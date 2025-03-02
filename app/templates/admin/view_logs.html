@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Entries{% endblock %}
+
+{% block content %}
+    <h1>Log Entries</h1>
+
+    <table class="table-logs">
+        <tr>
+            <th>Date + Time</th>
+            <th>User</th>
+            <th>Category</th>
+            <th>Description</th>
+        </tr>
+        {% for log in log_entries %}
+        <tr>
+            <td>{{ log.formatted_timestamp }}</td>
+            <td>{{ log.actor.email }}</td>
+            <td>{{ log.category }}</td>
+            <td>{{ log.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
