@@ -52,13 +52,30 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
+            
+            # Log successful login
+            log_entry = LogEntry(category='Login', actor_id=user.id, description=f"Successful login for {user.email}")
+            db.session.add(log_entry)
+            db.session.commit()
+            
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.index'))
         else:
+            # Log failed login attempt
+            log_entry = LogEntry(category='Failed Login', actor_id=None, description=f"Failed login attempt for email: {form.email.data}")
+            db.session.add(log_entry)
+            db.session.commit()
+            
             flash('Invalid email or password')
     return render_template('auth/login.html', form=form)
 
 @auth_bp.route('/logout')
 def logout():
+    if current_user.is_authenticated:
+        # Log logout
+        log_entry = LogEntry(category='Logout', actor_id=current_user.id, description=f"User {current_user.email} logged out")
+        db.session.add(log_entry)
+        db.session.commit()
+    
     logout_user()
     return redirect(url_for('main.index'))
