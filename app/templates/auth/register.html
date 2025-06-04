@@ -6,14 +6,6 @@
 
     <h1>Register</h1>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div style="color: red; margin-bottom: 10px;">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <form method="post">
         {{ form.hidden_tag() }}
         <p>
