@@ -1,4 +1,10 @@
 venv*
 __pycache__
+*.pyc
+*.pyo
 pyvenv.cfg
 .env
+.DS_Store
+instance/
+*.db
+*.sqlite

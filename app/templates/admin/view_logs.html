@@ -15,7 +15,7 @@
         {% for log in log_entries %}
         <tr>
             <td>{{ log.formatted_timestamp }}</td>
-            <td>{{ log.actor.email }}</td>
+            <td>{{ log.actor.email if log.actor else 'N/A' }}</td>
             <td>{{ log.category }}</td>
             <td>{{ log.description }}</td>
         </tr>

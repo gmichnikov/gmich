@@ -2,6 +2,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 import os
 
@@ -10,14 +11,22 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 def create_app():
+    # Validate required environment variables
+    required_vars = ['DATABASE_URL', 'SECRET_KEY', 'ADMIN_EMAIL']
+    for var in required_vars:
+        if not os.getenv(var):
+            raise ValueError(f"Required environment variable {var} is not set")
+    
     app = Flask(__name__)
     app.config.from_object('config')
     
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
     
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
