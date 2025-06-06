@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Question Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">{{ question.content }}</h2>
+                    <p class="text-muted">Asked on {{ question.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+            </div>
+
+            {% if summary_response %}
+            <div class="card mb-4 summary-card">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Response Analysis Summary
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="response-content markdown-body">
+                        {{ summary_response.content|markdown|safe }}
+                    </div>
+                    <div class="metadata mt-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Model:</strong> {{ summary_response.model_name }}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Total Tokens:</strong> {{ summary_response.total_tokens }}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Response Time:</strong> 
+                                    {% if summary_response.response_time is not none %}
+                                        {{ "%.1f"|format(summary_response.response_time) }}s
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% for response in responses %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{ response.llm_name }}</h3>
+                    <div>
+                        <span class="badge bg-primary">Input: ${{ "%.6f"|format(response.input_cost) }}</span>
+                        <span class="badge bg-primary ms-2">Output: ${{ "%.6f"|format(response.output_cost) }}</span>
+                        <div class="btn-group ms-2">
+                            {% if response.llm_name.startswith('GPT') %}
+                                <a href="https://openai.com/api/pricing/" target="_blank" class="btn btn-sm btn-outline-secondary" title="OpenAI Pricing">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </a>
+                            {% elif response.llm_name.startswith('Claude') %}
+                                <a href="https://www.anthropic.com/pricing#api" target="_blank" class="btn btn-sm btn-outline-secondary" title="Anthropic Pricing">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </a>
+                            {% elif response.llm_name.startswith('Gemini') %}
+                                <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" class="btn btn-sm btn-outline-secondary" title="Gemini Pricing">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="response-content mb-3 markdown-body">
+                        {{ response.content|markdown|safe }}
+                    </div>
+                    <div class="metadata">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Input Tokens:</strong> {{ response.input_tokens }}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Output Tokens:</strong> {{ response.output_tokens }}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Total Tokens:</strong> {{ response.total_tokens }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Model:</strong> {{ response.model_name }}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    <strong>Response Time:</strong> 
+                                    {% if response.response_time is not none %}
+                                        {{ "%.1f"|format(response.response_time) }}s
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">
+                                    {% if response.llm_name == 'GPT-4.1-mini' %}
+                                        <strong>Finish Reason:</strong> {{ response.metadata.finish_reason }}
+                                    {% elif response.llm_name == 'Claude' %}
+                                        <strong>Stop Reason:</strong> {{ response.metadata.stop_reason }}
+                                    {% elif response.llm_name == 'Gemini' and response.metadata.safety_ratings %}
+                                        <strong>Safety Ratings:</strong> {{ response.metadata.safety_ratings }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.markdown-body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.markdown-body code {
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: rgba(27,31,35,0.05);
+    border-radius: 3px;
+}
+
+.markdown-body pre {
+    padding: 16px;
+    overflow: auto;
+    font-size: 85%;
+    line-height: 1.45;
+    background-color: #f6f8fa;
+    border-radius: 3px;
+}
+
+.markdown-body pre code {
+    padding: 0;
+    margin: 0;
+    font-size: 100%;
+    word-break: normal;
+    white-space: pre;
+    background: transparent;
+    border: 0;
+}
+
+.markdown-body blockquote {
+    padding: 0 1em;
+    color: #6a737d;
+    border-left: 0.25em solid #dfe2e5;
+    margin: 0 0 16px 0;
+}
+
+.markdown-body table {
+    display: block;
+    width: 100%;
+    overflow: auto;
+    margin-top: 0;
+    margin-bottom: 16px;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+    padding: 6px 13px;
+    border: 1px solid #dfe2e5;
+}
+
+.markdown-body table tr {
+    background-color: #fff;
+    border-top: 1px solid #c6cbd1;
+}
+
+.markdown-body table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}
+
+.summary-card {
+    border-left: 4px solid #6f42c1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.summary-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.summary-card .card-header h3 {
+    color: #6f42c1;
+    font-size: 1.4rem;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}API Pricing Comparison{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-4">API Output Pricing Comparison (per 1M tokens)</h1>
+    <div class="chart-container" style="position: relative; height: 600px; margin: 20px 0;">
+        <canvas id="pricingChart"></canvas>
+    </div>
+    <div class="text-center mt-4">
+        <p class="text-muted">Output price in USD per 1M tokens</p>
+        <div class="d-flex justify-content-center gap-4">
+            <div class="d-flex align-items-center gap-2">
+                <div style="width: 15px; height: 15px; background-color: #10a37f; border-radius: 3px;"></div>
+                <span>OpenAI</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div style="width: 15px; height: 15px; background-color: #6b4fbb; border-radius: 3px;"></div>
+                <span>Anthropic</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div style="width: 15px; height: 15px; background-color: #4285f4; border-radius: 3px;"></div>
+                <span>Google</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const data = {
+        openai: [
+            { name: 'gpt-4.1', output: 8 },
+            { name: 'gpt-4.1-mini', output: 1.60 },
+            { name: 'gpt-4.1-nano', output: 0.4 },
+            { name: 'gpt-4o-mini', output: 0.6 },
+            { name: 'o3', output: 40 },
+            { name: 'o4-mini', output: 4.4 }
+        ],
+        anthropic: [
+            { name: 'claude-3-5-haiku-latest', output: 4 },
+            { name: 'claude-3-7-sonnet-latest', output: 15 },
+            { name: 'claude-sonnet-4-20250514', output: 15 },
+            { name: 'claude-opus-4-20250514', output: 75 }
+        ],
+        google: [
+            { name: 'gemini-2.5-flash-preview-05-20', output: 0.6 },
+            { name: 'gemini-2.5-pro-preview-06-05', output: 10 },
+            { name: 'gemini-2.0-flash', output: 0.4 },
+            { name: 'gemini-1.5-flash', output: 0.3 },
+            { name: 'gemini-1.5-pro', output: 5 }
+        ]
+    };
+
+    // Prepare data for chart
+    let chartData = [];
+
+    // Process OpenAI data
+    data.openai.forEach(model => {
+        chartData.push({
+            label: model.name,
+            output: model.output,
+            color: '#10a37f'
+        });
+    });
+
+    // Process Anthropic data
+    data.anthropic.forEach(model => {
+        chartData.push({
+            label: model.name,
+            output: model.output,
+            color: '#6b4fbb'
+        });
+    });
+
+    // Process Google data
+    data.google.forEach(model => {
+        chartData.push({
+            label: model.name,
+            output: model.output,
+            color: '#4285f4'
+        });
+    });
+
+    // Sort data by output price
+    chartData.sort((a, b) => a.output - b.output);
+
+    const labels = chartData.map(item => item.label);
+    const outputPrices = chartData.map(item => item.output);
+    const colors = chartData.map(item => item.color);
+
+    const ctx = document.getElementById('pricingChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Output Price ($/1M tokens)',
+                data: outputPrices,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Price (USD per 1M tokens)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Output Price: $${context.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">Welcome to Ask Many LLMs</h1>
+            <p class="lead mb-4">
+                Get multiple perspectives on your questions by asking different AI models simultaneously.
+                Compare responses from OpenAI, Anthropic, and Google in one place.
+            </p>
+
+            {% if logged_in %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Ready to ask a question?</h5>
+                        <p class="card-text">You have {{ current_user.credits }} credits available.</p>
+                        <a href="{{ url_for('questions.ask_question') }}" class="btn btn-primary">Ask a Question</a>
+                        <a href="{{ url_for('questions.list_questions') }}" class="btn btn-outline-primary">View My Questions</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Get Started</h5>
+                        <p class="card-text">Sign up or log in to start asking questions.</p>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Login</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
