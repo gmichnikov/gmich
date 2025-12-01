@@ -3,22 +3,39 @@
 {% block title %}Log Entries{% endblock %}
 
 {% block content %}
-    <h1>Log Entries</h1>
 
-    <table class="table-logs">
-        <tr>
-            <th>Date + Time</th>
-            <th>User</th>
-            <th>Category</th>
-            <th>Description</th>
-        </tr>
-        {% for log in log_entries %}
-        <tr>
-            <td>{{ log.formatted_timestamp }}</td>
-            <td>{{ log.actor.email if log.actor else 'N/A' }}</td>
-            <td>{{ log.category }}</td>
-            <td>{{ log.description }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+<div class="admin-logs-container">
+    <div class="admin-logs-header">
+        <h1 class="admin-logs-title">📋 Activity Logs</h1>
+        <p class="admin-logs-subtitle">View all system activity and user actions</p>
+    </div>
+
+    <div class="admin-logs-table-wrapper">
+        <table class="table-logs">
+            <thead>
+                <tr>
+                    <th>Date + Time</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in log_entries %}
+                <tr>
+                    <td class="log-timestamp">{{ log.formatted_timestamp }}</td>
+                    <td class="log-user">{{ log.actor.email if log.actor else 'N/A' }}</td>
+                    <td class="log-category">{{ log.category }}</td>
+                    <td class="log-description">{{ log.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="admin-logs-footer">
+        <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+    </div>
+</div>
+
 {% endblock %}
