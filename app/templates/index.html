@@ -11,23 +11,31 @@
 
 <section class="projects-section">
     <h2 class="section-title">My Projects</h2>
-    <div class="projects-grid">
-        {% for project in projects %}
-            <div class="project-card {% if not project.available %}project-card-disabled{% endif %}">
-                <div class="project-icon">{{ project.icon }}</div>
-                <h3 class="project-title">{{ project.name }}</h3>
-                <p class="project-description">{{ project.description }}</p>
-                
+        <div class="projects-grid">
+            {% for project in projects %}
                 {% if project.auth_required and not current_user.is_authenticated %}
-                    <a href="{{ url_for('auth.login') }}" class="project-button-auth-required">🔒 Login to Access</a>
+                    <a href="{{ url_for('auth.login') }}" class="project-card project-card-login-required">
+                        <div class="project-icon">{{ project.icon }}</div>
+                        <h3 class="project-title">{{ project.name }}</h3>
+                        <p class="project-description">{{ project.description }}</p>
+                        <span class="project-status project-status-login">🔒 Login Required</span>
+                    </a>
                 {% elif project.available %}
-                    <a href="{{ project.url }}" class="project-button">Launch App</a>
+                    <a href="{{ project.url }}" class="project-card project-card-clickable">
+                        <div class="project-icon">{{ project.icon }}</div>
+                        <h3 class="project-title">{{ project.name }}</h3>
+                        <p class="project-description">{{ project.description }}</p>
+                    </a>
                 {% else %}
-                    <span class="project-button-disabled">Coming Soon</span>
+                    <div class="project-card project-card-disabled">
+                        <div class="project-icon">{{ project.icon }}</div>
+                        <h3 class="project-title">{{ project.name }}</h3>
+                        <p class="project-description">{{ project.description }}</p>
+                        <span class="project-status project-status-coming-soon">Coming Soon</span>
+                    </div>
                 {% endif %}
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
 </section>
 
 {% endblock %}

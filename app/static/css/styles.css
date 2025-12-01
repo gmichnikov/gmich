@@ -185,22 +185,36 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  text-decoration: none;
+  color: inherit;
+  cursor: default;
 }
 
-.project-card:hover {
+.project-card-clickable {
+  cursor: pointer;
+}
+
+.project-card-clickable:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
   border-color: #667eea;
 }
 
+.project-card-login-required {
+  cursor: pointer;
+  border-color: #ffd43b;
+}
+
+.project-card-login-required:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 193, 7, 0.2);
+  border-color: #ffc107;
+}
+
 .project-card-disabled {
   opacity: 0.6;
   background: #f9f9f9;
-}
-
-.project-card-disabled:hover {
-  transform: none;
-  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .project-icon {
@@ -221,50 +235,23 @@ body {
   flex-grow: 1;
 }
 
-.project-button {
+.project-status {
   display: inline-block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 30px;
-  border-radius: 8px;
-  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
   font-weight: 600;
-  transition: all 0.3s;
   margin-top: auto;
 }
 
-.project-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.project-button-disabled {
-  display: inline-block;
-  background: #ddd;
+.project-status-coming-soon {
+  background: #f0f0f0;
   color: #999;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: not-allowed;
-  margin-top: auto;
 }
 
-.project-button-auth-required {
-  display: inline-block;
-  background: #ffd43b;
+.project-status-login {
+  background: #fff3cd;
   color: #856404;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-weight: 600;
-  margin-top: auto;
-  text-decoration: none;
-  transition: all 0.3s;
-}
-
-.project-button-auth-required:hover {
-  background: #ffc107;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
 }
 
 /* ===== Login Prompt ===== */
@@ -862,14 +849,12 @@ body {
     line-height: 1.4;
   }
 
-  .project-button,
-  .project-button-disabled,
-  .project-button-auth-required {
+  .project-status {
     grid-column: 1 / 3;
     grid-row: 3;
     margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 0.95rem;
+    padding: 6px 12px;
+    font-size: 0.85rem;
   }
 
   .login-box {
