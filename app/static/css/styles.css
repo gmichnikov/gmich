@@ -221,8 +221,15 @@ body {
   padding: 12px 30px;
   border-radius: 8px;
   font-weight: 600;
-  cursor: not-allowed;
   margin-top: auto;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.project-button-auth-required:hover {
+  background: #ffc107;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
 }
 
 /* ===== Login Prompt ===== */

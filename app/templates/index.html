@@ -9,38 +9,25 @@
     <p class="hero-subtitle">A collection of web applications and tools I've built</p>
 </div>
 
-{% if current_user.is_authenticated %}
-    <section class="projects-section">
-        <h2 class="section-title">My Projects</h2>
-        <div class="projects-grid">
-            {% for project in projects %}
-                <div class="project-card {% if not project.available %}project-card-disabled{% endif %}">
-                    <div class="project-icon">{{ project.icon }}</div>
-                    <h3 class="project-title">{{ project.name }}</h3>
-                    <p class="project-description">{{ project.description }}</p>
-                    
-                    {% if project.auth_required and not current_user.is_authenticated %}
-                        <span class="project-button-auth-required">🔒 Login Required</span>
-                    {% elif project.available %}
-                        <a href="{{ project.url }}" class="project-button">Launch App</a>
-                    {% else %}
-                        <span class="project-button-disabled">Coming Soon</span>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    </section>
-{% else %}
-    <section class="login-prompt">
-        <div class="login-box">
-            <h2>Access Projects</h2>
-            <p>Please log in to access the project hub</p>
-            <div class="login-actions">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-secondary">Register</a>
+<section class="projects-section">
+    <h2 class="section-title">My Projects</h2>
+    <div class="projects-grid">
+        {% for project in projects %}
+            <div class="project-card {% if not project.available %}project-card-disabled{% endif %}">
+                <div class="project-icon">{{ project.icon }}</div>
+                <h3 class="project-title">{{ project.name }}</h3>
+                <p class="project-description">{{ project.description }}</p>
+                
+                {% if project.auth_required and not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.login') }}" class="project-button-auth-required">🔒 Login to Access</a>
+                {% elif project.available %}
+                    <a href="{{ project.url }}" class="project-button">Launch App</a>
+                {% else %}
+                    <span class="project-button-disabled">Coming Soon</span>
+                {% endif %}
             </div>
-        </div>
-    </section>
-{% endif %}
+        {% endfor %}
+    </div>
+</section>
 
 {% endblock %}
