@@ -29,6 +29,16 @@ PROJECTS = [
         'order': 2
     },
     {
+        'id': 'mastermind',
+        'name': 'Mastermind',
+        'description': 'Classic code-breaking game - crack the 4-color code in 10 guesses',
+        'icon': '🎯',
+        'url': '/mastermind',
+        'auth_required': False,
+        'status': 'active',
+        'order': 3
+    },
+    {
         'id': 'notes',
         'name': 'Notes',
         'description': 'Take and organize notes with markdown support',
@@ -36,7 +46,7 @@ PROJECTS = [
         'url': '/notes',
         'auth_required': True,
         'status': 'coming_soon',
-        'order': 3
+        'order': 4
     },
     {
         'id': 'weather',
@@ -46,7 +56,7 @@ PROJECTS = [
         'url': '/weather',
         'auth_required': False,
         'status': 'coming_soon',
-        'order': 4
+        'order': 5
     }
 ]
 
