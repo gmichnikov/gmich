@@ -1,41 +1,13 @@
 from flask import Blueprint, render_template
 from flask_login import current_user
+from app.projects.registry import get_projects_for_user
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    # Project data - will be expanded as new projects are added
-    projects = [
-        {
-            'name': 'Todo App',
-            'description': 'A simple and elegant todo list application to manage your tasks',
-            'icon': '✓',
-            'url': '/todo',
-            'available': True
-        },
-        {
-            'name': 'Calculator',
-            'description': 'Pure JavaScript calculator with basic arithmetic operations',
-            'icon': '🔢',
-            'url': '/calculator',
-            'available': True
-        },
-        {
-            'name': 'Notes',
-            'description': 'Take and organize notes with markdown support',
-            'icon': '📝',
-            'url': '/notes',
-            'available': False
-        },
-        {
-            'name': 'Weather App',
-            'description': 'Check current weather and forecasts for any location',
-            'icon': '🌤',
-            'url': '/weather',
-            'available': False
-        }
-    ]
+    # Get projects from registry with availability based on user's auth status
+    projects = get_projects_for_user(current_user.is_authenticated)
     
     return render_template('index.html', projects=projects)
 

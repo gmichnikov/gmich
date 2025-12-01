@@ -18,7 +18,10 @@
                     <div class="project-icon">{{ project.icon }}</div>
                     <h3 class="project-title">{{ project.name }}</h3>
                     <p class="project-description">{{ project.description }}</p>
-                    {% if project.available %}
+                    
+                    {% if project.auth_required and not current_user.is_authenticated %}
+                        <span class="project-button-auth-required">🔒 Login Required</span>
+                    {% elif project.available %}
                         <a href="{{ project.url }}" class="project-button">Launch App</a>
                     {% else %}
                         <span class="project-button-disabled">Coming Soon</span>

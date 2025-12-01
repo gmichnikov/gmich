@@ -214,6 +214,17 @@ body {
   margin-top: auto;
 }
 
+.project-button-auth-required {
+  display: inline-block;
+  background: #ffd43b;
+  color: #856404;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: not-allowed;
+  margin-top: auto;
+}
+
 /* ===== Login Prompt ===== */
 .login-prompt {
   display: flex;
