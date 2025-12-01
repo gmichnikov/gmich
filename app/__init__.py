@@ -35,13 +35,16 @@ def create_app():
     from app.routes.main import main_bp
     from app.core.auth import auth_bp
     from app.core.admin import admin_bp
+    from app.projects.todo.routes import todo_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(todo_bp, url_prefix='/todo')
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
+    from app.projects.todo.models import TodoItem
     
     # User loader for Flask-Login
     @login_manager.user_loader

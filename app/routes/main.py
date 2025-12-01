@@ -12,7 +12,7 @@ def index():
             'description': 'A simple and elegant todo list application to manage your tasks',
             'icon': '✓',
             'url': '/todo',
-            'available': False
+            'available': True
         },
         {
             'name': 'Calculator',
