@@ -13,7 +13,13 @@
             <div class="nav-container">
                 <a href="{{ url_for('main.index') }}" class="nav-logo">gmich.org</a>
                 
-                <ul class="nav-menu">
+                <button class="nav-hamburger" id="navHamburger" aria-label="Toggle navigation">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                
+                <ul class="nav-menu" id="navMenu">
                     <li class="nav-item">
                         <a href="{{ url_for('main.index') }}" class="nav-link">Home</a>
                     </li>
@@ -60,6 +66,36 @@
         <footer class="footer">
             <p>&copy; 2025 gmich.org</p>
         </footer>
+
+        <script>
+            // Mobile hamburger menu toggle
+            const hamburger = document.getElementById('navHamburger');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (hamburger && navMenu) {
+                hamburger.addEventListener('click', function() {
+                    navMenu.classList.toggle('nav-menu-active');
+                    hamburger.classList.toggle('hamburger-active');
+                });
+                
+                // Close menu when clicking a link
+                const navLinks = navMenu.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navMenu.classList.remove('nav-menu-active');
+                        hamburger.classList.remove('hamburger-active');
+                    });
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!hamburger.contains(event.target) && !navMenu.contains(event.target)) {
+                        navMenu.classList.remove('nav-menu-active');
+                        hamburger.classList.remove('hamburger-active');
+                    }
+                });
+            }
+        </script>
 
         {% block scripts %}{% endblock %}
     </body>

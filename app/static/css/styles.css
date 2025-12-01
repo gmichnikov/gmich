@@ -92,6 +92,40 @@ body {
   background: #5568d3;
 }
 
+/* ===== Hamburger Menu (Hidden on Desktop) ===== */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 3px;
+  background: #667eea;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburger-active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
 /* ===== Main Content ===== */
 .main-content {
   max-width: 1200px;
@@ -728,9 +762,52 @@ body {
 
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
+  /* Mobile Navigation */
+  .nav-hamburger {
+    display: flex;
+  }
+
   .nav-menu {
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    position: fixed;
+    top: 70px;
+    right: -100%;
+    width: 280px;
+    height: calc(100vh - 70px);
+    background: white;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    gap: 0;
+  }
+
+  .nav-menu-active {
+    right: 0;
+  }
+
+  .nav-item {
+    width: 100%;
+    margin: 0;
+  }
+
+  .nav-link {
+    display: block;
+    width: 100%;
+    padding: 15px 20px;
+    margin: 5px 0;
+    border-radius: 8px;
+    text-align: left;
+  }
+
+  .nav-user .nav-link {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .nav-button,
+  .nav-button-primary {
+    text-align: center;
   }
 
   .hero-title {
@@ -743,10 +820,56 @@ body {
 
   .projects-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .projects-section {
     padding: 20px;
+  }
+
+  .project-card {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .project-icon {
+    grid-row: 1 / 3;
+    font-size: 2.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-title {
+    font-size: 1.2rem;
+    margin: 0;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .project-description {
+    font-size: 0.85rem;
+    margin: 0;
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    line-height: 1.4;
+  }
+
+  .project-button,
+  .project-button-disabled,
+  .project-button-auth-required {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
   }
 
   .login-box {
@@ -783,12 +906,34 @@ body {
   }
 
   .table-logs {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    min-width: 600px;
   }
 
   .table-logs th,
   .table-logs td {
-    padding: 10px 8px;
+    padding: 10px 6px;
+  }
+
+  .log-timestamp {
+    font-size: 0.75rem;
+    white-space: normal;
+    line-height: 1.3;
+    min-width: 85px;
+    max-width: 90px;
+  }
+
+  .log-user {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+
+  .log-category {
+    font-size: 0.8rem;
+  }
+
+  .log-description {
+    font-size: 0.8rem;
   }
 
   .error-card {
