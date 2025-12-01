@@ -3,13 +3,49 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="My application">
-        <title>{% block title %}{% endblock %} - My Application</title>
+        <meta name="description" content="Greg's Project Hub - A collection of web applications">
+        <title>{% block title %}{% endblock %} - Greg's Projects</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     </head>
 
     <body>
-        <main>
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="{{ url_for('main.index') }}" class="nav-logo">Greg's Projects</a>
+                
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.index') }}" class="nav-link">Home</a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin.reset_password') }}" class="nav-link">Admin</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin.view_logs') }}" class="nav-link">Logs</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item nav-user">
+                            <span class="nav-link">{{ current_user.email }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('auth.logout') }}" class="nav-link nav-button">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('auth.login') }}" class="nav-link nav-button">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('auth.register') }}" class="nav-link nav-button-primary">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
@@ -20,6 +56,11 @@
             
             {% block content %}{% endblock %}
         </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Greg's Projects. Built with Flask.</p>
+        </footer>
+
         {% block scripts %}{% endblock %}
     </body>
 </html>
