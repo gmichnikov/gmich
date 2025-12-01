@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Calculator{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('calculator.static', filename='calculator.css') }}">
+
+<div class="calculator-container">
+    <div class="calculator-header">
+        <h1 class="calculator-title">🔢 Calculator</h1>
+        <p class="calculator-subtitle">Pure JavaScript - No Backend Required</p>
+    </div>
+
+    <div class="calculator">
+        <div class="calculator-display">
+            <div class="calculator-previous-operand" id="previousOperand"></div>
+            <div class="calculator-current-operand" id="currentOperand">0</div>
+        </div>
+        
+        <div class="calculator-buttons">
+            <!-- Row 1: Clear and Delete -->
+            <button class="calculator-btn btn-function" id="clearBtn">AC</button>
+            <button class="calculator-btn btn-function" id="deleteBtn">DEL</button>
+            <button class="calculator-btn btn-operator" data-operator="/">÷</button>
+            <button class="calculator-btn btn-operator" data-operator="*">×</button>
+            
+            <!-- Row 2: 7, 8, 9, - -->
+            <button class="calculator-btn btn-number" data-number="7">7</button>
+            <button class="calculator-btn btn-number" data-number="8">8</button>
+            <button class="calculator-btn btn-number" data-number="9">9</button>
+            <button class="calculator-btn btn-operator" data-operator="-">−</button>
+            
+            <!-- Row 3: 4, 5, 6, + -->
+            <button class="calculator-btn btn-number" data-number="4">4</button>
+            <button class="calculator-btn btn-number" data-number="5">5</button>
+            <button class="calculator-btn btn-number" data-number="6">6</button>
+            <button class="calculator-btn btn-operator" data-operator="+">+</button>
+            
+            <!-- Row 4: 1, 2, 3 -->
+            <button class="calculator-btn btn-number" data-number="1">1</button>
+            <button class="calculator-btn btn-number" data-number="2">2</button>
+            <button class="calculator-btn btn-number" data-number="3">3</button>
+            
+            <!-- Row 5: 0, ., = (equals spans 2 rows) -->
+            <button class="calculator-btn btn-number btn-zero" data-number="0">0</button>
+            <button class="calculator-btn btn-number" data-number=".">.</button>
+            <button class="calculator-btn btn-equals" id="equalsBtn">=</button>
+        </div>
+    </div>
+
+    <div class="calculator-info">
+        <h3>Keyboard Shortcuts</h3>
+        <ul>
+            <li><strong>Numbers (0-9):</strong> Input numbers</li>
+            <li><strong>Operators (+, -, *, /):</strong> Mathematical operations</li>
+            <li><strong>Enter or =:</strong> Calculate result</li>
+            <li><strong>Escape or C:</strong> Clear all</li>
+            <li><strong>Backspace:</strong> Delete last digit</li>
+            <li><strong>Decimal (.):</strong> Add decimal point</li>
+        </ul>
+    </div>
+</div>
+
+<script src="{{ url_for('calculator.static', filename='calculator.js') }}"></script>
+
+{% endblock %}
+

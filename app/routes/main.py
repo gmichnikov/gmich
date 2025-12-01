@@ -16,10 +16,10 @@ def index():
         },
         {
             'name': 'Calculator',
-            'description': 'A powerful calculator with advanced mathematical functions',
+            'description': 'Pure JavaScript calculator with basic arithmetic operations',
             'icon': '🔢',
             'url': '/calculator',
-            'available': False
+            'available': True
         },
         {
             'name': 'Notes',

@@ -36,11 +36,13 @@ def create_app():
     from app.core.auth import auth_bp
     from app.core.admin import admin_bp
     from app.projects.todo.routes import todo_bp
+    from app.projects.calculator.routes import calculator_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(todo_bp, url_prefix='/todo')
+    app.register_blueprint(calculator_bp, url_prefix='/calculator')
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
