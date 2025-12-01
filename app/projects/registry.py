@@ -15,7 +15,6 @@ PROJECTS = [
         'icon': '✓',
         'url': '/todo',
         'auth_required': True,
-        'tech_stack': ['Python', 'Flask', 'PostgreSQL', 'SQLAlchemy'],
         'status': 'active',
         'order': 1
     },
@@ -26,7 +25,6 @@ PROJECTS = [
         'icon': '🔢',
         'url': '/calculator',
         'auth_required': False,
-        'tech_stack': ['JavaScript', 'HTML5', 'CSS3'],
         'status': 'active',
         'order': 2
     },
@@ -37,7 +35,6 @@ PROJECTS = [
         'icon': '📝',
         'url': '/notes',
         'auth_required': True,
-        'tech_stack': ['Python', 'Flask', 'Markdown', 'PostgreSQL'],
         'status': 'coming_soon',
         'order': 3
     },
@@ -48,7 +45,6 @@ PROJECTS = [
         'icon': '🌤',
         'url': '/weather',
         'auth_required': False,
-        'tech_stack': ['JavaScript', 'Weather API', 'Geolocation'],
         'status': 'coming_soon',
         'order': 4
     }

@@ -72,7 +72,6 @@ In `app/projects/registry.py`, add your project to the `PROJECTS` list:
     'icon': '🎯',  # Pick an emoji icon
     'url': '/your-project',
     'auth_required': False,  # True if requires login
-    'tech_stack': ['Python', 'Flask', 'JavaScript'],
     'status': 'active',  # or 'coming_soon'
     'order': 5  # Display order on homepage
 }
@@ -112,7 +111,6 @@ In `app/projects/registry.py`, add your project to the `PROJECTS` list:
 | `icon`          | string  | Emoji icon for visual appeal                  |
 | `url`           | string  | Route URL (must match blueprint registration) |
 | `auth_required` | boolean | True if login is required to access           |
-| `tech_stack`    | list    | Technologies used (shown as badges)           |
 | `status`        | string  | 'active' or 'coming_soon'                     |
 | `order`         | integer | Display order on homepage (lower = first)     |
 
