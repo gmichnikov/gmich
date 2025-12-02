@@ -33,7 +33,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        log_entry = LogEntry(category='Register', actor_id=new_user.id, description=f"Email: {new_user.email}")
+        log_entry = LogEntry(project='auth', category='Register', actor_id=new_user.id, description=f"Email: {new_user.email}")
         db.session.add(log_entry)
         db.session.commit()
 
@@ -54,7 +54,7 @@ def login():
             login_user(user)
             
             # Log successful login
-            log_entry = LogEntry(category='Login', actor_id=user.id, description=f"Successful login for {user.email}")
+            log_entry = LogEntry(project='auth', category='Login', actor_id=user.id, description=f"Successful login for {user.email}")
             db.session.add(log_entry)
             db.session.commit()
             
@@ -62,7 +62,7 @@ def login():
             return redirect(next_page or url_for('main.index'))
         else:
             # Log failed login attempt
-            log_entry = LogEntry(category='Failed Login', actor_id=None, description=f"Failed login attempt for email: {form.email.data}")
+            log_entry = LogEntry(project='auth', category='Failed Login', actor_id=None, description=f"Failed login attempt for email: {form.email.data}")
             db.session.add(log_entry)
             db.session.commit()
             
@@ -73,7 +73,7 @@ def login():
 def logout():
     if current_user.is_authenticated:
         # Log logout
-        log_entry = LogEntry(category='Logout', actor_id=current_user.id, description=f"User {current_user.email} logged out")
+        log_entry = LogEntry(project='auth', category='Logout', actor_id=current_user.id, description=f"User {current_user.email} logged out")
         db.session.add(log_entry)
         db.session.commit()
     

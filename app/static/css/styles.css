@@ -476,6 +476,75 @@ body {
   font-size: 1.1rem;
 }
 
+.logs-filters {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.filter-group-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-label {
+  color: #555;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.filter-select,
+.filter-input {
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s;
+  background: white;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filter-select {
+  cursor: pointer;
+}
+
+.filter-reset-btn {
+  padding: 10px 20px;
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+  height: fit-content;
+}
+
+.filter-reset-btn:hover {
+  background: #e0e0e0;
+}
+
 .admin-logs-table-wrapper {
   background: white;
   border-radius: 15px;
@@ -488,7 +557,7 @@ body {
 .table-logs {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 800px;
 }
 
 .table-logs thead tr {
@@ -533,6 +602,12 @@ body {
 .log-user {
   color: #667eea;
   font-weight: 500;
+}
+
+.log-project {
+  color: #764ba2;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
 .log-category {
@@ -857,6 +932,22 @@ body {
 
   .admin-logs-title {
     font-size: 2rem;
+  }
+
+  .logs-filters {
+    padding: 15px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group-search {
+    min-width: 100%;
+  }
+
+  .filter-reset-btn {
+    width: 100%;
   }
 
   .admin-logs-table-wrapper {

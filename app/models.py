@@ -22,10 +22,11 @@ class LogEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     actor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    project = db.Column(db.String(50), nullable=True)
     category = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
 
     actor = db.relationship('User', backref=db.backref('log_entries', lazy=True))
 
     def __repr__(self):
-        return f'<LogEntry {self.timestamp} - {self.category}>'
+        return f'<LogEntry {self.timestamp} - {self.project}/{self.category}>'

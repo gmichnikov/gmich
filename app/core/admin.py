@@ -31,7 +31,7 @@ def reset_password():
             db.session.commit()
             flash('Password reset successfully.')
 
-            log_entry = LogEntry(category='Reset Password', actor_id=current_user.id, description=f"{current_user.email} reset password of {user.email}")
+            log_entry = LogEntry(project='admin', category='Reset Password', actor_id=current_user.id, description=f"{current_user.email} reset password of {user.email}")
             db.session.add(log_entry)
             db.session.commit()
         else:

@@ -57,7 +57,8 @@ def add():
         
         # Log the action
         log_entry = LogEntry(
-            category='Todo - Add',
+            project='todo',
+            category='Add',
             actor_id=current_user.id,
             description=f"{current_user.email} added todo: '{todo.title}'"
         )
@@ -88,8 +89,9 @@ def complete(id):
     status = 'completed' if todo.completed else 'reactivated'
     
     # Log the action
-    log_category = 'Todo - Complete' if todo.completed else 'Todo - Reactivate'
+    log_category = 'Complete' if todo.completed else 'Reactivate'
     log_entry = LogEntry(
+        project='todo',
         category=log_category,
         actor_id=current_user.id,
         description=f"{current_user.email} {status} todo: '{todo.title}'"
@@ -120,7 +122,8 @@ def delete(id):
     
     # Log the action
     log_entry = LogEntry(
-        category='Todo - Delete',
+        project='todo',
+        category='Delete',
         actor_id=current_user.id,
         description=f"{current_user.email} deleted todo: '{todo_title}'"
     )
