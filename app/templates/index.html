@@ -15,8 +15,8 @@
                         <span class="project-status project-status-login">🔒 Login Required</span>
                     </a>
                 {% elif project.available %}
-                    <a href="{{ project.url }}" class="project-card project-card-clickable">
-                        <h3 class="project-title">{{ project.name }}</h3>
+                    <a href="{{ project.url }}" class="project-card project-card-clickable" {% if project.get('external') %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                        <h3 class="project-title">{{ project.name }}{% if project.get('external') %} ↗{% endif %}</h3>
                         <p class="project-description">{{ project.description }}</p>
                     </a>
                 {% else %}

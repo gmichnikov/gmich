@@ -43,6 +43,26 @@ PROJECTS = [
         'auth_required': False,
         'status': 'active',
         'order': 4
+    },
+    {
+        'id': 'gm_84_plus',
+        'name': 'GM-84 Plus',
+        'description': 'Advanced graphing calculator - plot equations, zoom, animate, and explore!',
+        'url': 'https://gmichnikov.github.io/gm-84-plus/',
+        'auth_required': False,
+        'status': 'active',
+        'order': 5,
+        'external': True
+    },
+    {
+        'id': 'estimate_pi',
+        'name': 'Estimate Pi',
+        'description': 'Throw virtual darts at a dartboard to estimate π using Monte Carlo simulation',
+        'url': 'https://gmichnikov.github.io/estimate-pi/',
+        'auth_required': False,
+        'status': 'active',
+        'order': 6,
+        'external': True
     }
 ]
 
