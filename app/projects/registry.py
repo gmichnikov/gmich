@@ -34,6 +34,15 @@ PROJECTS = [
         'auth_required': False,
         'status': 'active',
         'order': 3
+    },
+    {
+        'id': 'simon_says',
+        'name': 'Simon Says',
+        'description': 'Test your memory with this classic color sequence game',
+        'url': '/simon-says',
+        'auth_required': False,
+        'status': 'active',
+        'order': 4
     }
 ]
 
