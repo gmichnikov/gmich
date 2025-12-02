@@ -12,7 +12,6 @@ PROJECTS = [
         'id': 'todo',
         'name': 'Todo App',
         'description': 'A simple and elegant todo list application to manage your tasks',
-        'icon': '✓',
         'url': '/todo',
         'auth_required': True,
         'status': 'active',
@@ -22,7 +21,6 @@ PROJECTS = [
         'id': 'calculator',
         'name': 'Calculator',
         'description': 'Pure JavaScript calculator with basic arithmetic operations',
-        'icon': '🔢',
         'url': '/calculator',
         'auth_required': False,
         'status': 'active',
@@ -32,31 +30,10 @@ PROJECTS = [
         'id': 'mastermind',
         'name': 'Mastermind',
         'description': 'Classic code-breaking game - crack the 4-color code in 10 guesses',
-        'icon': '🎯',
         'url': '/mastermind',
         'auth_required': False,
         'status': 'active',
         'order': 3
-    },
-    {
-        'id': 'notes',
-        'name': 'Notes',
-        'description': 'Take and organize notes with markdown support',
-        'icon': '📝',
-        'url': '/notes',
-        'auth_required': True,
-        'status': 'coming_soon',
-        'order': 4
-    },
-    {
-        'id': 'weather',
-        'name': 'Weather App',
-        'description': 'Check current weather and forecasts for any location',
-        'icon': '🌤',
-        'url': '/weather',
-        'auth_required': False,
-        'status': 'coming_soon',
-        'order': 5
     }
 ]
 

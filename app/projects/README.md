@@ -69,11 +69,10 @@ In `app/projects/registry.py`, add your project to the `PROJECTS` list:
     'id': 'your_project',
     'name': 'Your Project Name',
     'description': 'Brief description of what your project does',
-    'icon': '🎯',  # Pick an emoji icon
     'url': '/your-project',
     'auth_required': False,  # True if requires login
     'status': 'active',  # or 'coming_soon'
-    'order': 5  # Display order on homepage
+    'order': 4  # Display order on homepage
 }
 ```
 
@@ -108,7 +107,6 @@ In `app/projects/registry.py`, add your project to the `PROJECTS` list:
 | `id`            | string  | Unique identifier (use snake_case)            |
 | `name`          | string  | Display name shown to users                   |
 | `description`   | string  | Brief description (1-2 sentences)             |
-| `icon`          | string  | Emoji icon for visual appeal                  |
 | `url`           | string  | Route URL (must match blueprint registration) |
 | `auth_required` | boolean | True if login is required to access           |
 | `status`        | string  | 'active' or 'coming_soon'                     |

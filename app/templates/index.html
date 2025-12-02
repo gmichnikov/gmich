@@ -4,31 +4,23 @@
 
 {% block content %}
 
-<div class="hero">
-    <h1 class="hero-title">Welcome to My Project Hub</h1>
-    <p class="hero-subtitle">A collection of web applications and tools I've built</p>
-</div>
-
 <section class="projects-section">
     <h2 class="section-title">My Projects</h2>
         <div class="projects-grid">
             {% for project in projects %}
                 {% if project.auth_required and not current_user.is_authenticated %}
                     <a href="{{ url_for('auth.login') }}" class="project-card project-card-login-required">
-                        <div class="project-icon">{{ project.icon }}</div>
                         <h3 class="project-title">{{ project.name }}</h3>
                         <p class="project-description">{{ project.description }}</p>
                         <span class="project-status project-status-login">🔒 Login Required</span>
                     </a>
                 {% elif project.available %}
                     <a href="{{ project.url }}" class="project-card project-card-clickable">
-                        <div class="project-icon">{{ project.icon }}</div>
                         <h3 class="project-title">{{ project.name }}</h3>
                         <p class="project-description">{{ project.description }}</p>
                     </a>
                 {% else %}
                     <div class="project-card project-card-disabled">
-                        <div class="project-icon">{{ project.icon }}</div>
                         <h3 class="project-title">{{ project.name }}</h3>
                         <p class="project-description">{{ project.description }}</p>
                         <span class="project-status project-status-coming-soon">Coming Soon</span>
