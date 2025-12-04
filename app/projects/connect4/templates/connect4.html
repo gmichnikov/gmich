@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}Connect 4{% endblock %}
+
+{% block content %}
+
+<style>
+    .c4-wrapper {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: calc(100vh - 70px - 60px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        margin: -20px;
+    }
+
+    .c4-wrapper h1 {
+        color: white;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 2.5em;
+    }
+
+    .c4-game-info {
+        color: white;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        text-align: center;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .c4-player-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        animation: c4Pulse 1s infinite;
+    }
+
+    @keyframes c4Pulse {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .c4-board-container {
+        background: #0066cc;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        position: relative;
+    }
+
+    .c4-board {
+        display: grid;
+        grid-template-columns: repeat(7, 70px);
+        grid-template-rows: repeat(6, 70px);
+        gap: 10px;
+        background: #0055aa;
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .c4-cell {
+        width: 70px;
+        height: 70px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .c4-cell.c4-preview {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .c4-cell.c4-preview.c4-yellow {
+        background: rgba(255, 215, 0, 0.4);
+    }
+
+    .c4-cell.c4-preview.c4-red {
+        background: rgba(220, 20, 60, 0.4);
+    }
+
+    .c4-cell.c4-yellow:not(.c4-preview) {
+        background: radial-gradient(circle at 30% 30%, #ffd700, #ffb700);
+        animation: c4DropIn 0.5s ease-out;
+    }
+
+    .c4-cell.c4-red:not(.c4-preview) {
+        background: radial-gradient(circle at 30% 30%, #dc143c, #a00020);
+        animation: c4DropIn 0.5s ease-out;
+    }
+
+    @keyframes c4DropIn {
+        0% {
+            transform: translateY(-400px);
+            opacity: 0;
+        }
+        60% {
+            transform: translateY(10px);
+        }
+        80% {
+            transform: translateY(-5px);
+        }
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .c4-cell.c4-winning {
+        animation: c4WinPulse 0.8s infinite;
+    }
+
+    @keyframes c4WinPulse {
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+        }
+        50% {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0);
+        }
+    }
+
+    .c4-doomed {
+        animation: c4Shake 0.5s infinite, c4DoomGlow 1s infinite;
+    }
+
+    @keyframes c4Shake {
+        0%,
+        100% {
+            transform: translateX(0) rotate(0deg);
+        }
+        25% {
+            transform: translateX(-5px) rotate(-2deg);
+        }
+        75% {
+            transform: translateX(5px) rotate(2deg);
+        }
+    }
+
+    @keyframes c4DoomGlow {
+        0%,
+        100% {
+            box-shadow: 0 0 20px 5px rgba(255, 0, 0, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 40px 15px rgba(255, 0, 0, 0.8);
+        }
+    }
+
+    .c4-controls {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+    }
+
+    .c4-btn {
+        padding: 15px 40px;
+        font-size: 1.2em;
+        background: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .c4-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .c4-btn:active {
+        transform: translateY(-1px);
+    }
+
+    .c4-doom-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #ff0000;
+        padding: 30px 50px;
+        border-radius: 20px;
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        z-index: 1000;
+        animation: c4DoomAppear 0.5s ease-out;
+        border: 3px solid #ff0000;
+        box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+    }
+
+    @keyframes c4DoomAppear {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+        }
+        100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    .c4-confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #f0f;
+        position: absolute;
+        animation: c4ConfettiFall 3s linear;
+    }
+
+    @keyframes c4ConfettiFall {
+        to {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .c4-board {
+            grid-template-columns: repeat(7, 45px);
+            grid-template-rows: repeat(6, 45px);
+            gap: 6px;
+            padding: 10px;
+        }
+
+        .c4-cell {
+            width: 45px;
+            height: 45px;
+        }
+
+        .c4-wrapper h1 {
+            font-size: 1.8em;
+        }
+
+        .c4-game-info {
+            font-size: 1.2em;
+        }
+    }
+</style>
+
+<div class="c4-wrapper">
+    <h1>🔴 Connect 4 🟡</h1>
+    <div class="c4-game-info" id="gameInfo">
+        <span class="c4-player-indicator" id="playerIndicator"></span>
+        <span id="statusText">Yellow's Turn</span>
+    </div>
+    <div class="c4-board-container" id="boardContainer">
+        <div class="c4-board" id="board"></div>
+    </div>
+    <div class="c4-controls">
+        <button class="c4-btn" onclick="resetGame()">Start Over</button>
+    </div>
+</div>
+
+<script>
+    const ROWS = 6;
+    const COLS = 7;
+    const YELLOW = "c4-yellow";
+    const RED = "c4-red";
+
+    let board = [];
+    let currentPlayer = YELLOW;
+    let gameOver = false;
+    let isDoomState = false;
+    let doomMessageShown = false;
+
+    // Initialize the game
+    function initGame() {
+        board = Array(ROWS)
+            .fill(null)
+            .map(() => Array(COLS).fill(null));
+        currentPlayer = YELLOW;
+        gameOver = false;
+        isDoomState = false;
+        doomMessageShown = false;
+
+        const boardElement = document.getElementById("board");
+        boardElement.innerHTML = "";
+        document.getElementById("boardContainer").classList.remove("c4-doomed");
+
+        // Create cells (top to bottom, left to right for proper grid layout)
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const cell = document.createElement("div");
+                cell.className = "c4-cell";
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.addEventListener("click", () => handleCellClick(col));
+                cell.addEventListener("mouseenter", () => handleCellHover(col, true));
+                cell.addEventListener("mouseleave", () => handleCellHover(col, false));
+                boardElement.appendChild(cell);
+            }
+        }
+
+        updateStatus();
+    }
+
+    function handleCellClick(col) {
+        if (gameOver) return;
+
+        const row = getLowestEmptyRow(col);
+        if (row === -1) return; // Column is full
+
+        // Clear preview
+        clearPreview();
+
+        // Place the piece
+        board[row][col] = currentPlayer;
+        const cell = getCell(row, col);
+        cell.classList.add(currentPlayer);
+
+        // Check for win
+        if (checkWin(row, col)) {
+            gameOver = true;
+            showWinner();
+            createConfetti();
+            return;
+        }
+
+        // Check for draw
+        if (isBoardFull()) {
+            gameOver = true;
+            document.getElementById("statusText").textContent = "It's a Draw!";
+            return;
+        }
+
+        // Switch player
+        currentPlayer = currentPlayer === YELLOW ? RED : YELLOW;
+        updateStatus();
+
+        // Check if next player is doomed
+        checkDoomState();
+    }
+
+    function handleCellHover(col, isEntering) {
+        if (gameOver) return;
+
+        clearPreview();
+
+        if (isEntering) {
+            const row = getLowestEmptyRow(col);
+            if (row !== -1) {
+                const cell = getCell(row, col);
+                cell.classList.add("c4-preview", currentPlayer);
+            }
+        }
+    }
+
+    function clearPreview() {
+        document.querySelectorAll(".c4-cell.c4-preview").forEach((cell) => {
+            cell.classList.remove("c4-preview", YELLOW, RED);
+        });
+    }
+
+    function getLowestEmptyRow(col) {
+        for (let row = ROWS - 1; row >= 0; row--) {
+            if (board[row][col] === null) {
+                return row;
+            }
+        }
+        return -1;
+    }
+
+    function getCell(row, col) {
+        return document.querySelector(`.c4-cell[data-row="${row}"][data-col="${col}"]`);
+    }
+
+    function checkWin(row, col) {
+        const player = board[row][col];
+
+        // Check horizontal
+        const horizontal =
+            countDirection(row, col, 0, 1, player) +
+            countDirection(row, col, 0, -1, player) +
+            1;
+        if (horizontal >= 4) {
+            highlightWinningCells(row, col, 0, 1, player);
+            return true;
+        }
+
+        // Check vertical
+        const vertical =
+            countDirection(row, col, 1, 0, player) +
+            countDirection(row, col, -1, 0, player) +
+            1;
+        if (vertical >= 4) {
+            highlightWinningCells(row, col, 1, 0, player);
+            return true;
+        }
+
+        // Check diagonal (/)
+        const diagonal1 =
+            countDirection(row, col, -1, 1, player) +
+            countDirection(row, col, 1, -1, player) +
+            1;
+        if (diagonal1 >= 4) {
+            highlightWinningCells(row, col, -1, 1, player);
+            return true;
+        }
+
+        // Check diagonal (\)
+        const diagonal2 =
+            countDirection(row, col, -1, -1, player) +
+            countDirection(row, col, 1, 1, player) +
+            1;
+        if (diagonal2 >= 4) {
+            highlightWinningCells(row, col, -1, -1, player);
+            return true;
+        }
+
+        return false;
+    }
+
+    function countDirection(row, col, rowDir, colDir, player) {
+        let count = 0;
+        let r = row + rowDir;
+        let c = col + colDir;
+
+        while (
+            r >= 0 &&
+            r < ROWS &&
+            c >= 0 &&
+            c < COLS &&
+            board[r][c] === player
+        ) {
+            count++;
+            r += rowDir;
+            c += colDir;
+        }
+
+        return count;
+    }
+
+    function highlightWinningCells(row, col, rowDir, colDir, player) {
+        const cells = [[row, col]];
+
+        // Forward direction
+        let r = row + rowDir;
+        let c = col + colDir;
+        while (
+            r >= 0 &&
+            r < ROWS &&
+            c >= 0 &&
+            c < COLS &&
+            board[r][c] === player
+        ) {
+            cells.push([r, c]);
+            r += rowDir;
+            c += colDir;
+        }
+
+        // Backward direction
+        r = row - rowDir;
+        c = col - colDir;
+        while (
+            r >= 0 &&
+            r < ROWS &&
+            c >= 0 &&
+            c < COLS &&
+            board[r][c] === player
+        ) {
+            cells.push([r, c]);
+            r -= rowDir;
+            c -= colDir;
+        }
+
+        cells.forEach(([r, c]) => {
+            getCell(r, c).classList.add("c4-winning");
+        });
+    }
+
+    function isBoardFull() {
+        return board[0].every((cell) => cell !== null);
+    }
+
+    function updateStatus() {
+        const statusText = document.getElementById("statusText");
+        const indicator = document.getElementById("playerIndicator");
+
+        statusText.textContent = `${currentPlayer === YELLOW ? "Yellow" : "Red"}'s Turn`;
+        indicator.style.background =
+            currentPlayer === YELLOW
+                ? "radial-gradient(circle at 30% 30%, #ffd700, #ffb700)"
+                : "radial-gradient(circle at 30% 30%, #dc143c, #a00020)";
+    }
+
+    function showWinner() {
+        const statusText = document.getElementById("statusText");
+        statusText.textContent = `${currentPlayer === YELLOW ? "🟡 Yellow" : "🔴 Red"} Wins!`;
+    }
+
+    function checkDoomState() {
+        // Check if current player is in a "doomed" state where opponent has multiple winning threats
+        const opponent = currentPlayer === YELLOW ? RED : YELLOW;
+        const winningThreats = countWinningThreats(opponent);
+
+        if (winningThreats >= 2 && !doomMessageShown) {
+            // Current player is doomed!
+            isDoomState = true;
+            doomMessageShown = true;
+            showDoomMessage();
+        }
+    }
+
+    function countWinningThreats(player) {
+        let threats = 0;
+
+        // Check each column for immediate winning moves
+        for (let col = 0; col < COLS; col++) {
+            const row = getLowestEmptyRow(col);
+            if (row !== -1) {
+                // Simulate the move
+                board[row][col] = player;
+                if (checkWinSimulation(row, col, player)) {
+                    threats++;
+                }
+                board[row][col] = null;
+            }
+        }
+
+        return threats;
+    }
+
+    function checkWinSimulation(row, col, player) {
+        // Check if this position creates a win (without highlighting)
+        const horizontal =
+            countDirection(row, col, 0, 1, player) +
+            countDirection(row, col, 0, -1, player) +
+            1;
+        if (horizontal >= 4) return true;
+
+        const vertical =
+            countDirection(row, col, 1, 0, player) +
+            countDirection(row, col, -1, 0, player) +
+            1;
+        if (vertical >= 4) return true;
+
+        const diagonal1 =
+            countDirection(row, col, -1, 1, player) +
+            countDirection(row, col, 1, -1, player) +
+            1;
+        if (diagonal1 >= 4) return true;
+
+        const diagonal2 =
+            countDirection(row, col, -1, -1, player) +
+            countDirection(row, col, 1, 1, player) +
+            1;
+        if (diagonal2 >= 4) return true;
+
+        return false;
+    }
+
+    function showDoomMessage() {
+        const message = document.createElement("div");
+        message.className = "c4-doom-message";
+        message.textContent = "💀 DOOMED! 💀\nYour opponent has multiple winning moves!";
+        message.style.whiteSpace = "pre-line";
+        document.body.appendChild(message);
+
+        // Add shake effect to board
+        document.getElementById("boardContainer").classList.add("c4-doomed");
+
+        // Remove message after 3 seconds
+        setTimeout(() => {
+            message.remove();
+            document.getElementById("boardContainer").classList.remove("c4-doomed");
+        }, 3000);
+    }
+
+    function createConfetti() {
+        const colors = ["#ffd700", "#dc143c", "#00ff00", "#00ffff", "#ff00ff", "#ff8800"];
+
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement("div");
+                confetti.style.position = "fixed";
+                confetti.style.left = Math.random() * 100 + "%";
+                confetti.style.top = "-10px";
+                confetti.style.width = "10px";
+                confetti.style.height = "10px";
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+                confetti.style.animation = `c4ConfettiFall ${2 + Math.random() * 2}s linear`;
+                confetti.style.zIndex = "999";
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 4000);
+            }, i * 30);
+        }
+    }
+
+    function resetGame() {
+        // Remove any doom messages
+        document.querySelectorAll(".c4-doom-message").forEach((el) => el.remove());
+        initGame();
+    }
+
+    // Start the game
+    initGame();
+</script>
+
+{% endblock %}
+

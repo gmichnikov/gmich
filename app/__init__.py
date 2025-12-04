@@ -39,6 +39,8 @@ def create_app():
     from app.projects.calculator.routes import calculator_bp
     from app.projects.mastermind.routes import mastermind_bp
     from app.projects.simon_says.routes import simon_says_bp
+    from app.projects.tic_tac_toe.routes import tic_tac_toe_bp
+    from app.projects.connect4.routes import connect4_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -47,6 +49,8 @@ def create_app():
     app.register_blueprint(calculator_bp, url_prefix='/calculator')
     app.register_blueprint(mastermind_bp, url_prefix='/mastermind')
     app.register_blueprint(simon_says_bp, url_prefix='/simon-says')
+    app.register_blueprint(tic_tac_toe_bp, url_prefix='/tic-tac-toe')
+    app.register_blueprint(connect4_bp, url_prefix='/connect4')
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

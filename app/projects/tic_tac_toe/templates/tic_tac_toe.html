@@ -1,0 +1,647 @@
+{% extends 'base.html' %}
+
+{% block title %}Tic-Tac-Toe{% endblock %}
+
+{% block content %}
+
+<style>
+    .ttt-wrapper {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: calc(100vh - 70px - 60px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        margin: -20px;
+    }
+
+    .ttt-container {
+        text-align: center;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .ttt-wrapper h1 {
+        color: white;
+        font-size: 3em;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .ttt-info-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .ttt-theme-selector {
+        margin-bottom: 12px;
+    }
+
+    .ttt-theme-selector label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+    }
+
+    .ttt-theme-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ttt-theme-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+        border: 2px solid #667eea;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .ttt-theme-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .ttt-theme-btn.ttt-active {
+        background: #667eea;
+        color: white;
+    }
+
+    .ttt-scores {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+
+    .ttt-player-score {
+        flex: 1;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .ttt-player-score.ttt-clickable {
+        cursor: pointer;
+    }
+
+    .ttt-player-score.ttt-clickable:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .ttt-player-score.ttt-player-active {
+        background: #667eea;
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .ttt-player-score.ttt-player-active.ttt-clickable:hover {
+        background: #5568d3;
+    }
+
+    .ttt-player-score .ttt-name {
+        font-weight: 600;
+        font-size: 0.95em;
+        margin-bottom: 3px;
+    }
+
+    .ttt-player-score .ttt-symbol {
+        font-size: 1.5em;
+        margin: 3px 0;
+    }
+
+    .ttt-player-score .ttt-score {
+        font-size: 1em;
+        font-weight: bold;
+    }
+
+    .ttt-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .ttt-reset-btn {
+        padding: 10px 20px;
+        font-size: 0.95em;
+        font-weight: 600;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .ttt-reset-btn:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .ttt-sound-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f0f0;
+        padding: 6px 12px;
+        border-radius: 8px;
+    }
+
+    .ttt-sound-toggle label {
+        cursor: pointer;
+        user-select: none;
+        color: #333;
+        font-weight: 500;
+        font-size: 0.9em;
+    }
+
+    .ttt-sound-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .ttt-game-board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        max-width: 400px;
+        margin: 0 auto 20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .ttt-cell {
+        aspect-ratio: 1;
+        background: white;
+        border: none;
+        border-radius: 15px;
+        font-size: 3em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ttt-cell:hover:not(.ttt-taken) {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background: #f8f9fa;
+    }
+
+    .ttt-cell.ttt-taken {
+        cursor: not-allowed;
+    }
+
+    .ttt-cell.ttt-winning {
+        background: #51cf66;
+        animation: tttWinPulse 0.6s ease;
+    }
+
+    @keyframes tttWinPulse {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .ttt-message {
+        min-height: 40px;
+        color: white;
+        font-size: 1.4em;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ttt-message.ttt-winner {
+        color: #51cf66;
+        font-size: 1.6em;
+        animation: tttMessageFloat 0.5s ease;
+    }
+
+    .ttt-message.ttt-draw {
+        color: #ffd43b;
+    }
+
+    @keyframes tttMessageFloat {
+        0% {
+            transform: translateY(10px);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .ttt-wrapper h1 {
+            font-size: 2em;
+        }
+
+        .ttt-game-board {
+            max-width: 300px;
+        }
+
+        .ttt-cell {
+            font-size: 2.5em;
+        }
+
+        .ttt-theme-buttons {
+            gap: 4px;
+        }
+
+        .ttt-theme-btn {
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+    }
+</style>
+
+<div class="ttt-wrapper">
+    <div class="ttt-container">
+        <h1>Tic-Tac-Toe</h1>
+
+        <div class="ttt-info-panel">
+            <div class="ttt-theme-selector">
+                <label>Choose Your Style:</label>
+                <div class="ttt-theme-buttons">
+                    <button class="ttt-theme-btn ttt-active" data-theme="animals">Animals</button>
+                    <button class="ttt-theme-btn" data-theme="food">Food</button>
+                    <button class="ttt-theme-btn" data-theme="sports">Sports</button>
+                    <button class="ttt-theme-btn" data-theme="faces">Faces</button>
+                    <button class="ttt-theme-btn" data-theme="shapes">Shapes</button>
+                </div>
+            </div>
+
+            <div class="ttt-scores">
+                <div class="ttt-player-score ttt-player-active" id="player1Score">
+                    <div class="ttt-name">Player 1</div>
+                    <div class="ttt-symbol" id="player1Symbol">🐱</div>
+                    <div class="ttt-score" id="p1ScoreText">0 wins</div>
+                </div>
+                <div class="ttt-player-score" id="player2Score">
+                    <div class="ttt-name">Player 2</div>
+                    <div class="ttt-symbol" id="player2Symbol">🐶</div>
+                    <div class="ttt-score" id="p2ScoreText">0 wins</div>
+                </div>
+            </div>
+
+            <div class="ttt-controls">
+                <button class="ttt-reset-btn" id="resetBtn">New Game</button>
+                <div class="ttt-sound-toggle">
+                    <input type="checkbox" id="soundToggle" />
+                    <label for="soundToggle">Sound</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="ttt-game-board">
+            <div class="ttt-cell" data-index="0"></div>
+            <div class="ttt-cell" data-index="1"></div>
+            <div class="ttt-cell" data-index="2"></div>
+            <div class="ttt-cell" data-index="3"></div>
+            <div class="ttt-cell" data-index="4"></div>
+            <div class="ttt-cell" data-index="5"></div>
+            <div class="ttt-cell" data-index="6"></div>
+            <div class="ttt-cell" data-index="7"></div>
+            <div class="ttt-cell" data-index="8"></div>
+        </div>
+
+        <div class="ttt-message" id="message">Click a player to choose who goes first</div>
+    </div>
+</div>
+
+<script>
+    // Game state
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let currentPlayer = 0;
+    let gameActive = true;
+    let scores = [0, 0];
+    let currentTheme = "animals";
+    let firstMoveMade = false;
+
+    // DOM elements
+    const cells = document.querySelectorAll(".ttt-cell");
+    const message = document.getElementById("message");
+    const resetBtn = document.getElementById("resetBtn");
+    const soundToggle = document.getElementById("soundToggle");
+    const player1Score = document.getElementById("player1Score");
+    const player2Score = document.getElementById("player2Score");
+    const player1Symbol = document.getElementById("player1Symbol");
+    const player2Symbol = document.getElementById("player2Symbol");
+    const p1ScoreDisplay = document.getElementById("p1ScoreText");
+    const p2ScoreDisplay = document.getElementById("p2ScoreText");
+    const themeButtons = document.querySelectorAll(".ttt-theme-btn");
+
+    // Audio context
+    let audioContext = null;
+
+    // Themes
+    const themes = {
+        animals: ["🐱", "🐶"],
+        food: ["🍕", "🍔"],
+        sports: ["⚽", "🏀"],
+        faces: ["😊", "😎"],
+        shapes: ["⭐", "💜"],
+    };
+
+    // Winning patterns
+    const winPatterns = [
+        [0, 1, 2], // Rows
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6], // Columns
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8], // Diagonals
+        [2, 4, 6],
+    ];
+
+    // Initialize audio
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    // Play sound
+    function playSound(frequency, duration = 100) {
+        if (!soundToggle.checked || !audioContext) return;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = "sine";
+
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + duration / 1000
+        );
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration / 1000);
+    }
+
+    // Update symbol displays
+    function updateSymbols() {
+        const symbols = themes[currentTheme];
+        player1Symbol.textContent = symbols[0];
+        player2Symbol.textContent = symbols[1];
+    }
+
+    // Handle theme change
+    function changeTheme(theme) {
+        currentTheme = theme;
+        updateSymbols();
+
+        // Update active theme button
+        themeButtons.forEach((btn) => {
+            if (btn.dataset.theme === theme) {
+                btn.classList.add("ttt-active");
+            } else {
+                btn.classList.remove("ttt-active");
+            }
+        });
+
+        // Update board with new symbols
+        cells.forEach((cell, index) => {
+            if (board[index] !== "") {
+                const playerIndex = board[index];
+                cell.textContent = themes[currentTheme][playerIndex];
+            }
+        });
+    }
+
+    // Enable player selection
+    function enablePlayerSelection() {
+        player1Score.classList.add("ttt-clickable");
+        player2Score.classList.add("ttt-clickable");
+    }
+
+    // Disable player selection
+    function disablePlayerSelection() {
+        player1Score.classList.remove("ttt-clickable");
+        player2Score.classList.remove("ttt-clickable");
+    }
+
+    // Handle player card click (to choose who goes first)
+    function handlePlayerClick(playerIndex) {
+        if (firstMoveMade || !gameActive) return;
+
+        currentPlayer = playerIndex;
+        updateTurnDisplay();
+        playSound(440.0, 80);
+    }
+
+    // Handle cell click
+    function handleCellClick(event) {
+        const index = parseInt(event.target.dataset.index);
+
+        if (board[index] !== "" || !gameActive) return;
+
+        // Lock player selection after first move
+        if (!firstMoveMade) {
+            firstMoveMade = true;
+            disablePlayerSelection();
+        }
+
+        // Place symbol
+        board[index] = currentPlayer;
+        const symbols = themes[currentTheme];
+        event.target.textContent = symbols[currentPlayer];
+        event.target.classList.add("ttt-taken");
+
+        // Play sound
+        initAudio();
+        playSound(currentPlayer === 0 ? 523.25 : 659.25, 100);
+
+        // Check for winner
+        const winner = checkWinner();
+        if (winner !== null) {
+            handleWin(winner);
+            return;
+        }
+
+        // Check for draw
+        if (board.every((cell) => cell !== "")) {
+            handleDraw();
+            return;
+        }
+
+        // Switch player
+        currentPlayer = currentPlayer === 0 ? 1 : 0;
+        updateTurnDisplay();
+    }
+
+    // Check for winner
+    function checkWinner() {
+        for (let pattern of winPatterns) {
+            const [a, b, c] = pattern;
+            if (
+                board[a] !== "" &&
+                board[a] === board[b] &&
+                board[a] === board[c]
+            ) {
+                return { player: board[a], pattern: pattern };
+            }
+        }
+        return null;
+    }
+
+    // Handle win
+    function handleWin(winner) {
+        gameActive = false;
+        disablePlayerSelection();
+
+        const playerNum = winner.player + 1;
+        const symbols = themes[currentTheme];
+        message.textContent = `Player ${playerNum} wins! ${symbols[winner.player]}`;
+        message.className = "ttt-message ttt-winner";
+
+        // Highlight winning cells
+        winner.pattern.forEach((index) => {
+            cells[index].classList.add("ttt-winning");
+        });
+
+        // Update score
+        scores[winner.player]++;
+        const score = scores[winner.player];
+        const scoreText = `${score} ${score === 1 ? "win" : "wins"}`;
+
+        if (winner.player === 0) {
+            p1ScoreDisplay.textContent = scoreText;
+        } else {
+            p2ScoreDisplay.textContent = scoreText;
+        }
+
+        // Play win sound
+        playSound(783.99, 200);
+        setTimeout(() => playSound(880.0, 200), 150);
+        setTimeout(() => playSound(987.77, 300), 300);
+    }
+
+    // Handle draw
+    function handleDraw() {
+        gameActive = false;
+        disablePlayerSelection();
+
+        message.textContent = "It's a draw!";
+        message.className = "ttt-message ttt-draw";
+        playSound(392.0, 300);
+    }
+
+    // Update turn display
+    function updateTurnDisplay() {
+        const symbols = themes[currentTheme];
+
+        if (!firstMoveMade) {
+            message.textContent = `Player ${currentPlayer + 1} selected - Click board to start`;
+        } else {
+            message.textContent = `Player ${currentPlayer + 1}'s turn ${symbols[currentPlayer]}`;
+        }
+        message.className = "ttt-message";
+
+        // Update active player highlight
+        if (currentPlayer === 0) {
+            player1Score.classList.add("ttt-player-active");
+            player2Score.classList.remove("ttt-player-active");
+        } else {
+            player2Score.classList.add("ttt-player-active");
+            player1Score.classList.remove("ttt-player-active");
+        }
+    }
+
+    // Reset game
+    function resetGame() {
+        board = ["", "", "", "", "", "", "", "", ""];
+        currentPlayer = 0;
+        gameActive = true;
+        firstMoveMade = false;
+
+        cells.forEach((cell) => {
+            cell.textContent = "";
+            cell.classList.remove("ttt-taken", "ttt-winning");
+        });
+
+        enablePlayerSelection();
+
+        // Show initial message
+        message.textContent = "Click a player to choose who goes first";
+        message.className = "ttt-message";
+
+        // Reset active player display
+        player1Score.classList.add("ttt-player-active");
+        player2Score.classList.remove("ttt-player-active");
+
+        playSound(440.0, 100);
+    }
+
+    // Event listeners
+    cells.forEach((cell) => {
+        cell.addEventListener("click", handleCellClick);
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+
+    player1Score.addEventListener("click", () => handlePlayerClick(0));
+    player2Score.addEventListener("click", () => handlePlayerClick(1));
+
+    themeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            changeTheme(btn.dataset.theme);
+        });
+    });
+
+    soundToggle.addEventListener("change", () => {
+        if (soundToggle.checked) {
+            initAudio();
+            playSound(440.0, 100);
+        }
+    });
+
+    // Initialize
+    updateSymbols();
+    enablePlayerSelection();
+
+    // Set initial active player display
+    player1Score.classList.add("ttt-player-active");
+    player2Score.classList.remove("ttt-player-active");
+</script>
+
+{% endblock %}
+

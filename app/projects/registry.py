@@ -38,7 +38,7 @@ PROJECTS = [
     {
         'id': 'simple_games',
         'name': 'Simple Games',
-        'description': 'Classic memory and logic games - Mastermind and Simon Says',
+        'description': 'Classic memory and logic games - Mastermind, Simon Says, and more!',
         'url': '/games',
         'auth_required': False,
         'status': 'active',
@@ -67,6 +67,28 @@ PROJECTS = [
         'type': 'project',
         'parent': 'simple_games',
         'order': 302
+    },
+    {
+        'id': 'tic_tac_toe',
+        'name': 'Tic-Tac-Toe',
+        'description': 'Classic two-player game with fun emoji themes',
+        'url': '/tic-tac-toe',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'simple_games',
+        'order': 303
+    },
+    {
+        'id': 'connect4',
+        'name': 'Connect 4',
+        'description': 'Drop discs to connect four in a row - with doom detection!',
+        'url': '/connect4',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'simple_games',
+        'order': 304
     },
     {
         'id': 'gm_84_plus',
