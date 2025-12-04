@@ -102,6 +102,39 @@ PROJECTS = [
         'order': 305
     },
     {
+        'id': 'spanish_vocab_invaders',
+        'name': 'Spanish Vocab Invaders',
+        'description': 'Space Invaders meets language learning - shoot the correct translations!',
+        'url': '/spanish-vocab-invaders',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'simple_games',
+        'order': 306
+    },
+    {
+        'id': 'game_night_tools',
+        'name': 'Game Night Tools',
+        'description': 'Helpful utilities for playing board games and card games IRL',
+        'url': '/game-night-tools',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'category',
+        'icon': '🎲',
+        'order': 6
+    },
+    {
+        'id': 'sorry_cards',
+        'name': 'Sorry! Cards',
+        'description': 'Digital card deck simulator for the Sorry! board game',
+        'url': '/sorry-cards',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'game_night_tools',
+        'order': 601
+    },
+    {
         'id': 'gm_84_plus',
         'name': 'GM-84 Plus',
         'description': 'Advanced graphing calculator - plot equations, zoom, animate, and explore!',

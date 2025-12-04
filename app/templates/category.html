@@ -12,22 +12,22 @@
     </div>
     
     <div class="projects-grid">
-        {% for game in games %}
-            {% if game.auth_required and not current_user.is_authenticated %}
+        {% for item in items %}
+            {% if item.auth_required and not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.login') }}" class="project-card project-card-login-required">
-                    <h3 class="project-title">{{ game.name }}</h3>
-                    <p class="project-description">{{ game.description }}</p>
+                    <h3 class="project-title">{{ item.name }}</h3>
+                    <p class="project-description">{{ item.description }}</p>
                     <span class="project-status project-status-login">🔒 Login Required</span>
                 </a>
-            {% elif game.available %}
-                <a href="{{ game.url }}" class="project-card project-card-clickable" {% if game.get('type') == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}>
-                    <h3 class="project-title">{{ game.name }}{% if game.get('type') == 'external' %} ↗{% endif %}</h3>
-                    <p class="project-description">{{ game.description }}</p>
+            {% elif item.available %}
+                <a href="{{ item.url }}" class="project-card project-card-clickable" {% if item.get('type') == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                    <h3 class="project-title">{{ item.name }}{% if item.get('type') == 'external' %} ↗{% endif %}</h3>
+                    <p class="project-description">{{ item.description }}</p>
                 </a>
             {% else %}
                 <div class="project-card project-card-disabled">
-                    <h3 class="project-title">{{ game.name }}</h3>
-                    <p class="project-description">{{ game.description }}</p>
+                    <h3 class="project-title">{{ item.name }}</h3>
+                    <p class="project-description">{{ item.description }}</p>
                     <span class="project-status project-status-coming-soon">Coming Soon</span>
                 </div>
             {% endif %}

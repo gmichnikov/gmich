@@ -17,9 +17,19 @@ def games():
     category = get_project_by_id('simple_games')
     
     # Get all child projects
-    games = get_children_of_category('simple_games', current_user.is_authenticated)
+    items = get_children_of_category('simple_games', current_user.is_authenticated)
     
-    return render_template('games.html', category=category, games=games)
+    return render_template('category.html', category=category, items=items)
+
+@main_bp.route('/game-night-tools')
+def game_night_tools():
+    # Get the Game Night Tools category info
+    category = get_project_by_id('game_night_tools')
+    
+    # Get all child projects
+    items = get_children_of_category('game_night_tools', current_user.is_authenticated)
+    
+    return render_template('category.html', category=category, items=items)
 
 @main_bp.errorhandler(404)
 def page_not_found(e):

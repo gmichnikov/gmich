@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+
+{% block title %}Spanish Vocab Invaders{% endblock %}
+
+{% block content %}
+
+<style>
+    .svi-wrapper {
+        position: relative;
+        width: 100%;
+        min-height: calc(100vh - 70px - 60px);
+        margin: -20px;
+        background-color: #000;
+        color: white;
+        font-family: 'Arial', sans-serif;
+        overflow: hidden;
+    }
+
+    .svi-game-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 70px - 60px);
+        background-color: black;
+    }
+
+    .svi-player {
+        position: absolute;
+        width: 60px;
+        height: 35px;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #00FF00;
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: left 0.05s linear;
+    }
+
+    .svi-invader {
+        position: absolute;
+        width: 100px;
+        height: 35px;
+        background-color: rgba(255, 0, 0, 0.7);
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-weight: bold;
+        color: white;
+        font-size: 14px;
+    }
+
+    @keyframes sviPulse {
+        0% { transform: scale(1); background-color: rgba(255, 0, 0, 0.7); }
+        50% { transform: scale(1.1); background-color: rgba(255, 0, 0, 0.9); }
+        100% { transform: scale(1); background-color: rgba(255, 0, 0, 0.7); }
+    }
+
+    .svi-correct-invader {
+        animation: sviPulse 1.5s infinite;
+    }
+
+    .svi-bullet {
+        position: absolute;
+        width: 5px;
+        height: 15px;
+        background-color: yellow;
+        border-radius: 2px;
+    }
+
+    .svi-english-word {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+    }
+
+    .svi-score {
+        position: absolute;
+        top: 80px;
+        left: 20px;
+        font-size: 20px;
+        color: white;
+    }
+
+    .svi-lives {
+        position: absolute;
+        top: 110px;
+        left: 20px;
+        font-size: 20px;
+        color: white;
+    }
+
+    .svi-start-screen, .svi-game-over-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .svi-game-over-screen {
+        display: none;
+    }
+
+    .svi-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #0066FF;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .svi-btn:hover {
+        background-color: #0044CC;
+    }
+
+    .svi-wrapper h1 {
+        color: #00AAFF;
+        font-size: 48px;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(0, 170, 255, 0.7);
+    }
+
+    .svi-wrapper p {
+        font-size: 18px;
+        max-width: 600px;
+        text-align: center;
+        margin-bottom: 20px;
+        line-height: 1.5;
+        color: white;
+    }
+
+    .svi-star {
+        position: absolute;
+        background-color: white;
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+    }
+
+    @media (max-width: 600px) {
+        .svi-wrapper h1 {
+            font-size: 32px;
+        }
+
+        .svi-wrapper p {
+            font-size: 14px;
+            padding: 0 20px;
+        }
+
+        .svi-english-word {
+            font-size: 20px;
+        }
+
+        .svi-invader {
+            width: 80px;
+            font-size: 12px;
+        }
+    }
+</style>
+
+<div class="svi-wrapper">
+    <div class="svi-game-container" id="sviGameContainer">
+        <div class="svi-english-word" id="sviEnglishWord">English Word</div>
+        <div class="svi-score" id="sviScore">Score: 0</div>
+        <div class="svi-lives" id="sviLives">Lives: 3</div>
+        <div class="svi-player" id="sviPlayer"></div>
+        
+        <div class="svi-start-screen" id="sviStartScreen">
+            <h1>🚀 Spanish Vocab Invaders</h1>
+            <p>Shoot the Spanish words that match the English word at the top!</p>
+            <p>Use LEFT and RIGHT arrow keys to move, SPACEBAR to shoot</p>
+            <button class="svi-btn" id="sviStartButton">Start Game</button>
+        </div>
+        
+        <div class="svi-game-over-screen" id="sviGameOverScreen">
+            <h1>Game Over</h1>
+            <p id="sviFinalScore">Your score: 0</p>
+            <button class="svi-btn" id="sviRestartButton">Play Again</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game elements
+    const gameContainer = document.getElementById('sviGameContainer');
+    const player = document.getElementById('sviPlayer');
+    const englishWordDisplay = document.getElementById('sviEnglishWord');
+    const scoreDisplay = document.getElementById('sviScore');
+    const livesDisplay = document.getElementById('sviLives');
+    const startScreen = document.getElementById('sviStartScreen');
+    const gameOverScreen = document.getElementById('sviGameOverScreen');
+    const startButton = document.getElementById('sviStartButton');
+    const restartButton = document.getElementById('sviRestartButton');
+    const finalScoreDisplay = document.getElementById('sviFinalScore');
+    
+    // Create starfield background
+    function createStarfield() {
+        const numStars = 100;
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'svi-star';
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.opacity = Math.random();
+            
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            gameContainer.appendChild(star);
+        }
+    }
+    
+    createStarfield();
+    
+    // Game variables
+    let playerPosition = 0;
+    let playerSpeed = 40;
+    let bullets = [];
+    let invaders = [];
+    let score = 0;
+    let lives = 3;
+    let gameRunning = false;
+    let currentEnglishWord = '';
+    let currentCorrectSpanishWord = '';
+    let gameWidth = 0;
+    let gameHeight = 0;
+    let recentlyUsedWords = [];
+    let wordFrequencyCounter = {};
+    let correctAnswerTimer = null;
+    
+    // Vocabulary pairs (English -> Spanish)
+    const vocabularyPairs = [
+        { english: "Hello", spanish: "Hola" },
+        { english: "Goodbye", spanish: "Adiós" },
+        { english: "Thank you", spanish: "Gracias" },
+        { english: "Please", spanish: "Por favor" },
+        { english: "Yes", spanish: "Sí" },
+        { english: "No", spanish: "No" },
+        { english: "Water", spanish: "Agua" },
+        { english: "Food", spanish: "Comida" },
+        { english: "Friend", spanish: "Amigo" },
+        { english: "Family", spanish: "Familia" },
+        { english: "House", spanish: "Casa" },
+        { english: "Car", spanish: "Coche" },
+        { english: "Book", spanish: "Libro" },
+        { english: "School", spanish: "Escuela" },
+        { english: "Teacher", spanish: "Profesor" },
+        { english: "Student", spanish: "Estudiante" },
+        { english: "Dog", spanish: "Perro" },
+        { english: "Cat", spanish: "Gato" },
+        { english: "Time", spanish: "Tiempo" },
+        { english: "Day", spanish: "Día" },
+        { english: "Night", spanish: "Noche" },
+        { english: "Morning", spanish: "Mañana" },
+        { english: "Evening", spanish: "Tarde" },
+        { english: "Red", spanish: "Rojo" },
+        { english: "Blue", spanish: "Azul" },
+        { english: "Green", spanish: "Verde" },
+        { english: "Yellow", spanish: "Amarillo" },
+        { english: "Big", spanish: "Grande" },
+        { english: "Small", spanish: "Pequeño" },
+        { english: "Hot", spanish: "Caliente" },
+        { english: "Cold", spanish: "Frío" }
+    ];
+
+    // Initialize game
+    function init() {
+        gameWidth = gameContainer.clientWidth;
+        gameHeight = gameContainer.clientHeight;
+        playerPosition = gameWidth / 2;
+        player.style.left = `${playerPosition}px`;
+        score = 0;
+        lives = 3;
+        bullets = [];
+        invaders = [];
+        updateScore();
+        updateLives();
+        
+        selectNewEnglishWord();
+    }
+    
+    // Start game
+    function startGame() {
+        init();
+        gameRunning = true;
+        startScreen.style.display = 'none';
+        gameOverScreen.style.display = 'none';
+        
+        gameLoop();
+        invaderCreationLoop();
+    }
+    
+    // Select a new English word for the player to match
+    function selectNewEnglishWord() {
+        if (correctAnswerTimer) {
+            clearTimeout(correctAnswerTimer);
+            correctAnswerTimer = null;
+        }
+        
+        // Filter out recently used words
+        let availablePairs = vocabularyPairs.filter(pair => 
+            !recentlyUsedWords.includes(pair.english)
+        );
+        
+        if (availablePairs.length === 0) {
+            recentlyUsedWords = [];
+            availablePairs = vocabularyPairs;
+        }
+        
+        // Sort by frequency (least used first)
+        availablePairs.sort((a, b) => {
+            const freqA = wordFrequencyCounter[a.english] || 0;
+            const freqB = wordFrequencyCounter[b.english] || 0;
+            return freqA - freqB;
+        });
+        
+        // Take from the least used words
+        const leastUsedGroup = availablePairs.slice(0, Math.ceil(availablePairs.length / 3));
+        const selectedPair = leastUsedGroup[Math.floor(Math.random() * leastUsedGroup.length)];
+        
+        currentEnglishWord = selectedPair.english;
+        currentCorrectSpanishWord = selectedPair.spanish;
+        
+        recentlyUsedWords.push(currentEnglishWord);
+        if (recentlyUsedWords.length > 5) {
+            recentlyUsedWords.shift();
+        }
+        
+        wordFrequencyCounter[currentEnglishWord] = (wordFrequencyCounter[currentEnglishWord] || 0) + 1;
+        
+        englishWordDisplay.textContent = `Translate: "${currentEnglishWord}"`;
+        
+        // Remove any existing correct invaders
+        for (let i = invaders.length - 1; i >= 0; i--) {
+            if (invaders[i].isCorrect) {
+                gameContainer.removeChild(invaders[i].element);
+                invaders.splice(i, 1);
+            }
+        }
+        
+        // Create a new correct invader after a short delay
+        setTimeout(() => {
+            if (gameRunning) {
+                createCorrectInvader();
+            }
+        }, 500);
+    }
+    
+    // Get a random position for an invader
+    function getRandomInvaderPosition() {
+        const x = Math.random() * (gameWidth - 100);
+        const y = -35;
+        return { x, y };
+    }
+    
+    // Create a regular (wrong answer) invader
+    function createInvader() {
+        if (!gameRunning) return;
+        
+        // Get a random wrong answer (not the current correct one)
+        let wrongAnswers = vocabularyPairs
+            .filter(pair => pair.spanish !== currentCorrectSpanishWord)
+            .map(pair => pair.spanish);
+        
+        const wrongAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
+        
+        const position = getRandomInvaderPosition();
+        
+        const invader = document.createElement('div');
+        invader.className = 'svi-invader';
+        invader.textContent = wrongAnswer;
+        invader.style.left = `${position.x}px`;
+        invader.style.top = `${position.y}px`;
+        
+        const invaderData = {
+            element: invader,
+            x: position.x,
+            y: position.y,
+            width: 100,
+            height: 35,
+            word: wrongAnswer,
+            isCorrect: false,
+            speed: 1 + Math.random() * 1.5
+        };
+        
+        invaders.push(invaderData);
+        gameContainer.appendChild(invader);
+    }
+    
+    // Create the correct answer invader
+    function createCorrectInvader() {
+        if (!gameRunning) return;
+        
+        // Check if a correct invader already exists
+        if (invaders.some(inv => inv.isCorrect)) return;
+        
+        const position = getRandomInvaderPosition();
+        
+        const invader = document.createElement('div');
+        invader.className = 'svi-invader svi-correct-invader';
+        invader.textContent = currentCorrectSpanishWord;
+        invader.style.left = `${position.x}px`;
+        invader.style.top = `${position.y}px`;
+        
+        const invaderData = {
+            element: invader,
+            x: position.x,
+            y: position.y,
+            width: 100,
+            height: 35,
+            word: currentCorrectSpanishWord,
+            isCorrect: true,
+            speed: 1.3
+        };
+        
+        invaders.push(invaderData);
+        gameContainer.appendChild(invader);
+        
+        if (correctAnswerTimer) {
+            clearTimeout(correctAnswerTimer);
+            correctAnswerTimer = null;
+        }
+    }
+    
+    // Create bullet
+    function createBullet() {
+        if (!gameRunning) return;
+        
+        const bullet = document.createElement('div');
+        bullet.className = 'svi-bullet';
+        
+        const bulletX = playerPosition + 27.5;
+        const bulletY = gameHeight - 55;
+        
+        bullet.style.left = `${bulletX}px`;
+        bullet.style.top = `${bulletY}px`;
+        
+        const bulletData = {
+            element: bullet,
+            x: bulletX,
+            y: bulletY,
+            width: 5,
+            height: 15,
+            speed: 10
+        };
+        
+        bullets.push(bulletData);
+        gameContainer.appendChild(bullet);
+    }
+    
+    // Update game state
+    function update() {
+        // Update bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const bullet = bullets[i];
+            bullet.y -= bullet.speed;
+            bullet.element.style.top = `${bullet.y}px`;
+            
+            if (bullet.y < 0) {
+                gameContainer.removeChild(bullet.element);
+                bullets.splice(i, 1);
+                continue;
+            }
+            
+            // Check for collision with invaders
+            for (let j = invaders.length - 1; j >= 0; j--) {
+                const invader = invaders[j];
+                
+                if (checkCollision(bullet, invader)) {
+                    gameContainer.removeChild(bullet.element);
+                    bullets.splice(i, 1);
+                    
+                    if (invader.isCorrect) {
+                        score += 100;
+                        updateScore();
+                        gameContainer.removeChild(invader.element);
+                        invaders.splice(j, 1);
+                        selectNewEnglishWord();
+                    } else {
+                        lives--;
+                        updateLives();
+                        gameContainer.removeChild(invader.element);
+                        invaders.splice(j, 1);
+                        
+                        if (lives <= 0) {
+                            endGame();
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+        }
+        
+        // Update invaders
+        for (let i = invaders.length - 1; i >= 0; i--) {
+            const invader = invaders[i];
+            invader.y += invader.speed;
+            invader.element.style.top = `${invader.y}px`;
+            
+            if (invader.y > gameHeight) {
+                gameContainer.removeChild(invader.element);
+                invaders.splice(i, 1);
+                
+                if (invader.isCorrect) {
+                    lives--;
+                    updateLives();
+                    
+                    if (lives <= 0) {
+                        endGame();
+                    } else {
+                        selectNewEnglishWord();
+                    }
+                }
+            }
+        }
+        
+        // Ensure there's always a correct answer coming
+        const correctExists = invaders.some(inv => inv.isCorrect);
+        if (!correctExists && gameRunning) {
+            if (!correctAnswerTimer) {
+                correctAnswerTimer = setTimeout(() => {
+                    if (gameRunning && !invaders.some(inv => inv.isCorrect)) {
+                        createCorrectInvader();
+                    }
+                    correctAnswerTimer = null;
+                }, 2000);
+            }
+        } else if (correctAnswerTimer) {
+            clearTimeout(correctAnswerTimer);
+            correctAnswerTimer = null;
+        }
+    }
+    
+    // Check collision between two objects
+    function checkCollision(obj1, obj2) {
+        return (
+            obj1.x < obj2.x + obj2.width &&
+            obj1.x + obj1.width > obj2.x &&
+            obj1.y < obj2.y + obj2.height &&
+            obj1.y + obj1.height > obj2.y
+        );
+    }
+    
+    // Update score display
+    function updateScore() {
+        scoreDisplay.textContent = `Score: ${score}`;
+    }
+    
+    // Update lives display
+    function updateLives() {
+        livesDisplay.textContent = `Lives: ${lives}`;
+    }
+    
+    // Game over
+    function endGame() {
+        gameRunning = false;
+        
+        if (correctAnswerTimer) {
+            clearTimeout(correctAnswerTimer);
+            correctAnswerTimer = null;
+        }
+        
+        bullets.forEach(bullet => gameContainer.removeChild(bullet.element));
+        invaders.forEach(invader => gameContainer.removeChild(invader.element));
+        
+        bullets = [];
+        invaders = [];
+        
+        finalScoreDisplay.textContent = `Your score: ${score}`;
+        gameOverScreen.style.display = 'flex';
+    }
+    
+    // Main game loop
+    function gameLoop() {
+        if (gameRunning) {
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+    }
+    
+    // Loop for creating invaders
+    function invaderCreationLoop() {
+        if (gameRunning) {
+            createInvader();
+            
+            const correctExists = invaders.some(inv => inv.isCorrect);
+            if (!correctExists) {
+                createCorrectInvader();
+            }
+            
+            let invaderDelay = 2000 - Math.min(1500, score / 10);
+            if (invaderDelay < 750) invaderDelay = 750;
+            
+            setTimeout(invaderCreationLoop, invaderDelay);
+        }
+    }
+    
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+        if (!gameRunning) return;
+        
+        switch (e.key) {
+            case 'ArrowLeft':
+                playerPosition = Math.max(0, playerPosition - playerSpeed);
+                player.style.left = `${playerPosition}px`;
+                break;
+                
+            case 'ArrowRight':
+                playerPosition = Math.min(gameWidth - 60, playerPosition + playerSpeed);
+                player.style.left = `${playerPosition}px`;
+                break;
+                
+            case ' ':
+                createBullet();
+                e.preventDefault();
+                break;
+        }
+    });
+    
+    // Resize handling
+    window.addEventListener('resize', () => {
+        gameWidth = gameContainer.clientWidth;
+        gameHeight = gameContainer.clientHeight;
+        playerPosition = Math.min(gameWidth - 60, playerPosition);
+        player.style.left = `${playerPosition}px`;
+    });
+    
+    // Event listeners
+    startButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', startGame);
+</script>
+
+{% endblock %}
+
