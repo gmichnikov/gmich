@@ -250,6 +250,43 @@ body {
   color: #856404;
 }
 
+.project-category-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* ===== Category Page Header ===== */
+.category-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.back-link {
+  display: inline-block;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: color 0.3s;
+}
+
+.back-link:hover {
+  color: #764ba2;
+}
+
+.category-description {
+  color: #666;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 /* ===== Login Prompt ===== */
 .login-prompt {
   display: flex;

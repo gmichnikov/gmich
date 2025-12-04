@@ -15,9 +15,14 @@
                         <span class="project-status project-status-login">🔒 Login Required</span>
                     </a>
                 {% elif project.available %}
-                    <a href="{{ project.url }}" class="project-card project-card-clickable" {% if project.get('external') %}target="_blank" rel="noopener noreferrer"{% endif %}>
-                        <h3 class="project-title">{{ project.name }}{% if project.get('external') %} ↗{% endif %}</h3>
+                    <a href="{{ project.url }}" class="project-card project-card-clickable" {% if project.get('type') == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                        <h3 class="project-title">
+                            {% if project.get('icon') %}{{ project.icon }} {% endif %}{{ project.name }}{% if project.get('type') == 'external' %} ↗{% endif %}
+                        </h3>
                         <p class="project-description">{{ project.description }}</p>
+                        {% if project.get('type') == 'category' %}
+                            <span class="project-category-badge">Collection →</span>
+                        {% endif %}
                     </a>
                 {% else %}
                     <div class="project-card project-card-disabled">

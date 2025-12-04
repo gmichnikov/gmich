@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+
+<section class="projects-section">
+    <div class="category-header">
+        <a href="{{ url_for('main.index') }}" class="back-link">← Back to Projects</a>
+        <h2 class="section-title">{{ category.icon }} {{ category.name }}</h2>
+        <p class="category-description">{{ category.description }}</p>
+    </div>
+    
+    <div class="projects-grid">
+        {% for game in games %}
+            {% if game.auth_required and not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login') }}" class="project-card project-card-login-required">
+                    <h3 class="project-title">{{ game.name }}</h3>
+                    <p class="project-description">{{ game.description }}</p>
+                    <span class="project-status project-status-login">🔒 Login Required</span>
+                </a>
+            {% elif game.available %}
+                <a href="{{ game.url }}" class="project-card project-card-clickable" {% if game.get('type') == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                    <h3 class="project-title">{{ game.name }}{% if game.get('type') == 'external' %} ↗{% endif %}</h3>
+                    <p class="project-description">{{ game.description }}</p>
+                </a>
+            {% else %}
+                <div class="project-card project-card-disabled">
+                    <h3 class="project-title">{{ game.name }}</h3>
+                    <p class="project-description">{{ game.description }}</p>
+                    <span class="project-status project-status-coming-soon">Coming Soon</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
+
