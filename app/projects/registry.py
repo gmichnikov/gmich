@@ -91,6 +91,17 @@ PROJECTS = [
         'order': 304
     },
     {
+        'id': 'algebra_snake',
+        'name': 'Algebra Snake',
+        'description': 'Classic snake game meets math - eat the correct answers to grow!',
+        'url': '/algebra-snake',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'simple_games',
+        'order': 305
+    },
+    {
         'id': 'gm_84_plus',
         'name': 'GM-84 Plus',
         'description': 'Advanced graphing calculator - plot equations, zoom, animate, and explore!',
