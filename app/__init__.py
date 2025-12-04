@@ -35,8 +35,6 @@ def create_app():
     from app.routes.main import main_bp
     from app.core.auth import auth_bp
     from app.core.admin import admin_bp
-    from app.projects.todo.routes import todo_bp
-    from app.projects.calculator.routes import calculator_bp
     from app.projects.mastermind.routes import mastermind_bp
     from app.projects.simon_says.routes import simon_says_bp
     from app.projects.tic_tac_toe.routes import tic_tac_toe_bp
@@ -49,8 +47,6 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(todo_bp, url_prefix='/todo')
-    app.register_blueprint(calculator_bp, url_prefix='/calculator')
     app.register_blueprint(mastermind_bp, url_prefix='/mastermind')
     app.register_blueprint(simon_says_bp, url_prefix='/simon-says')
     app.register_blueprint(tic_tac_toe_bp, url_prefix='/tic-tac-toe')
@@ -62,7 +58,6 @@ def create_app():
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
-    from app.projects.todo.models import TodoItem
     from app.projects.chatbot.models import ChatMessage
     
     # User loader for Flask-Login

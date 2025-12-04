@@ -16,26 +16,6 @@ For projects that belong to a category, add 'parent' field with category ID.
 
 PROJECTS = [
     {
-        'id': 'todo',
-        'name': 'Todo App',
-        'description': 'A simple and elegant todo list application to manage your tasks',
-        'url': '/todo',
-        'auth_required': True,
-        'status': 'active',
-        'type': 'project',
-        'order': 5
-    },
-    {
-        'id': 'calculator',
-        'name': 'Calculator',
-        'description': 'Pure JavaScript calculator with basic arithmetic operations',
-        'url': '/calculator',
-        'auth_required': False,
-        'status': 'active',
-        'type': 'project',
-        'order': 6
-    },
-    {
         'id': 'simple_games',
         'name': 'Simple Games',
         'description': 'Basic versions of some classic games',

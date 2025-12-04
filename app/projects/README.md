@@ -7,18 +7,16 @@ This directory contains all the projects hosted on my site.
 ```
 projects/
 ├── registry.py           # Centralized project configuration
-├── todo/                 # Example: Full-stack app with auth & database
+├── chatbot/              # Example: Full-stack app with auth & database
 │   ├── __init__.py
 │   ├── routes.py
 │   ├── models.py
-│   ├── forms.py
 │   ├── templates/
 │   └── static/
-└── calculator/           # Example: Pure JavaScript static app
+└── mastermind/           # Example: Pure JavaScript static app
     ├── __init__.py
     ├── routes.py
-    ├── templates/
-    └── static/
+    └── templates/
 ```
 
 ## Adding a New Project
@@ -84,19 +82,19 @@ In `app/projects/registry.py`, add your project to the `PROJECTS` list:
 
 ## Project Types
 
-### Full-Stack Projects (like Todo)
+### Full-Stack Projects (like Chatbot)
 
 - Use database models (`models.py`)
-- Use Flask forms (`forms.py`)
-- Require authentication
-- Server-side logic
+- Use Flask forms if needed
+- May require authentication
+- Server-side logic with API integration
 
-### Static JavaScript Projects (like Calculator)
+### Static JavaScript Projects (like Mastermind)
 
-- No backend logic needed
-- Pure client-side JavaScript
+- Minimal backend logic needed
+- Client-side JavaScript game logic
 - Can be public (no auth required)
-- Flask just serves the files
+- Flask serves the HTML template
 
 ## Registry Configuration
 
@@ -138,8 +136,8 @@ from app.projects.registry import (
 
 See existing projects:
 
-- **Todo App** - Full-stack with auth, database, forms
-- **Calculator** - Pure JavaScript, no auth, static files
+- **Chatbot** - Full-stack with auth, database, OpenAI API integration
+- **Mastermind** - Pure JavaScript game, no auth, static gameplay
 
 ## Questions?
 

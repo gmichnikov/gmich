@@ -1,141 +1,156 @@
-{% extends 'base.html' %}
-
-{% block title %}Log Entries{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% block title %}Log Entries{% endblock %} {% block
+content %}
 
 <div class="admin-logs-container">
-    <div class="admin-logs-header">
-        <h1 class="admin-logs-title">📋 Activity Logs</h1>
-        <p class="admin-logs-subtitle">View all system activity and user actions</p>
+  <div class="admin-logs-header">
+    <h1 class="admin-logs-title">📋 Activity Logs</h1>
+    <p class="admin-logs-subtitle">View all system activity and user actions</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="logs-filters">
+    <div class="filter-group">
+      <label for="projectFilter" class="filter-label">Project:</label>
+      <select id="projectFilter" class="filter-select">
+        <option value="">All Projects</option>
+        <option value="auth">Auth</option>
+        <option value="admin">Admin</option>
+        <option value="chatbot">Chatbot</option>
+        <option value="mastermind">Mastermind</option>
+        <option value="simon_says">Simon Says</option>
+        <option value="tic_tac_toe">Tic-Tac-Toe</option>
+        <option value="connect4">Connect 4</option>
+        <option value="algebra_snake">Algebra Snake</option>
+        <option value="spanish_vocab_invaders">Spanish Vocab Invaders</option>
+        <option value="sorry_cards">Sorry Cards</option>
+      </select>
     </div>
 
-    <!-- Filters -->
-    <div class="logs-filters">
-        <div class="filter-group">
-            <label for="projectFilter" class="filter-label">Project:</label>
-            <select id="projectFilter" class="filter-select">
-                <option value="">All Projects</option>
-                <option value="auth">Auth</option>
-                <option value="admin">Admin</option>
-                <option value="todo">Todo</option>
-                <option value="mastermind">Mastermind</option>
-                <option value="simon_says">Simon Says</option>
-                <option value="tic_tac_toe">Tic-Tac-Toe</option>
-                <option value="connect4">Connect 4</option>
-                <option value="algebra_snake">Algebra Snake</option>
-                <option value="spanish_vocab_invaders">Spanish Vocab Invaders</option>
-                <option value="sorry_cards">Sorry Cards</option>
-            </select>
-        </div>
-        
-        <div class="filter-group">
-            <label for="userFilter" class="filter-label">User:</label>
-            <select id="userFilter" class="filter-select">
-                <option value="">All Users</option>
-                {% set users = log_entries | map(attribute='actor.email') | unique | list %}
-                {% for user_email in users | sort %}
-                    {% if user_email %}
-                        <option value="{{ user_email }}">{{ user_email }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="filter-group filter-group-search">
-            <label for="searchFilter" class="filter-label">Search:</label>
-            <input type="text" id="searchFilter" class="filter-input" placeholder="Category or description...">
-        </div>
-        
-        <button id="resetFilters" class="filter-reset-btn">Reset</button>
+    <div class="filter-group">
+      <label for="userFilter" class="filter-label">User:</label>
+      <select id="userFilter" class="filter-select">
+        <option value="">All Users</option>
+        {% set users = log_entries | map(attribute='actor.email') | unique |
+        list %} {% for user_email in users | sort %} {% if user_email %}
+        <option value="{{ user_email }}">{{ user_email }}</option>
+        {% endif %} {% endfor %}
+      </select>
     </div>
 
-    <div class="admin-logs-table-wrapper">
-        <table class="table-logs">
-            <thead>
-                <tr>
-                    <th>Date + Time</th>
-                    <th>User</th>
-                    <th>Project</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in log_entries %}
-                <tr>
-                    <td class="log-timestamp">{{ log.formatted_timestamp }}</td>
-                    <td class="log-user">{{ log.actor.email if log.actor else 'N/A' }}</td>
-                    <td class="log-project">{{ log.project if log.project else '—' }}</td>
-                    <td class="log-category">{{ log.category }}</td>
-                    <td class="log-description">{{ log.description }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="filter-group filter-group-search">
+      <label for="searchFilter" class="filter-label">Search:</label>
+      <input
+        type="text"
+        id="searchFilter"
+        class="filter-input"
+        placeholder="Category or description..."
+      />
     </div>
 
-    <div class="admin-logs-footer">
-        <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
-    </div>
+    <button id="resetFilters" class="filter-reset-btn">Reset</button>
+  </div>
+
+  <div class="admin-logs-table-wrapper">
+    <table class="table-logs">
+      <thead>
+        <tr>
+          <th>Date + Time</th>
+          <th>User</th>
+          <th>Project</th>
+          <th>Category</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in log_entries %}
+        <tr>
+          <td class="log-timestamp">{{ log.formatted_timestamp }}</td>
+          <td class="log-user">
+            {{ log.actor.email if log.actor else 'N/A' }}
+          </td>
+          <td class="log-project">{{ log.project if log.project else '—' }}</td>
+          <td class="log-category">{{ log.category }}</td>
+          <td class="log-description">{{ log.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-logs-footer">
+    <p class="admin-footer-text">
+      <a href="{{ url_for('main.index') }}" class="admin-link"
+        >← Back to Home</a
+      >
+    </p>
+  </div>
 </div>
 
 <script>
-    // Get filter elements
-    const projectFilter = document.getElementById('projectFilter');
-    const userFilter = document.getElementById('userFilter');
-    const searchFilter = document.getElementById('searchFilter');
-    const resetBtn = document.getElementById('resetFilters');
-    const tableRows = document.querySelectorAll('.table-logs tbody tr');
+  // Get filter elements
+  const projectFilter = document.getElementById("projectFilter");
+  const userFilter = document.getElementById("userFilter");
+  const searchFilter = document.getElementById("searchFilter");
+  const resetBtn = document.getElementById("resetFilters");
+  const tableRows = document.querySelectorAll(".table-logs tbody tr");
 
-    // Filter function (AND logic)
-    function applyFilters() {
-        const projectValue = projectFilter.value.toLowerCase();
-        const userValue = userFilter.value.toLowerCase();
-        const searchValue = searchFilter.value.toLowerCase();
+  // Filter function (AND logic)
+  function applyFilters() {
+    const projectValue = projectFilter.value.toLowerCase();
+    const userValue = userFilter.value.toLowerCase();
+    const searchValue = searchFilter.value.toLowerCase();
 
-        let visibleCount = 0;
+    let visibleCount = 0;
 
-        tableRows.forEach(row => {
-            const project = row.querySelector('.log-project').textContent.toLowerCase();
-            const user = row.querySelector('.log-user').textContent.toLowerCase();
-            const category = row.querySelector('.log-category').textContent.toLowerCase();
-            const description = row.querySelector('.log-description').textContent.toLowerCase();
+    tableRows.forEach((row) => {
+      const project = row
+        .querySelector(".log-project")
+        .textContent.toLowerCase();
+      const user = row.querySelector(".log-user").textContent.toLowerCase();
+      const category = row
+        .querySelector(".log-category")
+        .textContent.toLowerCase();
+      const description = row
+        .querySelector(".log-description")
+        .textContent.toLowerCase();
 
-            // AND logic: all filters must pass
-            const projectMatch = !projectValue || project === projectValue;
-            const userMatch = !userValue || user === userValue;
-            const searchMatch = !searchValue || category.includes(searchValue) || description.includes(searchValue);
+      // AND logic: all filters must pass
+      const projectMatch = !projectValue || project === projectValue;
+      const userMatch = !userValue || user === userValue;
+      const searchMatch =
+        !searchValue ||
+        category.includes(searchValue) ||
+        description.includes(searchValue);
 
-            if (projectMatch && userMatch && searchMatch) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
+      if (projectMatch && userMatch && searchMatch) {
+        row.style.display = "";
+        visibleCount++;
+      } else {
+        row.style.display = "none";
+      }
+    });
 
-        // Update filter button text with count
-        if (visibleCount < tableRows.length) {
-            resetBtn.textContent = `Reset (${visibleCount} / ${tableRows.length})`;
-        } else {
-            resetBtn.textContent = 'Reset';
-        }
+    // Update filter button text with count
+    if (visibleCount < tableRows.length) {
+      resetBtn.textContent = `Reset (${visibleCount} / ${tableRows.length})`;
+    } else {
+      resetBtn.textContent = "Reset";
     }
+  }
 
-    // Reset function
-    function resetFilters() {
-        projectFilter.value = '';
-        userFilter.value = '';
-        searchFilter.value = '';
-        applyFilters();
-    }
+  // Reset function
+  function resetFilters() {
+    projectFilter.value = "";
+    userFilter.value = "";
+    searchFilter.value = "";
+    applyFilters();
+  }
 
-    // Add event listeners
-    projectFilter.addEventListener('change', applyFilters);
-    userFilter.addEventListener('change', applyFilters);
-    searchFilter.addEventListener('input', applyFilters);
-    resetBtn.addEventListener('click', resetFilters);
+  // Add event listeners
+  projectFilter.addEventListener("change", applyFilters);
+  userFilter.addEventListener("change", applyFilters);
+  searchFilter.addEventListener("input", applyFilters);
+  resetBtn.addEventListener("click", resetFilters);
 </script>
 
 {% endblock %}
