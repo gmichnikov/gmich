@@ -23,7 +23,7 @@ PROJECTS = [
         'auth_required': True,
         'status': 'active',
         'type': 'project',
-        'order': 1
+        'order': 5
     },
     {
         'id': 'calculator',
@@ -33,23 +33,23 @@ PROJECTS = [
         'auth_required': False,
         'status': 'active',
         'type': 'project',
-        'order': 2
+        'order': 6
     },
     {
         'id': 'simple_games',
         'name': 'Simple Games',
-        'description': 'Classic memory and logic games - Mastermind, Simon Says, and more!',
+        'description': 'Basic versions of some classic games',
         'url': '/games',
         'auth_required': False,
         'status': 'active',
         'type': 'category',
         'icon': '🎮',
-        'order': 3
+        'order': 2
     },
     {
         'id': 'mastermind',
         'name': 'Mastermind',
-        'description': 'Classic code-breaking game - crack the 4-color code in 10 guesses',
+        'description': 'Crack the 4-color code in 10 guesses',
         'url': '/mastermind',
         'auth_required': False,
         'status': 'active',
@@ -60,7 +60,7 @@ PROJECTS = [
     {
         'id': 'simon_says',
         'name': 'Simon Says',
-        'description': 'Test your memory with this classic color sequence game',
+        'description': 'Color sequence memory game',
         'url': '/simon-says',
         'auth_required': False,
         'status': 'active',
@@ -71,7 +71,7 @@ PROJECTS = [
     {
         'id': 'tic_tac_toe',
         'name': 'Tic-Tac-Toe',
-        'description': 'Classic two-player game with fun emoji themes',
+        'description': 'In addition to X/O, includes different emoji options',
         'url': '/tic-tac-toe',
         'auth_required': False,
         'status': 'active',
@@ -82,7 +82,7 @@ PROJECTS = [
     {
         'id': 'connect4',
         'name': 'Connect 4',
-        'description': 'Drop discs to connect four in a row - with doom detection!',
+        'description': 'Three in a row? Go for one more. Go for it...',
         'url': '/connect4',
         'auth_required': False,
         'status': 'active',
@@ -93,7 +93,7 @@ PROJECTS = [
     {
         'id': 'algebra_snake',
         'name': 'Algebra Snake',
-        'description': 'Classic snake game meets math - eat the correct answers to grow!',
+        'description': 'Eat the correct answers',
         'url': '/algebra-snake',
         'auth_required': False,
         'status': 'active',
@@ -104,7 +104,7 @@ PROJECTS = [
     {
         'id': 'spanish_vocab_invaders',
         'name': 'Spanish Vocab Invaders',
-        'description': 'Space Invaders meets language learning - shoot the correct translations!',
+        'description': 'Shoot the correct translations',
         'url': '/spanish-vocab-invaders',
         'auth_required': False,
         'status': 'active',
@@ -114,19 +114,19 @@ PROJECTS = [
     },
     {
         'id': 'game_night_tools',
-        'name': 'Game Night Tools',
-        'description': 'Helpful utilities for playing board games and card games IRL',
+        'name': 'Game Night Helpers',
+        'description': 'Helpful tools for playing board games and card games',
         'url': '/game-night-tools',
         'auth_required': False,
         'status': 'active',
         'type': 'category',
         'icon': '🎲',
-        'order': 6
+        'order': 3
     },
     {
         'id': 'sorry_cards',
         'name': 'Sorry! Cards',
-        'description': 'Digital card deck simulator for the Sorry! board game',
+        'description': 'Card deck simulator for the Sorry! board game',
         'url': '/sorry-cards',
         'auth_required': False,
         'status': 'active',
@@ -135,14 +135,26 @@ PROJECTS = [
         'order': 601
     },
     {
+        'id': 'coding_bootcamp',
+        'name': 'Coding Bootcamp',
+        'description': 'Things I made while I was at App Academy in 2016',
+        'url': '/coding-bootcamp',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'category',
+        'icon': '🎓',
+        'order': 4
+    },
+    {
         'id': 'gm_84_plus',
         'name': 'GM-84 Plus',
-        'description': 'Advanced graphing calculator - plot equations, zoom, animate, and explore!',
+        'description': 'Javascript implementation of a TI-83 Plus - plot equations, zoom, animate, and more',
         'url': 'https://gmichnikov.github.io/gm-84-plus/',
         'auth_required': False,
         'status': 'active',
         'type': 'external',
-        'order': 4
+        'parent': 'coding_bootcamp',
+        'order': 401
     },
     {
         'id': 'estimate_pi',
@@ -152,7 +164,8 @@ PROJECTS = [
         'auth_required': False,
         'status': 'active',
         'type': 'external',
-        'order': 5
+        'parent': 'coding_bootcamp',
+        'order': 402
     },
     {
         'id': 'chatbot',
@@ -162,7 +175,7 @@ PROJECTS = [
         'auth_required': True,
         'status': 'active',
         'type': 'project',
-        'order': 7
+        'order': 1
     }
 ]
 
