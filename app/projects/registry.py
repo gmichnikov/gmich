@@ -153,6 +153,16 @@ PROJECTS = [
         'status': 'active',
         'type': 'external',
         'order': 5
+    },
+    {
+        'id': 'chatbot',
+        'name': 'Greg-Bot',
+        'description': 'AI-powered chatbot that can answer questions about Greg',
+        'url': '/chatbot',
+        'auth_required': True,
+        'status': 'active',
+        'type': 'project',
+        'order': 7
     }
 ]
 

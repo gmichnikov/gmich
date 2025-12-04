@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}Chatbot{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('chatbot.static', filename='chatbot/chat.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-container">
+  <div class="chatbot-header">
+    <span class="chatbot-icon">📖</span>
+    <h1>Greg-Bot</h1>
+    <div class="chatbot-user-info">
+      <span>{{ current_user.email }}</span>
+      <a href="{{ url_for('main.index') }}" class="chatbot-nav-link">Home</a>
+      <a href="{{ url_for('auth.logout') }}" class="chatbot-nav-link">Logout</a>
+    </div>
+  </div>
+
+  <div class="chatbot-body">
+    <div class="chatbot-sidebar" id="chatSidebar">
+      <h3>Conversations</h3>
+      <div class="chatbot-conversation-list" id="conversationList">
+        <!-- Conversations will be loaded here -->
+        <div class="chatbot-empty-conversations">No conversations yet.</div>
+      </div>
+      <button id="newConversationBtn" class="chatbot-new-conversation-btn">
+        New Conversation
+      </button>
+    </div>
+
+    <div class="chatbot-main">
+      <div class="chatbot-spinner-container" id="loadingSpinner">
+        <div class="chatbot-spinner"></div>
+        <div class="chatbot-spinner"></div>
+        <div class="chatbot-spinner"></div>
+      </div>
+
+      <div class="chatbot-messages" id="chatMessages">
+        <div class="chatbot-empty-state" id="emptyState">
+          <p>Send a message to start chatting with the Greg-Bot</p>
+          <div class="chatbot-suggested-questions" id="suggestedQuestions">
+            <button class="chatbot-suggested-question">
+              Give me some background about Greg
+            </button>
+            <button class="chatbot-suggested-question">
+              Tell me about Greg's work experience
+            </button>
+            <button class="chatbot-suggested-question">
+              Does Greg have any background in education?
+            </button>
+            <button class="chatbot-suggested-question">
+              What other questions about Greg can you answer?
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chatbot-input-area">
+        <input
+          type="text"
+          id="chatInput"
+          class="chatbot-input"
+          placeholder="Type your message..."
+        />
+        <button id="sendButton" class="chatbot-send-button" disabled>➤</button>
+        <button id="deleteButton" class="chatbot-delete-button">🗑️</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Current conversation data
+  let currentConversationId = null;
+  let hasMessages = false;
+
+  // DOM elements
+  const chatMessages = document.getElementById("chatMessages");
+  const emptyState = document.getElementById("emptyState");
+  const suggestedQuestions = document.getElementById("suggestedQuestions");
+  const chatInput = document.getElementById("chatInput");
+  const sendButton = document.getElementById("sendButton");
+  const conversationList = document.getElementById("conversationList");
+  const newConversationBtn = document.getElementById("newConversationBtn");
+  const deleteButton = document.getElementById("deleteButton");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+
+  if (loadingSpinner.parentNode) {
+    loadingSpinner.parentNode.removeChild(loadingSpinner);
+  }
+
+  // Function to load user's conversations
+  function loadConversations() {
+    fetch("/chatbot/api/conversations")
+      .then((response) => response.json())
+      .then((conversations) => {
+        conversationList.innerHTML = "";
+
+        if (conversations.length > 0) {
+          conversations.forEach((conversation) => {
+            const conversationEl = document.createElement("div");
+            conversationEl.classList.add("chatbot-conversation-item");
+            conversationEl.dataset.id = conversation.id;
+            conversationEl.innerHTML = `
+                        <div class="chatbot-conversation-title">${conversation.title}</div>
+                        <div class="chatbot-conversation-date">${formatDate(conversation.started)}</div>
+                    `;
+            conversationEl.addEventListener("click", () =>
+              loadConversation(conversation.id)
+            );
+            conversationList.appendChild(conversationEl);
+          });
+        } else {
+          conversationList.innerHTML = `
+                    <div class="chatbot-empty-conversations">No conversations yet.</div>
+                `;
+        }
+      })
+      .catch((error) => console.error("Error loading conversations:", error));
+  }
+
+  // Function to load a specific conversation
+  function loadConversation(conversationId) {
+    currentConversationId = conversationId;
+
+    // Update active conversation in sidebar
+    document.querySelectorAll(".chatbot-conversation-item").forEach((item) => {
+      item.classList.remove("active");
+      if (item.dataset.id === conversationId) {
+        item.classList.add("active");
+      }
+    });
+
+    // Load messages for this conversation
+    fetch(`/chatbot/api/messages/${conversationId}`)
+      .then((response) => response.json())
+      .then((messages) => {
+        chatMessages.innerHTML = "";
+        chatMessages.appendChild(emptyState);
+
+        hasMessages = messages.length > 0;
+
+        if (hasMessages) {
+          hideEmptyState();
+          messages.forEach((message) => {
+            addMessageToDOM(message.content, message.is_user);
+          });
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+          showEmptyState();
+        }
+
+        updateDeleteButton();
+      })
+      .catch((error) => console.error("Error loading messages:", error));
+  }
+
+  // Function to show the empty state with suggested questions
+  function showEmptyState() {
+    if (!chatMessages.contains(emptyState)) {
+      chatMessages.appendChild(emptyState);
+    }
+
+    const messages = chatMessages.querySelectorAll(".chatbot-message");
+    messages.forEach((message) => message.remove());
+
+    emptyState.style.display = "flex";
+    hasMessages = false;
+    updateDeleteButton();
+  }
+
+  // Function to hide the empty state
+  function hideEmptyState() {
+    emptyState.style.display = "none";
+  }
+
+  // Function to add a message to the DOM
+  function addMessageToDOM(text, isUser) {
+    const messageEl = document.createElement("div");
+    messageEl.classList.add("chatbot-message");
+    messageEl.classList.add(isUser ? "chatbot-message-user" : "chatbot-message-bot");
+    messageEl.textContent = text;
+
+    chatMessages.appendChild(messageEl);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function formatDate(isoString) {
+    const date = new Date(isoString);
+    return (
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+      " UTC"
+    );
+  }
+
+  function sendMessage() {
+    const message = chatInput.value.trim();
+
+    if (!message) {
+      return;
+    }
+
+    sendButton.disabled = true;
+    showLoadingSpinner();
+
+    const requestData = {
+      message: message,
+      conversation_id: currentConversationId,
+    };
+
+    fetch("/chatbot/api/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Server returned " + response.status);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        hideLoadingSpinner();
+        hideEmptyState();
+
+        currentConversationId = data.conversation_id;
+
+        addMessageToDOM(data.user_message.content, true);
+        addMessageToDOM(data.bot_message.content, false);
+
+        hasMessages = true;
+        updateDeleteButton();
+
+        chatInput.value = "";
+        sendButton.disabled = true;
+        chatInput.focus();
+
+        setTimeout(loadConversations, 500);
+      })
+      .catch((error) => {
+        console.error("Error sending message:", error);
+        hideLoadingSpinner();
+        alert("Error sending message. Please try again.");
+        sendButton.disabled = false;
+      });
+  }
+
+  // Function to update the delete button visibility
+  function updateDeleteButton() {
+    if (currentConversationId && hasMessages) {
+      deleteButton.classList.add("visible");
+    } else {
+      deleteButton.classList.remove("visible");
+    }
+  }
+
+  // Event handlers for the new conversation button
+  newConversationBtn.addEventListener("click", () => {
+    currentConversationId = null;
+
+    const messages = chatMessages.querySelectorAll(".chatbot-message");
+    messages.forEach((message) => message.remove());
+
+    showEmptyState();
+
+    document.querySelectorAll(".chatbot-conversation-item").forEach((item) => {
+      item.classList.remove("active");
+    });
+
+    chatInput.focus();
+  });
+
+  // Add event listener for delete button
+  deleteButton.addEventListener("click", () => {
+    if (!currentConversationId) return;
+
+    if (
+      confirm(
+        "Are you sure you want to delete this conversation? This action cannot be undone."
+      )
+    ) {
+      fetch(`/chatbot/api/conversations/${currentConversationId}`, {
+        method: "DELETE",
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Failed to delete conversation");
+
+          currentConversationId = null;
+          hasMessages = false;
+          chatMessages.innerHTML = "";
+
+          showEmptyState();
+          updateDeleteButton();
+          loadConversations();
+        })
+        .catch((error) => {
+          console.error("Error deleting conversation:", error);
+          alert("Failed to delete conversation. Please try again.");
+        });
+    }
+  });
+
+  function showLoadingSpinner() {
+    chatMessages.appendChild(loadingSpinner);
+    loadingSpinner.style.display = "block";
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function hideLoadingSpinner() {
+    loadingSpinner.style.display = "none";
+  }
+
+  // Load conversations on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    loadConversations();
+    showEmptyState();
+
+    chatInput.addEventListener("input", function () {
+      sendButton.disabled = this.value.trim() === "";
+    });
+
+    chatInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && this.value.trim()) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendButton.addEventListener("click", function () {
+      sendMessage();
+    });
+
+    document.querySelectorAll(".chatbot-suggested-question").forEach((button) => {
+      button.addEventListener("click", function () {
+        chatInput.value = this.textContent.trim();
+        sendButton.disabled = false;
+        sendMessage();
+      });
+    });
+
+    chatInput.focus();
+  });
+</script>
+{% endblock %}
