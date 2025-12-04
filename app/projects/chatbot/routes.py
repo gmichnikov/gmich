@@ -104,8 +104,8 @@ def send_message():
     # Log the user message
     log_entry = LogEntry(
         actor_id=current_user.id,
-        category='Chat Message',
-        description=f"User sent message in conversation {conversation_id}",
+        category='Send',
+        description=f"Sent message in conversation {conversation_id[:8]}",
         project='chatbot'
     )
     db.session.add(log_entry)
@@ -137,11 +137,25 @@ def send_message():
 def delete_conversation(conversation_id):
     """Delete a specific conversation and all its messages"""
     try:
+        # Count messages before deletion for logging
+        message_count = ChatMessage.query.filter_by(
+            user_id=current_user.id,
+            conversation_id=conversation_id
+        ).count()
+
         ChatMessage.query.filter_by(
             user_id=current_user.id,
             conversation_id=conversation_id
         ).delete()
 
+        # Log the action
+        log_entry = LogEntry(
+            actor_id=current_user.id,
+            category='Delete',
+            description=f"Deleted conversation {conversation_id[:8]} ({message_count} messages)",
+            project='chatbot'
+        )
+        db.session.add(log_entry)
         db.session.commit()
 
         return jsonify({'status': 'success'}), 200
@@ -200,13 +214,32 @@ Keep responses concise. Never use markdown formatting.
 
         client = OpenAI(api_key=API_KEY)
 
+        model = "gpt-5-mini"
         completion = client.chat.completions.create(
-            model="gpt-5-nano",
+            model=model,
             messages=formatted_messages,
-            max_completion_tokens=1000
+            reasoning_effort="minimal",
+            max_completion_tokens=10000
         )
 
-        return completion.choices[0].message.content
+        response_content = completion.choices[0].message.content
+        
+        # Log if response is empty
+        if not response_content:
+            current_app.logger.warning(f"OpenAI returned empty response. Finish reason: {completion.choices[0].finish_reason}")
+            return "I apologize, but I received an empty response. Please try again."
+        
+        # Log the API response with token usage
+        log_entry = LogEntry(
+            actor_id=user_id,
+            category='Received Response',
+            description=f"Conv {conversation_id[:8]} | Model: {model} | Prompt: {completion.usage.prompt_tokens}t | Response: {completion.usage.completion_tokens}t | Total: {completion.usage.total_tokens}t | Finish: {completion.choices[0].finish_reason}",
+            project='chatbot'
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        return response_content
 
     except Exception as e:
         current_app.logger.error(f"OpenAI API error: {str(e)}")

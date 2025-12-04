@@ -1,7 +1,8 @@
 /* Chatbot - Chat container styles */
 .chatbot-container {
   width: 100%;
-  height: 100vh;
+  height: 85vh;
+  max-height: 800px;
   display: flex;
   flex-direction: column;
   background-color: #fff;
@@ -20,7 +21,6 @@
 .chatbot-header h1 {
   font-size: 18px;
   margin-left: 10px;
-  flex-grow: 1;
 }
 
 .chatbot-icon {
@@ -34,24 +34,6 @@
   justify-content: center;
   align-items: center;
   font-weight: bold;
-}
-
-.chatbot-user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.chatbot-nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.chatbot-nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Chatbot - Body (main container) */
@@ -99,7 +81,8 @@
 }
 
 .chatbot-conversation-item:hover {
-  background-color: #e9ecef;
+  background-co
+  lor: #e9ecef;
 }
 
 .chatbot-conversation-item.active {
