@@ -1,0 +1,886 @@
+{% extends 'base.html' %} {% block title %}Sushi Go Scorer{% endblock %} {%
+block content %}
+
+<style>
+  .sgs-wrapper {
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 70px - 60px);
+  }
+
+  .sgs-header {
+    text-align: center;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .sgs-header h1 {
+    font-size: 1.5em;
+    margin: 0;
+  }
+
+  .sgs-setup-section {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+  }
+
+  .sgs-player-count {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .sgs-player-count h3 {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 1em;
+  }
+
+  .sgs-player-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .sgs-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #4a90d9;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+
+  .sgs-btn:hover {
+    background-color: #357abd;
+    transform: translateY(-2px);
+  }
+
+  .sgs-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .sgs-btn-success {
+    background-color: #28a745;
+  }
+
+  .sgs-btn-success:hover {
+    background-color: #218838;
+  }
+
+  .sgs-btn-danger {
+    background-color: #dc3545;
+  }
+
+  .sgs-btn-danger:hover {
+    background-color: #c82333;
+  }
+
+  .sgs-player-names {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .sgs-name-input {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sgs-name-input label {
+    font-weight: 600;
+    color: #555;
+    font-size: 12px;
+  }
+
+  .sgs-name-input input {
+    padding: 6px;
+    font-size: 14px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+
+  .sgs-name-input input:focus {
+    outline: none;
+    border-color: #4a90d9;
+  }
+
+  .sgs-start-section {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .sgs-game-section {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+  }
+
+  .sgs-round-header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #4a90d9;
+  }
+
+  .sgs-round-header h2 {
+    color: #333;
+    font-size: 1.3em;
+    margin: 0;
+  }
+
+  .sgs-scoring-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .sgs-scoring-table th,
+  .sgs-scoring-table td {
+    padding: 6px 4px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+
+  .sgs-scoring-table th {
+    background-color: #f1f3f5;
+    font-weight: 600;
+    color: #333;
+    font-size: 1em;
+  }
+
+  .sgs-scoring-table .sgs-player-label {
+    text-align: left;
+    padding-left: 8px;
+    font-weight: 500;
+    background-color: #fff;
+  }
+
+  .sgs-scoring-table .sgs-food-header {
+    font-size: 1.2em;
+    white-space: nowrap;
+  }
+
+  .sgs-scoring-table input {
+    width: 50px;
+    padding: 4px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .sgs-scoring-table input:focus {
+    outline: none;
+    border-color: #4a90d9;
+  }
+
+  .sgs-score-buttons {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .sgs-score-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.2s;
+    min-width: 28px;
+  }
+
+  .sgs-score-btn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .sgs-score-btn.sgs-selected {
+    background-color: #4a90d9;
+    color: white;
+    border-color: #357abd;
+  }
+
+  .sgs-round-total-btn {
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  .sgs-previous-rounds {
+    margin-top: 10px;
+  }
+
+  .sgs-previous-round {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .sgs-previous-round-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px;
+    background: #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .sgs-previous-round-header:hover {
+    background: #dee2e6;
+  }
+
+  .sgs-previous-round-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1em;
+  }
+
+  .sgs-toggle-icon {
+    font-size: 1em;
+    transition: transform 0.3s;
+  }
+
+  .sgs-toggle-icon.sgs-expanded {
+    transform: rotate(180deg);
+  }
+
+  .sgs-previous-round-content {
+    display: none;
+    margin-top: 8px;
+  }
+
+  .sgs-previous-round-content.sgs-show {
+    display: block;
+  }
+
+  .sgs-scores-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+
+  .sgs-scores-summary h3 {
+    text-align: center;
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.2em;
+  }
+
+  .sgs-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .sgs-summary-table th,
+  .sgs-summary-table td {
+    padding: 6px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+
+  .sgs-summary-table th {
+    background-color: #4a90d9;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+
+  .sgs-summary-table .sgs-total-row {
+    background-color: #fff3cd;
+    font-weight: bold;
+  }
+
+  .sgs-controls {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .sgs-hidden {
+    display: none;
+  }
+
+  .sgs-winner-announcement {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .sgs-winner-announcement h2 {
+    font-size: 1.5em;
+    margin: 0 0 10px 0;
+  }
+
+  .sgs-winner-announcement p {
+    font-size: 1.1em;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .sgs-wrapper {
+      padding: 5px;
+    }
+
+    .sgs-header h1 {
+      font-size: 1.3em;
+    }
+
+    .sgs-setup-section,
+    .sgs-game-section,
+    .sgs-previous-round {
+      padding: 10px;
+    }
+
+    .sgs-scoring-table {
+      font-size: 12px;
+    }
+
+    .sgs-scoring-table input {
+      width: 40px;
+      padding: 3px;
+      font-size: 12px;
+    }
+
+    .sgs-scoring-table th,
+    .sgs-scoring-table td {
+      padding: 4px 2px;
+    }
+
+    .sgs-food-header {
+      font-size: 1em !important;
+    }
+
+    .sgs-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .sgs-score-buttons {
+      gap: 2px;
+    }
+
+    .sgs-score-btn {
+      padding: 3px 6px;
+      font-size: 11px;
+      min-width: 24px;
+    }
+
+    .sgs-player-names {
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px;
+    }
+  }
+</style>
+
+<div class="sgs-wrapper">
+  <div class="sgs-header">
+    <h1>🍣 Sushi Go Scorer 🍱</h1>
+  </div>
+
+  <!-- Setup Section -->
+  <div id="sgsSetupSection" class="sgs-setup-section">
+    <div class="sgs-player-count">
+      <h3>How many players?</h3>
+      <div class="sgs-player-buttons">
+        <button class="sgs-btn" onclick="setPlayerCount(2)">2 Players</button>
+        <button class="sgs-btn" onclick="setPlayerCount(3)">3 Players</button>
+        <button class="sgs-btn" onclick="setPlayerCount(4)">4 Players</button>
+        <button class="sgs-btn" onclick="setPlayerCount(5)">5 Players</button>
+      </div>
+    </div>
+
+    <div id="sgsPlayerNames" class="sgs-player-names sgs-hidden">
+      <!-- Player name inputs will be generated here -->
+    </div>
+
+    <div id="sgsStartSection" class="sgs-start-section sgs-hidden">
+      <button class="sgs-btn sgs-btn-success" onclick="startGame()">
+        🎮 Start Round 1
+      </button>
+    </div>
+  </div>
+
+  <!-- Game Section -->
+  <div id="sgsGameSection" class="sgs-game-section sgs-hidden">
+    <div class="sgs-round-header">
+      <h2 id="sgsRoundTitle">Round 1</h2>
+    </div>
+
+    <table class="sgs-scoring-table" id="sgsScoringTable">
+      <!-- Table will be generated by JavaScript -->
+    </table>
+
+    <div class="sgs-round-total-btn">
+      <button
+        class="sgs-btn sgs-btn-success"
+        id="sgsTotalRoundBtn"
+        onclick="totalCurrentRound()"
+      >
+        📊 Total Round 1
+      </button>
+    </div>
+  </div>
+
+  <!-- Previous Rounds (Completed) -->
+  <div id="sgsPreviousRounds" class="sgs-previous-rounds">
+    <!-- Previous round details will be added here -->
+  </div>
+
+  <!-- Scores Summary -->
+  <div id="sgsScoresSummary" class="sgs-scores-summary sgs-hidden">
+    <h3>📊 Score Summary</h3>
+    <table class="sgs-summary-table" id="sgsSummaryTable">
+      <!-- Summary will be generated by JavaScript -->
+    </table>
+  </div>
+
+  <!-- Winner Announcement -->
+  <div id="sgsWinnerSection" class="sgs-winner-announcement sgs-hidden">
+    <h2>🏆 Winner! 🏆</h2>
+    <p id="sgsWinnerText"></p>
+  </div>
+
+  <!-- Controls -->
+  <div class="sgs-controls">
+    <button class="sgs-btn sgs-btn-danger" onclick="resetGame()">
+      🔄 New Game
+    </button>
+  </div>
+</div>
+
+<script>
+  // Game state
+  let playerCount = 0;
+  let playerNames = [];
+  let currentRound = 0;
+  let scores = {}; // { playerName: { round1: {tempura: 5, ...}, round2: {...}, round3: {...} } }
+
+  // Food types with emojis and possible scores
+  const foodTypes = [
+    { id: "tempura", emoji: "🍤", name: "Tempura", scores: [5, 10] },
+    { id: "sashimi", emoji: "🍣", name: "Sashimi", scores: [10] },
+    { id: "nigiri", emoji: "🥚🦑🐟", name: "Nigiri", scores: null }, // numeric input
+    { id: "maki", emoji: "🍱", name: "Maki", scores: [6, 3, 1] },
+    {
+      id: "dumpling",
+      emoji: "🥟",
+      name: "Dumpling",
+      scores: [1, 3, 6, 10, 15],
+    },
+    { id: "pudding", emoji: "🍮", name: "Pudding", scores: null }, // numeric input
+  ];
+
+  function setPlayerCount(count) {
+    playerCount = count;
+    playerNames = [];
+
+    // Generate name input fields
+    const playerNamesDiv = document.getElementById("sgsPlayerNames");
+    playerNamesDiv.innerHTML = "";
+    playerNamesDiv.classList.remove("sgs-hidden");
+
+    for (let i = 1; i <= count; i++) {
+      const nameInput = document.createElement("div");
+      nameInput.className = "sgs-name-input";
+      nameInput.innerHTML = `
+                <label for="sgsPlayer${i}Name">Player ${i}:</label>
+                <input type="text" id="sgsPlayer${i}Name" placeholder="Player ${i}" />
+            `;
+      playerNamesDiv.appendChild(nameInput);
+    }
+
+    document.getElementById("sgsStartSection").classList.remove("sgs-hidden");
+  }
+
+  function startGame() {
+    // Collect player names
+    playerNames = [];
+    for (let i = 1; i <= playerCount; i++) {
+      const nameInput = document.getElementById(`sgsPlayer${i}Name`);
+      const name = nameInput.value.trim() || `Player ${i}`;
+      playerNames.push(name);
+    }
+
+    // Initialize scores
+    scores = {};
+    playerNames.forEach((name) => {
+      scores[name] = {
+        round1: {},
+        round2: {},
+        round3: {},
+      };
+    });
+
+    // Start round 1
+    currentRound = 1;
+    showRound(1);
+
+    // Hide setup, show game
+    document.getElementById("sgsSetupSection").classList.add("sgs-hidden");
+    document.getElementById("sgsGameSection").classList.remove("sgs-hidden");
+    document.getElementById("sgsScoresSummary").classList.remove("sgs-hidden");
+  }
+
+  function showRound(round) {
+    currentRound = round;
+    document.getElementById("sgsRoundTitle").textContent = `Round ${round}`;
+    document.getElementById(
+      "sgsTotalRoundBtn"
+    ).textContent = `📊 Total Round ${round}`;
+
+    generateScoringTable(round);
+    updateSummaryTable();
+  }
+
+  function generateScoringTable(round) {
+    const table = document.getElementById("sgsScoringTable");
+    table.innerHTML = "";
+
+    // Header row with food types
+    const roundKey = `round${round}`;
+    const headerRow = document.createElement("tr");
+    headerRow.innerHTML = "<th>Player</th>";
+
+    foodTypes.forEach((food) => {
+      // Skip pudding unless it's round 3
+      if (food.id === "pudding" && round !== 3) {
+        return;
+      }
+      headerRow.innerHTML += `<th class="sgs-food-header">${food.emoji}</th>`;
+    });
+    table.appendChild(headerRow);
+
+    // Player rows
+    playerNames.forEach((name) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td class="sgs-player-label">${name}</td>`;
+
+      foodTypes.forEach((food) => {
+        // Skip pudding unless it's round 3
+        if (food.id === "pudding" && round !== 3) {
+          return;
+        }
+
+        const currentValue = scores[name][roundKey][food.id] || 0;
+        const cellId = `sgs-${name}-${roundKey}-${food.id}`;
+
+        // Create cell with either buttons or input
+        const cell = document.createElement("td");
+
+        if (food.scores) {
+          // Multiple choice buttons
+          const buttonGroup = document.createElement("div");
+          buttonGroup.className = "sgs-score-buttons";
+
+          food.scores.forEach((score) => {
+            const btn = document.createElement("button");
+            btn.className = "sgs-score-btn";
+            btn.textContent = score;
+            btn.type = "button";
+            if (currentValue === score) {
+              btn.classList.add("sgs-selected");
+            }
+            btn.onclick = () =>
+              selectScore(name, roundKey, food.id, score, btn);
+            buttonGroup.appendChild(btn);
+          });
+
+          cell.appendChild(buttonGroup);
+        } else {
+          // Numeric input
+          const input = document.createElement("input");
+          input.type = "number";
+          input.id = cellId;
+          input.value = currentValue || "";
+          input.placeholder = "0";
+          input.min = "0";
+          cell.appendChild(input);
+        }
+
+        row.appendChild(cell);
+      });
+
+      table.appendChild(row);
+    });
+  }
+
+  function selectScore(playerName, roundKey, foodId, score, button) {
+    // Get all buttons in the same cell
+    const buttons = button.parentElement.querySelectorAll(".sgs-score-btn");
+
+    // If clicking the already selected button, deselect it
+    if (button.classList.contains("sgs-selected")) {
+      button.classList.remove("sgs-selected");
+      scores[playerName][roundKey][foodId] = 0;
+    } else {
+      // Deselect all buttons in this group
+      buttons.forEach((btn) => btn.classList.remove("sgs-selected"));
+      // Select the clicked button
+      button.classList.add("sgs-selected");
+      scores[playerName][roundKey][foodId] = score;
+    }
+  }
+
+  function totalCurrentRound() {
+    // Save current round scores (only for numeric inputs, buttons already save)
+    const roundKey = `round${currentRound}`;
+
+    playerNames.forEach((name) => {
+      foodTypes.forEach((food) => {
+        // Skip pudding unless it's round 3
+        if (food.id === "pudding" && currentRound !== 3) {
+          return;
+        }
+
+        // Only read from input fields (numeric entries)
+        if (!food.scores) {
+          const inputId = `sgs-${name}-${roundKey}-${food.id}`;
+          const input = document.getElementById(inputId);
+          if (input) {
+            const value = parseInt(input.value) || 0;
+            scores[name][roundKey][food.id] = value;
+          }
+        }
+        // Button scores are already saved in selectScore function
+      });
+    });
+
+    // Save the completed round for display
+    addPreviousRoundDisplay(currentRound);
+
+    // Move to next round or finish
+    if (currentRound < 3) {
+      showRound(currentRound + 1);
+    } else {
+      finishGame();
+    }
+  }
+
+  function addPreviousRoundDisplay(roundNum) {
+    const previousRoundsDiv = document.getElementById("sgsPreviousRounds");
+    const roundKey = `round${roundNum}`;
+
+    // Create a container for this round
+    const roundDiv = document.createElement("div");
+    roundDiv.className = "sgs-previous-round";
+    roundDiv.id = `sgsPrevRound${roundNum}`;
+
+    // Create header (clickable)
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "sgs-previous-round-header";
+    headerDiv.onclick = () => togglePreviousRound(roundNum);
+
+    const title = document.createElement("h3");
+    title.textContent = `Round ${roundNum} Scores`;
+
+    const toggleIcon = document.createElement("span");
+    toggleIcon.className = "sgs-toggle-icon";
+    toggleIcon.id = `sgsToggle${roundNum}`;
+    toggleIcon.textContent = "▼";
+
+    headerDiv.appendChild(title);
+    headerDiv.appendChild(toggleIcon);
+
+    // Create content (hidden by default)
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "sgs-previous-round-content";
+    contentDiv.id = `sgsPrevContent${roundNum}`;
+
+    // Build the scoring table (transposed)
+    const table = document.createElement("table");
+    table.className = "sgs-scoring-table";
+
+    // Header row with food types
+    const headerRow = document.createElement("tr");
+    headerRow.innerHTML = "<th>Player</th>";
+
+    foodTypes.forEach((food) => {
+      // Skip pudding unless it's round 3
+      if (food.id === "pudding" && roundNum !== 3) {
+        return;
+      }
+      headerRow.innerHTML += `<th class="sgs-food-header">${food.emoji}</th>`;
+    });
+    headerRow.innerHTML += "<th>Total</th>";
+    table.appendChild(headerRow);
+
+    // Player rows
+    playerNames.forEach((name) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td class="sgs-player-label">${name}</td>`;
+
+      foodTypes.forEach((food) => {
+        // Skip pudding unless it's round 3
+        if (food.id === "pudding" && roundNum !== 3) {
+          return;
+        }
+
+        const value = scores[name][roundKey][food.id] || 0;
+        row.innerHTML += `<td>${value > 0 ? value : "-"}</td>`;
+      });
+
+      const total = calculateRoundTotal(name, roundKey);
+      row.innerHTML += `<td><strong>${total}</strong></td>`;
+
+      table.appendChild(row);
+    });
+
+    contentDiv.appendChild(table);
+
+    roundDiv.appendChild(headerDiv);
+    roundDiv.appendChild(contentDiv);
+    previousRoundsDiv.appendChild(roundDiv);
+  }
+
+  function togglePreviousRound(roundNum) {
+    const content = document.getElementById(`sgsPrevContent${roundNum}`);
+    const icon = document.getElementById(`sgsToggle${roundNum}`);
+
+    content.classList.toggle("sgs-show");
+    icon.classList.toggle("sgs-expanded");
+  }
+
+  function finishGame() {
+    // Hide the game section
+    document.getElementById("sgsGameSection").classList.add("sgs-hidden");
+
+    // Update summary one final time
+    updateSummaryTable();
+
+    // Show winner
+    showWinner();
+  }
+
+  function updateSummaryTable() {
+    const table = document.getElementById("sgsSummaryTable");
+    table.innerHTML = "";
+
+    // Header
+    const headerRow = document.createElement("tr");
+    headerRow.innerHTML =
+      "<th>Player</th><th>Round 1</th><th>Round 2</th><th>Round 3</th><th>Total</th>";
+    table.appendChild(headerRow);
+
+    // Player rows
+    playerNames.forEach((name) => {
+      const round1Total = calculateRoundTotal(name, "round1");
+      const round2Total = calculateRoundTotal(name, "round2");
+      const round3Total = calculateRoundTotal(name, "round3");
+      const total = round1Total + round2Total + round3Total;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+                <td><strong>${name}</strong></td>
+                <td>${round1Total > 0 ? round1Total : "-"}</td>
+                <td>${round2Total > 0 ? round2Total : "-"}</td>
+                <td>${round3Total > 0 ? round3Total : "-"}</td>
+                <td class="sgs-total-row">${total}</td>
+            `;
+      table.appendChild(row);
+    });
+  }
+
+  function calculateRoundTotal(playerName, roundKey) {
+    const roundScores = scores[playerName][roundKey];
+    let total = 0;
+
+    Object.values(roundScores).forEach((score) => {
+      total += score || 0;
+    });
+
+    return total;
+  }
+
+  function showWinner() {
+    // Calculate final totals
+    const finalScores = playerNames.map((name) => {
+      const total =
+        calculateRoundTotal(name, "round1") +
+        calculateRoundTotal(name, "round2") +
+        calculateRoundTotal(name, "round3");
+      return { name, total };
+    });
+
+    // Sort by score
+    finalScores.sort((a, b) => b.total - a.total);
+
+    // Show winner
+    const winnerSection = document.getElementById("sgsWinnerSection");
+    const winnerText = document.getElementById("sgsWinnerText");
+
+    if (
+      finalScores.length > 1 &&
+      finalScores[0].total === finalScores[1].total
+    ) {
+      // Tie
+      const tiedPlayers = finalScores.filter(
+        (p) => p.total === finalScores[0].total
+      );
+      const names = tiedPlayers.map((p) => p.name).join(" and ");
+      winnerText.textContent = `It's a tie between ${names} with ${finalScores[0].total} points!`;
+    } else {
+      winnerText.textContent = `${finalScores[0].name} wins with ${finalScores[0].total} points!`;
+    }
+
+    winnerSection.classList.remove("sgs-hidden");
+  }
+
+  function resetGame() {
+    if (
+      confirm(
+        "Are you sure you want to start a new game? All progress will be lost."
+      )
+    ) {
+      // Reset all state
+      playerCount = 0;
+      playerNames = [];
+      currentRound = 0;
+      scores = {};
+
+      // Clear previous rounds
+      document.getElementById("sgsPreviousRounds").innerHTML = "";
+
+      // Hide game sections
+      document.getElementById("sgsGameSection").classList.add("sgs-hidden");
+      document.getElementById("sgsScoresSummary").classList.add("sgs-hidden");
+      document.getElementById("sgsWinnerSection").classList.add("sgs-hidden");
+      document.getElementById("sgsPlayerNames").classList.add("sgs-hidden");
+      document.getElementById("sgsStartSection").classList.add("sgs-hidden");
+
+      // Show setup
+      document.getElementById("sgsSetupSection").classList.remove("sgs-hidden");
+    }
+  }
+</script>
+
+{% endblock %}

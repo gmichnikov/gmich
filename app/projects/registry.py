@@ -115,6 +115,17 @@ PROJECTS = [
         'order': 601
     },
     {
+        'id': 'sushi_go',
+        'name': 'Sushi Go Scorer',
+        'description': 'Score tracker for Sushi Go card game',
+        'url': '/sushi-go',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'game_night_tools',
+        'order': 602
+    },
+    {
         'id': 'coding_bootcamp',
         'name': 'Coding Bootcamp',
         'description': 'Things I made while I was at App Academy in 2016',

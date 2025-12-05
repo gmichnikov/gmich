@@ -42,6 +42,7 @@ def create_app():
     from app.projects.algebra_snake.routes import algebra_snake_bp
     from app.projects.spanish_vocab_invaders.routes import spanish_vocab_invaders_bp
     from app.projects.sorry_cards.routes import sorry_cards_bp
+    from app.projects.sushi_go.routes import sushi_go_bp
     from app.projects.chatbot.routes import chatbot_bp
     
     app.register_blueprint(main_bp)
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(algebra_snake_bp, url_prefix='/algebra-snake')
     app.register_blueprint(spanish_vocab_invaders_bp, url_prefix='/spanish-vocab-invaders')
     app.register_blueprint(sorry_cards_bp, url_prefix='/sorry-cards')
+    app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
     app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
     
     # Import models to ensure they're known to Flask-SQLAlchemy
