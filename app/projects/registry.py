@@ -167,6 +167,16 @@ PROJECTS = [
         'status': 'active',
         'type': 'project',
         'order': 1
+    },
+    {
+        'id': 'ask_many_llms',
+        'name': 'Ask Many LLMs',
+        'description': 'Compare responses from multiple AI models (OpenAI, Anthropic, Google) side-by-side',
+        'url': '/ask-many-llms/ask',
+        'auth_required': True,
+        'status': 'active',
+        'type': 'project',
+        'order': 0  # Show first on homepage
     }
 ]
 

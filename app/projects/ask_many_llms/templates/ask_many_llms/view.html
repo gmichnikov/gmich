@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Many LLMs - Question Details{% endblock %}
+
+{% block styles %}
+<!-- Ask Many LLMs Custom CSS -->
+<link rel="stylesheet" href="{{ url_for('ask_many_llms.static', filename='ask_many_llms/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="ask-many-llms-container">
+    <div class="ask-many-llms-card">
+        <div class="ask-many-llms-card-body" style="margin-bottom: 15px;">
+            <a href="{{ url_for('ask_many_llms.list_questions') }}" class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to Questions
+            </a>
+        </div>
+        <div class="ask-many-llms-card-header">
+            <h2>{{ question.content }}</h2>
+            <p class="ask-many-llms-text-muted">Asked on {{ question.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        </div>
+    </div>
+
+    {% if summary_response %}
+    <div class="ask-many-llms-response-card ask-many-llms-summary-card">
+        <h3><i class="fas fa-chart-line"></i> Response Analysis Summary</h3>
+        <div class="ask-many-llms-response-content ask-many-llms-markdown-body">
+            {{ summary_response.content|markdown|safe }}
+        </div>
+        <div class="ask-many-llms-metadata">
+            <div class="ask-many-llms-metadata-item">
+                <strong>Model:</strong> {{ summary_response.model_name }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Total:</strong> {{ summary_response.total_tokens }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Runtime:</strong> 
+                {% if summary_response.response_time is not none %}
+                    {{ "%.1f"|format(summary_response.response_time) }}s
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% for response in responses %}
+    <div class="ask-many-llms-response-card">
+        <div class="ask-many-llms-flex-between ask-many-llms-mb-20">
+            <h3>{{ response.llm_name }}</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <span class="ask-many-llms-badge ask-many-llms-badge-cost">
+                    Input: ${{ "%.6f"|format(response.input_cost) }}
+                </span>
+                <span class="ask-many-llms-badge ask-many-llms-badge-cost">
+                    Output: ${{ "%.6f"|format(response.output_cost) }}
+                </span>
+                {% if response.llm_name.startswith('GPT') or response.llm_name.startswith('O') %}
+                    <a href="https://openai.com/api/pricing/" target="_blank" 
+                       class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm" 
+                       title="OpenAI Pricing">
+                        <i class="fas fa-dollar-sign"></i>
+                    </a>
+                {% elif response.llm_name.startswith('Claude') %}
+                    <a href="https://www.anthropic.com/pricing#api" target="_blank" 
+                       class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm" 
+                       title="Anthropic Pricing">
+                        <i class="fas fa-dollar-sign"></i>
+                    </a>
+                {% elif response.llm_name.startswith('Gemini') %}
+                    <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" 
+                       class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm" 
+                       title="Gemini Pricing">
+                        <i class="fas fa-dollar-sign"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="ask-many-llms-response-content ask-many-llms-markdown-body">
+            {{ response.content|markdown|safe }}
+        </div>
+        <div class="ask-many-llms-metadata">
+            <div class="ask-many-llms-metadata-item">
+                <strong>Input:</strong> {{ response.input_tokens }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Output:</strong> {{ response.output_tokens }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Total:</strong> {{ response.total_tokens }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Model:</strong> {{ response.model_name }}
+            </div>
+            <div class="ask-many-llms-metadata-item">
+                <strong>Runtime:</strong> 
+                {% if response.response_time is not none %}
+                    {{ "%.1f"|format(response.response_time) }}s
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

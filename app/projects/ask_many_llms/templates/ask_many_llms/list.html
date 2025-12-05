@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Many LLMs - My Questions{% endblock %}
+
+{% block styles %}
+<!-- Ask Many LLMs Custom CSS -->
+<link rel="stylesheet" href="{{ url_for('ask_many_llms.static', filename='ask_many_llms/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="ask-many-llms-container">
+    <div class="ask-many-llms-flex-between ask-many-llms-mb-20">
+        <h2 style="margin: 0; color: white;">My Questions</h2>
+        <a href="{{ url_for('ask_many_llms.ask_question') }}" class="ask-many-llms-btn ask-many-llms-btn-primary">
+            <i class="fas fa-plus"></i> Ask New Question
+        </a>
+    </div>
+
+    {% if questions %}
+        {% for question in questions %}
+        <div class="ask-many-llms-question-card">
+            <h5>
+                <a href="{{ url_for('ask_many_llms.view_question', question_id=question.id) }}">
+                    {{ question.content[:150] }}{% if question.content|length > 150 %}...{% endif %}
+                </a>
+            </h5>
+            <div class="ask-many-llms-question-meta">
+                <span>
+                    <i class="far fa-clock"></i> {{ question.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                </span>
+                <span>
+                    <i class="fas fa-robot"></i> {{ question.responses|length }} responses
+                </span>
+                <span>
+                    <i class="fas fa-dollar-sign"></i> Total cost: ${{ "%.6f"|format(question.total_cost) }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="ask-many-llms-alert ask-many-llms-alert-info">
+            You haven't asked any questions yet. <a href="{{ url_for('ask_many_llms.ask_question') }}" style="color: #0c5460; font-weight: 600;">Ask your first question!</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

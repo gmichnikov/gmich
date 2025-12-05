@@ -1,0 +1,539 @@
+{% extends "base.html" %} {% block styles %}
+<!-- Ask Many LLMs Custom CSS -->
+<link
+  rel="stylesheet"
+  href="{{ url_for('ask_many_llms.static', filename='ask_many_llms/style.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+{% endblock %} {% block content %}
+<div class="ask-many-llms-container">
+  <div class="ask-many-llms-card">
+    <div class="ask-many-llms-card-header">
+      <h2>Ask Many LLMs</h2>
+    </div>
+    <div class="ask-many-llms-card-body">
+      <p
+        class="ask-many-llms-text-muted"
+        style="margin-bottom: 15px; font-size: 0.9rem"
+      >
+        You have <strong>{{ current_user.credits }} credits</strong> (1 credit
+        per question)
+      </p>
+
+      <form method="POST" id="askManyLLMsForm">
+        {{ form.hidden_tag() }}
+
+        <div class="ask-many-llms-question-row">
+          <div class="ask-many-llms-question-input">
+            {{ form.content(class="ask-many-llms-textarea", rows=3,
+            placeholder="Enter your question here...") }} {% if
+            form.content.errors %} {% for error in form.content.errors %}
+            <span class="ask-many-llms-text-danger">{{ error }}</span>
+            {% endfor %} {% endif %}
+          </div>
+          <div class="ask-many-llms-question-submit">
+            {{ form.submit(class="ask-many-llms-btn ask-many-llms-btn-primary",
+            id="askManyLLMsSubmitBtn") }}
+          </div>
+        </div>
+
+        <div class="ask-many-llms-form-group">
+          <div class="ask-many-llms-model-selection">
+            <div class="ask-many-llms-selection-header">
+              <div class="ask-many-llms-selection-left">
+                <span
+                  class="ask-many-llms-selected-count"
+                  id="askManyLLMsSelectedCount"
+                  >0 models selected</span
+                >
+                <span class="ask-many-llms-switch-container">
+                  <label class="ask-many-llms-switch">
+                    {{ form.concise(id="askManyLLMsConciseSwitch") }}
+                    <span class="ask-many-llms-switch-slider"></span>
+                  </label>
+                  <label
+                    for="askManyLLMsConciseSwitch"
+                    style="
+                      cursor: pointer;
+                      font-weight: normal;
+                      font-size: 0.85rem;
+                    "
+                  >
+                    Concise
+                  </label>
+                </span>
+              </div>
+              <div class="ask-many-llms-preset-buttons">
+                <button
+                  type="button"
+                  class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm"
+                  id="askManyLLMsPresetMini"
+                >
+                  2 Mini
+                </button>
+                <button
+                  type="button"
+                  class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm"
+                  id="askManyLLMsPresetSmall"
+                >
+                  3 Small
+                </button>
+                <button
+                  type="button"
+                  class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm"
+                  id="askManyLLMsPresetMid"
+                >
+                  3 Mid
+                </button>
+                <button
+                  type="button"
+                  class="ask-many-llms-btn ask-many-llms-btn-secondary ask-many-llms-btn-sm"
+                  id="askManyLLMsClearAll"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div class="ask-many-llms-model-groups">
+              <!-- OpenAI Models -->
+              <div class="ask-many-llms-model-group">
+                <div class="ask-many-llms-model-group-label">OpenAI</div>
+                <div class="ask-many-llms-model-options">
+                  {% for display_name, label in form.models.choices %} {% if
+                  display_name.startswith('GPT') or display_name.startswith('O')
+                  %}
+                  <div class="ask-many-llms-model-checkbox-wrapper">
+                    <input class="ask-many-llms-model-checkbox" type="checkbox"
+                    name="models" value="{{ display_name }}"
+                    id="ask-many-llms-model-{{ display_name|lower|replace(' ',
+                    '-')|replace('.', '-') }}" {% if display_name == 'GPT-5
+                    Mini' %}checked{% endif %}>
+                    <label
+                      class="ask-many-llms-model-checkbox-label"
+                      for="ask-many-llms-model-{{ display_name|lower|replace(' ', '-')|replace('.', '-') }}"
+                    >
+                      <div>{{ display_name }}</div>
+                      <div class="ask-many-llms-model-price">
+                        (${{
+                        "%.2f"|format(label.split('$')[1].split('/')[0]|float)
+                        }}, ${{
+                        "%.2f"|format(label.split('$')[2].split('/')[0]|float)
+                        }})
+                      </div>
+                    </label>
+                  </div>
+                  {% endif %} {% endfor %}
+                </div>
+              </div>
+
+              <!-- Anthropic Models -->
+              <div class="ask-many-llms-model-group">
+                <div class="ask-many-llms-model-group-label">Anthropic</div>
+                <div class="ask-many-llms-model-options">
+                  {% for display_name, label in form.models.choices %} {% if
+                  display_name.startswith('Claude') %}
+                  <div class="ask-many-llms-model-checkbox-wrapper">
+                    <input class="ask-many-llms-model-checkbox" type="checkbox"
+                    name="models" value="{{ display_name }}"
+                    id="ask-many-llms-model-{{ display_name|lower|replace(' ',
+                    '-')|replace('.', '-') }}" {% if display_name == 'Claude
+                    Haiku 4.5' %}checked{% endif %}>
+                    <label
+                      class="ask-many-llms-model-checkbox-label"
+                      for="ask-many-llms-model-{{ display_name|lower|replace(' ', '-')|replace('.', '-') }}"
+                    >
+                      <div>{{ display_name|replace('Claude ', '') }}</div>
+                      <div class="ask-many-llms-model-price">
+                        (${{
+                        "%.2f"|format(label.split('$')[1].split('/')[0]|float)
+                        }}, ${{
+                        "%.2f"|format(label.split('$')[2].split('/')[0]|float)
+                        }})
+                      </div>
+                    </label>
+                  </div>
+                  {% endif %} {% endfor %}
+                </div>
+              </div>
+
+              <!-- Google Models -->
+              <div class="ask-many-llms-model-group">
+                <div class="ask-many-llms-model-group-label">Google</div>
+                <div class="ask-many-llms-model-options">
+                  {% for display_name, label in form.models.choices %} {% if
+                  display_name.startswith('Gemini') %}
+                  <div class="ask-many-llms-model-checkbox-wrapper">
+                    <input class="ask-many-llms-model-checkbox" type="checkbox"
+                    name="models" value="{{ display_name }}"
+                    id="ask-many-llms-model-{{ display_name|lower|replace(' ',
+                    '-')|replace('.', '-') }}" {% if display_name == 'Gemini 2.5
+                    Flash' %}checked{% endif %}>
+                    <label
+                      class="ask-many-llms-model-checkbox-label"
+                      for="ask-many-llms-model-{{ display_name|lower|replace(' ', '-')|replace('.', '-') }}"
+                    >
+                      <div>{{ display_name|replace('Gemini ', '') }}</div>
+                      <div class="ask-many-llms-model-price">
+                        (${{
+                        "%.2f"|format(label.split('$')[1].split('/')[0]|float)
+                        }}, ${{
+                        "%.2f"|format(label.split('$')[2].split('/')[0]|float)
+                        }})
+                      </div>
+                    </label>
+                  </div>
+                  {% endif %} {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Progress Tracking -->
+      <div class="ask-many-llms-progress-container" id="askManyLLMsProgress">
+        <div class="ask-many-llms-progress-header">
+          <h3>Processing Your Question</h3>
+          <p class="ask-many-llms-text-muted">
+            Querying models and generating summary...
+          </p>
+          <div
+            class="ask-many-llms-progress-status"
+            id="askManyLLMsProgressStatus"
+          >
+            <!-- Model status badges will be inserted here -->
+          </div>
+          <a
+            href="#"
+            class="ask-many-llms-btn ask-many-llms-btn-primary ask-many-llms-view-results-btn"
+            id="askManyLLMsViewResults"
+          >
+            View Results
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  // Ask Many LLMs - Question Form JavaScript
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("askManyLLMsForm");
+    const checkboxes = document.querySelectorAll(
+      ".ask-many-llms-model-checkbox"
+    );
+    const selectedCount = document.getElementById("askManyLLMsSelectedCount");
+    const submitBtn = document.getElementById("askManyLLMsSubmitBtn");
+    const presetMiniBtn = document.getElementById("askManyLLMsPresetMini");
+    const presetSmallBtn = document.getElementById("askManyLLMsPresetSmall");
+    const presetMidBtn = document.getElementById("askManyLLMsPresetMid");
+    const clearAllBtn = document.getElementById("askManyLLMsClearAll");
+    const maxModels = 5;
+
+    // Add keyboard shortcut for Command+Enter/Ctrl+Enter
+    const questionTextarea = document.querySelector('textarea[name="content"]');
+    if (questionTextarea) {
+      questionTextarea.addEventListener("keydown", function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          if (!submitBtn.disabled) {
+            submitBtn.click();
+          }
+        }
+      });
+    }
+
+    function updateSelectedCount() {
+      const selected = document.querySelectorAll(
+        ".ask-many-llms-model-checkbox:checked"
+      );
+      selectedCount.textContent = `${selected.length} models selected`;
+
+      // Update submit button state
+      submitBtn.disabled = selected.length === 0 || selected.length > maxModels;
+
+      // Add visual feedback for max selection
+      if (selected.length >= maxModels) {
+        selectedCount.classList.add("warning");
+      } else {
+        selectedCount.classList.remove("warning");
+      }
+    }
+
+    function selectPreset(preset) {
+      // Uncheck all checkboxes first
+      checkboxes.forEach((checkbox) => (checkbox.checked = false));
+
+      // Select the preset models
+      if (preset === "mini") {
+        const miniModels = [
+          "ask-many-llms-model-gpt-5-nano",
+          "ask-many-llms-model-gemini-2-5-flash-lite",
+        ];
+        miniModels.forEach((id) => {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      } else if (preset === "small") {
+        const smallModels = [
+          "ask-many-llms-model-gpt-5-mini",
+          "ask-many-llms-model-claude-haiku-4-5",
+          "ask-many-llms-model-gemini-2-5-flash",
+        ];
+        smallModels.forEach((id) => {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      } else if (preset === "mid") {
+        const midModels = [
+          "ask-many-llms-model-gpt-5-1",
+          "ask-many-llms-model-claude-sonnet-4-5",
+          "ask-many-llms-model-gemini-2-5-pro",
+        ];
+        midModels.forEach((id) => {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      }
+
+      updateSelectedCount();
+    }
+
+    function clearAll() {
+      checkboxes.forEach((checkbox) => (checkbox.checked = false));
+      updateSelectedCount();
+    }
+
+    // Handle checkbox changes
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", function () {
+        const selected = document.querySelectorAll(
+          ".ask-many-llms-model-checkbox:checked"
+        );
+
+        if (selected.length > maxModels) {
+          // If more than max models are selected, uncheck the current one
+          this.checked = false;
+        }
+
+        updateSelectedCount();
+      });
+    });
+
+    // Handle preset buttons
+    presetMiniBtn.addEventListener("click", () => selectPreset("mini"));
+    presetSmallBtn.addEventListener("click", () => selectPreset("small"));
+    presetMidBtn.addEventListener("click", () => selectPreset("mid"));
+    clearAllBtn.addEventListener("click", clearAll);
+
+    // Initial update and select 3 Small by default
+    selectPreset("small");
+    updateSelectedCount();
+
+    // Handle form submission with AJAX
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const content = questionTextarea.value.trim();
+      const selected = Array.from(
+        document.querySelectorAll(".ask-many-llms-model-checkbox:checked")
+      ).map((cb) => cb.value);
+      const concise = document.getElementById(
+        "askManyLLMsConciseSwitch"
+      ).checked;
+
+      if (!content || selected.length === 0 || selected.length > 5) {
+        return;
+      }
+
+      // Disable form
+      const formElements = form.querySelectorAll("input, textarea, button");
+      formElements.forEach((el) => (el.disabled = true));
+      form.classList.add("ask-many-llms-form-disabled");
+      submitBtn.textContent = "Processing...";
+
+      // Show progress container and collapse form
+      const progressContainer = document.getElementById("askManyLLMsProgress");
+      const progressStatus = document.getElementById(
+        "askManyLLMsProgressStatus"
+      );
+      const viewResultsBtn = document.getElementById("askManyLLMsViewResults");
+      const cardBody = document.querySelector(".ask-many-llms-card-body");
+
+      progressContainer.classList.add("active");
+
+      // Collapse the form after a brief delay to show the progress
+      setTimeout(() => {
+        cardBody.classList.add("has-progress");
+      }, 300);
+
+      // Initialize status badges
+      progressStatus.innerHTML = "";
+      selected.forEach((model) => {
+        const badge = document.createElement("div");
+        badge.className = "ask-many-llms-model-status pending";
+        badge.id = `status-${model
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/\./g, "-")}`;
+        badge.innerHTML = `${model}`;
+        progressStatus.appendChild(badge);
+      });
+
+      try {
+        // Step 1: Create the question
+        const createResponse = await fetch(
+          "{{ url_for('ask_many_llms.api_create_question') }}",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token() }}",
+            },
+            body: JSON.stringify({
+              content: content,
+              models: selected,
+            }),
+          }
+        );
+
+        if (!createResponse.ok) {
+          const error = await createResponse.json();
+          throw new Error(error.error || "Failed to create question");
+        }
+
+        const createData = await createResponse.json();
+        const questionId = createData.question_id;
+
+        // Step 2: Query each model sequentially
+        for (const model of selected) {
+          const statusBadge = document.getElementById(
+            `status-${model
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/\./g, "-")}`
+          );
+
+          // Mark as running
+          statusBadge.className = "ask-many-llms-model-status running";
+          statusBadge.innerHTML = `<span class="ask-many-llms-spinner"></span> ${model}`;
+
+          // Query the model
+          const queryResponse = await fetch(
+            "{{ url_for('ask_many_llms.api_query_model') }}",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token() }}",
+              },
+              body: JSON.stringify({
+                question_id: questionId,
+                model: model,
+                content: content,
+                concise: concise,
+              }),
+            }
+          );
+
+          const queryData = await queryResponse.json();
+
+          // Update status badge
+          if (queryData.success) {
+            statusBadge.className = "ask-many-llms-model-status completed";
+            const time = queryData.response_time
+              ? ` (${queryData.response_time.toFixed(1)}s)`
+              : "";
+            statusBadge.innerHTML = `<i class="fas fa-check-circle ask-many-llms-checkmark"></i> ${model}${time}`;
+          } else {
+            statusBadge.className = "ask-many-llms-model-status error";
+            statusBadge.innerHTML = `<i class="fas fa-times-circle ask-many-llms-error-icon"></i> ${model} (Error)`;
+          }
+        }
+
+        // Step 3: Generate summary if we have at least 2 successful responses
+        const completedResponses = selected.filter((model) => {
+          const badge = document.getElementById(
+            `status-${model
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/\./g, "-")}`
+          );
+          return badge && badge.classList.contains("completed");
+        });
+
+        if (completedResponses.length >= 2) {
+          // Add summary badge
+          const summaryBadge = document.createElement("div");
+          summaryBadge.className = "ask-many-llms-model-status summary";
+          summaryBadge.id = "status-summary";
+          summaryBadge.innerHTML = `<span class="ask-many-llms-spinner"></span> Generating Summary`;
+          progressStatus.appendChild(summaryBadge);
+
+          // Generate summary
+          const summaryResponse = await fetch(
+            "{{ url_for('ask_many_llms.api_generate_summary') }}",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token() }}",
+              },
+              body: JSON.stringify({
+                question_id: questionId,
+              }),
+            }
+          );
+
+          const summaryData = await summaryResponse.json();
+
+          // Update summary badge
+          if (summaryData.success) {
+            summaryBadge.className =
+              "ask-many-llms-model-status summary completed";
+            const time = summaryData.response_time
+              ? ` (${summaryData.response_time.toFixed(1)}s)`
+              : "";
+            summaryBadge.innerHTML = `<i class="fas fa-check-circle ask-many-llms-checkmark"></i> Summary${time}`;
+          } else {
+            summaryBadge.className = "ask-many-llms-model-status error";
+            summaryBadge.innerHTML = `<i class="fas fa-times-circle ask-many-llms-error-icon"></i> Summary (Error)`;
+          }
+        }
+
+        // Show view results button
+        viewResultsBtn.href =
+          "{{ url_for('ask_many_llms.view_question', question_id=0) }}".replace(
+            "0",
+            questionId
+          );
+        viewResultsBtn.classList.add("show");
+
+        // Auto-redirect after 1 second
+        setTimeout(() => {
+          window.location.href = viewResultsBtn.href;
+        }, 1000);
+      } catch (error) {
+        alert("Error: " + error.message);
+        // Re-enable form
+        formElements.forEach((el) => (el.disabled = false));
+        form.classList.remove("ask-many-llms-form-disabled");
+        submitBtn.textContent = "Ask Question";
+        progressContainer.classList.remove("active");
+        cardBody.classList.remove("has-progress");
+      }
+    });
+  });
+</script>
+{% endblock %}

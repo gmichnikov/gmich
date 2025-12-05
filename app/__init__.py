@@ -5,6 +5,8 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 import os
+import markdown
+import logging
 
 load_dotenv()
 
@@ -22,6 +24,12 @@ def create_app():
     
     app = Flask(__name__)
     app.config.from_object('config')
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
     
     # Initialize extensions
     db.init_app(app)
@@ -44,6 +52,7 @@ def create_app():
     from app.projects.sorry_cards.routes import sorry_cards_bp
     from app.projects.sushi_go.routes import sushi_go_bp
     from app.projects.chatbot.routes import chatbot_bp
+    from app.projects.ask_many_llms.routes import bp as ask_many_llms_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -57,10 +66,17 @@ def create_app():
     app.register_blueprint(sorry_cards_bp, url_prefix='/sorry-cards')
     app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
     app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
+    app.register_blueprint(ask_many_llms_bp)  # Has its own url_prefix defined
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
     from app.projects.chatbot.models import ChatMessage
+    from app.projects.ask_many_llms.models import LLMQuestion, LLMResponse
+    
+    # Register markdown filter for Ask Many LLMs templates
+    @app.template_filter('markdown')
+    def markdown_filter(text):
+        return markdown.markdown(text, extensions=['fenced_code', 'tables'])
     
     # User loader for Flask-Login
     @login_manager.user_loader

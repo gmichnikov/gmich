@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Credits{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">💰 Add Credits to User</h1>
+            <p class="admin-subtitle">Admin tool to add credits to user accounts</p>
+        </div>
+
+        <form method="post" class="admin-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="admin-form-group">
+                {{ form.email.label(class="admin-label") }}
+                {{ form.email(class="admin-select") }}
+            </div>
+
+            <div class="admin-form-group">
+                {{ form.credits.label(class="admin-label") }}
+                {{ form.credits(class="admin-input", placeholder="Enter number of credits to add") }}
+            </div>
+
+            <div class="admin-form-group">
+                {{ form.submit(class="admin-submit-btn") }}
+            </div>
+        </form>
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

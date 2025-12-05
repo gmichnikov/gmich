@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.models import User, LogEntry, db
-from app.forms import AdminPasswordResetForm
+from app.forms import AdminPasswordResetForm, AdminCreditForm
 from functools import wraps
 import pytz
 
@@ -38,6 +38,44 @@ def reset_password():
             flash('User not found.')
 
     return render_template('admin/reset_password.html', form=form)
+
+@admin_bp.route('/add_credits', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_credits():
+    form = AdminCreditForm()
+    form.email.choices = [(user.email, f"{user.email} ({user.credits} credits)") for user in User.query.order_by(User.email).all()]
+
+    if form.validate_on_submit():
+        try:
+            credits_to_add = int(form.credits.data)
+            if credits_to_add <= 0:
+                flash('Credits must be a positive number.', 'error')
+                return render_template('admin/add_credits.html', form=form)
+        except ValueError:
+            flash('Credits must be a valid number.', 'error')
+            return render_template('admin/add_credits.html', form=form)
+
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            old_credits = user.credits
+            user.credits += credits_to_add
+            db.session.commit()
+            
+            flash(f'Successfully added {credits_to_add} credits to {user.email}. New balance: {user.credits}', 'success')
+
+            log_entry = LogEntry(
+                project='admin', 
+                category='Add Credits', 
+                actor_id=current_user.id, 
+                description=f"{current_user.email} added {credits_to_add} credits to {user.email} (from {old_credits} to {user.credits})"
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+        else:
+            flash('User not found.', 'error')
+
+    return render_template('admin/add_credits.html', form=form)
 
 @admin_bp.route('/view_logs')
 @login_required

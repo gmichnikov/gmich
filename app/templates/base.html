@@ -27,8 +27,17 @@
                     
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <li class="nav-item">
-                                <a href="{{ url_for('admin.reset_password') }}" class="nav-link">Admin</a>
+                            <li class="nav-item nav-dropdown">
+                                <button class="nav-link nav-dropdown-toggle" id="adminDropdown" aria-expanded="false">
+                                    Admin
+                                    <svg class="nav-dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                        <path d="M6 8L2 4h8z"/>
+                                    </svg>
+                                </button>
+                                <ul class="nav-dropdown-menu" id="adminDropdownMenu">
+                                    <li><a href="{{ url_for('admin.reset_password') }}" class="nav-dropdown-item">Reset Password</a></li>
+                                    <li><a href="{{ url_for('admin.add_credits') }}" class="nav-dropdown-item">Add Credits</a></li>
+                                </ul>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ url_for('admin.view_logs') }}" class="nav-link">Logs</a>
@@ -94,6 +103,37 @@
                         navMenu.classList.remove('nav-menu-active');
                         hamburger.classList.remove('hamburger-active');
                     }
+                });
+            }
+            
+            // Dropdown menu toggle
+            const adminDropdown = document.getElementById('adminDropdown');
+            const adminDropdownMenu = document.getElementById('adminDropdownMenu');
+            
+            if (adminDropdown && adminDropdownMenu) {
+                adminDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    adminDropdownMenu.classList.toggle('nav-dropdown-menu-active');
+                    adminDropdown.setAttribute('aria-expanded', 
+                        adminDropdownMenu.classList.contains('nav-dropdown-menu-active'));
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!adminDropdown.contains(event.target) && !adminDropdownMenu.contains(event.target)) {
+                        adminDropdownMenu.classList.remove('nav-dropdown-menu-active');
+                        adminDropdown.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                // Close dropdown when clicking a dropdown item
+                const dropdownItems = adminDropdownMenu.querySelectorAll('.nav-dropdown-item');
+                dropdownItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        adminDropdownMenu.classList.remove('nav-dropdown-menu-active');
+                        adminDropdown.setAttribute('aria-expanded', 'false');
+                    });
                 });
             }
         </script>

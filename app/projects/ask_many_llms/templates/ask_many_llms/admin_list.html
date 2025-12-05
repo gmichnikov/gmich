@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Many LLMs - Admin - All Questions{% endblock %}
+
+{% block styles %}
+<!-- Ask Many LLMs Custom CSS -->
+<link rel="stylesheet" href="{{ url_for('ask_many_llms.static', filename='ask_many_llms/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="ask-many-llms-container">
+    <div class="ask-many-llms-flex-between ask-many-llms-mb-20">
+        <h2 style="margin: 0; color: white;">All Questions (Admin)</h2>
+        <a href="{{ url_for('ask_many_llms.ask_question') }}" class="ask-many-llms-btn ask-many-llms-btn-primary">
+            <i class="fas fa-plus"></i> Ask New Question
+        </a>
+    </div>
+
+    {% if questions %}
+        {% for question in questions %}
+        <div class="ask-many-llms-question-card">
+            <h5>
+                <a href="{{ url_for('ask_many_llms.view_question', question_id=question.id) }}">
+                    {{ question.content[:150] }}{% if question.content|length > 150 %}...{% endif %}
+                </a>
+            </h5>
+            <div class="ask-many-llms-question-meta">
+                <span>
+                    <i class="fas fa-user"></i> {{ question.user.email }}
+                </span>
+                <span>
+                    <i class="far fa-clock"></i> {{ question.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                </span>
+                <span>
+                    <i class="fas fa-robot"></i> {{ question.responses|length }} responses
+                </span>
+                <span>
+                    <i class="fas fa-dollar-sign"></i> Total cost: ${{ "%.6f"|format(question.total_cost) }}
+                </span>
+            </div>
+            <div class="ask-many-llms-mt-20">
+                <form method="POST" action="{{ url_for('ask_many_llms.admin_delete_question', question_id=question.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this question?');">
+                    <button type="submit" class="ask-many-llms-btn ask-many-llms-btn-danger ask-many-llms-btn-sm">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="ask-many-llms-alert ask-many-llms-alert-info">
+            No questions have been asked yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

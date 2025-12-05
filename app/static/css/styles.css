@@ -92,6 +92,68 @@ body {
   background: #5568d3;
 }
 
+/* ===== Dropdown Menu ===== */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.nav-dropdown-arrow {
+  transition: transform 0.3s;
+}
+
+.nav-dropdown-toggle[aria-expanded="true"] .nav-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  list-style: none;
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s;
+  z-index: 1001;
+}
+
+.nav-dropdown-menu-active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nav-dropdown-item {
+  display: block;
+  padding: 10px 16px;
+  color: #555;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.nav-dropdown-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
 /* ===== Hamburger Menu (Hidden on Desktop) ===== */
 .nav-hamburger {
   display: none;
@@ -884,6 +946,34 @@ body {
   .nav-item {
     width: 100%;
     margin: 0;
+  }
+  
+  /* Mobile dropdown styles */
+  .nav-dropdown-menu {
+    position: static;
+    margin-top: 0;
+    box-shadow: none;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    transform: none;
+    padding: 4px 0;
+    max-height: 0;
+    overflow: hidden;
+  }
+  
+  .nav-dropdown-menu-active {
+    max-height: 200px;
+    padding: 8px 0;
+  }
+  
+  .nav-dropdown-item {
+    padding: 10px 24px;
+  }
+  
+  .nav-dropdown-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 8px 16px;
   }
 
   .nav-link {
