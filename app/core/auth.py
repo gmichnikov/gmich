@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user
 from app.models import User, LogEntry, db
-from app.forms import RegistrationForm, LoginForm, ResendVerificationForm
-from app.utils.email_service import send_verification_email
+from app.forms import RegistrationForm, LoginForm, ResendVerificationForm, RequestPasswordResetForm, ResetPasswordForm
+from app.utils.email_service import send_verification_email, send_password_reset_email, send_password_reset_confirmation_email
 import os
 import logging
 from datetime import datetime, timedelta
@@ -18,6 +18,10 @@ ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 # Format: {identifier: [list of timestamps]}
 _resend_rate_limit = defaultdict(list)
 _resend_rate_limit_cleanup_time = datetime.utcnow()
+
+# Rate limiting for password reset (in-memory, simple approach)
+_password_reset_rate_limit = defaultdict(list)
+_password_reset_rate_limit_cleanup_time = datetime.utcnow()
 
 def _check_rate_limit(identifier, max_attempts=3, window_hours=1):
     """
@@ -307,3 +311,206 @@ def logout():
     
     logout_user()
     return redirect(url_for('main.index'))
+
+def _check_password_reset_rate_limit(email, user_ip):
+    """
+    Check password reset rate limits:
+    - Max 3 requests per email per hour
+    - Max 5 requests per email per 30 days
+    
+    Args:
+        email: User email address
+        user_ip: User IP address
+    
+    Returns:
+        tuple: (allowed, reason) - (True, None) if allowed, (False, reason) if blocked
+    """
+    global _password_reset_rate_limit, _password_reset_rate_limit_cleanup_time
+    
+    # Cleanup old entries periodically (every 5 minutes)
+    if datetime.utcnow() - _password_reset_rate_limit_cleanup_time > timedelta(minutes=5):
+        cutoff_30_days = datetime.utcnow() - timedelta(days=30)
+        for key in list(_password_reset_rate_limit.keys()):
+            _password_reset_rate_limit[key] = [
+                ts for ts in _password_reset_rate_limit[key] 
+                if ts > cutoff_30_days
+            ]
+            if not _password_reset_rate_limit[key]:
+                del _password_reset_rate_limit[key]
+        _password_reset_rate_limit_cleanup_time = datetime.utcnow()
+    
+    email_key = f"email:{email}"
+    
+    # Check 30-day limit (5 requests)
+    cutoff_30_days = datetime.utcnow() - timedelta(days=30)
+    requests_30_days = [
+        ts for ts in _password_reset_rate_limit[email_key]
+        if ts > cutoff_30_days
+    ]
+    
+    if len(requests_30_days) >= 5:
+        return (False, "30-day limit")
+    
+    # Check 1-hour limit (3 requests)
+    cutoff_1_hour = datetime.utcnow() - timedelta(hours=1)
+    requests_1_hour = [
+        ts for ts in _password_reset_rate_limit[email_key]
+        if ts > cutoff_1_hour
+    ]
+    
+    if len(requests_1_hour) >= 3:
+        return (False, "1-hour limit")
+    
+    # Record this attempt
+    _password_reset_rate_limit[email_key].append(datetime.utcnow())
+    return (True, None)
+
+@auth_bp.route('/request-password-reset', methods=['GET', 'POST'])
+def request_password_reset():
+    """
+    Allow users to request a password reset email.
+    Includes rate limiting to prevent abuse.
+    """
+    form = RequestPasswordResetForm()
+    
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        user_ip = request.remote_addr or 'unknown'
+        
+        # Check rate limits
+        allowed, reason = _check_password_reset_rate_limit(email, user_ip)
+        
+        if not allowed:
+            logger.warning(f"Password reset rate limit exceeded for email: {email} ({reason})")
+            # Still show success message (don't reveal rate limiting)
+            flash('If that email address is registered, a password reset link has been sent.')
+            return render_template('auth/request_password_reset.html', form=form)
+        
+        # Find user by email
+        user = User.query.filter_by(email=email).first()
+        
+        # Security: Always show success message, even if user doesn't exist
+        # This prevents email enumeration attacks
+        if user:
+            try:
+                # Generate new token (this invalidates any existing token)
+                token = user.generate_password_reset_token()
+                send_password_reset_email(user, token)
+                
+                # Log password reset request
+                log_entry = LogEntry(
+                    project='auth',
+                    category='Password Reset Requested',
+                    actor_id=user.id,
+                    description=f"Password reset requested for {user.email}"
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to send password reset email to {user.email}: {e}")
+                log_entry = LogEntry(
+                    project='auth',
+                    category='Password Reset Error',
+                    actor_id=user.id,
+                    description=f"Failed to send password reset email to {user.email}: {str(e)}"
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+        else:
+            # User doesn't exist - don't reveal this, just show generic message
+            logger.info(f"Password reset requested for non-existent email: {email}")
+            # Log to database for security monitoring (no actor_id since user doesn't exist)
+            log_entry = LogEntry(
+                project='auth',
+                category='Password Reset Requested - Non-existent Email',
+                actor_id=None,
+                description=f"Password reset requested for non-existent email: {email}"
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+        
+        # Always show success message (security best practice)
+        flash('If that email address is registered, a password reset link has been sent.')
+        return render_template('auth/request_password_reset.html', form=form)
+    
+    return render_template('auth/request_password_reset.html', form=form)
+
+@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    """
+    Reset password using token from email.
+    Token is passed as a query parameter on GET, or in form data on POST.
+    """
+    # Get token from query parameter (GET) or form data (POST)
+    token = request.args.get('token') or request.form.get('token')
+    
+    if not token:
+        flash('Invalid password reset link. Please request a new one.')
+        return redirect(url_for('auth.request_password_reset'))
+    
+    # Find user by password reset token
+    user = User.query.filter_by(password_reset_token=token).first()
+    
+    if not user:
+        # Log failed reset attempt (invalid token)
+        log_entry = LogEntry(
+            project='auth',
+            category='Password Reset Failed',
+            actor_id=None,
+            description=f"Failed password reset attempt with invalid token"
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        flash('Invalid or expired password reset link. Please request a new one.')
+        return redirect(url_for('auth.request_password_reset'))
+    
+    # Validate token
+    if not user.is_password_reset_token_valid(token):
+        # Token expired or invalid
+        log_entry = LogEntry(
+            project='auth',
+            category='Password Reset Failed',
+            actor_id=user.id,
+            description=f"Failed password reset attempt for {user.email} - token expired or invalid"
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        flash('This password reset link has expired. Please request a new one.')
+        return redirect(url_for('auth.request_password_reset'))
+    
+    # Token is valid, show reset form
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        # Double-check token is still valid (in case it expired between page load and submit)
+        if not user.is_password_reset_token_valid(token):
+            flash('This password reset link has expired. Please request a new one.')
+            return redirect(url_for('auth.request_password_reset'))
+        
+        # Reset the password
+        user.set_password(form.password.data)
+        user.clear_password_reset_token()  # Clear token (single-use)
+        db.session.commit()
+        
+        # Send confirmation email
+        try:
+            send_password_reset_confirmation_email(user)
+        except Exception as e:
+            logger.error(f"Failed to send password reset confirmation email to {user.email}: {e}")
+        
+        # Log successful password reset
+        log_entry = LogEntry(
+            project='auth',
+            category='Password Reset',
+            actor_id=user.id,
+            description=f"Password reset successful for {user.email}"
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        flash('Your password has been reset successfully. Please log in with your new password.')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password.html', form=form, token=token)

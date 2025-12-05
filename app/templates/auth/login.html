@@ -36,6 +36,9 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                <div style="text-align: right; margin-top: 8px;">
+                    <a href="{{ url_for('auth.request_password_reset') }}" class="auth-link" style="font-size: 0.9em;">Forgot Password?</a>
+                </div>
             </div>
 
             <div class="auth-form-group">

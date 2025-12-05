@@ -16,6 +16,8 @@ class User(db.Model, UserMixin):
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
     verification_token = db.Column(db.String(100), nullable=True)
     verification_token_expiry = db.Column(db.DateTime, nullable=True)
+    password_reset_token = db.Column(db.String(100), nullable=True)
+    password_reset_expiry = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -96,6 +98,60 @@ class User(db.Model, UserMixin):
         db.session.commit()
         
         return True
+    
+    def generate_password_reset_token(self):
+        """
+        Generate a new password reset token and set expiry to 1 hour from now.
+        Invalidates any existing reset token.
+        Saves the token and expiry to the database.
+        
+        Returns:
+            str: The generated password reset token
+        """
+        # Generate a cryptographically secure random token
+        token = secrets.token_urlsafe(32)
+        
+        # Set expiry to 1 hour from now (in UTC)
+        expiry = datetime.utcnow() + timedelta(hours=1)
+        
+        # Save to database (this invalidates any existing token)
+        self.password_reset_token = token
+        self.password_reset_expiry = expiry
+        db.session.commit()
+        
+        return token
+    
+    def is_password_reset_token_valid(self, token):
+        """
+        Check if the provided password reset token matches and hasn't expired.
+        
+        Args:
+            token: The password reset token to check
+        
+        Returns:
+            bool: True if token is valid and not expired, False otherwise
+        """
+        if not self.password_reset_token or not self.password_reset_expiry:
+            return False
+        
+        # Check if token matches
+        if self.password_reset_token != token:
+            return False
+        
+        # Check if token hasn't expired (compare UTC times)
+        if datetime.utcnow() > self.password_reset_expiry:
+            return False
+        
+        return True
+    
+    def clear_password_reset_token(self):
+        """
+        Clear the password reset token and expiry.
+        Used after successful password reset or when invalidating old tokens.
+        """
+        self.password_reset_token = None
+        self.password_reset_expiry = None
+        db.session.commit()
     
 class LogEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)

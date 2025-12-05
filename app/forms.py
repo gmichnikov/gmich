@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, SelectMultipleField, BooleanField
-from wtforms.validators import DataRequired, Length, Email, ValidationError
+from wtforms.validators import DataRequired, Length, Email, ValidationError, EqualTo
 import pytz
 from app.models import User
 
@@ -23,6 +23,18 @@ class LoginForm(FlaskForm):
 class ResendVerificationForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Resend Verification Email')
+
+class RequestPasswordResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Reset Link')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=4)])
+    password_confirm = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('password', message='Passwords must match')
+    ])
+    submit = SubmitField('Reset Password')
 
 class AdminPasswordResetForm(FlaskForm):
     email = SelectField('Select User', choices=[])
