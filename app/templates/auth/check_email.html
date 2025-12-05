@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Check Your Email{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Check Your Email</h1>
+            <p class="auth-subtitle">We've sent you a verification link</p>
+        </div>
+
+        <div class="auth-form-group">
+            <p>We've sent a verification email to your inbox. Please click the link in the email to verify your account.</p>
+            <p>The verification link will expire in 24 hours.</p>
+        </div>
+
+        <div class="auth-form-group">
+            <p><strong>Didn't receive the email?</strong></p>
+            <ul style="text-align: left; display: inline-block; margin: 20px 0;">
+                <li>Check your spam/junk folder</li>
+                <li>Make sure you entered the correct email address</li>
+                <li>Wait a few minutes and try again</li>
+            </ul>
+        </div>
+
+        <div class="auth-form-group">
+            <a href="{{ url_for('auth.resend_verification') }}" class="auth-submit-btn" style="text-decoration: none; display: inline-block;">Resend Verification Email</a>
+        </div>
+
+        <div class="auth-footer">
+            <p class="auth-footer-text"><a href="{{ url_for('auth.login') }}" class="auth-link">Back to Login</a></p>
+            <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

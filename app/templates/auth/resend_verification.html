@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Resend Verification Email{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Resend Verification Email</h1>
+            <p class="auth-subtitle">Request a new verification email</p>
+        </div>
+
+        <form method="post" class="auth-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="auth-form-group">
+                {{ form.email.label(class="auth-label") }}
+                {{ form.email(class="auth-input", placeholder="your@email.com") }}
+                {% if form.email.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.email.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.submit(class="auth-submit-btn") }}
+            </div>
+        </form>
+
+        <div class="auth-form-group" style="margin-top: 20px;">
+            <p style="font-size: 0.9em; color: #666;">
+                Enter your email address and we'll send you a new verification link if your account is not yet verified.
+            </p>
+        </div>
+
+        <div class="auth-footer">
+            <p class="auth-footer-text"><a href="{{ url_for('auth.login') }}" class="auth-link">Back to Login</a></p>
+            <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

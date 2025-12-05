@@ -20,6 +20,10 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
+class ResendVerificationForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Resend Verification Email')
+
 class AdminPasswordResetForm(FlaskForm):
     email = SelectField('Select User', choices=[])
     new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=4)])

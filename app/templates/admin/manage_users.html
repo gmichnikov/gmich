@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">👥 Manage Users</h1>
+            <p class="admin-subtitle">View and manage user accounts and verification status</p>
+        </div>
+
+        <!-- Filter buttons -->
+        <div class="admin-form-group" style="margin-bottom: 20px;">
+            <a href="{{ url_for('admin.manage_users', filter='all') }}" 
+               class="admin-link" 
+               style="display: inline-block; padding: 8px 16px; margin-right: 10px; background-color: {% if filter_status == 'all' %}#007bff{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'all' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
+                All Users
+            </a>
+            <a href="{{ url_for('admin.manage_users', filter='verified') }}" 
+               class="admin-link" 
+               style="display: inline-block; padding: 8px 16px; margin-right: 10px; background-color: {% if filter_status == 'verified' %}#28a745{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'verified' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
+                Verified
+            </a>
+            <a href="{{ url_for('admin.manage_users', filter='unverified') }}" 
+               class="admin-link" 
+               style="display: inline-block; padding: 8px 16px; background-color: {% if filter_status == 'unverified' %}#dc3545{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'unverified' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
+                Unverified
+            </a>
+        </div>
+
+        <!-- Users list -->
+        {% if users %}
+        <div style="margin-top: 20px;">
+            {% for user in users %}
+            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 16px; margin-bottom: 12px;">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">{{ user.email }}</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.9em; color: #6c757d;">
+                            <span>
+                                {% if user.email_verified %}
+                                    <span style="color: #28a745; font-weight: bold;">✓ Verified</span>
+                                {% else %}
+                                    <span style="color: #dc3545; font-weight: bold;">✗ Unverified</span>
+                                {% endif %}
+                            </span>
+                            <span>•</span>
+                            <span>
+                                {% if user.is_admin %}
+                                    <span style="color: #007bff; font-weight: bold;">Admin</span>
+                                {% else %}
+                                    <span>User</span>
+                                {% endif %}
+                            </span>
+                            <span>•</span>
+                            <span>{{ user.credits }} credits</span>
+                        </div>
+                    </div>
+                    <div style="flex-shrink: 0;">
+                        {% if not user.email_verified %}
+                            <form method="POST" action="{{ url_for('admin.verify_user_email', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to manually verify {{ user.email }}?');">
+                                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
+                                    Verify Email
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: #6c757d; font-style: italic; font-size: 0.9em;">Already verified</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="admin-form-group" style="margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 4px;">
+            <p style="text-align: center; color: #6c757d;">No users found with the selected filter.</p>
+        </div>
+        {% endif %}
+
+        <div class="admin-footer" style="margin-top: 30px;">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verification{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            {% if success %}
+                <h1 class="auth-title">Email Verified!</h1>
+                <p class="auth-subtitle">Your email address has been verified</p>
+            {% else %}
+                <h1 class="auth-title">Verification Failed</h1>
+                <p class="auth-subtitle">Unable to verify your email address</p>
+            {% endif %}
+        </div>
+
+        <div class="auth-form-group">
+            {% if success %}
+                <p>Your email address has been successfully verified. You can now log in to your account.</p>
+                <div class="auth-form-group" style="margin-top: 20px;">
+                    <a href="{{ url_for('auth.login') }}" class="auth-submit-btn" style="text-decoration: none; display: inline-block;">Go to Login</a>
+                </div>
+            {% else %}
+                <p>The verification link you used is invalid or has expired. This can happen if:</p>
+                <ul style="text-align: left; display: inline-block; margin: 20px 0;">
+                    <li>The link is more than 24 hours old</li>
+                    <li>The link has already been used</li>
+                    <li>The link was copied incorrectly</li>
+                </ul>
+                <p>Please request a new verification email to continue.</p>
+                <div class="auth-form-group" style="margin-top: 20px;">
+                    <a href="{{ url_for('auth.resend_verification') }}" class="auth-submit-btn" style="text-decoration: none; display: inline-block;">Request New Verification Email</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="auth-footer">
+            <p class="auth-footer-text"><a href="{{ url_for('auth.login') }}" class="auth-link">Back to Login</a></p>
+            <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

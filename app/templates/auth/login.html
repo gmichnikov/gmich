@@ -43,6 +43,13 @@
             </div>
         </form>
 
+        {% if show_resend %}
+        <div class="auth-form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <p style="text-align: center; margin-bottom: 10px;">Need a new verification email?</p>
+            <a href="{{ url_for('auth.resend_verification') }}" class="auth-link" style="display: block; text-align: center;">Resend Verification Email</a>
+        </div>
+        {% endif %}
+
         <div class="auth-footer">
             <p class="auth-footer-text">Don't have an account? <a href="{{ url_for('auth.register') }}" class="auth-link">Register here</a></p>
             <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>

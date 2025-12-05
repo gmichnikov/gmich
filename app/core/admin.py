@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
@@ -76,6 +76,56 @@ def add_credits():
             flash('User not found.', 'error')
 
     return render_template('admin/add_credits.html', form=form)
+
+@admin_bp.route('/users')
+@login_required
+@admin_required
+def manage_users():
+    """Admin view of all users with verification status."""
+    # Get filter parameter
+    filter_status = request.args.get('filter', 'all')  # 'all', 'verified', 'unverified'
+    
+    # Query users
+    query = User.query
+    
+    if filter_status == 'verified':
+        query = query.filter_by(email_verified=True)
+    elif filter_status == 'unverified':
+        query = query.filter_by(email_verified=False)
+    
+    users = query.order_by(User.email).all()
+    
+    return render_template('admin/manage_users.html', users=users, filter_status=filter_status)
+
+@admin_bp.route('/users/<int:user_id>/verify', methods=['POST'])
+@login_required
+@admin_required
+def verify_user_email(user_id):
+    """Manually verify a user's email address."""
+    user = User.query.get_or_404(user_id)
+    
+    if user.email_verified:
+        flash(f'{user.email} is already verified.', 'info')
+    else:
+        # Manually verify the user
+        user.email_verified = True
+        user.verification_token = None
+        user.verification_token_expiry = None
+        db.session.commit()
+        
+        # Log the manual verification
+        log_entry = LogEntry(
+            project='admin',
+            category='Manual Email Verification',
+            actor_id=current_user.id,
+            description=f"{current_user.email} manually verified email for {user.email}"
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        flash(f'Successfully verified email for {user.email}.', 'success')
+    
+    return redirect(url_for('admin.manage_users'))
 
 @admin_bp.route('/view_logs')
 @login_required
