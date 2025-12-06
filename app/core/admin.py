@@ -133,8 +133,8 @@ def verify_user_email(user_id):
 def view_logs():
     user_tz = pytz.timezone(current_user.time_zone)
 
-    # This is the fixed version of your query - it was using current_user_id instead of actor_id
-    log_entries = LogEntry.query.join(User, LogEntry.actor_id == User.id)
+    # Use outerjoin (LEFT JOIN) to include anonymous visits where actor_id is None
+    log_entries = LogEntry.query.outerjoin(User, LogEntry.actor_id == User.id)
     log_entries = log_entries.order_by(LogEntry.timestamp.desc()).all()
 
     for log in log_entries:
