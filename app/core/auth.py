@@ -633,8 +633,18 @@ def login_google():
     # Get the OAuth client
     google = oauth.google
 
-    # Redirect to Google OAuth
-    redirect_uri = url_for("auth.google_callback", _external=True)
+    # Get redirect URI - use explicit base URL if configured, otherwise use request headers
+    from flask import current_app
+
+    base_url = current_app.config.get("OAUTH_REDIRECT_BASE_URL")
+    if base_url:
+        # Use explicit base URL to avoid issues with proxy headers
+        redirect_uri = f"{base_url.rstrip('/')}{url_for('auth.google_callback')}"
+    else:
+        # Fall back to using request headers (may vary behind proxies)
+        redirect_uri = url_for("auth.google_callback", _external=True)
+
+    logger.info(f"Google OAuth redirect URI: {redirect_uri}")
     return google.authorize_redirect(redirect_uri)
 
 
