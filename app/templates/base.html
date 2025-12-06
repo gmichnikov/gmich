@@ -21,10 +21,6 @@
                 </button>
                 
                 <ul class="nav-menu" id="navMenu">
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.index') }}" class="nav-link">Home</a>
-                    </li>
-                    
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
                             <li class="nav-item nav-dropdown">
@@ -38,17 +34,45 @@
                                     <li><a href="{{ url_for('admin.manage_users') }}" class="nav-dropdown-item">Manage Users</a></li>
                                     <li><a href="{{ url_for('admin.reset_password') }}" class="nav-dropdown-item">Reset Password</a></li>
                                     <li><a href="{{ url_for('admin.add_credits') }}" class="nav-dropdown-item">Add Credits</a></li>
+                                    <li><a href="{{ url_for('admin.view_logs') }}" class="nav-dropdown-item">Logs</a></li>
                                 </ul>
                             </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('admin.view_logs') }}" class="nav-link">Logs</a>
-                            </li>
                         {% endif %}
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.index') }}" class="nav-link nav-link-icon" title="Home">
+                            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span class="nav-link-text">Home</span>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('main.feedback') }}" class="nav-link nav-link-icon" title="Feedback">
+                                <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    <line x1="9" y1="10" x2="15" y2="10"></line>
+                                    <line x1="9" y1="14" x2="13" y2="14"></line>
+                                </svg>
+                                <span class="nav-link-text">Feedback</span>
+                            </a>
+                        </li>
                         <li class="nav-item nav-user">
                             <span class="nav-link">{{ current_user.email }}</span>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ url_for('auth.logout') }}" class="nav-link nav-button">Logout</a>
+                            <a href="{{ url_for('auth.logout') }}" class="nav-link nav-button nav-link-icon" title="Logout">
+                                <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span class="nav-link-text">Logout</span>
+                            </a>
                         </li>
                     {% else %}
                         <li class="nav-item">

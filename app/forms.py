@@ -77,3 +77,9 @@ class AdminCreditForm(FlaskForm):
     email = SelectField('Select User', choices=[])
     credits = StringField('Credits to Add', validators=[DataRequired()])
     submit = SubmitField('Add Credits')
+
+class FeedbackForm(FlaskForm):
+    """Form for submitting feedback"""
+    subject = StringField('Subject', validators=[DataRequired(), Length(max=200)])
+    message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=2000)])
+    submit = SubmitField('Send Feedback')

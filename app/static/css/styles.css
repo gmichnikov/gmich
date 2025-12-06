@@ -67,6 +67,30 @@ body {
   background: rgba(102, 126, 234, 0.1);
 }
 
+.nav-link-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+}
+
+.nav-link-text {
+  display: inline;
+}
+
+@media (min-width: 769px) {
+  .nav-link-text {
+    display: none;
+  }
+  
+  .nav-link-icon {
+    padding: 8px 12px;
+  }
+}
+
 .nav-user .nav-link {
   color: #667eea;
   background: rgba(102, 126, 234, 0.1);
@@ -785,6 +809,11 @@ body {
   background: white;
 }
 
+textarea.auth-input {
+  min-height: 120px;
+  resize: vertical;
+}
+
 .auth-input:focus,
 .auth-select:focus {
   outline: none;
@@ -983,6 +1012,14 @@ body {
     margin: 5px 0;
     border-radius: 8px;
     text-align: left;
+  }
+  
+  .nav-link-text {
+    display: inline !important;
+  }
+  
+  .nav-link-icon {
+    justify-content: flex-start;
   }
 
   .nav-user .nav-link {

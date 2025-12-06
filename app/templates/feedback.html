@@ -1,0 +1,53 @@
+{% extends 'base.html' %} {% block title %}Feedback{% endblock %} {% block
+content %}
+
+<div class="auth-page-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Send Feedback</h1>
+    </div>
+
+    <form method="post" class="auth-form">
+      {{ form.hidden_tag() }}
+
+      <div class="auth-form-group">
+        {{ form.subject.label(class="auth-label") }} {{
+        form.subject(class="auth-input", placeholder="Brief description of your
+        feedback") }} {% if form.subject.errors %}
+        <div class="auth-error-messages">
+          {% for error in form.subject.errors %}
+          <span class="auth-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="auth-form-group">
+        {{ form.message.label(class="auth-label") }} {{
+        form.message(class="auth-input", rows=6, placeholder="Please share your
+        thoughts, suggestions, or report any issues...") }} {% if
+        form.message.errors %}
+        <div class="auth-error-messages">
+          {% for error in form.message.errors %}
+          <span class="auth-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="auth-form-group">
+        {{ form.submit(class="auth-submit-btn") }}
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      <p class="auth-footer-text">
+        <a href="{{ url_for('main.index') }}" class="auth-link"
+          >← Back to Home</a
+        >
+      </p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,6 +1,9 @@
-from flask import Blueprint, render_template
-from flask_login import current_user
+from flask import Blueprint, render_template, flash, redirect, url_for
+from flask_login import current_user, login_required
 from app.projects.registry import get_homepage_items, get_children_of_category, get_project_by_id
+from app.forms import FeedbackForm
+from app.utils.email_service import send_email
+import os
 
 main_bp = Blueprint('main', __name__)
 
@@ -40,6 +43,42 @@ def coding_bootcamp():
     items = get_children_of_category('coding_bootcamp', current_user.is_authenticated)
     
     return render_template('category.html', category=category, items=items)
+
+@main_bp.route('/feedback', methods=['GET', 'POST'])
+@login_required
+def feedback():
+    """Feedback page for authenticated users"""
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        try:
+            admin_email = os.getenv('ADMIN_EMAIL')
+            if not admin_email:
+                flash('Feedback service is currently unavailable. Please try again later.', 'error')
+                return redirect(url_for('main.feedback'))
+            
+            # Prepare email content
+            user_email = current_user.email
+            subject = f"Feedback from {user_email}: {form.subject.data}"
+            text_content = f"""Feedback from {user_email}:
+
+Subject: {form.subject.data}
+
+Message:
+{form.message.data}
+
+---
+This feedback was submitted from gregmichnikov.com
+"""
+            
+            # Send email to admin
+            send_email(admin_email, subject, text_content)
+            
+            flash('Thank you for your feedback! We\'ll get back to you soon.', 'success')
+            return redirect(url_for('main.index'))
+        except Exception as e:
+            flash('There was an error sending your feedback. Please try again later.', 'error')
+    
+    return render_template('feedback.html', form=form)
 
 @main_bp.errorhandler(404)
 def page_not_found(e):
