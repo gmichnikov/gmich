@@ -18,6 +18,9 @@ class User(db.Model, UserMixin):
     verification_token_expiry = db.Column(db.DateTime, nullable=True)
     password_reset_token = db.Column(db.String(100), nullable=True)
     password_reset_expiry = db.Column(db.DateTime, nullable=True)
+    # Google OAuth fields
+    google_id = db.Column(db.String(100), nullable=True, unique=True)
+    google_email = db.Column(db.String(60), nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

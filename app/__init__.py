@@ -39,6 +39,25 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     
+    # Configure Google OAuth
+    from app.core.auth import oauth
+    oauth.init_app(app)
+    
+    # Register Google OAuth client
+    google_client_id = app.config.get('GOOGLE_CLIENT_ID')
+    google_client_secret = app.config.get('GOOGLE_CLIENT_SECRET')
+    
+    if google_client_id and google_client_secret:
+        oauth.register(
+            name='google',
+            client_id=google_client_id,
+            client_secret=google_client_secret,
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={
+                'scope': 'openid email profile'
+            }
+        )
+    
     # Register blueprints
     from app.routes.main import main_bp
     from app.core.auth import auth_bp
