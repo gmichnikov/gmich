@@ -1,4 +1,22 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
-  "python.terminal.activateEnvironment": true
+  "python.terminal.activateEnvironment": true,
+  // Disable formatting for HTML/Jinja templates
+  "[html]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  // Treat Jinja templates as HTML but don't format them
+  "files.associations": {
+    "*.html": "jinja-html"
+  },
+  // Disable auto-formatting for Jinja files
+  "emmet.includeLanguages": {
+    "jinja-html": "html"
+  },
+  // Python formatting settings
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }

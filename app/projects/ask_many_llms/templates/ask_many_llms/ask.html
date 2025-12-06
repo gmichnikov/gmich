@@ -1,4 +1,6 @@
-{% extends "base.html" %} {% block styles %}
+{% extends "base.html" %}
+
+{% block styles %}
 <!-- Ask Many LLMs Custom CSS -->
 <link
   rel="stylesheet"
@@ -8,7 +10,9 @@
   rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 />
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <div class="ask-many-llms-container">
   <div class="ask-many-llms-card">
     <div class="ask-many-llms-card-header">
@@ -28,15 +32,15 @@
 
         <div class="ask-many-llms-question-row">
           <div class="ask-many-llms-question-input">
-            {{ form.content(class="ask-many-llms-textarea", rows=3,
-            placeholder="Enter your question here...") }} {% if
-            form.content.errors %} {% for error in form.content.errors %}
-            <span class="ask-many-llms-text-danger">{{ error }}</span>
-            {% endfor %} {% endif %}
+            {{ form.content(class="ask-many-llms-textarea", rows=3, placeholder="Enter your question here...") }}
+            {% if form.content.errors %}
+                {% for error in form.content.errors %}
+                    <span class="ask-many-llms-text-danger">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
           </div>
           <div class="ask-many-llms-question-submit">
-            {{ form.submit(class="ask-many-llms-btn ask-many-llms-btn-primary",
-            id="askManyLLMsSubmitBtn") }}
+            {{ form.submit(class="ask-many-llms-btn ask-many-llms-btn-primary", id="askManyLLMsSubmitBtn") }}
           </div>
         </div>
 
@@ -219,7 +223,9 @@
     </div>
   </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %}
+
+{% block scripts %}
 <script>
   // Ask Many LLMs - Question Form JavaScript
   document.addEventListener("DOMContentLoaded", function () {

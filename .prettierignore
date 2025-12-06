@@ -1,0 +1,4 @@
+# Ignore Jinja templates - formatters don't understand Jinja syntax
+**/*.html
+**/templates/**
+

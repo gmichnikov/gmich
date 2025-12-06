@@ -5,6 +5,7 @@ content %}
   <div class="auth-card">
     <div class="auth-header">
       <h1 class="auth-title">Send Feedback</h1>
+      <p class="auth-subtitle">We'd love to hear from you!</p>
     </div>
 
     <form method="post" class="auth-form">
@@ -12,8 +13,7 @@ content %}
 
       <div class="auth-form-group">
         {{ form.subject.label(class="auth-label") }} {{
-        form.subject(class="auth-input", placeholder="Brief description of your
-        feedback") }} {% if form.subject.errors %}
+        form.subject(class="auth-input", placeholder="Brief description of your feedback") }} {% if form.subject.errors %}
         <div class="auth-error-messages">
           {% for error in form.subject.errors %}
           <span class="auth-error">{{ error }}</span>
@@ -24,8 +24,7 @@ content %}
 
       <div class="auth-form-group">
         {{ form.message.label(class="auth-label") }} {{
-        form.message(class="auth-input", rows=6, placeholder="Please share your
-        thoughts, suggestions, or report any issues...") }} {% if
+        form.message(class="auth-input", rows=6, placeholder="Please share your thoughts, suggestions, or report any issues...") }} {% if
         form.message.errors %}
         <div class="auth-error-messages">
           {% for error in form.message.errors %}
