@@ -21,6 +21,13 @@
 .chatbot-header h1 {
   font-size: 18px;
   margin-left: 10px;
+  flex: 1;
+}
+
+.chatbot-credits {
+  font-size: 14px;
+  margin-left: auto;
+  padding-left: 15px;
 }
 
 .chatbot-icon {

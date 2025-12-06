@@ -95,7 +95,7 @@ PROJECTS = [
     {
         'id': 'game_night_tools',
         'name': 'Game Night Helpers',
-        'description': 'Helpful tools for playing board games and card games',
+        'description': 'Tools for playing board games and card games',
         'url': '/game-night-tools',
         'auth_required': False,
         'status': 'active',

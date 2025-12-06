@@ -1,16 +1,17 @@
-{% extends 'base.html' %}
-
-{% block title %}Chatbot{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('chatbot.static', filename='chatbot/chat.css') }}">
-{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% block title %}Chatbot{% endblock %} {% block styles
+%}
+<link
+  rel="stylesheet"
+  href="{{ url_for('chatbot.static', filename='chatbot/chat.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="chatbot-container">
   <div class="chatbot-header">
     <span class="chatbot-icon">📖</span>
     <h1>Greg-Bot</h1>
+    <div class="chatbot-credits" id="creditsDisplay">
+      You have <strong>{{ credits }} credits</strong> (1 credit per message)
+    </div>
   </div>
 
   <div class="chatbot-body">
@@ -65,13 +66,12 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
   // Current conversation data
   let currentConversationId = null;
   let hasMessages = false;
+  let currentCredits = {{ credits }};
 
   // DOM elements
   const chatMessages = document.getElementById("chatMessages");
@@ -83,6 +83,7 @@
   const newConversationBtn = document.getElementById("newConversationBtn");
   const deleteButton = document.getElementById("deleteButton");
   const loadingSpinner = document.getElementById("loadingSpinner");
+  const creditsDisplay = document.getElementById("creditsDisplay");
 
   if (loadingSpinner.parentNode) {
     loadingSpinner.parentNode.removeChild(loadingSpinner);
@@ -194,10 +195,31 @@
     );
   }
 
+  function updateCreditsDisplay(credits) {
+    currentCredits = credits;
+    creditsDisplay.innerHTML = `You have <strong>${credits} credits</strong> (1 credit per message)`;
+    updateSendButtonState();
+  }
+
+  function updateSendButtonState() {
+    if (currentCredits < 1) {
+      sendButton.disabled = true;
+      chatInput.placeholder = "Insufficient credits to send a message";
+    } else {
+      chatInput.placeholder = "Type your message...";
+      sendButton.disabled = chatInput.value.trim() === "";
+    }
+  }
+
   function sendMessage() {
     const message = chatInput.value.trim();
 
     if (!message) {
+      return;
+    }
+
+    if (currentCredits < 1) {
+      alert("You do not have enough credits to send a message.");
       return;
     }
 
@@ -218,7 +240,9 @@
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Server returned " + response.status);
+          return response.json().then((data) => {
+            throw new Error(data.error || "Server returned " + response.status);
+          });
         }
         return response.json();
       })
@@ -230,6 +254,11 @@
 
         addMessageToDOM(data.user_message.content, true);
         addMessageToDOM(data.bot_message.content, false);
+
+        // Update credits if provided
+        if (data.remaining_credits !== undefined) {
+          updateCreditsDisplay(data.remaining_credits);
+        }
 
         hasMessages = true;
         updateDeleteButton();
@@ -243,8 +272,12 @@
       .catch((error) => {
         console.error("Error sending message:", error);
         hideLoadingSpinner();
-        alert("Error sending message. Please try again.");
+        const errorMessage = error.message.includes("Insufficient credits")
+          ? "You do not have enough credits to send a message."
+          : "Error sending message. Please try again.";
+        alert(errorMessage);
         sendButton.disabled = false;
+        updateSendButtonState();
       });
   }
 
@@ -319,7 +352,7 @@
     showEmptyState();
 
     chatInput.addEventListener("input", function () {
-      sendButton.disabled = this.value.trim() === "";
+      updateSendButtonState();
     });
 
     chatInput.addEventListener("keydown", function (e) {

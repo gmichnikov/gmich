@@ -19,7 +19,7 @@ chatbot_bp = Blueprint('chatbot', __name__,
 def index():
     """Display the chatbot interface"""
     log_project_visit('chatbot', 'Greg-Bot')
-    return render_template('chatbot/chat.html')
+    return render_template('chatbot/chat.html', credits=current_user.credits)
 
 
 @chatbot_bp.route('/api/conversations', methods=['GET'])
@@ -75,60 +75,82 @@ def get_messages(conversation_id):
 @login_required
 def send_message():
     """Process a new message from the user"""
-    data = request.json
-    user_message = data.get('message', '').strip()
-    conversation_id = data.get('conversation_id')
+    try:
+        data = request.json
+        user_message = data.get('message', '').strip()
+        conversation_id = data.get('conversation_id')
 
-    # Create a new conversation if needed
-    if not conversation_id:
-        conversation_id = str(uuid4())
-    else:
-        # Validate existing conversation belongs to user
-        message_count = ChatMessage.query.filter(
-            ChatMessage.user_id == current_user.id,
-            ChatMessage.conversation_id == conversation_id
-        ).count()
+        # Check if user has sufficient credits
+        if current_user.credits < 1:
+            return jsonify({'error': 'Insufficient credits'}), 400
 
-        if message_count == 0:
-            return jsonify({'error': 'Invalid conversation ID'}), 403
+        # Create a new conversation if needed
+        if not conversation_id:
+            conversation_id = str(uuid4())
+        else:
+            # Validate existing conversation belongs to user
+            message_count = ChatMessage.query.filter(
+                ChatMessage.user_id == current_user.id,
+                ChatMessage.conversation_id == conversation_id
+            ).count()
 
-    # Save the user message
-    user_chat_message = ChatMessage(
-        user_id=current_user.id,
-        conversation_id=conversation_id,
-        content=user_message,
-        is_user=True
-    )
-    db.session.add(user_chat_message)
+            if message_count == 0:
+                return jsonify({'error': 'Invalid conversation ID'}), 403
 
-    # Log the user message
-    log_entry = LogEntry(
-        actor_id=current_user.id,
-        category='Send',
-        description=f"Sent message in conversation {conversation_id[:8]}",
-        project='chatbot'
-    )
-    db.session.add(log_entry)
-    db.session.commit()
+        # Save the user message
+        user_chat_message = ChatMessage(
+            user_id=current_user.id,
+            conversation_id=conversation_id,
+            content=user_message,
+            is_user=True
+        )
+        db.session.add(user_chat_message)
 
-    # Get bot response
-    bot_response = generate_bot_response(user_message, conversation_id, current_user.id)
+        # Log the user message
+        log_entry = LogEntry(
+            actor_id=current_user.id,
+            category='Send',
+            description=f"Sent message in conversation {conversation_id[:8]}",
+            project='chatbot'
+        )
+        db.session.add(log_entry)
+        db.session.commit()
 
-    # Save the bot response
-    bot_chat_message = ChatMessage(
-        user_id=current_user.id,
-        conversation_id=conversation_id,
-        content=bot_response,
-        is_user=False
-    )
-    db.session.add(bot_chat_message)
-    db.session.commit()
+        # Get bot response
+        bot_response = generate_bot_response(user_message, conversation_id, current_user.id)
 
-    return jsonify({
-        'user_message': user_chat_message.to_dict(),
-        'bot_message': bot_chat_message.to_dict(),
-        'conversation_id': conversation_id
-    })
+        # Save the bot response
+        bot_chat_message = ChatMessage(
+            user_id=current_user.id,
+            conversation_id=conversation_id,
+            content=bot_response,
+            is_user=False
+        )
+        db.session.add(bot_chat_message)
+
+        # Deduct credits after successful response
+        current_user.credits -= 1
+
+        # Log credit usage
+        credit_log = LogEntry(
+            project='chatbot',
+            category='Credit Usage',
+            actor_id=current_user.id,
+            description=f"Used 1 credit for message in conversation {conversation_id[:8]}. Remaining: {current_user.credits}"
+        )
+        db.session.add(credit_log)
+        db.session.commit()
+
+        return jsonify({
+            'user_message': user_chat_message.to_dict(),
+            'bot_message': bot_chat_message.to_dict(),
+            'conversation_id': conversation_id,
+            'remaining_credits': current_user.credits
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in send_message: {str(e)}", exc_info=True)
+        return jsonify({'error': 'An error occurred while processing your message'}), 500
 
 
 @chatbot_bp.route('/api/conversations/<conversation_id>', methods=['DELETE'])
