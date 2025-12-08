@@ -177,6 +177,16 @@ PROJECTS = [
         'status': 'active',
         'type': 'project',
         'order': 0  # Show first on homepage
+    },
+    {
+        'id': 'better_signups',
+        'name': 'Better Signups',
+        'description': 'Create and manage signup lists for events and items',
+        'url': '/better-signups',
+        'auth_required': True,
+        'status': 'active',
+        'type': 'project',
+        'order': 1
     }
 ]
 

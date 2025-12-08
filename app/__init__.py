@@ -72,6 +72,7 @@ def create_app():
     from app.projects.sushi_go.routes import sushi_go_bp
     from app.projects.chatbot.routes import chatbot_bp
     from app.projects.ask_many_llms.routes import bp as ask_many_llms_bp
+    from app.projects.better_signups.routes import bp as better_signups_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -86,11 +87,15 @@ def create_app():
     app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
     app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
     app.register_blueprint(ask_many_llms_bp)  # Has its own url_prefix defined
+    app.register_blueprint(better_signups_bp)  # Has its own url_prefix defined
     
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
     from app.projects.chatbot.models import ChatMessage
     from app.projects.ask_many_llms.models import LLMQuestion, LLMResponse
+    from app.projects.better_signups.models import (
+        SignupList, ListEditor, FamilyMember, Event, Item, Signup
+    )
     
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter('markdown')

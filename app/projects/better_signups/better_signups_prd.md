@@ -44,13 +44,13 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 1: Core Setup and Models
 
-- [ ] Create `models.py` from improved proposed models (move from `proposed_models_improved.py`)
-- [ ] Create database migration for all models
-- [ ] Create `__init__.py` for the better_signups module
-- [ ] Create Flask blueprint in `routes.py` with basic structure
-- [ ] Register blueprint in `app/__init__.py`
-- [ ] Import models in `app/__init__.py` so they're known to Flask-SQLAlchemy
-- [ ] Add project to `registry.py` (auth_required=True, type='project')
+- [x] Create `models.py` from improved proposed models (move from `proposed_models_improved.py`)
+- [x] Create database migration for all models
+- [x] Create `__init__.py` for the better_signups module
+- [x] Create Flask blueprint in `routes.py` with basic structure
+- [x] Register blueprint in `app/__init__.py`
+- [x] Import models in `app/__init__.py` so they're known to Flask-SQLAlchemy
+- [x] Add project to `registry.py` (auth_required=True, type='project')
 
 **Testing:**
 
