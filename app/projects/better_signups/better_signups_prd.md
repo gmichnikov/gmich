@@ -7,21 +7,21 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 1. The unit that a user creates will be called a List.
 2. A list contains either events or items (just one)
 3. Lists have a name and an optional description
-4. Events are either dates or datetimes/timestamps (just one, and the creator chooses if they want to offer specific time ranges, or just dates). Either way, they have an optional field called location and an optional descriptions. (The date or datetime is the "name")
+4. Events are either dates or datetimes/timestamps (just one, and the creator chooses if they want to offer specific time ranges, or just dates). Either way, they have an optional field called location and an optional descriptions. (The date or datetime is the "name" but we won't store this. We'll format the name for display.) For times, let's store the datetime and the time zone. The time zone should be the creator's time zone. Let's also store the duration in minutes, not the end time. For dates, store as a Date field (no time component). For date-only events, set duration_minutes = None and timezone = None.
 5. Items are strings. They have names and optional description.
 6. If we need an internal term that includes both events and items, we can call them elements, but that will never be exposed to users.
 7. There can be 1 or more signup spots available for each item event/item
 8. Auth will be handled by my web app's existing auth. Users must be signed in to use this.
-9. Each list can be either open to anyone with an account, or it can require an additional list password
+9. Each list can be either open to anyone with an account, or it can require an additional list password. Let's hash the password like with user passwords.
 10. It should be possible for the end user to cancel their signup for a spot
 11. A list creator is considered to be an editor and can add additional users to be list editors
 12. A list can be in the state or accepting signups, or not accepting signups
 13. Editors can both remove signups and edit the lists/elements at any time. For now, they cannot reduce the number of spots in an element below the number already signed up.
-14. When signing up, users can see how many spots are available and who has taken spots so far (though per below, we may eventually offer to hide that)
-15. Each user account needs to have the option to add other family members. For now, these other members only have names (first, last).
-16. When a user signs up, if they have other family members in their account, they have the option to indicate who they are signing up. The default is themselves.
+14. When signing up, users can see (before the sign up) how many spots are available and who has taken spots so far (though per below, we may eventually offer to hide that)
+15. Each user account needs to have the option to add other family members. For now, these other members only have a single full name for display.
+16. When a user signs up, if they have other family members in their account, they have the option to indicate who they are signing up. The default is themselves. We should have some sort of self Family Member record so we don't have to special case it. The name should not be editable here, we will take it from the user's account.
 17. A user can sign up more than one person for the same element if there are multiple spots. The same person cannot be signed up more than once for a splot though.
-18. There is no public list of lists. It must be reached via direct link.
+18. There is no public list of lists. It must be reached via direct link. This will be a standard UUID based URL that cannot be changed.
 
 # One level beyond basics
 
