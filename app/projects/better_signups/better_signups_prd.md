@@ -86,14 +86,14 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 3: List Creation and Management (Editor View)
 
-- [ ] Create form for creating a new list (name, description, type, password option)
-- [ ] Create route for creating a new list (generate UUID, set creator)
-- [ ] Create route for viewing list details (editor view)
-- [ ] Create route for editing list (name, description, password, accepting_signups toggle)
-- [ ] Create route for deleting a list
-- [ ] Create template for list creation form
-- [ ] Create template for list editor view
-- [ ] Add helper method to check if user is editor (including creator)
+- [x] Create form for creating a new list (name, description, type, password option)
+- [x] Create route for creating a new list (generate UUID, set creator)
+- [x] Create route for viewing list details (editor view)
+- [x] Create route for editing list (name, description, password, accepting_signups toggle)
+- [x] Create route for deleting a list
+- [x] Create template for list creation form
+- [x] Create template for list editor view
+- [x] Add helper method to check if user is editor (including creator)
 
 **Testing:**
 

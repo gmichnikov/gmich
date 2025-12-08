@@ -2,11 +2,11 @@
 Better Signups - Routes
 Handles signup list creation, management, and signups
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
-from app.forms import FamilyMemberForm
-from app.projects.better_signups.models import FamilyMember
+from app.forms import FamilyMemberForm, CreateSignupListForm, EditSignupListForm
+from app.projects.better_signups.models import FamilyMember, SignupList
 
 bp = Blueprint('better_signups', __name__,
                url_prefix='/better-signups',
@@ -18,7 +18,12 @@ bp = Blueprint('better_signups', __name__,
 @login_required
 def index():
     """Main Better Signups page"""
-    return render_template('better_signups/index.html')
+    # Get lists created by current user
+    my_lists = SignupList.query.filter_by(creator_id=current_user.id).order_by(
+        SignupList.created_at.desc()
+    ).all()
+    
+    return render_template('better_signups/index.html', my_lists=my_lists)
 
 
 @bp.route('/family-members')
@@ -114,4 +119,120 @@ def delete_family_member(member_id):
     
     flash(f'Family member "{name}" deleted successfully.', 'success')
     return redirect(url_for('better_signups.family_members'))
+
+
+@bp.route('/lists/create', methods=['GET', 'POST'])
+@login_required
+def create_list():
+    """Create a new signup list"""
+    form = CreateSignupListForm()
+    
+    if form.validate_on_submit():
+        # Create new list
+        new_list = SignupList(
+            name=form.name.data.strip(),
+            description=form.description.data.strip() if form.description.data else None,
+            list_type=form.list_type.data,
+            creator_id=current_user.id,
+            accepting_signups=True
+        )
+        
+        # Generate UUID
+        new_list.generate_uuid()
+        
+        # Set password if provided
+        if form.list_password.data and form.list_password.data.strip():
+            new_list.set_list_password(form.list_password.data)
+        
+        db.session.add(new_list)
+        db.session.commit()
+        
+        flash(f'List "{new_list.name}" created successfully!', 'success')
+        return redirect(url_for('better_signups.view_list', uuid=new_list.uuid))
+    
+    return render_template('better_signups/create_list.html', form=form)
+
+
+@bp.route('/lists/<string:uuid>')
+@login_required
+def view_list(uuid):
+    """View and edit a signup list (editor view)"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    
+    # Check if user is an editor
+    if not signup_list.is_editor(current_user):
+        flash('You do not have permission to view this list.', 'error')
+        return redirect(url_for('better_signups.index'))
+    
+    form = EditSignupListForm(obj=signup_list)
+    form.accepting_signups.data = signup_list.accepting_signups
+    
+    return render_template('better_signups/view_list.html', list=signup_list, form=form)
+
+
+@bp.route('/lists/<string:uuid>/edit', methods=['POST'])
+@login_required
+def edit_list(uuid):
+    """Edit a signup list"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    
+    # Check if user is an editor
+    if not signup_list.is_editor(current_user):
+        flash('You do not have permission to edit this list.', 'error')
+        return redirect(url_for('better_signups.index'))
+    
+    form = EditSignupListForm()
+    
+    if form.validate_on_submit():
+        signup_list.name = form.name.data.strip()
+        signup_list.description = form.description.data.strip() if form.description.data else None
+        signup_list.accepting_signups = form.accepting_signups.data
+        
+        # Update password if provided
+        if form.list_password.data and form.list_password.data.strip():
+            signup_list.set_list_password(form.list_password.data)
+        
+        db.session.commit()
+        
+        flash(f'List "{signup_list.name}" updated successfully!', 'success')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+
+@bp.route('/lists/<string:uuid>/delete', methods=['POST'])
+@login_required
+def delete_list(uuid):
+    """Delete a signup list"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    
+    # Only creator can delete
+    if signup_list.creator_id != current_user.id:
+        flash('Only the list creator can delete this list.', 'error')
+        return redirect(url_for('better_signups.index'))
+    
+    # Check if there are any signups
+    from app.projects.better_signups.models import Signup, Event, Item
+    event_ids = [e.id for e in signup_list.events]
+    item_ids = [i.id for i in signup_list.items]
+    
+    has_signups = False
+    if event_ids:
+        has_signups = db.session.query(Signup).filter(Signup.event_id.in_(event_ids)).first() is not None
+    if not has_signups and item_ids:
+        has_signups = db.session.query(Signup).filter(Signup.item_id.in_(item_ids)).first() is not None
+    
+    if has_signups:
+        flash('Cannot delete a list that has signups. Please remove all signups first.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+    
+    name = signup_list.name
+    db.session.delete(signup_list)
+    db.session.commit()
+    
+    flash(f'List "{name}" deleted successfully.', 'success')
+    return redirect(url_for('better_signups.index'))
 

@@ -175,3 +175,62 @@ class FamilyMemberForm(FlaskForm):
     def validate_display_name(self, field):
         if not field.data or not field.data.strip():
             raise ValidationError("Name cannot be blank or only whitespace.")
+
+
+class CreateSignupListForm(FlaskForm):
+    """Form for creating a new signup list"""
+
+    name = StringField(
+        "List Name",
+        validators=[DataRequired(), Length(min=1, max=200)],
+        description="Name of the signup list"
+    )
+    description = TextAreaField(
+        "Description",
+        validators=[Length(max=2000)],
+        description="Optional description for the list"
+    )
+    list_type = SelectField(
+        "List Type",
+        choices=[("events", "Events (dates/times)"), ("items", "Items")],
+        validators=[DataRequired()],
+        description="Choose whether this list contains events or items"
+    )
+    list_password = PasswordField(
+        "List Password (Optional)",
+        validators=[Length(max=100)],
+        description="Optional password to restrict access to this list. Leave blank for open access."
+    )
+    submit = SubmitField("Create List")
+
+    def validate_name(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError("List name cannot be blank or only whitespace.")
+
+
+class EditSignupListForm(FlaskForm):
+    """Form for editing a signup list"""
+
+    name = StringField(
+        "List Name",
+        validators=[DataRequired(), Length(min=1, max=200)]
+    )
+    description = TextAreaField(
+        "Description",
+        validators=[Length(max=2000)]
+    )
+    list_password = PasswordField(
+        "List Password (Optional)",
+        validators=[Length(max=100)],
+        description="Leave blank to keep current password, or enter new password to change it"
+    )
+    accepting_signups = BooleanField(
+        "Accepting Signups",
+        default=True,
+        description="Allow users to sign up for this list"
+    )
+    submit = SubmitField("Update List")
+
+    def validate_name(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError("List name cannot be blank or only whitespace.")

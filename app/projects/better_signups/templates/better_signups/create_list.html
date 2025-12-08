@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Create List - Better Signups{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Create New List</h1>
+            <p class="auth-subtitle">Create a signup list for events or items</p>
+        </div>
+
+        <form method="post" class="auth-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="auth-form-group">
+                {{ form.name.label(class="auth-label") }}
+                {{ form.name(class="auth-input", placeholder="School Volunteer Signups", autocomplete="off") }}
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    This is the name of your signup list (not your account name)
+                </small>
+                {% if form.name.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.name.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.description.label(class="auth-label") }}
+                {{ form.description(class="auth-input", rows=3, placeholder="Optional description") }}
+                {% if form.description.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.description.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.list_type.label(class="auth-label") }}
+                {{ form.list_type(class="auth-select") }}
+                {% if form.list_type.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.list_type.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label for="list_access_code" class="auth-label">List Password (Optional)</label>
+                <input type="text" 
+                       name="list_password" 
+                       id="list_access_code" 
+                       class="auth-input" 
+                       placeholder="Leave blank for open access" 
+                       autocomplete="off"
+                       data-lpignore="true" 
+                       data-1p-ignore="true"
+                       data-form-type="other"
+                       onfocus="this.type='password';"
+                       onblur="if(this.value===''){this.type='text';}">
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    Optional: Require a password for users to access this list (this is NOT your account password)
+                </small>
+                {% if form.list_password.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.list_password.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.submit(class="auth-submit-btn") }}
+            </div>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text"><a href="{{ url_for('better_signups.index') }}" class="auth-link">← Back to Better Signups</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
