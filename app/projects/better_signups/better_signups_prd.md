@@ -31,6 +31,7 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 4. A list level option to allow swaps. If this is on, a user can request to switch out of their current spot, and a link is sent by email to any other users who are signed up on that list but for a different element. Whoever clicks that link first, the swap is completed automatically. Until the swap is completed, the requestor remains in their chosen spot.
 5. Allow (ordered) waitlists on elements. For signups with lotteries, there will be an option up front to be added to a waitlist if not picked. For signups that are first come first served, there will just be an option to join the waitlist. The names can be visible or hidden. If someone cancels, the first name on the waitlist fills in. They must accept within some time (set by creator), or the next person is added. If the spot is not filled, it's then re-opened. A user can remove themselves from a waitlist at any time after it is created.
 6. Added to Google Calendar button
+7. A way to view a user's signups (including their family members)
 
 # Ideas that are not part of MVP, tracking them here for later
 
@@ -38,3 +39,268 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 2. Allow hiding who else signed up
 3. List editors can add questions that must be answered as part of taking a spot
 4. Confirmation emails and reminder emails
+
+# Implementation Plan
+
+## Phase 1: Core Setup and Models
+
+- [ ] Create `models.py` from improved proposed models (move from `proposed_models_improved.py`)
+- [ ] Create database migration for all models
+- [ ] Create `__init__.py` for the better_signups module
+- [ ] Create Flask blueprint in `routes.py` with basic structure
+- [ ] Register blueprint in `app/__init__.py`
+- [ ] Import models in `app/__init__.py` so they're known to Flask-SQLAlchemy
+- [ ] Add project to `registry.py` (auth_required=True, type='project')
+
+**Testing:**
+
+- Verify the app starts without errors
+- Check that "Better Signups" appears on the homepage (when logged in)
+- Verify you can navigate to the Better Signups URL (should show a basic page or placeholder)
+- Check database migration ran successfully (verify tables exist in database)
+
+## Phase 2: Family Members Management
+
+- [ ] Create form for adding/editing family members
+- [ ] Create route for viewing family members list
+- [ ] Create route for adding family member
+- [ ] Create route for deleting family member
+- [ ] Create template for family members management
+- [ ] Ensure "self" family member is auto-created for existing users (migration or signal)
+- [ ] Ensure "self" family member is auto-created for new users (hook or signal)
+
+**Testing:**
+
+- Navigate to family members page (should be accessible when logged in)
+- Verify your "self" family member appears automatically (name should match your account's full_name)
+- Add a new family member (e.g., "John Doe")
+- Verify the new family member appears in the list
+- Try to add another family member with the same name (should work - no uniqueness constraint)
+- Delete a family member and verify it's removed
+- Verify you cannot delete your "self" family member (or it's protected somehow)
+- Create a new user account and verify their "self" family member is auto-created
+
+## Phase 3: List Creation and Management (Editor View)
+
+- [ ] Create form for creating a new list (name, description, type, password option)
+- [ ] Create route for creating a new list (generate UUID, set creator)
+- [ ] Create route for viewing list details (editor view)
+- [ ] Create route for editing list (name, description, password, accepting_signups toggle)
+- [ ] Create route for deleting a list
+- [ ] Create template for list creation form
+- [ ] Create template for list editor view
+- [ ] Add helper method to check if user is editor (including creator)
+
+**Testing:**
+
+- Navigate to "Create New List" page
+- Create a list with name "Test Event List", type "events", no password
+- Verify you're redirected to the list editor view
+- Check that the list shows the correct name, description, and type
+- Verify a UUID is generated and shown in the URL
+- Edit the list: change name, add description, toggle "accepting signups" off and on
+- Create another list with type "items" and a password
+- Verify the password is set (you won't be able to test it until Phase 7)
+- Delete one of the lists and verify it's removed
+- Try to access a list you didn't create (should show error or redirect)
+
+## Phase 4: List Editors Management
+
+- [ ] Create form for adding list editors (by email)
+- [ ] Create route for adding an editor
+- [ ] Create route for removing an editor
+- [ ] Add UI in list editor view for managing editors
+
+**Testing:**
+
+- As list creator, view the list editor page
+- Add an editor by entering another user's email address
+- Verify the editor appears in the editors list
+- Try to add the same editor again (should show error or prevent duplicate)
+- Try to add an invalid email (should show validation error)
+- Remove an editor and verify they're removed from the list
+- Log in as the added editor and verify you can access the list editor view
+- Verify the editor can see the list but cannot delete it (or can, depending on requirements)
+
+## Phase 5: Events Management
+
+- [ ] Create form for creating/editing events (date vs datetime, location, description, spots)
+- [ ] Create route for adding an event to a list
+- [ ] Create route for editing an event
+- [ ] Create route for deleting an event
+- [ ] Create template for event form
+- [ ] Add validation: cannot reduce spots below current signups
+- [ ] Handle timezone storage (use creator's timezone)
+
+**Testing:**
+
+- In an "events" type list, click "Add Event"
+- Create a date-only event: select "date" type, pick a date, add location "Park", spots=5
+- Verify the event appears in the list with correct date, location, and spots
+- Create a datetime event: select "datetime" type, pick date/time, duration 60 minutes, location "Community Center", spots=3
+- Verify the event shows datetime, timezone (should match your account timezone), duration, location
+- Edit an event: change location, description, spots
+- Try to reduce spots below number of signups (if any exist) - should show validation error
+- Delete an event and verify it's removed
+- Verify events are only shown in "events" type lists (not in "items" lists)
+
+## Phase 6: Items Management
+
+- [ ] Create form for creating/editing items (name, description, spots)
+- [ ] Create route for adding an item to a list
+- [ ] Create route for editing an item
+- [ ] Create route for deleting an item
+- [ ] Create template for item form
+- [ ] Add validation: cannot reduce spots below current signups
+
+**Testing:**
+
+- In an "items" type list, click "Add Item"
+- Create an item: name "Bring Cookies", description "Chocolate chip preferred", spots=10
+- Verify the item appears in the list with correct name, description, and spots
+- Create multiple items and verify they all appear
+- Edit an item: change name, description, spots
+- Try to reduce spots below number of signups (if any exist) - should show validation error
+- Delete an item and verify it's removed
+- Verify items are only shown in "items" type lists (not in "events" lists)
+
+## Phase 7: Public List View (Signup Interface)
+
+- [ ] Create route for viewing list by UUID (public view)
+- [ ] Create route for password-protected list access
+- [ ] Create template for public list view (shows events/items, spots available, current signups)
+- [ ] Display spots taken vs spots available for each element
+- [ ] Show who has signed up (family member names)
+- [ ] Handle list password authentication
+
+**Testing:**
+
+- Copy the UUID from a list's editor view
+- Open the UUID URL in an incognito/private window (or different browser) while logged out
+- Verify you're prompted to log in (auth required)
+- Log in and access the UUID URL again
+- For a list without password: verify you can see the list immediately
+- For a list with password: verify you're prompted for password
+- Enter wrong password: should show error
+- Enter correct password: should show the list
+- Verify the list shows: name, description, all events/items
+- For each element, verify it shows: spots available, spots taken (should be 0 initially), spots remaining
+- Verify "Who has signed up" section shows empty or "No signups yet"
+- Try accessing a non-existent UUID: should show 404 or error
+
+## Phase 8: Signup Functionality
+
+- [ ] Create form for signing up (select family member if multiple available)
+- [ ] Create route for creating a signup
+- [ ] Create route for cancelling a signup
+- [ ] Add validation: same person cannot sign up twice for same element
+- [ ] Add validation: cannot sign up if no spots available
+- [ ] Update spots remaining display after signup/cancellation
+- [ ] Handle signup for multiple family members on same element
+
+**Testing:**
+
+- View a public list with available spots
+- Click "Sign Up" on an element
+- If you have multiple family members: verify dropdown shows all family members (including "self")
+- If you only have "self": verify it's pre-selected or no dropdown shown
+- Sign up yourself for an element
+- Verify spots taken increases, spots remaining decreases
+- Verify your name appears in "Who has signed up" section
+- Try to sign up the same person again for the same element: should show error
+- Sign up a different family member for the same element (if multiple spots available)
+- Verify both names appear in signups
+- Fill all available spots, then try to sign up again: should show "No spots available" error
+- Cancel one of your signups
+- Verify spots taken decreases, spots remaining increases
+- Verify the cancelled signup no longer appears in "Who has signed up"
+- Try to sign up again after cancelling: should work
+- Test with a list that has "accepting_signups" set to False: signup button should be disabled or show message
+
+## Phase 9: My Signups View
+
+- [ ] Create route for viewing user's own signups (all lists, all family members)
+- [ ] Create template for "My Signups" page
+- [ ] Display signups grouped by list (or chronologically)
+- [ ] Show for each signup: list name, element details (event date/time or item name), family member name, signup date
+- [ ] Add ability to cancel signups from this view
+- [ ] Add links to view the list (using UUID)
+- [ ] Show both active and cancelled signups (with clear distinction)
+- [ ] Optionally: show lists user has created/is editor of
+
+**Testing:**
+
+- Navigate to "My Signups" page (should be accessible from main Better Signups page)
+- Verify page shows all signups across all lists where you've signed up
+- For each signup, verify it shows: list name, element (event date/time or item name), which family member, signup date
+- Sign up for multiple elements across different lists
+- Verify all signups appear on "My Signups" page
+- Cancel a signup from the "My Signups" page
+- Verify the signup is marked as cancelled or removed from active signups
+- Verify cancelled signups are shown separately or clearly marked
+- Click link to view a list from "My Signups" page - should navigate to public list view
+- Test with multiple family members signed up - verify all appear correctly
+- If implemented: verify lists you created/are editor of appear in a separate section
+
+## Phase 10: Editor Signup Management
+
+- [ ] Create route for editor to remove a signup
+- [ ] Add UI in editor view for managing signups
+- [ ] Show all signups (active and cancelled) in editor view
+
+**Testing:**
+
+- As list creator/editor, view the list editor page
+- Verify you can see all signups for each element
+- For each signup, verify it shows: family member name, user email (or name), signup date
+- Distinguish between active and cancelled signups (different styling or section)
+- Remove a signup as editor
+- Verify the signup is removed (marked as cancelled or deleted)
+- Verify spots remaining increases in both editor view and public view
+- Log in as a different user, create some signups
+- As editor, verify you can see and remove those signups
+- Verify non-editors cannot access the editor view (should redirect or show error)
+
+## Phase 11: Testing and Polish
+
+- [ ] Test all CRUD operations
+- [ ] Test authentication and authorization (editors, creators)
+- [ ] Test password-protected lists
+- [ ] Test family member signups
+- [ ] Test edge cases (cancelling, editing spots, etc.)
+- [ ] Add error handling and user-friendly messages
+- [ ] Add logging for important actions
+- [ ] Style templates to match existing app design
+- [ ] Test on different browsers/devices
+
+**Testing:**
+
+- **End-to-end workflow:** Create a list → Add events/items → Share UUID → Sign up → Cancel → Edit as creator
+- **Multi-user scenario:** Create list → Add editor → Editor adds events → Both users sign up → Editor removes signup
+- **Edge cases:**
+  - Try to edit spots to 0 when there are signups (should fail)
+  - Try to edit spots to 1 when there are 2 signups (should fail)
+  - Try to edit spots to 3 when there are 2 signups (should succeed)
+  - Sign up, cancel, sign up again (should work)
+  - Access list with wrong password multiple times
+  - Try to delete a list with signups (decide behavior)
+- **UI/UX:**
+  - Verify all pages match existing app styling
+  - Check responsive design on mobile
+  - Verify error messages are clear and helpful
+  - Verify success messages appear after actions
+  - Check all links and navigation work correctly
+- **Security:**
+  - Verify non-editors cannot edit lists
+  - Verify users cannot access other users' family members
+  - Verify password-protected lists work correctly
+  - Test SQL injection attempts (should be handled by ORM)
+
+## Future Phases (Post-MVP)
+
+- [ ] Implement lottery system
+- [ ] Implement waitlists
+- [ ] Implement swap functionality
+- [ ] Add Google Calendar integration
+- [ ] Add per-list signup limits
+- [ ] Add email notifications
