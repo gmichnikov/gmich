@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Profile</h1>
+        </div>
+
+        <form method="post" class="auth-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="auth-form-group">
+                <label class="auth-label">Email</label>
+                <input type="email" class="auth-input" value="{{ user.email }}" disabled style="background-color: #f5f5f5; cursor: not-allowed;">
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">Email cannot be changed</small>
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.full_name.label(class="auth-label") }}
+                {{ form.full_name(class="auth-input", placeholder="John Doe") }}
+                {% if form.full_name.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.full_name.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.short_name.label(class="auth-label") }}
+                {{ form.short_name(class="auth-input", placeholder="John") }}
+                {% if form.short_name.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.short_name.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.time_zone.label(class="auth-label") }}
+                {{ form.time_zone(class="auth-select") }}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.submit(class="auth-submit-btn") }}
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

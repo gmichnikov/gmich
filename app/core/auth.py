@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, LogEntry, db
 from app.forms import (
     RegistrationForm,
@@ -7,6 +7,7 @@ from app.forms import (
     ResendVerificationForm,
     RequestPasswordResetForm,
     ResetPasswordForm,
+    ProfileForm,
 )
 from app.utils.email_service import (
     send_verification_email,
@@ -806,3 +807,39 @@ def google_callback():
         logger.error(f"Google OAuth callback error: {e}", exc_info=True)
         flash("An error occurred during Google login. Please try again.")
         return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    """User profile page for viewing and editing profile information."""
+    form = ProfileForm()
+
+    if form.validate_on_submit():
+        # Update user profile
+        current_user.full_name = form.full_name.data.strip()
+        current_user.short_name = form.short_name.data.strip()
+        current_user.time_zone = form.time_zone.data
+
+        db.session.commit()
+
+        # Log profile update
+        log_entry = LogEntry(
+            project="auth",
+            category="Profile Updated",
+            actor_id=current_user.id,
+            description=f"Profile updated for {current_user.email}",
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+
+        flash("Profile updated successfully!")
+        return redirect(url_for("auth.profile"))
+
+    # Pre-populate form with current user data
+    if request.method == "GET":
+        form.full_name.data = current_user.full_name
+        form.short_name.data = current_user.short_name
+        form.time_zone.data = current_user.time_zone
+
+    return render_template("auth/profile.html", form=form, user=current_user)

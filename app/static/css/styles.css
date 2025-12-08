@@ -94,7 +94,7 @@ body {
 .nav-user .nav-link {
   color: #667eea;
   background: rgba(102, 126, 234, 0.1);
-  cursor: default;
+  cursor: pointer;
 }
 
 .nav-button {

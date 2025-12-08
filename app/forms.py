@@ -85,3 +85,18 @@ class FeedbackForm(FlaskForm):
     subject = StringField('Subject', validators=[DataRequired(), Length(max=200)])
     message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=2000)])
     submit = SubmitField('Send Feedback')
+
+class ProfileForm(FlaskForm):
+    """Form for editing user profile"""
+    full_name = StringField('Full Name', validators=[DataRequired(), Length(max=100)])
+    short_name = StringField('How should we address you?', validators=[DataRequired(), Length(max=50)])
+    time_zone = SelectField('Time Zone', choices=[(tz, tz) for tz in pytz.common_timezones], default='UTC')
+    submit = SubmitField('Update Profile')
+    
+    def validate_full_name(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError('Full name cannot be blank or only whitespace.')
+    
+    def validate_short_name(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError('Short name cannot be blank or only whitespace.')
