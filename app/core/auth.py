@@ -16,6 +16,7 @@ from app.utils.email_service import (
 from authlib.integrations.flask_client import OAuth
 import os
 import logging
+import pytz
 from datetime import datetime, timedelta
 from collections import defaultdict
 
@@ -98,6 +99,8 @@ def register():
 
         new_user = User(
             email=form.email.data,
+            full_name=form.full_name.data,
+            short_name=form.short_name.data,
             time_zone=form.time_zone.data,
             email_verified=False,  # New users start unverified
         )
@@ -630,6 +633,13 @@ def login_google():
         flash("Google login is not configured. Please contact support.")
         return redirect(url_for("auth.login"))
 
+    # Get time zone from query parameter if provided (set by JavaScript)
+    time_zone = request.args.get("timezone", "UTC")
+    # Validate time zone is in pytz common timezones
+    if time_zone not in pytz.common_timezones:
+        time_zone = "UTC"
+    session["oauth_timezone"] = time_zone
+
     # Get the OAuth client
     google = oauth.google
 
@@ -733,12 +743,29 @@ def google_callback():
             return redirect(next_page or url_for("main.index"))
 
         # New user - create account
+        # Use Google name if available, otherwise use placeholder
+        # For short_name, try to extract first name from full name, or use full name
+        google_full_name = google_name.strip() if google_name else "placeholder"
+        google_short_name = (
+            google_full_name.split()[0]
+            if google_full_name and google_full_name != "placeholder"
+            else "placeholder"
+        )
+
+        # Get time zone from session (set before OAuth redirect) or default to UTC
+        time_zone = session.pop("oauth_timezone", "UTC")
+        # Validate time zone is in pytz common timezones
+        if time_zone not in pytz.common_timezones:
+            time_zone = "UTC"
+
         new_user = User(
             email=google_email,
+            full_name=google_full_name,
+            short_name=google_short_name,
             google_id=google_id,
             google_email=google_email,
             email_verified=verified_email,  # Google verifies emails
-            time_zone="UTC",  # Default, can be updated later
+            time_zone=time_zone,
         )
 
         # Automatically make user with ADMIN_EMAIL an admin

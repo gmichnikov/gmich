@@ -8,39 +8,66 @@
     <div class="auth-card">
         <div class="auth-header">
             <h1 class="auth-title">Create Account</h1>
-            <p class="auth-subtitle">Join to access all projects and features</p>
         </div>
 
         <form method="post" class="auth-form">
             {{ form.hidden_tag() }}
             
-            <div class="auth-form-group">
-                {{ form.email.label(class="auth-label") }}
-                {{ form.email(class="auth-input", placeholder="your@email.com") }}
-                {% if form.email.errors %}
-                    <div class="auth-error-messages">
-                        {% for error in form.email.errors %}
-                            <span class="auth-error">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+            <div class="auth-form-row auth-form-row-three">
+                <div class="auth-form-group auth-form-group-third">
+                    {{ form.email.label(class="auth-label") }}
+                    {{ form.email(class="auth-input", placeholder="your@email.com") }}
+                    {% if form.email.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.email.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form-group auth-form-group-third">
+                    {{ form.password.label(class="auth-label") }}
+                    {{ form.password(class="auth-input", placeholder="Password") }}
+                    {% if form.password.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.password.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form-group auth-form-group-third">
+                    {{ form.time_zone.label(class="auth-label") }}
+                    {{ form.time_zone(class="auth-select") }}
+                </div>
             </div>
 
-            <div class="auth-form-group">
-                {{ form.password.label(class="auth-label") }}
-                {{ form.password(class="auth-input", placeholder="Choose a strong password") }}
-                {% if form.password.errors %}
-                    <div class="auth-error-messages">
-                        {% for error in form.password.errors %}
-                            <span class="auth-error">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+            <div class="auth-form-row">
+                <div class="auth-form-group auth-form-group-half">
+                    {{ form.full_name.label(class="auth-label") }}
+                    {{ form.full_name(class="auth-input", placeholder="John Doe") }}
+                    {% if form.full_name.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.full_name.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
 
-            <div class="auth-form-group">
-                {{ form.time_zone.label(class="auth-label") }}
-                {{ form.time_zone(class="auth-select") }}
+                <div class="auth-form-group auth-form-group-half">
+                    {{ form.short_name.label(class="auth-label") }}
+                    {{ form.short_name(class="auth-input", placeholder="John") }}
+                    {% if form.short_name.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.short_name.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="auth-form-group">
@@ -54,7 +81,7 @@
         </div>
 
         <div class="auth-form-group">
-            <a href="{{ url_for('auth.login_google') }}" class="auth-google-btn">
+            <a href="{{ url_for('auth.login_google') }}" class="auth-google-btn" id="google-oauth-btn">
                 <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px;">
                     <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
                     <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
@@ -72,5 +99,25 @@
         </div>
     </div>
 </div>
+
+<script>
+// Detect browser time zone and append to Google OAuth link
+(function() {
+    const googleBtn = document.getElementById('google-oauth-btn');
+    if (googleBtn) {
+        try {
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (timeZone) {
+                const currentHref = googleBtn.getAttribute('href');
+                const separator = currentHref.includes('?') ? '&' : '?';
+                googleBtn.setAttribute('href', currentHref + separator + 'timezone=' + encodeURIComponent(timeZone));
+            }
+        } catch (e) {
+            // If time zone detection fails, just use the default link (UTC will be used)
+            console.log('Could not detect time zone:', e);
+        }
+    }
+})();
+</script>
 
 {% endblock %}

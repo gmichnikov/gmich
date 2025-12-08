@@ -10,6 +10,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(60), nullable=False, unique=True)
     password_hash = db.Column(db.String(128))
+    full_name = db.Column(db.String(100), nullable=False)
+    short_name = db.Column(db.String(50), nullable=False)
     time_zone = db.Column(db.String(50), nullable=False, default='UTC')
     is_admin = db.Column(db.Boolean, default=False)
     credits = db.Column(db.Integer, nullable=False, default=10)  # For Ask Many LLMs project

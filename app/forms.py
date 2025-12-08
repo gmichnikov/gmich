@@ -7,6 +7,8 @@ from app.models import User
 class RegistrationForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=4)])
+    full_name = StringField('Full Name', validators=[DataRequired(), Length(max=100)])
+    short_name = StringField('How should we address you?', validators=[DataRequired(), Length(max=50)])
     time_zone = SelectField('Time Zone', choices=[(tz, tz) for tz in pytz.common_timezones], default='US/Eastern')
     submit = SubmitField('Register')
     
