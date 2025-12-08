@@ -3,9 +3,23 @@
 {% block title %}Better Signups{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Better Signups</h1>
-    <p>Signup management system - Coming soon!</p>
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Better Signups</h1>
+            <p class="auth-subtitle">Create and manage signup lists for events and items</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+            <a href="{{ url_for('better_signups.family_members') }}" class="auth-submit-btn" style="text-decoration: none; text-align: center; display: block;">
+                Manage Family Members
+            </a>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

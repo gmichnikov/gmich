@@ -113,6 +113,14 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        # Create "self" family member for Better Signups
+        from app.projects.better_signups.utils import ensure_self_family_member
+        try:
+            ensure_self_family_member(new_user)
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.error(f"Failed to create self family member for {new_user.email}: {e}")
+
         # Generate verification token and send email
         try:
             token = new_user.generate_verification_token()
@@ -779,6 +787,14 @@ def google_callback():
         db.session.add(new_user)
         db.session.commit()
 
+        # Create "self" family member for Better Signups
+        from app.projects.better_signups.utils import ensure_self_family_member
+        try:
+            ensure_self_family_member(new_user)
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.error(f"Failed to create self family member for {new_user.email}: {e}")
+
         # Log registration
         log_entry = LogEntry(
             project="auth",
@@ -829,15 +845,10 @@ def profile():
         # This keeps the display_name in sync with the user's full_name
         if old_full_name != current_user.full_name:
             try:
-                from app.projects.better_signups.models import FamilyMember
-
-                self_family_member = FamilyMember.query.filter_by(
-                    user_id=current_user.id, is_self=True
-                ).first()
-                if self_family_member:
-                    self_family_member.display_name = current_user.full_name
+                from app.projects.better_signups.utils import ensure_self_family_member
+                ensure_self_family_member(current_user)
             except ImportError:
-                # FamilyMember model doesn't exist yet, skip update
+                # Better Signups not available, skip update
                 pass
 
         db.session.commit()

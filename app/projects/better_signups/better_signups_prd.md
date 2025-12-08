@@ -2,6 +2,10 @@
 
 This is a PRD for a better version of signup genius. The goal is to describe the requirements, very succinctly. We want to get an MVP version working, and then we can consider additional features.
 
+# Process Rules
+
+- Never create migrations by hand. Prompt me to run the flask db commands.
+
 # Basics
 
 1. The unit that a user creates will be called a List.
@@ -61,13 +65,13 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 2: Family Members Management
 
-- [ ] Create form for adding/editing family members
-- [ ] Create route for viewing family members list
-- [ ] Create route for adding family member
-- [ ] Create route for deleting family member
-- [ ] Create template for family members management
-- [ ] Ensure "self" family member is auto-created for existing users (migration or signal)
-- [ ] Ensure "self" family member is auto-created for new users (hook or signal)
+- [x] Create form for adding/editing family members
+- [x] Create route for viewing family members list
+- [x] Create route for adding family member
+- [x] Create route for deleting family member
+- [x] Create template for family members management
+- [x] Ensure "self" family member is auto-created for existing users (migration or signal)
+- [x] Ensure "self" family member is auto-created for new users (hook or signal)
 
 **Testing:**
 

@@ -160,3 +160,18 @@ class ProfileForm(FlaskForm):
     def validate_short_name(self, field):
         if not field.data or not field.data.strip():
             raise ValidationError("Short name cannot be blank or only whitespace.")
+
+
+class FamilyMemberForm(FlaskForm):
+    """Form for adding a family member"""
+
+    display_name = StringField(
+        "Full Name",
+        validators=[DataRequired(), Length(min=1, max=200)],
+        description="Enter the full name of the family member"
+    )
+    submit = SubmitField("Add Family Member")
+
+    def validate_display_name(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError("Name cannot be blank or only whitespace.")
