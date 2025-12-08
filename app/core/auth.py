@@ -100,8 +100,8 @@ def register():
 
         new_user = User(
             email=form.email.data,
-            full_name=form.full_name.data,
-            short_name=form.short_name.data,
+            full_name=form.full_name.data.strip(),
+            short_name=form.short_name.data.strip(),
             time_zone=form.time_zone.data,
             email_verified=False,  # New users start unverified
         )
@@ -747,6 +747,9 @@ def google_callback():
         # Use Google name if available, otherwise use placeholder
         # For short_name, try to extract first name from full name, or use full name
         google_full_name = google_name.strip() if google_name else "placeholder"
+        # If stripping resulted in empty string, use placeholder
+        if not google_full_name:
+            google_full_name = "placeholder"
         google_short_name = (
             google_full_name.split()[0]
             if google_full_name and google_full_name != "placeholder"
@@ -817,9 +820,25 @@ def profile():
 
     if form.validate_on_submit():
         # Update user profile
+        old_full_name = current_user.full_name
         current_user.full_name = form.full_name.data.strip()
         current_user.short_name = form.short_name.data.strip()
         current_user.time_zone = form.time_zone.data
+
+        # Update "self" FamilyMember if it exists (for better_signups project)
+        # This keeps the display_name in sync with the user's full_name
+        if old_full_name != current_user.full_name:
+            try:
+                from app.projects.better_signups.models import FamilyMember
+
+                self_family_member = FamilyMember.query.filter_by(
+                    user_id=current_user.id, is_self=True
+                ).first()
+                if self_family_member:
+                    self_family_member.display_name = current_user.full_name
+            except ImportError:
+                # FamilyMember model doesn't exist yet, skip update
+                pass
 
         db.session.commit()
 
