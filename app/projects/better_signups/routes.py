@@ -4,9 +4,11 @@ Handles signup list creation, management, and signups
 """
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from app import db
-from app.forms import FamilyMemberForm, CreateSignupListForm, EditSignupListForm
-from app.projects.better_signups.models import FamilyMember, SignupList
+from app.forms import FamilyMemberForm, CreateSignupListForm, EditSignupListForm, AddListEditorForm
+from app.projects.better_signups.models import FamilyMember, SignupList, ListEditor
+from app.models import User
 
 bp = Blueprint('better_signups', __name__,
                url_prefix='/better-signups',
@@ -23,7 +25,17 @@ def index():
         SignupList.created_at.desc()
     ).all()
     
-    return render_template('better_signups/index.html', my_lists=my_lists)
+    # Get lists where user is an editor (but not creator)
+    # This includes lists where user_id matches, or email matches (for pending invitations)
+    editor_lists = SignupList.query.join(ListEditor).filter(
+        SignupList.creator_id != current_user.id,
+        or_(
+            ListEditor.user_id == current_user.id,
+            ListEditor.email == current_user.email.lower()
+        )
+    ).order_by(SignupList.created_at.desc()).all()
+    
+    return render_template('better_signups/index.html', my_lists=my_lists, editor_lists=editor_lists)
 
 
 @bp.route('/family-members')
@@ -167,7 +179,19 @@ def view_list(uuid):
     form = EditSignupListForm(obj=signup_list)
     form.accepting_signups.data = signup_list.accepting_signups
     
-    return render_template('better_signups/view_list.html', list=signup_list, form=form)
+    # Form for adding editors (only shown to creator)
+    add_editor_form = AddListEditorForm() if signup_list.creator_id == current_user.id else None
+    
+    # Get list of editors (excluding creator)
+    editors = ListEditor.query.filter_by(list_id=signup_list.id).all()
+    
+    return render_template(
+        'better_signups/view_list.html', 
+        list=signup_list, 
+        form=form,
+        add_editor_form=add_editor_form,
+        editors=editors
+    )
 
 
 @bp.route('/lists/<string:uuid>/edit', methods=['POST'])
@@ -235,4 +259,93 @@ def delete_list(uuid):
     
     flash(f'List "{name}" deleted successfully.', 'success')
     return redirect(url_for('better_signups.index'))
+
+
+@bp.route('/lists/<string:uuid>/editors/add', methods=['POST'])
+@login_required
+def add_editor(uuid):
+    """Add an editor to a signup list"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    
+    # Only creator can add editors
+    if signup_list.creator_id != current_user.id:
+        flash('Only the list creator can add editors.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+    
+    form = AddListEditorForm()
+    
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        
+        # Try to find user by email
+        user = User.query.filter_by(email=email).first()
+        
+        # Check if user is already an editor (or is the creator)
+        if user and user.id == signup_list.creator_id:
+            flash('The list creator is already an editor.', 'error')
+            return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+        
+        # Check if already an editor (by user_id or by email)
+        existing_editor = None
+        if user:
+            existing_editor = ListEditor.query.filter_by(
+                list_id=signup_list.id,
+                user_id=user.id
+            ).first()
+        else:
+            existing_editor = ListEditor.query.filter_by(
+                list_id=signup_list.id,
+                email=email
+            ).first()
+        
+        if existing_editor:
+            flash('This email is already an editor.', 'error')
+            return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+        
+        # Add as editor (with user_id if user exists, otherwise just email)
+        editor = ListEditor(
+            list_id=signup_list.id,
+            user_id=user.id if user else None,
+            email=email
+        )
+        db.session.add(editor)
+        db.session.commit()
+        
+        # Generic success message to avoid email enumeration
+        flash(f'Editor added successfully. {email} can now edit this list.', 'success')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+    
+    return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+
+@bp.route('/lists/<string:uuid>/editors/<int:editor_id>/remove', methods=['POST'])
+@login_required
+def remove_editor(uuid, editor_id):
+    """Remove an editor from a signup list"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    
+    # Only creator can remove editors
+    if signup_list.creator_id != current_user.id:
+        flash('Only the list creator can remove editors.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+    
+    editor = ListEditor.query.get_or_404(editor_id)
+    
+    # Verify the editor belongs to this list
+    if editor.list_id != signup_list.id:
+        flash('Invalid editor.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+    
+    # Get editor info before deletion
+    editor_email = editor.get_display_email() or 'Unknown'
+    
+    db.session.delete(editor)
+    db.session.commit()
+    
+    # Generic message to avoid revealing whether user has an account
+    flash(f'Editor {editor_email} removed successfully.', 'success')
+    return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
 

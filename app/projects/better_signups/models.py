@@ -48,26 +48,49 @@ class SignupList(db.Model):
         """Check if a user is an editor (creator is always an editor)"""
         if self.creator_id == user.id:
             return True
-        return any(editor.user_id == user.id for editor in self.editors)
+        # Check by user_id or by email (for pending invitations)
+        return any(
+            editor.user_id == user.id or 
+            (editor.email and editor.email.lower() == user.email.lower())
+            for editor in self.editors
+        )
 
     def __repr__(self):
         return f'<SignupList {self.id}: {self.name}>'
 
 
 class ListEditor(db.Model):
-    """Additional editors for a signup list (creator is always an editor)"""
+    """Additional editors for a signup list (creator is always an editor)
+    
+    Can have either a user_id (if user exists) or just an email (pending invitation).
+    When a user signs up with an invited email, the user_id will be linked.
+    """
     id = db.Column(db.Integer, primary_key=True)
     list_id = db.Column(db.Integer, db.ForeignKey("signup_list.id"), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)  # Nullable for pending invitations
+    email = db.Column(db.String(60), nullable=True)  # Email for pending invitations or as backup
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    __table_args__ = (db.UniqueConstraint("list_id", "user_id"),)
+    # Unique constraint: either (list_id, user_id) or (list_id, email) must be unique
+    # We'll enforce this in application logic since SQL doesn't support OR in unique constraints well
+    __table_args__ = (
+        db.UniqueConstraint("list_id", "user_id", name="unique_list_user"),
+        db.UniqueConstraint("list_id", "email", name="unique_list_email"),
+    )
 
     # Relationships
     user = db.relationship('User', backref=db.backref('list_editorships', lazy=True))
 
+    def get_display_email(self):
+        """Get the email to display (from user if exists, otherwise from email field)"""
+        if self.user:
+            return self.user.email
+        return self.email
+
     def __repr__(self):
-        return f'<ListEditor list_id={self.list_id} user_id={self.user_id}>'
+        if self.user_id:
+            return f'<ListEditor list_id={self.list_id} user_id={self.user_id}>'
+        return f'<ListEditor list_id={self.list_id} email={self.email}>'
 
 
 class FamilyMember(db.Model):

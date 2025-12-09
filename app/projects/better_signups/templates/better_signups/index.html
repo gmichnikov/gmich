@@ -45,6 +45,33 @@
         </div>
         {% endif %}
 
+        {% if editor_lists %}
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Lists I Can Edit</h2>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for list in editor_lists %}
+                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <strong><a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
+                                Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
+                                Created by: {{ list.creator.full_name }} | 
+                                Created: {{ list.created_at.strftime('%B %d, %Y') }}
+                            </div>
+                            {% if list.description %}
+                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                                {{ list.description[:100] }}{% if list.description|length > 100 %}...{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="auth-footer" style="margin-top: 2rem;">
             <p class="auth-footer-text"><a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a></p>
         </div>

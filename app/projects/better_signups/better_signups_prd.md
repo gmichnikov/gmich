@@ -18,7 +18,7 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 8. Auth will be handled by my web app's existing auth. Users must be signed in to use this.
 9. Each list can be either open to anyone with an account, or it can require an additional list password. Let's hash the password like with user passwords.
 10. It should be possible for the end user to cancel their signup for a spot
-11. A list creator is considered to be an editor and can add additional users to be list editors
+11. A list creator is considered to be an editor and can add additional users to be list editors. Only creators can do this, editors cannot.
 12. A list can be in the state or accepting signups, or not accepting signups
 13. Editors can both remove signups and edit the lists/elements at any time. For now, they cannot reduce the number of spots in an element below the number already signed up.
 14. When signing up, users can see (before the sign up) how many spots are available and who has taken spots so far (though per below, we may eventually offer to hide that)
@@ -110,10 +110,10 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 4: List Editors Management
 
-- [ ] Create form for adding list editors (by email)
-- [ ] Create route for adding an editor
-- [ ] Create route for removing an editor
-- [ ] Add UI in list editor view for managing editors
+- [x] Create form for adding list editors (by email)
+- [x] Create route for adding an editor
+- [x] Create route for removing an editor
+- [x] Add UI in list editor view for managing editors
 
 **Testing:**
 

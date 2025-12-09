@@ -114,12 +114,21 @@ def register():
         db.session.commit()
 
         # Create "self" family member for Better Signups
-        from app.projects.better_signups.utils import ensure_self_family_member
+        from app.projects.better_signups.utils import ensure_self_family_member, link_pending_editor_invitations
         try:
             ensure_self_family_member(new_user)
         except Exception as e:
             # Log error but don't fail registration
             logger.error(f"Failed to create self family member for {new_user.email}: {e}")
+        
+        # Link any pending editor invitations
+        try:
+            linked_count = link_pending_editor_invitations(new_user)
+            if linked_count > 0:
+                logger.info(f"Linked {linked_count} pending editor invitation(s) for {new_user.email}")
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.error(f"Failed to link pending editor invitations for {new_user.email}: {e}")
 
         # Generate verification token and send email
         try:
@@ -362,6 +371,16 @@ def login():
 
             # Email is verified, proceed with login
             login_user(user)
+            
+            # Link any pending editor invitations (in case user was invited before registering)
+            from app.projects.better_signups.utils import link_pending_editor_invitations
+            try:
+                linked_count = link_pending_editor_invitations(user)
+                if linked_count > 0:
+                    logger.info(f"Linked {linked_count} pending editor invitation(s) for {user.email} on login")
+            except Exception as e:
+                # Log error but don't fail login
+                logger.error(f"Failed to link pending editor invitations for {user.email}: {e}")
 
             # Log successful login
             log_entry = LogEntry(
@@ -788,12 +807,21 @@ def google_callback():
         db.session.commit()
 
         # Create "self" family member for Better Signups
-        from app.projects.better_signups.utils import ensure_self_family_member
+        from app.projects.better_signups.utils import ensure_self_family_member, link_pending_editor_invitations
         try:
             ensure_self_family_member(new_user)
         except Exception as e:
             # Log error but don't fail registration
             logger.error(f"Failed to create self family member for {new_user.email}: {e}")
+        
+        # Link any pending editor invitations
+        try:
+            linked_count = link_pending_editor_invitations(new_user)
+            if linked_count > 0:
+                logger.info(f"Linked {linked_count} pending editor invitation(s) for {new_user.email}")
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.error(f"Failed to link pending editor invitations for {new_user.email}: {e}")
 
         # Log registration
         log_entry = LogEntry(
@@ -804,6 +832,16 @@ def google_callback():
         )
         db.session.add(log_entry)
         db.session.commit()
+
+        # Link any pending editor invitations
+        from app.projects.better_signups.utils import link_pending_editor_invitations
+        try:
+            linked_count = link_pending_editor_invitations(new_user)
+            if linked_count > 0:
+                logger.info(f"Linked {linked_count} pending editor invitation(s) for {new_user.email} (Google OAuth)")
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.error(f"Failed to link pending editor invitations for {new_user.email}: {e}")
 
         # Log them in
         login_user(new_user)

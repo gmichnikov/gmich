@@ -234,3 +234,18 @@ class EditSignupListForm(FlaskForm):
     def validate_name(self, field):
         if not field.data or not field.data.strip():
             raise ValidationError("List name cannot be blank or only whitespace.")
+
+
+class AddListEditorForm(FlaskForm):
+    """Form for adding a list editor by email"""
+
+    email = StringField(
+        "Email Address",
+        validators=[DataRequired(), Email(), Length(max=60)],
+        description="Enter the email address of the user to add as an editor"
+    )
+    submit = SubmitField("Add Editor")
+
+    def validate_email(self, field):
+        if not field.data or not field.data.strip():
+            raise ValidationError("Email cannot be blank or only whitespace.")

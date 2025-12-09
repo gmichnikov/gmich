@@ -104,6 +104,76 @@
             </form>
         </div>
 
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Editors</h2>
+            
+            <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Creator:</strong> 
+                    <span>{{ list.creator.full_name }} ({{ list.creator.email }})</span>
+                </div>
+            </div>
+
+            {% if editors %}
+            <div style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Additional Editors:</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    {% for editor in editors %}
+                    <li style="background-color: #f9f9f9; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span>{{ editor.get_display_email() or 'Unknown' }}</span>
+                        </div>
+                        {% if list.creator_id == current_user.id %}
+                        <form method="post" 
+                              action="{{ url_for('better_signups.remove_editor', uuid=list.uuid, editor_id=editor.id) }}" 
+                              style="margin: 0;"
+                              onsubmit="return confirm('Are you sure you want to remove this editor?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" 
+                                    style="background-color: #dc3545; color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
+                                Remove
+                            </button>
+                        </form>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <div style="margin-bottom: 1rem; color: #666;">
+                <p>No additional editors. Only the creator can edit this list.</p>
+            </div>
+            {% endif %}
+
+            {% if add_editor_form %}
+            <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem; margin-top: 1rem;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Add Editor</h3>
+                <form method="post" action="{{ url_for('better_signups.add_editor', uuid=list.uuid) }}" class="auth-form">
+                    {{ add_editor_form.hidden_tag() }}
+                    
+                    <div class="auth-form-group">
+                        {{ add_editor_form.email.label(class="auth-label") }}
+                        {{ add_editor_form.email(class="auth-input", autocomplete="off", type="email") }}
+                        <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                            Enter the email address of the user to add as an editor. They will be able to edit this list and manage events/items.
+                        </small>
+                        {% if add_editor_form.email.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in add_editor_form.email.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="auth-form-group">
+                        {{ add_editor_form.submit(class="auth-submit-btn") }}
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
         {% if list.list_type == 'events' %}
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Events</h2>
