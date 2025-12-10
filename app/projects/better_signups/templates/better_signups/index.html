@@ -27,7 +27,7 @@
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <strong><a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                            <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
                                 Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
                                 Created: {{ list.created_at.strftime('%B %d, %Y') }}
@@ -53,7 +53,7 @@
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <strong><a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                            <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
                                 Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
                                 Created by: {{ list.creator.full_name }} | 

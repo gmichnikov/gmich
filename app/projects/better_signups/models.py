@@ -39,6 +39,39 @@ class SignupList(db.Model):
             return False
         return check_password_hash(self.list_password_hash, password)
 
+    def user_has_access(self, user):
+        """Check if a user has been granted access to this password-protected list"""
+        if not self.list_password_hash:
+            return True  # No password protection = everyone has access
+
+        # Creators always have access to their own lists
+        if self.creator_id == user.id:
+            return True
+
+        # Check if user has been granted access
+        from app.projects.better_signups.models import ListAccess
+        access_grant = ListAccess.query.filter_by(
+            user_id=user.id,
+            list_id=self.id
+        ).first()
+        return access_grant is not None
+
+    def grant_user_access(self, user):
+        """Grant a user permanent access to this list (after successful password entry)"""
+        from app.projects.better_signups.models import ListAccess
+        # Use get_or_create pattern to avoid duplicates
+        access_grant = ListAccess.query.filter_by(
+            user_id=user.id,
+            list_id=self.id
+        ).first()
+
+        if not access_grant:
+            access_grant = ListAccess(user_id=user.id, list_id=self.id)
+            db.session.add(access_grant)
+            db.session.commit()
+
+        return access_grant
+
     def generate_uuid(self):
         """Generate a unique UUID for this list"""
         self.uuid = str(uuid_lib.uuid4())
@@ -185,6 +218,24 @@ class Item(db.Model):
 
     def __repr__(self):
         return f'<Item {self.id}: {self.name}>'
+
+
+class ListAccess(db.Model):
+    """Tracks which users have been granted access to password-protected lists"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    list_id = db.Column(db.Integer, db.ForeignKey("signup_list.id"), nullable=False)
+    granted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('list_accesses', lazy=True))
+    signup_list = db.relationship('SignupList', backref=db.backref('access_grants', lazy=True))
+
+    # Unique constraint to prevent duplicate access grants
+    __table_args__ = (db.UniqueConstraint('user_id', 'list_id', name='unique_user_list_access'),)
+
+    def __repr__(self):
+        return f'<ListAccess user_id={self.user_id} list_id={self.list_id}>'
 
 
 class Signup(db.Model):

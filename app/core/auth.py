@@ -392,7 +392,7 @@ def login():
             db.session.add(log_entry)
             db.session.commit()
 
-            next_page = request.args.get("next")
+            next_page = request.args.get("next") or session.pop("next", None)
             return redirect(next_page or url_for("main.index"))
         else:
             # Log failed login attempt

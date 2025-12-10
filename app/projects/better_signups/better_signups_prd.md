@@ -176,12 +176,15 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 7: Public List View (Signup Interface)
 
-- [ ] Create route for viewing list by UUID (public view)
-- [ ] Create route for password-protected list access
-- [ ] Create template for public list view (shows events/items, spots available, current signups)
-- [ ] Display spots taken vs spots available for each element
-- [ ] Show who has signed up (family member names)
-- [ ] Handle list password authentication
+- [x] Create route for viewing list by UUID (public view)
+- [x] Create route for password-protected list access
+- [x] Create template for public list view (shows events/items, spots available, current signups)
+- [x] Display spots taken vs spots available for each element
+- [x] Show who has signed up (family member names)
+- [x] Handle list password authentication
+- [x] Implement account-based password access (enter once, stay unlocked)
+- [x] Editors bypass password requirements for both view and edit
+- [x] Fix login redirect to return users to intended list after authentication
 
 **Testing:**
 

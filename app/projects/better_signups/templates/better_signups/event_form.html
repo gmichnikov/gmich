@@ -183,12 +183,12 @@
 
             <div class="auth-form-group">
                 {{ form.submit(class="auth-submit-btn") }}
-                <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="auth-link" style="margin-left: 1rem;">Cancel</a>
+                <a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" class="auth-link" style="margin-left: 1rem;">Cancel</a>
             </div>
         </form>
 
         <div class="auth-footer" style="margin-top: 2rem;">
-            <p class="auth-footer-text"><a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="auth-link">← Back to List</a></p>
+            <p class="auth-footer-text"><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" class="auth-link">← Back to List</a></p>
         </div>
     </div>
 </div>
