@@ -128,13 +128,17 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 5: Events Management
 
-- [ ] Create form for creating/editing events (date vs datetime, location, description, spots)
-- [ ] Create route for adding an event to a list
-- [ ] Create route for editing an event
-- [ ] Create route for deleting an event
-- [ ] Create template for event form
-- [ ] Add validation: cannot reduce spots below current signups
-- [ ] Handle timezone storage (use creator's timezone)
+- [x] Create form for creating/editing events (date vs datetime, location, description, spots)
+- [x] Create route for adding an event to a list
+- [x] Create route for editing an event
+- [x] Create route for deleting an event
+- [x] Create template for event form
+- [x] Add validation: cannot reduce spots below current signups
+- [x] Handle timezone storage (use creator's timezone)
+- [x] Add optional location linking to Google Maps (with toggle)
+- [x] Enforce consistent event types within a list (all date or all datetime)
+- [x] Display end time calculation for datetime events with duration
+- [x] Improved event display with better formatting and timezone info
 
 **Testing:**
 

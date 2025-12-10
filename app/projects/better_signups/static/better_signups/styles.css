@@ -1,0 +1,42 @@
+/* Better Signups specific button styles */
+.better-signups-btn {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-decoration: none;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.better-signups-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+}
+
+.better-signups-btn:active {
+  transform: translateY(0);
+}
+
+.better-signups-btn-secondary {
+  background: #6c757d;
+}
+
+.better-signups-btn-secondary:hover {
+  box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
+}
+
+.better-signups-btn-danger {
+  background: #dc3545;
+}
+
+.better-signups-btn-danger:hover {
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}

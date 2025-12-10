@@ -7,8 +7,10 @@ from wtforms import (
     TextAreaField,
     SelectMultipleField,
     BooleanField,
+    IntegerField,
+    DateField,
 )
-from wtforms.validators import DataRequired, Length, Email, ValidationError, EqualTo
+from wtforms.validators import DataRequired, Length, Email, ValidationError, EqualTo, NumberRange, Optional
 import pytz
 from app.models import User
 
@@ -249,3 +251,76 @@ class AddListEditorForm(FlaskForm):
     def validate_email(self, field):
         if not field.data or not field.data.strip():
             raise ValidationError("Email cannot be blank or only whitespace.")
+
+
+class EventForm(FlaskForm):
+    """Form for creating/editing events"""
+
+    event_type = SelectField(
+        "Event Type",
+        choices=[("date", "Date Only"), ("datetime", "Date and Time")],
+        validators=[DataRequired()],
+        description="Choose whether this is a date-only event or includes specific time"
+    )
+    event_date = DateField(
+        "Event Date",
+        validators=[Optional()],
+        description="Date for date-only events"
+    )
+    event_datetime = StringField(
+        "Event Date and Time",
+        validators=[],
+        description="Date and time for datetime events (format: YYYY-MM-DD HH:MM)"
+    )
+    timezone = SelectField(
+        "Time Zone",
+        choices=[(tz, tz) for tz in pytz.common_timezones],
+        validators=[Optional()],
+        description="Timezone for datetime events"
+    )
+    duration_minutes = IntegerField(
+        "Duration (minutes)",
+        validators=[Optional()],  # Max 7 days - validation done in custom validator
+        description="Duration in minutes (for datetime events only)"
+    )
+    location = StringField(
+        "Location",
+        validators=[Length(max=200)],
+        description="Optional location for the event"
+    )
+    location_is_link = BooleanField(
+        "Make the location a clickable link to Google Maps",
+        default=True
+    )
+    description = TextAreaField(
+        "Description",
+        validators=[Length(max=2000)],
+        description="Optional description for the event"
+    )
+    spots_available = IntegerField(
+        "Spots Available",
+        validators=[DataRequired(), NumberRange(min=1)],
+        default=1,
+        description="Number of signup spots available"
+    )
+    submit = SubmitField("Save Event")
+
+    def validate_event_date(self, field):
+        """Validate event_date is provided for date-only events"""
+        if self.event_type.data == 'date' and not field.data:
+            raise ValidationError("Event date is required for date-only events.")
+
+    def validate_event_datetime(self, field):
+        """Validate event_datetime is provided for datetime events"""
+        if self.event_type.data == 'datetime' and not field.data:
+            raise ValidationError("Event date and time is required for datetime events.")
+
+    def validate_duration_minutes(self, field):
+        """Validate duration_minutes if provided"""
+        # Only validate if a value is provided (field is optional)
+        if field.data is not None:
+            # IntegerField should already convert to int, but handle both cases
+            value = field.data if isinstance(field.data, int) else (int(field.data) if field.data else None)
+            if value is not None:
+                if value < 1 or value > 10080:
+                    raise ValidationError("Duration must be between 1 and 10080 minutes.")

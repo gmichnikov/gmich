@@ -85,7 +85,7 @@ body {
   .nav-link-text {
     display: none;
   }
-  
+
   .nav-link-icon {
     padding: 8px 12px;
   }
@@ -890,7 +890,7 @@ textarea.auth-input {
 
 .auth-divider::before,
 .auth-divider::after {
-  content: '';
+  content: "";
   flex: 1;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -922,7 +922,7 @@ textarea.auth-input {
 }
 
 .auth-google-btn:hover {
-  border-color: #4285F4;
+  border-color: #4285f4;
   box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
   transform: translateY(-1px);
 }
@@ -1044,7 +1044,7 @@ textarea.auth-input {
     width: 100%;
     margin: 0;
   }
-  
+
   /* Mobile dropdown styles */
   .nav-dropdown-menu {
     position: static;
@@ -1057,16 +1057,16 @@ textarea.auth-input {
     max-height: 0;
     overflow: hidden;
   }
-  
+
   .nav-dropdown-menu-active {
     max-height: 200px;
     padding: 8px 0;
   }
-  
+
   .nav-dropdown-item {
     padding: 10px 24px;
   }
-  
+
   .nav-dropdown-toggle {
     width: 100%;
     justify-content: flex-start;
@@ -1081,11 +1081,11 @@ textarea.auth-input {
     border-radius: 8px;
     text-align: left;
   }
-  
+
   .nav-link-text {
     display: inline !important;
   }
-  
+
   .nav-link-icon {
     justify-content: flex-start;
   }

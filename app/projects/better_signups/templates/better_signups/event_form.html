@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if event %}Edit Event{% else %}Add Event{% endif %} - Better Signups{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">{% if event %}Edit Event{% else %}Add Event{% endif %}</h1>
+            <p class="auth-subtitle">{{ list.name }}</p>
+        </div>
+
+        <form method="post" class="auth-form" id="event-form">
+            {{ form.hidden_tag() }}
+            
+            {% if form.errors %}
+            <div class="auth-error-messages" style="margin-bottom: 1rem; padding: 1rem; background-color: #f8d7da; border-radius: 8px;">
+                <strong>Please fix the following errors:</strong>
+                <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                    {% for field, errors in form.errors.items() %}
+                        {% for error in errors %}
+                        <li>{{ form[field].label.text }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <div class="auth-form-group">
+                {{ form.event_type.label(class="auth-label") }}
+                {% if form.event_type.render_kw and form.event_type.render_kw.get('disabled') %}
+                {{ form.event_type(class="auth-select", disabled=True, onchange="toggleEventFields()") }}
+                <input type="hidden" name="event_type" value="{{ form.event_type.data }}">
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    All events in this list must use the same type. This list uses "{{ 'Date Only' if form.event_type.data == 'date' else 'Date and Time' }}" events.
+                </small>
+                {% else %}
+                {{ form.event_type(class="auth-select", onchange="toggleEventFields()") }}
+                {% endif %}
+                {% if form.event_type.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.event_type.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="date-fields" style="display: none;">
+                <div class="auth-form-group">
+                    <label class="auth-label">
+                        {{ form.event_date.label.text }} <span style="color: #dc3545;">*</span>
+                    </label>
+                    {{ form.event_date(class="auth-input", type="date") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        Required for date-only events
+                    </small>
+                    {% if form.event_date.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.event_date.errors %}
+                        <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="datetime-fields" style="display: none;">
+                <div class="auth-form-group">
+                    <label class="auth-label">
+                        {{ form.event_datetime.label.text }} <span style="color: #dc3545;">*</span>
+                    </label>
+                    {{ form.event_datetime(class="auth-input", type="datetime-local") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        Required for datetime events.
+                    </small>
+                    {% if form.event_datetime.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.event_datetime.errors %}
+                        <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form-group">
+                    {{ form.timezone.label(class="auth-label") }}
+                    {{ form.timezone(class="auth-select") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        The timezone for this event. Defaults to your timezone ({{ list.creator.time_zone }}).
+                    </small>
+                    {% if form.timezone.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.timezone.errors %}
+                        <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form-group">
+                    <label class="auth-label">
+                        {{ form.duration_minutes.label.text }} <span style="color: #666; font-size: 0.875rem;">(Optional)</span>
+                    </label>
+                    {{ form.duration_minutes(class="auth-input", type="number", min="1", max="10080") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        Duration in minutes (max 7 days). Leave blank if no specific duration.
+                    </small>
+                    {% if form.duration_minutes.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.duration_minutes.errors %}
+                        <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">
+                    {{ form.location.label.text }} <span style="color: #666; font-size: 0.875rem;">(Optional)</span>
+                </label>
+                {{ form.location(class="auth-input", autocomplete="off") }}
+                {% if form.location.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.location.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ form.location_is_link() }}
+                    <span>{{ form.location_is_link.label.text }}</span>
+                </label>
+                {% if form.location_is_link.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.location_is_link.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">
+                    {{ form.description.label.text }} <span style="color: #666; font-size: 0.875rem;">(Optional)</span>
+                </label>
+                {{ form.description(class="auth-input", rows=3) }}
+                {% if form.description.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.description.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">
+                    {{ form.spots_available.label.text }} <span style="color: #dc3545;">*</span>
+                </label>
+                {{ form.spots_available(class="auth-input", type="number", min="1") }}
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    Required. Minimum 1 spot.
+                </small>
+                {% if event %}
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    Current signups: {{ event.get_spots_taken() }}. Cannot reduce below this number.
+                </small>
+                {% endif %}
+                {% if form.spots_available.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.spots_available.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.submit(class="auth-submit-btn") }}
+                <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="auth-link" style="margin-left: 1rem;">Cancel</a>
+            </div>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text"><a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="auth-link">← Back to List</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEventFields() {
+    const eventType = document.getElementById('event_type').value;
+    const dateFields = document.getElementById('date-fields');
+    const datetimeFields = document.getElementById('datetime-fields');
+    
+    if (eventType === 'date') {
+        dateFields.style.display = 'block';
+        datetimeFields.style.display = 'none';
+        // Clear datetime fields
+        document.getElementById('event_datetime').value = '';
+        document.getElementById('duration_minutes').value = '';
+    } else if (eventType === 'datetime') {
+        dateFields.style.display = 'none';
+        datetimeFields.style.display = 'block';
+        // Clear date field
+        document.getElementById('event_date').value = '';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleEventFields();
+});
+</script>
+
+{% endblock %}
+

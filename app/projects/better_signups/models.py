@@ -125,6 +125,7 @@ class Event(db.Model):
     timezone = db.Column(db.String(50), nullable=True)  # For datetime only
     duration_minutes = db.Column(db.Integer, nullable=True)  # For datetime only
     location = db.Column(db.String(200), nullable=True)
+    location_is_link = db.Column(db.Boolean, nullable=False, default=True)  # Whether location should link to Google Maps
     description = db.Column(db.Text, nullable=True)
     spots_available = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -143,6 +144,13 @@ class Event(db.Model):
     def get_spots_remaining(self):
         """Get the number of spots remaining"""
         return max(0, self.spots_available - self.get_spots_taken())
+    
+    def get_end_datetime(self):
+        """Get the end datetime for datetime events (start + duration)"""
+        if self.event_type == 'datetime' and self.event_datetime and self.duration_minutes:
+            from datetime import timedelta
+            return self.event_datetime + timedelta(minutes=self.duration_minutes)
+        return None
 
     def __repr__(self):
         if self.event_type == 'date':

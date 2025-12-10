@@ -2,39 +2,38 @@
 
 {% block title %}{{ list.name }} - Better Signups{% endblock %}
 
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+{% endblock %}
+
 {% block content %}
 
 <div class="auth-page-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h1 class="auth-title">{{ list.name }}</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h1 class="auth-title">{{ list.name }}</h1>
+                <a href="{{ url_for('better_signups.index') }}" class="auth-link">← Better Signups</a>
+            </div>
+            {% if list.description %}
+            <p class="auth-subtitle">{{ list.description }}</p>
+            {% endif %}
             <p class="auth-subtitle">
-                Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
                 Created: {{ list.created_at.strftime('%B %d, %Y') }}
             </p>
         </div>
 
         <div style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">List Information</h2>
-            
-            <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                <div style="margin-bottom: 0.5rem;">
-                    <strong>List UUID:</strong> 
-                    <code style="background-color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">{{ list.uuid }}</code>
-                </div>
-                <div style="margin-bottom: 0.5rem;">
-                    <strong>Public URL:</strong>
-                    <div style="margin-top: 0.25rem; color: #666; font-size: 0.875rem;">
-                        Public view coming in Phase 7. UUID: {{ list.uuid }}
-                    </div>
-                </div>
-                <div>
-                    <strong>Status:</strong> 
-                    <span style="color: {% if list.accepting_signups %}#28a745{% else %}#dc3545{% endif %};">
-                        {% if list.accepting_signups %}Accepting Signups{% else %}Not Accepting Signups{% endif %}
-                    </span>
-                </div>
-            </div>
+            <button type="button"
+                    onclick="toggleSection('list-settings')"
+                    style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 1rem; padding: 0; margin-bottom: 1rem;">
+                ⚙️ Edit List Settings
+            </button>
+
+            <div id="list-settings" style="display: none;">
 
             <form method="post" action="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" class="auth-form">
                 {{ form.hidden_tag() }}
@@ -104,8 +103,102 @@
             </form>
         </div>
 
+        {% if list.list_type == 'events' %}
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Editors</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; margin: 0;">Events</h2>
+                <a href="{{ url_for('better_signups.add_event', uuid=list.uuid) }}" class="better-signups-btn">
+                    Add Event
+                </a>
+            </div>
+
+            {% if events %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for event in events %}
+                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                                {% if event.event_type == 'date' %}
+                                    {{ event.event_date.strftime('%B %d, %Y') }}
+                                {% else %}
+                                    {% set end_time = event.get_end_datetime() %}
+                                    <div>
+                                        <div>
+                                            <strong>Start:</strong> {{ event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </div>
+                                        {% if end_time %}
+                                        <div>
+                                            <strong>End:</strong> {{ end_time.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </div>
+                                        {% endif %}
+                                        <div style="color: #666; font-weight: normal; font-size: 0.875rem; margin-top: 0.25rem;">
+                                            Timezone: {{ event.timezone }}
+                                            {% if event.duration_minutes %}
+                                            | Duration: {{ event.duration_minutes }} minutes
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if event.location %}
+                            <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                📍 {% if event.location_is_link %}
+                                    <a href="https://www.google.com/maps?q={{ event.location|urlencode }}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none;">{{ event.location }}</a>
+                                {% else %}
+                                    {{ event.location }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if event.description %}
+                            <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                {{ event.description }}
+                            </div>
+                            {% endif %}
+                            <div style="color: #666; font-size: 0.875rem;">
+                                Spots: {{ event.get_spots_taken() }} / {{ event.spots_available }}
+                                ({{ event.get_spots_remaining() }} remaining)
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                            <a href="{{ url_for('better_signups.edit_event', uuid=list.uuid, event_id=event.id) }}"
+                               class="better-signups-btn better-signups-btn-secondary">
+                                Edit
+                            </a>
+                            <form method="post"
+                                  action="{{ url_for('better_signups.delete_event', uuid=list.uuid, event_id=event.id) }}"
+                                  style="margin: 0;"
+                                  onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="better-signups-btn better-signups-btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #666;">No events yet. Click "Add Event" to create one.</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Items</h2>
+            <p style="color: #666;">Item management coming in Phase 6</p>
+        </div>
+        {% endif %}
+
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
+            <button type="button"
+                    onclick="toggleSection('editors-section')"
+                    style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 1rem; padding: 0; margin-bottom: 1rem;">
+                👥 Manage Editors
+            </button>
+
+            <div id="editors-section" style="display: none;">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Editors</h2>
             
             <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <div style="margin-bottom: 0.5rem;">
@@ -172,19 +265,9 @@
                 </form>
             </div>
             {% endif %}
+            </div>
         </div>
 
-        {% if list.list_type == 'events' %}
-        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Events</h2>
-            <p style="color: #666;">Event management coming in Phase 5</p>
-        </div>
-        {% else %}
-        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Items</h2>
-            <p style="color: #666;">Item management coming in Phase 6</p>
-        </div>
-        {% endif %}
 
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: #dc3545;">Danger Zone</h2>
@@ -202,6 +285,19 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script>
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'block';
+    } else {
+        section.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
 
 {% endblock %}
 
