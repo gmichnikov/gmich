@@ -24,6 +24,7 @@ from app.forms import (
     AddListEditorForm,
     EventForm,
     ItemForm,
+    SignupForm,
 )
 from app.projects.better_signups.models import (
     FamilyMember,
@@ -33,6 +34,7 @@ from app.projects.better_signups.models import (
     Item,
     Signup,
 )
+from app.projects.better_signups.utils import ensure_self_family_member
 from app.models import User
 import pytz
 
@@ -873,4 +875,216 @@ def view_list(uuid):
         return render_template("better_signups/password_prompt.html", list=signup_list)
 
     # User has access - show the list view
-    return render_template("better_signups/view_list.html", list=signup_list)
+    # Ensure user has a "self" family member
+    ensure_self_family_member(current_user)
+
+    # Get user's family members for signup forms
+    family_members = (
+        FamilyMember.query.filter_by(user_id=current_user.id)
+        .order_by(FamilyMember.is_self.desc(), FamilyMember.created_at)
+        .all()
+    )
+
+    # Pre-compute available family members for each element to avoid template complexity
+    # This will be a dict: {element_id: [available_family_member_ids]}
+    available_family_members_by_element = {}
+
+    # For events
+    for event in signup_list.events:
+        signed_up_family_member_ids = {
+            signup.family_member_id
+            for signup in event.get_active_signups()
+            if signup.user_id == current_user.id
+        }
+        available_family_members_by_element[f"event_{event.id}"] = [
+            member.id
+            for member in family_members
+            if member.id not in signed_up_family_member_ids
+        ]
+
+    # For items
+    for item in signup_list.items:
+        signed_up_family_member_ids = {
+            signup.family_member_id
+            for signup in item.get_active_signups()
+            if signup.user_id == current_user.id
+        }
+        available_family_members_by_element[f"item_{item.id}"] = [
+            member.id
+            for member in family_members
+            if member.id not in signed_up_family_member_ids
+        ]
+
+    return render_template(
+        "better_signups/view_list.html",
+        list=signup_list,
+        family_members=family_members,
+        available_family_members_by_element=available_family_members_by_element,
+    )
+
+
+@bp.route("/lists/<string:uuid>/signup", methods=["POST"])
+@login_required
+def create_signup(uuid):
+    """Create a signup for an event or item"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+
+    # Check if user has access
+    if not signup_list.is_editor(current_user) and not signup_list.user_has_access(
+        current_user
+    ):
+        flash("You do not have access to this list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if list is accepting signups
+    if not signup_list.accepting_signups:
+        flash("This list is not currently accepting signups.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get element type and ID from form
+    element_type = request.form.get("element_type")  # 'event' or 'item'
+    element_id = request.form.get("element_id")
+
+    if not element_type or not element_id:
+        flash("Invalid signup request.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    try:
+        element_id = int(element_id)
+    except ValueError:
+        flash("Invalid element ID.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get the element (event or item)
+    if element_type == "event":
+        element = Event.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid event.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    elif element_type == "item":
+        element = Item.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid item.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    else:
+        flash("Invalid element type.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if spots are available
+    if element.get_spots_remaining() <= 0:
+        flash("No spots available for this element.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get family member ID from form
+    family_member_id = request.form.get("family_member_id")
+    if not family_member_id:
+        flash("Please select a family member.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    try:
+        family_member_id = int(family_member_id)
+    except ValueError:
+        flash("Invalid family member.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify family member belongs to current user
+    family_member = FamilyMember.query.get_or_404(family_member_id)
+    if family_member.user_id != current_user.id:
+        flash("You can only sign up your own family members.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if this family member is already signed up for this element (active signup)
+    if element_type == "event":
+        existing_signup = Signup.query.filter_by(
+            event_id=element_id, family_member_id=family_member_id, cancelled_at=None
+        ).first()
+        # Also check for cancelled signup (to reactivate it)
+        cancelled_signup = Signup.query.filter(
+            Signup.event_id == element_id,
+            Signup.family_member_id == family_member_id,
+            Signup.cancelled_at.isnot(None),
+        ).first()
+    else:
+        existing_signup = Signup.query.filter_by(
+            item_id=element_id, family_member_id=family_member_id, cancelled_at=None
+        ).first()
+        # Also check for cancelled signup (to reactivate it)
+        cancelled_signup = Signup.query.filter(
+            Signup.item_id == element_id,
+            Signup.family_member_id == family_member_id,
+            Signup.cancelled_at.isnot(None),
+        ).first()
+
+    if existing_signup:
+        flash(
+            f"{family_member.display_name} is already signed up for this element.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # If there's a cancelled signup, reactivate it instead of creating a new one
+    if cancelled_signup:
+        cancelled_signup.cancelled_at = None
+        db.session.commit()
+        flash(f"Successfully signed up {family_member.display_name}!", "success")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Create a new signup
+    signup = Signup(
+        user_id=current_user.id,
+        family_member_id=family_member_id,
+    )
+
+    if element_type == "event":
+        signup.event_id = element_id
+    else:
+        signup.item_id = element_id
+
+    db.session.add(signup)
+    db.session.commit()
+
+    flash(f"Successfully signed up {family_member.display_name}!", "success")
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/signup/<int:signup_id>/cancel", methods=["POST"])
+@login_required
+def cancel_signup(uuid, signup_id):
+    """Cancel a signup"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    signup = Signup.query.get_or_404(signup_id)
+
+    # Verify signup belongs to an element in this list
+    if signup.event_id:
+        event = Event.query.get_or_404(signup.event_id)
+        if event.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    elif signup.item_id:
+        item = Item.query.get_or_404(signup.item_id)
+        if item.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    else:
+        flash("Invalid signup.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify user owns this signup (or is an editor)
+    if not signup_list.is_editor(current_user) and signup.user_id != current_user.id:
+        flash("You can only cancel your own signups.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if already cancelled
+    if signup.cancelled_at:
+        flash("This signup has already been cancelled.", "info")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Cancel the signup
+    signup.cancel()
+    db.session.commit()
+
+    family_member_name = (
+        signup.family_member.display_name if signup.family_member else "Unknown"
+    )
+    flash(f"Successfully cancelled signup for {family_member_name}.", "success")
+    return redirect(url_for("better_signups.view_list", uuid=uuid))

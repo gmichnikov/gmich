@@ -174,7 +174,7 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 - Delete an item and verify it's removed
 - Verify items are only shown in "items" type lists (not in "events" lists)
 
-## Phase 7: Public List View (Signup Interface)
+## Phase 7: Public List View
 
 - [x] Create route for viewing list by UUID (public view)
 - [x] Create route for password-protected list access
@@ -203,13 +203,13 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 8: Signup Functionality
 
-- [ ] Create form for signing up (select family member if multiple available)
-- [ ] Create route for creating a signup
-- [ ] Create route for cancelling a signup
-- [ ] Add validation: same person cannot sign up twice for same element
-- [ ] Add validation: cannot sign up if no spots available
-- [ ] Update spots remaining display after signup/cancellation
-- [ ] Handle signup for multiple family members on same element
+- [x] Create form for signing up (select family member if multiple available)
+- [x] Create route for creating a signup
+- [x] Create route for cancelling a signup
+- [x] Add validation: same person cannot sign up twice for same element
+- [x] Add validation: cannot sign up if no spots available
+- [x] Update spots remaining display after signup/cancellation
+- [x] Handle signup for multiple family members on same element
 
 **Testing:**
 

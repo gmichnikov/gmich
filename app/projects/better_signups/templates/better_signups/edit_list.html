@@ -215,7 +215,7 @@
                 <h2 style="font-size: 1.25rem; margin: 0;">Events</h2>
                 <div style="display: flex; gap: 0.5rem;">
                     <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn better-signups-btn-secondary">
-                        View/Sign Up
+                        Sign up!
                     </a>
                     <a href="{{ url_for('better_signups.add_event', uuid=list.uuid) }}" class="better-signups-btn">
                         Add Event
@@ -272,6 +272,11 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                            <button type="button"
+                                    onclick="toggleSection('event-signups-{{ event.id }}')"
+                                    class="better-signups-btn better-signups-btn-secondary">
+                                View Signups
+                            </button>
                             <a href="{{ url_for('better_signups.edit_event', uuid=list.uuid, event_id=event.id) }}"
                                class="better-signups-btn better-signups-btn-secondary">
                                 Edit
@@ -287,6 +292,32 @@
                             </form>
                         </div>
                     </div>
+                    <div id="event-signups-{{ event.id }}" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                        {% if event.get_active_signups() %}
+                            <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
+                            <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
+                                {% for signup in event.get_active_signups() %}
+                                <li style="margin-bottom: 0.25rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>
+                                            {% if signup.family_member %}
+                                                {% if signup.family_member.is_self %}
+                                                    {{ signup.family_member.display_name }}
+                                                {% else %}
+                                                    {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                {% endif %}
+                                            {% else %}
+                                                {{ signup.user.full_name }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ol>
+                        {% else %}
+                            <p style="color: #666; font-size: 0.875rem; margin: 0;">No signups yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -300,7 +331,7 @@
                 <h2 style="font-size: 1.25rem; margin: 0;">Items</h2>
                 <div style="display: flex; gap: 0.5rem;">
                     <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn better-signups-btn-secondary">
-                        View/Sign Up
+                        Sign up!
                     </a>
                     <a href="{{ url_for('better_signups.add_item', uuid=list.uuid) }}" class="better-signups-btn">
                         Add Item
@@ -328,6 +359,11 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                            <button type="button"
+                                    onclick="toggleSection('item-signups-{{ item.id }}')"
+                                    class="better-signups-btn better-signups-btn-secondary">
+                                View Signups
+                            </button>
                             <a href="{{ url_for('better_signups.edit_item', uuid=list.uuid, item_id=item.id) }}"
                                class="better-signups-btn better-signups-btn-secondary">
                                 Edit
@@ -342,6 +378,32 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
+                    <div id="item-signups-{{ item.id }}" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                        {% if item.get_active_signups() %}
+                            <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
+                            <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
+                                {% for signup in item.get_active_signups() %}
+                                <li style="margin-bottom: 0.25rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>
+                                            {% if signup.family_member %}
+                                                {% if signup.family_member.is_self %}
+                                                    {{ signup.family_member.display_name }}
+                                                {% else %}
+                                                    {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                {% endif %}
+                                            {% else %}
+                                                {{ signup.user.full_name }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ol>
+                        {% else %}
+                            <p style="color: #666; font-size: 0.875rem; margin: 0;">No signups yet.</p>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}

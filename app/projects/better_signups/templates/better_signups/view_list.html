@@ -86,18 +86,80 @@
 
                             {% if event.get_active_signups() %}
                             <div style="margin-top: 0.75rem;">
-                                <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
-                                <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.875rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <div style="font-weight: bold; font-size: 0.875rem;">Who has signed up:</div>
+                                    <button type="button" 
+                                            onclick="toggleSignups('event-signups-{{ event.id }}', this)"
+                                            style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; text-decoration: underline; padding: 0;">
+                                        Hide
+                                    </button>
+                                </div>
+                                <div id="event-signups-{{ event.id }}">
+                                <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in event.get_active_signups() %}
-                                    <li>
-                                        {% if signup.family_member %}
-                                            {{ signup.family_member.display_name }}
-                                        {% else %}
-                                            {{ signup.user.full_name }}
-                                        {% endif %}
+                                    <li style="margin-bottom: 0.25rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>
+                                                {% if signup.family_member %}
+                                                    {% if signup.family_member.is_self %}
+                                                        {{ signup.family_member.display_name }}
+                                                    {% else %}
+                                                        {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                    {% endif %}
+                                                {% else %}
+                                                    {{ signup.user.full_name }}
+                                                {% endif %}
+                                            </span>
+                                            {% if signup.user_id == current_user.id %}
+                                            <form method="POST" action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Cancel</button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
                                     </li>
                                     {% endfor %}
-                                </ul>
+                                </ol>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if list.accepting_signups and event.get_spots_remaining() > 0 %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                {% set available_member_ids = available_family_members_by_element.get('event_' ~ event.id|string, []) if available_family_members_by_element else [] %}
+                                {% if available_member_ids|length > 0 %}
+                                <form method="POST" action="{{ url_for('better_signups.create_signup', uuid=list.uuid) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="element_type" value="event">
+                                    <input type="hidden" name="element_id" value="{{ event.id }}">
+                                    <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                        {% for member in family_members %}
+                                            {% if member.id in available_member_ids %}
+                                            <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                            </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                </form>
+                                {% else %}
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                    {% if family_members|length == 1 %}
+                                        You are already signed up for this event.
+                                    {% else %}
+                                        All your family members are already signed up for this event.
+                                    {% endif %}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% elif not list.accepting_signups %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">This list is not accepting signups.</p>
+                            </div>
+                            {% elif event.get_spots_remaining() <= 0 %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
                             </div>
                             {% endif %}
                         </div>
@@ -134,18 +196,80 @@
 
                             {% if item.get_active_signups() %}
                             <div style="margin-top: 0.75rem;">
-                                <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
-                                <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.875rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <div style="font-weight: bold; font-size: 0.875rem;">Who has signed up:</div>
+                                    <button type="button" 
+                                            onclick="toggleSignups('item-signups-{{ item.id }}', this)"
+                                            style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; text-decoration: underline; padding: 0;">
+                                        Hide
+                                    </button>
+                                </div>
+                                <div id="item-signups-{{ item.id }}">
+                                <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in item.get_active_signups() %}
-                                    <li>
-                                        {% if signup.family_member %}
-                                            {{ signup.family_member.display_name }}
-                                        {% else %}
-                                            {{ signup.user.full_name }}
-                                        {% endif %}
+                                    <li style="margin-bottom: 0.25rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>
+                                                {% if signup.family_member %}
+                                                    {% if signup.family_member.is_self %}
+                                                        {{ signup.family_member.display_name }}
+                                                    {% else %}
+                                                        {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                    {% endif %}
+                                                {% else %}
+                                                    {{ signup.user.full_name }}
+                                                {% endif %}
+                                            </span>
+                                            {% if signup.user_id == current_user.id %}
+                                            <form method="POST" action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Cancel</button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
                                     </li>
                                     {% endfor %}
-                                </ul>
+                                </ol>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if list.accepting_signups and item.get_spots_remaining() > 0 %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                {% set available_member_ids = available_family_members_by_element.get('item_' ~ item.id|string, []) if available_family_members_by_element else [] %}
+                                {% if available_member_ids|length > 0 %}
+                                <form method="POST" action="{{ url_for('better_signups.create_signup', uuid=list.uuid) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="element_type" value="item">
+                                    <input type="hidden" name="element_id" value="{{ item.id }}">
+                                    <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                        {% for member in family_members %}
+                                            {% if member.id in available_member_ids %}
+                                            <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                            </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                </form>
+                                {% else %}
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                    {% if family_members|length == 1 %}
+                                        You are already signed up for this item.
+                                    {% else %}
+                                        All your family members are already signed up for this item.
+                                    {% endif %}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% elif not list.accepting_signups %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">This list is not accepting signups.</p>
+                            </div>
+                            {% elif item.get_spots_remaining() <= 0 %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
                             </div>
                             {% endif %}
                         </div>
@@ -166,5 +290,23 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script>
+function toggleSignups(sectionId, button) {
+    const section = document.getElementById(sectionId);
+    const computedStyle = window.getComputedStyle(section);
+    const isCurrentlyVisible = computedStyle.display !== 'none';
+    
+    if (isCurrentlyVisible) {
+        section.style.display = 'none';
+        button.textContent = 'Show';
+    } else {
+        section.style.display = 'block';
+        button.textContent = 'Hide';
+    }
+}
+</script>
+{% endblock %}
 
 {% endblock %}
