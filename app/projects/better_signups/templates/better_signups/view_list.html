@@ -240,7 +240,7 @@
             <button type="button"
                     onclick="toggleSection('editors-section')"
                     style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 1rem; padding: 0; margin-bottom: 1rem;">
-                👥 Manage Editors
+                👥 {% if list.creator_id == current_user.id %}Manage{% else %}View{% endif %} Editors
             </button>
 
             <div id="editors-section" style="display: none;">
@@ -314,10 +314,10 @@
             </div>
         </div>
 
-
+        {% if list.creator_id == current_user.id %}
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: #dc3545;">Danger Zone</h2>
-            <form method="post" action="{{ url_for('better_signups.delete_list', uuid=list.uuid) }}" 
+            <form method="post" action="{{ url_for('better_signups.delete_list', uuid=list.uuid) }}"
                   onsubmit="return confirm('Are you sure you want to delete this list? This action cannot be undone.');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="auth-submit-btn" style="background-color: #dc3545;">
@@ -325,6 +325,7 @@
                 </button>
             </form>
         </div>
+        {% endif %}
 
         <div class="auth-footer" style="margin-top: 2rem;">
             <p class="auth-footer-text"><a href="{{ url_for('better_signups.index') }}" class="auth-link">← Back to Better Signups</a></p>
