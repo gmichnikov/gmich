@@ -324,3 +324,25 @@ class EventForm(FlaskForm):
             if value is not None:
                 if value < 1 or value > 10080:
                     raise ValidationError("Duration must be between 1 and 10080 minutes.")
+
+
+class ItemForm(FlaskForm):
+    """Form for creating/editing items"""
+
+    name = StringField(
+        "Item Name",
+        validators=[DataRequired(), Length(max=200)],
+        description="Name of the item (e.g., 'Bring Cookies', 'Help with Setup')"
+    )
+    description = TextAreaField(
+        "Description",
+        validators=[Length(max=2000)],
+        description="Optional description for the item"
+    )
+    spots_available = IntegerField(
+        "Spots Available",
+        validators=[DataRequired(), NumberRange(min=1)],
+        default=1,
+        description="Number of signup spots available for this item"
+    )
+    submit = SubmitField("Save Item")

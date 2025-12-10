@@ -14,12 +14,15 @@ from app.forms import (
     EditSignupListForm,
     AddListEditorForm,
     EventForm,
+    ItemForm,
 )
 from app.projects.better_signups.models import (
     FamilyMember,
     SignupList,
     ListEditor,
     Event,
+    Item,
+    Signup,
 )
 from app.models import User
 import pytz
@@ -684,4 +687,127 @@ def delete_event(uuid, event_id):
     db.session.commit()
 
     flash("Event deleted successfully.", "success")
+    return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+
+@bp.route('/lists/<string:uuid>/items/add', methods=['GET', 'POST'])
+@login_required
+def add_item(uuid):
+    """Add an item to a signup list"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+
+    # Check if user is an editor
+    if not signup_list.is_editor(current_user):
+        flash('You do not have permission to add items to this list.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    # Only allow items in items-type lists
+    if signup_list.list_type != 'items':
+        flash('This list is not configured for items.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    form = ItemForm()
+
+    if form.validate_on_submit():
+        item = Item(
+            list_id=signup_list.id,
+            name=form.name.data.strip(),
+            description=form.description.data.strip() if form.description.data else None,
+            spots_available=form.spots_available.data
+        )
+
+        db.session.add(item)
+        db.session.commit()
+
+        flash(f'Item "{item.name}" added successfully!', 'success')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    return render_template('better_signups/item_form.html', form=form, list=signup_list, item=None)
+
+
+@bp.route('/lists/<string:uuid>/items/<int:item_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_item(uuid, item_id):
+    """Edit an item"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    item = Item.query.get_or_404(item_id)
+
+    # Verify item belongs to this list
+    if item.list_id != signup_list.id:
+        flash("Invalid item.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+    # Check if user is an editor
+    if not signup_list.is_editor(current_user):
+        flash("You do not have permission to edit this item.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+    # Only allow items in items-type lists
+    if signup_list.list_type != 'items':
+        flash('This list is not configured for items.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    # Populate form with existing data on GET request
+    if request.method == "GET":
+        form = ItemForm(obj=item)
+    else:
+        # POST request - use submitted form data
+        form = ItemForm()
+
+    if form.validate_on_submit():
+        # Check if reducing spots below current signups
+        current_signups = item.get_spots_taken()
+        if form.spots_available.data < current_signups:
+            flash(f'Cannot reduce spots below current signups ({current_signups}).', 'error')
+            return render_template('better_signups/item_form.html', form=form, list=signup_list, item=item)
+
+        # Update item
+        item.name = form.name.data.strip()
+        item.description = form.description.data.strip() if form.description.data else None
+        item.spots_available = form.spots_available.data
+
+        db.session.commit()
+
+        flash(f'Item "{item.name}" updated successfully!', 'success')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    return render_template('better_signups/item_form.html', form=form, list=signup_list, item=item)
+
+
+@bp.route('/lists/<string:uuid>/items/<int:item_id>/delete', methods=['POST'])
+@login_required
+def delete_item(uuid, item_id):
+    """Delete an item"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    item = Item.query.get_or_404(item_id)
+
+    # Verify item belongs to this list
+    if item.list_id != signup_list.id:
+        flash("Invalid item.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+    # Check if user is an editor
+    if not signup_list.is_editor(current_user):
+        flash("You do not have permission to delete this item.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+    # Only allow items in items-type lists
+    if signup_list.list_type != 'items':
+        flash('This list is not configured for items.', 'error')
+        return redirect(url_for('better_signups.view_list', uuid=signup_list.uuid))
+
+    # Check if there are any signups
+    current_signups = item.get_spots_taken()
+    if current_signups > 0:
+        flash(
+            f"Cannot delete item with {current_signups} signup(s). Please remove signups first.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+
+    item_name = item.name
+    db.session.delete(item)
+    db.session.commit()
+
+    flash(f'Item "{item_name}" deleted successfully.', "success")
     return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))

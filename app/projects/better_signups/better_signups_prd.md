@@ -154,12 +154,14 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 6: Items Management
 
-- [ ] Create form for creating/editing items (name, description, spots)
-- [ ] Create route for adding an item to a list
-- [ ] Create route for editing an item
-- [ ] Create route for deleting an item
-- [ ] Create template for item form
-- [ ] Add validation: cannot reduce spots below current signups
+- [x] Create form for creating/editing items (name, description, spots)
+- [x] Create route for adding an item to a list
+- [x] Create route for editing an item
+- [x] Create route for deleting an item
+- [x] Create template for item form
+- [x] Add validation: cannot reduce spots below current signups
+- [x] Integrate items display in list view (similar to events)
+- [x] Add proper error handling and user feedback
 
 **Testing:**
 

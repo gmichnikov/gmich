@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if item %}Edit{% else %}Add{% endif %} Item - {{ list.name }} - Better Signups{% endblock %}
+
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">
+                {% if item %}Edit{% else %}Add{% endif %} Item
+            </h1>
+            <p class="auth-subtitle">{{ list.name }}</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="auth-error-messages" style="margin-bottom: 1rem; padding: 1rem; background-color: #f8d7da; border-radius: 8px;">
+            <strong>Please fix the following errors:</strong>
+            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                    <li>{{ form[field].label.text }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {{ form.hidden_tag() }}
+
+            <div class="auth-form-group">
+                <label class="auth-label">
+                    {{ form.name.label.text }} <span class="required-asterisk">*</span>
+                </label>
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    {{ form.name.description }}
+                </small>
+                {{ form.name(class="auth-input", autocomplete="off") }}
+                {% if form.name.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.name.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.description.label(class="auth-label") }} <span style="color: #666; font-size: 0.875rem;">(Optional)</span>
+                {{ form.description(class="auth-input", rows=3) }}
+                {% if form.description.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.description.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">
+                    {{ form.spots_available.label.text }} <span class="required-asterisk">*</span>
+                </label>
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    {{ form.spots_available.description }}
+                </small>
+                {{ form.spots_available(class="auth-input", type="number", min="1") }}
+                {% if item %}
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    Current signups: {{ item.get_spots_taken() }}. Cannot reduce below this number.
+                </small>
+                {% endif %}
+                {% if form.spots_available.errors %}
+                <div class="auth-error-messages">
+                    {% for error in form.spots_available.errors %}
+                    <span class="auth-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                {{ form.submit(class="auth-submit-btn") }}
+                <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="auth-link" style="margin-left: 1rem;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.required-asterisk {
+    color: #dc3545;
+    margin-left: 4px;
+}
+</style>
+
+{% endblock %}
