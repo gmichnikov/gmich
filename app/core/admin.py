@@ -4,20 +4,24 @@ from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
 from functools import wraps
 import pytz
+from app.projects.better_signups.models import SignupList, ListEditor
 
-admin_bp = Blueprint('admin', __name__)
+admin_bp = Blueprint("admin", __name__)
+
 
 # Admin decorator
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_admin:
-            flash('Admin access required.')
-            return redirect(url_for('main.index'))
+            flash("Admin access required.")
+            return redirect(url_for("main.index"))
         return f(*args, **kwargs)
+
     return decorated_function
 
-@admin_bp.route('/reset_password', methods=['GET', 'POST'])
+
+@admin_bp.route("/reset_password", methods=["GET", "POST"])
 @login_required
 @admin_required
 def reset_password():
@@ -29,105 +33,122 @@ def reset_password():
         if user:
             user.set_password(form.new_password.data)
             db.session.commit()
-            flash('Password reset successfully.')
+            flash("Password reset successfully.")
 
-            log_entry = LogEntry(project='admin', category='Reset Password', actor_id=current_user.id, description=f"{current_user.email} reset password of {user.email}")
+            log_entry = LogEntry(
+                project="admin",
+                category="Reset Password",
+                actor_id=current_user.id,
+                description=f"{current_user.email} reset password of {user.email}",
+            )
             db.session.add(log_entry)
             db.session.commit()
         else:
-            flash('User not found.')
+            flash("User not found.")
 
-    return render_template('admin/reset_password.html', form=form)
+    return render_template("admin/reset_password.html", form=form)
 
-@admin_bp.route('/add_credits', methods=['GET', 'POST'])
+
+@admin_bp.route("/add_credits", methods=["GET", "POST"])
 @login_required
 @admin_required
 def add_credits():
     form = AdminCreditForm()
-    form.email.choices = [(user.email, f"{user.email} ({user.credits} credits)") for user in User.query.order_by(User.email).all()]
+    form.email.choices = [
+        (user.email, f"{user.email} ({user.credits} credits)")
+        for user in User.query.order_by(User.email).all()
+    ]
 
     if form.validate_on_submit():
         try:
             credits_to_add = int(form.credits.data)
             if credits_to_add <= 0:
-                flash('Credits must be a positive number.', 'error')
-                return render_template('admin/add_credits.html', form=form)
+                flash("Credits must be a positive number.", "error")
+                return render_template("admin/add_credits.html", form=form)
         except ValueError:
-            flash('Credits must be a valid number.', 'error')
-            return render_template('admin/add_credits.html', form=form)
+            flash("Credits must be a valid number.", "error")
+            return render_template("admin/add_credits.html", form=form)
 
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             old_credits = user.credits
             user.credits += credits_to_add
             db.session.commit()
-            
-            flash(f'Successfully added {credits_to_add} credits to {user.email}. New balance: {user.credits}', 'success')
+
+            flash(
+                f"Successfully added {credits_to_add} credits to {user.email}. New balance: {user.credits}",
+                "success",
+            )
 
             log_entry = LogEntry(
-                project='admin', 
-                category='Add Credits', 
-                actor_id=current_user.id, 
-                description=f"{current_user.email} added {credits_to_add} credits to {user.email} (from {old_credits} to {user.credits})"
+                project="admin",
+                category="Add Credits",
+                actor_id=current_user.id,
+                description=f"{current_user.email} added {credits_to_add} credits to {user.email} (from {old_credits} to {user.credits})",
             )
             db.session.add(log_entry)
             db.session.commit()
         else:
-            flash('User not found.', 'error')
+            flash("User not found.", "error")
 
-    return render_template('admin/add_credits.html', form=form)
+    return render_template("admin/add_credits.html", form=form)
 
-@admin_bp.route('/users')
+
+@admin_bp.route("/users")
 @login_required
 @admin_required
 def manage_users():
     """Admin view of all users with verification status."""
     # Get filter parameter
-    filter_status = request.args.get('filter', 'all')  # 'all', 'verified', 'unverified'
-    
+    filter_status = request.args.get("filter", "all")  # 'all', 'verified', 'unverified'
+
     # Query users
     query = User.query
-    
-    if filter_status == 'verified':
-        query = query.filter_by(email_verified=True)
-    elif filter_status == 'unverified':
-        query = query.filter_by(email_verified=False)
-    
-    users = query.order_by(User.email).all()
-    
-    return render_template('admin/manage_users.html', users=users, filter_status=filter_status)
 
-@admin_bp.route('/users/<int:user_id>/verify', methods=['POST'])
+    if filter_status == "verified":
+        query = query.filter_by(email_verified=True)
+    elif filter_status == "unverified":
+        query = query.filter_by(email_verified=False)
+
+    users = query.order_by(User.email).all()
+
+    return render_template(
+        "admin/manage_users.html", users=users, filter_status=filter_status
+    )
+
+
+@admin_bp.route("/users/<int:user_id>/verify", methods=["POST"])
 @login_required
 @admin_required
 def verify_user_email(user_id):
     """Manually verify a user's email address."""
     user = User.query.get_or_404(user_id)
-    
+
     if user.email_verified:
-        flash(f'{user.email} is already verified.', 'info')
+        flash(f"{user.email} is already verified.", "info")
     else:
         # Manually verify the user
         user.email_verified = True
         user.verification_token = None
         user.verification_token_expiry = None
         db.session.commit()
-        
+
         # Log the manual verification
         log_entry = LogEntry(
-            project='admin',
-            category='Manual Email Verification',
+            project="admin",
+            category="Manual Email Verification",
             actor_id=current_user.id,
-            description=f"{current_user.email} manually verified email for {user.email}"
+            description=f"{current_user.email} manually verified email for {user.email}",
         )
         db.session.add(log_entry)
         db.session.commit()
-        
-        flash(f'Successfully verified email for {user.email}.', 'success')
-    
-    return redirect(url_for('admin.manage_users'))
 
-@admin_bp.route('/view_logs')
+        flash(f"Successfully verified email for {user.email}.", "success")
+
+    return redirect(url_for("admin.manage_users"))
+
+
+@admin_bp.route("/view_logs")
 @login_required
 @admin_required
 def view_logs():
@@ -140,6 +161,53 @@ def view_logs():
     for log in log_entries:
         localized_timestamp = log.timestamp.replace(tzinfo=pytz.utc).astimezone(user_tz)
         tz_abbr = localized_timestamp.tzname()  # Gets the time zone abbreviation
-        log.formatted_timestamp = localized_timestamp.strftime('%Y-%m-%d, %I:%M:%S %p ') + tz_abbr
-    
-    return render_template('admin/view_logs.html', log_entries=log_entries)
+        log.formatted_timestamp = (
+            localized_timestamp.strftime("%Y-%m-%d, %I:%M:%S %p ") + tz_abbr
+        )
+
+    return render_template("admin/view_logs.html", log_entries=log_entries)
+
+
+@admin_bp.route("/view_all_signup_lists")
+@login_required
+@admin_required
+def view_all_signup_lists():
+    """Admin view of all signup lists in the Better Signups project."""
+    from app.projects.better_signups.models import Event, Item
+
+    # Get all lists ordered by creation date (newest first)
+    lists = SignupList.query.order_by(SignupList.created_at.desc()).all()
+
+    # For each list, get all editors (creator + additional editors) and calculate spots
+    for signup_list in lists:
+        # Get additional editors (excluding creator)
+        additional_editors = ListEditor.query.filter_by(list_id=signup_list.id).all()
+        # Combine creator with additional editors for display
+        all_editors = [signup_list.creator]
+        for editor in additional_editors:
+            if editor.user:
+                all_editors.append(editor.user)
+        signup_list.all_editors = all_editors
+        # Also get pending editor emails (editors without user accounts)
+        signup_list.pending_editor_emails = [
+            editor.email
+            for editor in additional_editors
+            if not editor.user and editor.email
+        ]
+
+        # Calculate total spots (taken and available)
+        total_spots_taken = 0
+        total_spots_available = 0
+        if signup_list.list_type == "events":
+            for event in signup_list.events:
+                total_spots_taken += event.get_spots_taken()
+                total_spots_available += event.spots_available
+        else:  # items
+            for item in signup_list.items:
+                total_spots_taken += item.get_spots_taken()
+                total_spots_available += item.spots_available
+
+        signup_list.total_spots_taken = total_spots_taken
+        signup_list.total_spots_available = total_spots_available
+
+    return render_template("admin/view_all_signup_lists.html", lists=lists)

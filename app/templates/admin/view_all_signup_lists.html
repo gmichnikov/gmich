@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}View All Signup Lists{% endblock %}
+
+{% block styles %}
+<style>
+.admin-signup-lists-container {
+  padding: 40px 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.admin-signup-lists-card {
+  background: white;
+  border-radius: 20px;
+  padding: 50px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.admin-signup-lists-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.admin-signup-lists-title {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.admin-signup-lists-subtitle {
+  color: #666;
+  font-size: 1rem;
+}
+
+.admin-signup-lists-table-wrapper {
+  margin-top: 20px;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table-signup-lists {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+  background-color: white;
+  table-layout: fixed;
+}
+
+.table-signup-lists thead tr {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table-signup-lists th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table-signup-lists th:nth-child(1) { width: 180px; min-width: 180px; }
+.table-signup-lists th:nth-child(2) { width: 150px; min-width: 150px; }
+.table-signup-lists th:nth-child(3) { width: 150px; min-width: 150px; }
+.table-signup-lists th:nth-child(4) { width: 100px; min-width: 100px; }
+.table-signup-lists th:nth-child(5) { width: 80px; min-width: 80px; }
+.table-signup-lists th:nth-child(6) { width: 120px; min-width: 120px; }
+
+.table-signup-lists td {
+  padding: 12px;
+  vertical-align: top;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.table-signup-lists tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.table-signup-lists-details-row {
+  display: none;
+  background-color: #f8f9fa;
+}
+
+.table-signup-lists-details-row.show {
+  display: table-row;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-signup-lists-container">
+    <div class="admin-signup-lists-card">
+        <div class="admin-signup-lists-header">
+            <h1 class="admin-signup-lists-title">📋 View All Signup Lists</h1>
+            <p class="admin-signup-lists-subtitle">Admin view of all signup lists in the Better Signups project</p>
+        </div>
+
+        <div class="admin-footer" style="margin-bottom: 20px;">
+            <p class="admin-footer-text">
+                <a href="{{ url_for('better_signups.index') }}" class="admin-link">← Back to Better Signups Home</a>
+            </p>
+        </div>
+
+        <!-- Lists table -->
+        {% if lists %}
+        <div class="admin-signup-lists-table-wrapper">
+            <table class="table-signup-lists">
+                <thead>
+                    <tr>
+                        <th>List Name</th>
+                        <th>Creator</th>
+                        <th>Editors</th>
+                        <th>Spots</th>
+                        <th>Password</th>
+                        <th>Events/Items</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for list in lists %}
+                    <tr>
+                        <td>
+                            <strong>
+                                <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" 
+                                   target="_blank" 
+                                   style="color: #007bff; text-decoration: none;">
+                                    {{ list.name }}
+                                </a>
+                            </strong>
+                            {% if list.description %}
+                            <div style="font-size: 0.875rem; color: #6c757d; margin-top: 4px;">{{ list.description[:100] }}{% if list.description|length > 100 %}...{% endif %}</div>
+                            {% endif %}
+                            {% if not list.accepting_signups %}
+                            <div style="font-size: 0.75rem; color: #dc3545; margin-top: 4px;">⚠️ Not accepting signups</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ list.creator.full_name or list.creator.email }}</div>
+                            <div style="font-size: 0.75rem; color: #6c757d;">{{ list.creator.email }}</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.875rem;">
+                                {% if list.all_editors %}
+                                    {% for editor in list.all_editors %}
+                                        <div style="margin-bottom: 4px;">
+                                            {{ editor.full_name or editor.email }}
+                                            {% if editor.id == list.creator_id %}
+                                                <span style="color: #6c757d; font-size: 0.75rem;">(creator)</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #6c757d;">None</span>
+                                {% endif %}
+                                {% if list.pending_editor_emails %}
+                                    {% for email in list.pending_editor_emails %}
+                                        <div style="margin-bottom: 4px; color: #6c757d; font-size: 0.75rem;">
+                                            {{ email }} <span style="font-style: italic;">(pending)</span>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: bold;">{{ list.total_spots_taken }} / {{ list.total_spots_available }}</div>
+                            <div style="font-size: 0.75rem; color: #6c757d;">taken / total</div>
+                        </td>
+                        <td style="text-align: center;">
+                            {% if list.list_password_hash %}
+                                <span style="color: #28a745; font-weight: bold;">Yes</span>
+                            {% else %}
+                                <span style="color: #6c757d;">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" 
+                                    onclick="toggleSignupListDetails('list-{{ list.id }}', this)"
+                                    style="background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
+                                Show Details
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="list-{{ list.id }}-details" class="table-signup-lists-details-row">
+                        <td colspan="6" style="padding: 16px;">
+                            {% if list.list_type == 'events' %}
+                                {% if list.events %}
+                                    <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 1rem;">Events:</h4>
+                                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        {% for event in list.events %}
+                                        <div style="padding: 12px; background-color: white; border-radius: 4px; border: 1px solid #dee2e6;">
+                                            <div style="font-weight: bold; margin-bottom: 6px;">
+                                                {% if event.event_type == 'date' %}
+                                                    {{ event.event_date.strftime('%B %d, %Y') }}
+                                                {% else %}
+                                                    {{ event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                                                    {% if event.timezone %}
+                                                        <span style="font-weight: normal; color: #6c757d; font-size: 0.875rem;">({{ event.timezone }})</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                            {% if event.location %}
+                                            <div style="font-size: 0.875rem; color: #6c757d; margin-bottom: 4px;">
+                                                📍 {{ event.location }}
+                                            </div>
+                                            {% endif %}
+                                            <div style="font-size: 0.875rem; color: #6c757d;">
+                                                <strong>Signups:</strong> {{ event.get_spots_taken() }} out of {{ event.spots_available }} spots
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p style="color: #6c757d; font-style: italic; margin: 0;">No events in this list.</p>
+                                {% endif %}
+                            {% else %}
+                                {% if list.items %}
+                                    <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 1rem;">Items:</h4>
+                                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        {% for item in list.items %}
+                                        <div style="padding: 12px; background-color: white; border-radius: 4px; border: 1px solid #dee2e6;">
+                                            <div style="font-weight: bold; margin-bottom: 6px;">
+                                                {{ item.name }}
+                                            </div>
+                                            {% if item.description %}
+                                            <div style="font-size: 0.875rem; color: #6c757d; margin-bottom: 4px;">
+                                                {{ item.description }}
+                                            </div>
+                                            {% endif %}
+                                            <div style="font-size: 0.875rem; color: #6c757d;">
+                                                <strong>Signups:</strong> {{ item.get_spots_taken() }} out of {{ item.spots_available }} spots
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p style="color: #6c757d; font-style: italic; margin: 0;">No items in this list.</p>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="admin-form-group" style="margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 4px;">
+            <p style="text-align: center; color: #6c757d;">No signup lists found.</p>
+        </div>
+        {% endif %}
+
+        <div class="admin-footer" style="margin-top: 30px;">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSignupListDetails(listId, button) {
+    const detailsRow = document.getElementById(listId + '-details');
+    if (detailsRow.classList.contains('show')) {
+        detailsRow.classList.remove('show');
+        button.textContent = 'Show Details';
+    } else {
+        detailsRow.classList.add('show');
+        button.textContent = 'Hide Details';
+    }
+}
+</script>
+
+{% endblock %}
