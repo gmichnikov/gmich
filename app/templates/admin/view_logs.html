@@ -32,7 +32,7 @@ content %}
       <label for="userFilter" class="filter-label">User:</label>
       <select id="userFilter" class="filter-select">
         <option value="">All Users</option>
-        {% set users = log_entries | map(attribute='actor.email') | unique |
+        {% set users = log_entries | selectattr('actor') | map(attribute='actor.email') | unique |
         list %} {% for user_email in users | sort %} {% if user_email %}
         <option value="{{ user_email }}">{{ user_email }}</option>
         {% endif %} {% endfor %}
