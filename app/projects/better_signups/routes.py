@@ -15,6 +15,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 from datetime import datetime, date
 from app import db
 from app.forms import (
@@ -72,9 +73,36 @@ def index():
         .order_by(SignupList.created_at.desc())
         .all()
     )
+    
+    # Get up to 3 most recent active signups
+    family_member_ids = [
+        fm.id
+        for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+    ]
+    
+    recent_signups = []
+    if family_member_ids:
+        recent_signups = (
+            Signup.query.options(
+                joinedload(Signup.event).joinedload(Event.list),
+                joinedload(Signup.item).joinedload(Item.list),
+                joinedload(Signup.family_member),
+                joinedload(Signup.user)
+            )
+            .filter(
+                Signup.family_member_id.in_(family_member_ids),
+                Signup.cancelled_at.is_(None)
+            )
+            .order_by(Signup.created_at.desc())
+            .limit(3)
+            .all()
+        )
 
     return render_template(
-        "better_signups/index.html", my_lists=my_lists, editor_lists=editor_lists
+        "better_signups/index.html",
+        my_lists=my_lists,
+        editor_lists=editor_lists,
+        recent_signups=recent_signups,
     )
 
 
@@ -1087,4 +1115,49 @@ def cancel_signup(uuid, signup_id):
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
     flash(f"Successfully cancelled signup for {family_member_name}.", "success")
+    
+    # Check if we should redirect back to my-signups page
+    next_url = request.form.get("next") or request.args.get("next")
+    if next_url and "my-signups" in next_url:
+        return redirect(url_for("better_signups.my_signups"))
+    
     return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/my-signups")
+@login_required
+def my_signups():
+    """View all active signups for the current user and their family members"""
+    # Get all family member IDs for current user
+    family_member_ids = [
+        fm.id
+        for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+    ]
+    
+    if not family_member_ids:
+        # No family members yet (shouldn't happen if self is auto-created, but handle it)
+        ensure_self_family_member(current_user)
+        family_member_ids = [
+            fm.id
+            for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+        ]
+    
+    # Get all active signups (not cancelled) for these family members
+    # Order by created_at descending (most recent first)
+    # Eager load related data to avoid N+1 queries
+    signups = (
+        Signup.query.options(
+            joinedload(Signup.event).joinedload(Event.list),
+            joinedload(Signup.item).joinedload(Item.list),
+            joinedload(Signup.family_member),
+            joinedload(Signup.user)
+        )
+        .filter(
+            Signup.family_member_id.in_(family_member_ids),
+            Signup.cancelled_at.is_(None)
+        )
+        .order_by(Signup.created_at.desc())
+        .all()
+    )
+    
+    return render_template("better_signups/my_signups.html", signups=signups)

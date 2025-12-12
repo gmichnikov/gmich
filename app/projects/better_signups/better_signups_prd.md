@@ -232,28 +232,28 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 9: My Signups View
 
-- [ ] Create route for viewing user's own signups (all lists, all family members)
-- [ ] Create template for "My Signups" page
-- [ ] Display signups grouped by list (or chronologically)
-- [ ] Show for each signup: list name, element details (event date/time or item name), family member name, signup date
-- [ ] Add ability to cancel signups from this view
-- [ ] Add links to view the list (using UUID)
-- [ ] Show both active and cancelled signups (with clear distinction)
-- [ ] Optionally: show lists user has created/is editor of
+- [x] Create route for viewing user's own signups (all lists, all family members)
+- [x] Create template for "My Signups" page
+- [x] Display signups chronologically by signup date (most recent first)
+- [x] Show for each signup: list name, element details (event date/time or item name), family member name, signup date
+- [x] Add ability to cancel signups from this view
+- [x] Add links to view the list (using UUID)
+- [x] Show up to 3 most recent signups on the home page (index) with link to full page
+- [x] Only show active signups (not cancelled)
 
 **Testing:**
 
 - Navigate to "My Signups" page (should be accessible from main Better Signups page)
-- Verify page shows all signups across all lists where you've signed up
-- For each signup, verify it shows: list name, element (event date/time or item name), which family member, signup date
+- Verify page shows all active signups across all lists where you've signed up, ordered by signup date (most recent first)
+- For each signup, verify it shows: list name, element (event date/time or item name), which family member (with "via [user name]" if not self), signup date
 - Sign up for multiple elements across different lists
-- Verify all signups appear on "My Signups" page
+- Verify all signups appear on "My Signups" page in chronological order
+- Verify cancelled signups do NOT appear
 - Cancel a signup from the "My Signups" page
-- Verify the signup is marked as cancelled or removed from active signups
-- Verify cancelled signups are shown separately or clearly marked
+- Verify the signup is removed from the page (redirects back to My Signups)
 - Click link to view a list from "My Signups" page - should navigate to public list view
 - Test with multiple family members signed up - verify all appear correctly
-- If implemented: verify lists you created/are editor of appear in a separate section
+- Verify home page shows up to 3 most recent signups with link to full page
 
 ## Phase 10: Editor Signup Management
 

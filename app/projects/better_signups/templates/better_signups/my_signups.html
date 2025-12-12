@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}My Signups - Better Signups{% endblock %}
+
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">My Signups</h1>
+            <p class="auth-subtitle">All your active signups across all lists</p>
+        </div>
+
+        {% if signups %}
+        <div style="margin-top: 2rem;">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for signup in signups %}
+                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                                <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" style="color: #007bff; text-decoration: none;">
+                                    {{ signup.event.list.name if signup.event else signup.item.list.name }}
+                                </a>
+                            </div>
+                            
+                            <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                {% if signup.event %}
+                                    <div style="font-weight: bold; color: #333; margin-bottom: 0.25rem;">
+                                        {% if signup.event.event_type == 'date' %}
+                                            {{ signup.event.event_date.strftime('%B %d, %Y') }}
+                                        {% else %}
+                                            {% set end_time = signup.event.get_end_datetime() %}
+                                            <div>
+                                                <div>
+                                                    <strong>Start:</strong> {{ signup.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                                                </div>
+                                                {% if end_time %}
+                                                <div>
+                                                    <strong>End:</strong> {{ end_time.strftime('%B %d, %Y at %I:%M %p') }}
+                                                </div>
+                                                {% endif %}
+                                                <div style="color: #666; font-weight: normal; font-size: 0.8rem; margin-top: 0.25rem;">
+                                                    Timezone: {{ signup.event.timezone }}
+                                                    {% if signup.event.duration_minutes %}
+                                                        | Duration: {{ signup.event.duration_minutes }} minutes
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if signup.event.location %}
+                                    <div style="margin-top: 0.25rem;">
+                                        📍 {% if signup.event.location_is_link %}
+                                            <a href="https://www.google.com/maps?q={{ signup.event.location|urlencode }}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none;">{{ signup.event.location }}</a>
+                                        {% else %}
+                                            {{ signup.event.location }}
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div style="font-weight: bold; color: #333;">
+                                        {{ signup.item.name }}
+                                    </div>
+                                    {% if signup.item.description %}
+                                    <div style="margin-top: 0.25rem;">
+                                        {{ signup.item.description }}
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            
+                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                                <strong>Signed up:</strong> {{ signup.family_member.display_name }}
+                                {% if not signup.family_member.is_self %}
+                                    (via {{ signup.user.full_name }})
+                                {% endif %}
+                            </div>
+                            
+                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.5rem;">
+                                Signed up on {{ signup.created_at.strftime('%B %d, %Y') }}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                            <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" 
+                               style="background-color: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block;">
+                                View List
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('better_signups.cancel_signup', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid, signup_id=signup.id) }}" 
+                                  style="margin: 0;" 
+                                  onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="next" value="{{ url_for('better_signups.my_signups') }}"/>
+                                <button type="submit" 
+                                        style="background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer;">
+                                    Cancel Signup
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div style="margin-top: 2rem; text-align: center; padding: 2rem; color: #666;">
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">You haven't signed up for anything yet.</p>
+            <p style="font-size: 0.875rem;">When you sign up for events or items, they'll appear here.</p>
+        </div>
+        {% endif %}
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text">
+                <a href="{{ url_for('better_signups.index') }}" class="auth-link">← Back to Better Signups</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
