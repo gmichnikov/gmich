@@ -9,29 +9,34 @@ Allow users to request swaps between their signups and other users' signups with
 ## Implementation Breakdown
 
 **Phase 12a: Database Models and Basic Structure**
+
 - Create models (SwapRequest, SwapRequestTarget, SwapToken), migrations
 - Add basic route structure (placeholder routes)
 - Test: Verify models can be created, relationships work, migrations run successfully
 
 **Phase 12b: Swap Request Creation (UI and Logic)**
+
 - Create swap interface template (shows all elements, allows multi-select up to 3)
 - Add "Swap" button to My Signups page
 - Implement swap request creation logic (validation, finding eligible partners)
 - Test: Can create swap requests, validation works, eligible partners found correctly
 
 **Phase 12c: Swap Tokens and Email Sending**
+
 - Generate swap tokens for eligible partners
 - Create email templates (request notification)
 - Send emails with swap links
 - Test: Emails sent correctly, tokens generated properly, links work
 
 **Phase 12d: Swap Execution**
+
 - Handle swap link clicks
 - Execute swaps atomically (cancel old signups, create new ones)
 - Send completion emails
 - Test: Swaps execute correctly, signups move properly, emails sent
 
 **Phase 12e: Cleanup, Cancellation, and Edge Cases**
+
 - Handle swap request cancellation
 - Automatic cleanup (signup cancelled, list deleted, element deleted)
 - Race condition handling
@@ -88,8 +93,12 @@ Allow users to request swaps between their signups and other users' signups with
 - [ ] When creating swap request:
   - Verify requestor's signup is still active
   - User can select MULTIPLE target elements they're interested in swapping to (maximum 3 target elements per swap request)
+  - Only show target elements that are FULL (no available spots) and have at least one signup
+    - If an element has available spots, user can just sign up directly - no need to swap
+    - If an element has zero signups, there's no one to swap with
   - For each selected target element:
     - Verify target element exists and is in same list
+    - Verify target element is full (spots_remaining == 0) and has signups (spots_taken > 0)
     - Verify requestor's family member (the one in the signup) is NOT already signed up for that target element (prevent self-swap - cannot swap to element you're already signed up for)
   - Check if this family member already has a pending swap request in this list - if yes, prevent creating new one (only one swap request per family member per list)
   - Find all eligible swap partners across ALL selected target elements:
@@ -225,4 +234,3 @@ Allow users to request swaps between their signups and other users' signups with
   - The list is deleted
   - The target element is deleted
 - **Graceful degradation**: All swap link clicks should verify conditions and show appropriate messages rather than throwing errors.
-

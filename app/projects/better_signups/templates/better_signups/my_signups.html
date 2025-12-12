@@ -107,6 +107,28 @@
                                 📅 Add to Google Calendar
                             </a>
                             {% endif %}
+                            {% if signup.pending_swap_request %}
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-end;">
+                                <div style="background-color: #ffc107; color: #333; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                    🔄 Swap Requested
+                                </div>
+                                <form method="POST" 
+                                      action="{{ url_for('better_signups.cancel_swap_request', swap_request_id=signup.pending_swap_request.id) }}" 
+                                      style="margin: 0;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" 
+                                            style="background-color: #6c757d; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                                        Cancel Swap
+                                    </button>
+                                </form>
+                            </div>
+                            {% elif signup.has_eligible_swap_targets %}
+                            <a href="{{ url_for('better_signups.create_swap_request', signup_id=signup.id) }}" 
+                               class="better-signups-btn better-signups-btn-secondary"
+                               style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                🔄 Swap
+                            </a>
+                            {% endif %}
                             <form method="POST" 
                                   action="{{ url_for('better_signups.cancel_signup', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid, signup_id=signup.id) }}" 
                                   style="margin: 0;" 

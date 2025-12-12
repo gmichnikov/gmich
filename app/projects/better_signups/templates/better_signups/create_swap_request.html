@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Swap - Better Signups{% endblock %}
+
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+<style>
+.better-signups-element-card {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.better-signups-element-card:hover:not(.selected):not(.disabled) {
+  border-color: #6c757d;
+  background-color: #f5f5f5;
+}
+
+.better-signups-element-card.selected {
+  border-color: #007bff;
+  background-color: #e7f3ff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.better-signups-element-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e9ecef;
+}
+
+.better-signups-element-card.disabled:hover {
+  border-color: transparent;
+  background-color: #e9ecef;
+}
+
+.better-signups-selection-limit {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Request Swap</h1>
+            <p class="auth-subtitle">
+                Select {% if available_elements|length > 3 %}up to 3 {% endif %}{{ signup_list.list_type }} you'd like to swap to
+            </p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div style="background-color: #e7f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <div style="font-weight: bold; margin-bottom: 0.5rem;">Swapping FROM:</div>
+                <div style="color: #666; font-size: 0.875rem;">
+                    {% if signup.event %}
+                        {% if signup.event.event_type == 'date' %}
+                            <strong>Date:</strong> {{ signup.event.event_date.strftime('%B %d, %Y') }}
+                        {% else %}
+                            <strong>DateTime:</strong> {{ signup.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }} ({{ signup.event.timezone }})
+                        {% endif %}
+                        {% if signup.event.description %}
+                            <br><strong>Description:</strong> {{ signup.event.description }}
+                        {% endif %}
+                        {% if signup.event.location %}
+                            <br><strong>Location:</strong> 
+                            {% if signup.event.location_is_link %}
+                                <a href="https://www.google.com/maps?q={{ signup.event.location|urlencode }}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none;">{{ signup.event.location }}</a>
+                            {% else %}
+                                {{ signup.event.location }}
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        <strong>Item:</strong> {{ signup.item.name }}
+                        {% if signup.item.description %}
+                            <br><strong>Description:</strong> {{ signup.item.description }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <form method="POST" id="swap-request-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-weight: bold; margin-bottom: 0.75rem;">Select {{ signup_list.list_type }} to swap TO{% if available_elements|length > 3 %} (up to 3){% endif %}:</div>
+                    
+                    {% if available_elements %}
+                    <div id="elements-container">
+                        {% for element in available_elements %}
+                        <div class="better-signups-element-card" 
+                             data-element-id="{{ element.id }}" 
+                             data-element-type="{{ element.type }}"
+                             {% if element.is_already_signed_up %}data-disabled="true" class="disabled"{% endif %}>
+                            <input type="checkbox" 
+                                   name="target_elements" 
+                                   value="{{ element.type }}:{{ element.id }}" 
+                                   id="element-{{ element.id }}"
+                                   {% if element.is_already_signed_up %}disabled{% endif %}
+                                   style="margin-right: 0.5rem;">
+                            <label for="element-{{ element.id }}" style="cursor: pointer; display: flex; align-items: start; width: 100%;">
+                                <div style="flex: 1;">
+                                    {% if element.type == 'event' %}
+                                        {% if element.event.event_type == 'date' %}
+                                            <div style="font-weight: bold;">{{ element.event.event_date.strftime('%B %d, %Y') }}</div>
+                                        {% else %}
+                                            <div style="font-weight: bold;">{{ element.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                            <div style="color: #666; font-size: 0.875rem;">{{ element.event.timezone }}</div>
+                                        {% endif %}
+                                        {% if element.event.description %}
+                                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;"><strong>Description:</strong> {{ element.event.description }}</div>
+                                        {% endif %}
+                                        {% if element.event.location %}
+                                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
+                                                <strong>Location:</strong> 
+                                                {% if element.event.location_is_link %}
+                                                    <a href="https://www.google.com/maps?q={{ element.event.location|urlencode }}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none;">{{ element.event.location }}</a>
+                                                {% else %}
+                                                    {{ element.event.location }}
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div style="font-weight: bold;">{{ element.item.name }}</div>
+                                        {% if element.item.description %}
+                                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;"><strong>Description:</strong> {{ element.item.description }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                    <div style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                                        <strong>Spots:</strong> {{ element.spots_taken }} taken, {{ element.spots_remaining }} remaining
+                                    </div>
+                                    {% if element.signups %}
+                                    <div style="margin-top: 0.5rem;">
+                                        <button type="button" 
+                                                class="show-signups-btn" 
+                                                data-element-id="{{ element.id }}"
+                                                style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.875rem; text-decoration: underline; padding: 0;">
+                                            Show signups
+                                        </button>
+                                        <div id="signups-{{ element.id }}" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #ddd;">
+                                            <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.25rem;">Who has signed up:</div>
+                                            <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
+                                                {% for signup_info in element.signups %}
+                                                <li style="margin-bottom: 0.25rem;">
+                                                    {{ signup_info.family_member_name }}
+                                                    {% if not signup_info.is_self %}
+                                                        (via {{ signup_info.user_name }})
+                                                    {% endif %}
+                                                </li>
+                                                {% endfor %}
+                                            </ol>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if element.is_already_signed_up %}
+                                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem; font-weight: bold;">
+                                        (Already signed up - cannot swap to this)
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px; color: #666;">
+                        No other {{ signup_list.list_type }} available in this list to swap to.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div id="selection-limit-message" class="better-signups-selection-limit" style="display: none;">
+                    Maximum 3 {{ signup_list.list_type }} selected. Please deselect one to select another.
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" 
+                            class="better-signups-btn"
+                            id="submit-btn"
+                            disabled>
+                        Create Swap Request
+                    </button>
+                    <a href="{{ url_for('better_signups.my_signups') }}" 
+                       class="better-signups-btn better-signups-btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[name="target_elements"]:not([disabled])');
+    const submitBtn = document.getElementById('submit-btn');
+    const limitMessage = document.getElementById('selection-limit-message');
+    const maxSelections = 3;
+
+    function updateSubmitButton() {
+        const selected = document.querySelectorAll('input[name="target_elements"]:checked').length;
+        submitBtn.disabled = selected === 0;
+        
+        if (selected >= maxSelections) {
+            limitMessage.style.display = 'block';
+            // Disable unchecked boxes
+            checkboxes.forEach(cb => {
+                if (!cb.checked) {
+                    cb.disabled = true;
+                    cb.closest('.better-signups-element-card').classList.add('disabled');
+                }
+            });
+        } else {
+            limitMessage.style.display = 'none';
+            // Re-enable all boxes
+            checkboxes.forEach(cb => {
+                cb.disabled = false;
+                cb.closest('.better-signups-element-card').classList.remove('disabled');
+            });
+        }
+    }
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const card = this.closest('.better-signups-element-card');
+            if (this.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            updateSubmitButton();
+        });
+    });
+
+    // Update on page load
+    updateSubmitButton();
+
+    // Handle show signups buttons
+    document.querySelectorAll('.show-signups-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const elementId = this.getAttribute('data-element-id');
+            const signupsDiv = document.getElementById('signups-' + elementId);
+            if (signupsDiv.style.display === 'none') {
+                signupsDiv.style.display = 'block';
+                this.textContent = 'Hide signups';
+            } else {
+                signupsDiv.style.display = 'none';
+                this.textContent = 'Show signups';
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}
+

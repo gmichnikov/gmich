@@ -5,6 +5,7 @@ Database models for the Better Signups project
 
 from datetime import datetime
 import uuid as uuid_lib
+import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 
@@ -317,3 +318,133 @@ class Signup(db.Model):
             f"event_id={self.event_id}" if self.event_id else f"item_id={self.item_id}"
         )
         return f"<Signup {self.id}: {element} family_member_id={self.family_member_id}>"
+
+
+class SwapRequest(db.Model):
+    """A swap request - user wants to swap FROM one signup TO one or more target elements"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    requestor_signup_id = db.Column(
+        db.Integer, db.ForeignKey("signup.id"), nullable=False
+    )
+    list_id = db.Column(db.Integer, db.ForeignKey("signup_list.id"), nullable=False)
+    requestor_family_member_id = db.Column(
+        db.Integer, db.ForeignKey("family_member.id"), nullable=False
+    )
+    status = db.Column(db.String(20), nullable=False, default="pending")  # 'pending', 'completed', 'cancelled'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    completed_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    # Relationships
+    requestor_signup = db.relationship(
+        "Signup",
+        foreign_keys=[requestor_signup_id],
+        backref=db.backref("swap_requests_as_requestor", lazy=True),
+    )
+    list = db.relationship("SignupList", backref=db.backref("swap_requests", lazy=True))
+    requestor_family_member = db.relationship(
+        "FamilyMember",
+        foreign_keys=[requestor_family_member_id],
+        backref=db.backref("swap_requests_as_requestor", lazy=True),
+    )
+    completed_by_user = db.relationship(
+        "User",
+        foreign_keys=[completed_by_user_id],
+        backref=db.backref("swap_requests_completed", lazy=True),
+    )
+    targets = db.relationship(
+        "SwapRequestTarget",
+        backref=db.backref("swap_request", lazy=True),
+        cascade="all, delete-orphan",
+    )
+    tokens = db.relationship(
+        "SwapToken",
+        backref=db.backref("swap_request", lazy=True),
+        cascade="all, delete-orphan",
+    )
+
+    def is_pending(self):
+        """Check if this swap request is still pending"""
+        return self.status == "pending"
+
+    def __repr__(self):
+        return f"<SwapRequest {self.id}: signup_id={self.requestor_signup_id} status={self.status}>"
+
+
+class SwapRequestTarget(db.Model):
+    """Target elements for a swap request (allows one swap request to target multiple elements)"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    swap_request_id = db.Column(
+        db.Integer, db.ForeignKey("swap_request.id"), nullable=False
+    )
+    target_element_id = db.Column(db.Integer, nullable=False)  # ID of event or item
+    target_element_type = db.Column(
+        db.String(20), nullable=False
+    )  # 'event' or 'item'
+
+    # Unique constraint: one swap request can't target the same element twice
+    __table_args__ = (
+        db.UniqueConstraint(
+            "swap_request_id",
+            "target_element_id",
+            "target_element_type",
+            name="unique_swap_request_target",
+        ),
+    )
+
+    def get_target_element(self):
+        """Get the actual Event or Item object"""
+        if self.target_element_type == "event":
+            from app.projects.better_signups.models import Event
+            return Event.query.get(self.target_element_id)
+        else:
+            from app.projects.better_signups.models import Item
+            return Item.query.get(self.target_element_id)
+
+    def __repr__(self):
+        return f"<SwapRequestTarget {self.id}: swap_request_id={self.swap_request_id} {self.target_element_type}_id={self.target_element_id}>"
+
+
+class SwapToken(db.Model):
+    """Token for a swap link - one per eligible family member + target element combo"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    swap_request_id = db.Column(
+        db.Integer, db.ForeignKey("swap_request.id"), nullable=False
+    )
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    recipient_signup_id = db.Column(
+        db.Integer, db.ForeignKey("signup.id"), nullable=False
+    )
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    is_used = db.Column(db.Boolean, default=False, nullable=False)
+    used_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    recipient_signup = db.relationship(
+        "Signup",
+        foreign_keys=[recipient_signup_id],
+        backref=db.backref("swap_tokens_as_recipient", lazy=True),
+    )
+    recipient_user = db.relationship(
+        "User",
+        foreign_keys=[recipient_user_id],
+        backref=db.backref("swap_tokens_received", lazy=True),
+    )
+
+    @staticmethod
+    def generate_token():
+        """Generate a unique token for a swap link"""
+        return secrets.token_urlsafe(48)  # 64 characters when base64 encoded
+
+    def mark_as_used(self):
+        """Mark this token as used"""
+        if not self.is_used:
+            self.is_used = True
+            self.used_at = datetime.utcnow()
+
+    def __repr__(self):
+        return f"<SwapToken {self.id}: token={self.token[:8]}... is_used={self.is_used}>"

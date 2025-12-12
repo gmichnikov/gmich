@@ -94,7 +94,8 @@ def create_app():
     from app.projects.chatbot.models import ChatMessage
     from app.projects.ask_many_llms.models import LLMQuestion, LLMResponse
     from app.projects.better_signups.models import (
-        SignupList, ListEditor, FamilyMember, Event, Item, Signup
+        SignupList, ListEditor, FamilyMember, Event, Item, Signup,
+        SwapRequest, SwapRequestTarget, SwapToken
     )
     
     # Register markdown filter for Ask Many LLMs templates

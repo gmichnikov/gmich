@@ -35,6 +35,9 @@ from app.projects.better_signups.models import (
     Event,
     Item,
     Signup,
+    SwapRequest,
+    SwapRequestTarget,
+    SwapToken,
 )
 from app.projects.better_signups.utils import (
     ensure_self_family_member,
@@ -1221,9 +1224,32 @@ def create_signup(uuid):
         flash("Invalid element type.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
-    # Check if spots are available
-    if element.get_spots_remaining() <= 0:
-        flash("No spots available for this element.", "error")
+    # Check if spots are available by querying database directly (not using relationship)
+    # This ensures we get the most up-to-date count
+    if element_type == "event":
+        active_count = (
+            db.session.query(Signup)
+            .filter(Signup.event_id == element_id)
+            .filter(Signup.cancelled_at.is_(None))
+            .count()
+        )
+    else:
+        active_count = (
+            db.session.query(Signup)
+            .filter(Signup.item_id == element_id)
+            .filter(Signup.cancelled_at.is_(None))
+            .count()
+        )
+    
+    spots_remaining = element.spots_available - active_count
+    
+    # Debug: Log the values to help diagnose issues
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Signup check: element_id={element_id}, element_type={element_type}, spots_available={element.spots_available}, active_count={active_count}, spots_remaining={spots_remaining}")
+    
+    if spots_remaining <= 0:
+        flash("No spots available for this element. It may have just filled up.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     # Get family member ID from form
@@ -1294,22 +1320,29 @@ def create_signup(uuid):
 
     # Race condition fix: Re-check spots by counting active signups directly from database
     # This ensures we have the latest count including any signups created by other users
+    # Note: The signup we just added is in the session but not committed, so it will be included in the count
     if element_type == "event":
         active_count = (
             db.session.query(Signup)
-            .filter_by(event_id=element_id, cancelled_at=None)
+            .filter(Signup.event_id == element_id)
+            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     else:
         active_count = (
             db.session.query(Signup)
-            .filter_by(item_id=element_id, cancelled_at=None)
+            .filter(Signup.item_id == element_id)
+            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     
+    # Debug: Log the values
+    logger.info(f"Race condition check: element_id={element_id}, element_type={element_type}, spots_available={element.spots_available}, active_count={active_count} (includes new signup in session)")
+    
     # Note: active_count includes the signup we just added (it's in the session but not committed)
-    # So we need to check if (active_count) >= spots_available (not >)
-    if active_count >= element.spots_available:
+    # So we need to check if (active_count) > spots_available (not >=)
+    # If active_count == spots_available, that's fine - we're taking the last spot
+    if active_count > element.spots_available:
         db.session.rollback()
         flash("No spots available for this element. It may have just filled up.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
@@ -1534,4 +1567,403 @@ def my_signups():
         else:
             signup.google_calendar_url = None
 
+    # Check for existing swap requests for each signup
+    # Get all pending swap requests for these family members in these lists
+    signup_ids = [s.id for s in signups]
+    if signup_ids:
+        pending_swap_requests = (
+            SwapRequest.query.filter(
+                SwapRequest.requestor_signup_id.in_(signup_ids),
+                SwapRequest.status == "pending"
+            )
+            .options(
+                joinedload(SwapRequest.targets)
+            )
+            .all()
+        )
+        # Create a dict mapping signup_id to swap_request
+        swap_requests_by_signup = {sr.requestor_signup_id: sr for sr in pending_swap_requests}
+    else:
+        swap_requests_by_signup = {}
+
+    # Attach swap request info to each signup and check if swap is possible
+    for signup in signups:
+        signup.pending_swap_request = swap_requests_by_signup.get(signup.id)
+        
+        # Check if there are any eligible swap targets for this signup
+        # Only show Swap button if there are full elements with signups to swap to
+        signup_list = signup.event.list if signup.event else signup.item.list
+        has_eligible_swap_targets = False
+        
+        if signup_list.list_type == "events":
+            # Count events that are full, have signups, and user isn't already signed up for
+            current_event_id = signup.event_id
+            eligible_events = Event.query.filter(
+                Event.list_id == signup_list.id,
+                Event.id != current_event_id
+            ).all()
+            
+            for event in eligible_events:
+                if event.get_spots_remaining() == 0 and event.get_spots_taken() > 0:
+                    # Check if user is already signed up for this event
+                    existing = Signup.query.filter_by(
+                        event_id=event.id,
+                        family_member_id=signup.family_member_id,
+                        cancelled_at=None
+                    ).first()
+                    if not existing:
+                        has_eligible_swap_targets = True
+                        break
+        else:  # items
+            # Count items that are full, have signups, and user isn't already signed up for
+            current_item_id = signup.item_id
+            eligible_items = Item.query.filter(
+                Item.list_id == signup_list.id,
+                Item.id != current_item_id
+            ).all()
+            
+            for item in eligible_items:
+                if item.get_spots_remaining() == 0 and item.get_spots_taken() > 0:
+                    # Check if user is already signed up for this item
+                    existing = Signup.query.filter_by(
+                        item_id=item.id,
+                        family_member_id=signup.family_member_id,
+                        cancelled_at=None
+                    ).first()
+                    if not existing:
+                        has_eligible_swap_targets = True
+                        break
+        
+        signup.has_eligible_swap_targets = has_eligible_swap_targets
+
     return render_template("better_signups/my_signups.html", signups=signups)
+
+
+# ============================================================================
+# Phase 12: Swap Request Feature - Placeholder Routes
+# ============================================================================
+
+@bp.route("/swap/<int:signup_id>/request", methods=["GET", "POST"])
+@login_required
+def create_swap_request(signup_id):
+    """Create a swap request"""
+    # Get the signup with all necessary relationships
+    signup = Signup.query.options(
+        joinedload(Signup.event).joinedload(Event.list),
+        joinedload(Signup.item).joinedload(Item.list),
+        joinedload(Signup.family_member),
+    ).get_or_404(signup_id)
+
+    # Verify signup belongs to current user
+    if signup.user_id != current_user.id:
+        flash("You can only create swap requests for your own signups.", "error")
+        return redirect(url_for("better_signups.my_signups"))
+
+    # Verify signup is active
+    if signup.cancelled_at is not None:
+        flash("Cannot create swap request for a cancelled signup.", "error")
+        return redirect(url_for("better_signups.my_signups"))
+
+    # Get the list
+    signup_list = signup.event.list if signup.event else signup.item.list
+
+    # Check if this family member already has a pending swap request in this list
+    existing_swap_request = SwapRequest.query.filter_by(
+        requestor_family_member_id=signup.family_member_id,
+        list_id=signup_list.id,
+        status="pending"
+    ).first()
+
+    if existing_swap_request:
+        flash(
+            f"You already have a pending swap request in '{signup_list.name}'. "
+            "Please cancel it before creating a new one.",
+            "error"
+        )
+        return redirect(url_for("better_signups.my_signups"))
+
+    if request.method == "POST":
+        # Get selected target elements
+        target_elements_raw = request.form.getlist("target_elements")
+        
+        if not target_elements_raw:
+            flash("Please select at least one element to swap to.", "error")
+            return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+        if len(target_elements_raw) > 3:
+            flash("Maximum 3 target elements allowed.", "error")
+            return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+        # Parse target elements
+        target_elements = []
+        for element_str in target_elements_raw:
+            try:
+                element_type, element_id_str = element_str.split(":", 1)
+                element_id = int(element_id_str)
+                target_elements.append((element_type, element_id))
+            except (ValueError, AttributeError):
+                flash("Invalid target element selected.", "error")
+                return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+        # Validate target elements
+        validated_targets = []
+        for element_type, element_id in target_elements:
+            # Verify element exists and is in same list
+            if element_type == "event":
+                element = Event.query.get(element_id)
+                if not element or element.list_id != signup_list.id:
+                    flash(f"Invalid event selected.", "error")
+                    return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+            elif element_type == "item":
+                element = Item.query.get(element_id)
+                if not element or element.list_id != signup_list.id:
+                    flash(f"Invalid item selected.", "error")
+                    return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+            else:
+                flash(f"Invalid element type.", "error")
+                return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+            # Verify requestor's family member is NOT already signed up for this target element
+            if element_type == "event":
+                existing_target_signup = Signup.query.filter_by(
+                    event_id=element_id,
+                    family_member_id=signup.family_member_id,
+                    cancelled_at=None
+                ).first()
+            else:
+                existing_target_signup = Signup.query.filter_by(
+                    item_id=element_id,
+                    family_member_id=signup.family_member_id,
+                    cancelled_at=None
+                ).first()
+
+            if existing_target_signup:
+                flash(
+                    f"You are already signed up for one of the selected elements. "
+                    "Cannot swap to an element you're already signed up for.",
+                    "error"
+                )
+                return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+            validated_targets.append((element_type, element_id, element))
+
+        # Find eligible swap partners across all target elements
+        eligible_tokens = []  # Will store (recipient_signup, target_element_type, target_element_id) tuples
+        
+        for element_type, element_id, element in validated_targets:
+            # Find all active signups for this target element
+            if element_type == "event":
+                target_signups = Signup.query.filter_by(
+                    event_id=element_id,
+                    cancelled_at=None
+                ).options(
+                    joinedload(Signup.family_member),
+                    joinedload(Signup.user),
+                ).all()
+            else:
+                target_signups = Signup.query.filter_by(
+                    item_id=element_id,
+                    cancelled_at=None
+                ).options(
+                    joinedload(Signup.family_member),
+                    joinedload(Signup.user),
+                ).all()
+
+            # For each signup on the target element, check if eligible
+            for target_signup in target_signups:
+                # Skip if same user (though they could have different family members)
+                # Actually, we want to allow swaps between different family members of same user
+                
+                # Check if this family member is already signed up for requestor's element
+                requestor_element_id = signup.event_id if signup.event_id else signup.item_id
+                requestor_element_type = "event" if signup.event_id else "item"
+                
+                if requestor_element_type == "event":
+                    already_signed_up = Signup.query.filter_by(
+                        event_id=requestor_element_id,
+                        family_member_id=target_signup.family_member_id,
+                        cancelled_at=None
+                    ).first()
+                else:
+                    already_signed_up = Signup.query.filter_by(
+                        item_id=requestor_element_id,
+                        family_member_id=target_signup.family_member_id,
+                        cancelled_at=None
+                    ).first()
+
+                if not already_signed_up:
+                    # This is an eligible swap partner
+                    eligible_tokens.append((target_signup, element_type, element_id))
+
+        if not eligible_tokens:
+            flash(
+                "No eligible swap partners found for the selected elements. "
+                "No one is signed up for these elements who could swap with you.",
+                "error"
+            )
+            return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+        # Create swap request
+        swap_request = SwapRequest(
+            requestor_signup_id=signup.id,
+            list_id=signup_list.id,
+            requestor_family_member_id=signup.family_member_id,
+            status="pending"
+        )
+        db.session.add(swap_request)
+        db.session.flush()  # Get the ID
+
+        # Create SwapRequestTarget records
+        for element_type, element_id, element in validated_targets:
+            target = SwapRequestTarget(
+                swap_request_id=swap_request.id,
+                target_element_id=element_id,
+                target_element_type=element_type
+            )
+            db.session.add(target)
+
+        # Create SwapToken records
+        for recipient_signup, target_element_type, target_element_id in eligible_tokens:
+            token = SwapToken(
+                swap_request_id=swap_request.id,
+                token=SwapToken.generate_token(),
+                recipient_signup_id=recipient_signup.id,
+                recipient_user_id=recipient_signup.user_id,
+                is_used=False
+            )
+            db.session.add(token)
+
+        try:
+            db.session.commit()
+            flash(
+                f"Swap request created! Eligible users will be notified via email.",
+                "success"
+            )
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while creating the swap request. Please try again.", "error")
+            return redirect(url_for("better_signups.create_swap_request", signup_id=signup_id))
+
+        return redirect(url_for("better_signups.my_signups"))
+
+    # GET request - show the swap request interface
+    # Get all other elements in the same list
+    available_elements = []
+    
+    # Get all events in the list (excluding the one we're swapping from)
+    if signup_list.list_type == "events":
+        events = Event.query.filter_by(list_id=signup_list.id).options(
+            joinedload(Event.signups).joinedload(Signup.family_member),
+            joinedload(Event.signups).joinedload(Signup.user),
+        ).all()
+        for event in events:
+            # Skip if this is the event we're swapping from
+            if signup.event_id and event.id == signup.event_id:
+                continue
+            
+            # Check if requestor's family member is already signed up for this event
+            existing_signup = Signup.query.filter_by(
+                event_id=event.id,
+                family_member_id=signup.family_member_id,
+                cancelled_at=None
+            ).first()
+            
+            # Only show elements that are full (no available spots) and have at least one signup
+            # If there are available spots, user can just sign up directly - no need to swap
+            spots_remaining = event.get_spots_remaining()
+            spots_taken = event.get_spots_taken()
+            
+            if spots_remaining > 0 or spots_taken == 0:
+                continue  # Skip this element - either has available spots or no signups
+            
+            # Get signups for this event
+            active_signups = event.get_active_signups()
+            signups_info = []
+            for s in active_signups:
+                signups_info.append({
+                    "family_member_name": s.family_member.display_name if s.family_member else s.user.full_name,
+                    "user_name": s.user.full_name,
+                    "is_self": s.family_member.is_self if s.family_member else False
+                })
+            
+            available_elements.append({
+                "id": event.id,
+                "type": "event",
+                "event": event,
+                "item": None,
+                "spots_taken": spots_taken,
+                "spots_remaining": spots_remaining,
+                "is_already_signed_up": existing_signup is not None,
+                "signups": signups_info
+            })
+    
+    # Get all items in the list (excluding the one we're swapping from)
+    if signup_list.list_type == "items":
+        items = Item.query.filter_by(list_id=signup_list.id).options(
+            joinedload(Item.signups).joinedload(Signup.family_member),
+            joinedload(Item.signups).joinedload(Signup.user),
+        ).all()
+        for item in items:
+            # Skip if this is the item we're swapping from
+            if signup.item_id and item.id == signup.item_id:
+                continue
+            
+            # Check if requestor's family member is already signed up for this item
+            existing_signup = Signup.query.filter_by(
+                item_id=item.id,
+                family_member_id=signup.family_member_id,
+                cancelled_at=None
+            ).first()
+            
+            # Only show elements that are full (no available spots) and have at least one signup
+            # If there are available spots, user can just sign up directly - no need to swap
+            spots_remaining = item.get_spots_remaining()
+            spots_taken = item.get_spots_taken()
+            
+            if spots_remaining > 0 or spots_taken == 0:
+                continue  # Skip this element - either has available spots or no signups
+            
+            # Get signups for this item
+            active_signups = item.get_active_signups()
+            signups_info = []
+            for s in active_signups:
+                signups_info.append({
+                    "family_member_name": s.family_member.display_name if s.family_member else s.user.full_name,
+                    "user_name": s.user.full_name,
+                    "is_self": s.family_member.is_self if s.family_member else False
+                })
+            
+            available_elements.append({
+                "id": item.id,
+                "type": "item",
+                "event": None,
+                "item": item,
+                "spots_taken": spots_taken,
+                "spots_remaining": spots_remaining,
+                "is_already_signed_up": existing_signup is not None,
+                "signups": signups_info
+            })
+
+    return render_template(
+        "better_signups/create_swap_request.html",
+        signup=signup,
+        signup_list=signup_list,
+        available_elements=available_elements
+    )
+
+
+@bp.route("/swap/<int:swap_request_id>/cancel", methods=["POST"])
+@login_required
+def cancel_swap_request(swap_request_id):
+    """Cancel a swap request (placeholder)"""
+    # TODO: Phase 12e - Implement swap request cancellation
+    flash("Swap cancellation feature coming soon!", "info")
+    return redirect(url_for("better_signups.my_signups"))
+
+
+@bp.route("/swap/execute/<string:token>", methods=["GET"])
+def execute_swap(token):
+    """Execute a swap via token link (placeholder)"""
+    # TODO: Phase 12d - Implement swap execution
+    flash("Swap execution feature coming soon!", "info")
+    return redirect(url_for("better_signups.index"))
