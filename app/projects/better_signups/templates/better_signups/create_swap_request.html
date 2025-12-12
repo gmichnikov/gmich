@@ -55,6 +55,9 @@
     <div class="auth-card">
         <div class="auth-header">
             <h1 class="auth-title">Request Swap</h1>
+            <p class="auth-subtitle" style="font-weight: bold; margin-bottom: 0.5rem;">
+                List: {{ signup_list.name }}
+            </p>
             <p class="auth-subtitle">
                 Select {% if available_elements|length > 3 %}up to 3 {% endif %}{{ signup_list.list_type }} you'd like to swap to
             </p>

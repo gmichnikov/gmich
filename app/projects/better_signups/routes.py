@@ -1242,12 +1242,6 @@ def create_signup(uuid):
         )
     
     spots_remaining = element.spots_available - active_count
-    
-    # Debug: Log the values to help diagnose issues
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Signup check: element_id={element_id}, element_type={element_type}, spots_available={element.spots_available}, active_count={active_count}, spots_remaining={spots_remaining}")
-    
     if spots_remaining <= 0:
         flash("No spots available for this element. It may have just filled up.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
@@ -1335,9 +1329,6 @@ def create_signup(uuid):
             .filter(Signup.cancelled_at.is_(None))
             .count()
         )
-    
-    # Debug: Log the values
-    logger.info(f"Race condition check: element_id={element_id}, element_type={element_type}, spots_available={element.spots_available}, active_count={active_count} (includes new signup in session)")
     
     # Note: active_count includes the signup we just added (it's in the session but not committed)
     # So we need to check if (active_count) > spots_available (not >=)
