@@ -445,6 +445,54 @@ body {
   padding: 20px;
   color: #666;
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.footer-social {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.footer-social-link:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.footer-social-icon {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .footer-social {
+    gap: 12px;
+  }
+
+  .footer-social-link {
+    padding: 6px;
+  }
+
+  .footer-social-icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* ===== Flash Messages ===== */
