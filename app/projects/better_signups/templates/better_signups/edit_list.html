@@ -297,19 +297,33 @@
                             <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
                             <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                 {% for signup in event.get_active_signups() %}
-                                <li style="margin-bottom: 0.25rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span>
-                                            {% if signup.family_member %}
-                                                {% if signup.family_member.is_self %}
+                                <li style="margin-bottom: 0.5rem;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+                                        <div style="flex: 1; min-width: 200px;">
+                                            <div>
+                                                {% if signup.family_member %}
                                                     {{ signup.family_member.display_name }}
+                                                    {% if not signup.family_member.is_self and signup.user %}
+                                                        <span style="color: #666;">({{ signup.user.full_name }})</span>
+                                                    {% endif %}
                                                 {% else %}
-                                                    {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                    {{ signup.user.full_name if signup.user else 'Unknown' }}
                                                 {% endif %}
-                                            {% else %}
-                                                {{ signup.user.full_name }}
-                                            {% endif %}
-                                        </span>
+                                            </div>
+                                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Signed up on {{ signup.created_at.strftime('%B %d, %Y') }}
+                                            </div>
+                                        </div>
+                                        <form method="POST" 
+                                              action="{{ url_for('better_signups.remove_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                              style="margin: 0;" 
+                                              onsubmit="return confirm('Are you sure you want to remove this signup?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" 
+                                                    style="background-color: #dc3545; color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer;">
+                                                Remove
+                                            </button>
+                                        </form>
                                     </div>
                                 </li>
                                 {% endfor %}
@@ -339,9 +353,9 @@
                 </div>
             </div>
 
-            {% if list.items %}
+            {% if items %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for item in list.items %}
+                {% for item in items %}
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
@@ -384,19 +398,33 @@
                             <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Who has signed up:</div>
                             <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                 {% for signup in item.get_active_signups() %}
-                                <li style="margin-bottom: 0.25rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span>
-                                            {% if signup.family_member %}
-                                                {% if signup.family_member.is_self %}
+                                <li style="margin-bottom: 0.5rem;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+                                        <div style="flex: 1; min-width: 200px;">
+                                            <div>
+                                                {% if signup.family_member %}
                                                     {{ signup.family_member.display_name }}
+                                                    {% if not signup.family_member.is_self and signup.user %}
+                                                        <span style="color: #666;">({{ signup.user.full_name }})</span>
+                                                    {% endif %}
                                                 {% else %}
-                                                    {{ signup.family_member.display_name }} ({{ signup.user.full_name }})
+                                                    {{ signup.user.full_name if signup.user else 'Unknown' }}
                                                 {% endif %}
-                                            {% else %}
-                                                {{ signup.user.full_name }}
-                                            {% endif %}
-                                        </span>
+                                            </div>
+                                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Signed up on {{ signup.created_at.strftime('%B %d, %Y') }}
+                                            </div>
+                                        </div>
+                                        <form method="POST" 
+                                              action="{{ url_for('better_signups.remove_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                              style="margin: 0;" 
+                                              onsubmit="return confirm('Are you sure you want to remove this signup?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" 
+                                                    style="background-color: #dc3545; color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer;">
+                                                Remove
+                                            </button>
+                                        </form>
                                     </div>
                                 </li>
                                 {% endfor %}

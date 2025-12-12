@@ -73,13 +73,12 @@ def index():
         .order_by(SignupList.created_at.desc())
         .all()
     )
-    
+
     # Get up to 3 most recent active signups
     family_member_ids = [
-        fm.id
-        for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+        fm.id for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
     ]
-    
+
     recent_signups = []
     if family_member_ids:
         recent_signups = (
@@ -87,11 +86,11 @@ def index():
                 joinedload(Signup.event).joinedload(Event.list),
                 joinedload(Signup.item).joinedload(Item.list),
                 joinedload(Signup.family_member),
-                joinedload(Signup.user)
+                joinedload(Signup.user),
             )
             .filter(
                 Signup.family_member_id.in_(family_member_ids),
-                Signup.cancelled_at.is_(None)
+                Signup.cancelled_at.is_(None),
             )
             .order_by(Signup.created_at.desc())
             .limit(3)
@@ -255,7 +254,11 @@ def create_list():
         db.session.commit()
 
         # Log the action
-        password_info = "password-protected" if form.list_password.data and form.list_password.data.strip() else "public"
+        password_info = (
+            "password-protected"
+            if form.list_password.data and form.list_password.data.strip()
+            else "public"
+        )
         log_entry = LogEntry(
             project="better_signups",
             category="Create List",
@@ -279,7 +282,7 @@ def edit_list(uuid):
 
     # Check if user is an editor
     if not signup_list.is_editor(current_user):
-        flash("You do not have permission to view this list.", "error")
+        flash("You do not have permission to edit this list.", "error")
         return redirect(url_for("better_signups.index"))
 
     form = EditSignupListForm(obj=signup_list)
@@ -321,13 +324,32 @@ def edit_list(uuid):
     editors = ListEditor.query.filter_by(list_id=signup_list.id).all()
 
     # Get events if this is an events list
+    # Eager load signups with user and family_member to avoid N+1 queries
     events = (
-        Event.query.filter_by(list_id=signup_list.id)
+        Event.query.options(
+            joinedload(Event.signups).joinedload(Signup.user),
+            joinedload(Event.signups).joinedload(Signup.family_member),
+        )
+        .filter_by(list_id=signup_list.id)
         .order_by(
             Event.event_date.asc().nullslast(), Event.event_datetime.asc().nullslast()
         )
         .all()
         if signup_list.list_type == "events"
+        else []
+    )
+
+    # Get items if this is an items list
+    # Eager load signups with user and family_member to avoid N+1 queries
+    items = (
+        Item.query.options(
+            joinedload(Item.signups).joinedload(Signup.user),
+            joinedload(Item.signups).joinedload(Signup.family_member),
+        )
+        .filter_by(list_id=signup_list.id)
+        .order_by(Item.created_at.asc())
+        .all()
+        if signup_list.list_type == "items"
         else []
     )
 
@@ -338,6 +360,7 @@ def edit_list(uuid):
         add_editor_form=add_editor_form,
         editors=editors,
         events=events,
+        items=items if signup_list.list_type == "items" else [],
     )
 
 
@@ -607,13 +630,15 @@ def add_event(uuid):
         if event.event_type == "date":
             event_details.append(f"date: {event.event_date.strftime('%B %d, %Y')}")
         else:
-            event_details.append(f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+            event_details.append(
+                f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+            )
             if event.timezone:
                 event_details.append(f"timezone: {event.timezone}")
         if event.location:
             event_details.append(f"location: {event.location}")
         event_details.append(f"spots: {event.spots_available}")
-        
+
         log_entry = LogEntry(
             project="better_signups",
             category="Add Event",
@@ -812,10 +837,12 @@ def delete_event(uuid, event_id):
     if event.event_type == "date":
         event_details.append(f"date: {event.event_date.strftime('%B %d, %Y')}")
     else:
-        event_details.append(f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+        event_details.append(
+            f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+        )
     if event.location:
         event_details.append(f"location: {event.location}")
-    
+
     db.session.delete(event)
     db.session.commit()
 
@@ -1176,7 +1203,7 @@ def create_signup(uuid):
     if cancelled_signup:
         cancelled_signup.cancelled_at = None
         db.session.commit()
-        
+
         # Log the action (reactivation)
         element_desc = ""
         if element_type == "event":
@@ -1186,7 +1213,7 @@ def create_signup(uuid):
                 element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
         else:
             element_desc = f"item: {element.name}"
-        
+
         log_entry = LogEntry(
             project="better_signups",
             category="Create Signup",
@@ -1195,7 +1222,7 @@ def create_signup(uuid):
         )
         db.session.add(log_entry)
         db.session.commit()
-        
+
         flash(f"Successfully signed up {family_member.display_name}!", "success")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
@@ -1222,7 +1249,7 @@ def create_signup(uuid):
             element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
     else:
         element_desc = f"item: {element.name}"
-    
+
     log_entry = LogEntry(
         project="better_signups",
         category="Create Signup",
@@ -1279,7 +1306,7 @@ def cancel_signup(uuid, signup_id):
     elif signup.item_id:
         # item was already queried above
         element_desc = f"item: {item.name}"
-    
+
     # Cancel the signup
     signup.cancel()
     db.session.commit()
@@ -1287,9 +1314,13 @@ def cancel_signup(uuid, signup_id):
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
-    
+
     # Log the action
-    cancelled_by = "themselves" if signup.user_id == current_user.id else f"editor {current_user.email}"
+    cancelled_by = (
+        "themselves"
+        if signup.user_id == current_user.id
+        else f"editor {current_user.email}"
+    )
     log_entry = LogEntry(
         project="better_signups",
         category="Cancel Signup",
@@ -1298,15 +1329,85 @@ def cancel_signup(uuid, signup_id):
     )
     db.session.add(log_entry)
     db.session.commit()
-    
+
     flash(f"Successfully cancelled signup for {family_member_name}.", "success")
-    
+
     # Check if we should redirect back to my-signups page
     next_url = request.form.get("next") or request.args.get("next")
     if next_url and "my-signups" in next_url:
         return redirect(url_for("better_signups.my_signups"))
-    
+
     return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/signup/<int:signup_id>/remove", methods=["POST"])
+@login_required
+def remove_signup(uuid, signup_id):
+    """Remove a signup as an editor (removes someone else's signup)"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    signup = Signup.query.get_or_404(signup_id)
+
+    # Verify user is an editor
+    if not signup_list.is_editor(current_user):
+        flash("You do not have permission to remove signups from this list.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=uuid))
+
+    # Verify signup belongs to an element in this list
+    if signup.event_id:
+        event = Event.query.get_or_404(signup.event_id)
+        if event.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.edit_list", uuid=uuid))
+    elif signup.item_id:
+        item = Item.query.get_or_404(signup.item_id)
+        if item.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.edit_list", uuid=uuid))
+    else:
+        flash("Invalid signup.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=uuid))
+
+    # Check if already cancelled
+    if signup.cancelled_at:
+        flash("This signup has already been cancelled.", "info")
+        return redirect(url_for("better_signups.edit_list", uuid=uuid))
+
+    # Get element details before cancellation for logging
+    element_desc = ""
+    if signup.event_id:
+        # event was already queried above
+        if event.event_type == "date":
+            element_desc = f"event date: {event.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    elif signup.item_id:
+        # item was already queried above
+        element_desc = f"item: {item.name}"
+
+    # Cancel the signup (reuse cancel method)
+    signup.cancel()
+    db.session.commit()
+
+    family_member_name = (
+        signup.family_member.display_name if signup.family_member else "Unknown"
+    )
+    user_name = signup.user.full_name if signup.user else "Unknown"
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Remove Signup",
+        actor_id=current_user.id,
+        description=f"Editor removed signup for {family_member_name} ({user_name}) on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+    flash(
+        f"Successfully removed signup for {family_member_name}.",
+        "success",
+    )
+    return redirect(url_for("better_signups.edit_list", uuid=uuid))
 
 
 @bp.route("/my-signups")
@@ -1315,18 +1416,16 @@ def my_signups():
     """View all active signups for the current user and their family members"""
     # Get all family member IDs for current user
     family_member_ids = [
-        fm.id
-        for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+        fm.id for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
     ]
-    
+
     if not family_member_ids:
         # No family members yet (shouldn't happen if self is auto-created, but handle it)
         ensure_self_family_member(current_user)
         family_member_ids = [
-            fm.id
-            for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
+            fm.id for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
         ]
-    
+
     # Get all active signups (not cancelled) for these family members
     # Order by created_at descending (most recent first)
     # Eager load related data to avoid N+1 queries
@@ -1335,14 +1434,14 @@ def my_signups():
             joinedload(Signup.event).joinedload(Event.list),
             joinedload(Signup.item).joinedload(Item.list),
             joinedload(Signup.family_member),
-            joinedload(Signup.user)
+            joinedload(Signup.user),
         )
         .filter(
             Signup.family_member_id.in_(family_member_ids),
-            Signup.cancelled_at.is_(None)
+            Signup.cancelled_at.is_(None),
         )
         .order_by(Signup.created_at.desc())
         .all()
     )
-    
+
     return render_template("better_signups/my_signups.html", signups=signups)

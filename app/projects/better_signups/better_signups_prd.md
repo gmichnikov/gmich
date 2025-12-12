@@ -257,9 +257,9 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 ## Phase 10: Editor Signup Management
 
-- [ ] Create route for editor to remove a signup
-- [ ] Add UI in editor view for managing signups
-- [ ] Show all signups (active and cancelled) in editor view
+- [x] Create route for editor to remove a signup
+- [x] Add UI in editor view for managing signups
+- [x] Show all signups (active and cancelled) in editor view
 
 **Testing:**
 
