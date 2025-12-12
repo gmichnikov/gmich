@@ -36,7 +36,7 @@ from app.projects.better_signups.models import (
     Signup,
 )
 from app.projects.better_signups.utils import ensure_self_family_member
-from app.models import User
+from app.models import User, LogEntry
 import pytz
 
 bp = Blueprint(
@@ -160,6 +160,16 @@ def add_family_member():
         db.session.add(family_member)
         db.session.commit()
 
+        # Log the action
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Add Family Member",
+            actor_id=current_user.id,
+            description=f"Added family member: {family_member.display_name}",
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+
         flash(
             f'Family member "{family_member.display_name}" added successfully.',
             "success",
@@ -202,6 +212,16 @@ def delete_family_member(member_id):
     db.session.delete(family_member)
     db.session.commit()
 
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Delete Family Member",
+        actor_id=current_user.id,
+        description=f"Deleted family member: {name}",
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
     flash(f'Family member "{name}" deleted successfully.', "success")
     return redirect(url_for("better_signups.family_members"))
 
@@ -232,6 +252,17 @@ def create_list():
             new_list.set_list_password(form.list_password.data)
 
         db.session.add(new_list)
+        db.session.commit()
+
+        # Log the action
+        password_info = "password-protected" if form.list_password.data and form.list_password.data.strip() else "public"
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Create List",
+            actor_id=current_user.id,
+            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, UUID: {new_list.uuid})",
+        )
+        db.session.add(log_entry)
         db.session.commit()
 
         flash(f'List "{new_list.name}" created successfully!', "success")
@@ -347,7 +378,18 @@ def delete_list(uuid):
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     name = signup_list.name
+    uuid = signup_list.uuid
     db.session.delete(signup_list)
+    db.session.commit()
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Delete List",
+        actor_id=current_user.id,
+        description=f"Deleted list '{name}' (UUID: {uuid})",
+    )
+    db.session.add(log_entry)
     db.session.commit()
 
     flash(f'List "{name}" deleted successfully.', "success")
@@ -400,6 +442,16 @@ def add_editor(uuid):
         db.session.add(editor)
         db.session.commit()
 
+        # Log the action
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Add List Editor",
+            actor_id=current_user.id,
+            description=f"Added editor {email} to list '{signup_list.name}' (UUID: {signup_list.uuid})",
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+
         # Generic success message to avoid email enumeration
         flash(f"Editor added successfully. {email} can now edit this list.", "success")
     else:
@@ -432,6 +484,16 @@ def remove_editor(uuid, editor_id):
     editor_email = editor.get_display_email() or "Unknown"
 
     db.session.delete(editor)
+    db.session.commit()
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Remove List Editor",
+        actor_id=current_user.id,
+        description=f"Removed editor {editor_email} from list '{signup_list.name}' (UUID: {signup_list.uuid})",
+    )
+    db.session.add(log_entry)
     db.session.commit()
 
     # Generic message to avoid revealing whether user has an account
@@ -538,6 +600,27 @@ def add_event(uuid):
                 )
 
         db.session.add(event)
+        db.session.commit()
+
+        # Log the action
+        event_details = []
+        if event.event_type == "date":
+            event_details.append(f"date: {event.event_date.strftime('%B %d, %Y')}")
+        else:
+            event_details.append(f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+            if event.timezone:
+                event_details.append(f"timezone: {event.timezone}")
+        if event.location:
+            event_details.append(f"location: {event.location}")
+        event_details.append(f"spots: {event.spots_available}")
+        
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Add Event",
+            actor_id=current_user.id,
+            description=f"Added event to list '{signup_list.name}' (UUID: {signup_list.uuid}): {', '.join(event_details)}",
+        )
+        db.session.add(log_entry)
         db.session.commit()
 
         flash(f"Event added successfully!", "success")
@@ -724,7 +807,26 @@ def delete_event(uuid, event_id):
         )
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
+    # Get event details before deletion for logging
+    event_details = []
+    if event.event_type == "date":
+        event_details.append(f"date: {event.event_date.strftime('%B %d, %Y')}")
+    else:
+        event_details.append(f"datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+    if event.location:
+        event_details.append(f"location: {event.location}")
+    
     db.session.delete(event)
+    db.session.commit()
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Delete Event",
+        actor_id=current_user.id,
+        description=f"Deleted event from list '{signup_list.name}' (UUID: {signup_list.uuid}): {', '.join(event_details)}",
+    )
+    db.session.add(log_entry)
     db.session.commit()
 
     flash("Event deleted successfully.", "success")
@@ -760,6 +862,16 @@ def add_item(uuid):
         )
 
         db.session.add(item)
+        db.session.commit()
+
+        # Log the action
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Add Item",
+            actor_id=current_user.id,
+            description=f"Added item '{item.name}' (spots: {item.spots_available}) to list '{signup_list.name}' (UUID: {signup_list.uuid})",
+        )
+        db.session.add(log_entry)
         db.session.commit()
 
         flash(f'Item "{item.name}" added successfully!', "success")
@@ -861,6 +973,16 @@ def delete_item(uuid, item_id):
 
     item_name = item.name
     db.session.delete(item)
+    db.session.commit()
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Delete Item",
+        actor_id=current_user.id,
+        description=f"Deleted item '{item_name}' from list '{signup_list.name}' (UUID: {signup_list.uuid})",
+    )
+    db.session.add(log_entry)
     db.session.commit()
 
     flash(f'Item "{item_name}" deleted successfully.', "success")
@@ -1054,6 +1176,26 @@ def create_signup(uuid):
     if cancelled_signup:
         cancelled_signup.cancelled_at = None
         db.session.commit()
+        
+        # Log the action (reactivation)
+        element_desc = ""
+        if element_type == "event":
+            if element.event_type == "date":
+                element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+            else:
+                element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+        else:
+            element_desc = f"item: {element.name}"
+        
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Create Signup",
+            actor_id=current_user.id,
+            description=f"Reactivated signup for {family_member.display_name} on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
         flash(f"Successfully signed up {family_member.display_name}!", "success")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
@@ -1069,6 +1211,25 @@ def create_signup(uuid):
         signup.item_id = element_id
 
     db.session.add(signup)
+    db.session.commit()
+
+    # Log the action
+    element_desc = ""
+    if element_type == "event":
+        if element.event_type == "date":
+            element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        element_desc = f"item: {element.name}"
+    
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Create Signup",
+        actor_id=current_user.id,
+        description=f"Signed up {family_member.display_name} for list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
     db.session.commit()
 
     flash(f"Successfully signed up {family_member.display_name}!", "success")
@@ -1107,6 +1268,18 @@ def cancel_signup(uuid, signup_id):
         flash("This signup has already been cancelled.", "info")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
+    # Get element details before cancellation for logging
+    element_desc = ""
+    if signup.event_id:
+        # event was already queried above
+        if event.event_type == "date":
+            element_desc = f"event date: {event.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    elif signup.item_id:
+        # item was already queried above
+        element_desc = f"item: {item.name}"
+    
     # Cancel the signup
     signup.cancel()
     db.session.commit()
@@ -1114,6 +1287,18 @@ def cancel_signup(uuid, signup_id):
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
+    
+    # Log the action
+    cancelled_by = "themselves" if signup.user_id == current_user.id else f"editor {current_user.email}"
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Cancel Signup",
+        actor_id=current_user.id,
+        description=f"Cancelled signup for {family_member_name} (cancelled by {cancelled_by}) on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+    
     flash(f"Successfully cancelled signup for {family_member_name}.", "success")
     
     # Check if we should redirect back to my-signups page
