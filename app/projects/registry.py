@@ -12,7 +12,13 @@ Project Types:
 - 'external': External link that opens in new tab
 
 For projects that belong to a category, add 'parent' field with category ID.
+
+Feature Flags:
+Projects can be hidden from the homepage using environment variables.
+Format: HIDE_<PROJECT_ID> (e.g., HIDE_BETTER_SIGNUPS=TRUE)
+Projects are shown by default. Only "TRUE" (case-insensitive) hides the feature.
 """
+import os
 
 PROJECTS = [
     {
@@ -224,6 +230,26 @@ def get_project_by_id(project_id):
     return next((p for p in PROJECTS if p['id'] == project_id), None)
 
 
+def is_project_hidden(project_id):
+    """
+    Check if a project should be hidden via environment variable.
+    
+    Feature flag format: HIDE_<PROJECT_ID> (e.g., HIDE_BETTER_SIGNUPS)
+    - Projects are shown by default
+    - Returns True (hidden) only if env var is set to "TRUE" (case-insensitive)
+    - Returns False (shown) if env var is not set or set to any other value
+    
+    Args:
+        project_id (str): The project ID to check
+        
+    Returns:
+        bool: True if project should be hidden, False if it should be shown
+    """
+    env_var_name = f"HIDE_{project_id.upper()}"
+    env_value = os.getenv(env_var_name, '').strip().upper()
+    return env_value == 'TRUE'
+
+
 def get_projects_by_auth(auth_required=None):
     """
     Get projects filtered by authentication requirement.
@@ -248,12 +274,16 @@ def get_homepage_items(is_authenticated):
         is_authenticated (bool): Whether the user is logged in
         
     Returns:
-        list: Items with 'available' flag set based on auth status
+        list: Items with 'available' flag set based on auth status and feature flags
     """
     items = []
     for project in get_all_projects():
         # Skip projects that have a parent (they're shown in category pages)
         if project.get('parent'):
+            continue
+        
+        # Check feature flag - if hidden, skip this project entirely
+        if is_project_hidden(project['id']):
             continue
             
         project_copy = project.copy()
