@@ -97,9 +97,9 @@
                                 <div id="event-signups-{{ event.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in event.get_active_signups() %}
-                                    <li style="margin-bottom: 0.25rem;">
-                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <span>
+                                    <li class="better-signups-signup-item">
+                                        <div class="better-signups-signup-actions">
+                                            <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
                                                     {% if signup.family_member.is_self %}
                                                         {{ signup.family_member.display_name }}
@@ -111,10 +111,26 @@
                                                 {% endif %}
                                             </span>
                                             {% if signup.user_id == current_user.id %}
-                                            <form method="POST" action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this signup?');">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Cancel</button>
-                                            </form>
+                                                {% if event.google_calendar_url %}
+                                                <a href="{{ event.google_calendar_url }}" 
+                                                   target="_blank" 
+                                                   rel="noopener noreferrer"
+                                                   class="better-signups-btn better-signups-btn-google-calendar"
+                                                   style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                    📅 Add to Google Cal
+                                                </a>
+                                                {% endif %}
+                                                <form method="POST" 
+                                                      action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                      style="display: inline; margin: 0;" 
+                                                      onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <button type="submit" 
+                                                            class="better-signups-btn better-signups-btn-danger"
+                                                            style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        Cancel
+                                                    </button>
+                                                </form>
                                             {% endif %}
                                         </div>
                                     </li>
@@ -207,9 +223,9 @@
                                 <div id="item-signups-{{ item.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in item.get_active_signups() %}
-                                    <li style="margin-bottom: 0.25rem;">
-                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <span>
+                                    <li class="better-signups-signup-item">
+                                        <div class="better-signups-signup-actions">
+                                            <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
                                                     {% if signup.family_member.is_self %}
                                                         {{ signup.family_member.display_name }}
@@ -221,10 +237,17 @@
                                                 {% endif %}
                                             </span>
                                             {% if signup.user_id == current_user.id %}
-                                            <form method="POST" action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this signup?');">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Cancel</button>
-                                            </form>
+                                                <form method="POST" 
+                                                      action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                      style="display: inline; margin: 0;" 
+                                                      onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <button type="submit" 
+                                                            class="better-signups-btn better-signups-btn-danger"
+                                                            style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        Cancel
+                                                    </button>
+                                                </form>
                                             {% endif %}
                                         </div>
                                     </li>

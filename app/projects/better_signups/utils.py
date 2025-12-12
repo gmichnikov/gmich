@@ -4,6 +4,9 @@ Helper functions for the Better Signups project
 """
 from app import db
 from app.projects.better_signups.models import FamilyMember, ListEditor
+from urllib.parse import urlencode
+import pytz
+from datetime import timedelta, datetime
 
 
 def ensure_self_family_member(user):
@@ -68,4 +71,109 @@ def link_pending_editor_invitations(user):
     db.session.commit()
     
     return len(pending_invitations)
+
+
+def get_google_calendar_url(event, list_name, user=None):
+    """
+    Generate a Google Calendar URL for adding an event to Google Calendar.
+    
+    Args:
+        event: Event instance (date or datetime type)
+        list_name: Name of the signup list
+        user: User instance (required for date events to get timezone)
+        
+    Returns:
+        str: Google Calendar URL, or None if event is invalid
+    """
+    # Handle date-only events
+    if event.event_type == "date":
+        if not event.event_date or not user:
+            return None
+        
+        # Get user's timezone
+        try:
+            user_tz = pytz.timezone(user.time_zone) if user.time_zone else pytz.UTC
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            user_tz = pytz.UTC
+        
+        # Create datetime at noon in user's timezone
+        # event.event_date is a date object, so we need to combine it with a time
+        from datetime import time
+        noon_time = time(12, 0, 0)  # 12:00:00
+        noon_datetime = datetime.combine(event.event_date, noon_time)
+        noon_local = user_tz.localize(noon_datetime)
+        
+        # Convert to UTC for Google Calendar
+        start_utc = noon_local.astimezone(pytz.UTC)
+        
+        # Default to 1 hour duration for date events
+        end_utc = start_utc + timedelta(hours=1)
+        
+    # Handle datetime events
+    elif event.event_type == "datetime":
+        if not event.event_datetime:
+            return None
+        
+        # Get timezone - use event timezone or default to UTC
+        try:
+            event_tz = (
+                pytz.timezone(event.timezone) if event.timezone else pytz.UTC
+            )
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            # Fallback to UTC if timezone is invalid
+            event_tz = pytz.UTC
+        
+        # Localize the datetime to the event's timezone
+        # event_datetime is stored as naive datetime, so we need to localize it
+        if event.event_datetime.tzinfo is None:
+            # Naive datetime - localize it
+            localized_start = event_tz.localize(event.event_datetime)
+        else:
+            # Already timezone-aware - convert to event timezone first, then UTC
+            localized_start = event.event_datetime.astimezone(event_tz)
+        
+        # Convert to UTC for Google Calendar
+        start_utc = localized_start.astimezone(pytz.UTC)
+        
+        # Calculate end time
+        if event.duration_minutes:
+            end_utc = start_utc + timedelta(minutes=event.duration_minutes)
+        else:
+            # Default to 1 hour if no duration specified
+            end_utc = start_utc + timedelta(hours=1)
+    else:
+        # Unknown event type
+        return None
+    
+    # Format dates for Google Calendar (YYYYMMDDTHHMMSSZ format)
+    start_str = start_utc.strftime("%Y%m%dT%H%M%SZ")
+    end_str = end_utc.strftime("%Y%m%dT%H%M%SZ")
+    
+    # Build event title
+    title = list_name
+    if event.description:
+        title = f"{list_name}: {event.description[:50]}"  # Limit description in title
+    
+    # Build description
+    description_parts = [f"Signup for: {list_name}"]
+    if event.description:
+        description_parts.append(f"\n\n{event.description}")
+    
+    description = "\n".join(description_parts)
+    
+    # Build URL parameters
+    params = {
+        "action": "TEMPLATE",
+        "text": title,
+        "dates": f"{start_str}/{end_str}",
+        "details": description,
+    }
+    
+    # Add location if available
+    if event.location:
+        params["location"] = event.location
+    
+    # Build and return URL
+    base_url = "https://calendar.google.com/calendar/render"
+    return f"{base_url}?{urlencode(params)}"
 

@@ -56,6 +56,11 @@
                                             </div>
                                         {% endif %}
                                     </div>
+                                    {% if signup.event.description %}
+                                    <div style="margin-top: 0.25rem;">
+                                        {{ signup.event.description }}
+                                    </div>
+                                    {% endif %}
                                     {% if signup.event.location %}
                                     <div style="margin-top: 0.25rem;">
                                         📍 {% if signup.event.location_is_link %}
@@ -94,6 +99,14 @@
                                style="background-color: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block;">
                                 View List
                             </a>
+                            {% if signup.google_calendar_url %}
+                            <a href="{{ signup.google_calendar_url }}" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               style="background-color: #4285F4; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; text-align: center;">
+                                📅 Add to Google Calendar
+                            </a>
+                            {% endif %}
                             <form method="POST" 
                                   action="{{ url_for('better_signups.cancel_signup', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid, signup_id=signup.id) }}" 
                                   style="margin: 0;" 

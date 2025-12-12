@@ -34,7 +34,7 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 3. Within lists that user lotteries, have an option to always give everyone 1 spot before giving anyone a second spot, etc.
 4. A list level option to allow swaps. If this is on, a user can request to switch out of their current spot, and a link is sent by email to any other users who are signed up on that list but for a different element. Whoever clicks that link first, the swap is completed automatically. Until the swap is completed, the requestor remains in their chosen spot.
 5. Allow (ordered) waitlists on elements. For signups with lotteries, there will be an option up front to be added to a waitlist if not picked. For signups that are first come first served, there will just be an option to join the waitlist. The names can be visible or hidden. If someone cancels, the first name on the waitlist fills in. They must accept within some time (set by creator), or the next person is added. If the spot is not filled, it's then re-opened. A user can remove themselves from a waitlist at any time after it is created.
-6. Added to Google Calendar button
+6. [x] Added to Google Calendar button
 7. A way to view a user's signups (including their family members)
 
 # Ideas that are not part of MVP, tracking them here for later
@@ -314,6 +314,6 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 - [ ] Implement lottery system
 - [ ] Implement waitlists
 - [ ] Implement swap functionality
-- [ ] Add Google Calendar integration
+- [x] Add Google Calendar integration (button added for date and datetime events)
 - [ ] Add per-list signup limits
 - [ ] Add email notifications

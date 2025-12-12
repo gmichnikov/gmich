@@ -36,7 +36,10 @@ from app.projects.better_signups.models import (
     Item,
     Signup,
 )
-from app.projects.better_signups.utils import ensure_self_family_member
+from app.projects.better_signups.utils import (
+    ensure_self_family_member,
+    get_google_calendar_url,
+)
 from app.models import User, LogEntry
 import pytz
 
@@ -1158,6 +1161,11 @@ def view_list(uuid):
             if member.id not in signed_up_family_member_ids
         ]
 
+    # Generate Google Calendar URLs for all events (date and datetime)
+    # We'll attach URLs to events so the template can use them
+    for event in signup_list.events:
+        event.google_calendar_url = get_google_calendar_url(event, signup_list.name, current_user)
+
     return render_template(
         "better_signups/view_list.html",
         list=signup_list,
@@ -1517,5 +1525,13 @@ def my_signups():
         .order_by(Signup.created_at.desc())
         .all()
     )
+
+    # Generate Google Calendar URLs for all events (date and datetime)
+    for signup in signups:
+        if signup.event:
+            list_name = signup.event.list.name
+            signup.google_calendar_url = get_google_calendar_url(signup.event, list_name, current_user)
+        else:
+            signup.google_calendar_url = None
 
     return render_template("better_signups/my_signups.html", signups=signups)
