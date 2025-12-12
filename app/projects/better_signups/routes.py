@@ -16,6 +16,7 @@ from flask import (
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from datetime import datetime, date
 from app import db
 from app.forms import (
@@ -157,9 +158,8 @@ def add_family_member():
             is_self=False,
         )
         db.session.add(family_member)
-        db.session.commit()
 
-        # Log the action
+        # Log the action (combine with add commit)
         log_entry = LogEntry(
             project="better_signups",
             category="Add Family Member",
@@ -167,7 +167,14 @@ def add_family_member():
             description=f"Added family member: {family_member.display_name}",
         )
         db.session.add(log_entry)
-        db.session.commit()
+
+        # Commit both family member creation and log together
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while adding the family member. Please try again.", "error")
+            return redirect(url_for("better_signups.family_members"))
 
         flash(
             f'Family member "{family_member.display_name}" added successfully.',
@@ -208,10 +215,8 @@ def delete_family_member(member_id):
         return redirect(url_for("better_signups.family_members"))
 
     name = family_member.display_name
-    db.session.delete(family_member)
-    db.session.commit()
 
-    # Log the action
+    # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Delete Family Member",
@@ -219,7 +224,15 @@ def delete_family_member(member_id):
         description=f"Deleted family member: {name}",
     )
     db.session.add(log_entry)
-    db.session.commit()
+    db.session.delete(family_member)
+
+    # Commit both deletion and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while deleting the family member. Please try again.", "error")
+        return redirect(url_for("better_signups.family_members"))
 
     flash(f'Family member "{name}" deleted successfully.', "success")
     return redirect(url_for("better_signups.family_members"))
@@ -251,9 +264,8 @@ def create_list():
             new_list.set_list_password(form.list_password.data)
 
         db.session.add(new_list)
-        db.session.commit()
 
-        # Log the action
+        # Log the action (combine with create commit)
         password_info = (
             "password-protected"
             if form.list_password.data and form.list_password.data.strip()
@@ -266,7 +278,14 @@ def create_list():
             description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, UUID: {new_list.uuid})",
         )
         db.session.add(log_entry)
-        db.session.commit()
+
+        # Commit both list creation and log together
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while creating the list. Please try again.", "error")
+            return render_template("better_signups/create_list.html", form=form)
 
         flash(f'List "{new_list.name}" created successfully!', "success")
         return redirect(url_for("better_signups.edit_list", uuid=new_list.uuid))
@@ -402,10 +421,8 @@ def delete_list(uuid):
 
     name = signup_list.name
     uuid = signup_list.uuid
-    db.session.delete(signup_list)
-    db.session.commit()
 
-    # Log the action
+    # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Delete List",
@@ -413,7 +430,15 @@ def delete_list(uuid):
         description=f"Deleted list '{name}' (UUID: {uuid})",
     )
     db.session.add(log_entry)
-    db.session.commit()
+    db.session.delete(signup_list)
+
+    # Commit both deletion and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while deleting the list. Please try again.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     flash(f'List "{name}" deleted successfully.', "success")
     return redirect(url_for("better_signups.index"))
@@ -463,9 +488,8 @@ def add_editor(uuid):
             list_id=signup_list.id, user_id=user.id if user else None, email=email
         )
         db.session.add(editor)
-        db.session.commit()
 
-        # Log the action
+        # Log the action (combine with add commit)
         log_entry = LogEntry(
             project="better_signups",
             category="Add List Editor",
@@ -473,7 +497,14 @@ def add_editor(uuid):
             description=f"Added editor {email} to list '{signup_list.name}' (UUID: {signup_list.uuid})",
         )
         db.session.add(log_entry)
-        db.session.commit()
+
+        # Commit both editor addition and log together
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while adding the editor. Please try again.", "error")
+            return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
         # Generic success message to avoid email enumeration
         flash(f"Editor added successfully. {email} can now edit this list.", "success")
@@ -506,10 +537,7 @@ def remove_editor(uuid, editor_id):
     # Get editor info before deletion
     editor_email = editor.get_display_email() or "Unknown"
 
-    db.session.delete(editor)
-    db.session.commit()
-
-    # Log the action
+    # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Remove List Editor",
@@ -517,7 +545,15 @@ def remove_editor(uuid, editor_id):
         description=f"Removed editor {editor_email} from list '{signup_list.name}' (UUID: {signup_list.uuid})",
     )
     db.session.add(log_entry)
-    db.session.commit()
+    db.session.delete(editor)
+
+    # Commit both deletion and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while removing the editor. Please try again.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     # Generic message to avoid revealing whether user has an account
     flash(f"Editor {editor_email} removed successfully.", "success")
@@ -623,9 +659,8 @@ def add_event(uuid):
                 )
 
         db.session.add(event)
-        db.session.commit()
 
-        # Log the action
+        # Log the action (combine with add commit)
         event_details = []
         if event.event_type == "date":
             event_details.append(f"date: {event.event_date.strftime('%B %d, %Y')}")
@@ -646,7 +681,19 @@ def add_event(uuid):
             description=f"Added event to list '{signup_list.name}' (UUID: {signup_list.uuid}): {', '.join(event_details)}",
         )
         db.session.add(log_entry)
-        db.session.commit()
+
+        # Commit both event creation and log together
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while adding the event. Please try again.", "error")
+            return render_template(
+                "better_signups/event_form.html",
+                form=form,
+                list=signup_list,
+                event=None,
+            )
 
         flash(f"Event added successfully!", "success")
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
@@ -843,10 +890,7 @@ def delete_event(uuid, event_id):
     if event.location:
         event_details.append(f"location: {event.location}")
 
-    db.session.delete(event)
-    db.session.commit()
-
-    # Log the action
+    # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Delete Event",
@@ -854,7 +898,15 @@ def delete_event(uuid, event_id):
         description=f"Deleted event from list '{signup_list.name}' (UUID: {signup_list.uuid}): {', '.join(event_details)}",
     )
     db.session.add(log_entry)
-    db.session.commit()
+    db.session.delete(event)
+
+    # Commit both deletion and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while deleting the event. Please try again.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     flash("Event deleted successfully.", "success")
     return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
@@ -889,9 +941,8 @@ def add_item(uuid):
         )
 
         db.session.add(item)
-        db.session.commit()
 
-        # Log the action
+        # Log the action (combine with add commit)
         log_entry = LogEntry(
             project="better_signups",
             category="Add Item",
@@ -899,7 +950,16 @@ def add_item(uuid):
             description=f"Added item '{item.name}' (spots: {item.spots_available}) to list '{signup_list.name}' (UUID: {signup_list.uuid})",
         )
         db.session.add(log_entry)
-        db.session.commit()
+
+        # Commit both item creation and log together
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash("An error occurred while adding the item. Please try again.", "error")
+            return render_template(
+                "better_signups/item_form.html", form=form, list=signup_list, item=None
+            )
 
         flash(f'Item "{item.name}" added successfully!', "success")
         return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
@@ -999,10 +1059,8 @@ def delete_item(uuid, item_id):
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     item_name = item.name
-    db.session.delete(item)
-    db.session.commit()
 
-    # Log the action
+    # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Delete Item",
@@ -1010,7 +1068,15 @@ def delete_item(uuid, item_id):
         description=f"Deleted item '{item_name}' from list '{signup_list.name}' (UUID: {signup_list.uuid})",
     )
     db.session.add(log_entry)
-    db.session.commit()
+    db.session.delete(item)
+
+    # Commit both deletion and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while deleting the item. Please try again.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
     flash(f'Item "{item_name}" deleted successfully.', "success")
     return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
@@ -1175,21 +1241,9 @@ def create_signup(uuid):
         existing_signup = Signup.query.filter_by(
             event_id=element_id, family_member_id=family_member_id, cancelled_at=None
         ).first()
-        # Also check for cancelled signup (to reactivate it)
-        cancelled_signup = Signup.query.filter(
-            Signup.event_id == element_id,
-            Signup.family_member_id == family_member_id,
-            Signup.cancelled_at.isnot(None),
-        ).first()
     else:
         existing_signup = Signup.query.filter_by(
             item_id=element_id, family_member_id=family_member_id, cancelled_at=None
-        ).first()
-        # Also check for cancelled signup (to reactivate it)
-        cancelled_signup = Signup.query.filter(
-            Signup.item_id == element_id,
-            Signup.family_member_id == family_member_id,
-            Signup.cancelled_at.isnot(None),
         ).first()
 
     if existing_signup:
@@ -1197,33 +1251,6 @@ def create_signup(uuid):
             f"{family_member.display_name} is already signed up for this element.",
             "error",
         )
-        return redirect(url_for("better_signups.view_list", uuid=uuid))
-
-    # If there's a cancelled signup, reactivate it instead of creating a new one
-    if cancelled_signup:
-        cancelled_signup.cancelled_at = None
-        db.session.commit()
-
-        # Log the action (reactivation)
-        element_desc = ""
-        if element_type == "event":
-            if element.event_type == "date":
-                element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
-            else:
-                element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
-        else:
-            element_desc = f"item: {element.name}"
-
-        log_entry = LogEntry(
-            project="better_signups",
-            category="Create Signup",
-            actor_id=current_user.id,
-            description=f"Reactivated signup for {family_member.display_name} on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
-        )
-        db.session.add(log_entry)
-        db.session.commit()
-
-        flash(f"Successfully signed up {family_member.display_name}!", "success")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     # Create a new signup
@@ -1238,9 +1265,8 @@ def create_signup(uuid):
         signup.item_id = element_id
 
     db.session.add(signup)
-    db.session.commit()
-
-    # Log the action
+    
+    # Prepare logging info before commit
     element_desc = ""
     if element_type == "event":
         if element.event_type == "date":
@@ -1257,7 +1283,43 @@ def create_signup(uuid):
         description=f"Signed up {family_member.display_name} for list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
     )
     db.session.add(log_entry)
-    db.session.commit()
+
+    # Race condition fix: Re-check spots by counting active signups directly from database
+    # This ensures we have the latest count including any signups created by other users
+    if element_type == "event":
+        active_count = (
+            db.session.query(Signup)
+            .filter_by(event_id=element_id, cancelled_at=None)
+            .count()
+        )
+    else:
+        active_count = (
+            db.session.query(Signup)
+            .filter_by(item_id=element_id, cancelled_at=None)
+            .count()
+        )
+    
+    # Note: active_count includes the signup we just added (it's in the session but not committed)
+    # So we need to check if (active_count) >= spots_available (not >)
+    if active_count >= element.spots_available:
+        db.session.rollback()
+        flash("No spots available for this element. It may have just filled up.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Commit both signup and log entry together
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash(
+            f"{family_member.display_name} is already signed up for this element.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while creating your signup. Please try again.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     flash(f"Successfully signed up {family_member.display_name}!", "success")
     return redirect(url_for("better_signups.view_list", uuid=uuid))
@@ -1309,13 +1371,12 @@ def cancel_signup(uuid, signup_id):
 
     # Cancel the signup
     signup.cancel()
-    db.session.commit()
 
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
 
-    # Log the action
+    # Log the action (combine with cancel commit)
     cancelled_by = (
         "themselves"
         if signup.user_id == current_user.id
@@ -1328,7 +1389,14 @@ def cancel_signup(uuid, signup_id):
         description=f"Cancelled signup for {family_member_name} (cancelled by {cancelled_by}) on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
     )
     db.session.add(log_entry)
-    db.session.commit()
+
+    # Commit both cancel and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while cancelling your signup. Please try again.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     flash(f"Successfully cancelled signup for {family_member_name}.", "success")
 
@@ -1386,14 +1454,13 @@ def remove_signup(uuid, signup_id):
 
     # Cancel the signup (reuse cancel method)
     signup.cancel()
-    db.session.commit()
 
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
     user_name = signup.user.full_name if signup.user else "Unknown"
 
-    # Log the action
+    # Log the action (combine with cancel commit)
     log_entry = LogEntry(
         project="better_signups",
         category="Remove Signup",
@@ -1401,7 +1468,14 @@ def remove_signup(uuid, signup_id):
         description=f"Editor removed signup for {family_member_name} ({user_name}) on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
     )
     db.session.add(log_entry)
-    db.session.commit()
+
+    # Commit both cancel and log together
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while removing the signup. Please try again.", "error")
+        return redirect(url_for("better_signups.edit_list", uuid=uuid))
 
     flash(
         f"Successfully removed signup for {family_member_name}.",
