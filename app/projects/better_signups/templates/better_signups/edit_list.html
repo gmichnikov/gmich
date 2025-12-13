@@ -214,7 +214,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2 style="font-size: 1.25rem; margin: 0;">Events</h2>
                 <div style="display: flex; gap: 0.5rem;">
-                    <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn better-signups-btn-secondary">
+                    <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                         Sign up!
                     </a>
                     <a href="{{ url_for('better_signups.add_event', uuid=list.uuid) }}" class="better-signups-btn">
@@ -344,7 +344,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2 style="font-size: 1.25rem; margin: 0;">Items</h2>
                 <div style="display: flex; gap: 0.5rem;">
-                    <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn better-signups-btn-secondary">
+                    <a href="{{ url_for('better_signups.view_list', uuid=list.uuid) }}" class="better-signups-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                         Sign up!
                     </a>
                     <a href="{{ url_for('better_signups.add_item', uuid=list.uuid) }}" class="better-signups-btn">

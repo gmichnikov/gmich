@@ -16,9 +16,18 @@
         <div class="auth-header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <h1 class="auth-title">{{ list.name }}</h1>
-                {% if list.is_editor(current_user) %}
-                <a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" class="auth-link">← Manage List</a>
-                {% endif %}
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    {% if list.is_editor(current_user) %}
+                    <a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" class="auth-link">← Manage List</a>
+                    {% endif %}
+                    <button type="button" 
+                            onclick="copyListLink()" 
+                            class="better-signups-btn better-signups-btn-secondary"
+                            style="font-size: 0.875rem; padding: 0.375rem 0.75rem;"
+                            title="Copy list link">
+                        📋 Copy Link
+                    </button>
+                </div>
             </div>
             {% if list.description %}
             <p class="auth-subtitle">{{ list.description }}</p>
@@ -40,7 +49,7 @@
             {% if list.events %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for event in list.events %}
-                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                <div class="better-signups-element-card {% if 'event_' ~ event.id|string in user_signed_up_element_ids %}better-signups-element-user-signed-up{% endif %}" style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <div style="font-weight: bold; margin-bottom: 0.5rem;">
@@ -97,7 +106,7 @@
                                 <div id="event-signups-{{ event.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in event.get_active_signups() %}
-                                    <li class="better-signups-signup-item">
+                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}">
                                         <div class="better-signups-signup-actions">
                                             <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
@@ -148,16 +157,26 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <input type="hidden" name="element_type" value="event">
                                     <input type="hidden" name="element_id" value="{{ event.id }}">
-                                    <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                    {% if available_member_ids|length == 1 %}
+                                        {# Quick signup: skip dropdown when only one option #}
                                         {% for member in family_members %}
                                             {% if member.id in available_member_ids %}
-                                            <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
-                                                {{ member.display_name }}{% if member.is_self %} (You){% endif %}
-                                            </option>
+                                            <input type="hidden" name="family_member_id" value="{{ member.id }}">
                                             {% endif %}
                                         {% endfor %}
-                                    </select>
-                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                    {% else %}
+                                        <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                            {% for member in family_members %}
+                                                {% if member.id in available_member_ids %}
+                                                <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                    {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                                </option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                    {% endif %}
                                 </form>
                                 {% else %}
                                 <p style="color: #666; font-size: 0.875rem; margin: 0;">
@@ -195,7 +214,7 @@
             {% if list.items %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for item in list.items %}
-                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                <div class="better-signups-element-card {% if 'item_' ~ item.id|string in user_signed_up_element_ids %}better-signups-element-user-signed-up{% endif %}" style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <div style="font-weight: bold; margin-bottom: 0.5rem;">
@@ -223,7 +242,7 @@
                                 <div id="item-signups-{{ item.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in item.get_active_signups() %}
-                                    <li class="better-signups-signup-item">
+                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}">
                                         <div class="better-signups-signup-actions">
                                             <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
@@ -265,16 +284,26 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <input type="hidden" name="element_type" value="item">
                                     <input type="hidden" name="element_id" value="{{ item.id }}">
-                                    <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                    {% if available_member_ids|length == 1 %}
+                                        {# Quick signup: skip dropdown when only one option #}
                                         {% for member in family_members %}
                                             {% if member.id in available_member_ids %}
-                                            <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
-                                                {{ member.display_name }}{% if member.is_self %} (You){% endif %}
-                                            </option>
+                                            <input type="hidden" name="family_member_id" value="{{ member.id }}">
                                             {% endif %}
                                         {% endfor %}
-                                    </select>
-                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                    {% else %}
+                                        <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                            {% for member in family_members %}
+                                                {% if member.id in available_member_ids %}
+                                                <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                    {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                                </option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
+                                    {% endif %}
                                 </form>
                                 {% else %}
                                 <p style="color: #666; font-size: 0.875rem; margin: 0;">
@@ -328,6 +357,23 @@ function toggleSignups(sectionId, button) {
         section.style.display = 'block';
         button.textContent = 'Hide';
     }
+}
+
+function copyListLink() {
+    const url = '{{ url_for("better_signups.view_list", uuid=list.uuid, _external=True) }}';
+    navigator.clipboard.writeText(url).then(function() {
+        // Show temporary feedback
+        const button = document.querySelector('button[onclick="copyListLink()"]');
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Copied!';
+        button.style.backgroundColor = '#28a745';
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.style.backgroundColor = '';
+        }, 2000);
+    }).catch(function(err) {
+        alert('Failed to copy link. Please copy manually: ' + url);
+    });
 }
 </script>
 {% endblock %}

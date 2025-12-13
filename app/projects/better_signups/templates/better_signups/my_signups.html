@@ -20,17 +20,44 @@
 
         {% if signups %}
         <div style="margin-top: 2rem;">
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for signup in signups %}
+            {# Filter input #}
+            <div style="margin-bottom: 1rem;">
+                <input type="text" 
+                       id="signup-filter" 
+                       placeholder="Filter by list name, description, or item/event name..." 
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;"
+                       onkeyup="filterSignups()">
+            </div>
+            
+            {# Group signups by list #}
+            {% set grouped_signups = {} %}
+            {% for signup in signups %}
+                {% set list_name = signup.event.list.name if signup.event else signup.item.list.name %}
+                {% if list_name not in grouped_signups %}
+                    {% set _ = grouped_signups.update({list_name: []}) %}
+                {% endif %}
+                {% set _ = grouped_signups[list_name].append(signup) %}
+            {% endfor %}
+            
+            <div id="signups-container">
+                {% for list_name in grouped_signups.keys()|sort %}
+                {% set first_signup = grouped_signups[list_name][0] %}
+                {% set list_uuid = first_signup.event.list.uuid if first_signup.event else first_signup.item.list.uuid %}
+                <div class="signup-list-group" data-list-name="{{ list_name|lower }}" data-list-description="{{ (first_signup.event.list.description if first_signup.event else first_signup.item.list.description)|default('')|lower }}">
+                    <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #ddd;">
+                        <a href="{{ url_for('better_signups.view_list', uuid=list_uuid) }}" style="color: #007bff; text-decoration: none;">{{ list_name }}</a>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                        {% for signup in grouped_signups[list_name] %}
+                        {% set signup_list_name = signup.event.list.name if signup.event else signup.item.list.name %}
+                        <div class="signup-item" 
+                             data-list-name="{{ signup_list_name|lower }}"
+                             data-list-description="{{ (signup.event.list.description if signup.event else signup.item.list.description)|default('')|lower }}"
+                             data-element-name="{% if signup.event %}{% if signup.event.event_type == 'date' %}{{ signup.event.event_date.strftime('%B %d, %Y')|lower }}{% else %}{{ signup.event.event_datetime.strftime('%B %d, %Y at %I:%M %p')|lower }}{% endif %}{% else %}{{ signup.item.name|lower }}{% endif %}"
+                             data-element-description="{% if signup.event %}{{ (signup.event.description or '')|lower }}{% else %}{{ (signup.item.description or '')|lower }}{% endif %}">
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
                         <div style="flex: 1; min-width: 250px;">
-                            <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                                <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" style="color: #007bff; text-decoration: none;">
-                                    {{ signup.event.list.name if signup.event else signup.item.list.name }}
-                                </a>
-                            </div>
-                            
                             <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.5rem;">
                                 {% if signup.event %}
                                     <div style="font-weight: bold; color: #333; margin-bottom: 0.25rem;">
@@ -95,10 +122,6 @@
                         </div>
                         
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
-                            <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" 
-                               style="background-color: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block;">
-                                View List
-                            </a>
                             {% if signup.google_calendar_url %}
                             <a href="{{ signup.google_calendar_url }}" 
                                target="_blank" 
@@ -143,6 +166,10 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                        {% endfor %}
+                    </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -161,5 +188,55 @@
     </div>
 </div>
 
+{% block scripts %}
+<script>
+function filterSignups() {
+    const filterValue = document.getElementById('signup-filter').value.toLowerCase().trim();
+    const listGroups = document.querySelectorAll('.signup-list-group');
+    
+    if (filterValue === '') {
+        // Show all
+        listGroups.forEach(group => {
+            group.style.display = '';
+            group.querySelectorAll('.signup-item').forEach(item => {
+                item.style.display = '';
+            });
+        });
+        return;
+    }
+    
+    // For each list group, filter its items and show/hide the group accordingly
+    listGroups.forEach(group => {
+        const items = group.querySelectorAll('.signup-item');
+        let hasVisibleItems = false;
+        
+        items.forEach(item => {
+            const listName = (item.getAttribute('data-list-name') || '').toLowerCase();
+            const listDescription = (item.getAttribute('data-list-description') || '').toLowerCase();
+            const elementName = (item.getAttribute('data-element-name') || '').toLowerCase();
+            const elementDescription = (item.getAttribute('data-element-description') || '').toLowerCase();
+            
+            const matches = listName.includes(filterValue) || 
+                           listDescription.includes(filterValue) || 
+                           elementName.includes(filterValue) ||
+                           elementDescription.includes(filterValue);
+            
+            if (matches) {
+                item.style.display = '';
+                hasVisibleItems = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Show the group only if it has at least one visible item
+        group.style.display = hasVisibleItems ? '' : 'none';
+    });
+}
+</script>
 {% endblock %}
+
+{% endblock %}
+
+
 

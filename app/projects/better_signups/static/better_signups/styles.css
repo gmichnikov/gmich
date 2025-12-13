@@ -63,3 +63,16 @@
 .better-signups-signup-item {
   margin-bottom: 0.25rem;
 }
+
+/* Highlight elements that the current user has signed up for */
+.better-signups-element-user-signed-up {
+  border: 2px solid #28a745 !important;
+  background-color: #f0fff4 !important;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+}
+
+/* Highlight signups that belong to the current user's family members */
+.better-signups-signup-user-family {
+  font-weight: 600;
+  color: #155724;
+}

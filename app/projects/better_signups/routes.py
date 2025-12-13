@@ -1137,6 +1137,12 @@ def view_list(uuid):
     # Pre-compute available family members for each element to avoid template complexity
     # This will be a dict: {element_id: [available_family_member_ids]}
     available_family_members_by_element = {}
+    
+    # Track which elements the current user has signed up for (any family member)
+    user_signed_up_element_ids = set()
+    
+    # Track which signup IDs belong to the current user's family members
+    user_family_signup_ids = set()
 
     # For events
     for event in signup_list.events:
@@ -1150,6 +1156,15 @@ def view_list(uuid):
             for member in family_members
             if member.id not in signed_up_family_member_ids
         ]
+        
+        # Check if user has any family member signed up for this event
+        if signed_up_family_member_ids:
+            user_signed_up_element_ids.add(f"event_{event.id}")
+        
+        # Track signup IDs for this user's family members
+        for signup in event.get_active_signups():
+            if signup.user_id == current_user.id:
+                user_family_signup_ids.add(signup.id)
 
     # For items
     for item in signup_list.items:
@@ -1163,6 +1178,15 @@ def view_list(uuid):
             for member in family_members
             if member.id not in signed_up_family_member_ids
         ]
+        
+        # Check if user has any family member signed up for this item
+        if signed_up_family_member_ids:
+            user_signed_up_element_ids.add(f"item_{item.id}")
+        
+        # Track signup IDs for this user's family members
+        for signup in item.get_active_signups():
+            if signup.user_id == current_user.id:
+                user_family_signup_ids.add(signup.id)
 
     # Generate Google Calendar URLs for all events (date and datetime)
     # We'll attach URLs to events so the template can use them
@@ -1174,6 +1198,8 @@ def view_list(uuid):
         list=signup_list,
         family_members=family_members,
         available_family_members_by_element=available_family_members_by_element,
+        user_signed_up_element_ids=user_signed_up_element_ids,
+        user_family_signup_ids=user_family_signup_ids,
     )
 
 

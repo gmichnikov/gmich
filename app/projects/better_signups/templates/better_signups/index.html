@@ -78,10 +78,42 @@
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                                <button type="button" 
+                                        onclick="copyListLink('{{ url_for('better_signups.view_list', uuid=list.uuid, _external=True) }}', this)"
+                                        style="background: none; border: none; cursor: pointer; padding: 0.25rem; color: #666; font-size: 0.875rem;"
+                                        title="Copy list link">
+                                    📋
+                                </button>
+                            </div>
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
                                 Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
                                 Created: {{ list.created_at.strftime('%B %d, %Y') }}
+                            </div>
+                            {% if list.list_type == 'events' %}
+                                {% set element_count = list.events|length %}
+                                {% set elements_with_spots_list = [] %}
+                                {% for event in list.events %}
+                                    {% if event.get_spots_remaining() > 0 %}
+                                        {% set _ = elements_with_spots_list.append(1) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set elements_with_spots = elements_with_spots_list|length %}
+                                {% set elements_full = element_count - elements_with_spots %}
+                            {% else %}
+                                {% set element_count = list.items|length %}
+                                {% set elements_with_spots_list = [] %}
+                                {% for item in list.items %}
+                                    {% if item.get_spots_remaining() > 0 %}
+                                        {% set _ = elements_with_spots_list.append(1) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set elements_with_spots = elements_with_spots_list|length %}
+                                {% set elements_full = element_count - elements_with_spots %}
+                            {% endif %}
+                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
+                                {{ element_count }} {{ list.list_type }}: {{ elements_with_spots }} with spots available, {{ elements_full }} full
                             </div>
                             {% if list.description %}
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
@@ -104,11 +136,43 @@
                 <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
-                            <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <strong><a href="{{ url_for('better_signups.edit_list', uuid=list.uuid) }}" style="color: #007bff; text-decoration: none;">{{ list.name }}</a></strong>
+                                <button type="button" 
+                                        onclick="copyListLink('{{ url_for('better_signups.view_list', uuid=list.uuid, _external=True) }}', this)"
+                                        style="background: none; border: none; cursor: pointer; padding: 0.25rem; color: #666; font-size: 0.875rem;"
+                                        title="Copy list link">
+                                    📋
+                                </button>
+                            </div>
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
                                 Type: {{ 'Events' if list.list_type == 'events' else 'Items' }} | 
                                 Created by: {{ list.creator.full_name }} | 
                                 Created: {{ list.created_at.strftime('%B %d, %Y') }}
+                            </div>
+                            {% if list.list_type == 'events' %}
+                                {% set element_count = list.events|length %}
+                                {% set elements_with_spots_list = [] %}
+                                {% for event in list.events %}
+                                    {% if event.get_spots_remaining() > 0 %}
+                                        {% set _ = elements_with_spots_list.append(1) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set elements_with_spots = elements_with_spots_list|length %}
+                                {% set elements_full = element_count - elements_with_spots %}
+                            {% else %}
+                                {% set element_count = list.items|length %}
+                                {% set elements_with_spots_list = [] %}
+                                {% for item in list.items %}
+                                    {% if item.get_spots_remaining() > 0 %}
+                                        {% set _ = elements_with_spots_list.append(1) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set elements_with_spots = elements_with_spots_list|length %}
+                                {% set elements_full = element_count - elements_with_spots %}
+                            {% endif %}
+                            <div style="color: #666; font-size: 0.875rem; margin-top: 0.25rem;">
+                                {{ element_count }} {{ list.list_type }}: {{ elements_with_spots }} with spots available, {{ elements_full }} full
                             </div>
                             {% if list.description %}
                             <div style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
@@ -128,5 +192,24 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script>
+function copyListLink(url, button) {
+    navigator.clipboard.writeText(url).then(function() {
+        // Show temporary feedback
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓';
+        button.style.color = '#28a745';
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.style.color = '';
+        }, 2000);
+    }).catch(function(err) {
+        alert('Failed to copy link. Please copy manually: ' + url);
+    });
+}
+</script>
+{% endblock %}
 {% endblock %}
 
