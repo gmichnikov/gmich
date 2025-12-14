@@ -313,8 +313,7 @@ This is a PRD for a better version of signup genius. The goal is to describe the
 
 - [ ] Implement lottery system
 - [ ] Implement waitlists
-- [ ] Implement swap functionality (see `swap_requests_prd.md`)
+- [x] Implement swap functionality (see `swap_requests_prd.md`)
 - [x] Add Google Calendar integration (button added for date and datetime events)
 - [ ] Add per-list signup limits
 - [ ] Add email notifications
-
