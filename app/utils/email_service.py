@@ -443,3 +443,152 @@ gregmichnikov.com
         # Log the error but don't crash - swap request creation should still succeed
         logger.error(f"Failed to send swap request email to {recipient_user.email}: {e}")
         return None
+
+
+def send_waitlist_spot_offered_email(user, family_member, element, list_obj, deadline):
+    """
+    Send email notification when a spot is offered from the waitlist.
+    
+    Args:
+        user: User model instance (the person receiving the email)
+        family_member: FamilyMember model instance (who the spot is for)
+        element: Event or Item model instance (the element with the available spot)
+        list_obj: SignupList model instance (the list this is for)
+        deadline: datetime object (when the offer expires, typically created_at + 24 hours)
+    
+    Returns:
+        requests.Response object if successful, None if error (logged)
+    
+    Note: Must be called within a Flask application context.
+    """
+    from app.projects.better_signups.models import Event
+    
+    # Determine element description
+    if isinstance(element, Event):
+        if element.event_type == "date":
+            element_desc = element.event_date.strftime('%B %d, %Y')
+            element_type_str = "event"
+        else:
+            element_desc = f"{element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+            if element.timezone:
+                element_desc += f" ({element.timezone})"
+            element_type_str = "event"
+        
+        # Add location if available
+        if element.location:
+            element_desc += f" - {element.location}"
+    else:
+        # It's an Item
+        element_desc = element.name
+        element_type_str = "item"
+        if element.description:
+            element_desc += f" - {element.description}"
+    
+    # Generate list URL
+    list_url = url_for('better_signups.view_list', uuid=list_obj.uuid, _external=True)
+    
+    # Format deadline
+    deadline_str = deadline.strftime('%B %d, %Y at %I:%M %p UTC')
+    
+    subject = f"A Spot is Available! {list_obj.name}"
+    
+    text_content = f"""Hello {user.full_name},
+
+Great news! You've been offered a spot from the waitlist!
+
+List: {list_obj.name}
+{element_type_str.capitalize()}: {element_desc}
+For: {family_member.display_name}
+
+⏰ You have until {deadline_str} to confirm your spot (24 hours).
+
+To confirm your spot:
+1. Click the link below to view the list
+2. Log in if needed
+3. Find the {element_type_str} in the list
+4. Click the "Confirm Your Spot" button
+
+{list_url}
+
+Important:
+- You must confirm within 24 hours or the spot will be offered to the next person
+- The spot will show as "Pending confirmation" until you confirm it
+- Once confirmed, it's yours!
+
+If you no longer want this spot, you can click "Decline" on the list page to pass it to the next person.
+
+Best regards,
+gregmichnikov.com
+"""
+    
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .highlight-box {{ background-color: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #28a745; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .warning-box {{ background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+        .btn {{ display: inline-block; padding: 15px 30px; background-color: #28a745; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; margin: 20px 0; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="color: #28a745;">🎉 A Spot is Available!</h2>
+        <p>Hello {user.full_name},</p>
+        <p><strong>Great news!</strong> You've been offered a spot from the waitlist!</p>
+        
+        <div class="highlight-box">
+            <p style="margin: 0 0 10px 0;"><strong>List:</strong> {list_obj.name}</p>
+            <p style="margin: 0 0 10px 0;"><strong>{element_type_str.capitalize()}:</strong> {element_desc}</p>
+            <p style="margin: 0;"><strong>For:</strong> {family_member.display_name}</p>
+        </div>
+        
+        <div class="warning-box">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">⏰ You have until {deadline_str} to confirm</p>
+            <p style="margin: 0;">That's <strong>24 hours</strong> from now!</p>
+        </div>
+        
+        <h3>How to Confirm Your Spot:</h3>
+        <ol>
+            <li>Click the button below to view the list</li>
+            <li>Log in if needed</li>
+            <li>Find the {element_type_str} in the list (it will have a "Pending confirmation" label)</li>
+            <li>Click the green "Confirm Your Spot" button</li>
+        </ol>
+        
+        <div style="text-align: center;">
+            <a href="{list_url}" class="btn">View List and Confirm Spot</a>
+        </div>
+        
+        <div class="info-box">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">Important Information:</p>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li>You must confirm within 24 hours or the spot will go to the next person</li>
+                <li>The spot shows as "Pending confirmation" until you confirm it</li>
+                <li>Once confirmed, the spot is yours!</li>
+                <li>Don't want it? Click "Decline" to pass it to the next person</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    
+    try:
+        return send_email(
+            to_email=user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content
+        )
+    except Exception as e:
+        # Log the error but don't crash - cascade should still succeed
+        logger.error(f"Failed to send waitlist spot offered email to {user.email}: {e}")
+        return None

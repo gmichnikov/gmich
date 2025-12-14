@@ -181,6 +181,51 @@ def offer_spot_to_next_in_waitlist(element_type, element_id):
         return None
 
 
+def send_waitlist_offer_email(cascade_result):
+    """
+    Send email notification when someone is offered a spot from the waitlist.
+    
+    Args:
+        cascade_result: dict returned from offer_spot_to_next_in_waitlist()
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        from app.utils.email_service import send_waitlist_spot_offered_email
+        from datetime import timedelta
+        
+        signup = cascade_result['signup']
+        user = cascade_result['user']
+        family_member = cascade_result['family_member']
+        element = cascade_result['element']
+        
+        # Get the list
+        if signup.event_id:
+            list_obj = element.list
+        else:
+            list_obj = element.list
+        
+        # Calculate deadline (24 hours from creation)
+        deadline = signup.created_at + timedelta(hours=24)
+        
+        # Send email
+        send_waitlist_spot_offered_email(
+            user=user,
+            family_member=family_member,
+            element=element,
+            list_obj=list_obj,
+            deadline=deadline
+        )
+        
+        logger.info(f"Sent waitlist offer email to {user.email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send waitlist offer email: {e}")
+        return False
+
+
 # ============================================================================
 # Routes
 # ============================================================================
@@ -1787,11 +1832,12 @@ def cancel_signup(uuid, signup_id):
         cascade_result = offer_spot_to_next_in_waitlist(element_type_for_cascade, element_id_for_cascade)
         if cascade_result:
             # Someone was offered the spot
-            # TODO Phase 8: Send email notification here
             logger.info(
                 f"Cascade successful: offered spot to {cascade_result['family_member'].display_name} "
                 f"(user {cascade_result['user'].id})"
             )
+            # Send email notification
+            send_waitlist_offer_email(cascade_result)
 
     # Check if we should redirect back to my-signups page
     next_url = request.form.get("next") or request.args.get("next")
@@ -2273,11 +2319,12 @@ def decline_signup(uuid, signup_id):
         cascade_result = offer_spot_to_next_in_waitlist(element_type, element_id)
         if cascade_result:
             # Someone else was offered the spot
-            # TODO Phase 8: Send email notification here
             logger.info(
                 f"Cascade after decline: offered spot to {cascade_result['family_member'].display_name} "
                 f"(user {cascade_result['user'].id})"
             )
+            # Send email notification
+            send_waitlist_offer_email(cascade_result)
             flash(f"The spot has been offered to the next person on the waitlist.", "info")
 
     return redirect(url_for("better_signups.view_list", uuid=uuid))

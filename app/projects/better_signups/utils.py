@@ -339,7 +339,12 @@ def process_expired_pending_confirmations():
                         f"Cascade after expiration: offered spot to {next_family_member.display_name} "
                         f"(user {cascade_result['user'].id})"
                     )
-                    # TODO Phase 8: Send email notification here
+                    # Send email notification
+                    try:
+                        from app.projects.better_signups.routes import send_waitlist_offer_email
+                        send_waitlist_offer_email(cascade_result)
+                    except Exception as email_error:
+                        logger.error(f"Failed to send waitlist offer email: {email_error}")
                 else:
                     logger.info(f"Waitlist empty for {element_type} {element_id}, spot now available to all")
         

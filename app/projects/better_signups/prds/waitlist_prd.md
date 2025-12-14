@@ -465,7 +465,7 @@ When a user cancels a confirmed signup:
 
 ### Phase 8: Email Notifications
 
-- [ ] Create email template for "Spot Offered" notification
+- [x] Create email template for "Spot Offered" notification
   - Subject: "A spot is available! [List Name] - [Element Name]"
   - Body:
     - "Great news! You've been offered a spot from the waitlist."
@@ -473,8 +473,8 @@ When a user cancels a confirmed signup:
     - Deadline: "You have until [date/time] to confirm"
     - Clear instructions: "Click the link below, log in, and click 'Confirm Your Spot'"
     - Link to list view: `/list/<uuid>`
-- [ ] Integrate email sending into cascade helper (or trigger after cascade)
-- [ ] Send email when:
+- [x] Integrate email sending into cascade helper (or trigger after cascade)
+- [x] Send email when:
   - Spot offered from waitlist (cancellation flow)
   - Spot offered after decline
   - Spot offered after expiration
