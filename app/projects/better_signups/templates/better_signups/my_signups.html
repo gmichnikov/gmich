@@ -132,12 +132,19 @@
                             {% endif %}
                             {% if signup.pending_swap_request %}
                             <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-end;">
-                                <div style="background-color: #ffc107; color: #333; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                <div style="background-color: #ffc107; color: #333; padding: 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-align: right; max-width: 200px;">
                                     🔄 Swap Requested
+                                    <div style="font-weight: normal; margin-top: 0.25rem; font-size: 0.7rem;">
+                                        Swapping to:
+                                        {% for target_desc in signup.swap_target_descriptions %}
+                                            <div>• {{ target_desc }}</div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                                 <form method="POST" 
                                       action="{{ url_for('better_signups.cancel_swap_request', swap_request_id=signup.pending_swap_request.id) }}" 
-                                      style="margin: 0;">
+                                      style="margin: 0;"
+                                      onsubmit="return confirm('Cancel this swap request? All swap links will be invalidated.');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit" 
                                             style="background-color: #6c757d; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">

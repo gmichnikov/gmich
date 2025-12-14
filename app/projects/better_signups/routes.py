@@ -1706,6 +1706,26 @@ def my_signups():
     for signup in signups:
         signup.pending_swap_request = swap_requests_by_signup.get(signup.id)
         
+        # If there's a pending swap request, get target element descriptions
+        if signup.pending_swap_request:
+            signup.swap_target_descriptions = []
+            for target in signup.pending_swap_request.targets:
+                if target.target_element_type == "event":
+                    event = Event.query.get(target.target_element_id)
+                    if event:
+                        if event.event_type == "date":
+                            signup.swap_target_descriptions.append(event.event_date.strftime('%b %d, %Y'))
+                        else:
+                            signup.swap_target_descriptions.append(event.event_datetime.strftime('%b %d, %I:%M %p'))
+                    else:
+                        signup.swap_target_descriptions.append("[Deleted]")
+                else:
+                    item = Item.query.get(target.target_element_id)
+                    if item:
+                        signup.swap_target_descriptions.append(item.name)
+                    else:
+                        signup.swap_target_descriptions.append("[Deleted]")
+        
         # Check if there are any eligible swap targets for this signup
         # Use helper function instead of inline logic
         signup.has_eligible_swap_targets = check_has_eligible_swap_targets(signup)
