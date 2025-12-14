@@ -432,6 +432,20 @@ def delete_list(uuid):
     name = signup_list.name
     uuid = signup_list.uuid
 
+    # Cancel all pending swap requests for this list (automatic cleanup)
+    pending_swap_requests = SwapRequest.query.filter_by(
+        list_id=signup_list.id,
+        status="pending"
+    ).all()
+    
+    for swap_req in pending_swap_requests:
+        swap_req.status = "cancelled"
+        # Invalidate all associated tokens
+        for token in swap_req.tokens:
+            if not token.is_used:
+                token.is_used = True
+                token.used_at = datetime.utcnow()
+
     # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
         project="better_signups",
@@ -889,6 +903,40 @@ def delete_event(uuid, event_id):
         )
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
+    # Handle swap request cleanup when target element is deleted
+    # Find all pending swap requests that target this event
+    pending_swap_requests = SwapRequest.query.filter_by(
+        list_id=signup_list.id,
+        status="pending"
+    ).all()
+    
+    for swap_req in pending_swap_requests:
+        # Find and remove any targets for this event
+        targets_to_remove = [t for t in swap_req.targets if t.target_element_type == "event" and t.target_element_id == event.id]
+        
+        for target in targets_to_remove:
+            # Invalidate all tokens associated with this target element
+            tokens_for_target = [t for t in swap_req.tokens if t.target_element_id == event.id and t.target_element_type == "event"]
+            for token in tokens_for_target:
+                if not token.is_used:
+                    token.is_used = True
+                    token.used_at = datetime.utcnow()
+            
+            # Remove the target
+            db.session.delete(target)
+        
+        # If swap request has no remaining targets, cancel it
+        if targets_to_remove:
+            db.session.flush()  # Flush deletions
+            remaining_targets = SwapRequestTarget.query.filter_by(swap_request_id=swap_req.id).count()
+            if remaining_targets == 0:
+                swap_req.status = "cancelled"
+                # Invalidate any remaining tokens
+                for token in swap_req.tokens:
+                    if not token.is_used:
+                        token.is_used = True
+                        token.used_at = datetime.utcnow()
+
     # Get event details before deletion for logging
     event_details = []
     if event.event_type == "date":
@@ -1067,6 +1115,40 @@ def delete_item(uuid, item_id):
             "error",
         )
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
+
+    # Handle swap request cleanup when target element is deleted
+    # Find all pending swap requests that target this item
+    pending_swap_requests = SwapRequest.query.filter_by(
+        list_id=signup_list.id,
+        status="pending"
+    ).all()
+    
+    for swap_req in pending_swap_requests:
+        # Find and remove any targets for this item
+        targets_to_remove = [t for t in swap_req.targets if t.target_element_type == "item" and t.target_element_id == item.id]
+        
+        for target in targets_to_remove:
+            # Invalidate all tokens associated with this target element
+            tokens_for_target = [t for t in swap_req.tokens if t.target_element_id == item.id and t.target_element_type == "item"]
+            for token in tokens_for_target:
+                if not token.is_used:
+                    token.is_used = True
+                    token.used_at = datetime.utcnow()
+            
+            # Remove the target
+            db.session.delete(target)
+        
+        # If swap request has no remaining targets, cancel it
+        if targets_to_remove:
+            db.session.flush()  # Flush deletions
+            remaining_targets = SwapRequestTarget.query.filter_by(swap_request_id=swap_req.id).count()
+            if remaining_targets == 0:
+                swap_req.status = "cancelled"
+                # Invalidate any remaining tokens
+                for token in swap_req.tokens:
+                    if not token.is_used:
+                        token.is_used = True
+                        token.used_at = datetime.utcnow()
 
     item_name = item.name
 
@@ -1422,6 +1504,20 @@ def cancel_signup(uuid, signup_id):
         # item was already queried above
         element_desc = f"item: {item.name}"
 
+    # Cancel any pending swap requests for this signup (automatic cleanup)
+    pending_swap_requests = SwapRequest.query.filter_by(
+        requestor_signup_id=signup.id,
+        status="pending"
+    ).all()
+    
+    for swap_req in pending_swap_requests:
+        swap_req.status = "cancelled"
+        # Invalidate all associated tokens
+        for token in swap_req.tokens:
+            if not token.is_used:
+                token.is_used = True
+                token.used_at = datetime.utcnow()
+
     # Cancel the signup (delete it)
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
@@ -1499,6 +1595,20 @@ def remove_signup(uuid, signup_id):
     elif signup.item_id:
         # item was already queried above
         element_desc = f"item: {item.name}"
+
+    # Cancel any pending swap requests for this signup (automatic cleanup)
+    pending_swap_requests = SwapRequest.query.filter_by(
+        requestor_signup_id=signup.id,
+        status="pending"
+    ).all()
+    
+    for swap_req in pending_swap_requests:
+        swap_req.status = "cancelled"
+        # Invalidate all associated tokens
+        for token in swap_req.tokens:
+            if not token.is_used:
+                token.is_used = True
+                token.used_at = datetime.utcnow()
 
     # Cancel the signup (reuse cancel method - delete it)
     family_member_name = (
@@ -1990,9 +2100,45 @@ def create_swap_request(signup_id):
 @bp.route("/swap/<int:swap_request_id>/cancel", methods=["POST"])
 @login_required
 def cancel_swap_request(swap_request_id):
-    """Cancel a swap request (placeholder)"""
-    # TODO: Phase 12e - Implement swap request cancellation
-    flash("Swap cancellation feature coming soon!", "info")
+    """Cancel a swap request"""
+    swap_request = SwapRequest.query.get_or_404(swap_request_id)
+    
+    # Verify swap request belongs to current user
+    if swap_request.requestor_signup and swap_request.requestor_signup.user_id != current_user.id:
+        flash("You can only cancel your own swap requests.", "error")
+        return redirect(url_for("better_signups.my_signups"))
+    
+    # Check if already completed or cancelled
+    if swap_request.status != "pending":
+        flash(f"This swap request is already {swap_request.status}.", "info")
+        return redirect(url_for("better_signups.my_signups"))
+    
+    # Mark as cancelled
+    swap_request.status = "cancelled"
+    
+    # Invalidate all associated tokens
+    for token in swap_request.tokens:
+        if not token.is_used:
+            token.is_used = True
+            token.used_at = datetime.utcnow()
+    
+    # Log the cancellation
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Cancel Swap Request",
+        actor_id=current_user.id,
+        description=f"Cancelled swap request (ID: {swap_request_id}) in list '{swap_request.list.name}'",
+    )
+    db.session.add(log_entry)
+    
+    try:
+        db.session.commit()
+        flash("Swap request cancelled successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error cancelling swap request: {e}")
+        flash("An error occurred while cancelling the swap request.", "error")
+    
     return redirect(url_for("better_signups.my_signups"))
 
 

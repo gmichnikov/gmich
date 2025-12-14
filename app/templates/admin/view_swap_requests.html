@@ -43,10 +43,18 @@
                             </div>
 
                             <div style="margin-bottom: 0.75rem;">
-                                <strong>Requestor:</strong> {{ sr.requestor_family_member.display_name }}
-                                <span style="color: #666;">
-                                    ({{ sr.requestor_signup.user.full_name }})
-                                </span>
+                                <strong>Requestor:</strong> 
+                                {% if sr.requestor_signup %}
+                                    {{ sr.requestor_family_member.display_name }}
+                                    <span style="color: #666;">
+                                        ({{ sr.requestor_signup.user.full_name }})
+                                    </span>
+                                {% else %}
+                                    {{ sr.requestor_family_member.display_name }}
+                                    <span style="color: #999; font-style: italic;">
+                                        (signup deleted)
+                                    </span>
+                                {% endif %}
                             </div>
 
                             <div style="margin-bottom: 0.75rem;">

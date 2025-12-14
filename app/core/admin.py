@@ -243,21 +243,33 @@ def view_swap_requests():
     for sr in swap_requests:
         # Get requestor's element description
         requestor_signup = sr.requestor_signup
-        if requestor_signup.event_id:
-            from app.projects.better_signups.models import Event
+        
+        # If signup still exists (might be None if deleted/completed)
+        if requestor_signup:
+            if requestor_signup.event_id:
+                from app.projects.better_signups.models import Event
 
-            event = Event.query.get(requestor_signup.event_id)
-            if event.event_type == "date":
-                sr.requestor_element_desc = event.event_date.strftime("%B %d, %Y")
+                event = Event.query.get(requestor_signup.event_id)
+                if event:
+                    if event.event_type == "date":
+                        sr.requestor_element_desc = event.event_date.strftime("%B %d, %Y")
+                    else:
+                        sr.requestor_element_desc = event.event_datetime.strftime(
+                            "%B %d, %Y at %I:%M %p"
+                        )
+                else:
+                    sr.requestor_element_desc = "[Deleted Event]"
             else:
-                sr.requestor_element_desc = event.event_datetime.strftime(
-                    "%B %d, %Y at %I:%M %p"
-                )
-        else:
-            from app.projects.better_signups.models import Item
+                from app.projects.better_signups.models import Item
 
-            item = Item.query.get(requestor_signup.item_id)
-            sr.requestor_element_desc = item.name
+                item = Item.query.get(requestor_signup.item_id)
+                if item:
+                    sr.requestor_element_desc = item.name
+                else:
+                    sr.requestor_element_desc = "[Deleted Item]"
+        else:
+            # Signup no longer exists (completed swap or deleted)
+            sr.requestor_element_desc = "[Signup Deleted]"
 
         # Get target elements descriptions
         sr.target_descriptions = []

@@ -337,6 +337,9 @@ def send_swap_request_email(recipient_user, requestor_user, swap_request, tokens
             recipient_current_element = Item.query.get(recipient_signup.item_id)
             recipient_from_desc = recipient_current_element.name
         
+        # Generate swap link for this token
+        swap_url = url_for('better_signups.execute_swap', token=token.token, _external=True)
+        
         # Text version
         swap_options_text.append(
             f"  • {recipient_family_member.display_name}:\n"
