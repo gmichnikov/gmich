@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ error_title }} - Better Signups{% endblock %}
+
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title" style="color: #dc3545;">{{ error_title }}</h1>
+            <p class="auth-subtitle">{{ error_message }}</p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div style="background-color: #f8d7da; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #dc3545;">
+                <p style="margin: 0; color: #721c24;">
+                    This swap link is no longer valid. The swap may have already been completed by someone else, 
+                    or the swap request may have been cancelled.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{{ url_for('better_signups.my_signups') }}" 
+                   class="better-signups-btn">
+                    View My Signups
+                </a>
+                <a href="{{ url_for('better_signups.index') }}" 
+                   class="better-signups-btn better-signups-btn-secondary">
+                    Better Signups Home
+                </a>
+            </div>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text">
+                If you believe this is an error, please contact support.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

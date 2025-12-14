@@ -1998,7 +1998,330 @@ def cancel_swap_request(swap_request_id):
 
 @bp.route("/swap/execute/<string:token>", methods=["GET"])
 def execute_swap(token):
-    """Execute a swap via token link (placeholder)"""
-    # TODO: Phase 12d - Implement swap execution
-    flash("Swap execution feature coming soon!", "info")
-    return redirect(url_for("better_signups.index"))
+    """Execute a swap via token link"""
+    # Get the token
+    swap_token = SwapToken.query.filter_by(token=token).first()
+    
+    if not swap_token:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Invalid Swap Link",
+            error_message="This swap link is invalid or has expired.",
+        )
+    
+    # Check if token is already used
+    if swap_token.is_used:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Swap Already Completed",
+            error_message="This swap has already been completed. The link can only be used once.",
+        )
+    
+    # Get the swap request
+    swap_request = swap_token.swap_request
+    
+    # Check if swap request is still pending
+    if swap_request.status != "pending":
+        status_msg = {
+            "completed": "This swap request has already been completed.",
+            "cancelled": "This swap request has been cancelled.",
+        }.get(swap_request.status, "This swap request is no longer active.")
+        
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Swap Not Available",
+            error_message=status_msg,
+        )
+    
+    # Get both signups
+    requestor_signup = swap_request.requestor_signup
+    recipient_signup = swap_token.recipient_signup
+    
+    # Verify both signups still exist (not deleted)
+    if not requestor_signup or not recipient_signup:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Signup Not Found",
+            error_message="One of the signups involved in this swap no longer exists.",
+        )
+    
+    # Verify target element still exists in swap request targets
+    target_exists = any(
+        t.target_element_id == swap_token.target_element_id 
+        and t.target_element_type == swap_token.target_element_type
+        for t in swap_request.targets
+    )
+    
+    if not target_exists:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Target Element Removed",
+            error_message="The element you wanted to swap to is no longer available in this swap request.",
+        )
+    
+    # Get the target element
+    if swap_token.target_element_type == "event":
+        target_element = Event.query.get(swap_token.target_element_id)
+    else:
+        target_element = Item.query.get(swap_token.target_element_id)
+    
+    if not target_element:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Element Deleted",
+            error_message="The element you wanted to swap to has been deleted from the list.",
+        )
+    
+    # Get requestor's element
+    if requestor_signup.event_id:
+        requestor_element = Event.query.get(requestor_signup.event_id)
+        requestor_element_type = "event"
+    else:
+        requestor_element = Item.query.get(requestor_signup.item_id)
+        requestor_element_type = "item"
+    
+    if not requestor_element:
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Element Deleted",
+            error_message="The element being swapped from has been deleted from the list.",
+        )
+    
+    # Get list
+    signup_list = swap_request.list
+    
+    # Execute the swap atomically
+    try:
+        # Create new signups
+        # Requestor's family member → target element
+        new_requestor_signup = Signup(
+            user_id=requestor_signup.user_id,
+            family_member_id=requestor_signup.family_member_id,
+        )
+        if swap_token.target_element_type == "event":
+            new_requestor_signup.event_id = swap_token.target_element_id
+        else:
+            new_requestor_signup.item_id = swap_token.target_element_id
+        
+        # Recipient's family member → requestor's original element
+        new_recipient_signup = Signup(
+            user_id=recipient_signup.user_id,
+            family_member_id=recipient_signup.family_member_id,
+        )
+        if requestor_element_type == "event":
+            new_recipient_signup.event_id = requestor_element.id
+        else:
+            new_recipient_signup.item_id = requestor_element.id
+        
+        # Mark swap request as completed FIRST (before deleting signups)
+        # This is important because requestor_signup_id has a foreign key constraint
+        swap_request.status = "completed"
+        swap_request.completed_at = datetime.utcnow()
+        swap_request.completed_by_user_id = swap_token.recipient_user_id
+        
+        # Delete old signups
+        db.session.delete(requestor_signup)
+        db.session.delete(recipient_signup)
+        
+        # Add new signups
+        db.session.add(new_requestor_signup)
+        db.session.add(new_recipient_signup)
+        
+        # Mark token as used
+        swap_token.mark_as_used()
+        
+        # Invalidate all other tokens for this swap request
+        for other_token in swap_request.tokens:
+            if other_token.id != swap_token.id and not other_token.is_used:
+                other_token.is_used = True
+                other_token.used_at = datetime.utcnow()
+        
+        # Log the swap execution
+        requestor_family_member = swap_request.requestor_family_member
+        recipient_family_member = recipient_signup.family_member
+        
+        # Get element descriptions for logging
+        if requestor_element_type == "event":
+            if requestor_element.event_type == "date":
+                requestor_element_desc = requestor_element.event_date.strftime('%B %d, %Y')
+            else:
+                requestor_element_desc = requestor_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')
+        else:
+            requestor_element_desc = requestor_element.name
+        
+        if swap_token.target_element_type == "event":
+            if target_element.event_type == "date":
+                target_element_desc = target_element.event_date.strftime('%B %d, %Y')
+            else:
+                target_element_desc = target_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')
+        else:
+            target_element_desc = target_element.name
+        
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Execute Swap",
+            actor_id=swap_token.recipient_user_id,
+            description=f"Swap executed in list '{signup_list.name}' (UUID: {signup_list.uuid}). "
+                       f"{requestor_family_member.display_name} swapped from '{requestor_element_desc}' to '{target_element_desc}'. "
+                       f"{recipient_family_member.display_name} swapped from '{target_element_desc}' to '{requestor_element_desc}'.",
+        )
+        db.session.add(log_entry)
+        
+        # Commit the transaction
+        db.session.commit()
+        
+        # Send completion emails (after commit, so we don't send if transaction fails)
+        requestor_user = User.query.get(requestor_signup.user_id)
+        recipient_user = User.query.get(swap_token.recipient_user_id)
+        
+        if requestor_user and recipient_user:
+            from app.utils.email_service import send_email
+            
+            # Email to requestor
+            try:
+                requestor_subject = f"Swap Completed in '{signup_list.name}'"
+                requestor_text = f"""Hello {requestor_user.full_name},
+
+Good news! Your swap request in '{signup_list.name}' has been completed.
+
+{requestor_family_member.display_name} has been swapped:
+- FROM: {requestor_element_desc}
+- TO: {target_element_desc}
+
+{recipient_user.full_name} accepted your swap request.
+
+You can view your updated signups at: {url_for('better_signups.my_signups', _external=True)}
+
+Best regards,
+gregmichnikov.com
+"""
+                requestor_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .success-box {{ background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>✅ Swap Completed!</h2>
+        <p>Hello {requestor_user.full_name},</p>
+        <p>Good news! Your swap request in <strong>'{signup_list.name}'</strong> has been completed.</p>
+        
+        <div class="success-box">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">{requestor_family_member.display_name} has been swapped:</p>
+            <p style="margin: 0;">✗ FROM: <span style="text-decoration: line-through;">{requestor_element_desc}</span></p>
+            <p style="margin: 0;">✓ TO: <strong style="color: #28a745;">{target_element_desc}</strong></p>
+        </div>
+        
+        <p><strong>{recipient_user.full_name}</strong> accepted your swap request.</p>
+        
+        <p>
+            <a href="{url_for('better_signups.my_signups', _external=True)}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                View My Signups
+            </a>
+        </p>
+        
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+                send_email(requestor_user.email, requestor_subject, requestor_text, requestor_html)
+            except Exception as e:
+                logger.error(f"Failed to send swap completion email to requestor {requestor_user.email}: {e}")
+            
+            # Email to recipient
+            try:
+                recipient_subject = f"Swap Completed in '{signup_list.name}'"
+                recipient_text = f"""Hello {recipient_user.full_name},
+
+You have successfully completed a swap in '{signup_list.name}'.
+
+{recipient_family_member.display_name} has been swapped:
+- FROM: {target_element_desc}
+- TO: {requestor_element_desc}
+
+The swap was with {requestor_user.full_name}.
+
+You can view your updated signups at: {url_for('better_signups.my_signups', _external=True)}
+
+Best regards,
+gregmichnikov.com
+"""
+                recipient_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .success-box {{ background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>✅ Swap Completed!</h2>
+        <p>Hello {recipient_user.full_name},</p>
+        <p>You have successfully completed a swap in <strong>'{signup_list.name}'</strong>.</p>
+        
+        <div class="success-box">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">{recipient_family_member.display_name} has been swapped:</p>
+            <p style="margin: 0;">✗ FROM: <span style="text-decoration: line-through;">{target_element_desc}</span></p>
+            <p style="margin: 0;">✓ TO: <strong style="color: #28a745;">{requestor_element_desc}</strong></p>
+        </div>
+        
+        <p>The swap was with <strong>{requestor_user.full_name}</strong>.</p>
+        
+        <p>
+            <a href="{url_for('better_signups.my_signups', _external=True)}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                View My Signups
+            </a>
+        </p>
+        
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+                send_email(recipient_user.email, recipient_subject, recipient_text, recipient_html)
+            except Exception as e:
+                logger.error(f"Failed to send swap completion email to recipient {recipient_user.email}: {e}")
+        
+        # Show success page
+        return render_template(
+            "better_signups/swap_success.html",
+            swap_request=swap_request,
+            requestor_family_member=requestor_family_member,
+            recipient_family_member=recipient_family_member,
+            requestor_element_desc=requestor_element_desc,
+            target_element_desc=target_element_desc,
+            signup_list=signup_list,
+        )
+        
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.error(f"IntegrityError during swap execution: {e}")
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Swap Failed",
+            error_message="The swap could not be completed. One of the family members may already be signed up for the target element.",
+        )
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error executing swap: {e}")
+        return render_template(
+            "better_signups/swap_error.html",
+            error_title="Swap Failed",
+            error_message="An unexpected error occurred while completing the swap. Please try again or contact support.",
+        )
+

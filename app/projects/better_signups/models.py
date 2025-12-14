@@ -312,7 +312,7 @@ class SwapRequest(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     requestor_signup_id = db.Column(
-        db.Integer, db.ForeignKey("signup.id"), nullable=False
+        db.Integer, db.ForeignKey("signup.id"), nullable=True  # Nullable because signup gets deleted when swap completes
     )
     list_id = db.Column(db.Integer, db.ForeignKey("signup_list.id"), nullable=False)
     requestor_family_member_id = db.Column(
@@ -403,7 +403,7 @@ class SwapToken(db.Model):
     )
     token = db.Column(db.String(64), unique=True, nullable=False, index=True)
     recipient_signup_id = db.Column(
-        db.Integer, db.ForeignKey("signup.id"), nullable=False
+        db.Integer, db.ForeignKey("signup.id"), nullable=True  # Nullable because signup gets deleted when swap completes
     )
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     target_element_id = db.Column(db.Integer, nullable=False)  # ID of event or item this token is for

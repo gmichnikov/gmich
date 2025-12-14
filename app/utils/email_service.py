@@ -324,23 +324,24 @@ def send_swap_request_email(recipient_user, requestor_user, swap_request, tokens
         recipient_signup = token.recipient_signup
         recipient_family_member = recipient_signup.family_member
         
-        # Get target element details (what they would swap TO)
-        if token.target_element_type == "event":
-            target_element = Event.query.get(token.target_element_id)
-            if target_element.event_type == "date":
-                target_element_desc = target_element.event_date.strftime('%B %d, %Y')
+        # Get the element recipient is currently signed up for (what they're swapping FROM)
+        if recipient_signup.event_id:
+            from app.projects.better_signups.models import Event
+            recipient_current_element = Event.query.get(recipient_signup.event_id)
+            if recipient_current_element.event_type == "date":
+                recipient_from_desc = recipient_current_element.event_date.strftime('%B %d, %Y')
             else:
-                target_element_desc = f"{target_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')} ({target_element.timezone})"
+                recipient_from_desc = f"{recipient_current_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')} ({recipient_current_element.timezone})"
         else:
-            target_element = Item.query.get(token.target_element_id)
-            target_element_desc = target_element.name
-        
-        # Generate swap link
-        swap_url = url_for('better_signups.execute_swap', token=token.token, _external=True)
+            from app.projects.better_signups.models import Item
+            recipient_current_element = Item.query.get(recipient_signup.item_id)
+            recipient_from_desc = recipient_current_element.name
         
         # Text version
         swap_options_text.append(
-            f"  • {recipient_family_member.display_name}: Swap to '{target_element_desc}'\n"
+            f"  • {recipient_family_member.display_name}:\n"
+            f"    You swap FROM: {recipient_from_desc}\n"
+            f"    You swap TO: {requestor_element_desc}\n"
             f"    Link: {swap_url}"
         )
         
@@ -350,8 +351,11 @@ def send_swap_request_email(recipient_user, requestor_user, swap_request, tokens
                 <p style="margin: 0 0 10px 0; font-weight: bold; color: #333;">
                     {recipient_family_member.display_name}
                 </p>
+                <p style="margin: 0 0 5px 0; color: #666;">
+                    <strong>You swap FROM:</strong> <span style="text-decoration: line-through;">{recipient_from_desc}</span>
+                </p>
                 <p style="margin: 0 0 10px 0; color: #666;">
-                    Swap to: <strong>{target_element_desc}</strong>
+                    <strong>You swap TO:</strong> <strong style="color: #28a745;">{requestor_element_desc}</strong>
                 </p>
                 <a href="{swap_url}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold;">
                     Complete This Swap
@@ -363,15 +367,15 @@ def send_swap_request_email(recipient_user, requestor_user, swap_request, tokens
 
 {requestor_user.full_name} would like to swap signups with you in the list '{list_name}'.
 
-They want to swap FROM: {requestor_family_member.display_name}'s signup for '{requestor_element_desc}'
+They want to get rid of: {requestor_element_desc}
 
 Your family has the following swap option(s):
 
 {chr(10).join(swap_options_text)}
 
 What happens if you click a link:
-- {requestor_family_member.display_name} will be moved to the element you clicked
 - Your family member will be moved to '{requestor_element_desc}'
+- {requestor_family_member.display_name} will get your spot
 - The swap happens instantly - first click wins!
 
 If you're not interested, simply ignore this email.
@@ -398,8 +402,7 @@ gregmichnikov.com
         <p><strong>{requestor_user.full_name}</strong> would like to swap signups with you.</p>
         
         <div class="info-box">
-            <p style="margin: 0 0 5px 0;"><strong>They want to swap FROM:</strong></p>
-            <p style="margin: 0;">{requestor_family_member.display_name}'s signup for <strong>'{requestor_element_desc}'</strong></p>
+            <p style="margin: 0;"><strong>They want to get rid of:</strong> {requestor_element_desc}</p>
         </div>
         
         <h3>Your Swap Option(s):</h3>

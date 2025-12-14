@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Swap Successful - Better Signups{% endblock %}
+
+{% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('better_signups.static', filename='better_signups/styles.css') }}"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title" style="color: #28a745;">✅ Swap Completed!</h1>
+            <p class="auth-subtitle">The swap has been successfully executed</p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div style="background-color: #d4edda; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #28a745;">
+                <p style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: bold; color: #155724;">
+                    {{ requestor_family_member.display_name }} → {{ target_element_desc }}
+                </p>
+                <p style="margin: 0; color: #155724;">
+                    {{ recipient_family_member.display_name }} → {{ requestor_element_desc }}
+                </p>
+            </div>
+
+            <div style="background-color: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h3 style="margin-top: 0;">What happened:</h3>
+                <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>{{ requestor_family_member.display_name }}</strong> was moved to <strong>{{ target_element_desc }}</strong></li>
+                    <li><strong>{{ recipient_family_member.display_name }}</strong> was moved to <strong>{{ requestor_element_desc }}</strong></li>
+                    <li>Both parties have been notified via email</li>
+                    <li>All other swap links for this request are now invalid</li>
+                </ul>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{{ url_for('better_signups.my_signups') }}" 
+                   class="better-signups-btn">
+                    View My Signups
+                </a>
+                <a href="{{ url_for('better_signups.view_list', uuid=signup_list.uuid) }}" 
+                   class="better-signups-btn better-signups-btn-secondary">
+                    View List
+                </a>
+            </div>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text">
+                <a href="{{ url_for('better_signups.index') }}" class="auth-link">← Back to Better Signups</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
