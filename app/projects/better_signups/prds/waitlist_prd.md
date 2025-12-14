@@ -410,19 +410,19 @@ When a user cancels a confirmed signup:
 
 ### Phase 6: Confirmation & Decline Flow
 
-- [ ] Add helper function to check if user has any pending_confirmation signups for a list
-- [ ] Update public list view: if user has pending_confirmation, show alert banner at top
+- [x] Add helper function to check if user has any pending_confirmation signups for a list
+- [x] Update public list view: if user has pending_confirmation, show alert banner at top
   - "⏱ You have a spot waiting! [Element Name] - Confirm within 24 hours"
-- [ ] Add "Confirm Your Spot" button next to pending_confirmation signups
-- [ ] Create route for confirming spot (POST `/list/<uuid>/signup/<id>/confirm`)
+- [x] Add "Confirm Your Spot" button next to pending_confirmation signups
+- [x] Create route for confirming spot (POST `/list/<uuid>/signup/<id>/confirm`)
   - Update Signup status from 'pending_confirmation' to 'confirmed'
   - Show success message
-- [ ] Add "Decline Spot" button next to "Confirm Your Spot"
-- [ ] Create route for declining spot (POST `/list/<uuid>/signup/<id>/decline`)
+- [x] Add "Decline Spot" button next to "Confirm Your Spot"
+- [x] Create route for declining spot (POST `/list/<uuid>/signup/<id>/decline`)
   - Delete the Signup record
   - Call cascade helper to offer to next person
   - Show message: "Spot declined and offered to next person"
-- [ ] Update "My Signups" view to prominently show pending confirmations
+- [x] Update "My Signups" view to prominently show pending confirmations
   - Separate section at top: "Spots Waiting for Confirmation"
   - Show countdown/deadline
   - Include "Confirm" and "Decline" buttons
@@ -438,21 +438,22 @@ When a user cancels a confirmed signup:
 
 ### Phase 7: Expiration & Background Job
 
-- [ ] Create helper function to check and expire pending confirmations
+- [x] Create helper function to check and expire pending confirmations
   - Find all Signup with status='pending_confirmation' AND created_at < (now - 24 hours)
   - For each expired signup:
     - Get element info
     - Delete the Signup
     - Call cascade helper
     - Log the expiration event
-- [ ] Add real-time expiration check to list view (run helper on page load)
+- [x] Add real-time expiration check to list view (run helper on page load)
   - Prevents showing stale data
   - Process any expirations before rendering
-- [ ] Create background job/cron that runs every 15-30 minutes
+- [x] Create background job/cron that runs every 15-30 minutes
   - Calls the expiration helper function
   - Logs how many expirations processed
-- [ ] Add command line script for manual expiration check (for testing)
-  - `flask better-signups check-expirations`
+  - **Note: Using Heroku Scheduler - see HEROKU_SCHEDULER_SETUP.md for setup instructions**
+- [x] Add command line script for manual expiration check (for testing)
+  - `flask process-waitlist-expirations`
 
 **Testing:**
 

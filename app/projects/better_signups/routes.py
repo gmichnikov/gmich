@@ -1391,6 +1391,10 @@ def view_list(uuid):
         return render_template("better_signups/password_prompt.html", list=signup_list)
 
     # User has access - show the list view
+    # Process any expired pending confirmations before showing the list
+    from app.projects.better_signups.utils import process_expired_pending_confirmations
+    process_expired_pending_confirmations()
+    
     # Ensure user has a "self" family member
     ensure_self_family_member(current_user)
 

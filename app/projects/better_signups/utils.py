@@ -4,9 +4,13 @@ Helper functions for the Better Signups project
 """
 from app import db
 from app.projects.better_signups.models import FamilyMember, ListEditor, Event, Item, Signup
+from app.models import LogEntry
 from urllib.parse import urlencode
 import pytz
 from datetime import timedelta, datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_self_family_member(user):
@@ -233,3 +237,121 @@ def check_has_eligible_swap_targets(signup):
                     return True
     
     return False
+
+
+def process_expired_pending_confirmations():
+    """
+    Process expired pending_confirmation signups (older than 24 hours).
+    
+    This function:
+    1. Finds all pending_confirmation signups older than 24 hours
+    2. Deletes them
+    3. Offers the spot to the next person on the waitlist (if applicable)
+    4. Logs all actions
+    
+    Returns:
+        dict: {
+            'processed_count': int,  # Number of expired signups removed
+            'cascade_count': int,    # Number of spots offered to next person
+            'errors': list           # List of error messages (if any)
+        }
+    """
+    from app.projects.better_signups.models import SignupList
+    
+    # Avoid circular import - import here
+    from app.projects.better_signups.routes import offer_spot_to_next_in_waitlist
+    
+    expiration_cutoff = datetime.utcnow() - timedelta(hours=24)
+    
+    expired_signups = Signup.query.filter(
+        Signup.status == "pending_confirmation",
+        Signup.created_at <= expiration_cutoff,
+    ).all()
+    
+    if not expired_signups:
+        return {'processed_count': 0, 'cascade_count': 0, 'errors': []}
+    
+    processed_count = 0
+    cascade_count = 0
+    errors = []
+    
+    for signup in expired_signups:
+        try:
+            # Get element info before deleting
+            if signup.event_id:
+                element_type = "event"
+                element_id = signup.event_id
+                event = Event.query.get(element_id)
+                if not event:
+                    errors.append(f"Signup {signup.id}: Event {element_id} not found")
+                    continue
+                if event.event_type == "date":
+                    element_desc = f"event date: {event.event_date.strftime('%B %d, %Y')}"
+                else:
+                    element_desc = f"event datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+            elif signup.item_id:
+                element_type = "item"
+                element_id = signup.item_id
+                item = Item.query.get(element_id)
+                if not item:
+                    errors.append(f"Signup {signup.id}: Item {element_id} not found")
+                    continue
+                element_desc = f"item: {item.name}"
+            else:
+                errors.append(f"Signup {signup.id} has no event or item")
+                continue
+            
+            family_member_name = signup.family_member.display_name if signup.family_member else "Unknown"
+            list_name = signup.event.list.name if signup.event else signup.item.list.name
+            list_uuid = signup.event.list.uuid if signup.event else signup.item.list.uuid
+            list_id = signup.event.list_id if signup.event else signup.item.list_id
+            
+            logger.info(
+                f"Processing expired pending confirmation for {family_member_name} "
+                f"on list '{list_name}', {element_desc}"
+            )
+            
+            # Delete the expired signup
+            db.session.delete(signup)
+            
+            # Log the expiration
+            log_entry = LogEntry(
+                project="better_signups",
+                category="Waitlist Expiration",
+                actor_id=signup.user_id,
+                description=f"Pending confirmation expired for {family_member_name} on list '{list_name}' (UUID: {list_uuid}), {element_desc}. Spot offered at {signup.created_at.strftime('%B %d, %Y at %I:%M %p')}.",
+            )
+            db.session.add(log_entry)
+            
+            # Commit the deletion and log
+            db.session.commit()
+            processed_count += 1
+            
+            # Check if list allows waitlist and offer to next person
+            signup_list = SignupList.query.get(list_id)
+            
+            if signup_list and signup_list.allow_waitlist:
+                cascade_result = offer_spot_to_next_in_waitlist(element_type, element_id)
+                if cascade_result:
+                    cascade_count += 1
+                    next_family_member = cascade_result["family_member"]
+                    logger.info(
+                        f"Cascade after expiration: offered spot to {next_family_member.display_name} "
+                        f"(user {cascade_result['user'].id})"
+                    )
+                    # TODO Phase 8: Send email notification here
+                else:
+                    logger.info(f"Waitlist empty for {element_type} {element_id}, spot now available to all")
+        
+        except Exception as e:
+            db.session.rollback()
+            error_msg = f"Error processing signup {signup.id}: {str(e)}"
+            errors.append(error_msg)
+            logger.error(error_msg)
+            continue
+    
+    return {
+        'processed_count': processed_count,
+        'cascade_count': cascade_count,
+        'errors': errors
+    }
