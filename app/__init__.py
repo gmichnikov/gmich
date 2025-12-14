@@ -108,4 +108,8 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
+    # Register CLI commands
+    from app.projects.better_signups.commands import init_app as init_better_signups_commands
+    init_better_signups_commands(app)
+    
     return app
