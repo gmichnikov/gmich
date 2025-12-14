@@ -366,7 +366,7 @@
                                                 {% endif %}
                                             </div>
                                             <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
-                                                Position #{{ entry.position }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
+                                                Position #{{ loop.index }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
                                             </div>
                                         </li>
                                         {% endfor %}
@@ -493,7 +493,7 @@
                                                 {% endif %}
                                             </div>
                                             <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
-                                                Position #{{ entry.position }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
+                                                Position #{{ loop.index }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
                                             </div>
                                         </li>
                                         {% endfor %}

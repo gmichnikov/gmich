@@ -194,7 +194,7 @@ class Event(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all confirmed signups for this event (excludes cancelled)"""
+        """Get all active signups for this event (includes confirmed and pending_confirmation, excludes cancelled)"""
         return [s for s in self.signups if s.status != 'cancelled']
 
     def get_spots_taken(self):
@@ -240,7 +240,7 @@ class Item(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all confirmed signups for this item (excludes cancelled)"""
+        """Get all active signups for this item (includes confirmed and pending_confirmation, excludes cancelled)"""
         return [s for s in self.signups if s.status != 'cancelled']
 
     def get_spots_taken(self):

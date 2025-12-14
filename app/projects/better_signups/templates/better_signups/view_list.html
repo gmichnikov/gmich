@@ -40,6 +40,37 @@
                 ⚠️ This list is currently not accepting signups.
             </div>
             {% endif %}
+            
+            {# Alert banner for pending confirmations #}
+            {% if pending_confirmations %}
+            <div style="background-color: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; border: 2px solid #28a745; margin-top: 1rem;">
+                <div style="font-weight: bold; font-size: 1rem; margin-bottom: 0.5rem;">⏱ You have {{ pending_confirmations|length }} spot{% if pending_confirmations|length != 1 %}s{% endif %} waiting for confirmation!</div>
+                {% for pending in pending_confirmations %}
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: rgba(255,255,255,0.5); border-radius: 4px;">
+                        {% if pending.event %}
+                            {% if pending.event.event_type == 'date' %}
+                                {{ pending.event.event_date.strftime('%B %d, %Y') }}
+                            {% else %}
+                                {{ pending.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% endif %}
+                        {% else %}
+                            {{ pending.item.name }}
+                        {% endif %}
+                        - {{ pending.family_member.display_name }}
+                        <span style="font-weight: bold;">
+                            {% if pending.is_expired %}
+                                (Expired)
+                            {% else %}
+                                (Confirm by {{ pending.deadline.strftime('%b %d at %I:%M %p') }})
+                            {% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+                <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+                    Scroll down to find your pending spot(s) and click "Confirm Your Spot" or "Decline" to continue.
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         {% if list.list_type == 'events' %}
@@ -106,7 +137,8 @@
                                 <div id="event-signups-{{ event.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in event.get_active_signups() %}
-                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}">
+                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}" 
+                                        {% if signup.status == 'pending_confirmation' %}style="background-color: #fff3cd; border-left: 3px solid #ffc107; padding-left: 0.5rem;"{% endif %}>
                                         <div class="better-signups-signup-actions">
                                             <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
@@ -118,28 +150,57 @@
                                                 {% else %}
                                                     {{ signup.user.full_name }}
                                                 {% endif %}
+                                                {% if signup.status == 'pending_confirmation' %}
+                                                    <span style="color: #856404; font-weight: bold; font-size: 0.75rem; margin-left: 0.5rem;">⏱ Pending Confirmation</span>
+                                                {% endif %}
                                             </span>
                                             {% if signup.user_id == current_user.id %}
-                                                {% if event.google_calendar_url %}
-                                                <a href="{{ event.google_calendar_url }}" 
-                                                   target="_blank" 
-                                                   rel="noopener noreferrer"
-                                                   class="better-signups-btn better-signups-btn-google-calendar"
-                                                   style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                    📅 Add to Google Cal
-                                                </a>
+                                                {% if signup.status == 'pending_confirmation' %}
+                                                    {# Show Confirm and Decline buttons for pending #}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.confirm_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn"
+                                                                style="background-color: #28a745; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            ✓ Confirm Your Spot
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.decline_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;"
+                                                          onsubmit="return confirm('Decline this spot? It will be offered to the next person on the waitlist.');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Decline
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    {# Show normal cancel button for confirmed signups #}
+                                                    {% if event.google_calendar_url %}
+                                                    <a href="{{ event.google_calendar_url }}" 
+                                                       target="_blank" 
+                                                       rel="noopener noreferrer"
+                                                       class="better-signups-btn better-signups-btn-google-calendar"
+                                                       style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        📅 Add to Google Cal
+                                                    </a>
+                                                    {% endif %}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;" 
+                                                          onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Cancel
+                                                        </button>
+                                                    </form>
                                                 {% endif %}
-                                                <form method="POST" 
-                                                      action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
-                                                      style="display: inline; margin: 0;" 
-                                                      onsubmit="return confirm('Are you sure you want to cancel this signup?');">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                    <button type="submit" 
-                                                            class="better-signups-btn better-signups-btn-danger"
-                                                            style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                        Cancel
-                                                    </button>
-                                                </form>
                                             {% endif %}
                                         </div>
                                     </li>
@@ -269,7 +330,7 @@
                                                         {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
                                                     {% endif %}
                                                     {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
-                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ loop.index }} in line)</span>
                                                     {% endif %}
                                                 </span>
                                                 {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
@@ -338,7 +399,8 @@
                                 <div id="item-signups-{{ item.id }}">
                                 <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal;">
                                     {% for signup in item.get_active_signups() %}
-                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}">
+                                    <li class="better-signups-signup-item {% if signup.id in user_family_signup_ids %}better-signups-signup-user-family{% endif %}"
+                                        {% if signup.status == 'pending_confirmation' %}style="background-color: #fff3cd; border-left: 3px solid #ffc107; padding-left: 0.5rem;"{% endif %}>
                                         <div class="better-signups-signup-actions">
                                             <span class="better-signups-signup-name">
                                                 {% if signup.family_member %}
@@ -350,19 +412,48 @@
                                                 {% else %}
                                                     {{ signup.user.full_name }}
                                                 {% endif %}
+                                                {% if signup.status == 'pending_confirmation' %}
+                                                    <span style="color: #856404; font-weight: bold; font-size: 0.75rem; margin-left: 0.5rem;">⏱ Pending Confirmation</span>
+                                                {% endif %}
                                             </span>
                                             {% if signup.user_id == current_user.id %}
-                                                <form method="POST" 
-                                                      action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
-                                                      style="display: inline; margin: 0;" 
-                                                      onsubmit="return confirm('Are you sure you want to cancel this signup?');">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                    <button type="submit" 
-                                                            class="better-signups-btn better-signups-btn-danger"
-                                                            style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                        Cancel
-                                                    </button>
-                                                </form>
+                                                {% if signup.status == 'pending_confirmation' %}
+                                                    {# Show Confirm and Decline buttons for pending #}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.confirm_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn"
+                                                                style="background-color: #28a745; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            ✓ Confirm Your Spot
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.decline_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;"
+                                                          onsubmit="return confirm('Decline this spot? It will be offered to the next person on the waitlist.');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Decline
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    {# Show normal cancel button for confirmed signups #}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.cancel_signup', uuid=list.uuid, signup_id=signup.id) }}" 
+                                                          style="display: inline; margin: 0;" 
+                                                          onsubmit="return confirm('Are you sure you want to cancel this signup?');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
                                             {% endif %}
                                         </div>
                                     </li>
@@ -492,7 +583,7 @@
                                                         {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
                                                     {% endif %}
                                                     {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
-                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ loop.index }} in line)</span>
                                                     {% endif %}
                                                 </span>
                                                 {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}

@@ -61,6 +61,131 @@ bp = Blueprint(
 )
 
 
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+
+def offer_spot_to_next_in_waitlist(element_type, element_id):
+    """
+    Offer a spot to the next person on the waitlist for an element.
+    
+    This function:
+    1. Finds the first person on the waitlist (lowest position)
+    2. Creates a pending_confirmation signup for them
+    3. Deletes their waitlist entry
+    4. Returns info about the offered signup for email notification
+    
+    Args:
+        element_type: 'event' or 'item'
+        element_id: ID of the event or item
+        
+    Returns:
+        dict with signup info if someone was offered, None if waitlist is empty
+        {
+            'signup': Signup object,
+            'user': User object,
+            'family_member': FamilyMember object,
+            'element': Event or Item object
+        }
+    """
+    try:
+        # Query for waitlist entries for this element, ordered by position
+        waitlist_entry = (
+            WaitlistEntry.query.filter_by(
+                element_type=element_type,
+                element_id=element_id,
+            )
+            .order_by(WaitlistEntry.position.asc())
+            .first()
+        )
+        
+        if not waitlist_entry:
+            # No one on waitlist, spot opens to everyone
+            logger.info(f"No waitlist entries found for {element_type} {element_id}")
+            return None
+        
+        # Get the family member and user
+        family_member = waitlist_entry.family_member
+        user = family_member.user
+        
+        # Get the element
+        if element_type == "event":
+            element = Event.query.get(element_id)
+        else:
+            element = Item.query.get(element_id)
+            
+        if not element:
+            logger.error(f"Element not found: {element_type} {element_id}")
+            # Delete stale waitlist entry
+            db.session.delete(waitlist_entry)
+            db.session.commit()
+            return None
+        
+        # Create pending_confirmation signup
+        signup = Signup(
+            user_id=user.id,
+            family_member_id=family_member.id,
+            status='pending_confirmation',
+        )
+        
+        if element_type == "event":
+            signup.event_id = element_id
+        else:
+            signup.item_id = element_id
+        
+        # Delete the waitlist entry (they're no longer waiting)
+        db.session.delete(waitlist_entry)
+        
+        # Add signup
+        db.session.add(signup)
+        
+        # Log the cascade event
+        element_desc = ""
+        if element_type == "event":
+            if element.event_type == "date":
+                element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+            else:
+                element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+        else:
+            element_desc = f"item: {element.name}"
+            
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Waitlist Cascade",
+            actor_id=user.id,
+            description=f"Offered spot to {family_member.display_name} from waitlist (position #{waitlist_entry.position}), {element_desc}",
+        )
+        db.session.add(log_entry)
+        
+        # Commit the transaction
+        db.session.commit()
+        
+        logger.info(
+            f"Offered spot to {family_member.display_name} (user {user.id}) "
+            f"for {element_type} {element_id}, position was #{waitlist_entry.position}"
+        )
+        
+        # Return info for email notification
+        return {
+            'signup': signup,
+            'user': user,
+            'family_member': family_member,
+            'element': element,
+            'element_type': element_type,
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in offer_spot_to_next_in_waitlist: {str(e)}")
+        db.session.rollback()
+        return None
+
+
+# ============================================================================
+# Routes
+# ============================================================================
+
+
 @bp.route("/")
 @login_required
 def index():
@@ -1353,6 +1478,28 @@ def view_list(uuid):
     for event in signup_list.events:
         event.google_calendar_url = get_google_calendar_url(event, signup_list.name, current_user)
 
+    # Check for pending confirmations for this user
+    family_member_ids = [fm.id for fm in family_members]
+    pending_confirmations = []
+    if family_member_ids:
+        from datetime import timedelta
+        pending_confirmations = (
+            Signup.query.options(
+                joinedload(Signup.event),
+                joinedload(Signup.item),
+                joinedload(Signup.family_member),
+            )
+            .filter(
+                Signup.family_member_id.in_(family_member_ids),
+                Signup.status == 'pending_confirmation',
+            )
+            .all()
+        )
+        # Attach deadline info to each pending confirmation
+        for pending in pending_confirmations:
+            pending.deadline = pending.created_at + timedelta(hours=24)
+            pending.is_expired = pending.deadline < datetime.utcnow()
+
     return render_template(
         "better_signups/view_list.html",
         list=signup_list,
@@ -1362,6 +1509,7 @@ def view_list(uuid):
         user_family_signup_ids=user_family_signup_ids,
         waitlist_entries_by_element=waitlist_entries_by_element,
         user_waitlist_entries=user_waitlist_entries,
+        pending_confirmations=pending_confirmations,
     )
 
 
@@ -1599,6 +1747,10 @@ def cancel_signup(uuid, signup_id):
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
     
+    # Store element info for cascade before deleting signup
+    element_type_for_cascade = "event" if signup.event_id else "item"
+    element_id_for_cascade = signup.event_id if signup.event_id else signup.item_id
+    
     db.session.delete(signup)
 
     # Log the action (combine with cancel commit)
@@ -1624,6 +1776,18 @@ def cancel_signup(uuid, signup_id):
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     flash(f"Successfully cancelled signup for {family_member_name}.", "success")
+    
+    # After successful cancellation, check if we should offer spot to waitlist
+    # Only do this if the list allows waitlist
+    if signup_list.allow_waitlist:
+        cascade_result = offer_spot_to_next_in_waitlist(element_type_for_cascade, element_id_for_cascade)
+        if cascade_result:
+            # Someone was offered the spot
+            # TODO Phase 8: Send email notification here
+            logger.info(
+                f"Cascade successful: offered spot to {cascade_result['family_member'].display_name} "
+                f"(user {cascade_result['user'].id})"
+            )
 
     # Check if we should redirect back to my-signups page
     next_url = request.form.get("next") or request.args.get("next")
@@ -1955,6 +2119,166 @@ def remove_from_waitlist(uuid, entry_id):
     return redirect(url_for("better_signups.view_list", uuid=uuid))
 
 
+@bp.route("/lists/<string:uuid>/signup/<int:signup_id>/confirm", methods=["POST"])
+@login_required
+def confirm_signup(uuid, signup_id):
+    """Confirm a pending_confirmation signup"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    signup = Signup.query.get_or_404(signup_id)
+
+    # Verify signup belongs to an element in this list
+    if signup.event_id:
+        event = Event.query.get_or_404(signup.event_id)
+        if event.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    elif signup.item_id:
+        item = Item.query.get_or_404(signup.item_id)
+        if item.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    else:
+        flash("Invalid signup.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify user owns this signup
+    if signup.user_id != current_user.id:
+        flash("You can only confirm your own signups.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify signup is pending_confirmation
+    if signup.status != 'pending_confirmation':
+        flash("This signup is not pending confirmation.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if 24 hours have passed (expired)
+    from datetime import timedelta
+    if signup.created_at + timedelta(hours=24) < datetime.utcnow():
+        flash("This spot offer has expired. It may have been offered to someone else.", "error")
+        # Don't redirect yet - let expiration handler clean it up
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Confirm the signup
+    signup.status = 'confirmed'
+    
+    # Get element for logging
+    element_desc = ""
+    if signup.event_id:
+        event = Event.query.get(signup.event_id)
+        if event.event_type == "date":
+            element_desc = f"event date: {event.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        item = Item.query.get(signup.item_id)
+        element_desc = f"item: {item.name}"
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Confirm Spot",
+        actor_id=current_user.id,
+        description=f"Confirmed spot for {signup.family_member.display_name} on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while confirming your spot. Please try again.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    flash(f"Successfully confirmed spot for {signup.family_member.display_name}!", "success")
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/signup/<int:signup_id>/decline", methods=["POST"])
+@login_required
+def decline_signup(uuid, signup_id):
+    """Decline a pending_confirmation signup and offer to next person"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    signup = Signup.query.get_or_404(signup_id)
+
+    # Verify signup belongs to an element in this list
+    if signup.event_id:
+        event = Event.query.get_or_404(signup.event_id)
+        if event.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+        element_type = "event"
+        element_id = signup.event_id
+    elif signup.item_id:
+        item = Item.query.get_or_404(signup.item_id)
+        if item.list_id != signup_list.id:
+            flash("Invalid signup.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+        element_type = "item"
+        element_id = signup.item_id
+    else:
+        flash("Invalid signup.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify user owns this signup
+    if signup.user_id != current_user.id:
+        flash("You can only decline your own signups.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify signup is pending_confirmation
+    if signup.status != 'pending_confirmation':
+        flash("This signup is not pending confirmation.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    family_member_name = signup.family_member.display_name
+
+    # Get element for logging
+    element_desc = ""
+    if signup.event_id:
+        event = Event.query.get(signup.event_id)
+        if event.event_type == "date":
+            element_desc = f"event date: {event.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        item = Item.query.get(signup.item_id)
+        element_desc = f"item: {item.name}"
+
+    # Delete the signup
+    db.session.delete(signup)
+
+    # Log the action
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Decline Spot",
+        actor_id=current_user.id,
+        description=f"Declined spot for {family_member_name} on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while declining the spot. Please try again.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    flash(f"Spot declined for {family_member_name}.", "success")
+
+    # After successful decline, offer to next person on waitlist
+    if signup_list.allow_waitlist:
+        cascade_result = offer_spot_to_next_in_waitlist(element_type, element_id)
+        if cascade_result:
+            # Someone else was offered the spot
+            # TODO Phase 8: Send email notification here
+            logger.info(
+                f"Cascade after decline: offered spot to {cascade_result['family_member'].display_name} "
+                f"(user {cascade_result['user'].id})"
+            )
+            flash(f"The spot has been offered to the next person on the waitlist.", "info")
+
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
 @bp.route("/my-signups")
 @login_required
 def my_signups():
@@ -1987,6 +2311,16 @@ def my_signups():
         .order_by(Signup.created_at.desc())
         .all()
     )
+    
+    # Split signups into pending confirmations and confirmed
+    from datetime import timedelta
+    pending_confirmations = [s for s in signups if s.status == 'pending_confirmation']
+    confirmed_signups = [s for s in signups if s.status == 'confirmed']
+    
+    # Attach deadline info to pending confirmations
+    for pending in pending_confirmations:
+        pending.deadline = pending.created_at + timedelta(hours=24)
+        pending.is_expired = pending.deadline < datetime.utcnow()
 
     # Get all waitlist entries for these family members
     # Order by created_at descending (most recent first)
@@ -1999,9 +2333,19 @@ def my_signups():
         .order_by(WaitlistEntry.created_at.desc())
         .all()
     )
+    
+    # Compute actual current position for each entry
+    # (position field may be stale after others are removed)
+    for entry in waitlist_entries:
+        # Count how many entries are ahead of this one for the same element
+        entries_ahead = WaitlistEntry.query.filter_by(
+            element_type=entry.element_type,
+            element_id=entry.element_id
+        ).filter(WaitlistEntry.position < entry.position).count()
+        entry.current_position = entries_ahead + 1
 
     # Generate Google Calendar URLs for all events (date and datetime)
-    for signup in signups:
+    for signup in confirmed_signups:
         if signup.event:
             list_name = signup.event.list.name
             signup.google_calendar_url = get_google_calendar_url(signup.event, list_name, current_user)
@@ -2010,7 +2354,7 @@ def my_signups():
 
     # Check for existing swap requests for each signup
     # Get all pending swap requests for these family members in these lists
-    signup_ids = [s.id for s in signups]
+    signup_ids = [s.id for s in confirmed_signups]
     if signup_ids:
         pending_swap_requests = (
             SwapRequest.query.filter(
@@ -2028,7 +2372,7 @@ def my_signups():
         swap_requests_by_signup = {}
 
     # Attach swap request info to each signup and check if swap is possible
-    for signup in signups:
+    for signup in confirmed_signups:
         signup.pending_swap_request = swap_requests_by_signup.get(signup.id)
         
         # If there's a pending swap request, get target element descriptions
@@ -2057,7 +2401,8 @@ def my_signups():
 
     return render_template(
         "better_signups/my_signups.html",
-        signups=signups,
+        signups=confirmed_signups,
+        pending_confirmations=pending_confirmations,
         waitlist_entries=waitlist_entries,
     )
 

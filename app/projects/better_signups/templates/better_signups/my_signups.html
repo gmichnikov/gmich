@@ -18,6 +18,94 @@
             <p class="auth-subtitle">All your active signups across all lists</p>
         </div>
 
+        {# Pending Confirmations Section - show at top if any exist #}
+        {% if pending_confirmations %}
+        <div style="margin-top: 2rem; padding: 1.5rem; background-color: #d4edda; border: 2px solid #28a745; border-radius: 8px;">
+            <h2 style="color: #155724; margin-bottom: 1rem; font-size: 1.25rem;">
+                ⏱ Spots Waiting for Your Confirmation ({{ pending_confirmations|length }})
+            </h2>
+            <p style="color: #155724; font-size: 0.875rem; margin-bottom: 1rem;">
+                You have been offered spot(s) from the waitlist! Please confirm or decline within 24 hours.
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for pending in pending_confirmations %}
+                <div style="padding: 1rem; background-color: white; border-radius: 6px; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 0.25rem;">
+                                {{ pending.family_member.display_name }}
+                            </div>
+                            <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                {% if pending.event %}
+                                    List: {{ pending.event.list.name }}
+                                {% else %}
+                                    List: {{ pending.item.list.name }}
+                                {% endif %}
+                            </div>
+                            <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                {% if pending.event %}
+                                    {% if pending.event.event_type == 'date' %}
+                                        Event: {{ pending.event.event_date.strftime('%B %d, %Y') }}
+                                    {% else %}
+                                        Event: {{ pending.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                                    {% endif %}
+                                    {% if pending.event.location %}
+                                        <br>Location: {{ pending.event.location }}
+                                    {% endif %}
+                                {% else %}
+                                    Item: {{ pending.item.name }}
+                                    {% if pending.item.description %}
+                                        <br>{{ pending.item.description }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div style="{% if pending.is_expired %}color: #dc3545{% else %}color: #856404{% endif %}; font-weight: bold; font-size: 0.875rem; margin-top: 0.5rem;">
+                                {% if pending.is_expired %}
+                                    ⚠️ This offer has expired
+                                {% else %}
+                                    Confirm by: {{ pending.deadline.strftime('%B %d, %Y at %I:%M %p') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            {% if not pending.is_expired %}
+                                <form method="POST" 
+                                      action="{{ url_for('better_signups.confirm_signup', 
+                                                uuid=(pending.event.list.uuid if pending.event else pending.item.list.uuid), 
+                                                signup_id=pending.id) }}" 
+                                      style="display: inline; margin: 0;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" 
+                                            class="better-signups-btn"
+                                            style="background-color: #28a745; padding: 0.5rem 1rem;">
+                                        ✓ Confirm Your Spot
+                                    </button>
+                                </form>
+                                <form method="POST" 
+                                      action="{{ url_for('better_signups.decline_signup', 
+                                                uuid=(pending.event.list.uuid if pending.event else pending.item.list.uuid), 
+                                                signup_id=pending.id) }}" 
+                                      style="display: inline; margin: 0;"
+                                      onsubmit="return confirm('Decline this spot? It will be offered to the next person on the waitlist.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" 
+                                            class="better-signups-btn better-signups-btn-danger"
+                                            style="padding: 0.5rem 1rem;">
+                                        Decline
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span style="color: #dc3545; font-size: 0.875rem;">Expired - will be offered to next person</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         {% if signups %}
         <div style="margin-top: 2rem;">
             {# Filter input #}
@@ -200,7 +288,7 @@
                         <div style="flex: 1; min-width: 250px;">
                             <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.5rem;">
                                 <div style="font-weight: bold; color: #f39c12; margin-bottom: 0.25rem; font-size: 0.9rem;">
-                                    📋 Waitlist Position #{{ entry.position }}
+                                    📋 Waitlist Position #{{ entry.current_position }}
                                 </div>
                                 <div style="font-weight: bold; color: #333; margin-bottom: 0.25rem;">
                                     {{ entry.signup_list.name }}
