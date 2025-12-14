@@ -42,6 +42,7 @@ from app.projects.better_signups.models import (
 from app.projects.better_signups.utils import (
     ensure_self_family_member,
     get_google_calendar_url,
+    check_has_eligible_swap_targets,
 )
 from app.models import User, LogEntry
 import pytz
@@ -97,7 +98,6 @@ def index():
             )
             .filter(
                 Signup.family_member_id.in_(family_member_ids),
-                Signup.cancelled_at.is_(None),
             )
             .order_by(Signup.created_at.desc())
             .limit(3)
@@ -211,7 +211,7 @@ def delete_family_member(member_id):
         return redirect(url_for("better_signups.family_members"))
 
     # Check if there are any active signups for this family member
-    active_signups = [s for s in family_member.signups if s.cancelled_at is None]
+    active_signups = family_member.signups
     if active_signups:
         flash(
             f'Cannot delete "{family_member.display_name}" because they have active signups. '
@@ -1256,14 +1256,12 @@ def create_signup(uuid):
         active_count = (
             db.session.query(Signup)
             .filter(Signup.event_id == element_id)
-            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     else:
         active_count = (
             db.session.query(Signup)
             .filter(Signup.item_id == element_id)
-            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     
@@ -1293,11 +1291,11 @@ def create_signup(uuid):
     # Check if this family member is already signed up for this element (active signup)
     if element_type == "event":
         existing_signup = Signup.query.filter_by(
-            event_id=element_id, family_member_id=family_member_id, cancelled_at=None
+            event_id=element_id, family_member_id=family_member_id
         ).first()
     else:
         existing_signup = Signup.query.filter_by(
-            item_id=element_id, family_member_id=family_member_id, cancelled_at=None
+            item_id=element_id, family_member_id=family_member_id
         ).first()
 
     if existing_signup:
@@ -1345,14 +1343,12 @@ def create_signup(uuid):
         active_count = (
             db.session.query(Signup)
             .filter(Signup.event_id == element_id)
-            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     else:
         active_count = (
             db.session.query(Signup)
             .filter(Signup.item_id == element_id)
-            .filter(Signup.cancelled_at.is_(None))
             .count()
         )
     
@@ -1410,12 +1406,7 @@ def cancel_signup(uuid, signup_id):
         flash("You can only cancel your own signups.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
-    # Check if already cancelled
-    if signup.cancelled_at:
-        flash("This signup has already been cancelled.", "info")
-        return redirect(url_for("better_signups.view_list", uuid=uuid))
-
-    # Get element details before cancellation for logging
+    # Get element details before deletion for logging
     element_desc = ""
     if signup.event_id:
         # event was already queried above
@@ -1427,12 +1418,12 @@ def cancel_signup(uuid, signup_id):
         # item was already queried above
         element_desc = f"item: {item.name}"
 
-    # Cancel the signup
-    signup.cancel()
-
+    # Cancel the signup (delete it)
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
+    
+    db.session.delete(signup)
 
     # Log the action (combine with cancel commit)
     cancelled_by = (
@@ -1493,12 +1484,7 @@ def remove_signup(uuid, signup_id):
         flash("Invalid signup.", "error")
         return redirect(url_for("better_signups.edit_list", uuid=uuid))
 
-    # Check if already cancelled
-    if signup.cancelled_at:
-        flash("This signup has already been cancelled.", "info")
-        return redirect(url_for("better_signups.edit_list", uuid=uuid))
-
-    # Get element details before cancellation for logging
+    # Get element details before deletion for logging
     element_desc = ""
     if signup.event_id:
         # event was already queried above
@@ -1510,13 +1496,13 @@ def remove_signup(uuid, signup_id):
         # item was already queried above
         element_desc = f"item: {item.name}"
 
-    # Cancel the signup (reuse cancel method)
-    signup.cancel()
-
+    # Cancel the signup (reuse cancel method - delete it)
     family_member_name = (
         signup.family_member.display_name if signup.family_member else "Unknown"
     )
     user_name = signup.user.full_name if signup.user else "Unknown"
+    
+    db.session.delete(signup)
 
     # Log the action (combine with cancel commit)
     log_entry = LogEntry(
@@ -1570,7 +1556,6 @@ def my_signups():
         )
         .filter(
             Signup.family_member_id.in_(family_member_ids),
-            Signup.cancelled_at.is_(None),
         )
         .order_by(Signup.created_at.desc())
         .all()
@@ -1608,50 +1593,8 @@ def my_signups():
         signup.pending_swap_request = swap_requests_by_signup.get(signup.id)
         
         # Check if there are any eligible swap targets for this signup
-        # Only show Swap button if there are full elements with signups to swap to
-        signup_list = signup.event.list if signup.event else signup.item.list
-        has_eligible_swap_targets = False
-        
-        if signup_list.list_type == "events":
-            # Count events that are full, have signups, and user isn't already signed up for
-            current_event_id = signup.event_id
-            eligible_events = Event.query.filter(
-                Event.list_id == signup_list.id,
-                Event.id != current_event_id
-            ).all()
-            
-            for event in eligible_events:
-                if event.get_spots_remaining() == 0 and event.get_spots_taken() > 0:
-                    # Check if user is already signed up for this event
-                    existing = Signup.query.filter_by(
-                        event_id=event.id,
-                        family_member_id=signup.family_member_id,
-                        cancelled_at=None
-                    ).first()
-                    if not existing:
-                        has_eligible_swap_targets = True
-                        break
-        else:  # items
-            # Count items that are full, have signups, and user isn't already signed up for
-            current_item_id = signup.item_id
-            eligible_items = Item.query.filter(
-                Item.list_id == signup_list.id,
-                Item.id != current_item_id
-            ).all()
-            
-            for item in eligible_items:
-                if item.get_spots_remaining() == 0 and item.get_spots_taken() > 0:
-                    # Check if user is already signed up for this item
-                    existing = Signup.query.filter_by(
-                        item_id=item.id,
-                        family_member_id=signup.family_member_id,
-                        cancelled_at=None
-                    ).first()
-                    if not existing:
-                        has_eligible_swap_targets = True
-                        break
-        
-        signup.has_eligible_swap_targets = has_eligible_swap_targets
+        # Use helper function instead of inline logic
+        signup.has_eligible_swap_targets = check_has_eligible_swap_targets(signup)
 
     return render_template("better_signups/my_signups.html", signups=signups)
 
@@ -1677,8 +1620,8 @@ def create_swap_request(signup_id):
         return redirect(url_for("better_signups.my_signups"))
 
     # Verify signup is active
-    if signup.cancelled_at is not None:
-        flash("Cannot create swap request for a cancelled signup.", "error")
+    if not signup:
+        flash("Signup not found.", "error")
         return redirect(url_for("better_signups.my_signups"))
 
     # Get the list
@@ -1745,13 +1688,11 @@ def create_swap_request(signup_id):
                 existing_target_signup = Signup.query.filter_by(
                     event_id=element_id,
                     family_member_id=signup.family_member_id,
-                    cancelled_at=None
                 ).first()
             else:
                 existing_target_signup = Signup.query.filter_by(
                     item_id=element_id,
                     family_member_id=signup.family_member_id,
-                    cancelled_at=None
                 ).first()
 
             if existing_target_signup:
@@ -1765,14 +1706,13 @@ def create_swap_request(signup_id):
             validated_targets.append((element_type, element_id, element))
 
         # Find eligible swap partners across all target elements
-        eligible_tokens = []  # Will store (recipient_signup, target_element_type, target_element_id) tuples
+        eligible_swap_partners = []  # Will store (recipient_signup, target_element_type, target_element_id) tuples
         
         for element_type, element_id, element in validated_targets:
             # Find all active signups for this target element
             if element_type == "event":
                 target_signups = Signup.query.filter_by(
                     event_id=element_id,
-                    cancelled_at=None
                 ).options(
                     joinedload(Signup.family_member),
                     joinedload(Signup.user),
@@ -1780,7 +1720,6 @@ def create_swap_request(signup_id):
             else:
                 target_signups = Signup.query.filter_by(
                     item_id=element_id,
-                    cancelled_at=None
                 ).options(
                     joinedload(Signup.family_member),
                     joinedload(Signup.user),
@@ -1799,20 +1738,18 @@ def create_swap_request(signup_id):
                     already_signed_up = Signup.query.filter_by(
                         event_id=requestor_element_id,
                         family_member_id=target_signup.family_member_id,
-                        cancelled_at=None
                     ).first()
                 else:
                     already_signed_up = Signup.query.filter_by(
                         item_id=requestor_element_id,
                         family_member_id=target_signup.family_member_id,
-                        cancelled_at=None
                     ).first()
 
                 if not already_signed_up:
                     # This is an eligible swap partner
-                    eligible_tokens.append((target_signup, element_type, element_id))
+                    eligible_swap_partners.append((target_signup, element_type, element_id))
 
-        if not eligible_tokens:
+        if not eligible_swap_partners:
             flash(
                 "No eligible swap partners found for the selected elements. "
                 "No one is signed up for these elements who could swap with you.",
@@ -1840,15 +1777,47 @@ def create_swap_request(signup_id):
             db.session.add(target)
 
         # Create SwapToken records
-        for recipient_signup, target_element_type, target_element_id in eligible_tokens:
+        for recipient_signup, target_element_type, target_element_id in eligible_swap_partners:
             token = SwapToken(
                 swap_request_id=swap_request.id,
                 token=SwapToken.generate_token(),
                 recipient_signup_id=recipient_signup.id,
                 recipient_user_id=recipient_signup.user_id,
+                target_element_id=target_element_id,
+                target_element_type=target_element_type,
                 is_used=False
             )
             db.session.add(token)
+
+        # Log the swap request creation
+        target_element_names = []
+        for element_type, element_id, element in validated_targets:
+            if element_type == "event":
+                if element.event_type == "date":
+                    target_element_names.append(f"event: {element.event_date.strftime('%B %d, %Y')}")
+                else:
+                    target_element_names.append(f"event: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+            else:
+                target_element_names.append(f"item: {element.name}")
+        
+        requestor_element_desc = ""
+        if signup.event_id:
+            if signup.event.event_type == "date":
+                requestor_element_desc = f"event: {signup.event.event_date.strftime('%B %d, %Y')}"
+            else:
+                requestor_element_desc = f"event: {signup.event.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+        else:
+            requestor_element_desc = f"item: {signup.item.name}"
+        
+        log_entry = LogEntry(
+            project="better_signups",
+            category="Create Swap Request",
+            actor_id=current_user.id,
+            description=f"Created swap request for {signup.family_member.display_name} in list '{signup_list.name}' (UUID: {signup_list.uuid}). "
+                       f"Swapping FROM {requestor_element_desc} TO {', '.join(target_element_names)}. "
+                       f"Notified {len(set(sp[0].user_id for sp in eligible_swap_partners))} users.",
+        )
+        db.session.add(log_entry)
 
         try:
             db.session.commit()
@@ -1882,7 +1851,6 @@ def create_swap_request(signup_id):
             existing_signup = Signup.query.filter_by(
                 event_id=event.id,
                 family_member_id=signup.family_member_id,
-                cancelled_at=None
             ).first()
             
             # Only show elements that are full (no available spots) and have at least one signup
@@ -1929,7 +1897,6 @@ def create_swap_request(signup_id):
             existing_signup = Signup.query.filter_by(
                 item_id=item.id,
                 family_member_id=signup.family_member_id,
-                cancelled_at=None
             ).first()
             
             # Only show elements that are full (no available spots) and have at least one signup

@@ -193,8 +193,8 @@ class Event(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all non-cancelled signups for this event"""
-        return [s for s in self.signups if s.cancelled_at is None]
+        """Get all signups for this event"""
+        return self.signups
 
     def get_spots_taken(self):
         """Get the number of spots currently taken"""
@@ -239,8 +239,8 @@ class Item(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all non-cancelled signups for this item"""
-        return [s for s in self.signups if s.cancelled_at is None]
+        """Get all signups for this item"""
+        return self.signups
 
     def get_spots_taken(self):
         """Get the number of spots currently taken"""
@@ -288,30 +288,17 @@ class Signup(db.Model):
         db.Integer, db.ForeignKey("family_member.id"), nullable=False
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    cancelled_at = db.Column(db.DateTime, nullable=True)
 
     __table_args__ = (
         db.CheckConstraint(
             "(event_id IS NOT NULL AND item_id IS NULL) OR (event_id IS NULL AND item_id IS NOT NULL)"
         ),
-        # Note: These unique constraints prevent duplicate signups, but they don't
-        # account for cancelled signups. We'll need to filter by cancelled_at IS NULL
-        # in application logic, or use a partial unique index (database-specific).
         db.UniqueConstraint("event_id", "family_member_id", name="unique_event_signup"),
         db.UniqueConstraint("item_id", "family_member_id", name="unique_item_signup"),
     )
 
     # Relationships
     user = db.relationship("User", backref=db.backref("signups", lazy=True))
-
-    def is_active(self):
-        """Check if this signup is active (not cancelled)"""
-        return self.cancelled_at is None
-
-    def cancel(self):
-        """Cancel this signup"""
-        if not self.cancelled_at:
-            self.cancelled_at = datetime.utcnow()
 
     def __repr__(self):
         element = (
@@ -419,6 +406,8 @@ class SwapToken(db.Model):
         db.Integer, db.ForeignKey("signup.id"), nullable=False
     )
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    target_element_id = db.Column(db.Integer, nullable=False)  # ID of event or item this token is for
+    target_element_type = db.Column(db.String(20), nullable=False)  # 'event' or 'item'
     is_used = db.Column(db.Boolean, default=False, nullable=False)
     used_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -439,6 +428,15 @@ class SwapToken(db.Model):
     def generate_token():
         """Generate a unique token for a swap link"""
         return secrets.token_urlsafe(48)  # 64 characters when base64 encoded
+
+    def get_target_element(self):
+        """Get the actual Event or Item object that this token is for"""
+        if self.target_element_type == "event":
+            from app.projects.better_signups.models import Event
+            return Event.query.get(self.target_element_id)
+        else:
+            from app.projects.better_signups.models import Item
+            return Item.query.get(self.target_element_id)
 
     def mark_as_used(self):
         """Mark this token as used"""

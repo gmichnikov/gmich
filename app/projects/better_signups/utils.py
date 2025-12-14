@@ -3,7 +3,7 @@ Better Signups Utilities
 Helper functions for the Better Signups project
 """
 from app import db
-from app.projects.better_signups.models import FamilyMember, ListEditor
+from app.projects.better_signups.models import FamilyMember, ListEditor, Event, Item, Signup
 from urllib.parse import urlencode
 import pytz
 from datetime import timedelta, datetime
@@ -177,3 +177,59 @@ def get_google_calendar_url(event, list_name, user=None):
     base_url = "https://calendar.google.com/calendar/render"
     return f"{base_url}?{urlencode(params)}"
 
+
+def check_has_eligible_swap_targets(signup):
+    """
+    Check if a signup has any eligible swap targets in its list.
+    
+    A swap target is eligible if:
+    - It's a different element (not the one the user is signed up for)
+    - It's FULL (no available spots remaining)
+    - It has at least one signup
+    - The user's family member is NOT already signed up for it
+    
+    Args:
+        signup: Signup instance
+        
+    Returns:
+        bool: True if there are eligible swap targets, False otherwise
+    """
+    # Get the list
+    signup_list = signup.event.list if signup.event else signup.item.list
+    
+    if signup_list.list_type == "events":
+        # Count events that are full, have signups, and user isn't already signed up for
+        current_event_id = signup.event_id
+        eligible_events = Event.query.filter(
+            Event.list_id == signup_list.id,
+            Event.id != current_event_id
+        ).all()
+        
+        for event in eligible_events:
+            if event.get_spots_remaining() == 0 and event.get_spots_taken() > 0:
+                # Check if user is already signed up for this event
+                existing = Signup.query.filter_by(
+                    event_id=event.id,
+                    family_member_id=signup.family_member_id,
+                ).first()
+                if not existing:
+                    return True
+    else:  # items
+        # Count items that are full, have signups, and user isn't already signed up for
+        current_item_id = signup.item_id
+        eligible_items = Item.query.filter(
+            Item.list_id == signup_list.id,
+            Item.id != current_item_id
+        ).all()
+        
+        for item in eligible_items:
+            if item.get_spots_remaining() == 0 and item.get_spots_taken() > 0:
+                # Check if user is already signed up for this item
+                existing = Signup.query.filter_by(
+                    item_id=item.id,
+                    family_member_id=signup.family_member_id,
+                ).first()
+                if not existing:
+                    return True
+    
+    return False
