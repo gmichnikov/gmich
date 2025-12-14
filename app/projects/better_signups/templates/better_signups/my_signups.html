@@ -247,6 +247,17 @@
                                style="background-color: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block;">
                                 View List
                             </a>
+                            <form method="POST" 
+                                  action="{{ url_for('better_signups.remove_from_waitlist', uuid=entry.signup_list.uuid, entry_id=entry.id) }}" 
+                                  style="margin: 0;" 
+                                  onsubmit="return confirm('Remove {{ entry.family_member.display_name }} from the waitlist?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="next" value="{{ url_for('better_signups.my_signups') }}"/>
+                                <button type="submit" 
+                                        style="background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer;">
+                                    Remove from Waitlist
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

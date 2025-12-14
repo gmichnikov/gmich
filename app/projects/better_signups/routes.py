@@ -1865,7 +1865,93 @@ def join_waitlist(uuid):
         flash("An error occurred while joining the waitlist. Please try again.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
-    flash(f"Successfully added {family_member.display_name} to the waitlist! You are #{ position} in line.", "success")
+    flash(f"Successfully added {family_member.display_name} to the waitlist! You are #{position} in line.", "success")
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/waitlist/<int:entry_id>/remove", methods=["POST"])
+@login_required
+def remove_from_waitlist(uuid, entry_id):
+    """Remove a family member from a waitlist"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+    waitlist_entry = WaitlistEntry.query.get_or_404(entry_id)
+
+    # Verify entry belongs to this list
+    if waitlist_entry.list_id != signup_list.id:
+        flash("Invalid waitlist entry.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if user has access to this list
+    if not signup_list.is_editor(current_user) and not signup_list.user_has_access(
+        current_user
+    ):
+        flash("You do not have access to this list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify user owns this family member OR is an editor
+    if waitlist_entry.family_member.user_id != current_user.id and not signup_list.is_editor(current_user):
+        flash("You can only remove your own family members from the waitlist.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get info for logging before deletion
+    family_member_name = waitlist_entry.family_member.display_name
+    position = waitlist_entry.position
+    element_type = waitlist_entry.element_type
+    element_id = waitlist_entry.element_id
+
+    # Get element for description
+    if element_type == "event":
+        element = Event.query.get(element_id)
+        if element:
+            if element.event_type == "date":
+                element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+            else:
+                element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+        else:
+            element_desc = f"event (deleted)"
+    else:
+        element = Item.query.get(element_id)
+        if element:
+            element_desc = f"item: {element.name}"
+        else:
+            element_desc = f"item (deleted)"
+
+    # Delete the waitlist entry
+    db.session.delete(waitlist_entry)
+
+    # Log the action
+    removed_by = (
+        "themselves"
+        if waitlist_entry.family_member.user_id == current_user.id
+        else f"editor {current_user.email}"
+    )
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Remove from Waitlist",
+        actor_id=current_user.id,
+        description=f"Removed {family_member_name} from waitlist (position #{position}, removed by {removed_by}) on list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    # Commit
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while removing from waitlist. Please try again.", "error")
+        # Check where to redirect based on 'next' parameter
+        next_url = request.form.get("next") or request.args.get("next")
+        if next_url and "my-signups" in next_url:
+            return redirect(url_for("better_signups.my_signups"))
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    flash(f"Successfully removed {family_member_name} from the waitlist.", "success")
+
+    # Check if we should redirect back to my-signups page
+    next_url = request.form.get("next") or request.args.get("next")
+    if next_url and "my-signups" in next_url:
+        return redirect(url_for("better_signups.my_signups"))
+
     return redirect(url_for("better_signups.view_list", uuid=uuid))
 
 

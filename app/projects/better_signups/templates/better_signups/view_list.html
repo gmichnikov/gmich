@@ -260,15 +260,32 @@
                                     <div id="event-waitlist-{{ event.id }}">
                                     <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
                                         {% for entry in waitlist %}
-                                        <li>
-                                            {% if entry.family_member.is_self %}
-                                                {{ entry.family_member.display_name }}
-                                            {% else %}
-                                                {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
-                                            {% endif %}
-                                            {% if entry.family_member.user_id == current_user.id %}
-                                                <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
-                                            {% endif %}
+                                        <li class="better-signups-signup-item {% if entry.family_member.user_id == current_user.id %}better-signups-signup-user-family{% endif %}">
+                                            <div class="better-signups-signup-actions">
+                                                <span class="better-signups-signup-name">
+                                                    {% if entry.family_member.is_self %}
+                                                        {{ entry.family_member.display_name }}
+                                                    {% else %}
+                                                        {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
+                                                    {% endif %}
+                                                    {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
+                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                                    {% endif %}
+                                                </span>
+                                                {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.remove_from_waitlist', uuid=list.uuid, entry_id=entry.id) }}" 
+                                                          style="display: inline; margin: 0;" 
+                                                          onsubmit="return confirm('Remove {{ entry.family_member.display_name }} from the waitlist?');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Remove
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
                                         </li>
                                         {% endfor %}
                                     </ol>
@@ -466,15 +483,32 @@
                                     <div id="item-waitlist-{{ item.id }}">
                                     <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
                                         {% for entry in waitlist %}
-                                        <li>
-                                            {% if entry.family_member.is_self %}
-                                                {{ entry.family_member.display_name }}
-                                            {% else %}
-                                                {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
-                                            {% endif %}
-                                            {% if entry.family_member.user_id == current_user.id %}
-                                                <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
-                                            {% endif %}
+                                        <li class="better-signups-signup-item {% if entry.family_member.user_id == current_user.id %}better-signups-signup-user-family{% endif %}">
+                                            <div class="better-signups-signup-actions">
+                                                <span class="better-signups-signup-name">
+                                                    {% if entry.family_member.is_self %}
+                                                        {{ entry.family_member.display_name }}
+                                                    {% else %}
+                                                        {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
+                                                    {% endif %}
+                                                    {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
+                                                        <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                                    {% endif %}
+                                                </span>
+                                                {% if entry.family_member.user_id == current_user.id or list.is_editor(current_user) %}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('better_signups.remove_from_waitlist', uuid=list.uuid, entry_id=entry.id) }}" 
+                                                          style="display: inline; margin: 0;" 
+                                                          onsubmit="return confirm('Remove {{ entry.family_member.display_name }} from the waitlist?');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" 
+                                                                class="better-signups-btn better-signups-btn-danger"
+                                                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            Remove
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
                                         </li>
                                         {% endfor %}
                                     </ol>
