@@ -4,7 +4,13 @@ from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
 from functools import wraps
 import pytz
-from app.projects.better_signups.models import SignupList, ListEditor
+from app.projects.better_signups.models import (
+    SignupList,
+    ListEditor,
+    SwapRequest,
+    SwapRequestTarget,
+    SwapToken,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -211,3 +217,109 @@ def view_all_signup_lists():
         signup_list.total_spots_available = total_spots_available
 
     return render_template("admin/view_all_signup_lists.html", lists=lists)
+
+
+@admin_bp.route("/swap_requests")
+@login_required
+@admin_required
+def view_swap_requests():
+    """View all swap requests in the system"""
+    from sqlalchemy.orm import joinedload
+
+    # Get all swap requests with eager loading
+    swap_requests = (
+        SwapRequest.query.options(
+            joinedload(SwapRequest.requestor_signup),
+            joinedload(SwapRequest.requestor_family_member),
+            joinedload(SwapRequest.list),
+            joinedload(SwapRequest.targets),
+            joinedload(SwapRequest.tokens),
+        )
+        .order_by(SwapRequest.created_at.desc())
+        .all()
+    )
+
+    # Enhance swap requests with additional info
+    for sr in swap_requests:
+        # Get requestor's element description
+        requestor_signup = sr.requestor_signup
+        if requestor_signup.event_id:
+            from app.projects.better_signups.models import Event
+
+            event = Event.query.get(requestor_signup.event_id)
+            if event.event_type == "date":
+                sr.requestor_element_desc = event.event_date.strftime("%B %d, %Y")
+            else:
+                sr.requestor_element_desc = event.event_datetime.strftime(
+                    "%B %d, %Y at %I:%M %p"
+                )
+        else:
+            from app.projects.better_signups.models import Item
+
+            item = Item.query.get(requestor_signup.item_id)
+            sr.requestor_element_desc = item.name
+
+        # Get target elements descriptions
+        sr.target_descriptions = []
+        for target in sr.targets:
+            if target.target_element_type == "event":
+                from app.projects.better_signups.models import Event
+
+                event = Event.query.get(target.target_element_id)
+                if event:
+                    if event.event_type == "date":
+                        sr.target_descriptions.append(
+                            event.event_date.strftime("%B %d, %Y")
+                        )
+                    else:
+                        sr.target_descriptions.append(
+                            event.event_datetime.strftime("%B %d, %Y at %I:%M %p")
+                        )
+                else:
+                    sr.target_descriptions.append("[Deleted Event]")
+            else:
+                from app.projects.better_signups.models import Item
+
+                item = Item.query.get(target.target_element_id)
+                if item:
+                    sr.target_descriptions.append(item.name)
+                else:
+                    sr.target_descriptions.append("[Deleted Item]")
+
+        # Count tokens
+        sr.token_count = len(sr.tokens)
+
+    return render_template("admin/view_swap_requests.html", swap_requests=swap_requests)
+
+
+@admin_bp.route("/swap_requests/<int:swap_request_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_swap_request(swap_request_id):
+    """Delete a swap request and all associated tokens"""
+    swap_request = SwapRequest.query.get_or_404(swap_request_id)
+
+    # Get info for logging before deletion
+    requestor_family_member_name = swap_request.requestor_family_member.display_name
+    list_name = swap_request.list.name
+
+    # Delete swap request (cascade will delete targets and tokens)
+    db.session.delete(swap_request)
+
+    # Log the action
+    log_entry = LogEntry(
+        project="admin",
+        category="Delete Swap Request",
+        actor_id=current_user.id,
+        description=f"{current_user.email} deleted swap request for {requestor_family_member_name} in list '{list_name}' (ID: {swap_request_id})",
+    )
+    db.session.add(log_entry)
+
+    try:
+        db.session.commit()
+        flash(f"Swap request deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting swap request: {str(e)}", "error")
+
+    return redirect(url_for("admin.view_swap_requests"))

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Swap Requests{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">All Swap Requests</h1>
+            <p class="auth-subtitle">View and manage swap requests across all lists</p>
+        </div>
+
+        {% if swap_requests %}
+        <div style="margin-top: 2rem;">
+            <p style="margin-bottom: 1rem; color: #666;">
+                Total: <strong>{{ swap_requests|length }}</strong> swap request(s)
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% for sr in swap_requests %}
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; background-color: #f9f9f9;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <div style="margin-bottom: 1rem;">
+                                <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.875rem; font-weight: bold; 
+                                    {% if sr.status == 'pending' %}background-color: #ffc107; color: #333;
+                                    {% elif sr.status == 'completed' %}background-color: #28a745; color: white;
+                                    {% else %}background-color: #6c757d; color: white;{% endif %}">
+                                    {{ sr.status.upper() }}
+                                </span>
+                                <span style="margin-left: 0.5rem; color: #999; font-size: 0.875rem;">
+                                    ID: {{ sr.id }}
+                                </span>
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong style="color: #007bff;">List:</strong> 
+                                <a href="{{ url_for('better_signups.view_list', uuid=sr.list.uuid) }}" 
+                                   target="_blank"
+                                   style="color: #007bff; text-decoration: none;">
+                                    {{ sr.list.name }}
+                                </a>
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong>Requestor:</strong> {{ sr.requestor_family_member.display_name }}
+                                <span style="color: #666;">
+                                    ({{ sr.requestor_signup.user.full_name }})
+                                </span>
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong>Swapping FROM:</strong> 
+                                <span style="color: #dc3545;">{{ sr.requestor_element_desc }}</span>
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong>Swapping TO:</strong>
+                                <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                                    {% for target_desc in sr.target_descriptions %}
+                                    <li style="color: #28a745;">{{ target_desc }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong>Tokens Generated:</strong> {{ sr.token_count }}
+                            </div>
+
+                            <div style="color: #999; font-size: 0.875rem;">
+                                Created: {{ sr.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            {% if sr.status == 'pending' %}
+                            <form method="POST" 
+                                  action="{{ url_for('admin.delete_swap_request', swap_request_id=sr.id) }}"
+                                  onsubmit="return confirm('Are you sure you want to delete this swap request? This will also delete all associated tokens.');"
+                                  style="margin: 0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" 
+                                        style="background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
+                                    Delete
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #999; font-size: 0.875rem; font-style: italic;">
+                                ({{ sr.status }})
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div style="margin-top: 2rem; text-align: center; padding: 2rem; color: #666;">
+            <p style="font-size: 1.1rem;">No swap requests found.</p>
+        </div>
+        {% endif %}
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <p class="auth-footer-text">
+                <a href="{{ url_for('main.index') }}" class="auth-link">← Back to Home</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
