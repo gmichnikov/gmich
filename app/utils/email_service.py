@@ -280,3 +280,160 @@ gregmichnikov.com
         logger.error(f"Failed to send password reset confirmation email to {user.email}: {e}")
         return None
 
+
+def send_swap_request_email(recipient_user, requestor_user, swap_request, tokens_for_recipient, list_name):
+    """
+    Send swap request notification email to a potential swap partner.
+    
+    Args:
+        recipient_user: User model instance (the person receiving the email)
+        requestor_user: User model instance (the person who created the swap request)
+        swap_request: SwapRequest model instance
+        tokens_for_recipient: List of SwapToken instances for this recipient
+        list_name: Name of the signup list
+    
+    Returns:
+        requests.Response object if successful, None if error (logged)
+    
+    Note: Must be called within a Flask application context.
+    """
+    from app.projects.better_signups.models import Event, Item
+    
+    # Get requestor's element details
+    requestor_signup = swap_request.requestor_signup
+    requestor_family_member = swap_request.requestor_family_member
+    
+    if requestor_signup.event_id:
+        requestor_element = Event.query.get(requestor_signup.event_id)
+        if requestor_element.event_type == "date":
+            requestor_element_desc = requestor_element.event_date.strftime('%B %d, %Y')
+        else:
+            requestor_element_desc = f"{requestor_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')} ({requestor_element.timezone})"
+    else:
+        requestor_element = Item.query.get(requestor_signup.item_id)
+        requestor_element_desc = requestor_element.name
+    
+    subject = f"Swap Request in '{list_name}'"
+    
+    # Build swap options text
+    swap_options_text = []
+    swap_options_html = []
+    
+    for token in tokens_for_recipient:
+        # Get recipient's signup details
+        recipient_signup = token.recipient_signup
+        recipient_family_member = recipient_signup.family_member
+        
+        # Get target element details (what they would swap TO)
+        if token.target_element_type == "event":
+            target_element = Event.query.get(token.target_element_id)
+            if target_element.event_type == "date":
+                target_element_desc = target_element.event_date.strftime('%B %d, %Y')
+            else:
+                target_element_desc = f"{target_element.event_datetime.strftime('%B %d, %Y at %I:%M %p')} ({target_element.timezone})"
+        else:
+            target_element = Item.query.get(token.target_element_id)
+            target_element_desc = target_element.name
+        
+        # Generate swap link
+        swap_url = url_for('better_signups.execute_swap', token=token.token, _external=True)
+        
+        # Text version
+        swap_options_text.append(
+            f"  • {recipient_family_member.display_name}: Swap to '{target_element_desc}'\n"
+            f"    Link: {swap_url}"
+        )
+        
+        # HTML version
+        swap_options_html.append(f"""
+            <div style="margin: 15px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #333;">
+                    {recipient_family_member.display_name}
+                </p>
+                <p style="margin: 0 0 10px 0; color: #666;">
+                    Swap to: <strong>{target_element_desc}</strong>
+                </p>
+                <a href="{swap_url}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Complete This Swap
+                </a>
+            </div>
+        """)
+    
+    text_content = f"""Hello {recipient_user.full_name},
+
+{requestor_user.full_name} would like to swap signups with you in the list '{list_name}'.
+
+They want to swap FROM: {requestor_family_member.display_name}'s signup for '{requestor_element_desc}'
+
+Your family has the following swap option(s):
+
+{chr(10).join(swap_options_text)}
+
+What happens if you click a link:
+- {requestor_family_member.display_name} will be moved to the element you clicked
+- Your family member will be moved to '{requestor_element_desc}'
+- The swap happens instantly - first click wins!
+
+If you're not interested, simply ignore this email.
+
+Best regards,
+gregmichnikov.com
+"""
+    
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .info-box {{ background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+        .warning {{ background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Swap Request in '{list_name}'</h2>
+        <p>Hello {recipient_user.full_name},</p>
+        <p><strong>{requestor_user.full_name}</strong> would like to swap signups with you.</p>
+        
+        <div class="info-box">
+            <p style="margin: 0 0 5px 0;"><strong>They want to swap FROM:</strong></p>
+            <p style="margin: 0;">{requestor_family_member.display_name}'s signup for <strong>'{requestor_element_desc}'</strong></p>
+        </div>
+        
+        <h3>Your Swap Option(s):</h3>
+        <p>Click any button below to complete that swap:</p>
+        
+        {''.join(swap_options_html)}
+        
+        <div class="warning">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">⚡ Important:</p>
+            <p style="margin: 0;">
+                • The swap happens <strong>instantly</strong> when you click<br>
+                • <strong>First click wins!</strong> If someone else clicks first, the swap will already be completed<br>
+                • Both signups will be swapped automatically
+            </p>
+        </div>
+        
+        <p>If you're not interested, simply ignore this email.</p>
+        
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    
+    try:
+        return send_email(
+            to_email=recipient_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content
+        )
+    except Exception as e:
+        # Log the error but don't crash - swap request creation should still succeed
+        logger.error(f"Failed to send swap request email to {recipient_user.email}: {e}")
+        return None

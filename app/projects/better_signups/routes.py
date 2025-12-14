@@ -45,7 +45,11 @@ from app.projects.better_signups.utils import (
     check_has_eligible_swap_targets,
 )
 from app.models import User, LogEntry
+from app.utils.email_service import send_swap_request_email
 import pytz
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint(
     "better_signups",
@@ -1821,10 +1825,57 @@ def create_swap_request(signup_id):
 
         try:
             db.session.commit()
-            flash(
-                f"Swap request created! Eligible users will be notified via email.",
-                "success"
-            )
+            
+            # Send emails to eligible swap partners
+            # Group tokens by recipient_user_id
+            tokens_by_user = {}
+            for token_tuple in eligible_swap_partners:
+                recipient_signup, target_element_type, target_element_id = token_tuple
+                user_id = recipient_signup.user_id
+                
+                if user_id not in tokens_by_user:
+                    tokens_by_user[user_id] = []
+                
+                # Find the actual SwapToken object that was created
+                token_obj = SwapToken.query.filter_by(
+                    swap_request_id=swap_request.id,
+                    recipient_signup_id=recipient_signup.id,
+                    target_element_id=target_element_id,
+                    target_element_type=target_element_type
+                ).first()
+                
+                if token_obj:
+                    tokens_by_user[user_id].append(token_obj)
+            
+            # Send one email per user with all their family's swap options
+            emails_sent = 0
+            for recipient_user_id, tokens_for_user in tokens_by_user.items():
+                recipient_user = User.query.get(recipient_user_id)
+                if recipient_user:
+                    try:
+                        send_swap_request_email(
+                            recipient_user=recipient_user,
+                            requestor_user=current_user,
+                            swap_request=swap_request,
+                            tokens_for_recipient=tokens_for_user,
+                            list_name=signup_list.name
+                        )
+                        emails_sent += 1
+                    except Exception as e:
+                        # Log but continue - we don't want email failures to break swap creation
+                        logger.error(f"Failed to send swap email to user {recipient_user_id}: {e}")
+            
+            if emails_sent > 0:
+                flash(
+                    f"Swap request created! {emails_sent} user(s) have been notified via email.",
+                    "success"
+                )
+            else:
+                flash(
+                    f"Swap request created, but emails could not be sent. "
+                    "Please check your email configuration.",
+                    "warning"
+                )
         except SQLAlchemyError as e:
             db.session.rollback()
             flash("An error occurred while creating the swap request. Please try again.", "error")
