@@ -318,14 +318,17 @@ def edit_list(uuid):
         return redirect(url_for("better_signups.index"))
 
     form = EditSignupListForm(obj=signup_list)
-    form.accepting_signups.data = signup_list.accepting_signups
-    form.allow_waitlist.data = signup_list.allow_waitlist
+    
+    # Only pre-populate checkbox values on GET requests
+    # On POST, let the form get values from request data
+    if request.method == 'GET':
+        form.accepting_signups.data = signup_list.accepting_signups
+        form.allow_waitlist.data = signup_list.allow_waitlist
 
     if form.validate_on_submit():
         # Validate waitlist can be disabled
         if not form.allow_waitlist.data and signup_list.allow_waitlist:
             # User is trying to disable waitlist - check if any waitlist entries exist
-            from app.projects.better_signups.models import WaitlistEntry
             waitlist_count = WaitlistEntry.query.filter_by(list_id=signup_list.id).count()
             if waitlist_count > 0:
                 flash(
@@ -349,6 +352,7 @@ def edit_list(uuid):
                         joinedload(Item.signups).joinedload(Signup.user),
                         joinedload(Item.signups).joinedload(Signup.family_member),
                     ).filter_by(list_id=signup_list.id).order_by(Item.created_at.asc()).all() if signup_list.list_type == "items" else [],
+                    waitlist_entries_by_element={},
                 )
         
         signup_list.name = form.name.data.strip()
@@ -416,6 +420,23 @@ def edit_list(uuid):
         else []
     )
 
+    # Get waitlist entries if waitlist is enabled
+    waitlist_entries_by_element = {}
+    if signup_list.allow_waitlist:
+        all_waitlist_entries = (
+            WaitlistEntry.query.options(
+                joinedload(WaitlistEntry.family_member).joinedload(FamilyMember.user)
+            )
+            .filter_by(list_id=signup_list.id)
+            .order_by(WaitlistEntry.position)
+            .all()
+        )
+        for entry in all_waitlist_entries:
+            element_key = f"{entry.element_type}_{entry.element_id}"
+            if element_key not in waitlist_entries_by_element:
+                waitlist_entries_by_element[element_key] = []
+            waitlist_entries_by_element[element_key].append(entry)
+
     return render_template(
         "better_signups/edit_list.html",
         list=signup_list,
@@ -424,6 +445,7 @@ def edit_list(uuid):
         editors=editors,
         events=events,
         items=items if signup_list.list_type == "items" else [],
+        waitlist_entries_by_element=waitlist_entries_by_element,
     )
 
 
@@ -1263,6 +1285,24 @@ def view_list(uuid):
     
     # Track which signup IDs belong to the current user's family members
     user_family_signup_ids = set()
+    
+    # Get all waitlist entries for this list
+    waitlist_entries_by_element = {}
+    user_waitlist_entries = {}  # Track which elements user's family members are on waitlist for
+    
+    if signup_list.allow_waitlist:
+        all_waitlist_entries = WaitlistEntry.query.filter_by(list_id=signup_list.id).order_by(WaitlistEntry.position).all()
+        for entry in all_waitlist_entries:
+            element_key = f"{entry.element_type}_{entry.element_id}"
+            if element_key not in waitlist_entries_by_element:
+                waitlist_entries_by_element[element_key] = []
+            waitlist_entries_by_element[element_key].append(entry)
+            
+            # Track if current user's family member is on this waitlist
+            if entry.family_member.user_id == current_user.id:
+                if element_key not in user_waitlist_entries:
+                    user_waitlist_entries[element_key] = []
+                user_waitlist_entries[element_key].append(entry)
 
     # For events
     for event in signup_list.events:
@@ -1320,6 +1360,8 @@ def view_list(uuid):
         available_family_members_by_element=available_family_members_by_element,
         user_signed_up_element_ids=user_signed_up_element_ids,
         user_family_signup_ids=user_family_signup_ids,
+        waitlist_entries_by_element=waitlist_entries_by_element,
+        user_waitlist_entries=user_waitlist_entries,
     )
 
 
@@ -1676,6 +1718,157 @@ def remove_signup(uuid, signup_id):
     return redirect(url_for("better_signups.edit_list", uuid=uuid))
 
 
+@bp.route("/lists/<string:uuid>/waitlist/join", methods=["POST"])
+@login_required
+def join_waitlist(uuid):
+    """Join a waitlist for an event or item"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+
+    # Check if user has access
+    if not signup_list.is_editor(current_user) and not signup_list.user_has_access(
+        current_user
+    ):
+        flash("You do not have access to this list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if list allows waitlist
+    if not signup_list.allow_waitlist:
+        flash("This list does not have waitlist enabled.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if list is accepting signups
+    if not signup_list.accepting_signups:
+        flash("This list is not currently accepting signups or waitlist entries.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get form data
+    element_type = request.form.get("element_type")  # 'event' or 'item'
+    element_id = request.form.get("element_id", type=int)
+    family_member_id = request.form.get("family_member_id", type=int)
+
+    if not all([element_type, element_id, family_member_id]):
+        flash("Missing required information.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Validate element type
+    if element_type not in ["event", "item"]:
+        flash("Invalid element type.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get the element
+    if element_type == "event":
+        element = Event.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid event.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    else:
+        element = Item.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid item.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify element is full
+    if element.get_spots_remaining() > 0:
+        flash("This element still has spots available. Please sign up directly instead.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify family member belongs to current user
+    family_member = FamilyMember.query.get_or_404(family_member_id)
+    if family_member.user_id != current_user.id:
+        flash("Invalid family member.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if this family member is already signed up for this element
+    if element_type == "event":
+        existing_signup = Signup.query.filter_by(
+            event_id=element_id, family_member_id=family_member_id
+        ).first()
+    else:
+        existing_signup = Signup.query.filter_by(
+            item_id=element_id, family_member_id=family_member_id
+        ).first()
+
+    if existing_signup:
+        flash(
+            f"{family_member.display_name} is already signed up for this element.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if already on waitlist
+    existing_waitlist = WaitlistEntry.query.filter_by(
+        list_id=signup_list.id,
+        element_type=element_type,
+        element_id=element_id,
+        family_member_id=family_member_id,
+    ).first()
+
+    if existing_waitlist:
+        flash(
+            f"{family_member.display_name} is already on the waitlist for this element.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Calculate position (max + 1, or 1 if first)
+    max_position = (
+        db.session.query(db.func.max(WaitlistEntry.position))
+        .filter_by(
+            element_type=element_type,
+            element_id=element_id,
+        )
+        .scalar()
+    )
+    position = (max_position + 1) if max_position else 1
+
+    # Create waitlist entry
+    waitlist_entry = WaitlistEntry(
+        list_id=signup_list.id,
+        element_type=element_type,
+        element_id=element_id,
+        family_member_id=family_member_id,
+        position=position,
+    )
+
+    db.session.add(waitlist_entry)
+
+    # Log the action
+    element_desc = ""
+    if element_type == "event":
+        if element.event_type == "date":
+            element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        element_desc = f"item: {element.name}"
+
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Join Waitlist",
+        actor_id=current_user.id,
+        description=f"Added {family_member.display_name} to waitlist (position #{position}) for list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    # Commit
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash(
+            f"{family_member.display_name} is already on the waitlist for this element.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash("An error occurred while joining the waitlist. Please try again.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    flash(f"Successfully added {family_member.display_name} to the waitlist! You are #{ position} in line.", "success")
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
 @bp.route("/my-signups")
 @login_required
 def my_signups():
@@ -1706,6 +1899,18 @@ def my_signups():
             Signup.family_member_id.in_(family_member_ids),
         )
         .order_by(Signup.created_at.desc())
+        .all()
+    )
+
+    # Get all waitlist entries for these family members
+    # Order by created_at descending (most recent first)
+    waitlist_entries = (
+        WaitlistEntry.query.options(
+            joinedload(WaitlistEntry.family_member),
+            joinedload(WaitlistEntry.signup_list),
+        )
+        .filter(WaitlistEntry.family_member_id.in_(family_member_ids))
+        .order_by(WaitlistEntry.created_at.desc())
         .all()
     )
 
@@ -1764,7 +1969,11 @@ def my_signups():
         # Use helper function instead of inline logic
         signup.has_eligible_swap_targets = check_has_eligible_swap_targets(signup)
 
-    return render_template("better_signups/my_signups.html", signups=signups)
+    return render_template(
+        "better_signups/my_signups.html",
+        signups=signups,
+        waitlist_entries=waitlist_entries,
+    )
 
 
 # ============================================================================

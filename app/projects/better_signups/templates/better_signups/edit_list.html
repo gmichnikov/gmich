@@ -348,6 +348,32 @@
                         {% else %}
                             <p style="color: #666; font-size: 0.875rem; margin: 0;">No signups yet.</p>
                         {% endif %}
+                        
+                        {# Show waitlist entries if any #}
+                        {% if list.allow_waitlist %}
+                            {% set element_key = 'event_' ~ event.id|string %}
+                            {% set waitlist = waitlist_entries_by_element.get(element_key, []) %}
+                            {% if waitlist|length > 0 %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                    <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Waitlist ({{ waitlist|length }} waiting):</div>
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
+                                        {% for entry in waitlist %}
+                                        <li style="margin-bottom: 0.5rem;">
+                                            <div>
+                                                {{ entry.family_member.display_name }}
+                                                {% if not entry.family_member.is_self %}
+                                                    <span style="color: #666;">({{ entry.family_member.user.full_name }})</span>
+                                                {% endif %}
+                                            </div>
+                                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Position #{{ entry.position }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                </div>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -448,6 +474,32 @@
                             </ol>
                         {% else %}
                             <p style="color: #666; font-size: 0.875rem; margin: 0;">No signups yet.</p>
+                        {% endif %}
+                        
+                        {# Show waitlist entries if any #}
+                        {% if list.allow_waitlist %}
+                            {% set element_key = 'item_' ~ item.id|string %}
+                            {% set waitlist = waitlist_entries_by_element.get(element_key, []) %}
+                            {% if waitlist|length > 0 %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                    <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">Waitlist ({{ waitlist|length }} waiting):</div>
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
+                                        {% for entry in waitlist %}
+                                        <li style="margin-bottom: 0.5rem;">
+                                            <div>
+                                                {{ entry.family_member.display_name }}
+                                                {% if not entry.family_member.is_self %}
+                                                    <span style="color: #666;">({{ entry.family_member.user.full_name }})</span>
+                                                {% endif %}
+                                            </div>
+                                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Position #{{ entry.position }} • Joined {{ entry.created_at.strftime('%B %d, %Y') }}
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>

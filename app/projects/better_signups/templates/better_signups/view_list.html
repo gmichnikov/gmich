@@ -194,8 +194,87 @@
                             </div>
                             {% elif event.get_spots_remaining() <= 0 %}
                             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
-                                <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
+                                {% if list.allow_waitlist and list.accepting_signups %}
+                                    {% set available_member_ids = available_family_members_by_element.get('event_' ~ event.id|string, []) if available_family_members_by_element else [] %}
+                                    {% set element_key = 'event_' ~ event.id|string %}
+                                    {% set user_waitlist = user_waitlist_entries.get(element_key, []) %}
+                                    {% if available_member_ids|length > 0 %}
+                                    <form method="POST" action="{{ url_for('better_signups.join_waitlist', uuid=list.uuid) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <input type="hidden" name="element_type" value="event">
+                                        <input type="hidden" name="element_id" value="{{ event.id }}">
+                                        {% if available_member_ids|length == 1 %}
+                                            {# Quick join: skip dropdown when only one option #}
+                                            {% for member in family_members %}
+                                                {% if member.id in available_member_ids %}
+                                                <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                                {% endif %}
+                                            {% endfor %}
+                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
+                                        {% else %}
+                                            <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                                {% for member in family_members %}
+                                                    {% if member.id in available_member_ids %}
+                                                    <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                        {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                                    </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
+                                        {% endif %}
+                                    </form>
+                                    {% elif user_waitlist|length > 0 %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                        {% if family_members|length == 1 %}
+                                            You are already on the waitlist for this event.
+                                        {% else %}
+                                            All your family members are already on the waitlist or signed up for this event.
+                                        {% endif %}
+                                    </p>
+                                    {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                        No spots remaining. All your family members are already signed up.
+                                    </p>
+                                    {% endif %}
+                                {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
+                                {% endif %}
                             </div>
+                            {% endif %}
+                            
+                            {# Show waitlist entries if any #}
+                            {% if list.allow_waitlist %}
+                                {% set element_key = 'event_' ~ event.id|string %}
+                                {% set waitlist = waitlist_entries_by_element.get(element_key, []) %}
+                                {% if waitlist|length > 0 %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <div style="font-weight: bold; font-size: 0.875rem;">Waitlist ({{ waitlist|length }} waiting):</div>
+                                        <button type="button" 
+                                                onclick="toggleSignups('event-waitlist-{{ event.id }}', this)"
+                                                style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; text-decoration: underline; padding: 0;">
+                                            Hide
+                                        </button>
+                                    </div>
+                                    <div id="event-waitlist-{{ event.id }}">
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
+                                        {% for entry in waitlist %}
+                                        <li>
+                                            {% if entry.family_member.is_self %}
+                                                {{ entry.family_member.display_name }}
+                                            {% else %}
+                                                {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
+                                            {% endif %}
+                                            {% if entry.family_member.user_id == current_user.id %}
+                                                <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                    </div>
+                                </div>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
@@ -321,8 +400,87 @@
                             </div>
                             {% elif item.get_spots_remaining() <= 0 %}
                             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
-                                <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
+                                {% if list.allow_waitlist and list.accepting_signups %}
+                                    {% set available_member_ids = available_family_members_by_element.get('item_' ~ item.id|string, []) if available_family_members_by_element else [] %}
+                                    {% set element_key = 'item_' ~ item.id|string %}
+                                    {% set user_waitlist = user_waitlist_entries.get(element_key, []) %}
+                                    {% if available_member_ids|length > 0 %}
+                                    <form method="POST" action="{{ url_for('better_signups.join_waitlist', uuid=list.uuid) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <input type="hidden" name="element_type" value="item">
+                                        <input type="hidden" name="element_id" value="{{ item.id }}">
+                                        {% if available_member_ids|length == 1 %}
+                                            {# Quick join: skip dropdown when only one option #}
+                                            {% for member in family_members %}
+                                                {% if member.id in available_member_ids %}
+                                                <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                                {% endif %}
+                                            {% endfor %}
+                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
+                                        {% else %}
+                                            <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                                {% for member in family_members %}
+                                                    {% if member.id in available_member_ids %}
+                                                    <option value="{{ member.id }}" {% if member.is_self %}selected{% endif %}>
+                                                        {{ member.display_name }}{% if member.is_self %} (You){% endif %}
+                                                    </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
+                                        {% endif %}
+                                    </form>
+                                    {% elif user_waitlist|length > 0 %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                        {% if family_members|length == 1 %}
+                                            You are already on the waitlist for this item.
+                                        {% else %}
+                                            All your family members are already on the waitlist or signed up for this item.
+                                        {% endif %}
+                                    </p>
+                                    {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">
+                                        No spots remaining. All your family members are already signed up.
+                                    </p>
+                                    {% endif %}
+                                {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0;">No spots remaining.</p>
+                                {% endif %}
                             </div>
+                            {% endif %}
+                            
+                            {# Show waitlist entries if any #}
+                            {% if list.allow_waitlist %}
+                                {% set element_key = 'item_' ~ item.id|string %}
+                                {% set waitlist = waitlist_entries_by_element.get(element_key, []) %}
+                                {% if waitlist|length > 0 %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <div style="font-weight: bold; font-size: 0.875rem;">Waitlist ({{ waitlist|length }} waiting):</div>
+                                        <button type="button" 
+                                                onclick="toggleSignups('item-waitlist-{{ item.id }}', this)"
+                                                style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; text-decoration: underline; padding: 0;">
+                                            Hide
+                                        </button>
+                                    </div>
+                                    <div id="item-waitlist-{{ item.id }}">
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #666; font-style: italic;">
+                                        {% for entry in waitlist %}
+                                        <li>
+                                            {% if entry.family_member.is_self %}
+                                                {{ entry.family_member.display_name }}
+                                            {% else %}
+                                                {{ entry.family_member.display_name }} ({{ entry.family_member.user.full_name }})
+                                            {% endif %}
+                                            {% if entry.family_member.user_id == current_user.id %}
+                                                <span style="color: #28a745; font-weight: bold;">(You are #{{ entry.position }} in line)</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                    </div>
+                                </div>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
