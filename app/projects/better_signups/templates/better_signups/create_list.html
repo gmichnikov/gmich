@@ -79,6 +79,23 @@
             </div>
 
             <div class="auth-form-group">
+                <label class="auth-checkbox-label">
+                    {{ form.allow_waitlist(class="auth-checkbox") }}
+                    <span>{{ form.allow_waitlist.label.text }}</span>
+                </label>
+                <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                    {{ form.allow_waitlist.description }}
+                </small>
+                {% if form.allow_waitlist.errors %}
+                    <div class="auth-error-messages">
+                        {% for error in form.allow_waitlist.errors %}
+                            <span class="auth-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
                 {{ form.submit(class="auth-submit-btn") }}
             </div>
         </form>

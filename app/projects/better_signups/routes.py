@@ -38,6 +38,7 @@ from app.projects.better_signups.models import (
     SwapRequest,
     SwapRequestTarget,
     SwapToken,
+    WaitlistEntry,
 )
 from app.projects.better_signups.utils import (
     ensure_self_family_member,
@@ -264,6 +265,7 @@ def create_list():
             list_type=form.list_type.data,
             creator_id=current_user.id,
             accepting_signups=True,
+            allow_waitlist=form.allow_waitlist.data,
         )
 
         # Generate UUID
@@ -281,11 +283,12 @@ def create_list():
             if form.list_password.data and form.list_password.data.strip()
             else "public"
         )
+        waitlist_info = "waitlist enabled" if form.allow_waitlist.data else "no waitlist"
         log_entry = LogEntry(
             project="better_signups",
             category="Create List",
             actor_id=current_user.id,
-            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, UUID: {new_list.uuid})",
+            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, {waitlist_info}, UUID: {new_list.uuid})",
         )
         db.session.add(log_entry)
 
@@ -316,13 +319,44 @@ def edit_list(uuid):
 
     form = EditSignupListForm(obj=signup_list)
     form.accepting_signups.data = signup_list.accepting_signups
+    form.allow_waitlist.data = signup_list.allow_waitlist
 
     if form.validate_on_submit():
+        # Validate waitlist can be disabled
+        if not form.allow_waitlist.data and signup_list.allow_waitlist:
+            # User is trying to disable waitlist - check if any waitlist entries exist
+            from app.projects.better_signups.models import WaitlistEntry
+            waitlist_count = WaitlistEntry.query.filter_by(list_id=signup_list.id).count()
+            if waitlist_count > 0:
+                flash(
+                    f"Cannot disable waitlist: {waitlist_count} people are currently on waitlists. "
+                    "Remove all waitlist entries first.",
+                    "error"
+                )
+                return render_template(
+                    "better_signups/edit_list.html",
+                    list=signup_list,
+                    form=form,
+                    add_editor_form=AddListEditorForm() if signup_list.creator_id == current_user.id else None,
+                    editors=ListEditor.query.filter_by(list_id=signup_list.id).all(),
+                    events=Event.query.options(
+                        joinedload(Event.signups).joinedload(Signup.user),
+                        joinedload(Event.signups).joinedload(Signup.family_member),
+                    ).filter_by(list_id=signup_list.id).order_by(
+                        Event.event_date.asc().nullslast(), Event.event_datetime.asc().nullslast()
+                    ).all() if signup_list.list_type == "events" else [],
+                    items=Item.query.options(
+                        joinedload(Item.signups).joinedload(Signup.user),
+                        joinedload(Item.signups).joinedload(Signup.family_member),
+                    ).filter_by(list_id=signup_list.id).order_by(Item.created_at.asc()).all() if signup_list.list_type == "items" else [],
+                )
+        
         signup_list.name = form.name.data.strip()
         signup_list.description = (
             form.description.data.strip() if form.description.data else None
         )
         signup_list.accepting_signups = form.accepting_signups.data
+        signup_list.allow_waitlist = form.allow_waitlist.data
 
         # Handle password changes
         if request.form.get("remove_password"):

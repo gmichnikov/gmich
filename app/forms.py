@@ -211,6 +211,11 @@ class CreateSignupListForm(FlaskForm):
         validators=[Length(max=100)],
         description="Optional password to restrict access to this list. Leave blank for open access.",
     )
+    allow_waitlist = BooleanField(
+        "Enable Waitlist",
+        default=False,
+        description="Allow users to join a waitlist when spots are full",
+    )
     submit = SubmitField("Create List")
 
     def validate_name(self, field):
@@ -232,6 +237,11 @@ class EditSignupListForm(FlaskForm):
         "Accepting Signups",
         default=True,
         description="Allow users to sign up for this list",
+    )
+    allow_waitlist = BooleanField(
+        "Enable Waitlist",
+        default=False,
+        description="Allow users to join a waitlist when spots are full",
     )
     submit = SubmitField("Update List")
 

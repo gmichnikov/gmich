@@ -19,6 +19,7 @@ class SignupList(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     list_password_hash = db.Column(db.String(128), nullable=True)
     accepting_signups = db.Column(db.Boolean, default=True)
+    allow_waitlist = db.Column(db.Boolean, default=False)
     list_type = db.Column(db.String(20), nullable=False)  # 'events' or 'items'
     uuid = db.Column(db.String(36), unique=True, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -193,11 +194,11 @@ class Event(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all signups for this event"""
-        return self.signups
+        """Get all confirmed signups for this event (excludes cancelled)"""
+        return [s for s in self.signups if s.status != 'cancelled']
 
     def get_spots_taken(self):
-        """Get the number of spots currently taken"""
+        """Get the number of spots currently taken (includes pending_confirmation)"""
         return len(self.get_active_signups())
 
     def get_spots_remaining(self):
@@ -239,11 +240,11 @@ class Item(db.Model):
     )
 
     def get_active_signups(self):
-        """Get all signups for this item"""
-        return self.signups
+        """Get all confirmed signups for this item (excludes cancelled)"""
+        return [s for s in self.signups if s.status != 'cancelled']
 
     def get_spots_taken(self):
-        """Get the number of spots currently taken"""
+        """Get the number of spots currently taken (includes pending_confirmation)"""
         return len(self.get_active_signups())
 
     def get_spots_remaining(self):
@@ -287,6 +288,7 @@ class Signup(db.Model):
     family_member_id = db.Column(
         db.Integer, db.ForeignKey("family_member.id"), nullable=False
     )
+    status = db.Column(db.String(20), nullable=False, default='confirmed')  # 'confirmed', 'pending_confirmation', 'cancelled'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
@@ -446,3 +448,45 @@ class SwapToken(db.Model):
 
     def __repr__(self):
         return f"<SwapToken {self.id}: token={self.token[:8]}... is_used={self.is_used}>"
+
+
+class WaitlistEntry(db.Model):
+    """Entry in a waitlist for an element (event or item)"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    list_id = db.Column(db.Integer, db.ForeignKey("signup_list.id"), nullable=False)
+    element_type = db.Column(db.String(20), nullable=False)  # 'event' or 'item'
+    element_id = db.Column(db.Integer, nullable=False)  # ID of event or item
+    family_member_id = db.Column(
+        db.Integer, db.ForeignKey("family_member.id"), nullable=False
+    )
+    position = db.Column(db.Integer, nullable=False)  # Position in waitlist (1-indexed)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    signup_list = db.relationship(
+        "SignupList", backref=db.backref("waitlist_entries", lazy=True, cascade="all, delete-orphan")
+    )
+    family_member = db.relationship(
+        "FamilyMember", backref=db.backref("waitlist_entries", lazy=True)
+    )
+
+    # Unique constraint: one family member can only be on waitlist once per element
+    __table_args__ = (
+        db.UniqueConstraint(
+            "element_type",
+            "element_id",
+            "family_member_id",
+            name="unique_waitlist_entry",
+        ),
+    )
+
+    def get_element(self):
+        """Get the actual Event or Item object"""
+        if self.element_type == "event":
+            return Event.query.get(self.element_id)
+        else:
+            return Item.query.get(self.element_id)
+
+    def __repr__(self):
+        return f"<WaitlistEntry {self.id}: {self.element_type}_id={self.element_id} family_member_id={self.family_member_id} position={self.position}>"
