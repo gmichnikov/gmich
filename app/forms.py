@@ -216,6 +216,11 @@ class CreateSignupListForm(FlaskForm):
         default=False,
         description="Allow users to join a waitlist when spots are full",
     )
+    max_signups_per_member = IntegerField(
+        "Max Signups Per Person (Optional)",
+        validators=[Optional(), NumberRange(min=1)],
+        description="Leave blank for no limit. Minimum value is 1.",
+    )
     submit = SubmitField("Create List")
 
     def validate_name(self, field):
@@ -242,6 +247,11 @@ class EditSignupListForm(FlaskForm):
         "Enable Waitlist",
         default=False,
         description="Allow users to join a waitlist when spots are full",
+    )
+    max_signups_per_member = IntegerField(
+        "Max Signups Per Person (Optional)",
+        validators=[Optional(), NumberRange(min=1)],
+        description="Leave blank for no limit. Minimum value is 1.",
     )
     submit = SubmitField("Update List")
 

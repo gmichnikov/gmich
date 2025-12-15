@@ -3,7 +3,7 @@ Better Signups Utilities
 Helper functions for the Better Signups project
 """
 from app import db
-from app.projects.better_signups.models import FamilyMember, ListEditor, Event, Item, Signup
+from app.projects.better_signups.models import FamilyMember, ListEditor, Event, Item, Signup, SignupList
 from app.models import LogEntry
 from urllib.parse import urlencode
 import pytz
@@ -360,3 +360,83 @@ def process_expired_pending_confirmations():
         'cascade_count': cascade_count,
         'errors': errors
     }
+
+
+def get_signup_count(family_member_id, signup_list_id):
+    """
+    Count the number of signups a family member has in a specific list.
+    
+    Only counts signups with status 'confirmed' or 'pending_confirmation'.
+    Does NOT count cancelled signups or waitlist entries.
+    
+    Args:
+        family_member_id: ID of the family member
+        signup_list_id: ID of the signup list
+        
+    Returns:
+        int: Number of active signups for this family member in this list
+    """
+    # Query for all signups for this family member in this list
+    # Need to join through Event or Item to get to the list
+    count = 0
+    
+    # Count event signups
+    event_signups = db.session.query(Signup).join(Event).filter(
+        Signup.family_member_id == family_member_id,
+        Event.list_id == signup_list_id,
+        Signup.status.in_(['confirmed', 'pending_confirmation'])
+    ).count()
+    
+    count += event_signups
+    
+    # Count item signups
+    item_signups = db.session.query(Signup).join(Item).filter(
+        Signup.family_member_id == family_member_id,
+        Item.list_id == signup_list_id,
+        Signup.status.in_(['confirmed', 'pending_confirmation'])
+    ).count()
+    
+    count += item_signups
+    
+    return count
+
+
+def is_at_limit(family_member_id, signup_list_id):
+    """
+    Check if a family member has reached the signup limit for a list.
+    
+    Args:
+        family_member_id: ID of the family member
+        signup_list_id: ID of the signup list
+        
+    Returns:
+        bool: True if at or above limit, False if below limit or no limit set
+    """
+    signup_list = SignupList.query.get(signup_list_id)
+    
+    # If no list found or no limit set, return False (not at limit)
+    if not signup_list or signup_list.max_signups_per_member is None:
+        return False
+    
+    # Get current signup count
+    current_count = get_signup_count(family_member_id, signup_list_id)
+    
+    # Check if at or above limit
+    return current_count >= signup_list.max_signups_per_member
+
+
+def can_signup(family_member_id, signup_list_id):
+    """
+    Check if a family member can sign up for more elements in a list.
+    
+    This is the inverse of is_at_limit() - returns True if the family member
+    is below the limit or if no limit is set.
+    
+    Args:
+        family_member_id: ID of the family member
+        signup_list_id: ID of the signup list
+        
+    Returns:
+        bool: True if can sign up for more, False if at limit
+    """
+    return not is_at_limit(family_member_id, signup_list_id)

@@ -20,6 +20,7 @@ class SignupList(db.Model):
     list_password_hash = db.Column(db.String(128), nullable=True)
     accepting_signups = db.Column(db.Boolean, default=True)
     allow_waitlist = db.Column(db.Boolean, default=False)
+    max_signups_per_member = db.Column(db.Integer, nullable=True)  # Max signups per family member (NULL = no limit)
     list_type = db.Column(db.String(20), nullable=False)  # 'events' or 'items'
     uuid = db.Column(db.String(36), unique=True, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -150,6 +150,21 @@
                 </div>
 
                 <div class="auth-form-group">
+                    {{ form.max_signups_per_member.label(class="auth-label") }}
+                    {{ form.max_signups_per_member(class="auth-input", placeholder="Leave blank for no limit", type="number", min="1") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        {{ form.max_signups_per_member.description }}
+                    </small>
+                    {% if form.max_signups_per_member.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.max_signups_per_member.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form-group">
                     {{ form.submit(class="auth-submit-btn") }}
                 </div>
             </form>

@@ -71,17 +71,19 @@ def offer_spot_to_next_in_waitlist(element_type, element_id):
     Offer a spot to the next person on the waitlist for an element.
     
     This function:
-    1. Finds the first person on the waitlist (lowest position)
-    2. Creates a pending_confirmation signup for them
-    3. Deletes their waitlist entry
-    4. Returns info about the offered signup for email notification
+    1. Finds people on the waitlist (ordered by position)
+    2. Checks if they're at their signup limit for the list
+    3. Skips people at limit (logs, keeps them on waitlist)
+    4. Creates a pending_confirmation signup for first eligible person
+    5. Deletes their waitlist entry
+    6. Returns info about the offered signup for email notification
     
     Args:
         element_type: 'event' or 'item'
         element_id: ID of the event or item
         
     Returns:
-        dict with signup info if someone was offered, None if waitlist is empty
+        dict with signup info if someone was offered, None if waitlist is empty or everyone is at limit
         {
             'signup': Signup object,
             'user': User object,
@@ -89,27 +91,10 @@ def offer_spot_to_next_in_waitlist(element_type, element_id):
             'element': Event or Item object
         }
     """
+    from app.projects.better_signups.utils import is_at_limit
+    
     try:
-        # Query for waitlist entries for this element, ordered by position
-        waitlist_entry = (
-            WaitlistEntry.query.filter_by(
-                element_type=element_type,
-                element_id=element_id,
-            )
-            .order_by(WaitlistEntry.position.asc())
-            .first()
-        )
-        
-        if not waitlist_entry:
-            # No one on waitlist, spot opens to everyone
-            logger.info(f"No waitlist entries found for {element_type} {element_id}")
-            return None
-        
-        # Get the family member and user
-        family_member = waitlist_entry.family_member
-        user = family_member.user
-        
-        # Get the element
+        # Get the element to determine the list_id
         if element_type == "event":
             element = Event.query.get(element_id)
         else:
@@ -117,63 +102,112 @@ def offer_spot_to_next_in_waitlist(element_type, element_id):
             
         if not element:
             logger.error(f"Element not found: {element_type} {element_id}")
-            # Delete stale waitlist entry
-            db.session.delete(waitlist_entry)
-            db.session.commit()
             return None
         
-        # Create pending_confirmation signup
-        signup = Signup(
-            user_id=user.id,
-            family_member_id=family_member.id,
-            status='pending_confirmation',
+        list_id = element.list_id
+        
+        # Query for all waitlist entries for this element, ordered by position
+        waitlist_entries = (
+            WaitlistEntry.query.filter_by(
+                element_type=element_type,
+                element_id=element_id,
+            )
+            .order_by(WaitlistEntry.position.asc())
+            .all()
         )
         
-        if element_type == "event":
-            signup.event_id = element_id
-        else:
-            signup.item_id = element_id
+        if not waitlist_entries:
+            # No one on waitlist, spot opens to everyone
+            logger.info(f"No waitlist entries found for {element_type} {element_id}")
+            return None
         
-        # Delete the waitlist entry (they're no longer waiting)
-        db.session.delete(waitlist_entry)
-        
-        # Add signup
-        db.session.add(signup)
-        
-        # Log the cascade event
-        element_desc = ""
-        if element_type == "event":
-            if element.event_type == "date":
-                element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
-            else:
-                element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
-        else:
-            element_desc = f"item: {element.name}"
+        # Iterate through waitlist entries to find someone below the limit
+        for waitlist_entry in waitlist_entries:
+            family_member = waitlist_entry.family_member
+            user = family_member.user
             
-        log_entry = LogEntry(
-            project="better_signups",
-            category="Waitlist Cascade",
-            actor_id=user.id,
-            description=f"Offered spot to {family_member.display_name} from waitlist (position #{waitlist_entry.position}), {element_desc}",
-        )
-        db.session.add(log_entry)
+            # Check if this family member is at their signup limit
+            if is_at_limit(family_member.id, list_id):
+                # Skip this person - they're at their limit
+                logger.info(
+                    f"Skipping {family_member.display_name} (user {user.id}) on waitlist "
+                    f"for {element_type} {element_id} - at signup limit"
+                )
+                
+                # Log the skip event
+                log_entry = LogEntry(
+                    project="better_signups",
+                    category="Waitlist Limit Skip",
+                    actor_id=user.id,
+                    description=f"Skipped offering spot to {family_member.display_name} from waitlist - at signup limit for list",
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+                
+                # Continue to next person in waitlist (keep this person on waitlist)
+                continue
+            
+            # This person is below the limit - offer them the spot
+            
+            # Create pending_confirmation signup
+            signup = Signup(
+                user_id=user.id,
+                family_member_id=family_member.id,
+                status='pending_confirmation',
+            )
+            
+            if element_type == "event":
+                signup.event_id = element_id
+            else:
+                signup.item_id = element_id
+            
+            # Delete the waitlist entry (they're no longer waiting)
+            db.session.delete(waitlist_entry)
+            
+            # Add signup
+            db.session.add(signup)
+            
+            # Log the cascade event
+            element_desc = ""
+            if element_type == "event":
+                if element.event_type == "date":
+                    element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+                else:
+                    element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+            else:
+                element_desc = f"item: {element.name}"
+                
+            log_entry = LogEntry(
+                project="better_signups",
+                category="Waitlist Cascade",
+                actor_id=user.id,
+                description=f"Offered spot to {family_member.display_name} from waitlist (position #{waitlist_entry.position}), {element_desc}",
+            )
+            db.session.add(log_entry)
+            
+            # Commit the transaction
+            db.session.commit()
+            
+            logger.info(
+                f"Offered spot to {family_member.display_name} (user {user.id}) "
+                f"for {element_type} {element_id}, position was #{waitlist_entry.position}"
+            )
+            
+            # Return info for email notification
+            return {
+                'signup': signup,
+                'user': user,
+                'family_member': family_member,
+                'element': element,
+                'element_type': element_type,
+            }
         
-        # Commit the transaction
-        db.session.commit()
-        
+        # If we get here, everyone on the waitlist is at their limit
         logger.info(
-            f"Offered spot to {family_member.display_name} (user {user.id}) "
-            f"for {element_type} {element_id}, position was #{waitlist_entry.position}"
+            f"All {len(waitlist_entries)} people on waitlist for {element_type} {element_id} "
+            f"are at their signup limit. Spot opens to everyone."
         )
-        
-        # Return info for email notification
-        return {
-            'signup': signup,
-            'user': user,
-            'family_member': family_member,
-            'element': element,
-            'element_type': element_type,
-        }
+        return None
         
     except Exception as e:
         logger.error(f"Error in offer_spot_to_next_in_waitlist: {str(e)}")
@@ -436,6 +470,7 @@ def create_list():
             creator_id=current_user.id,
             accepting_signups=True,
             allow_waitlist=form.allow_waitlist.data,
+            max_signups_per_member=form.max_signups_per_member.data if form.max_signups_per_member.data else None,
         )
 
         # Generate UUID
@@ -454,11 +489,12 @@ def create_list():
             else "public"
         )
         waitlist_info = "waitlist enabled" if form.allow_waitlist.data else "no waitlist"
+        limit_info = f"limit: {new_list.max_signups_per_member} per person" if new_list.max_signups_per_member else "no limit"
         log_entry = LogEntry(
             project="better_signups",
             category="Create List",
             actor_id=current_user.id,
-            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, {waitlist_info}, UUID: {new_list.uuid})",
+            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, {waitlist_info}, {limit_info}, UUID: {new_list.uuid})",
         )
         db.session.add(log_entry)
 
@@ -494,6 +530,7 @@ def edit_list(uuid):
     if request.method == 'GET':
         form.accepting_signups.data = signup_list.accepting_signups
         form.allow_waitlist.data = signup_list.allow_waitlist
+        form.max_signups_per_member.data = signup_list.max_signups_per_member
 
     if form.validate_on_submit():
         # Validate waitlist can be disabled
@@ -531,6 +568,7 @@ def edit_list(uuid):
         )
         signup_list.accepting_signups = form.accepting_signups.data
         signup_list.allow_waitlist = form.allow_waitlist.data
+        signup_list.max_signups_per_member = form.max_signups_per_member.data if form.max_signups_per_member.data else None
 
         # Handle password changes
         if request.form.get("remove_password"):
