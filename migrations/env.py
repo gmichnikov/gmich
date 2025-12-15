@@ -1,9 +1,17 @@
 import logging
 from logging.config import fileConfig
+import warnings
 
 from flask import current_app
+from sqlalchemy import exc as sa_exc
 
 from alembic import context
+
+# Suppress the circular dependency warning for llm_question/llm_response tables
+# This is safely handled with use_alter=True in the models
+warnings.filterwarnings('ignore', 
+                       r".*Cannot correctly sort tables.*llm_question, llm_response.*",
+                       category=sa_exc.SAWarning)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
