@@ -1685,6 +1685,19 @@ def create_signup(uuid):
         flash("You can only sign up your own family members.", "error")
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
+    # Check if family member is at their signup limit for this list
+    from app.projects.better_signups.utils import is_at_limit, get_signup_count
+    
+    if is_at_limit(family_member_id, signup_list.id):
+        current_count = get_signup_count(family_member_id, signup_list.id)
+        flash(
+            f"Cannot sign up {family_member.display_name} - they have already signed up for the maximum number "
+            f"of elements in this list ({current_count}/{signup_list.max_signups_per_member}). "
+            f"Please cancel one of their existing signups first.",
+            "error"
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
     # Check if this family member is already signed up for this element (active signup)
     if element_type == "event":
         existing_signup = Signup.query.filter_by(
@@ -2028,6 +2041,19 @@ def join_waitlist(uuid):
     family_member = FamilyMember.query.get_or_404(family_member_id)
     if family_member.user_id != current_user.id:
         flash("Invalid family member.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if family member is at their signup limit for this list
+    from app.projects.better_signups.utils import is_at_limit, get_signup_count
+    
+    if is_at_limit(family_member_id, signup_list.id):
+        current_count = get_signup_count(family_member_id, signup_list.id)
+        flash(
+            f"Cannot join waitlist - {family_member.display_name} has already signed up for the maximum number "
+            f"of elements ({current_count}/{signup_list.max_signups_per_member}). "
+            f"You can join the waitlist once they have fewer signups.",
+            "error"
+        )
         return redirect(url_for("better_signups.view_list", uuid=uuid))
 
     # Check if this family member is already signed up for this element
