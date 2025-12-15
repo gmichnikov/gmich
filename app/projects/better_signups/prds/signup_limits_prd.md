@@ -465,9 +465,9 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 1: Database & Models
 
-- [ ] Add `max_signups_per_member` field to SignupList model
-- [ ] Create migration
-- [ ] Run migration
+- [x] Add `max_signups_per_member` field to SignupList model
+- [x] Create migration
+- [x] Run migration
 
 **Testing:**
 
@@ -476,9 +476,9 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 2: Helper Functions
 
-- [ ] Create `get_signup_count(family_member_id, signup_list_id)` helper
-- [ ] Create `is_at_limit(family_member_id, signup_list_id)` helper
-- [ ] Create `can_signup(family_member_id, signup_list_id)` helper
+- [x] Create `get_signup_count(family_member_id, signup_list_id)` helper
+- [x] Create `is_at_limit(family_member_id, signup_list_id)` helper
+- [x] Create `can_signup(family_member_id, signup_list_id)` helper
 - [ ] Write unit tests for helpers
 
 **Testing:**
@@ -489,10 +489,10 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 3: Display Limit Settings
 
-- [ ] Add form field to list creation form
-- [ ] Add form field to list edit form
-- [ ] Add validation on form (must be >= 1 if provided)
-- [ ] Display limit in editor view (list settings section)
+- [x] Add form field to list creation form
+- [x] Add form field to list edit form
+- [x] Add validation on form (must be >= 1 if provided)
+- [x] Display limit in editor view (list settings section)
 
 **Testing:**
 
@@ -504,11 +504,11 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 4: Enforce Limits on Signup
 
-- [ ] Update signup route to check `is_at_limit()` before creating signup
-- [ ] Add appropriate error message when validation fails
-- [ ] Update public list view to show count indicator "(X/Y spots used)" for family members
-- [ ] Show "At limit" message in place of "Sign Up" button when family member is at limit
-- [ ] Ensure error messages are clear and actionable
+- [x] Update signup route to check `is_at_limit()` before creating signup
+- [x] Add appropriate error message when validation fails
+- [x] Update public list view to show count indicator "(X/Y spots used)" for family members
+- [x] Show "At limit" message in place of "Sign Up" button when family member is at limit
+- [x] Ensure error messages are clear and actionable
 
 **Testing:**
 
@@ -520,9 +520,9 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 5: Enforce Limits on Waitlist Join
 
-- [ ] Update join waitlist route to check `is_at_limit()` before creating waitlist entry
-- [ ] Add appropriate error message
-- [ ] Update "Join Waitlist" button logic to check limit
+- [x] Update join waitlist route to check `is_at_limit()` before creating waitlist entry
+- [x] Add appropriate error message
+- [x] Update "Join Waitlist" button logic to check limit
 
 **Testing:**
 
@@ -532,10 +532,10 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 6: Enforce Limits in Cascade Helper
 
-- [ ] Update `offer_spot_to_next_in_waitlist()` to check limits
-- [ ] Skip people at limit (log but don't delete waitlist entry)
-- [ ] Continue to next person in queue
-- [ ] If all at limit, return None (spot opens)
+- [x] Update `offer_spot_to_next_in_waitlist()` to check limits
+- [x] Skip people at limit (log but don't delete waitlist entry)
+- [x] Continue to next person in queue
+- [x] If all at limit, return None (spot opens)
 
 **Testing:**
 
@@ -546,11 +546,11 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 ### Phase 7: UI Polish & User Feedback
 
-- [ ] Add progress indicators throughout UI "(X/Y spots used)"
-- [ ] Add list-level banner explaining limit
-- [ ] Improve error messages with helpful suggestions
-- [ ] Add tooltips where helpful
-- [ ] Style limit-related elements consistently
+- [x] Add progress indicators throughout UI "(X/Y spots used)" (simplified to just banner)
+- [x] Add list-level banner explaining limit
+- [x] Improve error messages with helpful suggestions
+- [x] Add tooltips where helpful
+- [x] Style limit-related elements consistently
 
 **Testing:**
 
@@ -562,8 +562,8 @@ Add per-list signup limits to Better Signups, allowing list creators to limit ho
 
 - [ ] Run all unit tests
 - [ ] Run all integration tests
-- [ ] Complete manual testing scenarios (listed above)
-- [ ] Test edge cases
+- [x] Complete manual testing scenarios (listed above)
+- [x] Test edge cases
 - [ ] Test with large numbers (100+ signups)
 - [ ] Test performance of helper functions
 

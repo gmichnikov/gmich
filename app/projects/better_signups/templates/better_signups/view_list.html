@@ -41,6 +41,13 @@
             </div>
             {% endif %}
             
+            {# Banner for signup limits #}
+            {% if list.max_signups_per_member %}
+            <div style="background-color: #e7f3ff; color: #004085; padding: 0.75rem; border-radius: 6px; border: 1px solid #b8daff; margin-top: 1rem;">
+                ℹ️ <strong>Note:</strong> Each person can sign up for up to {{ list.max_signups_per_member }} {{ list.list_type }} in this list.
+            </div>
+            {% endif %}
+            
             {# Alert banner for pending confirmations #}
             {% if pending_confirmations %}
             <div style="background-color: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; border: 2px solid #28a745; margin-top: 1rem;">
@@ -223,9 +230,9 @@
                                         {% for member in family_members %}
                                             {% if member.id in available_member_ids %}
                                             <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up{% if not member.is_self %} {{ member.display_name }}{% endif %}!</button>
                                             {% endif %}
                                         {% endfor %}
-                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
                                     {% else %}
                                         <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
                                             {% for member in family_members %}
@@ -269,9 +276,9 @@
                                             {% for member in family_members %}
                                                 {% if member.id in available_member_ids %}
                                                 <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                                <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist{% if not member.is_self %} for {{ member.display_name }}{% endif %}</button>
                                                 {% endif %}
                                             {% endfor %}
-                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
                                         {% else %}
                                             <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
                                                 {% for member in family_members %}
@@ -476,9 +483,9 @@
                                         {% for member in family_members %}
                                             {% if member.id in available_member_ids %}
                                             <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up{% if not member.is_self %} {{ member.display_name }}{% endif %}!</button>
                                             {% endif %}
                                         {% endfor %}
-                                        <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Sign up!</button>
                                     {% else %}
                                         <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
                                             {% for member in family_members %}
@@ -522,9 +529,9 @@
                                             {% for member in family_members %}
                                                 {% if member.id in available_member_ids %}
                                                 <input type="hidden" name="family_member_id" value="{{ member.id }}">
+                                                <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist{% if not member.is_self %} for {{ member.display_name }}{% endif %}</button>
                                                 {% endif %}
                                             {% endfor %}
-                                            <button type="submit" style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: bold;">Join Waitlist</button>
                                         {% else %}
                                             <select name="family_member_id" required style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
                                                 {% for member in family_members %}

@@ -1487,6 +1487,12 @@ def view_list(uuid):
         .order_by(FamilyMember.is_self.desc(), FamilyMember.created_at)
         .all()
     )
+    
+    # Calculate signup counts for each family member (for limit display)
+    from app.projects.better_signups.utils import get_signup_count
+    family_member_signup_counts = {}
+    for fm in family_members:
+        family_member_signup_counts[fm.id] = get_signup_count(fm.id, signup_list.id)
 
     # Pre-compute available family members for each element to avoid template complexity
     # This will be a dict: {element_id: [available_family_member_ids]}
@@ -1597,6 +1603,7 @@ def view_list(uuid):
         waitlist_entries_by_element=waitlist_entries_by_element,
         user_waitlist_entries=user_waitlist_entries,
         pending_confirmations=pending_confirmations,
+        family_member_signup_counts=family_member_signup_counts,
     )
 
 
@@ -1692,7 +1699,7 @@ def create_signup(uuid):
         current_count = get_signup_count(family_member_id, signup_list.id)
         flash(
             f"Cannot sign up {family_member.display_name} - they have already signed up for the maximum number "
-            f"of elements in this list ({current_count}/{signup_list.max_signups_per_member}). "
+            f"of {signup_list.list_type} in this list ({current_count}/{signup_list.max_signups_per_member}). "
             f"Please cancel one of their existing signups first.",
             "error"
         )
@@ -2050,7 +2057,7 @@ def join_waitlist(uuid):
         current_count = get_signup_count(family_member_id, signup_list.id)
         flash(
             f"Cannot join waitlist - {family_member.display_name} has already signed up for the maximum number "
-            f"of elements ({current_count}/{signup_list.max_signups_per_member}). "
+            f"of {signup_list.list_type} ({current_count}/{signup_list.max_signups_per_member}). "
             f"You can join the waitlist once they have fewer signups.",
             "error"
         )
