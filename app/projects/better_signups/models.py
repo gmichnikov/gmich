@@ -23,6 +23,14 @@ class SignupList(db.Model):
     max_signups_per_member = db.Column(db.Integer, nullable=True)  # Max signups per family member (NULL = no limit)
     list_type = db.Column(db.String(20), nullable=False)  # 'events' or 'items'
     uuid = db.Column(db.String(36), unique=True, nullable=False, index=True)
+    
+    # Lottery fields
+    is_lottery = db.Column(db.Boolean, default=False, nullable=False)
+    lottery_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # UTC datetime when lottery will run
+    lottery_timezone = db.Column(db.String(50), nullable=True)  # Creator's timezone (e.g., "America/New_York")
+    lottery_completed = db.Column(db.Boolean, default=False, nullable=False)
+    lottery_running = db.Column(db.Boolean, default=False, nullable=False)  # True while lottery is being processed
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -290,6 +298,7 @@ class Signup(db.Model):
         db.Integer, db.ForeignKey("family_member.id"), nullable=False
     )
     status = db.Column(db.String(20), nullable=False, default='confirmed')  # 'confirmed', 'pending_confirmation', 'cancelled'
+    source = db.Column(db.String(20), nullable=False, default='direct')  # 'direct', 'lottery', 'waitlist'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
@@ -491,3 +500,58 @@ class WaitlistEntry(db.Model):
 
     def __repr__(self):
         return f"<WaitlistEntry {self.id}: {self.element_type}_id={self.element_id} family_member_id={self.family_member_id} position={self.position}>"
+
+
+class LotteryEntry(db.Model):
+    """Entry in a lottery for an element (event or item)"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    signup_list_id = db.Column(
+        db.Integer, db.ForeignKey("signup_list.id", ondelete="CASCADE"), nullable=False
+    )
+    event_id = db.Column(
+        db.Integer, db.ForeignKey("event.id", ondelete="CASCADE"), nullable=True
+    )
+    item_id = db.Column(
+        db.Integer, db.ForeignKey("item.id", ondelete="CASCADE"), nullable=True
+    )
+    family_member_id = db.Column(
+        db.Integer, db.ForeignKey("family_member.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )  # For easy lookup
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(datetime.now().astimezone().tzinfo),
+    )
+
+    # Relationships
+    signup_list = db.relationship(
+        "SignupList", backref=db.backref("lottery_entries", lazy=True)
+    )
+    event = db.relationship("Event", backref=db.backref("lottery_entries", lazy=True))
+    item = db.relationship("Item", backref=db.backref("lottery_entries", lazy=True))
+    family_member = db.relationship(
+        "FamilyMember", backref=db.backref("lottery_entries", lazy=True)
+    )
+    user = db.relationship("User", backref=db.backref("lottery_entries", lazy=True))
+
+    # Constraint: exactly one of event_id or item_id must be set
+    __table_args__ = (
+        db.CheckConstraint(
+            "(event_id IS NOT NULL AND item_id IS NULL) OR (event_id IS NULL AND item_id IS NOT NULL)",
+            name="lottery_entry_element_check",
+        ),
+    )
+
+    def get_element(self):
+        """Get the actual Event or Item object"""
+        if self.event_id:
+            return Event.query.get(self.event_id)
+        else:
+            return Item.query.get(self.item_id)
+
+    def __repr__(self):
+        element = f"event_id={self.event_id}" if self.event_id else f"item_id={self.item_id}"
+        return f"<LotteryEntry {self.id}: {element} family_member_id={self.family_member_id}>"

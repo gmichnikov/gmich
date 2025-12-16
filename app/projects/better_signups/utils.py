@@ -440,3 +440,48 @@ def can_signup(family_member_id, signup_list_id):
         bool: True if can sign up for more, False if at limit
     """
     return not is_at_limit(family_member_id, signup_list_id)
+
+
+def validate_lottery_datetime(lottery_datetime_naive, timezone_str):
+    """
+    Validate that a lottery datetime is at least 1 hour in the future.
+    
+    Args:
+        lottery_datetime_naive: Naive datetime in creator's timezone
+        timezone_str: Timezone string (e.g., "America/New_York")
+        
+    Returns:
+        tuple: (is_valid, error_message, utc_datetime)
+            - is_valid: True if valid, False otherwise
+            - error_message: Error message if invalid, None if valid
+            - utc_datetime: Timezone-aware UTC datetime if valid, None if invalid
+    """
+    from datetime import datetime, timezone
+    
+    try:
+        # Get the timezone object
+        tz = pytz.timezone(timezone_str)
+    except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+        return (False, "Invalid timezone", None)
+    
+    try:
+        # Localize the naive datetime to the creator's timezone
+        localized_dt = tz.localize(lottery_datetime_naive)
+        
+        # Convert to UTC
+        utc_dt = localized_dt.astimezone(pytz.UTC)
+        
+        # Get current time in UTC
+        now_utc = datetime.now(pytz.UTC)
+        
+        # Check if at least 1 hour in the future
+        time_difference = utc_dt - now_utc
+        
+        if time_difference.total_seconds() < 3600:  # 3600 seconds = 1 hour
+            return (False, "Lottery time must be at least 1 hour from now", None)
+        
+        return (True, None, utc_dt)
+        
+    except Exception as e:
+        logger.error(f"Error validating lottery datetime: {e}")
+        return (False, "Invalid datetime", None)
