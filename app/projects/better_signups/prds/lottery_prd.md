@@ -308,38 +308,38 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 1: Database Models & Basic Setup
 
-- [ ] Add `is_lottery`, `lottery_datetime`, `lottery_timezone`, `lottery_completed`, `lottery_running` to `SignupList`
-- [ ] Add `source` field to `Signup` model ('direct', 'lottery', 'waitlist')
-- [ ] Create `LotteryEntry` model (with `event_id`/`item_id` nullable fields, following existing pattern)
-- [ ] Set up cascade deletion on all foreign keys (`ondelete='CASCADE'`)
-- [ ] Create database migration
-- [ ] Add validation helpers (lottery datetime must be at least 1 hour in future, accounting for timezone)
+- [x] Add `is_lottery`, `lottery_datetime`, `lottery_timezone`, `lottery_completed`, `lottery_running` to `SignupList`
+- [x] Add `source` field to `Signup` model ('direct', 'lottery', 'waitlist')
+- [x] Create `LotteryEntry` model (with `event_id`/`item_id` nullable fields, following existing pattern)
+- [x] Set up cascade deletion on all foreign keys (`ondelete='CASCADE'`)
+- [x] Create database migration
+- [x] Add validation helpers (lottery datetime must be at least 1 hour in future, accounting for timezone)
 
 ### Phase 2: List Creation with Lottery Option
 
-- [ ] Update list creation form to include lottery option
-- [ ] Add datetime picker for lottery datetime
-- [ ] Display and store creator's timezone
-- [ ] Validate lottery datetime is at least 1 hour in future (both client-side and server-side)
-- [ ] Convert times to UTC properly accounting for creator's timezone
-- [ ] Prevent editing `is_lottery` after creation
+- [x] Update list creation form to include lottery option
+- [x] Add datetime picker for lottery datetime
+- [x] Display and store creator's timezone
+- [x] Validate lottery datetime is at least 1 hour in future (both client-side and server-side)
+- [x] Convert times to UTC properly accounting for creator's timezone
+- [x] Prevent editing `is_lottery` after creation
 
 ### Phase 3: Lottery Entry UI (Public View)
 
-- [ ] Update public list view to detect lottery lists
-- [ ] Show lottery banner and datetime
-- [ ] Replace "Sign Up" with "Enter Lottery" buttons
-- [ ] Create lottery entry form (select family members)
-- [ ] Display lottery entries (who has entered)
-- [ ] Add remove entry functionality
+- [x] Update public list view to detect lottery lists
+- [x] Show lottery banner and datetime
+- [x] Replace "Sign Up" with "Enter Lottery" buttons
+- [x] Create lottery entry form (select family members)
+- [x] Display lottery entries (who has entered)
+- [x] Add remove entry functionality
 
 ### Phase 4: Lottery Entry Backend
 
-- [ ] Create route for entering lottery
-- [ ] Validation: list must be lottery list, lottery not yet run
-- [ ] Create `LotteryEntry` records
-- [ ] Create route for removing lottery entries
-- [ ] Handle multiple family members per element
+- [x] Create route for entering lottery
+- [x] Validation: list must be lottery list, lottery not yet run
+- [x] Create `LotteryEntry` records
+- [x] Create route for removing lottery entries
+- [x] Handle multiple family members per element
 
 ### Phase 5: List Editor View for Lotteries
 

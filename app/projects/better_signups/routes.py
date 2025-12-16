@@ -39,6 +39,7 @@ from app.projects.better_signups.models import (
     SwapRequestTarget,
     SwapToken,
     WaitlistEntry,
+    LotteryEntry,
 )
 from app.projects.better_signups.utils import (
     ensure_self_family_member,
@@ -1614,6 +1615,38 @@ def view_list(uuid):
         for pending in pending_confirmations:
             pending.deadline = pending.created_at + timedelta(hours=24)
             pending.is_expired = pending.deadline < datetime.utcnow()
+    
+    # Get all lottery entries for this list (if lottery list)
+    lottery_entries_by_element = {}
+    user_lottery_entries = {}  # Track which elements user's family members have entered
+    
+    if signup_list.is_lottery and not signup_list.lottery_completed:
+        all_lottery_entries = (
+            LotteryEntry.query.options(
+                joinedload(LotteryEntry.family_member),
+                joinedload(LotteryEntry.user),
+            )
+            .filter_by(signup_list_id=signup_list.id)
+            .all()
+        )
+        
+        for entry in all_lottery_entries:
+            # Determine element key
+            if entry.event_id:
+                element_key = f"event_{entry.event_id}"
+            else:
+                element_key = f"item_{entry.item_id}"
+            
+            # Add to all entries
+            if element_key not in lottery_entries_by_element:
+                lottery_entries_by_element[element_key] = []
+            lottery_entries_by_element[element_key].append(entry)
+            
+            # Track if current user's family member has entered this lottery
+            if entry.user_id == current_user.id:
+                if element_key not in user_lottery_entries:
+                    user_lottery_entries[element_key] = []
+                user_lottery_entries[element_key].append(entry)
 
     return render_template(
         "better_signups/view_list.html",
@@ -1626,6 +1659,8 @@ def view_list(uuid):
         user_waitlist_entries=user_waitlist_entries,
         pending_confirmations=pending_confirmations,
         family_member_signup_counts=family_member_signup_counts,
+        lottery_entries_by_element=lottery_entries_by_element,
+        user_lottery_entries=user_lottery_entries,
     )
 
 
@@ -2010,6 +2045,206 @@ def remove_signup(uuid, signup_id):
         "success",
     )
     return redirect(url_for("better_signups.edit_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/lottery/enter", methods=["POST"])
+@login_required
+def enter_lottery(uuid):
+    """Enter a lottery for an event or item"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+
+    # Check if user has access
+    if not signup_list.is_editor(current_user) and not signup_list.user_has_access(
+        current_user
+    ):
+        flash("You do not have access to this list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if this is a lottery list
+    if not signup_list.is_lottery:
+        flash("This is not a lottery list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if lottery has already completed
+    if signup_list.lottery_completed:
+        flash("The lottery for this list has already completed.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if lottery is currently running
+    if signup_list.lottery_running:
+        flash("The lottery is currently running. Please check back shortly.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get form data
+    element_type = request.form.get("element_type")  # 'event' or 'item'
+    element_id = request.form.get("element_id", type=int)
+    family_member_id = request.form.get("family_member_id", type=int)
+
+    if not all([element_type, element_id, family_member_id]):
+        flash("Missing required information.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Validate element type
+    if element_type not in ["event", "item"]:
+        flash("Invalid element type.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get the element
+    if element_type == "event":
+        element = Event.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid event.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+    else:
+        element = Item.query.get_or_404(element_id)
+        if element.list_id != signup_list.id:
+            flash("Invalid item.", "error")
+            return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify family member belongs to current user
+    family_member = FamilyMember.query.get_or_404(family_member_id)
+    if family_member.user_id != current_user.id:
+        flash("Invalid family member.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if already entered for this element
+    if element_type == "event":
+        existing_entry = LotteryEntry.query.filter_by(
+            event_id=element_id, family_member_id=family_member_id
+        ).first()
+    else:
+        existing_entry = LotteryEntry.query.filter_by(
+            item_id=element_id, family_member_id=family_member_id
+        ).first()
+
+    if existing_entry:
+        flash(
+            f"{family_member.display_name} has already entered this lottery.",
+            "error",
+        )
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Create lottery entry
+    lottery_entry = LotteryEntry(
+        signup_list_id=signup_list.id,
+        event_id=element_id if element_type == "event" else None,
+        item_id=element_id if element_type == "item" else None,
+        family_member_id=family_member_id,
+        user_id=current_user.id,
+    )
+
+    db.session.add(lottery_entry)
+
+    # Log the action
+    element_desc = ""
+    if element_type == "event":
+        if element.event_type == "date":
+            element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        element_desc = f"item: {element.name}"
+
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Enter Lottery",
+        actor_id=current_user.id,
+        description=f"Entered {family_member.display_name} into lottery for list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    # Commit
+    try:
+        db.session.commit()
+        flash(
+            f"✓ {family_member.display_name} has been entered into the lottery!",
+            "success",
+        )
+    except IntegrityError:
+        db.session.rollback()
+        flash("An error occurred. Please try again.", "error")
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Database error entering lottery: {e}")
+        flash("An error occurred. Please try again.", "error")
+
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+
+@bp.route("/lists/<string:uuid>/lottery/remove/<int:entry_id>", methods=["POST"])
+@login_required
+def remove_lottery_entry(uuid, entry_id):
+    """Remove a lottery entry"""
+    signup_list = SignupList.query.filter_by(uuid=uuid).first_or_404()
+
+    # Check if user has access
+    if not signup_list.is_editor(current_user) and not signup_list.user_has_access(
+        current_user
+    ):
+        flash("You do not have access to this list.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get the lottery entry
+    lottery_entry = LotteryEntry.query.get_or_404(entry_id)
+
+    # Verify entry belongs to this list
+    if lottery_entry.signup_list_id != signup_list.id:
+        flash("Invalid lottery entry.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Verify entry belongs to current user
+    if lottery_entry.user_id != current_user.id:
+        flash("You can only remove your own lottery entries.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Check if lottery has already completed or is running
+    if signup_list.lottery_completed:
+        flash("The lottery has already completed. Cannot remove entries.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    if signup_list.lottery_running:
+        flash("The lottery is currently running. Cannot remove entries.", "error")
+        return redirect(url_for("better_signups.view_list", uuid=uuid))
+
+    # Get family member for logging
+    family_member = lottery_entry.family_member
+
+    # Delete the entry
+    db.session.delete(lottery_entry)
+
+    # Log the action
+    element_desc = ""
+    if lottery_entry.event_id:
+        element = Event.query.get(lottery_entry.event_id)
+        if element.event_type == "date":
+            element_desc = f"event date: {element.event_date.strftime('%B %d, %Y')}"
+        else:
+            element_desc = f"event datetime: {element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+    else:
+        element = Item.query.get(lottery_entry.item_id)
+        element_desc = f"item: {element.name}"
+
+    log_entry = LogEntry(
+        project="better_signups",
+        category="Remove Lottery Entry",
+        actor_id=current_user.id,
+        description=f"Removed {family_member.display_name} from lottery for list '{signup_list.name}' (UUID: {signup_list.uuid}), {element_desc}",
+    )
+    db.session.add(log_entry)
+
+    # Commit
+    try:
+        db.session.commit()
+        flash(
+            f"{family_member.display_name} removed from lottery.",
+            "success",
+        )
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Database error removing lottery entry: {e}")
+        flash("An error occurred. Please try again.", "error")
+
+    return redirect(url_for("better_signups.view_list", uuid=uuid))
 
 
 @bp.route("/lists/<string:uuid>/waitlist/join", methods=["POST"])
