@@ -29,10 +29,11 @@ This PRD describes the lottery system for Better Signups. Instead of first-come-
 
 ### Timezone Handling
 
-- The lottery datetime is entered in the **creator's timezone**
+- The lottery datetime is entered in the **creator's timezone** (at time of lottery creation/editing)
 - Store both the UTC datetime and the creator's timezone in the database
 - Display the lottery datetime to all users in the **creator's timezone** with clear timezone indication (e.g., "March 15, 2025 at 3:00 PM EST")
 - Make it very clear in the UI what timezone is being used
+- If the creator later changes their account timezone, the stored lottery datetime does not automatically change (they can manually edit the lottery datetime if needed)
 
 ## User Experience
 
@@ -61,16 +62,30 @@ This PRD describes the lottery system for Better Signups. Instead of first-come-
 - Creators can still edit elements:
   - Change number of spots
   - Add new elements
-  - Delete elements (even with entries)
+  - Delete elements (even with entries) - cascade deletes associated lottery entries
   - Change element details (dates, descriptions, etc.)
 - Creators can change the lottery datetime (must remain in future)
 - All normal list editing capabilities remain available
 
+**My Lottery Entries View:**
+
+- Add section to "My Signups" page showing lottery entries
+- Order: Signups (confirmed + pending) → Lottery Entries → Waitlist entries
+- For each lottery entry, display:
+  - List name
+  - Element details (event date/time or item name)
+  - Family member name
+  - Lottery datetime
+  - Button to remove entry
+- Group by list, show countdown to lottery time
+- Only show entries for lotteries that haven't run yet
+
 ### During Lottery Execution
 
-- When the lottery is actively running, the list shows: "Lottery in progress... Please check back shortly."
+- When the lottery is actively running (`lottery_running=True`), the list shows: "Lottery in progress... Please check back shortly."
 - All actions are blocked (no entering, no removing entries, no editing by creators)
 - This should be a brief state (just while the lottery algorithm runs)
+- The `lottery_running` flag protects against race conditions if the scheduler job runs on multiple dynos
 
 ### After Lottery
 
@@ -98,14 +113,18 @@ This PRD describes the lottery system for Better Signups. Instead of first-come-
 ### Execution Timing
 
 - Automated job runs every hour (via Heroku Scheduler)
-- Job looks for lotteries scheduled in the past 65 minutes that haven't run yet
-- Each lottery is processed and marked as completed
+- Job looks for lotteries scheduled in the past 65 minutes that haven't run yet (`lottery_datetime` in past, `lottery_completed=False`, `lottery_running=False`)
+- For each lottery found:
+  1. Set `lottery_running=True` (prevents duplicate processing)
+  2. Process the lottery algorithm
+  3. Set `lottery_completed=True` and `lottery_running=False`
+  4. Send emails
 
 ### Processing Order
 
 - Process elements in order:
   - **Events (date/datetime lists)**: Chronological order by date/datetime
-  - **Items lists**: Order they appear in the list (display order)
+  - **Items lists**: Order by `id` (creation order)
 
 ### Selection Algorithm (Per Element)
 
@@ -113,17 +132,17 @@ For each element:
 
 1. **Collect all entries** for this element
 2. **Apply list limits** (if enabled):
-   - Track how many spots each user has already won in this lottery run
-   - Filter out entries for users who have already reached their limit
+   - Track how many spots each family member has already won in this lottery run
+   - Filter out entries for family members who have already reached their limit
 3. **Randomly select winners**:
    - Select the number of winners equal to available spots
    - Use random selection from eligible entries
-4. **Create pending signups** for winners (requiring acceptance within 24 hours)
+4. **Create pending signups** for winners (requiring acceptance within 24 hours, with `source='lottery'`)
 5. **Handle waitlist** (if enabled on this list):
    - Take remaining non-winning entries
    - Randomly order them
    - Add to waitlist in that random order
-   - Note: Users at their limit can still be on waitlists, but existing waitlist logic prevents them from moving up
+   - Note: Family members at their limit can still be on waitlists, but existing waitlist logic prevents them from moving up
 
 ### Under-subscribed Lotteries
 
@@ -133,9 +152,9 @@ For each element:
 ### List Limits Integration
 
 - If a list has a `max_signups_per_member` set, apply it during lottery:
-  - Track wins per user (across all their family members) during lottery processing
-  - Once a user reaches their limit, remove their remaining entries from consideration
-  - Users CAN be on waitlists even after reaching their limit
+  - Track wins per family member during lottery processing (limits are per family member, not per user account)
+  - Once a family member reaches their limit, remove their remaining entries from consideration
+  - Family members CAN be on waitlists even after reaching their limit
   - Existing waitlist logic prevents them from receiving spots beyond the limit
 
 ## Email Notifications
@@ -179,6 +198,7 @@ is_lottery = db.Column(db.Boolean, default=False, nullable=False)
 lottery_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # UTC
 lottery_timezone = db.Column(db.String(50), nullable=True)  # e.g., "America/New_York"
 lottery_completed = db.Column(db.Boolean, default=False, nullable=False)
+lottery_running = db.Column(db.Boolean, default=False, nullable=False)  # True while lottery is being processed
 ```
 
 ### LotteryEntry Model (New)
@@ -186,18 +206,50 @@ lottery_completed = db.Column(db.Boolean, default=False, nullable=False)
 ```python
 class LotteryEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    element_id = db.Column(db.Integer, db.ForeignKey('element.id'), nullable=False)
-    element_type = db.Column(db.String(10), nullable=False)  # 'event' or 'item'
-    family_member_id = db.Column(db.Integer, db.ForeignKey('family_member.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # For easy lookup
+    signup_list_id = db.Column(db.Integer, db.ForeignKey('signup_list.id', ondelete='CASCADE'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id', ondelete='CASCADE'), nullable=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id', ondelete='CASCADE'), nullable=True)
+    family_member_id = db.Column(db.Integer, db.ForeignKey('family_member.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
+    signup_list = db.relationship('SignupList', backref='lottery_entries')
+    event = db.relationship('Event', backref='lottery_entries')
+    item = db.relationship('Item', backref='lottery_entries')
     family_member = db.relationship('FamilyMember', backref='lottery_entries')
     user = db.relationship('User', backref='lottery_entries')
+
+    # Constraint: exactly one of event_id or item_id must be set
+    __table_args__ = (
+        db.CheckConstraint(
+            '(event_id IS NOT NULL AND item_id IS NULL) OR (event_id IS NULL AND item_id IS NOT NULL)',
+            name='lottery_entry_element_check'
+        ),
+    )
 ```
 
-Note: We use polymorphic element references (element_id + element_type) since elements can be Events or Items.
+Note: Following the pattern of `Signup` and `WaitlistEntry` models, we use separate nullable foreign keys for events and items with a check constraint to ensure exactly one is set.
+
+**Cascade Deletion Behavior:**
+
+- If a **family member** is deleted, all their `LotteryEntry` records are cascade deleted
+- If an **event** is deleted, all associated `LotteryEntry` records are cascade deleted
+- If an **item** is deleted, all associated `LotteryEntry` records are cascade deleted
+- If a **SignupList** is deleted, all associated `LotteryEntry` records are cascade deleted
+- If a **user** is deleted, all their `LotteryEntry` records are cascade deleted
+- No email notifications are sent when entries are deleted due to cascade deletion
+- Matches existing behavior for `Signup` and `WaitlistEntry` models
+
+### Signup Model
+
+Add field to track signup source:
+
+```python
+source = db.Column(db.String(20), default='direct', nullable=False)  # 'direct', 'lottery', 'waitlist'
+```
+
+This helps distinguish lottery winners from waitlist promotions from direct signups, useful for emails and UI messaging.
 
 ## UI Components
 
@@ -256,8 +308,10 @@ Note: We use polymorphic element references (element_id + element_type) since el
 
 ### Phase 1: Database Models & Basic Setup
 
-- [ ] Add `is_lottery`, `lottery_datetime`, `lottery_timezone`, `lottery_completed` to `SignupList`
-- [ ] Create `LotteryEntry` model
+- [ ] Add `is_lottery`, `lottery_datetime`, `lottery_timezone`, `lottery_completed`, `lottery_running` to `SignupList`
+- [ ] Add `source` field to `Signup` model ('direct', 'lottery', 'waitlist')
+- [ ] Create `LotteryEntry` model (with `event_id`/`item_id` nullable fields, following existing pattern)
+- [ ] Set up cascade deletion on all foreign keys (`ondelete='CASCADE'`)
 - [ ] Create database migration
 - [ ] Add validation helpers (lottery datetime must be at least 1 hour in future, accounting for timezone)
 
@@ -298,21 +352,23 @@ Note: We use polymorphic element references (element_id + element_type) since el
 
 - [ ] Create command/task for running lotteries
 - [ ] Implement lottery selection algorithm:
-  - Process elements in correct order
+  - Set `lottery_running=True` at start
+  - Process elements in correct order (chronological for events, id order for items)
   - Random selection per element
-  - Apply list limits
-  - Create pending signups for winners
+  - Apply list limits (per family member)
+  - Create pending signups for winners with `source='lottery'`
   - Randomly order waitlist (if enabled)
-- [ ] Mark lottery as completed
+  - Set `lottery_completed=True` and `lottery_running=False` at end
+- [ ] Add error handling (ensure `lottery_running` is cleared even on errors)
 - [ ] Add logging for lottery execution
 
 ### Phase 7: Automated Lottery Scheduling
 
-- [ ] Create Heroku Scheduler command
+- [ ] Create Heroku Scheduler command (following pattern in `commands.py`)
 - [ ] Add to scheduled jobs (hourly)
-- [ ] Look for lotteries in past 65 minutes
-- [ ] Execute and mark complete
-- [ ] Handle errors gracefully
+- [ ] Look for lotteries in past 65 minutes (`lottery_datetime < now`, `lottery_completed=False`, `lottery_running=False`)
+- [ ] Execute lottery algorithm for each found
+- [ ] Handle errors gracefully (ensure flags are cleared)
 
 ### Phase 8: Winner Acceptance Flow
 
@@ -332,10 +388,10 @@ Note: We use polymorphic element references (element_id + element_type) since el
 
 ### Phase 10: During-Lottery State Handling
 
-- [ ] Add flag or state tracking for "lottery in progress"
-- [ ] Update UI to show "in progress" message
-- [ ] Block all actions during execution
-- [ ] Clear state when lottery completes
+- [ ] Check `lottery_running` flag in all relevant views
+- [ ] Update UI to show "Lottery in progress..." message when flag is True
+- [ ] Block all actions during execution (entry, removal, editing)
+- [ ] Ensure flag is cleared when lottery completes (handled in Phase 6)
 
 ### Phase 11: Post-Lottery Behavior
 
@@ -344,7 +400,18 @@ Note: We use polymorphic element references (element_id + element_type) since el
 - [ ] Ensure all existing features work (cancellation, etc.)
 - [ ] Display lottery completion status clearly
 
-### Phase 12: Testing & Edge Cases
+### Phase 12: My Lottery Entries View
+
+- [ ] Update "My Signups" page to include lottery entries section
+- [ ] Add section between signups and waitlist entries
+- [ ] Query all lottery entries for current user (all family members)
+- [ ] Filter to only show entries for lotteries that haven't run yet
+- [ ] Display: list name, element details, family member, lottery datetime
+- [ ] Add "Remove Entry" button for each entry
+- [ ] Group by list with countdown/lottery time displayed
+- [ ] Show message if no lottery entries exist
+
+### Phase 13: Testing & Edge Cases
 
 - [ ] Test under-subscribed lotteries
 - [ ] Test with list limits enabled
@@ -355,24 +422,64 @@ Note: We use polymorphic element references (element_id + element_type) since el
 - [ ] Test email notifications
 - [ ] Test acceptance flow
 - [ ] Test concurrent lottery execution (multiple lists)
+- [ ] Test "My Lottery Entries" view with multiple entries across lists
+- [ ] Test cascade deletion: delete family member with lottery entries, verify entries deleted
+- [ ] Test cascade deletion: delete element with lottery entries, verify entries deleted
+- [ ] Test removing lottery entries from My Lottery Entries page
 
 ## Key Design Decisions
 
 1. **Lottery is permanent**: Once enabled, cannot be disabled. This prevents gaming the system.
 
-2. **Timezone clarity**: Always display creator's timezone to avoid confusion.
+2. **Timezone clarity**: Always display creator's timezone to avoid confusion. Timezone doesn't auto-update if creator changes their account timezone.
 
 3. **Transparency**: Users can see all entries, fostering trust in the random selection.
 
-4. **Acceptance required**: Winners must actively accept spots, preventing no-shows.
+4. **Acceptance required**: Winners must actively accept spots (24 hours), preventing no-shows.
 
-5. **List limits respected**: Ensures fair distribution across all elements.
+5. **List limits respected**: Ensures fair distribution across all elements. Limits are per family member (not per user account).
 
 6. **Waitlist randomization**: If using waitlists, order is also randomized (not first-to-enter).
 
 7. **Post-lottery flexibility**: After lottery, normal operations resume, allowing organic signup for remaining spots.
 
-8. **Creator control maintained**: Creators can still edit elements even after entries are made.
+8. **Creator control maintained**: Creators can still edit elements even after entries are made, including reducing spots.
+
+9. **Race condition protection**: `lottery_running` flag prevents duplicate processing if scheduler runs on multiple dynos.
+
+10. **Source tracking**: Track whether signups came from lottery, waitlist, or direct signup for better emails and UI.
+
+11. **Element ordering**: Events processed chronologically, items by creation order (id).
+
+12. **My Lottery Entries view**: Consolidated view of all lottery entries on My Signups page for easy management.
+
+13. **Cascade deletion**: Deleting family members, elements, or lists automatically removes associated lottery entries (no orphaned data).
+
+## Technical Implementation Notes
+
+### Database Schema Decisions
+
+1. **LotteryEntry element references**: Use separate `event_id` and `item_id` nullable foreign keys (following the pattern of `Signup` and `WaitlistEntry`) rather than polymorphic `element_id + element_type`. This is safer and follows existing codebase patterns.
+
+2. **Signup source field**: Add `source` column to `Signup` table to track origin ('direct', 'lottery', 'waitlist'). This enables different email templates and UI messaging without complex inference logic.
+
+3. **Race condition prevention**: Use `lottery_running` boolean flag on `SignupList` to prevent duplicate processing. The scheduler command will atomically set this flag before processing.
+
+### Automated Job Pattern
+
+Follow the existing pattern established for waitlist expiration processing:
+
+- Command in `commands.py` registered via `init_app()`
+- Heroku Scheduler runs hourly: `flask run-lottery-draws`
+- Query finds eligible lotteries: `lottery_datetime < now - 65 minutes` AND `lottery_completed=False` AND `lottery_running=False`
+- Process each lottery with try/except to ensure flags are cleared on errors
+
+### Integration Points
+
+1. **Waitlist cascade logic**: Reuse existing `offer_spot_to_next_in_waitlist()` helper, but lottery winners will have `source='lottery'` set
+2. **List limits validation**: Reuse existing limit checking logic from signup flow
+3. **Pending confirmation flow**: Reuse existing 24-hour acceptance window and expiration logic
+4. **Email system**: Extend existing email templates for lottery-specific messaging
 
 ## Open Questions / Future Considerations
 
