@@ -9,6 +9,7 @@ from wtforms import (
     BooleanField,
     IntegerField,
     DateField,
+    DateTimeLocalField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -221,11 +222,33 @@ class CreateSignupListForm(FlaskForm):
         validators=[Optional(), NumberRange(min=1)],
         description="Leave blank for no limit. Minimum value is 1.",
     )
+    is_lottery = BooleanField(
+        "Enable Lottery",
+        default=False,
+        description="Use a lottery system instead of first-come-first-served. Cannot be changed after creation.",
+    )
+    lottery_datetime = DateTimeLocalField(
+        "Lottery Date & Time",
+        validators=[Optional()],
+        description="When the lottery will run (in your timezone). Must be at least 1 hour in the future.",
+        format='%Y-%m-%dT%H:%M',
+    )
     submit = SubmitField("Create List")
 
     def validate_name(self, field):
         if not field.data or not field.data.strip():
             raise ValidationError("List name cannot be blank or only whitespace.")
+    
+    def validate_lottery_datetime(self, field):
+        """Validate lottery datetime if lottery is enabled"""
+        if self.is_lottery.data and not field.data:
+            raise ValidationError("Lottery date & time is required when lottery is enabled.")
+    
+    def validate_is_lottery(self, field):
+        """Additional validation for lottery lists"""
+        if field.data and not self.lottery_datetime.data:
+            # This will be caught by validate_lottery_datetime, but adding for completeness
+            pass
 
 
 class EditSignupListForm(FlaskForm):

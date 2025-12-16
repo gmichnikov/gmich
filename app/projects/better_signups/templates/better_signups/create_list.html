@@ -110,10 +110,64 @@
                 {% endif %}
             </div>
 
+            <div style="background-color: #f0f8ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #007bff;">
+                <div class="auth-form-group" style="margin-bottom: 0.5rem;">
+                    <label class="auth-checkbox-label">
+                        {{ form.is_lottery(class="auth-checkbox", id="is_lottery_checkbox") }}
+                        <span style="font-weight: 600;">{{ form.is_lottery.label.text }}</span>
+                    </label>
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        {{ form.is_lottery.description }}
+                    </small>
+                    {% if form.is_lottery.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.is_lottery.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="lottery_datetime_group" class="auth-form-group" style="display: none; margin-top: 1rem; margin-bottom: 0;">
+                    {{ form.lottery_datetime.label(class="auth-label") }}
+                    {{ form.lottery_datetime(class="auth-input") }}
+                    <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                        Times are in your timezone: <strong>{{ current_user.time_zone }}</strong>. 
+                        The lottery will run within 1 hour after this time. Must be at least 1 hour in the future.
+                    </small>
+                    {% if form.lottery_datetime.errors %}
+                        <div class="auth-error-messages">
+                            {% for error in form.lottery_datetime.errors %}
+                                <span class="auth-error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="auth-form-group">
                 {{ form.submit(class="auth-submit-btn") }}
             </div>
         </form>
+
+        <script>
+            // Show/hide lottery datetime field based on lottery checkbox
+            const lotteryCheckbox = document.getElementById('is_lottery_checkbox');
+            const lotteryDatetimeGroup = document.getElementById('lottery_datetime_group');
+
+            function toggleLotteryDatetime() {
+                if (lotteryCheckbox.checked) {
+                    lotteryDatetimeGroup.style.display = 'block';
+                } else {
+                    lotteryDatetimeGroup.style.display = 'none';
+                }
+            }
+
+            lotteryCheckbox.addEventListener('change', toggleLotteryDatetime);
+            
+            // Initialize on page load
+            toggleLotteryDatetime();
+        </script>
 
         <div class="auth-footer" style="margin-top: 2rem;">
             <p class="auth-footer-text"><a href="{{ url_for('better_signups.index') }}" class="auth-link">← Back to Better Signups</a></p>

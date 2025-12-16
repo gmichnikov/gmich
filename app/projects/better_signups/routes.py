@@ -44,6 +44,7 @@ from app.projects.better_signups.utils import (
     ensure_self_family_member,
     get_google_calendar_url,
     check_has_eligible_swap_targets,
+    validate_lottery_datetime,
 )
 from app.models import User, LogEntry
 from app.utils.email_service import send_swap_request_email
@@ -460,6 +461,23 @@ def create_list():
     form = CreateSignupListForm()
 
     if form.validate_on_submit():
+        # Validate lottery datetime if lottery is enabled
+        lottery_datetime_utc = None
+        if form.is_lottery.data:
+            if not form.lottery_datetime.data:
+                flash("Lottery date & time is required when lottery is enabled.", "error")
+                return render_template("better_signups/create_list.html", form=form)
+            
+            # Validate lottery datetime (at least 1 hour in future)
+            is_valid, error_msg, lottery_datetime_utc = validate_lottery_datetime(
+                form.lottery_datetime.data,
+                current_user.time_zone
+            )
+            
+            if not is_valid:
+                flash(error_msg, "error")
+                return render_template("better_signups/create_list.html", form=form)
+        
         # Create new list
         new_list = SignupList(
             name=form.name.data.strip(),
@@ -471,6 +489,9 @@ def create_list():
             accepting_signups=True,
             allow_waitlist=form.allow_waitlist.data,
             max_signups_per_member=form.max_signups_per_member.data if form.max_signups_per_member.data else None,
+            is_lottery=form.is_lottery.data,
+            lottery_datetime=lottery_datetime_utc if form.is_lottery.data else None,
+            lottery_timezone=current_user.time_zone if form.is_lottery.data else None,
         )
 
         # Generate UUID
@@ -490,11 +511,12 @@ def create_list():
         )
         waitlist_info = "waitlist enabled" if form.allow_waitlist.data else "no waitlist"
         limit_info = f"limit: {new_list.max_signups_per_member} per person" if new_list.max_signups_per_member else "no limit"
+        lottery_info = f"lottery: {new_list.lottery_datetime.strftime('%Y-%m-%d %H:%M')} {new_list.lottery_timezone}" if new_list.is_lottery else "first-come-first-served"
         log_entry = LogEntry(
             project="better_signups",
             category="Create List",
             actor_id=current_user.id,
-            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, {waitlist_info}, {limit_info}, UUID: {new_list.uuid})",
+            description=f"Created list '{new_list.name}' (type: {new_list.list_type}, {password_info}, {waitlist_info}, {limit_info}, {lottery_info}, UUID: {new_list.uuid})",
         )
         db.session.add(log_entry)
 
