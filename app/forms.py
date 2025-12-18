@@ -276,6 +276,12 @@ class EditSignupListForm(FlaskForm):
         validators=[Optional(), NumberRange(min=1)],
         description="Leave blank for no limit. Minimum value is 1.",
     )
+    lottery_datetime = DateTimeLocalField(
+        "Lottery Date & Time",
+        validators=[Optional()],
+        description="When the lottery will run (in your timezone). Must be at least 1 hour in the future.",
+        format='%Y-%m-%dT%H:%M',
+    )
     submit = SubmitField("Update List")
 
     def validate_name(self, field):

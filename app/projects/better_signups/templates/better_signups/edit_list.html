@@ -169,6 +169,41 @@
                     {% endif %}
                 </div>
 
+                {% if list.is_lottery %}
+                <div style="background-color: #f0f8ff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #007bff;">
+                    <div style="font-weight: bold; margin-bottom: 0.5rem; color: #004085; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🎲 Lottery Settings</span>
+                        {% if list.lottery_completed %}
+                            <span style="background-color: #28a745; color: white; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">COMPLETED</span>
+                        {% elif list.lottery_running %}
+                            <span style="background-color: #ffc107; color: black; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">IN PROGRESS</span>
+                        {% else %}
+                            <span style="background-color: #007bff; color: white; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">SCHEDULED</span>
+                        {% endif %}
+                    </div>
+                    <div class="auth-form-group" style="margin-bottom: 0;">
+                        {{ form.lottery_datetime.label(class="auth-label") }}
+                        {{ form.lottery_datetime(class="auth-input") }}
+                        <small style="color: #666; font-size: 0.875rem; margin-top: 4px; display: block;">
+                            The lottery will run within 1 hour after this time. Must be at least 1 hour in the future.
+                            Times are in your timezone: <strong>{{ list.lottery_timezone }}</strong>.
+                        </small>
+                        {% if list.lottery_completed %}
+                        <div style="margin-top: 0.5rem; color: #28a745; font-weight: bold; font-size: 0.875rem;">
+                            ✓ Lottery completed on {{ list.lottery_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                        {% endif %}
+                        {% if form.lottery_datetime.errors %}
+                            <div class="auth-error-messages">
+                                {% for error in form.lottery_datetime.errors %}
+                                    <span class="auth-error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="auth-form-group">
                     {{ form.submit(class="auth-submit-btn") }}
                 </div>
@@ -394,6 +429,32 @@
                                 </div>
                             {% endif %}
                         {% endif %}
+
+                        {# Show lottery entries if any #}
+                        {% if list.is_lottery and not list.lottery_completed %}
+                            {% set element_key = 'event_' ~ event.id|string %}
+                            {% set lottery_entries = lottery_entries_by_element.get(element_key, []) %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">🎲 Lottery Entries ({{ lottery_entries|length }}):</div>
+                                {% if lottery_entries %}
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #004085;">
+                                        {% for entry in lottery_entries %}
+                                        <li style="margin-bottom: 0.25rem;">
+                                            {{ entry.family_member.display_name }}
+                                            {% if not entry.family_member.is_self and entry.user %}
+                                                <span style="color: #666;">({{ entry.user.full_name }})</span>
+                                            {% endif %}
+                                            <span style="color: #999; font-size: 0.75rem; margin-left: 0.5rem;">
+                                                Entered: {{ entry.created_at.strftime('%b %d, %H:%M') }}
+                                            </span>
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0; font-style: italic;">No entries yet.</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -520,6 +581,32 @@
                                     </ol>
                                 </div>
                             {% endif %}
+                        {% endif %}
+
+                        {# Show lottery entries if any #}
+                        {% if list.is_lottery and not list.lottery_completed %}
+                            {% set element_key = 'item_' ~ item.id|string %}
+                            {% set lottery_entries = lottery_entries_by_element.get(element_key, []) %}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                                <div style="font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">🎲 Lottery Entries ({{ lottery_entries|length }}):</div>
+                                {% if lottery_entries %}
+                                    <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; list-style-type: decimal; color: #004085;">
+                                        {% for entry in lottery_entries %}
+                                        <li style="margin-bottom: 0.25rem;">
+                                            {{ entry.family_member.display_name }}
+                                            {% if not entry.family_member.is_self and entry.user %}
+                                                <span style="color: #666;">({{ entry.user.full_name }})</span>
+                                            {% endif %}
+                                            <span style="color: #999; font-size: 0.75rem; margin-left: 0.5rem;">
+                                                Entered: {{ entry.created_at.strftime('%b %d, %H:%M') }}
+                                            </span>
+                                        </li>
+                                        {% endfor %}
+                                    </ol>
+                                {% else %}
+                                    <p style="color: #666; font-size: 0.875rem; margin: 0; font-style: italic;">No entries yet.</p>
+                                {% endif %}
+                            </div>
                         {% endif %}
                     </div>
                 </div>

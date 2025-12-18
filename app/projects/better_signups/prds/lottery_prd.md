@@ -343,10 +343,10 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 5: List Editor View for Lotteries
 
-- [ ] Update editor view to show lottery status
-- [ ] Display lottery entries per element
-- [ ] Add ability to edit lottery datetime (validate at least 1 hour in future)
-- [ ] Show entry counts and participant lists
+- [x] Update editor view to show lottery status
+- [x] Display lottery entries per element
+- [x] Add ability to edit lottery datetime (validate at least 1 hour in future)
+- [x] Show entry counts and participant lists
 
 ### Phase 6: Lottery Execution Algorithm
 

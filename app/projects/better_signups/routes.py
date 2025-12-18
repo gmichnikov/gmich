@@ -554,36 +554,54 @@ def edit_list(uuid):
         form.accepting_signups.data = signup_list.accepting_signups
         form.allow_waitlist.data = signup_list.allow_waitlist
         form.max_signups_per_member.data = signup_list.max_signups_per_member
+        if signup_list.is_lottery and signup_list.lottery_datetime:
+            # Convert UTC lottery datetime back to creator's timezone for display in form
+            try:
+                tz = pytz.timezone(signup_list.lottery_timezone)
+                localized_dt = signup_list.lottery_datetime.replace(tzinfo=pytz.UTC).astimezone(tz)
+                form.lottery_datetime.data = localized_dt
+            except Exception as e:
+                logger.error(f"Error localizing lottery datetime for form: {e}")
+                form.lottery_datetime.data = signup_list.lottery_datetime
 
     if form.validate_on_submit():
-        # Validate waitlist can be disabled
-        if not form.allow_waitlist.data and signup_list.allow_waitlist:
-            # User is trying to disable waitlist - check if any waitlist entries exist
-            waitlist_count = WaitlistEntry.query.filter_by(list_id=signup_list.id).count()
-            if waitlist_count > 0:
-                flash(
-                    f"Cannot disable waitlist: {waitlist_count} people are currently on waitlists. "
-                    "Remove all waitlist entries first.",
-                    "error"
+        # Validate lottery datetime if lottery is enabled and being updated
+        lottery_datetime_utc = signup_list.lottery_datetime
+        if signup_list.is_lottery and form.lottery_datetime.data:
+            # Only validate/update if changed
+            # Get existing localized time for comparison
+            tz = pytz.timezone(signup_list.lottery_timezone)
+            existing_localized = signup_list.lottery_datetime.replace(tzinfo=pytz.UTC).astimezone(tz).replace(tzinfo=None)
+            
+            if form.lottery_datetime.data != existing_localized:
+                # Validate new lottery datetime (at least 1 hour in future)
+                is_valid, error_msg, lottery_datetime_utc = validate_lottery_datetime(
+                    form.lottery_datetime.data,
+                    signup_list.lottery_timezone
                 )
-                return render_template(
-                    "better_signups/edit_list.html",
-                    list=signup_list,
-                    form=form,
-                    add_editor_form=AddListEditorForm() if signup_list.creator_id == current_user.id else None,
-                    editors=ListEditor.query.filter_by(list_id=signup_list.id).all(),
-                    events=Event.query.options(
-                        joinedload(Event.signups).joinedload(Signup.user),
-                        joinedload(Event.signups).joinedload(Signup.family_member),
-                    ).filter_by(list_id=signup_list.id).order_by(
-                        Event.event_date.asc().nullslast(), Event.event_datetime.asc().nullslast()
-                    ).all() if signup_list.list_type == "events" else [],
-                    items=Item.query.options(
-                        joinedload(Item.signups).joinedload(Signup.user),
-                        joinedload(Item.signups).joinedload(Signup.family_member),
-                    ).filter_by(list_id=signup_list.id).order_by(Item.created_at.asc()).all() if signup_list.list_type == "items" else [],
-                    waitlist_entries_by_element={},
-                )
+                
+                if not is_valid:
+                    flash(error_msg, "error")
+                    # Prepare data for re-rendering template on error
+                    return render_template(
+                        "better_signups/edit_list.html",
+                        list=signup_list,
+                        form=form,
+                        add_editor_form=AddListEditorForm() if signup_list.creator_id == current_user.id else None,
+                        editors=ListEditor.query.filter_by(list_id=signup_list.id).all(),
+                        events=Event.query.options(
+                            joinedload(Event.signups).joinedload(Signup.user),
+                            joinedload(Event.signups).joinedload(Signup.family_member),
+                        ).filter_by(list_id=signup_list.id).order_by(
+                            Event.event_date.asc().nullslast(), Event.event_datetime.asc().nullslast()
+                        ).all() if signup_list.list_type == "events" else [],
+                        items=Item.query.options(
+                            joinedload(Item.signups).joinedload(Signup.user),
+                            joinedload(Item.signups).joinedload(Signup.family_member),
+                        ).filter_by(list_id=signup_list.id).order_by(Item.created_at.asc()).all() if signup_list.list_type == "items" else [],
+                        waitlist_entries_by_element={},
+                        lottery_entries_by_element={},
+                    )
         
         signup_list.name = form.name.data.strip()
         signup_list.description = (
@@ -592,6 +610,9 @@ def edit_list(uuid):
         signup_list.accepting_signups = form.accepting_signups.data
         signup_list.allow_waitlist = form.allow_waitlist.data
         signup_list.max_signups_per_member = form.max_signups_per_member.data if form.max_signups_per_member.data else None
+        
+        if signup_list.is_lottery:
+            signup_list.lottery_datetime = lottery_datetime_utc
 
         # Handle password changes
         if request.form.get("remove_password"):
@@ -668,6 +689,22 @@ def edit_list(uuid):
                 waitlist_entries_by_element[element_key] = []
             waitlist_entries_by_element[element_key].append(entry)
 
+    # Get lottery entries if lottery is enabled and not completed
+    lottery_entries_by_element = {}
+    if signup_list.is_lottery and not signup_list.lottery_completed:
+        all_lottery_entries = (
+            LotteryEntry.query.options(
+                joinedload(LotteryEntry.family_member).joinedload(FamilyMember.user)
+            )
+            .filter_by(signup_list_id=signup_list.id)
+            .all()
+        )
+        for entry in all_lottery_entries:
+            element_key = f"{'event' if entry.event_id else 'item'}_{entry.event_id or entry.item_id}"
+            if element_key not in lottery_entries_by_element:
+                lottery_entries_by_element[element_key] = []
+            lottery_entries_by_element[element_key].append(entry)
+
     return render_template(
         "better_signups/edit_list.html",
         list=signup_list,
@@ -677,6 +714,7 @@ def edit_list(uuid):
         events=events,
         items=items if signup_list.list_type == "items" else [],
         waitlist_entries_by_element=waitlist_entries_by_element,
+        lottery_entries_by_element=lottery_entries_by_element,
     )
 
 
