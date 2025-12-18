@@ -364,11 +364,11 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 7: Automated Lottery Scheduling
 
-- [ ] Create Heroku Scheduler command (following pattern in `commands.py`)
+- [x] Create Heroku Scheduler command (following pattern in `commands.py`)
 - [ ] Add to scheduled jobs (hourly)
-- [ ] Look for lotteries in past 65 minutes (`lottery_datetime < now`, `lottery_completed=False`, `lottery_running=False`)
-- [ ] Execute lottery algorithm for each found
-- [ ] Handle errors gracefully (ensure flags are cleared)
+- [x] Look for lotteries in past 65 minutes (`lottery_datetime < now`, `lottery_completed=False`, `lottery_running=False`)
+- [x] Execute lottery algorithm for each found
+- [x] Handle errors gracefully (ensure flags are cleared)
 
 ### Phase 8: Winner Acceptance Flow
 
