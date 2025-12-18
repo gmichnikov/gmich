@@ -1632,7 +1632,7 @@ def view_list(uuid):
     for event in signup_list.events:
         event.google_calendar_url = get_google_calendar_url(event, signup_list.name, current_user)
 
-    # Check for pending confirmations for this user
+    # Check for pending confirmations for this user in this list
     family_member_ids = [fm.id for fm in family_members]
     pending_confirmations = []
     if family_member_ids:
@@ -1643,9 +1643,12 @@ def view_list(uuid):
                 joinedload(Signup.item),
                 joinedload(Signup.family_member),
             )
+            .outerjoin(Event, Signup.event_id == Event.id)
+            .outerjoin(Item, Signup.item_id == Item.id)
             .filter(
                 Signup.family_member_id.in_(family_member_ids),
                 Signup.status == 'pending_confirmation',
+                db.or_(Event.list_id == signup_list.id, Item.list_id == signup_list.id)
             )
             .all()
         )

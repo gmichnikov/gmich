@@ -350,8 +350,8 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 6: Lottery Execution Algorithm
 
-- [ ] Create command/task for running lotteries
-- [ ] Implement lottery selection algorithm:
+- [x] Create command/task for running lotteries
+- [x] Implement lottery selection algorithm:
   - Set `lottery_running=True` at start
   - Process elements in correct order (chronological for events, id order for items)
   - Random selection per element
@@ -359,8 +359,8 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
   - Create pending signups for winners with `source='lottery'`
   - Randomly order waitlist (if enabled)
   - Set `lottery_completed=True` and `lottery_running=False` at end
-- [ ] Add error handling (ensure `lottery_running` is cleared even on errors)
-- [ ] Add logging for lottery execution
+- [x] Add error handling (ensure `lottery_running` is cleared even on errors)
+- [x] Add logging for lottery execution
 
 ### Phase 7: Automated Lottery Scheduling
 

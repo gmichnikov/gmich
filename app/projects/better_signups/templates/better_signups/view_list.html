@@ -95,10 +95,7 @@
             </div>
             {% elif list.is_lottery and list.lottery_completed %}
             <div style="background-color: #e7f3ff; color: #004085; padding: 1rem; border-radius: 6px; border: 1px solid #b8daff; margin-top: 1rem;">
-                <div style="font-weight: bold; font-size: 1rem;">✓ Lottery Completed</div>
-                <div style="font-size: 0.875rem; margin-top: 0.5rem;">
-                    The lottery has been conducted. Available spots can now be filled on a first-come-first-served basis.
-                </div>
+                <div style="font-weight: bold; font-size: 1rem;">✓ Lottery Completed on {{ list.lottery_datetime.strftime('%B %d, %Y at %I:%M %p') }} {{ list.lottery_timezone }}</div>
             </div>
             {% endif %}
             

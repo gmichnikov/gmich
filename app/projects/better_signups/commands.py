@@ -46,3 +46,28 @@ def init_app(app):
             click.echo(f"  - Expired signups removed: {result['processed_count']}")
             click.echo(f"  - Spots offered from waitlist: {result['cascade_count']}")
             click.echo(f"  - Errors: {len(result['errors'])}")
+            click.echo(f"  - Errors: {len(result['errors'])}")
+
+
+    @app.cli.command("process-lottery-draws")
+    def process_lottery_draws():
+        """
+        Process scheduled lotteries that are ready to run.
+        Should be run hourly via Heroku Scheduler.
+        """
+        from app.projects.better_signups.utils import process_lottery_draws
+        
+        click.echo("Starting lottery draw processing...")
+        
+        with app.app_context():
+            result = process_lottery_draws()
+            
+            if result['processed_count'] == 0:
+                click.echo("No lotteries ready to run.")
+            else:
+                click.echo(f"Processed {result['processed_count']} lottery draws.")
+                
+            if result['errors']:
+                click.echo(f"\nErrors encountered ({len(result['errors'])}):")
+                for error in result['errors']:
+                    click.echo(f"  - {error}", err=True)

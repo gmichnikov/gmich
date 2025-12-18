@@ -485,3 +485,221 @@ def validate_lottery_datetime(lottery_datetime_naive, timezone_str):
     except Exception as e:
         logger.error(f"Error validating lottery datetime: {e}")
         return (False, "Invalid datetime", None)
+
+
+def process_lottery_draws():
+    """
+    Process all scheduled lotteries that are ready to run.
+    
+    Finds lotteries where:
+    - lottery_datetime was at least 65 minutes ago (1 hour buffer provided by system + 5 min safety)
+      NOTE: PRD says "executes within 60 minutes AFTER the scheduled time".
+      To be safe and ensure the 1 hour window is fully respected, we look for lotteries
+      scheduled more than 60 minutes ago.
+    - lottery_completed is False
+    - lottery_running is False
+    
+    For each lottery:
+    1. Sets lottery_running=True
+    2. Processes each element (events chronologically, items by ID)
+    3. Randomly selects winners up to spots_available
+    4. Respects max_signups_per_member limits
+    5. Creates pending_confirmation signups for winners
+    6. Adds non-winners to waitlist (randomized order)
+    7. Sets lottery_completed=True, lottery_running=False
+    
+    Returns:
+        dict: {
+            'processed_count': int,
+            'errors': list
+        }
+    """
+    from app.projects.better_signups.models import WaitlistEntry, LotteryEntry
+    import random
+    
+    # 65 minutes ago (1 hour "cooling off" + 5 min buffer)
+    # This ensures users had their full hour after the time to stare at the screen
+    # before we actually run it.
+    execution_cutoff = datetime.now(pytz.UTC) - timedelta(minutes=65)
+    
+    ready_lists = SignupList.query.filter(
+        SignupList.is_lottery == True,
+        SignupList.lottery_completed == False,
+        SignupList.lottery_running == False,
+        SignupList.lottery_datetime <= execution_cutoff
+    ).all()
+    
+    if not ready_lists:
+        return {'processed_count': 0, 'errors': []}
+        
+    processed_count = 0
+    errors = []
+    
+    for signup_list in ready_lists:
+        try:
+            logger.info(f"Starting lottery processing for list '{signup_list.name}' (ID: {signup_list.id})")
+            
+            # Mark as running to check race conditions (though usually handled by DB lock or single worker)
+            signup_list.lottery_running = True
+            db.session.commit()
+            
+            # Gather all elements
+            # Process order: Events (chronological), then Items (creation order / ID)
+            elements_to_process = []
+            
+            # Events
+            events = Event.query.filter_by(list_id=signup_list.id).all()
+            # Sort events: date events by event_date, datetime events by event_datetime
+            # We'll normalize to a sort key
+            def event_sort_key(e):
+                if e.event_type == 'date':
+                    return datetime.combine(e.event_date, datetime.min.time())
+                return e.event_datetime or datetime.max
+            
+            events.sort(key=event_sort_key)
+            for e in events:
+                elements_to_process.append(('event', e))
+                
+            # Items
+            items = Item.query.filter_by(list_id=signup_list.id).order_by(Item.id).all()
+            for i in items:
+                elements_to_process.append(('item', i))
+                
+            # Track wins per family member for this lottery run to enforce limits
+            # Map: family_member_id -> count of wins in this lottery
+            # We also need to know existing signups if we want to be totally strict,
+            # but usually limits apply to the total.
+            # is_at_limit() checks DB, but since we haven't committed new signups yet,
+            # we need to track local wins.
+            family_wins_in_run = {}
+            
+            for element_type, element in elements_to_process:
+                # 1. Get all entries for this element
+                if element_type == 'event':
+                    entries = LotteryEntry.query.filter_by(event_id=element.id).all()
+                else:
+                    entries = LotteryEntry.query.filter_by(item_id=element.id).all()
+                    
+                if not entries:
+                    continue
+                    
+                # 2. Shuffle entries for randomness
+                random.shuffle(entries)
+                
+                # 3. Determine available spots
+                # For a lottery, it's usually all spots, but maybe creator added some manually?
+                # We'll use get_spots_remaining()
+                spots_available = element.get_spots_remaining()
+                
+                # 4. Filter candidates (check limits)
+                # We do this optimally by iterating the shuffled list and picking winners
+                winners = []
+                waitlist_candidates = []
+                
+                for entry in entries:
+                    fm_id = entry.family_member_id
+                    
+                    # Check if family member is at limit
+                    # Limit check = (Existing DB signups) + (Wins in this run so far)
+                    
+                    # Get existing confirmed/pending signups from DB
+                    # (Note: this function queries DB)
+                    db_count = get_signup_count(fm_id, signup_list.id)
+                    
+                    # Add local wins
+                    local_count = family_wins_in_run.get(fm_id, 0)
+                    
+                    total_count = db_count + local_count
+                    
+                    limit = signup_list.max_signups_per_member
+                    at_limit = (limit is not None) and (total_count >= limit)
+                    
+                    if not at_limit and len(winners) < spots_available:
+                        # YOU WIN!
+                        winners.append(entry)
+                        family_wins_in_run[fm_id] = local_count + 1
+                    else:
+                        # Waitlist or Limit Reached
+                        # If at limit, they can still go on waitlist?
+                        # PRD: "Family members at their limit can still be on waitlists"
+                        waitlist_candidates.append(entry)
+                
+                # 5. Create Signups for winners
+                for win_entry in winners:
+                    signup = Signup(
+                        user_id=win_entry.user_id,
+                        family_member_id=win_entry.family_member_id,
+                        status='pending_confirmation',
+                        source='lottery'
+                    )
+                    if element_type == 'event':
+                        signup.event_id = element.id
+                    else:
+                        signup.item_id = element.id
+                        
+                    db.session.add(signup)
+                    
+                    # Log it
+                    log = LogEntry(
+                        project="better_signups",
+                        category="Lottery Win",
+                        actor_id=win_entry.user_id,
+                        description=f"Won lottery for {element.__repr__()} on list {signup_list.name}"
+                    )
+                    db.session.add(log)
+                    
+                # 6. Add remaining to Waitlist (if enabled)
+                if signup_list.allow_waitlist:
+                    # Randomize waitlist candidates too (PRD: "Randomly order them")
+                    # They might already be random from the initial shuffle, but shuffle again to be sure
+                    # if we had separated them. Actually initial shuffle is enough, but waitlist_candidates
+                    # preserves that order.
+                    
+                    # Current waitlist position start
+                    # We need to append to existing waitlist if any (unlikely for new lottery, but possible)
+                    current_max_pos = 0
+                    if element_type == 'event':
+                        last_wl = WaitlistEntry.query.filter_by(element_type='event', element_id=element.id).order_by(WaitlistEntry.position.desc()).first()
+                    else:
+                        last_wl = WaitlistEntry.query.filter_by(element_type='item', element_id=element.id).order_by(WaitlistEntry.position.desc()).first()
+                        
+                    if last_wl:
+                        current_max_pos = last_wl.position
+                        
+                    for i, wl_entry in enumerate(waitlist_candidates):
+                        position = current_max_pos + i + 1
+                        
+                        waitlist_item = WaitlistEntry(
+                            list_id=signup_list.id,
+                            element_type=element_type,
+                            element_id=element.id,
+                            family_member_id=wl_entry.family_member_id,
+                            position=position
+                        )
+                        db.session.add(waitlist_item)
+            
+            # Mark complete
+            signup_list.lottery_completed = True
+            signup_list.lottery_running = False
+            db.session.commit()
+            
+            processed_count += 1
+            logger.info(f"Completed lottery for list '{signup_list.name}'")
+            
+        except Exception as e:
+            db.session.rollback()
+            # Try to clear the running flag if possible
+            try:
+                signup_list.lottery_running = False
+                db.session.commit()
+            except:
+                pass
+                
+            error_msg = f"Error processing lottery for list {signup_list.id}: {str(e)}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+            
+    return {
+        'processed_count': processed_count,
+        'errors': errors
+    }
