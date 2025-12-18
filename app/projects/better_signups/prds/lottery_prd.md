@@ -372,19 +372,19 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 8: Winner Acceptance Flow
 
-- [ ] Extend existing pending signup acceptance to handle lottery winners
-- [ ] Generate acceptance links (already exists for waitlist)
-- [ ] 24-hour timeout (already exists for waitlist)
-- [ ] Handle acceptance and rejection
-- [ ] Move to next person on waitlist if rejected/timeout
+- [x] Extend existing pending signup acceptance to handle lottery winners
+- [x] Generate acceptance links (already exists for waitlist)
+- [x] 24-hour timeout (already exists for waitlist)
+- [x] Handle acceptance and rejection
+- [x] Move to next person on waitlist if rejected/timeout
 
 ### Phase 9: Email Notifications
 
-- [ ] Create lottery completion email template (participants)
-- [ ] Include won spots, waitlist positions, losses
-- [ ] Include acceptance links with 24-hour deadline
-- [ ] Create lottery completion email template (creator)
-- [ ] Send emails after lottery completes
+- [x] Create lottery completion email template (participants)
+- [x] Include won spots, waitlist positions, losses
+- [x] Include acceptance links with 24-hour deadline
+- [x] Create lottery completion email template (creator)
+- [x] Send emails after lottery completes
 
 ### Phase 10: During-Lottery State Handling
 

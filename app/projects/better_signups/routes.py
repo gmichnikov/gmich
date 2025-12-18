@@ -474,7 +474,7 @@ def create_list():
                 form.lottery_datetime.data,
                 current_user.time_zone
             )
-            
+
             if not is_valid:
                 flash(error_msg, "error")
                 return render_template("better_signups/create_list.html", form=form)
@@ -579,7 +579,7 @@ def edit_list(uuid):
                     form.lottery_datetime.data,
                     signup_list.lottery_timezone
                 )
-                
+
                 if not is_valid:
                     flash(error_msg, "error")
                     # Prepare data for re-rendering template on error
@@ -786,6 +786,7 @@ def delete_list(uuid):
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
+        logger.error(f"Error deleting list {uuid}: {e}")
         flash("An error occurred while deleting the list. Please try again.", "error")
         return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
@@ -1632,6 +1633,12 @@ def view_list(uuid):
     for event in signup_list.events:
         event.google_calendar_url = get_google_calendar_url(event, signup_list.name, current_user)
 
+    # Convert lottery datetime from UTC to local timezone for display
+    lottery_datetime_local = None
+    if signup_list.is_lottery and signup_list.lottery_datetime:
+        tz = pytz.timezone(signup_list.lottery_timezone)
+        lottery_datetime_local = signup_list.lottery_datetime.replace(tzinfo=pytz.UTC).astimezone(tz)
+
     # Check for pending confirmations for this user in this list
     family_member_ids = [fm.id for fm in family_members]
     pending_confirmations = []
@@ -1702,6 +1709,7 @@ def view_list(uuid):
         family_member_signup_counts=family_member_signup_counts,
         lottery_entries_by_element=lottery_entries_by_element,
         user_lottery_entries=user_lottery_entries,
+        lottery_datetime_local=lottery_datetime_local,
     )
 
 

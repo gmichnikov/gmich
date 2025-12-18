@@ -528,10 +528,10 @@ class LotteryEntry(db.Model):
 
     # Relationships
     signup_list = db.relationship(
-        "SignupList", backref=db.backref("lottery_entries", lazy=True)
+        "SignupList", backref=db.backref("lottery_entries", lazy=True, cascade="all, delete-orphan")
     )
-    event = db.relationship("Event", backref=db.backref("lottery_entries", lazy=True))
-    item = db.relationship("Item", backref=db.backref("lottery_entries", lazy=True))
+    event = db.relationship("Event", backref=db.backref("lottery_entries", lazy=True, cascade="all, delete-orphan"))
+    item = db.relationship("Item", backref=db.backref("lottery_entries", lazy=True, cascade="all, delete-orphan"))
     family_member = db.relationship(
         "FamilyMember", backref=db.backref("lottery_entries", lazy=True)
     )

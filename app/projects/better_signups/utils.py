@@ -487,15 +487,170 @@ def validate_lottery_datetime(lottery_datetime_naive, timezone_str):
         return (False, "Invalid datetime", None)
 
 
+def send_lottery_completion_emails(signup_list):
+    """
+    Send lottery completion emails to all participants and the creator.
+
+    Args:
+        signup_list: SignupList instance (lottery that just completed)
+    """
+    from app.projects.better_signups.models import WaitlistEntry, LotteryEntry
+    from app.models import User
+    from app.utils.email_service import send_lottery_completion_email_participant, send_lottery_completion_email_creator
+    from datetime import timedelta
+
+    # Collect data for participant emails
+    # Get all users who had lottery entries
+    user_entries = {}  # user_id -> {'wins': [], 'waitlist': [], 'losses': []}
+
+    # Get all lottery entries for this list
+    all_entries = LotteryEntry.query.filter_by(signup_list_id=signup_list.id).all()
+
+    for entry in all_entries:
+        user_id = entry.user_id
+        if user_id not in user_entries:
+            user_entries[user_id] = {'wins': [], 'waitlist': [], 'losses': []}
+
+    # Categorize each entry as win, waitlist, or loss
+    for entry in all_entries:
+        element = entry.event if entry.event_id else entry.item
+        family_member = entry.family_member
+        user_id = entry.user_id
+
+        # Check if won (has pending_confirmation signup)
+        if entry.event_id:
+            win_signup = Signup.query.filter_by(
+                event_id=entry.event_id,
+                family_member_id=entry.family_member_id,
+                status='pending_confirmation',
+                source='lottery'
+            ).first()
+        else:
+            win_signup = Signup.query.filter_by(
+                item_id=entry.item_id,
+                family_member_id=entry.family_member_id,
+                status='pending_confirmation',
+                source='lottery'
+            ).first()
+
+        if win_signup:
+            # Won!
+            deadline = win_signup.created_at + timedelta(hours=24)
+            user_entries[user_id]['wins'].append({
+                'element': element,
+                'family_member': family_member,
+                'deadline': deadline
+            })
+        else:
+            # Check if on waitlist
+            if entry.event_id:
+                wl_entry = WaitlistEntry.query.filter_by(
+                    element_type='event',
+                    element_id=entry.event_id,
+                    family_member_id=entry.family_member_id
+                ).first()
+            else:
+                wl_entry = WaitlistEntry.query.filter_by(
+                    element_type='item',
+                    element_id=entry.item_id,
+                    family_member_id=entry.family_member_id
+                ).first()
+
+            if wl_entry:
+                # On waitlist
+                user_entries[user_id]['waitlist'].append({
+                    'element': element,
+                    'family_member': family_member,
+                    'position': wl_entry.position
+                })
+            else:
+                # Did not win
+                user_entries[user_id]['losses'].append({
+                    'element': element,
+                    'family_member': family_member
+                })
+
+    # Send emails to all participants
+    for user_id, data in user_entries.items():
+        try:
+            user = User.query.get(user_id)
+            if user:
+                send_lottery_completion_email_participant(
+                    user=user,
+                    list_obj=signup_list,
+                    wins=data['wins'],
+                    waitlist_positions=data['waitlist'],
+                    losses=data['losses']
+                )
+                logger.info(f"Sent lottery completion email to participant {user.email}")
+        except Exception as e:
+            logger.error(f"Failed to send lottery completion email to user {user_id}: {e}")
+
+    # Collect data for creator email
+    lottery_stats = []
+
+    # Get all elements
+    events = Event.query.filter_by(list_id=signup_list.id).all()
+    items = Item.query.filter_by(list_id=signup_list.id).all()
+
+    for event in events:
+        entries_count = LotteryEntry.query.filter_by(event_id=event.id).count()
+        winners_count = Signup.query.filter_by(
+            event_id=event.id,
+            status='pending_confirmation',
+            source='lottery'
+        ).count()
+        waitlist_count = WaitlistEntry.query.filter_by(
+            element_type='event',
+            element_id=event.id
+        ).count()
+
+        lottery_stats.append({
+            'element': event,
+            'entries_count': entries_count,
+            'winners_count': winners_count,
+            'waitlist_count': waitlist_count
+        })
+
+    for item in items:
+        entries_count = LotteryEntry.query.filter_by(item_id=item.id).count()
+        winners_count = Signup.query.filter_by(
+            item_id=item.id,
+            status='pending_confirmation',
+            source='lottery'
+        ).count()
+        waitlist_count = WaitlistEntry.query.filter_by(
+            element_type='item',
+            element_id=item.id
+        ).count()
+
+        lottery_stats.append({
+            'element': item,
+            'entries_count': entries_count,
+            'winners_count': winners_count,
+            'waitlist_count': waitlist_count
+        })
+
+    # Send email to creator
+    try:
+        creator = User.query.get(signup_list.creator_id)
+        if creator:
+            send_lottery_completion_email_creator(
+                creator_user=creator,
+                list_obj=signup_list,
+                lottery_stats=lottery_stats
+            )
+            logger.info(f"Sent lottery completion email to creator {creator.email}")
+    except Exception as e:
+        logger.error(f"Failed to send lottery completion email to creator: {e}")
+
+
 def process_lottery_draws():
     """
     Process all scheduled lotteries that are ready to run.
-    
+
     Finds lotteries where:
-    - lottery_datetime was at least 65 minutes ago (1 hour buffer provided by system + 5 min safety)
-      NOTE: PRD says "executes within 60 minutes AFTER the scheduled time".
-      To be safe and ensure the 1 hour window is fully respected, we look for lotteries
-      scheduled more than 60 minutes ago.
+    - lottery_datetime is in the past (will run as soon as scheduler executes after scheduled time)
     - lottery_completed is False
     - lottery_running is False
     
@@ -517,10 +672,10 @@ def process_lottery_draws():
     from app.projects.better_signups.models import WaitlistEntry, LotteryEntry
     import random
     
-    # 65 minutes ago (1 hour "cooling off" + 5 min buffer)
-    # This ensures users had their full hour after the time to stare at the screen
-    # before we actually run it.
-    execution_cutoff = datetime.now(pytz.UTC) - timedelta(minutes=65)
+    # Use current time as cutoff - any lottery scheduled in the past will be processed
+    # The lottery will run on the next scheduler execution after the scheduled time
+    # (typically within 10 minutes if scheduler runs every 10 minutes)
+    execution_cutoff = datetime.now(pytz.UTC)
     
     ready_lists = SignupList.query.filter(
         SignupList.is_lottery == True,
@@ -598,29 +753,26 @@ def process_lottery_draws():
                 
                 for entry in entries:
                     fm_id = entry.family_member_id
-                    
-                    # Check if family member is at limit
-                    # Limit check = (Existing DB signups) + (Wins in this run so far)
-                    
-                    # Get existing confirmed/pending signups from DB
-                    # (Note: this function queries DB)
-                    db_count = get_signup_count(fm_id, signup_list.id)
-                    
-                    # Add local wins
+
+                    # Check if family member is at limit FOR WINNING
+                    # During lottery processing, we only count wins in THIS lottery run
+                    # (We can't query DB because pending signups haven't been committed yet
+                    # and might be visible in the session, causing incorrect counts)
+                    # Note: Waitlist positions do NOT count toward the limit
+
+                    # Count wins in this lottery run
                     local_count = family_wins_in_run.get(fm_id, 0)
-                    
-                    total_count = db_count + local_count
-                    
+
                     limit = signup_list.max_signups_per_member
-                    at_limit = (limit is not None) and (total_count >= limit)
-                    
+                    at_limit = (limit is not None) and (local_count >= limit)
+
                     if not at_limit and len(winners) < spots_available:
                         # YOU WIN!
                         winners.append(entry)
                         family_wins_in_run[fm_id] = local_count + 1
                     else:
-                        # Waitlist or Limit Reached
-                        # If at limit, they can still go on waitlist?
+                        # Didn't win (either at limit or no spots left)
+                        # Everyone who doesn't win goes on waitlist regardless of limit
                         # PRD: "Family members at their limit can still be on waitlists"
                         waitlist_candidates.append(entry)
                 
@@ -682,9 +834,15 @@ def process_lottery_draws():
             signup_list.lottery_completed = True
             signup_list.lottery_running = False
             db.session.commit()
-            
+
             processed_count += 1
             logger.info(f"Completed lottery for list '{signup_list.name}'")
+
+            # Send emails after successful completion
+            try:
+                send_lottery_completion_emails(signup_list)
+            except Exception as email_error:
+                logger.error(f"Error sending lottery completion emails: {email_error}")
             
         except Exception as e:
             db.session.rollback()

@@ -80,22 +80,22 @@
             {% endif %}
             
             {# Lottery banner #}
-            {% if list.is_lottery and not list.lottery_completed %}
+            {% if list.is_lottery and not list.lottery_completed and lottery_datetime_local %}
             <div style="background-color: #f0f8ff; color: #004085; padding: 1rem; border-radius: 6px; border: 2px solid #007bff; margin-top: 1rem;">
                 <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">🎲 LOTTERY LIST</div>
                 <div style="margin-bottom: 0.5rem;">
                     This list uses a lottery system instead of first-come-first-served. Winners will be randomly selected on:
                 </div>
                 <div style="font-weight: bold; font-size: 1rem; background-color: rgba(255,255,255,0.7); padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
-                    📅 {{ list.lottery_datetime.strftime('%B %d, %Y at %I:%M %p') }} {{ list.lottery_timezone }}
+                    📅 {{ lottery_datetime_local.strftime('%B %d, %Y at %I:%M %p') }} {{ list.lottery_timezone }}
                 </div>
                 <div style="font-size: 0.875rem; color: #555;">
                     The lottery will run within 1 hour after this time. Winners will be notified by email and must accept their spots within 24 hours.
                 </div>
             </div>
-            {% elif list.is_lottery and list.lottery_completed %}
+            {% elif list.is_lottery and list.lottery_completed and lottery_datetime_local %}
             <div style="background-color: #e7f3ff; color: #004085; padding: 1rem; border-radius: 6px; border: 1px solid #b8daff; margin-top: 1rem;">
-                <div style="font-weight: bold; font-size: 1rem;">✓ Lottery Completed on {{ list.lottery_datetime.strftime('%B %d, %Y at %I:%M %p') }} {{ list.lottery_timezone }}</div>
+                <div style="font-weight: bold; font-size: 1rem;">✓ Lottery Completed on {{ lottery_datetime_local.strftime('%B %d, %Y at %I:%M %p') }} {{ list.lottery_timezone }}</div>
             </div>
             {% endif %}
             

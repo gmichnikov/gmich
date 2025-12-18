@@ -592,3 +592,351 @@ gregmichnikov.com
         # Log the error but don't crash - cascade should still succeed
         logger.error(f"Failed to send waitlist spot offered email to {user.email}: {e}")
         return None
+
+
+def send_lottery_completion_email_participant(user, list_obj, wins, waitlist_positions, losses):
+    """
+    Send lottery completion email to a participant.
+
+    Args:
+        user: User model instance (the person receiving the email)
+        list_obj: SignupList model instance (the lottery list)
+        wins: List of dicts with keys: 'element', 'family_member', 'deadline'
+        waitlist_positions: List of dicts with keys: 'element', 'family_member', 'position'
+        losses: List of dicts with keys: 'element', 'family_member'
+
+    Returns:
+        requests.Response object if successful, None if error (logged)
+
+    Note: Must be called within a Flask application context.
+    """
+    from app.projects.better_signups.models import Event
+
+    def format_element(element):
+        """Helper to format element description"""
+        if isinstance(element, Event):
+            if element.event_type == "date":
+                desc = element.event_date.strftime('%B %d, %Y')
+            else:
+                desc = f"{element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+                if element.timezone:
+                    desc += f" ({element.timezone})"
+            if element.location:
+                desc += f" - {element.location}"
+        else:
+            # It's an Item
+            desc = element.name
+            if element.description:
+                desc += f" - {element.description}"
+        return desc
+
+    # Generate list URL
+    list_url = url_for('better_signups.view_list', uuid=list_obj.uuid, _external=True)
+
+    subject = f"Lottery Results: {list_obj.name}"
+
+    # Build email content sections
+    wins_text = []
+    wins_html = []
+    for win in wins:
+        element_desc = format_element(win['element'])
+        deadline_str = win['deadline'].strftime('%B %d at %I:%M %p UTC')
+        wins_text.append(
+            f"  ✓ {win['family_member'].display_name}: {element_desc}\n"
+            f"    Confirm by: {deadline_str}"
+        )
+        wins_html.append(f"""
+            <div style="margin: 10px 0; padding: 15px; background-color: #d4edda; border-radius: 5px; border-left: 4px solid #28a745;">
+                <p style="margin: 0 0 5px 0; font-weight: bold; color: #155724;">
+                    ✓ {win['family_member'].display_name}
+                </p>
+                <p style="margin: 0 0 5px 0; color: #155724;">
+                    {element_desc}
+                </p>
+                <p style="margin: 0; font-size: 14px; color: #155724;">
+                    <strong>Confirm by: {deadline_str}</strong>
+                </p>
+            </div>
+        """)
+
+    waitlist_text = []
+    waitlist_html = []
+    for wl in waitlist_positions:
+        element_desc = format_element(wl['element'])
+        waitlist_text.append(
+            f"  • {wl['family_member'].display_name}: {element_desc} (Position #{wl['position']})"
+        )
+        waitlist_html.append(f"""
+            <div style="margin: 10px 0; padding: 10px; background-color: #fff3cd; border-radius: 5px;">
+                <p style="margin: 0 0 5px 0; font-weight: bold; color: #856404;">
+                    {wl['family_member'].display_name}
+                </p>
+                <p style="margin: 0; color: #856404;">
+                    {element_desc} <strong>(Position #{wl['position']})</strong>
+                </p>
+            </div>
+        """)
+
+    losses_text = []
+    losses_html = []
+    for loss in losses:
+        element_desc = format_element(loss['element'])
+        losses_text.append(
+            f"  • {loss['family_member'].display_name}: {element_desc}"
+        )
+        losses_html.append(f"""
+            <div style="margin: 5px 0; color: #666;">
+                <p style="margin: 0;">
+                    {loss['family_member'].display_name}: {element_desc}
+                </p>
+            </div>
+        """)
+
+    # Build text version
+    text_content = f"""Hello {user.full_name},
+
+The lottery for '{list_obj.name}' has completed!
+
+"""
+
+    if wins:
+        text_content += f"""🎉 CONGRATULATIONS! You won the following spot(s):
+
+{chr(10).join(wins_text)}
+
+⏰ IMPORTANT: You must confirm each spot within 24 hours or it will be offered to the next person on the waitlist.
+
+To confirm your spots:
+1. Visit the list: {list_url}
+2. Find your pending spots (marked "Pending confirmation")
+3. Click "Confirm Your Spot" for each one
+
+"""
+
+    if waitlist_positions:
+        text_content += f"""📋 Waitlist Positions:
+
+{chr(10).join(waitlist_text)}
+
+You'll be notified if a spot becomes available!
+
+"""
+
+    if losses:
+        text_content += f"""Unfortunately, you did not win the following:
+
+{chr(10).join(losses_text)}
+
+"""
+
+    text_content += """Best regards,
+gregmichnikov.com
+"""
+
+    # Build HTML version
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #007bff; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+        .content {{ background-color: #f8f9fa; padding: 20px; }}
+        .section {{ margin: 20px 0; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
+        .btn {{ display: inline-block; padding: 15px 30px; background-color: #28a745; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; margin: 20px 0; text-align: center; }}
+        .warning-box {{ background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0;">🎲 Lottery Results</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">{list_obj.name}</p>
+        </div>
+        <div class="content">
+            <p>Hello {user.full_name},</p>
+            <p><strong>The lottery has completed!</strong> Here are your results:</p>
+"""
+
+    if wins:
+        html_content += f"""
+            <div class="section">
+                <h2 style="color: #28a745; margin-top: 0;">🎉 Congratulations! You Won:</h2>
+                {''.join(wins_html)}
+
+                <div class="warning-box">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">⏰ Action Required!</p>
+                    <p style="margin: 0;">You must confirm each spot within <strong>24 hours</strong> or it will be offered to the next person.</p>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="{list_url}" class="btn">View List and Confirm Spots</a>
+                </div>
+            </div>
+"""
+
+    if waitlist_positions:
+        html_content += f"""
+            <div class="section">
+                <h3>📋 Waitlist Positions:</h3>
+                {''.join(waitlist_html)}
+                <p style="font-size: 14px; color: #666;">You'll be notified if a spot becomes available!</p>
+            </div>
+"""
+
+    if losses:
+        html_content += f"""
+            <div class="section">
+                <h3>Unfortunately, you did not win:</h3>
+                {''.join(losses_html)}
+            </div>
+"""
+
+    html_content += f"""
+        </div>
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+    try:
+        return send_email(
+            to_email=user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content
+        )
+    except Exception as e:
+        logger.error(f"Failed to send lottery completion email to {user.email}: {e}")
+        return None
+
+
+def send_lottery_completion_email_creator(creator_user, list_obj, lottery_stats):
+    """
+    Send lottery completion email to the list creator.
+
+    Args:
+        creator_user: User model instance (the list creator)
+        list_obj: SignupList model instance (the lottery list)
+        lottery_stats: List of dicts with keys: 'element', 'entries_count', 'winners_count', 'waitlist_count'
+
+    Returns:
+        requests.Response object if successful, None if error (logged)
+
+    Note: Must be called within a Flask application context.
+    """
+    from app.projects.better_signups.models import Event
+
+    def format_element(element):
+        """Helper to format element description"""
+        if isinstance(element, Event):
+            if element.event_type == "date":
+                return element.event_date.strftime('%B %d, %Y')
+            else:
+                desc = f"{element.event_datetime.strftime('%B %d, %Y at %I:%M %p')}"
+                if element.timezone:
+                    desc += f" ({element.timezone})"
+                return desc
+        else:
+            # It's an Item
+            return element.name
+
+    # Generate list editor URL
+    editor_url = url_for('better_signups.edit_list', uuid=list_obj.uuid, _external=True)
+
+    subject = f"Your Lottery Has Completed: {list_obj.name}"
+
+    # Build stats sections
+    stats_text = []
+    stats_html = []
+
+    for stat in lottery_stats:
+        element_desc = format_element(stat['element'])
+        stats_text.append(
+            f"  • {element_desc}\n"
+            f"    Entries: {stat['entries_count']}\n"
+            f"    Winners (pending confirmation): {stat['winners_count']}\n"
+            f"    Waitlist: {stat['waitlist_count']}"
+        )
+        stats_html.append(f"""
+            <div style="margin: 15px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #007bff;">
+                    {element_desc}
+                </p>
+                <p style="margin: 0; font-size: 14px; color: #666;">
+                    <strong>Entries:</strong> {stat['entries_count']}<br>
+                    <strong>Winners (pending confirmation):</strong> {stat['winners_count']}<br>
+                    <strong>Waitlist:</strong> {stat['waitlist_count']}
+                </p>
+            </div>
+        """)
+
+    text_content = f"""Hello {creator_user.full_name},
+
+Your lottery for '{list_obj.name}' has completed!
+
+Summary:
+
+{chr(10).join(stats_text)}
+
+Winners have been notified by email and have 24 hours to confirm their spots. If they don't confirm, spots will automatically be offered to people on the waitlist.
+
+View and manage your list:
+{editor_url}
+
+Best regards,
+gregmichnikov.com
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #007bff; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+        .content {{ background-color: #f8f9fa; padding: 20px; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
+        .btn {{ display: inline-block; padding: 15px 30px; background-color: #007bff; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; margin: 20px 0; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0;">✓ Lottery Completed</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">{list_obj.name}</p>
+        </div>
+        <div class="content">
+            <p>Hello {creator_user.full_name},</p>
+            <p><strong>Your lottery has completed!</strong> Here's the summary:</p>
+
+            {''.join(stats_html)}
+
+            <p style="margin-top: 20px;">Winners have been notified by email and have <strong>24 hours</strong> to confirm their spots. If they don't confirm, spots will automatically be offered to people on the waitlist.</p>
+
+            <div style="text-align: center;">
+                <a href="{editor_url}" class="btn">Manage Your List</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Best regards,<br>gregmichnikov.com</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+    try:
+        return send_email(
+            to_email=creator_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content
+        )
+    except Exception as e:
+        logger.error(f"Failed to send lottery completion email to creator {creator_user.email}: {e}")
+        return None
