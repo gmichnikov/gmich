@@ -2293,6 +2293,10 @@ def remove_lottery_entry(uuid, entry_id):
         logger.error(f"Database error removing lottery entry: {e}")
         flash("An error occurred. Please try again.", "error")
 
+    # Check for 'next' parameter to support redirecting back to my_signups
+    next_url = request.form.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect(url_for("better_signups.view_list", uuid=uuid))
 
 
@@ -2802,7 +2806,7 @@ def my_signups():
     # Attach swap request info to each signup and check if swap is possible
     for signup in confirmed_signups:
         signup.pending_swap_request = swap_requests_by_signup.get(signup.id)
-        
+
         # If there's a pending swap request, get target element descriptions
         if signup.pending_swap_request:
             signup.swap_target_descriptions = []
@@ -2822,16 +2826,67 @@ def my_signups():
                         signup.swap_target_descriptions.append(item.name)
                     else:
                         signup.swap_target_descriptions.append("[Deleted]")
-        
+
         # Check if there are any eligible swap targets for this signup
         # Use helper function instead of inline logic
         signup.has_eligible_swap_targets = check_has_eligible_swap_targets(signup)
+
+    # Get all lottery entries for these family members (for lotteries that haven't run yet)
+    lottery_entries = (
+        LotteryEntry.query.options(
+            joinedload(LotteryEntry.event).joinedload(Event.list),
+            joinedload(LotteryEntry.item).joinedload(Item.list),
+            joinedload(LotteryEntry.family_member),
+            joinedload(LotteryEntry.signup_list),
+        )
+        .join(SignupList)
+        .filter(
+            LotteryEntry.family_member_id.in_(family_member_ids),
+            SignupList.lottery_completed == False
+        )
+        .order_by(SignupList.lottery_datetime.asc())
+        .all()
+    )
+
+    # Group lottery entries by list for better display
+    # Also convert lottery datetime to user's timezone
+    import pytz
+    from collections import defaultdict
+
+    lottery_entries_by_list = defaultdict(list)
+    list_info = {}  # Store list metadata (name, uuid, lottery_datetime_local)
+
+    for entry in lottery_entries:
+        list_obj = entry.signup_list
+        list_id = list_obj.id
+
+        # Add entry to the group
+        lottery_entries_by_list[list_id].append(entry)
+
+        # Store list info (only once per list)
+        if list_id not in list_info:
+            # Convert lottery datetime to user's local timezone
+            tz = pytz.timezone(current_user.time_zone)
+            lottery_datetime_local = list_obj.lottery_datetime.replace(tzinfo=pytz.UTC).astimezone(tz)
+
+            list_info[list_id] = {
+                'list': list_obj,
+                'lottery_datetime_local': lottery_datetime_local,
+                'entries': lottery_entries_by_list[list_id]
+            }
+
+    # Sort lists by lottery datetime (soonest first)
+    sorted_lottery_lists = sorted(
+        list_info.values(),
+        key=lambda x: x['list'].lottery_datetime
+    )
 
     return render_template(
         "better_signups/my_signups.html",
         signups=confirmed_signups,
         pending_confirmations=pending_confirmations,
         waitlist_entries=waitlist_entries,
+        lottery_lists=sorted_lottery_lists,
     )
 
 

@@ -365,8 +365,8 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 ### Phase 7: Automated Lottery Scheduling
 
 - [x] Create Heroku Scheduler command (following pattern in `commands.py`)
-- [ ] Add to scheduled jobs (hourly)
-- [x] Look for lotteries in past 65 minutes (`lottery_datetime < now`, `lottery_completed=False`, `lottery_running=False`)
+- [x] Add to scheduled jobs (configured via Heroku Scheduler: `flask process-lottery-draws`)
+- [x] Look for lotteries where `lottery_datetime < now`, `lottery_completed=False`, `lottery_running=False`
 - [x] Execute lottery algorithm for each found
 - [x] Handle errors gracefully (ensure flags are cleared)
 
@@ -388,28 +388,28 @@ This helps distinguish lottery winners from waitlist promotions from direct sign
 
 ### Phase 10: During-Lottery State Handling
 
-- [ ] Check `lottery_running` flag in all relevant views
-- [ ] Update UI to show "Lottery in progress..." message when flag is True
-- [ ] Block all actions during execution (entry, removal, editing)
-- [ ] Ensure flag is cleared when lottery completes (handled in Phase 6)
+- [x] Check `lottery_running` flag in all relevant views
+- [x] Update UI to show "Lottery in progress..." message when flag is True
+- [x] Block all actions during execution (entry, removal, editing)
+- [x] Ensure flag is cleared when lottery completes (handled in Phase 6)
 
 ### Phase 11: Post-Lottery Behavior
 
-- [ ] After lottery completes, allow regular signups for unfilled spots
-- [ ] Ensure waitlist operates normally
-- [ ] Ensure all existing features work (cancellation, etc.)
-- [ ] Display lottery completion status clearly
+- [x] After lottery completes, allow regular signups for unfilled spots
+- [x] Ensure waitlist operates normally
+- [x] Ensure all existing features work (cancellation, etc.)
+- [x] Display lottery completion status clearly
 
 ### Phase 12: My Lottery Entries View
 
-- [ ] Update "My Signups" page to include lottery entries section
-- [ ] Add section between signups and waitlist entries
-- [ ] Query all lottery entries for current user (all family members)
-- [ ] Filter to only show entries for lotteries that haven't run yet
-- [ ] Display: list name, element details, family member, lottery datetime
-- [ ] Add "Remove Entry" button for each entry
-- [ ] Group by list with countdown/lottery time displayed
-- [ ] Show message if no lottery entries exist
+- [x] Update "My Signups" page to include lottery entries section
+- [x] Add section between signups and waitlist entries
+- [x] Query all lottery entries for current user (all family members)
+- [x] Filter to only show entries for lotteries that haven't run yet
+- [x] Display: list name, element details, family member, lottery datetime
+- [x] Add "Remove Entry" button for each entry
+- [x] Group by list with countdown/lottery time displayed
+- [x] Show message if no lottery entries exist
 
 ### Phase 13: Testing & Edge Cases
 

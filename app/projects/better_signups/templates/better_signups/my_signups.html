@@ -275,6 +275,97 @@
         </div>
         {% endif %}
 
+        {# Lottery Entries Section #}
+        {% if lottery_lists %}
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">
+                🎲 My Lottery Entries
+                {% set total_entries = lottery_lists|map(attribute='entries')|map('length')|sum %}
+                <span style="font-size: 0.875rem; color: #666; font-weight: normal;">
+                    ({{ total_entries }} {% if total_entries == 1 %}entry{% else %}entries{% endif %} across {{ lottery_lists|length }} {% if lottery_lists|length == 1 %}lottery{% else %}lotteries{% endif %})
+                </span>
+            </h2>
+            <p style="color: #666; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                These are your entries for lotteries that haven't run yet. You can remove entries until the lottery runs.
+            </p>
+
+            {% for list_data in lottery_lists %}
+            {% set list_obj = list_data['list'] %}
+            {% set lottery_datetime_local = list_data['lottery_datetime_local'] %}
+            {% set entries = list_data['entries'] %}
+
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background-color: #f0f8ff; border-radius: 8px; border-left: 4px solid #007bff;">
+                {# List header #}
+                <div style="margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        <a href="{{ url_for('better_signups.view_list', uuid=list_obj.uuid) }}"
+                           style="color: #007bff; text-decoration: none;">
+                            {{ list_obj.name }}
+                        </a>
+                    </h3>
+                    <div style="font-weight: bold; color: #004085; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                        📅 Lottery: {{ lottery_datetime_local.strftime('%B %d, %Y at %I:%M %p') }} {{ list_obj.lottery_timezone }}
+                    </div>
+                    {% if list_obj.lottery_running %}
+                    <div style="color: #856404; font-weight: bold; font-size: 0.875rem; margin-top: 0.5rem;">
+                        ⏳ Lottery is currently running...
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# Entries for this list #}
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for entry in entries %}
+                    {% set element = entry.event if entry.event_id else entry.item %}
+                    <div style="padding: 1rem; background-color: white; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="font-weight: bold; margin-bottom: 0.25rem; color: #333;">
+                                {{ entry.family_member.display_name }}
+                            </div>
+                            <div style="color: #666; font-size: 0.875rem;">
+                                {% if entry.event %}
+                                    {% if entry.event.event_type == 'date' %}
+                                        📅 {{ entry.event.event_date.strftime('%B %d, %Y') }}
+                                    {% else %}
+                                        📅 {{ entry.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                                    {% endif %}
+                                    {% if entry.event.location %}
+                                        <br>📍 {{ entry.event.location }}
+                                    {% endif %}
+                                {% else %}
+                                    📦 {{ entry.item.name }}
+                                    {% if entry.item.description %}
+                                        <br><span style="color: #999; font-size: 0.8rem;">{{ entry.item.description }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            {% if not list_obj.lottery_running %}
+                            <form method="POST"
+                                  action="{{ url_for('better_signups.remove_lottery_entry', uuid=list_obj.uuid, entry_id=entry.id) }}"
+                                  style="margin: 0;"
+                                  onsubmit="return confirm('Remove {{ entry.family_member.display_name }} from this lottery?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="next" value="{{ url_for('better_signups.my_signups') }}"/>
+                                <button type="submit"
+                                        class="better-signups-btn better-signups-btn-danger"
+                                        style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                    Remove Entry
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #856404; font-size: 0.875rem;">Cannot remove during lottery</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {# Waitlist Section #}
         {% if waitlist_entries %}
         <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
