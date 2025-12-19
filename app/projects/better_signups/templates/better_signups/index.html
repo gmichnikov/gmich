@@ -10,72 +10,32 @@
             <p class="auth-subtitle">Create and manage signup lists for events and items</p>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
-            <a href="{{ url_for('better_signups.create_list') }}" class="auth-submit-btn" style="text-decoration: none; text-align: center; display: block; background-color: #28a745;">
-                Create New List
+        <div style="margin-top: 2rem;">
+            <a href="{{ url_for('better_signups.my_signups') }}" class="auth-submit-btn" style="text-decoration: none; text-align: center; display: block; background-color: #007bff; font-size: 1.1rem; padding: 1rem;">
+                View My Signups & Confirmations
             </a>
-            <a href="{{ url_for('better_signups.family_members') }}" class="auth-submit-btn" style="text-decoration: none; text-align: center; display: block;">
-                Manage Family Members
-            </a>
-            <a href="{{ url_for('better_signups.my_signups') }}" class="auth-submit-btn" style="text-decoration: none; text-align: center; display: block;">
-                My Signups
-            </a>
-        </div>
 
-        {% if recent_signups %}
-        <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1.25rem; margin: 0;">Recent Signups</h2>
-                <a href="{{ url_for('better_signups.my_signups') }}" style="color: #007bff; text-decoration: none; font-size: 0.875rem;">View All →</a>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for signup in recent_signups %}
-                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 0.5rem;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <div style="font-weight: bold; margin-bottom: 0.25rem;">
-                                <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" style="color: #007bff; text-decoration: none;">
-                                    {{ signup.event.list.name if signup.event else signup.item.list.name }}
-                                </a>
-                            </div>
-                            <div style="color: #666; font-size: 0.875rem;">
-                                {% if signup.event %}
-                                    {% if signup.event.event_type == 'date' %}
-                                        {{ signup.event.event_date.strftime('%B %d, %Y') }}
-                                    {% else %}
-                                        {{ signup.event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
-                                        {% if signup.event.timezone %}
-                                            ({{ signup.event.timezone }})
-                                        {% endif %}
-                                    {% endif %}
-                                {% else %}
-                                    {{ signup.item.name }}
-                                {% endif %}
-                            </div>
-                            <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
-                                {{ signup.family_member.display_name }}
-                                {% if not signup.family_member.is_self %}
-                                    (via {{ signup.user.full_name }})
-                                {% endif %}
-                            </div>
-                        </div>
-                        <a href="{{ url_for('better_signups.view_list', uuid=signup.event.list.uuid if signup.event else signup.item.list.uuid) }}" 
-                           style="background-color: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem; cursor: pointer; text-decoration: none; display: inline-block;">
-                            View
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; font-size: 0.95rem;">
+                <a href="{{ url_for('better_signups.create_list') }}" class="auth-link" style="color: #007bff;">
+                    + Create New List
+                </a>
+                <a href="{{ url_for('better_signups.family_members') }}" class="auth-link" style="color: #007bff;">
+                    Manage Family Members
+                </a>
             </div>
         </div>
-        {% endif %}
 
         {% if my_lists %}
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">My Lists</h2>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; margin: 0;">My Lists</h2>
+                {% if my_lists|length > 3 %}
+                <a href="#" onclick="toggleMyLists(event)" id="my-lists-toggle" style="color: #007bff; text-decoration: none; font-size: 0.875rem;">See All ({{ my_lists|length }}) →</a>
+                {% endif %}
+            </div>
+            <div id="my-lists-container" style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for list in my_lists %}
-                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                <div class="my-list-item" style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px; {% if loop.index > 3 %}display: none;{% endif %}">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
@@ -130,10 +90,15 @@
 
         {% if editor_lists %}
         <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem; margin-top: 2rem;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Lists I Can Edit</h2>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; margin: 0;">Lists I Can Edit</h2>
+                {% if editor_lists|length > 3 %}
+                <a href="#" onclick="toggleEditorLists(event)" id="editor-lists-toggle" style="color: #007bff; text-decoration: none; font-size: 0.875rem;">See All ({{ editor_lists|length }}) →</a>
+                {% endif %}
+            </div>
+            <div id="editor-lists-container" style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for list in editor_lists %}
-                <div style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px;">
+                <div class="editor-list-item" style="padding: 1rem; background-color: #f9f9f9; border-radius: 8px; {% if loop.index > 3 %}display: none;{% endif %}">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
@@ -208,6 +173,36 @@ function copyListLink(url, button) {
     }).catch(function(err) {
         alert('Failed to copy link. Please copy manually: ' + url);
     });
+}
+
+function toggleMyLists(event) {
+    event.preventDefault();
+    const items = document.querySelectorAll('.my-list-item');
+    const toggle = document.getElementById('my-lists-toggle');
+    const isExpanded = toggle.textContent.includes('Show Less');
+
+    items.forEach((item, index) => {
+        if (index >= 3) {
+            item.style.display = isExpanded ? 'none' : 'block';
+        }
+    });
+
+    toggle.textContent = isExpanded ? 'See All ({{ my_lists|length }}) →' : '← Show Less';
+}
+
+function toggleEditorLists(event) {
+    event.preventDefault();
+    const items = document.querySelectorAll('.editor-list-item');
+    const toggle = document.getElementById('editor-lists-toggle');
+    const isExpanded = toggle.textContent.includes('Show Less');
+
+    items.forEach((item, index) => {
+        if (index >= 3) {
+            item.style.display = isExpanded ? 'none' : 'block';
+        }
+    });
+
+    toggle.textContent = isExpanded ? 'See All ({{ editor_lists|length }}) →' : '← Show Less';
 }
 </script>
 {% endblock %}

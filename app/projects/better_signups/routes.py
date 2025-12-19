@@ -293,33 +293,10 @@ def index():
         .all()
     )
 
-    # Get up to 3 most recent active signups
-    family_member_ids = [
-        fm.id for fm in FamilyMember.query.filter_by(user_id=current_user.id).all()
-    ]
-
-    recent_signups = []
-    if family_member_ids:
-        recent_signups = (
-            Signup.query.options(
-                joinedload(Signup.event).joinedload(Event.list),
-                joinedload(Signup.item).joinedload(Item.list),
-                joinedload(Signup.family_member),
-                joinedload(Signup.user),
-            )
-            .filter(
-                Signup.family_member_id.in_(family_member_ids),
-            )
-            .order_by(Signup.created_at.desc())
-            .limit(3)
-            .all()
-        )
-
     return render_template(
         "better_signups/index.html",
         my_lists=my_lists,
         editor_lists=editor_lists,
-        recent_signups=recent_signups,
     )
 
 
