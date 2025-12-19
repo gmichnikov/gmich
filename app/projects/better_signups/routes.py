@@ -739,7 +739,7 @@ def delete_list(uuid):
         list_id=signup_list.id,
         status="pending"
     ).all()
-    
+
     for swap_req in pending_swap_requests:
         swap_req.status = "cancelled"
         # Invalidate all associated tokens
@@ -747,6 +747,10 @@ def delete_list(uuid):
             if not token.is_used:
                 token.is_used = True
                 token.used_at = datetime.utcnow()
+
+    # Delete all access grants for this list
+    from app.projects.better_signups.models import ListAccess
+    ListAccess.query.filter_by(list_id=signup_list.id).delete()
 
     # Log the action before deletion (combine with delete commit)
     log_entry = LogEntry(
