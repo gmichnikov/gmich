@@ -8,6 +8,7 @@ from app.models import LogEntry
 from urllib.parse import urlencode
 import pytz
 from datetime import timedelta, datetime
+from collections import defaultdict
 import logging
 
 logger = logging.getLogger(__name__)
@@ -738,45 +739,73 @@ def process_lottery_draws():
                 if not entries:
                     continue
                     
-                # 2. Shuffle entries for randomness
-                random.shuffle(entries)
-                
-                # 3. Determine available spots
+                # 2. Determine available spots
                 # For a lottery, it's usually all spots, but maybe creator added some manually?
                 # We'll use get_spots_remaining()
                 spots_available = element.get_spots_remaining()
-                
-                # 4. Filter candidates (check limits)
-                # We do this optimally by iterating the shuffled list and picking winners
-                winners = []
-                waitlist_candidates = []
-                
+
+                # 3. Filter out entries for family members at their limit
+                # Apply limits first, before grouping by win count
+                eligible_entries = []
+                ineligible_entries = []
+
                 for entry in entries:
                     fm_id = entry.family_member_id
-
-                    # Check if family member is at limit FOR WINNING
-                    # During lottery processing, we only count wins in THIS lottery run
-                    # (We can't query DB because pending signups haven't been committed yet
-                    # and might be visible in the session, causing incorrect counts)
-                    # Note: Waitlist positions do NOT count toward the limit
-
-                    # Count wins in this lottery run
                     local_count = family_wins_in_run.get(fm_id, 0)
-
                     limit = signup_list.max_signups_per_member
                     at_limit = (limit is not None) and (local_count >= limit)
 
-                    if not at_limit and len(winners) < spots_available:
-                        # YOU WIN!
-                        winners.append(entry)
-                        family_wins_in_run[fm_id] = local_count + 1
+                    if at_limit:
+                        # At limit - still eligible for waitlist, but not for winning
+                        ineligible_entries.append(entry)
                     else:
-                        # Didn't win (either at limit or no spots left)
-                        # Everyone who doesn't win goes on waitlist regardless of limit
-                        # PRD: "Family members at their limit can still be on waitlists"
-                        waitlist_candidates.append(entry)
-                
-                # 5. Create Signups for winners
+                        eligible_entries.append(entry)
+
+                # 4. Group eligible entries by current win count
+                # This ensures fair distribution - people with fewer wins get priority
+                win_groups = defaultdict(list)
+
+                for entry in eligible_entries:
+                    fm_id = entry.family_member_id
+                    win_count = family_wins_in_run.get(fm_id, 0)
+                    win_groups[win_count].append(entry)
+
+                # 5. Select winners with priority by win count
+                # Start with lowest win count group and work up
+                winners = []
+                remaining_entries = []
+
+                # Process groups in order of win count (0, 1, 2, ...)
+                sorted_win_counts = sorted(win_groups.keys())
+                for i, win_count in enumerate(sorted_win_counts):
+                    group_entries = win_groups[win_count]
+
+                    # Randomly shuffle this group for fairness within the group
+                    random.shuffle(group_entries)
+
+                    # Select winners from this group
+                    for entry in group_entries:
+                        if len(winners) < spots_available:
+                            # Winner!
+                            winners.append(entry)
+                            fm_id = entry.family_member_id
+                            family_wins_in_run[fm_id] = family_wins_in_run.get(fm_id, 0) + 1
+                        else:
+                            # No more spots - add to remaining
+                            remaining_entries.append(entry)
+
+                    # If we've filled all spots, add any remaining higher-count groups to remaining
+                    if len(winners) >= spots_available:
+                        # Add all entries from remaining unprocessed groups
+                        for remaining_win_count in sorted_win_counts[i+1:]:
+                            remaining_entries.extend(win_groups[remaining_win_count])
+                        break
+
+                # Collect all non-winners for waitlist
+                # This includes: remaining eligible entries + ineligible (at limit) entries
+                waitlist_candidates = remaining_entries + ineligible_entries
+
+                # 6. Create Signups for winners
                 for win_entry in winners:
                     signup = Signup(
                         user_id=win_entry.user_id,
@@ -799,13 +828,12 @@ def process_lottery_draws():
                         description=f"Won lottery for {element.__repr__()} on list {signup_list.name}"
                     )
                     db.session.add(log)
-                    
-                # 6. Add remaining to Waitlist (if enabled)
+
+                # 7. Add remaining to Waitlist (if enabled)
                 if signup_list.allow_waitlist:
-                    # Randomize waitlist candidates too (PRD: "Randomly order them")
-                    # They might already be random from the initial shuffle, but shuffle again to be sure
-                    # if we had separated them. Actually initial shuffle is enough, but waitlist_candidates
-                    # preserves that order.
+                    # Randomize waitlist candidates (PRD: "Randomly order them")
+                    # Need to shuffle since they've been grouped and processed by win count
+                    random.shuffle(waitlist_candidates)
                     
                     # Current waitlist position start
                     # We need to append to existing waitlist if any (unlikely for new lottery, but possible)

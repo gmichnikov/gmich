@@ -498,3 +498,98 @@ Follow the existing pattern established for waitlist expiration processing:
 - Existing pending signup acceptance flow (for winner acceptance)
 - Email notification system
 - Heroku Scheduler (for automated lottery execution)
+
+## Algorithm Enhancement: Fair Distribution Priority
+
+### Problem Statement
+
+The basic random lottery algorithm can result in unfair outcomes where one person wins many spots while another person interested in the same elements wins none. This defeats the purpose of using a lottery system for fair allocation.
+
+### Solution: Priority Groups Based on Current Wins
+
+When selecting winners for each element, prioritize entrants who have won fewer spots so far during this lottery execution. This ensures more equitable distribution across all participants.
+
+### Updated Selection Algorithm (Per Element)
+
+For each element:
+
+1. **Collect all entries** for this element
+2. **Apply list limits** (if enabled):
+   - Track how many spots each family member has already won in this lottery run
+   - Filter out entries for family members who have already reached their limit
+3. **Group entries by current win count** (per family member):
+   - Group 0: Family members with 0 wins so far in this lottery
+   - Group 1: Family members with 1 win so far in this lottery
+   - Group 2: Family members with 2 wins so far in this lottery
+   - And so on...
+4. **Randomly select winners with priority**:
+   - Start with the group with the lowest win count (Group 0)
+   - Randomly select from that group until either:
+     - All spots for this element are filled, OR
+     - The group is exhausted
+   - If spots remain and Group 0 is exhausted, move to Group 1 and repeat
+   - Continue until all spots are filled or all groups are exhausted
+5. **Create pending signups** for winners (requiring acceptance within 24 hours, with `source='lottery'`)
+6. **Handle waitlist** (if enabled on this list):
+   - Take remaining non-winning entries
+   - Randomly order them (no priority grouping for waitlist)
+   - Add to waitlist in that random order
+
+### Key Clarifications
+
+1. **Win count scope**: Only count spots won during the current lottery execution, starting everyone at 0. Since lottery lists cannot have pre-existing signups (lottery is enabled at creation), there are no pre-lottery signups to consider.
+
+2. **Family member independence**: Track wins separately for each family member. If Mom wins 3 spots and Kid wins 0, Kid remains in Group 0 for subsequent element draws.
+
+3. **Limits applied first**: Apply `max_signups_per_member` limits BEFORE grouping by win count. Once a family member reaches their limit, they are completely excluded from that element's lottery.
+
+4. **Single entrant edge case**: If only one person expresses interest in an element, they win that spot regardless of their current win count.
+
+### Example Scenario
+
+Element order: Event A (2 spots), Event B (1 spot), Event C (2 spots)
+
+**Lottery entries:**
+- Alice enters for Events A, B, C
+- Bob enters for Events A, B, C
+- Carol enters for Events A, B, C
+
+**Event A draw (2 spots):**
+- All three are in Group 0 (zero wins)
+- Randomly select 2: Alice and Bob win
+- Win counts: Alice=1, Bob=1, Carol=0
+
+**Event B draw (1 spot):**
+- Group 0: Carol (0 wins)
+- Group 1: Alice, Bob (1 win each)
+- Draw from Group 0 first: Carol wins
+- Win counts: Alice=1, Bob=1, Carol=1
+
+**Event C draw (2 spots):**
+- All three now in Group 1 (one win each)
+- Randomly select 2: Alice and Carol win
+- Final wins: Alice=2, Bob=1, Carol=2
+
+Without this priority system, Alice and Bob might have won all 5 spots, leaving Carol with none despite entering all three lotteries.
+
+### Implementation Changes Required
+
+#### Phase 6 Updates (Lottery Execution Algorithm)
+
+The lottery execution code needs to be modified to:
+
+1. **Track wins per family member**: Maintain a dictionary `family_member_wins = {}` throughout the lottery execution, initialized to 0 for all family members with entries.
+
+2. **Group entries by win count**: Before randomly selecting winners for each element, group the eligible entries by their family member's current win count.
+
+3. **Priority-based selection**: Implement the tiered random selection logic, processing groups in ascending order of win count.
+
+4. **Update win counts**: After selecting winners for each element, increment the win count for each family member who won.
+
+#### Code Location
+
+The changes will be in the lottery execution algorithm, specifically in the `run_lottery_for_list()` function (or equivalent) that processes each element. The existing random selection logic will be replaced with the priority group approach.
+
+#### Backward Compatibility
+
+This is a pure algorithm change with no database schema modifications required. The `LotteryEntry` and `Signup` models remain unchanged. This enhancement can be implemented as a modification to Phase 6 code.
