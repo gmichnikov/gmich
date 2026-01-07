@@ -844,7 +844,7 @@ def add_editor(uuid):
             for error in errors:
                 flash(f"{field}: {error}", "error")
 
-    return redirect(url_for("better_signups.view_list", uuid=signup_list.uuid))
+    return redirect(url_for("better_signups.edit_list", uuid=signup_list.uuid))
 
 
 @bp.route("/lists/<string:uuid>/editors/<int:editor_id>/remove", methods=["POST"])
