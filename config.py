@@ -13,6 +13,9 @@ PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+# Google Ads Configuration
+GOOGLE_ADS_ID = os.getenv("GOOGLE_ADS_ID")
+
 # Jinja2 whitespace control - prevents unwanted line breaks in rendered HTML
 JINJA2_TRIM_BLOCKS = True
 JINJA2_LSTRIP_BLOCKS = True
