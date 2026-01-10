@@ -413,6 +413,7 @@ block content %}
 <script>
   let players = [];
   let scores = {};
+  const STORAGE_KEY = 'ys_game_data';
 
   const categories = [
     { type: 'header', name: 'Upper Section' },
@@ -437,6 +438,39 @@ block content %}
     { id: 'lower_total', name: 'Total Lower', type: 'calc', section: 'lower' },
     { id: 'grand_total', name: 'Grand Total', type: 'calc', section: 'total' }
   ];
+
+  // Load game on init
+  window.addEventListener('DOMContentLoaded', () => {
+    loadGame();
+  });
+
+  function saveGame() {
+    const data = {
+      players: players,
+      scores: scores
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadGame() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.players && data.players.length > 0) {
+          players = data.players;
+          scores = data.scores;
+          
+          document.getElementById('ysSetup').classList.add('ys-hidden');
+          document.getElementById('ysGame').classList.remove('ys-hidden');
+          renderTable();
+        }
+      } catch (e) {
+        console.error("Failed to load saved game", e);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }
 
   function setupPlayers(count) {
     const container = document.getElementById('ysPlayerNames');
@@ -476,6 +510,7 @@ block content %}
 
     document.getElementById('ysSetup').classList.add('ys-hidden');
     document.getElementById('ysGame').classList.remove('ys-hidden');
+    saveGame();
     renderTable();
   }
 
@@ -487,17 +522,29 @@ block content %}
     footerRow.innerHTML = '<th class="ys-category-cell"></th>';
 
     players.forEach(p => {
-      headerRow.innerHTML += `
-        <th class="ys-player-header">
-          ${p.name}
-          <span class="ys-player-progress" id="progress-header-${p.id}">0/13 filled</span>
-        </th>
-      `;
-      footerRow.innerHTML += `
-        <td>
-          <span class="ys-progress-footer" id="progress-footer-${p.id}">0/13 filled</span>
-        </td>
-      `;
+      // Create header cell safely
+      const th = document.createElement('th');
+      th.className = 'ys-player-header';
+      
+      const nameText = document.createTextNode(p.name);
+      th.appendChild(nameText);
+      
+      const progressSpan = document.createElement('span');
+      progressSpan.className = 'ys-player-progress';
+      progressSpan.id = `progress-header-${p.id}`;
+      progressSpan.textContent = '0/13 filled';
+      
+      th.appendChild(progressSpan);
+      headerRow.appendChild(th);
+
+      // Create footer cell safely
+      const td = document.createElement('td');
+      const footerSpan = document.createElement('span');
+      footerSpan.className = 'ys-progress-footer';
+      footerSpan.id = `progress-footer-${p.id}`;
+      footerSpan.textContent = '0/13 filled';
+      td.appendChild(footerSpan);
+      footerRow.appendChild(td);
     });
 
     const body = document.getElementById('ysTableBody');
@@ -608,6 +655,7 @@ block content %}
     updateProgress(playerId);
     calculateTotals();
     checkGameFinished();
+    saveGame();
   }
 
   function toggleScore(playerId, catId, value) {
@@ -631,6 +679,7 @@ block content %}
     updateProgress(playerId);
     calculateTotals();
     checkGameFinished();
+    saveGame();
   }
 
   function updateProgress(playerId) {
@@ -735,6 +784,7 @@ block content %}
 
   function confirmReset() {
     if (confirm('Are you sure you want to start a new game? All current scores will be lost.')) {
+      localStorage.removeItem(STORAGE_KEY);
       document.getElementById('ysGame').classList.add('ys-hidden');
       document.getElementById('ysSetup').classList.remove('ys-hidden');
       document.getElementById('ysWinnerSection').classList.add('ys-hidden');
