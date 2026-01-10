@@ -1,0 +1,745 @@
+{% extends 'base.html' %} {% block title %}Yahtzee Scorer{% endblock %} {%
+block content %}
+
+<style>
+  .ys-wrapper {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 70px - 60px);
+  }
+
+  .ys-header {
+    text-align: center;
+    color: #1a1a1a;
+    margin-bottom: 15px;
+  }
+
+  .ys-header h1 {
+    font-size: 2em;
+    margin: 0;
+    color: #d32f2f;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .ys-setup-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ys-player-count h3 {
+    margin: 0 0 20px 0;
+    color: #444;
+    font-weight: 500;
+  }
+
+  .ys-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .ys-btn {
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+  }
+
+  .ys-btn:hover {
+    background-color: #b71c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(211, 47, 47, 0.4);
+  }
+
+  .ys-btn:active {
+    transform: translateY(0);
+  }
+
+  .ys-btn-success {
+    background-color: #2e7d32;
+    box-shadow: 0 2px 4px rgba(46, 125, 50, 0.3);
+  }
+
+  .ys-btn-success:hover {
+    background-color: #1b5e20;
+    box-shadow: 0 4px 8px rgba(46, 125, 50, 0.4);
+  }
+
+  .ys-btn-secondary {
+    background-color: #757575;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .ys-player-names {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+    text-align: left;
+  }
+
+  .ys-name-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ys-name-input label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #777;
+    text-transform: uppercase;
+  }
+
+  .ys-name-input input {
+    padding: 12px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+  }
+
+  .ys-name-input input:focus {
+    border-color: #d32f2f;
+    outline: none;
+    background-color: #fff;
+  }
+
+  .ys-game-section {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .ys-table-container {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .ys-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+    table-layout: fixed;
+  }
+
+  .ys-table th, .ys-table td {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 6px 4px;
+    text-align: center;
+  }
+
+  .ys-table th {
+    background-color: #fff;
+    border-bottom: 2px solid #d32f2f;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 8px 4px;
+  }
+
+  .ys-category-cell {
+    text-align: left !important;
+    font-weight: 700;
+    background-color: #fafafa !important;
+    width: 140px;
+    color: #444;
+    border-right: 1px solid #f0f0f0;
+    padding-left: 10px !important;
+    font-size: 13px;
+  }
+
+  .ys-player-header {
+    color: #333;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .ys-player-progress {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #d32f2f;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+
+  .ys-progress-footer {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #d32f2f;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+
+  .ys-section-header {
+    background-color: #f5f5f5 !important;
+    text-align: left !important;
+    padding: 4px 10px !important;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    font-weight: 800;
+  }
+
+  .ys-subtotal-row {
+    background-color: #fff9c4 !important;
+    font-weight: 700;
+  }
+
+  .ys-subtotal-row td {
+    color: #856404;
+    padding: 4px 4px;
+  }
+
+  .ys-grand-total-row {
+    background-color: #d4edda !important;
+    font-weight: 800;
+    font-size: 1.1em;
+  }
+
+  .ys-grand-total-row td {
+    color: #155724;
+    border-top: 2px solid #c3e6cb;
+    padding: 8px 4px;
+  }
+
+  .ys-winner-banner {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 10px;
+    text-align: center;
+    border: 1px solid #c3e6cb;
+    font-weight: 700;
+  }
+
+  .ys-input-number {
+    width: 60px;
+    padding: 4px;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    transition: border-color 0.2s;
+  }
+
+  .ys-input-number:focus {
+    border-color: #d32f2f;
+    outline: none;
+  }
+
+  .ys-select {
+    padding: 4px;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 60px;
+    text-align: center;
+  }
+
+  .ys-select:focus {
+    border-color: #d32f2f;
+    outline: none;
+  }
+
+  .ys-toggle-group {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .ys-toggle-btn {
+    padding: 4px 8px;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s;
+    min-width: 44px;
+    color: #666;
+  }
+
+  .ys-toggle-btn:hover {
+    background-color: #f8f8f8;
+    border-color: #ddd;
+  }
+
+  .ys-toggle-btn.ys-selected {
+    background-color: #d32f2f;
+    color: white;
+    border-color: #d32f2f;
+    box-shadow: 0 2px 4px rgba(211, 47, 47, 0.2);
+  }
+
+  .ys-hidden {
+    display: none;
+  }
+
+  .ys-controls {
+    padding: 20px;
+    text-align: center;
+    background-color: #fafafa;
+    border-top: 1px solid #eee;
+  }
+
+  .ys-bonus-active {
+    color: #d32f2f;
+    font-weight: 800;
+  }
+
+  @media (max-width: 600px) {
+    .ys-wrapper {
+      padding: 0;
+    }
+    .ys-header h1 {
+      font-size: 1.5em;
+      margin-top: 10px;
+    }
+    .ys-setup-section {
+      border-radius: 0;
+      padding: 15px;
+    }
+    .ys-game-section {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .ys-table th, .ys-table td {
+      padding: 8px 4px;
+    }
+    .ys-category-cell {
+      width: 130px;
+      font-size: 13px;
+      padding-left: 10px !important;
+    }
+    .ys-toggle-btn {
+      padding: 6px 8px;
+      min-width: 40px;
+      font-size: 12px;
+    }
+    .ys-input-number, .ys-select {
+      width: 60px;
+      padding: 6px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<div class="ys-wrapper">
+  <div class="ys-header">
+    <h1>🎲 Yahtzee Scorer 🎲</h1>
+  </div>
+
+  <div id="ysSetup" class="ys-setup-section">
+    <div class="ys-player-count">
+      <h3>How many players?</h3>
+      <div class="ys-btn-group">
+        <button class="ys-btn" onclick="setupPlayers(1)">1</button>
+        <button class="ys-btn" onclick="setupPlayers(2)">2</button>
+        <button class="ys-btn" onclick="setupPlayers(3)">3</button>
+        <button class="ys-btn" onclick="setupPlayers(4)">4</button>
+        <button class="ys-btn" onclick="setupPlayers(5)">5</button>
+      </div>
+    </div>
+
+    <div id="ysPlayerNames" class="ys-player-names ys-hidden">
+      <!-- Player name inputs -->
+    </div>
+
+    <div id="ysStartBtn" class="ys-hidden" style="margin-top: 30px">
+      <button class="ys-btn ys-btn-success" onclick="startGame()">Start Scoring</button>
+    </div>
+  </div>
+
+  <div id="ysGame" class="ys-game-section ys-hidden">
+    <div class="ys-table-container">
+      <table class="ys-table" id="ysScoreTable">
+        <thead>
+          <tr id="ysTableHeader">
+            <th class="ys-category-cell">Category</th>
+            <!-- Player headers -->
+          </tr>
+        </thead>
+        <tbody id="ysTableBody">
+          <!-- Rows will be generated here -->
+        </tbody>
+        <tfoot>
+          <tr id="ysTableFooter">
+            <th class="ys-category-cell"></th>
+            <!-- Progress footer -->
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div id="ysWinnerSection" class="ys-hidden"></div>
+
+    <div class="ys-controls">
+      <button class="ys-btn ys-btn-secondary" onclick="confirmReset()">Reset Game</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let players = [];
+  let scores = {};
+
+  const categories = [
+    { type: 'header', name: 'Upper Section' },
+    { id: 'ones', name: 'Ones', type: 'dropdown', values: [0, 1, 2, 3, 4, 5], section: 'upper' },
+    { id: 'twos', name: 'Twos', type: 'dropdown', values: [0, 2, 4, 6, 8, 10], section: 'upper' },
+    { id: 'threes', name: 'Threes', type: 'dropdown', values: [0, 3, 6, 9, 12, 15], section: 'upper' },
+    { id: 'fours', name: 'Fours', type: 'dropdown', values: [0, 4, 8, 12, 16, 20], section: 'upper' },
+    { id: 'fives', name: 'Fives', type: 'dropdown', values: [0, 5, 10, 15, 20, 25], section: 'upper' },
+    { id: 'sixes', name: 'Sixes', type: 'dropdown', values: [0, 6, 12, 18, 24, 30], section: 'upper' },
+    { id: 'upper_subtotal', name: 'Subtotal', type: 'calc', section: 'upper' },
+    { id: 'upper_bonus', name: 'Bonus (35)', type: 'calc', section: 'upper' },
+    { id: 'upper_total', name: 'Total Upper', type: 'calc', section: 'upper' },
+    { type: 'header', name: 'Lower Section' },
+    { id: 'three_kind', name: '3 of a Kind', type: 'number', min: 0, max: 30, section: 'lower' },
+    { id: 'four_kind', name: '4 of a Kind', type: 'number', min: 0, max: 30, section: 'lower' },
+    { id: 'full_house', name: 'Full House (25)', type: 'toggle', value: 25, section: 'lower' },
+    { id: 'sm_straight', name: 'Sm Straight (30)', type: 'toggle', value: 30, section: 'lower' },
+    { id: 'lg_straight', name: 'Lg Straight (40)', type: 'toggle', value: 40, section: 'lower' },
+    { id: 'yahtzee', name: 'Yahtzee (50)', type: 'toggle', value: 50, section: 'lower' },
+    { id: 'chance', name: 'Chance', type: 'number', min: 0, max: 30, section: 'lower' },
+    { id: 'yahtzee_bonus', name: 'Yahtzee Bonus', type: 'bonus', section: 'lower' },
+    { id: 'lower_total', name: 'Total Lower', type: 'calc', section: 'lower' },
+    { id: 'grand_total', name: 'Grand Total', type: 'calc', section: 'total' }
+  ];
+
+  function setupPlayers(count) {
+    const container = document.getElementById('ysPlayerNames');
+    container.innerHTML = '';
+    container.classList.remove('ys-hidden');
+    document.getElementById('ysStartBtn').classList.remove('ys-hidden');
+
+    for (let i = 1; i <= count; i++) {
+      const div = document.createElement('div');
+      div.className = 'ys-name-input';
+      div.innerHTML = `
+        <label>Player ${i}</label>
+        <input type="text" id="ysPlayer${i}" placeholder="Enter Name" value="Player ${i}">
+      `;
+      container.appendChild(div);
+    }
+    // Auto-focus first name
+    container.querySelector('input').select();
+  }
+
+  function startGame() {
+    const nameInputs = document.querySelectorAll('.ys-name-input input');
+    players = Array.from(nameInputs).map((input, i) => ({
+      id: `p${i}`,
+      name: input.value.trim() || `Player ${i+1}`
+    }));
+
+    scores = {};
+    players.forEach(p => {
+      scores[p.id] = {};
+      categories.forEach(cat => {
+        if (cat.id && cat.type !== 'calc') {
+          scores[p.id][cat.id] = null;
+        }
+      });
+    });
+
+    document.getElementById('ysSetup').classList.add('ys-hidden');
+    document.getElementById('ysGame').classList.remove('ys-hidden');
+    renderTable();
+  }
+
+  function renderTable() {
+    const headerRow = document.getElementById('ysTableHeader');
+    headerRow.innerHTML = '<th class="ys-category-cell">Category</th>';
+    
+    const footerRow = document.getElementById('ysTableFooter');
+    footerRow.innerHTML = '<th class="ys-category-cell"></th>';
+
+    players.forEach(p => {
+      headerRow.innerHTML += `
+        <th class="ys-player-header">
+          ${p.name}
+          <span class="ys-player-progress" id="progress-header-${p.id}">0/13 filled</span>
+        </th>
+      `;
+      footerRow.innerHTML += `
+        <td>
+          <span class="ys-progress-footer" id="progress-footer-${p.id}">0/13 filled</span>
+        </td>
+      `;
+    });
+
+    const body = document.getElementById('ysTableBody');
+    body.innerHTML = '';
+
+    categories.forEach(cat => {
+      const row = document.createElement('tr');
+      
+      if (cat.type === 'header') {
+        row.innerHTML = `<td colspan="${players.length + 1}" class="ys-section-header">${cat.name}</td>`;
+      } else {
+        if (cat.id === 'grand_total') row.className = 'ys-grand-total-row';
+        else if (cat.type === 'calc') row.className = 'ys-subtotal-row';
+
+        let rowHtml = `<td class="ys-category-cell">${cat.name}</td>`;
+        players.forEach(p => {
+          rowHtml += `<td id="cell-${cat.id}-${p.id}">${renderCell(cat, p.id)}</td>`;
+        });
+        row.innerHTML = rowHtml;
+      }
+      body.appendChild(row);
+    });
+    
+    updateProgressAll();
+    calculateTotals();
+  }
+
+  function validateNumber(input, max) {
+    // This function is no longer used, we handle it in updateScore
+  }
+
+  function renderCell(cat, playerId) {
+    const val = scores[playerId][cat.id];
+    
+    if (cat.type === 'dropdown') {
+      let options = `<option value="">--</option>`;
+      cat.values.forEach(v => {
+        options += `<option value="${v}" ${val === v && val !== null ? 'selected' : ''}>${v}</option>`;
+      });
+      return `<select class="ys-select" onchange="updateScore('${playerId}', '${cat.id}', this.value)">${options}</select>`;
+    }
+    
+    if (cat.type === 'number') {
+      return `<input type="number" class="ys-input-number" min="${cat.min}" max="${cat.max}" 
+              value="${val === null ? '' : val}" 
+              onchange="updateScore('${playerId}', '${cat.id}', this.value)">`;
+    }
+    
+    if (cat.type === 'toggle') {
+      const isSelected = val === cat.value;
+      const isZero = val === 0;
+      return `
+        <div class="ys-toggle-group">
+          <button class="ys-toggle-btn ${isSelected ? 'ys-selected' : ''}" 
+                  onclick="toggleScore('${playerId}', '${cat.id}', ${cat.value})">${cat.value}</button>
+          <button class="ys-toggle-btn ${isZero ? 'ys-selected' : ''}" 
+                  onclick="toggleScore('${playerId}', '${cat.id}', 0)">0</button>
+        </div>
+      `;
+    }
+
+    if (cat.type === 'bonus') {
+      const yzVal = scores[playerId]['yahtzee'];
+      if (yzVal !== 50) return `<span style="color: #eee">--</span>`;
+      
+      let options = '';
+      for(let i=0; i<=5; i++) {
+        options += `<option value="${i * 100}" ${val === i * 100 ? 'selected' : ''}>${i}</option>`;
+      }
+      return `
+        <div style="display:flex; flex-direction:column; align-items:center; gap:2px">
+          <span style="font-size: 10px; color: #888">BONUS</span>
+          <select class="ys-select ys-bonus-active" onchange="updateScore('${playerId}', '${cat.id}', this.value)">${options}</select>
+        </div>
+      `;
+    }
+    
+    if (cat.type === 'calc') {
+      return `<span id="calc-${cat.id}-${playerId}">0</span>`;
+    }
+    
+    return '';
+  }
+
+  function updateScore(playerId, catId, value) {
+    let intVal = value === '' ? null : parseInt(value);
+    
+    // Clamp values if they are numbers
+    const cat = categories.find(c => c.id === catId);
+    if (cat && cat.type === 'number' && intVal !== null) {
+      if (intVal < 0) intVal = 0;
+      if (intVal > 30) intVal = 30;
+      
+      const input = document.querySelector(`#cell-${catId}-${playerId} input`);
+      if (input) input.value = intVal;
+    }
+    
+    scores[playerId][catId] = intVal;
+    
+    if (catId === 'yahtzee') {
+      if (intVal !== 50) {
+        scores[playerId]['yahtzee_bonus'] = 0;
+      }
+      const bonusCell = document.getElementById(`cell-yahtzee_bonus-${playerId}`);
+      bonusCell.innerHTML = renderCell(categories.find(c => c.id === 'yahtzee_bonus'), playerId);
+    }
+
+    updateProgress(playerId);
+    calculateTotals();
+    checkGameFinished();
+  }
+
+  function toggleScore(playerId, catId, value) {
+    if (scores[playerId][catId] === value) {
+      scores[playerId][catId] = null;
+    } else {
+      scores[playerId][catId] = value;
+    }
+    
+    const cat = categories.find(c => c.id === catId);
+    document.getElementById(`cell-${catId}-${playerId}`).innerHTML = renderCell(cat, playerId);
+
+    if (catId === 'yahtzee') {
+      if (scores[playerId][catId] !== 50) {
+        scores[playerId]['yahtzee_bonus'] = 0;
+      }
+      const bonusCell = document.getElementById(`cell-yahtzee_bonus-${playerId}`);
+      bonusCell.innerHTML = renderCell(categories.find(c => c.id === 'yahtzee_bonus'), playerId);
+    }
+
+    updateProgress(playerId);
+    calculateTotals();
+    checkGameFinished();
+  }
+
+  function updateProgress(playerId) {
+    const filledCount = categories.filter(cat => 
+      cat.id && 
+      cat.type !== 'calc' && 
+      cat.id !== 'yahtzee_bonus' && 
+      scores[playerId][cat.id] !== null
+    ).length;
+    
+    const text = `${filledCount}/13 filled`;
+    const headerEl = document.getElementById(`progress-header-${playerId}`);
+    const footerEl = document.getElementById(`progress-footer-${playerId}`);
+    
+    if (headerEl) headerEl.textContent = text;
+    if (footerEl) footerEl.textContent = text;
+  }
+
+  function getGrandTotal(playerId) {
+    let upperSubtotal = 0;
+    categories.filter(c => c.section === 'upper' && c.type !== 'calc').forEach(c => {
+      upperSubtotal += (scores[playerId][c.id] || 0);
+    });
+    const upperBonus = upperSubtotal >= 63 ? 35 : 0;
+    
+    let lowerTotal = 0;
+    categories.filter(c => c.section === 'lower' && c.type !== 'calc').forEach(c => {
+      lowerTotal += (scores[playerId][c.id] || 0);
+    });
+    
+    return upperSubtotal + upperBonus + lowerTotal;
+  }
+
+  function checkGameFinished() {
+    if (players.length < 2) return;
+    
+    const allFinished = players.every(p => {
+      const filledCount = categories.filter(cat => 
+        cat.id && 
+        cat.type !== 'calc' && 
+        cat.id !== 'yahtzee_bonus' && 
+        scores[p.id][cat.id] !== null
+      ).length;
+      return filledCount === 13;
+    });
+    
+    const winnerSection = document.getElementById('ysWinnerSection');
+    if (allFinished) {
+      let maxScore = -1;
+      let winners = [];
+      
+      players.forEach(p => {
+        const total = getGrandTotal(p.id);
+        if (total > maxScore) {
+          maxScore = total;
+          winners = [p.name];
+        } else if (total === maxScore) {
+          winners.push(p.name);
+        }
+      });
+      
+      winnerSection.classList.remove('ys-hidden');
+      winnerSection.className = 'ys-winner-banner';
+      if (winners.length === 1) {
+        winnerSection.textContent = `🏆 ${winners[0]} wins with ${maxScore} points! 🏆`;
+      } else {
+        winnerSection.textContent = `🤝 It's a tie between ${winners.join(' and ')} with ${maxScore} points! 🤝`;
+      }
+    } else {
+      winnerSection.classList.add('ys-hidden');
+    }
+  }
+
+  function updateProgressAll() {
+    players.forEach(p => updateProgress(p.id));
+  }
+
+  function calculateTotals() {
+    players.forEach(p => {
+      let upperSubtotal = 0;
+      categories.filter(c => c.section === 'upper' && c.type !== 'calc').forEach(c => {
+        upperSubtotal += (scores[p.id][c.id] || 0);
+      });
+      
+      const upperBonus = upperSubtotal >= 63 ? 35 : 0;
+      const upperTotal = upperSubtotal + upperBonus;
+      
+      let lowerTotal = 0;
+      categories.filter(c => c.section === 'lower' && c.type !== 'calc').forEach(c => {
+        lowerTotal += (scores[p.id][c.id] || 0);
+      });
+      
+      const grandTotal = upperTotal + lowerTotal;
+      
+      document.getElementById(`calc-upper_subtotal-${p.id}`).textContent = upperSubtotal;
+      document.getElementById(`calc-upper_bonus-${p.id}`).textContent = upperBonus;
+      document.getElementById(`calc-upper_total-${p.id}`).textContent = upperTotal;
+      document.getElementById(`calc-lower_total-${p.id}`).textContent = lowerTotal;
+      document.getElementById(`calc-grand_total-${p.id}`).textContent = grandTotal;
+    });
+  }
+
+  function confirmReset() {
+    if (confirm('Are you sure you want to start a new game? All current scores will be lost.')) {
+      document.getElementById('ysGame').classList.add('ys-hidden');
+      document.getElementById('ysSetup').classList.remove('ys-hidden');
+      document.getElementById('ysWinnerSection').classList.add('ys-hidden');
+    }
+  }
+</script>
+
+{% endblock %}

@@ -132,6 +132,17 @@ PROJECTS = [
         'order': 602
     },
     {
+        'id': 'yahtzee_scorer',
+        'name': 'Yahtzee Scorer',
+        'description': 'Simple scorer for Yahtzee with auto-calculation',
+        'url': '/yahtzee',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'game_night_tools',
+        'order': 603
+    },
+    {
         'id': 'hourglass_timer',
         'name': 'Hourglass Timer',
         'description': 'Visual hourglass timer with pause/resume and optional beep',
@@ -140,7 +151,7 @@ PROJECTS = [
         'status': 'active',
         'type': 'project',
         'parent': 'game_night_tools',
-        'order': 603
+        'order': 604
     },
     {
         'id': 'coding_bootcamp',
