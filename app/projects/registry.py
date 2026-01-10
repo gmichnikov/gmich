@@ -132,6 +132,17 @@ PROJECTS = [
         'order': 602
     },
     {
+        'id': 'hourglass_timer',
+        'name': 'Hourglass Timer',
+        'description': 'Visual hourglass timer with pause/resume and optional beep',
+        'url': '/hourglass-timer',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'game_night_tools',
+        'order': 603
+    },
+    {
         'id': 'coding_bootcamp',
         'name': 'Coding Bootcamp',
         'description': 'Things I made while I was at App Academy in 2016',

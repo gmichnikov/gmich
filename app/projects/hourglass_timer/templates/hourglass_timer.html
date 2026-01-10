@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hourglass Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .hgtimer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .hgtimer-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 25px;
+        }
+
+        .hgtimer-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .hgtimer-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hgtimer-input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .hgtimer-input-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .hgtimer-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hgtimer-presets {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .hgtimer-preset-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hgtimer-preset-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .hgtimer-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hgtimer-checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .hgtimer-checkbox-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .hgtimer-start-btn {
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .hgtimer-start-btn:hover {
+            background: #5568d3;
+        }
+
+        .hgtimer-start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .hgtimer-hourglass {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hgtimer-hourglass.active {
+            display: flex;
+        }
+
+        .hgtimer-glass-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+        }
+
+        .hgtimer-glass {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Hourglass frame (SVG outline) */
+        .hgtimer-frame {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .hgtimer-frame svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Top chamber */
+        .hgtimer-chamber-top {
+            position: absolute;
+            top: 4px;
+            left: 20%;
+            width: 60%;
+            height: 45%;
+            overflow: hidden;
+            clip-path: polygon(0% 0%, 100% 0%, 58% 100%, 42% 100%);
+        }
+
+        .hgtimer-sand-top {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #f4a261;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
+                repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+        }
+
+        /* Bottom chamber */
+        .hgtimer-chamber-bottom {
+            position: absolute;
+            bottom: 4px;
+            left: 20%;
+            width: 60%;
+            height: 45%;
+            overflow: hidden;
+            clip-path: polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%);
+        }
+
+        .hgtimer-sand-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #f4a261;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
+                repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+        }
+
+        .hgtimer-sand-top.warning,
+        .hgtimer-sand-bottom.warning {
+            background: #e63946;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
+                repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+        }
+
+        .hgtimer-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .hgtimer-controls.hidden {
+            display: none;
+        }
+
+        .hgtimer-control-btn {
+            flex: 1;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .hgtimer-control-btn:hover {
+            background: #5568d3;
+        }
+
+        .hgtimer-control-btn.secondary {
+            background: #95a5f7;
+        }
+
+        .hgtimer-control-btn.secondary:hover {
+            background: #7e8fe9;
+        }
+
+        .hgtimer-finished {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .hgtimer-finished-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .hgtimer-finished.active {
+            display: flex;
+        }
+
+        .hgtimer-finished-message {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            animation: hgtimer-pulse 1s ease-in-out infinite;
+        }
+
+            @keyframes hgtimer-pulse {
+                0%, 100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.7;
+                    transform: scale(1.05);
+                }
+            }
+
+            .hgtimer-finished-emoji {
+                font-size: 64px;
+                display: none;
+            }
+
+        .hgtimer-reset-btn {
+            flex: 1;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .hgtimer-reset-btn.secondary {
+            background: #95a5f7;
+        }
+
+        .hgtimer-reset-btn.secondary:hover {
+            background: #7e8fe9;
+        }
+
+        .hgtimer-reset-btn:hover {
+            background: #5568d3;
+        }
+
+        body.hgtimer-flash {
+            animation: hgtimer-flash-animation 0.5s ease-in-out 3;
+        }
+
+        @keyframes hgtimer-flash-animation {
+            0%, 100% {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            50% {
+                background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+            }
+        }
+
+        .hgtimer-paused-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            display: none;
+        }
+
+        .hgtimer-paused-overlay.active {
+            display: block;
+        }
+
+        .hgtimer-duration-display {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="hgtimer-container">
+        <h1 class="hgtimer-title">⏳ Hourglass Timer</h1>
+        
+        <!-- Setup Screen -->
+        <div class="hgtimer-setup" id="setupScreen">
+            <div class="hgtimer-input-group">
+                <label for="secondsInput">Time (seconds)</label>
+                <input type="number" id="secondsInput" min="1" max="3600" step="1" inputmode="numeric" pattern="[0-9]*" value="60" />
+            </div>
+
+            <div class="hgtimer-presets">
+                <button class="hgtimer-preset-btn" data-seconds="30">30s</button>
+                <button class="hgtimer-preset-btn" data-seconds="60">60s</button>
+                <button class="hgtimer-preset-btn" data-seconds="120">2min</button>
+            </div>
+
+            <div class="hgtimer-checkbox-group">
+                <input type="checkbox" id="beepToggle" />
+                <label for="beepToggle">Beep when finished</label>
+            </div>
+
+            <button class="hgtimer-start-btn" id="startBtn">Start Timer</button>
+        </div>
+
+        <!-- Hourglass Animation -->
+        <div class="hgtimer-hourglass" id="hourglassScreen">
+            <div class="hgtimer-glass-container">
+                <div class="hgtimer-glass">
+                    <div class="hgtimer-frame">
+                        <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Hourglass outline -->
+                            <path d="
+                                M 40 0
+                                L 160 0
+                                L 160 30
+                                L 110 135
+                                L 110 165
+                                L 160 270
+                                L 160 300
+                                L 40 300
+                                L 40 270
+                                L 90 165
+                                L 90 135
+                                L 40 30
+                                Z
+                            " fill="none" stroke="#333" stroke-width="4" />
+                        </svg>
+                    </div>
+                    <div class="hgtimer-chamber-top">
+                        <div class="hgtimer-sand-top" id="sandTop"></div>
+                    </div>
+                    <div class="hgtimer-chamber-bottom">
+                        <div class="hgtimer-sand-bottom" id="sandBottom"></div>
+                    </div>
+                </div>
+                <div class="hgtimer-paused-overlay" id="pausedOverlay">PAUSED</div>
+            </div>
+
+            <div class="hgtimer-duration-display" id="durationDisplay"></div>
+
+            <div class="hgtimer-controls" id="timerControls">
+                <button class="hgtimer-control-btn secondary" id="pauseBtn">Pause</button>
+                <button class="hgtimer-control-btn" id="cancelBtn">Cancel</button>
+            </div>
+
+            <!-- Finished State (shown within hourglass screen) -->
+            <div class="hgtimer-finished" id="finishedControls">
+                <div class="hgtimer-finished-message">Time's Up!</div>
+                <div class="hgtimer-finished-buttons">
+                    <button class="hgtimer-reset-btn secondary" id="resetBtn">Reset Timer</button>
+                    <button class="hgtimer-reset-btn" id="newTimerBtn">New Timer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let totalSeconds = 60;
+        let elapsedSeconds = 0;
+        let startTime = null;
+        let pausedTime = 0;
+        let intervalId = null;
+        let isPaused = false;
+        let shouldBeep = false;
+
+        // Elements
+        const setupScreen = document.getElementById('setupScreen');
+        const hourglassScreen = document.getElementById('hourglassScreen');
+        const timerControls = document.getElementById('timerControls');
+        const finishedControls = document.getElementById('finishedControls');
+        const secondsInput = document.getElementById('secondsInput');
+        const beepToggle = document.getElementById('beepToggle');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const newTimerBtn = document.getElementById('newTimerBtn');
+        const sandTop = document.getElementById('sandTop');
+        const sandBottom = document.getElementById('sandBottom');
+        const pausedOverlay = document.getElementById('pausedOverlay');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const presetBtns = document.querySelectorAll('.hgtimer-preset-btn');
+
+        // Audio context for beep
+        let audioContext = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playBeep() {
+            if (!shouldBeep) return;
+            
+            initAudio();
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Preset buttons
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const seconds = parseInt(btn.dataset.seconds);
+                secondsInput.value = seconds;
+            });
+        });
+
+        // Start timer
+        startBtn.addEventListener('click', () => {
+            startTimerFromInput();
+        });
+
+        function startTimerFromInput() {
+            const inputValue = secondsInput.value.trim();
+            const seconds = parseInt(inputValue);
+            
+            // Check if input is a valid whole number
+            if (isNaN(seconds) || seconds < 1) {
+                alert('Please enter a valid whole number of seconds');
+                secondsInput.focus();
+                return;
+            }
+            
+            // Check if input contains decimals
+            if (inputValue.includes('.') || inputValue.includes(',')) {
+                alert('Please enter a whole number only (no decimals)');
+                secondsInput.focus();
+                return;
+            }
+            
+            // Ensure parsed value matches input (catches cases like "4.0" or "4e5")
+            if (seconds.toString() !== inputValue) {
+                alert('Please enter a whole number only (no decimals)');
+                secondsInput.focus();
+                return;
+            }
+
+            totalSeconds = seconds;
+            elapsedSeconds = 0;
+            shouldBeep = beepToggle.checked;
+            
+            // Update duration display
+            updateDurationDisplay();
+            
+            showScreen('hourglass');
+            startTimer();
+        }
+
+        // Keyboard shortcut: Ctrl+Enter to start timer
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (setupScreen.style.display !== 'none') {
+                    startTimerFromInput();
+                }
+            }
+        });
+
+        function formatTime(seconds) {
+            if (seconds < 60) {
+                return `${seconds}s`;
+            } else if (seconds % 60 === 0) {
+                const mins = Math.floor(seconds / 60);
+                return `${mins} min${mins > 1 ? 's' : ''}`;
+            } else {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function updateDurationDisplay() {
+            durationDisplay.textContent = formatTime(totalSeconds);
+        }
+
+        function startTimer() {
+            isPaused = false;
+            pauseBtn.textContent = 'Pause';
+            pausedOverlay.classList.remove('active');
+            
+            // Record start time
+            startTime = Date.now() - (elapsedSeconds * 1000);
+            
+            // Set initial sand heights
+            updateSandLevels();
+            
+            // Update every 100ms for smooth animation (10fps - good balance for mobile)
+            intervalId = setInterval(() => {
+                if (!isPaused) {
+                    // Calculate elapsed time based on actual time, not intervals
+                    elapsedSeconds = (Date.now() - startTime) / 1000;
+                    
+                    // Update visual
+                    updateSandLevels();
+                    
+                    // Check for warning (last 10 seconds or 25% of time, whichever is smaller)
+                    const remainingSeconds = totalSeconds - elapsedSeconds;
+                    const warningThreshold = Math.min(10, Math.ceil(totalSeconds * 0.25));
+                    if (remainingSeconds <= warningThreshold && remainingSeconds > 0) {
+                        sandTop.classList.add('warning');
+                        sandBottom.classList.add('warning');
+                    }
+                    
+                    // Check if finished
+                    if (elapsedSeconds >= totalSeconds) {
+                        finishTimer();
+                    }
+                }
+            }, 100);
+        }
+
+        function updateSandLevels() {
+            const percentElapsed = Math.min(elapsedSeconds / totalSeconds, 1);
+            const percentRemaining = 1 - percentElapsed;
+            sandTop.style.height = `${percentRemaining * 100}%`;
+            sandBottom.style.height = `${percentElapsed * 100}%`;
+        }
+
+        // Pause/Resume
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseBtn.textContent = 'Resume';
+                pausedOverlay.classList.add('active');
+                pausedTime = Date.now();
+            } else {
+                pauseBtn.textContent = 'Pause';
+                pausedOverlay.classList.remove('active');
+                // Adjust start time to account for paused duration
+                const pauseDuration = Date.now() - pausedTime;
+                startTime += pauseDuration;
+            }
+        });
+
+        // Cancel
+        cancelBtn.addEventListener('click', () => {
+            clearInterval(intervalId);
+            showScreen('setup');
+            resetSand();
+        });
+
+        function finishTimer() {
+            clearInterval(intervalId);
+            
+            // Ensure sand is fully drained/filled
+            sandTop.style.height = '0%';
+            sandBottom.style.height = '100%';
+            
+            // Play beep
+            playBeep();
+            
+            // Flash screen
+            document.body.classList.add('hgtimer-flash');
+            setTimeout(() => {
+                document.body.classList.remove('hgtimer-flash');
+            }, 1500);
+            
+            // Show finished controls, hide timer controls
+            timerControls.classList.add('hidden');
+            finishedControls.classList.add('active');
+        }
+
+        // Reset with same time
+        resetBtn.addEventListener('click', () => {
+            elapsedSeconds = 0;
+            timerControls.classList.remove('hidden');
+            finishedControls.classList.remove('active');
+            resetSand();
+        });
+
+        // New timer
+        newTimerBtn.addEventListener('click', () => {
+            showScreen('setup');
+            timerControls.classList.remove('hidden');
+            finishedControls.classList.remove('active');
+            resetSand();
+        });
+
+        function showScreen(screen) {
+            setupScreen.style.display = 'none';
+            hourglassScreen.classList.remove('active');
+            timerControls.classList.remove('hidden');
+            finishedControls.classList.remove('active');
+            
+            if (screen === 'setup') {
+                setupScreen.style.display = 'flex';
+            } else if (screen === 'hourglass') {
+                hourglassScreen.classList.add('active');
+            }
+        }
+
+        function resetSand() {
+            sandTop.style.height = '100%';
+            sandBottom.style.height = '0%';
+            sandTop.classList.remove('warning');
+            sandBottom.classList.remove('warning');
+        }
+
+        // Initialize
+        resetSand();
+    </script>
+</body>
+</html>

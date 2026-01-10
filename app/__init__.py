@@ -70,6 +70,7 @@ def create_app():
     from app.projects.spanish_vocab_invaders.routes import spanish_vocab_invaders_bp
     from app.projects.sorry_cards.routes import sorry_cards_bp
     from app.projects.sushi_go.routes import sushi_go_bp
+    from app.projects.hourglass_timer.routes import hourglass_timer_bp
     from app.projects.chatbot.routes import chatbot_bp
     from app.projects.ask_many_llms.routes import bp as ask_many_llms_bp
     from app.projects.better_signups.routes import bp as better_signups_bp
@@ -85,6 +86,7 @@ def create_app():
     app.register_blueprint(spanish_vocab_invaders_bp, url_prefix='/spanish-vocab-invaders')
     app.register_blueprint(sorry_cards_bp, url_prefix='/sorry-cards')
     app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
+    app.register_blueprint(hourglass_timer_bp, url_prefix='/hourglass-timer')
     app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
     app.register_blueprint(ask_many_llms_bp)  # Has its own url_prefix defined
     app.register_blueprint(better_signups_bp)  # Has its own url_prefix defined
