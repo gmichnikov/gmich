@@ -623,7 +623,9 @@ block content %}
           input.id = cellId;
           input.value = currentValue || "";
           input.placeholder = "0";
-          input.min = "0";
+          if (food.id !== "pudding") {
+            input.min = "0";
+          }
           cell.appendChild(input);
         }
 
@@ -746,7 +748,7 @@ block content %}
         }
 
         const value = scores[name][roundKey][food.id] || 0;
-        row.innerHTML += `<td>${value > 0 ? value : "-"}</td>`;
+        row.innerHTML += `<td>${value !== 0 ? value : "-"}</td>`;
       });
 
       const total = calculateRoundTotal(name, roundKey);
@@ -801,9 +803,9 @@ block content %}
       const row = document.createElement("tr");
       row.innerHTML = `
                 <td><strong>${name}</strong></td>
-                <td>${round1Total > 0 ? round1Total : "-"}</td>
-                <td>${round2Total > 0 ? round2Total : "-"}</td>
-                <td>${round3Total > 0 ? round3Total : "-"}</td>
+                <td>${round1Total !== 0 ? round1Total : "-"}</td>
+                <td>${round2Total !== 0 ? round2Total : "-"}</td>
+                <td>${round3Total !== 0 ? round3Total : "-"}</td>
                 <td class="sgs-total-row">${total}</td>
             `;
       table.appendChild(row);
