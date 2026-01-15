@@ -8,14 +8,16 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
         {% block styles %}{% endblock %}
 
-        {% if config.GOOGLE_ADS_ID and 'gregmichnikov.com' in request.host %}
+        {% if config.GOOGLE_ADS_IDS and 'gregmichnikov.com' in request.host %}
         <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.GOOGLE_ADS_ID }}"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.GOOGLE_ADS_IDS[0] }}"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '{{ config.GOOGLE_ADS_ID }}');
+          {% for ads_id in config.GOOGLE_ADS_IDS %}
+          gtag('config', '{{ ads_id }}');
+          {% endfor %}
         </script>
         {% endif %}
     </head>
