@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
@@ -1072,20 +1077,22 @@ textarea.auth-input {
   .nav-menu {
     position: fixed;
     top: 70px;
-    right: -100%;
+    right: -280px;
     width: 280px;
     height: calc(100vh - 70px);
     background: white;
     flex-direction: column;
     padding: 20px;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: right 0.3s ease;
+    transition: right 0.3s ease, visibility 0.3s;
     z-index: 1000;
     gap: 0;
+    visibility: hidden;
   }
 
   .nav-menu-active {
     right: 0;
+    visibility: visible;
   }
 
   .nav-item {
