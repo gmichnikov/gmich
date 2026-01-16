@@ -4,6 +4,11 @@
 
 {% block styles %}
 <style>
+    /* Universal box-sizing for all elements in this project */
+    .gl-container, .gl-container *, .gl-container *::before, .gl-container *::after {
+        box-sizing: border-box;
+    }
+
     :root {
         --gl-primary: #013369; /* NFL Blue */
         --gl-secondary: #D50A0A; /* NFL Red */
@@ -23,39 +28,7 @@
         background: var(--gl-white);
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    @media (max-width: 600px) {
-        .gl-yard-helper-btn {
-            min-width: 44px;
-            min-height: 44px;
-            padding: 8px;
-            font-size: 0.9rem;
-        }
-
-        .gl-container {
-            margin: 10px;
-            padding: 15px;
-        }
-        
-        .gl-scoreboard {
-            flex-direction: column;
-        }
-
-        .gl-player-score {
-            padding: 10px;
-        }
-
-        .gl-score-value {
-            font-size: 2rem;
-            margin: 5px 0;
-        }
-
-        .gl-field-status {
-            flex-direction: column;
-            text-align: center;
-            gap: 5px;
-        }
+        overflow-x: hidden;
     }
 
     .gl-header {
@@ -91,14 +64,22 @@
     }
 
     .gl-btn {
-        padding: 10px 20px;
+        padding: 10px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
         font-weight: bold;
         transition: opacity 0.2s;
-        display: inline-block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-align: center;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        width: 100%;
+        min-width: 0; /* Important: prevents flexing past container */
+        box-sizing: border-box;
     }
 
     .gl-btn:hover {
@@ -292,6 +273,7 @@
         border-radius: 4px;
         border: none;
         color: black;
+        min-width: 0;
     }
 
     .gl-drive-summary {
@@ -335,33 +317,105 @@
         background: white;
         padding: 20px;
         border-radius: 8px;
-        max-width: 500px;
         width: 95%;
+        max-width: 320px; /* Force it much narrower for mobile by default */
+        margin: auto;
         text-align: center;
         max-height: 90vh;
         overflow-y: auto;
+        box-sizing: border-box;
     }
 
-    .gl-drive-end-options {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    @media (max-width: 400px) {
-        .gl-drive-end-options {
-            grid-template-columns: 1fr;
+    /* Desktop overrides for modal */
+    @media (min-width: 768px) {
+        .gl-modal-content {
+            max-width: 500px;
         }
     }
 
-    @media (max-width: 600px) {
-        .gl-play-actions {
-            grid-template-columns: 1fr 1fr;
+    .gl-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    /* Force single column on everything for mobile */
+    .gl-drive-end-options, 
+    .gl-play-actions,
+    .gl-grid-2 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    /* Desktop overrides */
+    @media (min-width: 768px) {
+        .gl-drive-end-options, 
+        .gl-play-actions,
+        .gl-grid-2 {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .gl-container {
+            margin: 0 auto;
+            padding: 10px;
+            width: auto;
+            max-width: none;
+            border-radius: 4px;
+            box-shadow: none;
         }
         
+        .gl-scoreboard {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .gl-player-score {
+            padding: 10px;
+            width: 100%;
+            flex: none;
+        }
+
+        .gl-score-value {
+            font-size: 1.8rem;
+            margin: 5px 0;
+        }
+
+        .gl-field-status {
+            flex-direction: column;
+            text-align: center;
+            gap: 5px;
+            font-size: 0.95rem;
+        }
+
         .gl-btn {
-            padding: 12px 10px; /* Slightly taller for mobile tapping */
+            padding: 12px 8px;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .gl-yard-helper-btn {
+            min-width: 40px;
+            min-height: 40px;
+            padding: 5px;
+            font-size: 0.85rem;
+        }
+
+        /* Ensure drive history table doesn't break layout */
+        .gl-drive-summary {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .gl-history-table {
+            font-size: 0.85rem;
+        }
+
+        .gl-history-table th, .gl-history-table td {
+            padding: 8px 4px;
         }
     }
 </style>
@@ -408,7 +462,7 @@
         <div id="glOvertimeChoice" class="gl-setup-card gl-hidden">
             <h3>Overtime Start</h3>
             <p>The game is tied! Who gets the ball first in Overtime?</p>
-            <div style="display: flex; gap: 20px; justify-content: center; margin: 20px 0;">
+            <div class="gl-grid-2" style="margin: 20px 0;">
                 <button class="gl-btn gl-btn-outline" id="glOTBtn0" onclick="glStartOT(0)">Player 1</button>
                 <button class="gl-btn gl-btn-outline" id="glOTBtn1" onclick="glStartOT(1)">Player 2</button>
             </div>
@@ -452,7 +506,7 @@
                 <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Note: Use 50 for the middle of the field.</p>
             </div>
             <button class="gl-btn gl-btn-success" style="width: 100%;" onclick="glStartDrive()">Begin Drive</button>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="gl-grid-2" style="margin-top: 10px;">
                 <button class="gl-btn gl-btn-outline" onclick="glHandleReturnTD('Punt Return TD')">Punt Return TD</button>
                 <button class="gl-btn gl-btn-outline" onclick="glHandleReturnTD('Kick Return TD')">Kick Return TD</button>
             </div>
