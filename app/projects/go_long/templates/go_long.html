@@ -1,0 +1,1025 @@
+{% extends "base.html" %}
+
+{% block title %}Go Long! Scorer{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --gl-primary: #013369; /* NFL Blue */
+        --gl-secondary: #D50A0A; /* NFL Red */
+        --gl-field: #2d5a27;
+        --gl-text: #333;
+        --gl-white: #fff;
+        --gl-gray: #f4f4f4;
+        --gl-border: #ddd;
+    }
+
+    .gl-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--gl-text);
+        background: var(--gl-white);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 600px) {
+        .gl-yard-helper-btn {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .gl-container {
+            margin: 10px;
+            padding: 15px;
+        }
+        
+        .gl-scoreboard {
+            flex-direction: column;
+        }
+
+        .gl-player-score {
+            padding: 10px;
+        }
+
+        .gl-score-value {
+            font-size: 2rem;
+            margin: 5px 0;
+        }
+
+        .gl-field-status {
+            flex-direction: column;
+            text-align: center;
+            gap: 5px;
+        }
+    }
+
+    .gl-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid var(--gl-primary);
+    }
+
+    .gl-setup-card {
+        background: var(--gl-gray);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .gl-form-group {
+        margin-bottom: 15px;
+    }
+
+    .gl-form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .gl-form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--gl-border);
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .gl-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: opacity 0.2s;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .gl-btn:hover {
+        opacity: 0.9;
+    }
+
+    .gl-btn-primary {
+        background: var(--gl-primary);
+        color: white;
+    }
+
+    .gl-btn-secondary {
+        background: var(--gl-secondary);
+        color: white;
+    }
+
+    .gl-btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .gl-btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .gl-btn-outline {
+        background: transparent;
+        border: 2px solid var(--gl-primary);
+        color: var(--gl-primary);
+    }
+
+    .gl-scoreboard {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .gl-player-score {
+        flex: 1;
+        padding: 15px;
+        background: var(--gl-gray);
+        border-radius: 8px;
+        text-align: center;
+        border-top: 5px solid var(--gl-border);
+    }
+
+    .gl-player-score.active {
+        border-color: var(--gl-primary);
+        background: #eef4ff;
+    }
+
+    .gl-score-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .gl-possession-dots {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    .gl-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ccc;
+    }
+
+    .gl-dot.filled {
+        background: var(--gl-primary);
+    }
+
+    .gl-dot.bonus {
+        background: var(--gl-secondary);
+    }
+
+    .gl-game-info {
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .gl-visual-field {
+        width: 100%;
+        height: 30px;
+        background: var(--gl-field);
+        border: 2px solid white;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .gl-field-line-50 {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: rgba(255,255,255,0.5);
+    }
+
+    .gl-field-ball {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #f0ad4e; /* Football color-ish */
+        border: 2px solid white;
+        border-radius: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        transition: left 0.3s ease-out;
+        z-index: 5;
+    }
+
+    .gl-drive-tracker {
+        background: var(--gl-field);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .gl-field-status {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+
+    .gl-down-dist {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .gl-play-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .gl-yardage-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .gl-yard-helpers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: flex-start;
+    }
+
+    .gl-yard-helper-btn {
+        padding: 5px 6px;
+        font-size: 0.85rem;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        min-width: 38px;
+        min-height: 38px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gl-yard-helper-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .gl-yardage-input-group input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        color: black;
+    }
+
+    .gl-drive-summary {
+        margin-top: 30px;
+    }
+
+    .gl-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .gl-history-table th, .gl-history-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--gl-border);
+    }
+
+    .gl-history-table th {
+        background: var(--gl-gray);
+    }
+
+    .gl-hidden {
+        display: none !important;
+    }
+
+    .gl-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .gl-modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 95%;
+        text-align: center;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .gl-drive-end-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 400px) {
+        .gl-drive-end-options {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .gl-play-actions {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .gl-btn {
+            padding: 12px 10px; /* Slightly taller for mobile tapping */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gl-container">
+    <div class="gl-header">
+        <h1>Go Long! Scorer</h1>
+    </div>
+
+    <!-- Setup Screen -->
+    <div id="glSetup" class="gl-setup-card">
+        <h3>Game Setup</h3>
+        <div class="gl-form-group">
+            <label for="glPlayer1">Player 1 Name</label>
+            <input type="text" id="glPlayer1" value="Player 1">
+        </div>
+        <div class="gl-form-group">
+            <label for="glPlayer2">Player 2 Name</label>
+            <input type="text" id="glPlayer2" value="Player 2">
+        </div>
+        <div class="gl-form-group">
+            <label>Who starts with possession?</label>
+            <div style="display: flex; gap: 20px; margin-top: 10px;">
+                <label style="font-weight: normal; cursor: pointer;">
+                    <input type="radio" name="glStarter" value="0" checked style="width: auto;"> <span id="glLabelP1">Player 1</span>
+                </label>
+                <label style="font-weight: normal; cursor: pointer;">
+                    <input type="radio" name="glStarter" value="1" style="width: auto;"> <span id="glLabelP2">Player 2</span>
+                </label>
+            </div>
+        </div>
+        <button class="gl-btn gl-btn-primary" style="width: 100%;" onclick="glStartGame()">Start Game</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="glGame" class="gl-hidden">
+        <div class="gl-game-info">
+            <span id="glHalfLabel">1st Half</span> | 
+            <span id="glQuarterInfo">Possession Tracking</span>
+        </div>
+
+        <div id="glOvertimeChoice" class="gl-setup-card gl-hidden">
+            <h3>Overtime Start</h3>
+            <p>The game is tied! Who gets the ball first in Overtime?</p>
+            <div style="display: flex; gap: 20px; justify-content: center; margin: 20px 0;">
+                <button class="gl-btn gl-btn-outline" id="glOTBtn0" onclick="glStartOT(0)">Player 1</button>
+                <button class="gl-btn gl-btn-outline" id="glOTBtn1" onclick="glStartOT(1)">Player 2</button>
+            </div>
+        </div>
+
+        <div class="gl-scoreboard">
+            <div id="glPlayerCard0" class="gl-player-score">
+                <div id="glName0" style="font-weight: bold;">Player 1</div>
+                <div id="glScore0" class="gl-score-value">0</div>
+                <div class="gl-possession-dots" id="glDots0">
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                </div>
+            </div>
+            <div id="glPlayerCard1" class="gl-player-score">
+                <div id="glName1" style="font-weight: bold;">Player 2</div>
+                <div id="glScore1" class="gl-score-value">0</div>
+                <div class="gl-possession-dots" id="glDots1">
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                    <div class="gl-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drive Setup (Between Drives) -->
+        <div id="glDriveSetup" class="gl-setup-card">
+            <h3 id="glDriveSetupTitle">Start New Drive</h3>
+            <div class="gl-form-group">
+                <label>Starting Location</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="glStartSide" style="padding: 10px; border-radius: 4px; border: 1px solid var(--gl-border);">
+                        <option value="own">OWN</option>
+                        <option value="other">OTHER</option>
+                    </select>
+                    <input type="number" id="glStartYard" value="20" min="1" max="50" style="flex: 1;">
+                </div>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Note: Use 50 for the middle of the field.</p>
+            </div>
+            <button class="gl-btn gl-btn-success" style="width: 100%;" onclick="glStartDrive()">Begin Drive</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <button class="gl-btn gl-btn-outline" onclick="glHandleReturnTD('Punt Return TD')">Punt Return TD</button>
+                <button class="gl-btn gl-btn-outline" onclick="glHandleReturnTD('Kick Return TD')">Kick Return TD</button>
+            </div>
+        </div>
+
+        <!-- Active Drive Tracker -->
+        <div id="glDriveTracker" class="gl-drive-tracker gl-hidden">
+            <div class="gl-visual-field">
+                <div class="gl-field-line-50"></div>
+                <div id="glBallMarker" class="gl-field-ball" style="left: 20%;"></div>
+            </div>
+            <div class="gl-field-status">
+                <span id="glCurrentPossession">Player 1 Possession</span>
+                <span id="glCurrentBall">Ball at: OWN 20</span>
+            </div>
+            <div class="gl-down-dist" id="glDownDistDisp">
+                1st & 10
+            </div>
+
+            <div class="gl-yardage-input-group">
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <label for="glYardInput" style="padding-top: 8px;">Yards:</label>
+                    <input type="number" id="glYardInput" placeholder="0" step="1">
+                </div>
+                <div class="gl-yard-helpers">
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(-10)">-10</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(-2)">-2</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(-1)">-1</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(0)">0</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(1)">1</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(2)">2</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(3)">3</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(4)">4</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(5)">5</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(6)">6</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(7)">7</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(10)">10</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(15)">15</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(20)">20</button>
+                    <button class="gl-yard-helper-btn" onclick="glSetYards(30)">30</button>
+                </div>
+            </div>
+
+            <div class="gl-play-actions">
+                <button class="gl-btn gl-btn-outline" style="border-color: white; color: white;" onclick="glProcessPlay('gain')">Gain</button>
+                <button class="gl-btn gl-btn-outline" style="border-color: white; color: white;" onclick="glProcessPlay('loss')">Loss / No Gain</button>
+                <button class="gl-btn gl-btn-outline" style="border-color: white; color: white;" onclick="glProcessPlay('sack')">Sack</button>
+                <button class="gl-btn gl-btn-outline" style="border-color: white; color: white;" onclick="glProcessPlay('penalty')">Penalty</button>
+                <button class="gl-btn gl-btn-outline" style="border-color: white; color: white;" onclick="glProcessPlay('turnover')">Turnover</button>
+                <button class="gl-btn gl-btn-primary" style="border-color: white;" onclick="glOpenDriveEndModal()">Drive Result</button>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="gl-btn gl-btn-danger" style="font-size: 0.8rem;" onclick="glUndoPlay()">Undo Last Play</button>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="gl-drive-summary">
+            <h3>Drive History</h3>
+            <div style="overflow-x: auto;">
+                <table class="gl-history-table">
+                    <thead>
+                        <tr>
+                            <th>Drive</th>
+                            <th>Player</th>
+                            <th>Result</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glHistoryBody">
+                        <!-- History rows go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="gl-btn gl-btn-outline" onclick="glResetGame()">Reset Game</button>
+        </div>
+    </div>
+
+    <!-- Drive End Modal -->
+    <div id="glDriveEndModal" class="gl-modal gl-hidden">
+        <div class="gl-modal-content">
+            <h3>How did the drive end?</h3>
+            <div class="gl-drive-end-options">
+                <button class="gl-btn gl-btn-success" onclick="glEndDrive('td1')">TD + 1</button>
+                <button class="gl-btn gl-btn-success" onclick="glEndDrive('td2')">TD + 2</button>
+                <button class="gl-btn gl-btn-success" onclick="glEndDrive('td0')">TD + 0 (Blocked/Miss)</button>
+                <button class="gl-btn gl-btn-primary" onclick="glEndDrive('fg')">FG Make</button>
+                <button class="gl-btn gl-btn-outline" onclick="glEndDrive('mfg')">FG Miss</button>
+                <button class="gl-btn gl-btn-outline" onclick="glEndDrive('punt')">Punt</button>
+                <button class="gl-btn gl-btn-outline" onclick="glEndDrive('blocked_punt')">Blocked Punt</button>
+                <button class="gl-btn gl-btn-danger" onclick="glEndDrive('turnover')">Turnover</button>
+                <button class="gl-btn gl-btn-danger" onclick="glEndDrive('downs')">Downs</button>
+                <button class="gl-btn gl-btn-danger" onclick="glEndDrive('safety')">Safety</button>
+                <button class="gl-btn gl-btn-outline" style="grid-column: span 2;" onclick="glCloseDriveEndModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gameState = {
+        players: [{name: '', score: 0}, {name: '', score: 0}],
+        startingPlayerIndex: 0,
+        currentHalf: 1,
+        currentPossessionIndex: 0,
+        possessionCount: { 0: 0, 1: 0 },
+        isBonusPossession: false,
+        history: [],
+        firstHalfStarter: 0,
+        pendingReturnTD: null,
+        isGameOver: false,
+        otPossessions: 0
+    };
+
+    let currentDrive = null;
+
+    // Load from local storage
+    window.onload = function() {
+        const saved = localStorage.getItem('glGameState');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                gameState = parsed.gameState;
+                currentDrive = parsed.currentDrive;
+                
+                if (gameState.players[0].name) {
+                    document.getElementById('glName0').textContent = gameState.players[0].name;
+                    document.getElementById('glName1').textContent = gameState.players[1].name;
+                    document.getElementById('glSetup').classList.add('gl-hidden');
+                    document.getElementById('glGame').classList.remove('gl-hidden');
+                    glUpdateUI();
+                }
+            } catch (e) {
+                console.error("Error loading saved game", e);
+            }
+        }
+    };
+
+    function glSaveGame() {
+        localStorage.setItem('glGameState', JSON.stringify({
+            gameState: gameState,
+            currentDrive: currentDrive
+        }));
+    }
+
+    let driveHistory = [];
+
+    // Initialize names in setup
+    document.getElementById('glPlayer1').addEventListener('input', (e) => {
+        document.getElementById('glLabelP1').textContent = e.target.value || 'Player 1';
+    });
+    document.getElementById('glPlayer2').addEventListener('input', (e) => {
+        document.getElementById('glLabelP2').textContent = e.target.value || 'Player 2';
+    });
+
+    function glStartGame() {
+        gameState.players[0].name = document.getElementById('glPlayer1').value || 'Player 1';
+        gameState.players[1].name = document.getElementById('glPlayer2').value || 'Player 2';
+        
+        const starter = document.querySelector('input[name="glStarter"]:checked').value;
+        gameState.startingPlayerIndex = parseInt(starter);
+        gameState.firstHalfStarter = gameState.startingPlayerIndex;
+        gameState.currentPossessionIndex = gameState.startingPlayerIndex;
+        
+        document.getElementById('glName0').textContent = gameState.players[0].name;
+        document.getElementById('glName1').textContent = gameState.players[1].name;
+        
+        document.getElementById('glSetup').classList.add('gl-hidden');
+        document.getElementById('glGame').classList.remove('gl-hidden');
+        
+        glUpdateUI();
+    }
+
+    function glUpdateUI() {
+        glSaveGame();
+        
+        document.getElementById('glScore0').textContent = gameState.players[0].score;
+        document.getElementById('glScore1').textContent = gameState.players[1].score;
+        
+        document.getElementById('glPlayerCard0').classList.toggle('active', gameState.currentPossessionIndex === 0);
+        document.getElementById('glPlayerCard1').classList.toggle('active', gameState.currentPossessionIndex === 1);
+        
+        let halfText = gameState.currentHalf === 1 ? '1st Half' : '2nd Half';
+        if (gameState.currentHalf === 3) halfText = 'OVERTIME';
+        document.getElementById('glHalfLabel').textContent = halfText;
+        
+        glUpdateDots();
+        glUpdateHistory();
+        
+        if (gameState.isGameOver) {
+            document.getElementById('glDriveSetup').classList.add('gl-hidden');
+            document.getElementById('glDriveTracker').classList.add('gl-hidden');
+            document.getElementById('glOvertimeChoice').classList.add('gl-hidden');
+            document.getElementById('glHalfLabel').textContent = 'GAME OVER';
+            return;
+        }
+
+        if (gameState.currentHalf === 3 && gameState.otPossessions === 0 && !currentDrive) {
+            document.getElementById('glDriveSetup').classList.add('gl-hidden');
+            document.getElementById('glDriveTracker').classList.add('gl-hidden');
+            document.getElementById('glOvertimeChoice').classList.remove('gl-hidden');
+            document.getElementById('glOTBtn0').textContent = gameState.players[0].name;
+            document.getElementById('glOTBtn1').textContent = gameState.players[1].name;
+            return;
+        } else {
+            document.getElementById('glOvertimeChoice').classList.add('gl-hidden');
+        }
+
+        if (currentDrive) {
+            document.getElementById('glDriveSetup').classList.add('gl-hidden');
+            document.getElementById('glDriveTracker').classList.remove('gl-hidden');
+            
+            document.getElementById('glCurrentPossession').textContent = `${gameState.players[gameState.currentPossessionIndex].name} Possession`;
+            document.getElementById('glCurrentBall').textContent = `Ball at: ${glFormatYardline(currentDrive.currentYardline, currentDrive.currentSide)}`;
+            
+            // Visual field update
+            const abs = glGetAbsoluteYardline(currentDrive.currentYardline, currentDrive.currentSide);
+            document.getElementById('glBallMarker').style.left = `${abs}%`;
+
+            const distText = currentDrive.distance >= (100 - glGetAbsoluteYardline(currentDrive.currentYardline, currentDrive.currentSide)) 
+                ? 'Goal' : currentDrive.distance;
+            document.getElementById('glDownDistDisp').textContent = `${glFormatDown(currentDrive.down)} & ${distText}`;
+        } else {
+            document.getElementById('glDriveSetup').classList.remove('gl-hidden');
+            document.getElementById('glDriveTracker').classList.add('gl-hidden');
+            
+            const count = gameState.possessionCount[gameState.currentPossessionIndex];
+            const isBonus = gameState.isBonusPossession;
+            let titleText = `Start Drive #${count + 1}${isBonus ? ' (BONUS)' : ''} for ${gameState.players[gameState.currentPossessionIndex].name}`;
+            if (gameState.currentHalf === 3) titleText = `OT Drive for ${gameState.players[gameState.currentPossessionIndex].name}`;
+            document.getElementById('glDriveSetupTitle').textContent = titleText;
+        }
+    }
+
+    function glUpdateDots() {
+        for (let p = 0; p < 2; p++) {
+            const dotsContainer = document.getElementById(`glDots${p}`);
+            const dots = dotsContainer.querySelectorAll('.gl-dot');
+            const count = gameState.possessionCount[p];
+            
+            dots.forEach((dot, i) => {
+                dot.classList.remove('filled', 'bonus');
+                if (i < count) {
+                    dot.classList.add('filled');
+                }
+            });
+            
+            // Handle bonus dot if it's the last one
+            if (gameState.isBonusPossession && gameState.currentPossessionIndex === p) {
+                // We might need a 5th dot or just highlight the 4th differently?
+                // Let's just make the last filled one red if it's a bonus?
+                // Actually, let's just add a temporary class to the container
+            }
+        }
+    }
+
+    function glStartDrive() {
+        const side = document.getElementById('glStartSide').value;
+        const yardInput = document.getElementById('glStartYard');
+        const yard = parseInt(yardInput.value);
+
+        if (isNaN(yard) || yard < 1 || yard > 50) {
+            alert("Please enter a yard line between 1 and 50.");
+            return;
+        }
+        
+        currentDrive = {
+            playerIndex: gameState.currentPossessionIndex,
+            startYardline: yard,
+            startSide: side,
+            currentYardline: yard,
+            currentSide: side,
+            down: 1,
+            distance: 10,
+            plays: []
+        };
+        
+        glUpdateUI();
+    }
+
+    function glHandleReturnTD(type) {
+        gameState.pendingReturnTD = type;
+        currentDrive = {
+            playerIndex: gameState.currentPossessionIndex,
+            isReturn: true,
+            plays: []
+        };
+        glOpenDriveEndModal();
+    }
+
+    function glSetYards(val) {
+        document.getElementById('glYardInput').value = val;
+    }
+
+    function glProcessPlay(type) {
+        const yardInput = document.getElementById('glYardInput');
+        const yards = Math.floor(parseFloat(yardInput.value)) || 0;
+        
+        // Save state for undo
+        currentDrive.plays.push({
+            down: currentDrive.down,
+            distance: currentDrive.distance,
+            yardline: currentDrive.currentYardline,
+            side: currentDrive.currentSide,
+            yards: yards,
+            type: type
+        });
+
+        const absStart = glGetAbsoluteYardline(currentDrive.currentYardline, currentDrive.currentSide);
+        let newAbs = absStart;
+
+        if (type === 'gain') {
+            newAbs += yards;
+            if (yards >= currentDrive.distance) {
+                currentDrive.down = 1;
+                currentDrive.distance = 10;
+            } else {
+                currentDrive.down++;
+                currentDrive.distance -= yards;
+            }
+        } else if (type === 'loss') {
+            newAbs -= yards;
+            currentDrive.down++;
+            currentDrive.distance += yards;
+        } else if (type === 'sack') {
+            newAbs -= yards;
+            currentDrive.down++;
+            currentDrive.distance += yards;
+        } else if (type === 'penalty') {
+            // User can enter negative for penalty against them, positive for for them?
+            // Let's assume positive yards = forward, negative = backward
+            newAbs += yards;
+            currentDrive.distance -= yards;
+            // Down does not change for penalty
+        } else if (type === 'turnover') {
+            // Turnover: ball moves, then drive ends.
+            // But usually user just wants to end the drive.
+            // Let's just end the drive with a turnover result.
+            glEndDrive('turnover');
+            return;
+        } else if (type === 'turnover_downs') {
+            glEndDrive('downs');
+            return;
+        }
+
+        // Bound yardage 0-100
+        newAbs = Math.max(0, Math.min(100, newAbs));
+        
+        const pos = glFromAbsoluteYardline(newAbs);
+        currentDrive.currentYardline = pos.yard;
+        currentDrive.currentSide = pos.side;
+
+        // Auto turnover on downs
+        if (currentDrive.down > 4) {
+            glEndDrive('downs');
+            return;
+        }
+
+        yardInput.value = '';
+        glUpdateUI();
+    }
+
+    function glUndoPlay() {
+        if (!currentDrive || currentDrive.plays.length === 0) return;
+        
+        const lastPlay = currentDrive.plays.pop();
+        currentDrive.down = lastPlay.down;
+        currentDrive.distance = lastPlay.distance;
+        currentDrive.currentYardline = lastPlay.yardline;
+        currentDrive.currentSide = lastPlay.side;
+        
+        glUpdateUI();
+    }
+
+    function glOpenDriveEndModal() {
+        document.getElementById('glDriveEndModal').classList.remove('gl-hidden');
+    }
+
+    function glCloseDriveEndModal() {
+        if (gameState.pendingReturnTD) {
+            gameState.pendingReturnTD = null;
+            currentDrive = null;
+            glUpdateUI();
+        }
+        document.getElementById('glDriveEndModal').classList.add('gl-hidden');
+    }
+
+    function glEndDrive(result) {
+        let points = 0;
+        let label = '';
+        let isTurnover = false;
+
+        switch(result) {
+            case 'td1': points = 7; label = 'TD + 1'; break;
+            case 'td2': points = 8; label = 'TD + 2'; break;
+            case 'td0': points = 6; label = 'TD'; break;
+            case 'fg': points = 3; label = 'FG'; break;
+            case 'mfg': points = 0; label = 'Missed FG'; break;
+            case 'punt': points = 0; label = 'Punt'; break;
+            case 'blocked_punt': points = 0; label = 'Blocked Punt'; isTurnover = true; break;
+            case 'turnover': points = 0; label = 'Turnover'; isTurnover = true; break;
+            case 'downs': points = 0; label = 'Downs'; isTurnover = true; break;
+            case 'safety': 
+                // Safety gives 2 points to OTHER player
+                gameState.players[1 - gameState.currentPossessionIndex].score += 2;
+                label = 'Safety';
+                break;
+        }
+
+        if (gameState.pendingReturnTD && (result === 'td1' || result === 'td2' || result === 'td0')) {
+            label = `${gameState.pendingReturnTD} (${label})`;
+        }
+        gameState.pendingReturnTD = null;
+
+        gameState.players[gameState.currentPossessionIndex].score += points;
+        
+        gameState.history.push({
+            half: gameState.currentHalf === 3 ? 'OT' : gameState.currentHalf,
+            player: gameState.players[gameState.currentPossessionIndex].name,
+            result: label,
+            score: `${gameState.players[0].score} - ${gameState.players[1].score}`
+        });
+
+        // Possession Logic
+        if (gameState.currentHalf === 3) {
+            gameState.otPossessions++;
+            if (gameState.otPossessions >= 2) {
+                gameState.isGameOver = true;
+                alert(`Game Over! Final Score: ${gameState.players[0].name} ${gameState.players[0].score}, ${gameState.players[1].name} ${gameState.players[1].score}`);
+            } else {
+                gameState.currentPossessionIndex = 1 - gameState.currentPossessionIndex;
+            }
+        } else if (!gameState.isBonusPossession) {
+            gameState.possessionCount[gameState.currentPossessionIndex]++;
+        }
+
+        if (gameState.currentHalf !== 3) {
+            const p1Count = gameState.possessionCount[0];
+            const p2Count = gameState.possessionCount[1];
+
+            if (gameState.currentHalf === 1 && (p1Count >= 4 && p2Count >= 4) && !gameState.isBonusPossession) {
+                if (isTurnover) {
+                    // Bonus possession
+                    gameState.isBonusPossession = true;
+                    gameState.currentPossessionIndex = 1 - gameState.currentPossessionIndex;
+                } else {
+                    // Start 2nd half
+                    glStartSecondHalf();
+                }
+            } else if (gameState.isBonusPossession) {
+                // End of bonus possession
+                gameState.isBonusPossession = false;
+                if (gameState.currentHalf === 1) {
+                    glStartSecondHalf();
+                } else {
+                    glHandleEndOfSecondHalf();
+                }
+            } else if (gameState.currentHalf === 2 && (p1Count >= 4 && p2Count >= 4)) {
+                if (isTurnover) {
+                    gameState.isBonusPossession = true;
+                    gameState.currentPossessionIndex = 1 - gameState.currentPossessionIndex;
+                } else {
+                    glHandleEndOfSecondHalf();
+                }
+            } else {
+                // Normal swap
+                gameState.currentPossessionIndex = 1 - gameState.currentPossessionIndex;
+            }
+        }
+
+        currentDrive = null;
+        glCloseDriveEndModal();
+        glUpdateUI();
+    }
+
+    function glHandleEndOfSecondHalf() {
+        if (gameState.players[0].score === gameState.players[1].score) {
+            alert("Tied at the end of regulation! Moving to Overtime.");
+            gameState.currentHalf = 3;
+            gameState.otPossessions = 0;
+        } else {
+            gameState.isGameOver = true;
+            alert(`Game Over! Final Score: ${gameState.players[0].name} ${gameState.players[0].score}, ${gameState.players[1].name} ${gameState.players[1].score}`);
+        }
+    }
+
+    function glStartOT(playerIdx) {
+        gameState.currentPossessionIndex = playerIdx;
+        gameState.otPossessions = 0;
+        glUpdateUI();
+    }
+
+    function glStartSecondHalf() {
+        gameState.currentHalf = 2;
+        gameState.possessionCount = { 0: 0, 1: 0 };
+        gameState.isBonusPossession = false;
+        // 2nd half starts with the player who DID NOT start the 1st half
+        gameState.currentPossessionIndex = 1 - gameState.firstHalfStarter;
+        alert("Starting 2nd Half!");
+    }
+
+    function glResetGame() {
+        if (confirm("Are you sure you want to reset the game?")) {
+            localStorage.removeItem('glGameState');
+            gameState = {
+                players: [{name: '', score: 0}, {name: '', score: 0}],
+                startingPlayerIndex: 0,
+                currentHalf: 1,
+                currentPossessionIndex: 0,
+                possessionCount: { 0: 0, 1: 0 },
+                isBonusPossession: false,
+                history: [],
+                firstHalfStarter: 0,
+                pendingReturnTD: null,
+                isGameOver: false,
+                otPossessions: 0
+            };
+            currentDrive = null;
+            document.getElementById('glSetup').classList.remove('gl-hidden');
+            document.getElementById('glGame').classList.add('gl-hidden');
+            document.getElementById('glHistoryBody').innerHTML = '';
+            glUpdateUI();
+        }
+    }
+
+    function glUpdateHistory() {
+        const body = document.getElementById('glHistoryBody');
+        body.innerHTML = '';
+        gameState.history.slice().reverse().forEach((h, i) => {
+            const row = `<tr>
+                <td>H${h.half}</td>
+                <td>${h.player}</td>
+                <td>${h.result}</td>
+                <td>${h.score}</td>
+            </tr>`;
+            body.innerHTML += row;
+        });
+    }
+
+    // Helper functions
+    function glGetAbsoluteYardline(yard, side) {
+        if (yard === 50) return 50;
+        if (side === 'own') return yard;
+        return 100 - yard;
+    }
+
+    function glFromAbsoluteYardline(abs) {
+        if (abs === 50) return { yard: 50, side: 'own' };
+        if (abs < 50) return { yard: abs, side: 'own' };
+        return { yard: 100 - abs, side: 'other' };
+    }
+
+    function glFormatYardline(yard, side) {
+        if (yard === 50) return "50";
+        return `${side.toUpperCase()} ${yard}`;
+    }
+
+    function glFormatDown(down) {
+        if (down === 1) return "1st";
+        if (down === 2) return "2nd";
+        if (down === 3) return "3rd";
+        if (down === 4) return "4th";
+        return down;
+    }
+</script>
+{% endblock %}

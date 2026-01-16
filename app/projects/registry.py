@@ -154,6 +154,17 @@ PROJECTS = [
         'order': 604
     },
     {
+        'id': 'go_long',
+        'name': 'Go Long! Scorer',
+        'description': 'Score and drive tracker for the football dice game',
+        'url': '/go-long',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'game_night_tools',
+        'order': 605
+    },
+    {
         'id': 'coding_bootcamp',
         'name': 'Coding Bootcamp',
         'description': 'Things I made while I was at App Academy in 2016',

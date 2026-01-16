@@ -72,6 +72,7 @@ def create_app():
     from app.projects.sushi_go.routes import sushi_go_bp
     from app.projects.yahtzee_scorer.routes import yahtzee_scorer_bp
     from app.projects.hourglass_timer.routes import hourglass_timer_bp
+    from app.projects.go_long.routes import go_long_bp
     from app.projects.chatbot.routes import chatbot_bp
     from app.projects.ask_many_llms.routes import bp as ask_many_llms_bp
     from app.projects.better_signups.routes import bp as better_signups_bp
@@ -89,6 +90,7 @@ def create_app():
     app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
     app.register_blueprint(yahtzee_scorer_bp, url_prefix='/yahtzee')
     app.register_blueprint(hourglass_timer_bp, url_prefix='/hourglass-timer')
+    app.register_blueprint(go_long_bp, url_prefix='/go-long')
     app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
     app.register_blueprint(ask_many_llms_bp)  # Has its own url_prefix defined
     app.register_blueprint(better_signups_bp)  # Has its own url_prefix defined
