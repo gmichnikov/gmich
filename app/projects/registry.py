@@ -88,6 +88,17 @@ PROJECTS = [
         'order': 305
     },
     {
+        'id': 'ivy_burrito_feed',
+        'name': 'Ivy Burrito Feed',
+        'description': 'Help Ivy eat as many burritos as possible!',
+        'url': '/ivy-burrito-feed',
+        'auth_required': False,
+        'status': 'active',
+        'type': 'project',
+        'parent': 'simple_games',
+        'order': 307
+    },
+    {
         'id': 'spanish_vocab_invaders',
         'name': 'Spanish Vocab Invaders',
         'description': 'Shoot the correct translations',

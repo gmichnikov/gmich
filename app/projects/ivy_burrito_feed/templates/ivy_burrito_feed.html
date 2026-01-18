@@ -1,0 +1,873 @@
+{% extends 'base.html' %}
+
+{% block title %}Ivy League Bowl Feed{% endblock %}
+
+{% block styles %}
+<style>
+    .ibf-game-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        /* Subtract navbar and footer height roughly, or use a fixed min-height */
+        min-height: calc(100vh - 200px); 
+    }
+
+    .ibf-header {
+        background: white;
+        padding: 20px;
+        border-radius: 10px 10px 0 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .ibf-header h1 {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .ibf-header h1 .ibf-emoji {
+        font-size: 32px;
+    }
+
+    .ibf-stats {
+        display: flex;
+        gap: 30px;
+        margin-top: 10px;
+        font-size: 18px;
+    }
+
+    .ibf-stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ibf-stat-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .ibf-stat-value {
+        color: #a0522d;
+        font-weight: bold;
+        font-size: 22px;
+    }
+
+    .ibf-main-content {
+        display: flex;
+        gap: 20px;
+        flex: 1;
+        background: white;
+        border-radius: 0 0 10px 10px;
+        overflow: hidden;
+        min-height: 600px;
+    }
+
+    .ibf-twitter-feed {
+        flex: 1;
+        background: #f7f9fa;
+        border-right: 2px solid #e1e8ed;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .ibf-feed-header {
+        background: #1da1f2;
+        color: white;
+        padding: 15px 20px;
+        font-size: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ibf-feed-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .ibf-tweet {
+        background: white;
+        border: 2px solid #e1e8ed;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .ibf-tweet.ibf-oldest {
+        border-color: #a0522d;
+        border-width: 3px;
+        box-shadow: 0 0 15px rgba(160, 82, 45, 0.3);
+        background: #fff8f0;
+    }
+
+    .ibf-tweet.ibf-served {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+
+    .ibf-tweet-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .ibf-school-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+        color: white;
+    }
+
+    .ibf-tweet-info {
+        flex: 1;
+    }
+
+    .ibf-school-name {
+        font-weight: bold;
+        color: #14171a;
+        font-size: 16px;
+    }
+
+    .ibf-tweet-handle {
+        color: #657786;
+        font-size: 14px;
+    }
+
+    .ibf-tweet-text {
+        color: #14171a;
+        line-height: 1.5;
+        margin-bottom: 5px;
+        font-size: 15px;
+    }
+
+    .ibf-tweet-hashtags {
+        color: #1da1f2;
+        font-size: 14px;
+    }
+
+    .ibf-bowl-builder {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Tighter gap */
+        overflow-y: auto;
+    }
+
+    .ibf-builder-title {
+        font-size: 22px; /* Slightly smaller */
+        color: #a0522d;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    .ibf-current-order-indicator {
+        background: #fff8f0;
+        border: 2px solid #a0522d;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        font-weight: bold;
+        color: #a0522d;
+    }
+
+    .ibf-ingredient-section {
+        background: #f8f8f8;
+        border-radius: 8px;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .ibf-section-title {
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+        text-transform: uppercase;
+        width: 80px;
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    .ibf-ingredient-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ibf-ingredient-btn {
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .ibf-ingredient-btn:hover {
+        border-color: #a0522d;
+        transform: translateY(-2px);
+    }
+
+    .ibf-ingredient-btn.ibf-selected {
+        background: #a0522d;
+        color: white;
+        border-color: #a0522d;
+    }
+
+    .ibf-your-bowl {
+        background: linear-gradient(to bottom, #f8f8f8, #fff);
+        border: 3px solid #a0522d;
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 120px;
+    }
+
+    .ibf-bowl-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #a0522d;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .ibf-bowl-contents {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 40px;
+        justify-content: center;
+    }
+
+    .ibf-bowl-ingredient {
+        background: #a0522d;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .ibf-submit-btn {
+        background: linear-gradient(135deg, #a0522d, #8b4513);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 15px rgba(160, 82, 45, 0.3);
+    }
+
+    .ibf-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(160, 82, 45, 0.4);
+    }
+
+    .ibf-submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .ibf-submit-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .ibf-feedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48px;
+        font-weight: bold;
+        padding: 30px 60px;
+        border-radius: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 2000;
+    }
+
+    .ibf-feedback.ibf-show {
+        opacity: 1;
+    }
+
+    .ibf-feedback.ibf-correct {
+        background: #4caf50;
+        color: white;
+    }
+
+    .ibf-feedback.ibf-incorrect {
+        background: #f44336;
+        color: white;
+    }
+
+    .ibf-game-over {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+    }
+
+    .ibf-game-over.ibf-show {
+        display: flex;
+    }
+
+    .ibf-game-over-content {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 500px;
+    }
+
+    .ibf-game-over-content h2 {
+        font-size: 36px;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .ibf-game-over-content p {
+        font-size: 20px;
+        margin-bottom: 30px;
+        color: #666;
+    }
+
+    .ibf-restart-btn {
+        background: #a0522d;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .ibf-restart-btn:hover {
+        background: #8b4513;
+    }
+
+    @media (max-width: 1000px) {
+        .ibf-game-wrapper {
+            min-height: auto;
+        }
+        .ibf-header {
+            padding: 10px;
+        }
+        .ibf-header h1 {
+            font-size: 18px; /* Even smaller */
+        }
+        .ibf-header h1 .ibf-emoji {
+            font-size: 20px;
+        }
+        .ibf-stats {
+            gap: 12px;
+            font-size: 13px;
+            justify-content: center;
+        }
+        .ibf-stat-value {
+            font-size: 16px;
+        }
+        .ibf-main-content {
+            flex-direction: column;
+            gap: 8px;
+            min-height: auto;
+        }
+        .ibf-twitter-feed {
+            border-right: none;
+            border-bottom: 2px solid #e1e8ed;
+            max-height: 150px; /* Even shorter feed on mobile */
+        }
+        .ibf-feed-header {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        .ibf-tweet {
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        .ibf-tweet-text {
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        .ibf-bowl-builder {
+            padding: 8px;
+            gap: 5px;
+        }
+        .ibf-builder-title {
+            display: none;
+        }
+        .ibf-current-order-indicator {
+            padding: 6px;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        .ibf-ingredient-section {
+            padding: 5px 10px;
+            gap: 10px;
+            border-radius: 4px;
+        }
+        .ibf-section-title {
+            width: 60px;
+            font-size: 10px;
+        }
+        .ibf-ingredient-btn {
+            padding: 3px 8px;
+            font-size: 10px;
+        }
+        .ibf-your-bowl {
+            padding: 5px 10px;
+            min-height: 50px;
+        }
+        .ibf-bowl-title {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .ibf-bowl-contents {
+            gap: 4px;
+        }
+        .ibf-bowl-ingredient {
+            padding: 2px 8px;
+            font-size: 10px;
+        }
+        .ibf-submit-btn {
+            padding: 8px;
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ibf-game-wrapper">
+    <div class="ibf-header">
+        <h1><span class="ibf-emoji">🏀</span> Ivy League Bowl Feed <span class="ibf-emoji">🌯</span></h1>
+        <div class="ibf-stats">
+            <div class="ibf-stat">
+                <span class="ibf-stat-label">Score:</span>
+                <span class="ibf-stat-value" id="ibf-score">0</span>
+            </div>
+            <div class="ibf-stat">
+                <span class="ibf-stat-label">Streak:</span>
+                <span class="ibf-stat-value" id="ibf-streak">0</span>
+            </div>
+            <div class="ibf-stat">
+                <span class="ibf-stat-label">Time:</span>
+                <span class="ibf-stat-value" id="ibf-timer">60</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="ibf-main-content">
+        <div class="ibf-twitter-feed">
+            <div class="ibf-feed-header">
+                🐦 Live Twitter Feed
+            </div>
+            <div class="ibf-feed-content" id="ibf-feed">
+                <!-- Tweets will be added here -->
+            </div>
+        </div>
+
+        <div class="ibf-bowl-builder">
+            <div class="ibf-builder-title">🌯 Build Your Bowl</div>
+            <div class="ibf-current-order-indicator">
+                ⚡ Serve the OLDEST order (highlighted in brown)
+            </div>
+
+            <div class="ibf-ingredient-section">
+                <div class="ibf-section-title">Rice</div>
+                <div class="ibf-ingredient-options" id="ibf-rice-options"></div>
+            </div>
+
+            <div class="ibf-ingredient-section">
+                <div class="ibf-section-title">Beans</div>
+                <div class="ibf-ingredient-options" id="ibf-beans-options"></div>
+            </div>
+
+            <div class="ibf-ingredient-section">
+                <div class="ibf-section-title">Protein</div>
+                <div class="ibf-ingredient-options" id="ibf-protein-options"></div>
+            </div>
+
+            <div class="ibf-ingredient-section">
+                <div class="ibf-section-title">Toppings</div>
+                <div class="ibf-ingredient-options" id="ibf-toppings-options"></div>
+            </div>
+
+            <div class="ibf-your-bowl">
+                <div class="ibf-bowl-title">Your Bowl</div>
+                <div class="ibf-bowl-contents" id="ibf-current-bowl"></div>
+            </div>
+
+            <button class="ibf-submit-btn" id="ibf-submit-btn">SERVE BOWL 🚀</button>
+        </div>
+    </div>
+</div>
+
+<div class="ibf-feedback" id="ibf-feedback"></div>
+
+<div class="ibf-game-over" id="ibf-game-over">
+    <div class="ibf-game-over-content">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="ibf-final-score">0</span></p>
+        <p>Bowls Served: <span id="ibf-bowls-served">0</span></p>
+        <button class="ibf-restart-btn" onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Game state
+    const gameState = {
+        score: 0,
+        streak: 0,
+        timeLeft: 60,
+        orders: [],
+        currentBowl: {},
+        bowlsServed: 0,
+        gameOver: false
+    };
+
+    // Ivy League schools
+    const schools = [
+        { name: 'Harvard', handle: '@Harvard_Eats', color: '#A41034', emoji: '🦅' },
+        { name: 'Yale', handle: '@Yale_Bowls', color: '#00356b', emoji: '🐶' },
+        { name: 'Princeton', handle: '@Princeton_Food', color: '#FF8F00', emoji: '🐯' },
+        { name: 'Columbia', handle: '@Columbia_Hungry', color: '#B9D9EB', emoji: '🦁' },
+        { name: 'Penn', handle: '@Penn_Dining', color: '#011F5B', emoji: '🐾' },
+        { name: 'Dartmouth', handle: '@Dartmouth_Eats', color: '#00693E', emoji: '🌲' },
+        { name: 'Cornell', handle: '@Cornell_Bowl', color: '#B31B1B', emoji: '🐻' },
+        { name: 'Brown', handle: '@Brown_Fuel', color: '#4E3629', emoji: '🐻' }
+    ];
+
+    // Ingredients
+    const ingredients = {
+        rice: ['White Rice', 'Brown Rice', 'No Rice'],
+        beans: ['Black Beans', 'Pinto Beans', 'No Beans'],
+        protein: ['Chicken', 'Steak', 'Carnitas', 'Barbacoa', 'Sofritas', 'Veggie'],
+        toppings: ['Mild Salsa', 'Corn', 'Sour Cream', 'Cheese', 'Guac', 'Lettuce', 'Hot Salsa']
+    };
+
+    // Tweet templates
+    const tweetTemplates = [
+        { text: "Just finished practice, need {protein} for those GAINS 💪", needs: ['protein'], hashtags: '#PostWorkout #FuelUp' },
+        { text: "Pulling an all-nighter at the library 📚 Need brain food with {protein} and {toppings}", needs: ['protein', 'toppings'], hashtags: '#StudyFuel #Finals' },
+        { text: "Game day! Load me up with {rice}, {beans}, and {protein} 🏀", needs: ['rice', 'beans', 'protein'], hashtags: '#GameDay #IvyBall' },
+        { text: "Trying to eat healthy... {rice}, {protein}, and definitely {toppings} please! 🥗", needs: ['rice', 'protein', 'toppings'], hashtags: '#HealthyEating' },
+        { text: "STARVING after lecture. Give me {protein}, {beans}, and extra {toppings}! 😋", needs: ['protein', 'beans', 'toppings'], hashtags: '#Hangry' },
+        { text: "Need comfort food... {rice}, {beans}, {protein} with {toppings} on top 🤤", needs: ['rice', 'beans', 'protein', 'toppings'], hashtags: '#ComfortFood' },
+        { text: "Quick bite between classes! Just {protein} and {toppings} 🏃‍♀️", needs: ['protein', 'toppings'], hashtags: '#OnTheGo' },
+        { text: "Celebrating the W! Full bowl: {rice}, {beans}, {protein}, all the {toppings}! 🎉", needs: ['rice', 'beans', 'protein', 'toppings'], hashtags: '#Victory #Champions' }
+    ];
+
+    // Initialize ingredient buttons
+    function initializeIngredients() {
+        ['rice', 'beans', 'protein', 'toppings'].forEach(category => {
+            const container = document.getElementById(`ibf-${category}-options`);
+            ingredients[category].forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'ibf-ingredient-btn';
+                btn.textContent = item;
+                btn.onclick = () => selectIngredient(category, item, btn);
+                container.appendChild(btn);
+            });
+        });
+    }
+
+    // Select ingredient
+    function selectIngredient(category, item, btn) {
+        // For rice, beans, protein - only one selection allowed
+        if (['rice', 'beans', 'protein'].includes(category)) {
+            document.querySelectorAll(`#ibf-${category}-options .ibf-ingredient-btn`).forEach(b => {
+                b.classList.remove('ibf-selected');
+            });
+        }
+        
+        btn.classList.toggle('ibf-selected');
+        
+        if (btn.classList.contains('ibf-selected')) {
+            if (['rice', 'beans', 'protein'].includes(category)) {
+                gameState.currentBowl[category] = item;
+            } else {
+                if (!gameState.currentBowl[category]) {
+                    gameState.currentBowl[category] = [];
+                }
+                gameState.currentBowl[category].push(item);
+            }
+        } else {
+            if (category === 'toppings') {
+                gameState.currentBowl[category] = gameState.currentBowl[category].filter(i => i !== item);
+            } else {
+                delete gameState.currentBowl[category];
+            }
+        }
+        
+        updateBowlDisplay();
+    }
+
+    // Update bowl display
+    function updateBowlDisplay() {
+        const container = document.getElementById('ibf-current-bowl');
+        container.innerHTML = '';
+        
+        ['rice', 'beans', 'protein', 'toppings'].forEach(category => {
+            if (gameState.currentBowl[category]) {
+                const items = Array.isArray(gameState.currentBowl[category]) 
+                    ? gameState.currentBowl[category] 
+                    : [gameState.currentBowl[category]];
+                
+                items.forEach(item => {
+                    const span = document.createElement('span');
+                    span.className = 'ibf-bowl-ingredient';
+                    span.textContent = item;
+                    container.appendChild(span);
+                });
+            }
+        });
+
+        if (container.children.length === 0) {
+            container.innerHTML = '<span style="color: #999;">Select ingredients...</span>';
+        }
+    }
+
+    // Generate random order
+    function generateOrder() {
+        const school = schools[Math.floor(Math.random() * schools.length)];
+        const template = tweetTemplates[Math.floor(Math.random() * tweetTemplates.length)];
+        
+        const order = {
+            school: school,
+            template: template,
+            correctIngredients: {},
+            id: Date.now() + Math.random()
+        };
+
+        let text = template.text;
+        template.needs.forEach(category => {
+            let ingredient;
+            if (category === 'toppings') {
+                ingredient = ingredients[category][Math.floor(Math.random() * ingredients[category].length)];
+                order.correctIngredients[category] = [ingredient];
+                text = text.replace(`{${category}}`, ingredient);
+            } else {
+                ingredient = ingredients[category][Math.floor(Math.random() * ingredients[category].length)];
+                order.correctIngredients[category] = ingredient;
+                text = text.replace(`{${category}}`, ingredient);
+            }
+        });
+
+        order.text = text;
+        order.hashtags = template.hashtags;
+
+        return order;
+    }
+
+    // Add order to feed
+    function addOrderToFeed(order) {
+        const feed = document.getElementById('ibf-feed');
+        const tweet = document.createElement('div');
+        tweet.className = 'ibf-tweet';
+        tweet.dataset.orderId = order.id;
+        
+        tweet.innerHTML = `
+            <div class="ibf-tweet-header">
+                <div class="ibf-school-logo" style="background: ${order.school.color}">
+                    ${order.school.emoji}
+                </div>
+                <div class="ibf-tweet-info">
+                    <div class="ibf-school-name">${order.school.name}</div>
+                    <div class="ibf-tweet-handle">${order.school.handle}</div>
+                </div>
+            </div>
+            <div class="ibf-tweet-text">${order.text}</div>
+            <div class="ibf-tweet-hashtags">${order.hashtags}</div>
+        `;
+        
+        feed.appendChild(tweet);
+        gameState.orders.push(order);
+        updateOldestHighlight();
+    }
+
+    // Update which tweet is highlighted as oldest
+    function updateOldestHighlight() {
+        document.querySelectorAll('.ibf-tweet').forEach(t => t.classList.remove('ibf-oldest'));
+        if (gameState.orders.length > 0) {
+            const oldestId = gameState.orders[0].id;
+            const oldestTweet = document.querySelector(`[data-order-id="${oldestId}"]`);
+            if (oldestTweet) {
+                oldestTweet.classList.add('ibf-oldest');
+            }
+        }
+    }
+
+    // Check if bowl matches order
+    function checkBowl() {
+        if (gameState.orders.length === 0) return;
+        
+        const order = gameState.orders[0];
+        let correct = true;
+
+        // Check each category
+        ['rice', 'beans', 'protein'].forEach(category => {
+            if (order.correctIngredients[category]) {
+                if (gameState.currentBowl[category] !== order.correctIngredients[category]) {
+                    correct = false;
+                }
+            }
+        });
+
+        // Check toppings
+        if (order.correctIngredients.toppings) {
+            const orderToppings = order.correctIngredients.toppings;
+            const bowlToppings = gameState.currentBowl.toppings || [];
+            
+            orderToppings.forEach(topping => {
+                if (!bowlToppings.includes(topping)) {
+                    correct = false;
+                }
+            });
+        }
+
+        if (correct) {
+            gameState.score += 100 + (gameState.streak * 20);
+            gameState.streak++;
+            gameState.bowlsServed++;
+            showFeedback('✓ Perfect!', true);
+        } else {
+            gameState.streak = 0;
+            showFeedback('✗ Wrong!', false);
+        }
+
+        // Remove served order
+        const oldestTweet = document.querySelector(`[data-order-id="${gameState.orders[0].id}"]`);
+        if (oldestTweet) {
+            oldestTweet.classList.add('ibf-served');
+            setTimeout(() => oldestTweet.remove(), 300);
+        }
+        
+        gameState.orders.shift();
+        updateOldestHighlight();
+        clearBowl();
+        updateUI();
+    }
+
+    // Show feedback
+    function showFeedback(text, isCorrect) {
+        const feedback = document.getElementById('ibf-feedback');
+        feedback.textContent = text;
+        feedback.className = 'ibf-feedback ibf-show ' + (isCorrect ? 'ibf-correct' : 'ibf-incorrect');
+        
+        setTimeout(() => {
+            feedback.classList.remove('ibf-show');
+        }, 800);
+    }
+
+    // Clear bowl
+    function clearBowl() {
+        gameState.currentBowl = {};
+        document.querySelectorAll('.ibf-ingredient-btn').forEach(btn => {
+            btn.classList.remove('ibf-selected');
+        });
+        updateBowlDisplay();
+    }
+
+    // Update UI
+    function updateUI() {
+        document.getElementById('ibf-score').textContent = gameState.score;
+        document.getElementById('ibf-streak').textContent = gameState.streak;
+        document.getElementById('ibf-timer').textContent = gameState.timeLeft;
+    }
+
+    // Game timer
+    function startTimer() {
+        const timerInterval = setInterval(() => {
+            if (gameState.gameOver) {
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            gameState.timeLeft--;
+            updateUI();
+            
+            if (gameState.timeLeft <= 0) {
+                endGame();
+                clearInterval(timerInterval);
+            }
+        }, 1000);
+    }
+
+    // Order spawner
+    function startOrderSpawner() {
+        // Add initial orders
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => addOrderToFeed(generateOrder()), i * 500);
+        }
+
+        // Continue adding orders
+        const spawnerInterval = setInterval(() => {
+            if (gameState.gameOver) {
+                clearInterval(spawnerInterval);
+                return;
+            }
+            
+            if (gameState.orders.length < 8) {
+                addOrderToFeed(generateOrder());
+            }
+        }, 6000); // Slowed down from 3000 to 6000ms
+    }
+
+    // End game
+    function endGame() {
+        gameState.gameOver = true;
+        document.getElementById('ibf-final-score').textContent = gameState.score;
+        document.getElementById('ibf-bowls-served').textContent = gameState.bowlsServed;
+        document.getElementById('ibf-game-over').classList.add('ibf-show');
+    }
+
+    // Initialize game
+    function init() {
+        initializeIngredients();
+        updateUI();
+        startTimer();
+        startOrderSpawner();
+        
+        document.getElementById('ibf-submit-btn').addEventListener('click', () => {
+            if (gameState.orders.length > 0) {
+                checkBowl();
+            }
+        });
+    }
+
+    // Start game when page loads
+    window.addEventListener('load', init);
+</script>
+{% endblock %}
