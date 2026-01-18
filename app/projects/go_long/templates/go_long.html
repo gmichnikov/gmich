@@ -296,6 +296,36 @@
         background: var(--gl-gray);
     }
 
+    .gl-play-by-play {
+        padding: 10px;
+        background: #fdfdfd;
+        border-bottom: 2px solid var(--gl-border);
+        font-size: 0.85rem;
+    }
+
+    .gl-play-item {
+        margin-bottom: 5px;
+        padding-bottom: 5px;
+        border-bottom: 1px dashed #eee;
+    }
+
+    .gl-play-item:last-child {
+        border-bottom: none;
+    }
+
+    .gl-history-row {
+        cursor: pointer;
+    }
+
+    .gl-history-row:hover {
+        background: #f9f9f9;
+    }
+
+    .gl-undo-drive-container {
+        margin-top: 10px;
+        text-align: center;
+    }
+
     .gl-hidden {
         display: none !important;
     }
@@ -491,6 +521,10 @@
             </div>
         </div>
 
+        <div id="glUndoDriveContainer" class="gl-undo-drive-container gl-hidden">
+            <button class="gl-btn gl-btn-outline" style="font-size: 0.8rem; width: auto;" onclick="glUndoLastDrive()">Undo Last Drive</button>
+        </div>
+
         <!-- Drive Setup (Between Drives) -->
         <div id="glDriveSetup" class="gl-setup-card">
             <h3 id="glDriveSetupTitle">Start New Drive</h3>
@@ -559,8 +593,14 @@
                 <button class="gl-btn gl-btn-primary" style="border-color: white;" onclick="glOpenDriveEndModal()">Drive Result</button>
             </div>
             
-            <div style="text-align: center;">
-                <button class="gl-btn gl-btn-danger" style="font-size: 0.8rem;" onclick="glUndoPlay()">Undo Last Play</button>
+            <div id="glCurrentPlaysContainer" class="gl-hidden" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                <div id="glCurrentPlaysList" class="gl-play-by-play" style="background: rgba(255,255,255,0.1); color: white; border: none; text-align: left; border-radius: 4px;">
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
+                <button id="glToggleCurrentPlaysBtn" class="gl-btn gl-btn-outline gl-hidden" style="font-size: 0.8rem; width: auto; border-color: white; color: white;" onclick="glToggleCurrentPlays()">Show Plays</button>
+                <button class="gl-btn gl-btn-danger" style="font-size: 0.8rem; width: auto;" onclick="glUndoPlay()">Undo Last Play</button>
             </div>
         </div>
 
@@ -622,7 +662,8 @@
         firstHalfStarter: 0,
         pendingReturnTD: null,
         isGameOver: false,
-        otPossessions: 0
+        otPossessions: 0,
+        showCurrentPlays: false
     };
 
     let currentDrive = null;
@@ -704,6 +745,7 @@
             document.getElementById('glDriveSetup').classList.add('gl-hidden');
             document.getElementById('glDriveTracker').classList.add('gl-hidden');
             document.getElementById('glOvertimeChoice').classList.add('gl-hidden');
+            document.getElementById('glUndoDriveContainer').classList.add('gl-hidden');
             document.getElementById('glHalfLabel').textContent = 'GAME OVER';
             return;
         }
@@ -712,6 +754,7 @@
             document.getElementById('glDriveSetup').classList.add('gl-hidden');
             document.getElementById('glDriveTracker').classList.add('gl-hidden');
             document.getElementById('glOvertimeChoice').classList.remove('gl-hidden');
+            document.getElementById('glUndoDriveContainer').classList.add('gl-hidden');
             document.getElementById('glOTBtn0').textContent = gameState.players[0].name;
             document.getElementById('glOTBtn1').textContent = gameState.players[1].name;
             return;
@@ -722,6 +765,7 @@
         if (currentDrive) {
             document.getElementById('glDriveSetup').classList.add('gl-hidden');
             document.getElementById('glDriveTracker').classList.remove('gl-hidden');
+            document.getElementById('glUndoDriveContainer').classList.add('gl-hidden');
             
             document.getElementById('glCurrentPossession').textContent = `${gameState.players[gameState.currentPossessionIndex].name} Possession`;
             document.getElementById('glCurrentBall').textContent = `Ball at: ${glFormatYardline(currentDrive.currentYardline, currentDrive.currentSide)}`;
@@ -730,12 +774,37 @@
             const abs = glGetAbsoluteYardline(currentDrive.currentYardline, currentDrive.currentSide);
             document.getElementById('glBallMarker').style.left = `${abs}%`;
 
-            const distText = currentDrive.distance >= (100 - glGetAbsoluteYardline(currentDrive.currentYardline, currentDrive.currentSide)) 
+            const distText = (currentDrive.currentSide === 'other' && currentDrive.distance >= currentDrive.currentYardline)
                 ? 'Goal' : currentDrive.distance;
             document.getElementById('glDownDistDisp').textContent = `${glFormatDown(currentDrive.down)} & ${distText}`;
+
+            // Current drive plays display
+            const playsBtn = document.getElementById('glToggleCurrentPlaysBtn');
+            const playsContainer = document.getElementById('glCurrentPlaysContainer');
+            if (currentDrive.plays.length > 0) {
+                playsBtn.classList.remove('gl-hidden');
+                playsBtn.textContent = gameState.showCurrentPlays ? 'Hide Plays' : 'Show Plays';
+                
+                if (gameState.showCurrentPlays) {
+                    playsContainer.classList.remove('gl-hidden');
+                    document.getElementById('glCurrentPlaysList').innerHTML = glRenderPlays(currentDrive);
+                } else {
+                    playsContainer.classList.add('gl-hidden');
+                }
+            } else {
+                playsBtn.classList.add('gl-hidden');
+                playsContainer.classList.add('gl-hidden');
+            }
         } else {
             document.getElementById('glDriveSetup').classList.remove('gl-hidden');
             document.getElementById('glDriveTracker').classList.add('gl-hidden');
+            
+            // Show Undo Last Drive button only if there is history and no active drive
+            if (gameState.history.length > 0) {
+                document.getElementById('glUndoDriveContainer').classList.remove('gl-hidden');
+            } else {
+                document.getElementById('glUndoDriveContainer').classList.add('gl-hidden');
+            }
             
             const count = gameState.possessionCount[gameState.currentPossessionIndex];
             const isBonus = gameState.isBonusPossession;
@@ -787,6 +856,7 @@
             distance: 10,
             plays: []
         };
+        gameState.showCurrentPlays = false;
         
         glUpdateUI();
     }
@@ -840,11 +910,13 @@
             currentDrive.down++;
             currentDrive.distance += yards;
         } else if (type === 'penalty') {
-            // User can enter negative for penalty against them, positive for for them?
-            // Let's assume positive yards = forward, negative = backward
             newAbs += yards;
-            currentDrive.distance -= yards;
-            // Down does not change for penalty
+            if (yards >= currentDrive.distance) {
+                currentDrive.down = 1;
+                currentDrive.distance = 10;
+            } else {
+                currentDrive.distance -= yards;
+            }
         } else if (type === 'turnover') {
             // Turnover: ball moves, then drive ends.
             // But usually user just wants to end the drive.
@@ -857,6 +929,7 @@
         }
 
         // Bound yardage 0-100
+        const isTD = newAbs >= 100;
         newAbs = Math.max(0, Math.min(100, newAbs));
         
         const pos = glFromAbsoluteYardline(newAbs);
@@ -864,13 +937,17 @@
         currentDrive.currentSide = pos.side;
 
         // Auto turnover on downs
-        if (currentDrive.down > 4) {
+        if (currentDrive.down > 4 && !isTD) {
             glEndDrive('downs');
             return;
         }
 
         yardInput.value = '';
         glUpdateUI();
+
+        if (isTD) {
+            glOpenDriveEndModal();
+        }
     }
 
     function glUndoPlay() {
@@ -923,16 +1000,33 @@
         if (gameState.pendingReturnTD && (result === 'td1' || result === 'td2' || result === 'td0')) {
             label = `${gameState.pendingReturnTD} (${label})`;
         }
+
+        // Save state for undo before we modify anything
+        const historyEntry = {
+            half: gameState.currentHalf === 3 ? 'OT' : gameState.currentHalf,
+            player: gameState.players[gameState.currentPossessionIndex].name,
+            playerIndex: gameState.currentPossessionIndex,
+            result: label,
+            score: `${gameState.players[0].score} - ${gameState.players[1].score}`,
+            points: points,
+            isSafety: result === 'safety',
+            isTurnover: isTurnover,
+            wasBonus: gameState.isBonusPossession,
+            prePossessionCount: {...gameState.possessionCount},
+            preCurrentHalf: gameState.currentHalf,
+            preOtPossessions: gameState.otPossessions,
+            preCurrentPossessionIndex: gameState.currentPossessionIndex,
+            pendingReturnTD: gameState.pendingReturnTD,
+            drive: currentDrive ? JSON.parse(JSON.stringify(currentDrive)) : null
+        };
+
         gameState.pendingReturnTD = null;
 
         gameState.players[gameState.currentPossessionIndex].score += points;
         
-        gameState.history.push({
-            half: gameState.currentHalf === 3 ? 'OT' : gameState.currentHalf,
-            player: gameState.players[gameState.currentPossessionIndex].name,
-            result: label,
-            score: `${gameState.players[0].score} - ${gameState.players[1].score}`
-        });
+        // Update history display with current score after adding points
+        historyEntry.score = `${gameState.players[0].score} - ${gameState.players[1].score}`;
+        gameState.history.push(historyEntry);
 
         // Possession Logic
         if (gameState.currentHalf === 3) {
@@ -986,6 +1080,41 @@
         glUpdateUI();
     }
 
+    function glUndoLastDrive() {
+        if (gameState.history.length === 0) return;
+        if (!confirm("Undo the last completed drive and its points?")) return;
+
+        const last = gameState.history.pop();
+        
+        // Restore scores
+        if (last.isSafety) {
+            gameState.players[1 - last.preCurrentPossessionIndex].score -= 2;
+        } else {
+            gameState.players[last.preCurrentPossessionIndex].score -= last.points;
+        }
+
+        // Restore state
+        gameState.currentHalf = last.preCurrentHalf;
+        gameState.possessionCount = last.prePossessionCount;
+        gameState.currentPossessionIndex = last.preCurrentPossessionIndex;
+        gameState.otPossessions = last.preOtPossessions;
+        gameState.isBonusPossession = last.wasBonus;
+        gameState.pendingReturnTD = last.pendingReturnTD;
+        gameState.isGameOver = false;
+        gameState.showCurrentPlays = false;
+        
+        // Restore current drive
+        currentDrive = last.drive;
+
+        // If the drive ended on downs (5th down), automatically undo that last play 
+        // to return to the 4th down state for the user to correct.
+        if (currentDrive && currentDrive.down > 4) {
+            glUndoPlay();
+        } else {
+            glUpdateUI();
+        }
+    }
+
     function glHandleEndOfSecondHalf() {
         if (gameState.players[0].score === gameState.players[1].score) {
             alert("Tied at the end of regulation! Moving to Overtime.");
@@ -1026,7 +1155,8 @@
                 firstHalfStarter: 0,
                 pendingReturnTD: null,
                 isGameOver: false,
-                otPossessions: 0
+                otPossessions: 0,
+                showCurrentPlays: false
             };
             currentDrive = null;
             document.getElementById('glSetup').classList.remove('gl-hidden');
@@ -1040,14 +1170,52 @@
         const body = document.getElementById('glHistoryBody');
         body.innerHTML = '';
         gameState.history.slice().reverse().forEach((h, i) => {
-            const row = `<tr>
+            const actualIndex = gameState.history.length - 1 - i;
+            const row = `<tr class="gl-history-row" onclick="glToggleDriveDetails(${actualIndex})">
                 <td>H${h.half}</td>
                 <td>${h.player}</td>
                 <td>${h.result}</td>
                 <td>${h.score}</td>
+            </tr>
+            <tr id="glDriveDetails${actualIndex}" class="gl-hidden">
+                <td colspan="4" class="gl-play-by-play">
+                    ${glRenderPlays(h.drive)}
+                </td>
             </tr>`;
             body.innerHTML += row;
         });
+    }
+
+    function glRenderPlays(drive) {
+        if (!drive || !drive.plays || drive.plays.length === 0) {
+            return "No plays recorded for this drive.";
+        }
+        return drive.plays.map((p, i) => {
+            let typeLabel = p.type.toUpperCase();
+            if (p.type === 'gain') typeLabel = 'GAIN';
+            if (p.type === 'loss') typeLabel = 'LOSS';
+            
+            // Goal check logic
+            const abs = glGetAbsoluteYardline(p.yardline, p.side);
+            const isGoal = abs >= 90;
+            const distLabel = isGoal ? 'Goal' : p.distance;
+
+            return `<div class="gl-play-item">
+                <strong>Play ${i+1}:</strong> ${glFormatDown(p.down)} & ${distLabel} | 
+                ${glFormatYardline(p.yardline, p.side)} | 
+                ${typeLabel} ${p.yards} yds
+            </div>`;
+        }).join('');
+    }
+
+    function glToggleDriveDetails(index) {
+        const el = document.getElementById(`glDriveDetails${index}`);
+        el.classList.toggle('gl-hidden');
+    }
+
+    function glToggleCurrentPlays() {
+        gameState.showCurrentPlays = !gameState.showCurrentPlays;
+        glUpdateUI();
     }
 
     // Helper functions
@@ -1073,7 +1241,7 @@
         if (down === 2) return "2nd";
         if (down === 3) return "3rd";
         if (down === 4) return "4th";
-        return down;
+        return down > 4 ? "4th" : down;
     }
 </script>
 {% endblock %}
