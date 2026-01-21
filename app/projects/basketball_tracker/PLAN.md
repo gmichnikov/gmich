@@ -33,9 +33,9 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [ ] Redirect back to teams page
 - [ ] Create POST route `/teams/<int:team_id>/delete` to delete team
   - [ ] Verify team belongs to current_user
-  - [ ] Delete team from database
-  - [ ] Flash success message
-  - [ ] Redirect back to teams page
+  - [ ] Check if team is used in any games (team1_id or team2_id in BasketballGame)
+  - [ ] If team has games: flash error message "Cannot delete team with existing games" and redirect
+  - [ ] If team has no games: delete team from database, flash success message, redirect
 - [ ] Update GET route `/teams` to fetch and pass user's teams to template
 
 ### [ ] 1.5 Teams Page - Frontend
@@ -256,12 +256,13 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [ ] For each team calculate:
     - [ ] Makes by type (Layup, Close 2, Far 2, 3-Pointer, Free Throw)
     - [ ] Misses by type
-    - [ ] Field Goal % (2-pointers only)
-    - [ ] 3-Point %
-    - [ ] Free Throw %
+    - [ ] Field Goal % (2-pointers only) - handle division by zero (if no attempts, return None or 0)
+    - [ ] 3-Point % - handle division by zero
+    - [ ] Free Throw % - handle division by zero
     - [ ] Total Points
     - [ ] Turnovers by type (Traveling, Steal, Other)
     - [ ] Offensive Rebounds
+  - [ ] Ensure all percentage calculations check for zero attempts before dividing
 - [ ] Create API route `/game/<int:game_id>/stats` returning JSON stats
   - [ ] Verify game belongs to current_user
   - [ ] Call stats calculation function
@@ -281,7 +282,9 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [ ] Fetch from `/game/<int:game_id>/stats` when view is shown
   - [ ] Populate HTML with returned data
   - [ ] Format percentages nicely (e.g., "45.5%" or "5/11")
+  - [ ] Handle null/zero percentages: show "-" or "0/0" instead of "NaN%" or error
 - [ ] Test: Add events, switch to stats view, verify calculations correct
+- [ ] Test: View stats with no events (all percentages should show gracefully)
 
 ### [ ] 4.3 Log View - Frontend
 - [ ] Add log view section to game.html

@@ -93,7 +93,8 @@ Each page should also allow navigation back to the site's main navigation.
   - Internal navigation: Games | Teams
   - "Add Team" form with name input
   - List of user's teams with delete option
-- **Future consideration:** Prevent deleting teams used in games, or allow with warning
+- **Delete Restriction:** Teams that are used in any games cannot be deleted (prevent foreign key errors and orphaned data). Show error message if user attempts to delete a team that has games.
+- **Future consideration:** Add ability to delete teams with games (cascade delete or require manual game deletion first)
 
 ### 3. Game Page (`/basketball-tracker/game/<id>`)
 Three view modes (toggled): **Edit**, **Stats**, **Log**
@@ -139,6 +140,7 @@ Three view modes (toggled): **Edit**, **Stats**, **Log**
     - Total Points
     - Turnovers by type
     - Offensive Rebounds
+- **Percentage Calculations:** Handle division by zero gracefully. If no attempts of a type, show "0/0" or "-" instead of percentage, don't crash.
 - **Toggle:** Button to switch back to Edit or Log view
 
 #### Log View
