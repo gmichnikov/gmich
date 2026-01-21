@@ -15,49 +15,49 @@ migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 
+
 def create_app():
     # Validate required environment variables
-    required_vars = ['DATABASE_URL', 'SECRET_KEY', 'ADMIN_EMAIL']
+    required_vars = ["DATABASE_URL", "SECRET_KEY", "ADMIN_EMAIL"]
     for var in required_vars:
         if not os.getenv(var):
             raise ValueError(f"Required environment variable {var} is not set")
-    
+
     app = Flask(__name__)
-    app.config.from_object('config')
-    
+    app.config.from_object("config")
+
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
-    
+
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    
+    login_manager.login_view = "auth.login"
+
     # Configure Google OAuth
     from app.core.auth import oauth
+
     oauth.init_app(app)
-    
+
     # Register Google OAuth client
-    google_client_id = app.config.get('GOOGLE_CLIENT_ID')
-    google_client_secret = app.config.get('GOOGLE_CLIENT_SECRET')
-    
+    google_client_id = app.config.get("GOOGLE_CLIENT_ID")
+    google_client_secret = app.config.get("GOOGLE_CLIENT_SECRET")
+
     if google_client_id and google_client_secret:
         oauth.register(
-            name='google',
+            name="google",
             client_id=google_client_id,
             client_secret=google_client_secret,
-            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            client_kwargs={
-                'scope': 'openid email profile'
-            }
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
         )
-    
+
     # Register blueprints
     from app.routes.main import main_bp
     from app.core.auth import auth_bp
@@ -77,47 +77,66 @@ def create_app():
     from app.projects.chatbot.routes import chatbot_bp
     from app.projects.ask_many_llms.routes import bp as ask_many_llms_bp
     from app.projects.better_signups.routes import bp as better_signups_bp
-    
+    from app.projects.basketball_tracker.routes import basketball_tracker
+
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(mastermind_bp, url_prefix='/mastermind')
-    app.register_blueprint(simon_says_bp, url_prefix='/simon-says')
-    app.register_blueprint(tic_tac_toe_bp, url_prefix='/tic-tac-toe')
-    app.register_blueprint(connect4_bp, url_prefix='/connect4')
-    app.register_blueprint(algebra_snake_bp, url_prefix='/algebra-snake')
-    app.register_blueprint(ivy_burrito_feed_bp, url_prefix='/ivy-burrito-feed')
-    app.register_blueprint(spanish_vocab_invaders_bp, url_prefix='/spanish-vocab-invaders')
-    app.register_blueprint(sorry_cards_bp, url_prefix='/sorry-cards')
-    app.register_blueprint(sushi_go_bp, url_prefix='/sushi-go')
-    app.register_blueprint(yahtzee_scorer_bp, url_prefix='/yahtzee')
-    app.register_blueprint(hourglass_timer_bp, url_prefix='/hourglass-timer')
-    app.register_blueprint(go_long_bp, url_prefix='/go-long')
-    app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
+    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(mastermind_bp, url_prefix="/mastermind")
+    app.register_blueprint(simon_says_bp, url_prefix="/simon-says")
+    app.register_blueprint(tic_tac_toe_bp, url_prefix="/tic-tac-toe")
+    app.register_blueprint(connect4_bp, url_prefix="/connect4")
+    app.register_blueprint(algebra_snake_bp, url_prefix="/algebra-snake")
+    app.register_blueprint(ivy_burrito_feed_bp, url_prefix="/ivy-burrito-feed")
+    app.register_blueprint(
+        spanish_vocab_invaders_bp, url_prefix="/spanish-vocab-invaders"
+    )
+    app.register_blueprint(sorry_cards_bp, url_prefix="/sorry-cards")
+    app.register_blueprint(sushi_go_bp, url_prefix="/sushi-go")
+    app.register_blueprint(yahtzee_scorer_bp, url_prefix="/yahtzee")
+    app.register_blueprint(hourglass_timer_bp, url_prefix="/hourglass-timer")
+    app.register_blueprint(go_long_bp, url_prefix="/go-long")
+    app.register_blueprint(chatbot_bp, url_prefix="/chatbot")
     app.register_blueprint(ask_many_llms_bp)  # Has its own url_prefix defined
     app.register_blueprint(better_signups_bp)  # Has its own url_prefix defined
-    
+    app.register_blueprint(basketball_tracker, url_prefix="/basketball-tracker")
+
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
     from app.projects.chatbot.models import ChatMessage
     from app.projects.ask_many_llms.models import LLMQuestion, LLMResponse
     from app.projects.better_signups.models import (
-        SignupList, ListEditor, FamilyMember, Event, Item, Signup,
-        SwapRequest, SwapRequestTarget, SwapToken
+        SignupList,
+        ListEditor,
+        FamilyMember,
+        Event,
+        Item,
+        Signup,
+        SwapRequest,
+        SwapRequestTarget,
+        SwapToken,
     )
-    
+    from app.projects.basketball_tracker.models import (
+        BasketballTeam,
+        BasketballGame,
+        BasketballEvent,
+    )
+
     # Register markdown filter for Ask Many LLMs templates
-    @app.template_filter('markdown')
+    @app.template_filter("markdown")
     def markdown_filter(text):
-        return markdown.markdown(text, extensions=['fenced_code', 'tables'])
-    
+        return markdown.markdown(text, extensions=["fenced_code", "tables"])
+
     # User loader for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
-    
+
     # Register CLI commands
-    from app.projects.better_signups.commands import init_app as init_better_signups_commands
+    from app.projects.better_signups.commands import (
+        init_app as init_better_signups_commands,
+    )
+
     init_better_signups_commands(app)
-    
+
     return app

@@ -237,6 +237,16 @@ PROJECTS = [
         'status': 'active',
         'type': 'project',
         'order': 1
+    },
+    {
+        'id': 'basketball_tracker',
+        'name': 'Basketball Tracker',
+        'description': 'Track youth basketball game statistics and events',
+        'url': '/basketball-tracker',
+        'auth_required': True,
+        'status': 'active',
+        'type': 'project',
+        'order': 5
     }
 ]
 
