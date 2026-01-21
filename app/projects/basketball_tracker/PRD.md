@@ -49,13 +49,14 @@ A mobile-first basketball game tracking app that allows users to log game events
   - `event_subcategory` (string: shot type, turnover type, or rebound type, required)
   - `created_at` (timestamp)
 - **Event Categories and Subcategories:**
-  - **Make Shot** (category='make') → Layup, Close 2, Far 2, 3-Pointer
-  - **Miss Shot** (category='miss') → Layup, Close 2, Far 2, 3-Pointer
+  - **Make Shot** (category='make') → Layup, Close 2, Far 2, 3-Pointer, Free Throw
+  - **Miss Shot** (category='miss') → Layup, Close 2, Far 2, 3-Pointer, Free Throw
   - **Turnover** (category='turnover') → Traveling, Steal, Other
   - **Rebound** (category='rebound') → Offensive (defensive can be added later)
 - **Aggregation Logic:**
   - All makes/misses with subcategory in {Layup, Close 2, Far 2} = Field Goals (2-point attempts)
   - All makes/misses with subcategory "3-Pointer" = 3-Point attempts
+  - All makes/misses with subcategory "Free Throw" = Free Throw attempts
   - All turnovers aggregate as turnovers regardless of subcategory
   - All rebounds with subcategory "Offensive" = Offensive rebounds
 - **Behavior:**
@@ -98,11 +99,15 @@ Each page should also allow navigation back to the site's main navigation.
 Three view modes (toggled): **Edit**, **Stats**, **Log**
 
 #### Edit View (Default)
+- **Live Score Display:** Prominent display showing current score for both teams (e.g., "Team A: 45 - Team B: 38"). Score is calculated on the fly from make events, not stored in database. Updates automatically when events are added/undone.
+  - Free Throw make = 1 point
+  - Layup/Close 2/Far 2 make = 2 points
+  - 3-Pointer make = 3 points
 - **Team Switcher:** Toggle/segmented control at top to select which team (Team 1 or Team 2) the next event applies to. Must clearly show both team names.
 - **Period Selector:** Small, always-visible selector showing current period (1, 2, 3, 4, OT). Can only move forward, not backward. User can change before submitting events.
 - **Primary Action Buttons** (large, touch-friendly):
-  - **Make Shot** → inline expansion shows: Layup | Close 2 | Far 2 | 3-Pointer → select one → saves
-  - **Miss Shot** → inline expansion shows: Layup | Close 2 | Far 2 | 3-Pointer → select one → saves
+  - **Make Shot** → inline expansion shows: Layup | Close 2 | Far 2 | 3-Pointer | Free Throw → select one → saves
+  - **Miss Shot** → inline expansion shows: Layup | Close 2 | Far 2 | 3-Pointer | Free Throw → select one → saves
   - **Turnover** → inline expansion shows: Traveling | Steal | Other → select one → saves
   - **Offensive Rebound** → saves immediately (no subcategory needed)
 - **Undo Button:** Always visible (or visible when events exist). Clicking undo deletes the most recent event. Support unlimited undo levels.
@@ -126,10 +131,11 @@ Three view modes (toggled): **Edit**, **Stats**, **Log**
 - **Purpose:** Summary statistics for the current game
 - **Display:**
   - For each team, show totals:
-    - Made shots by type (Layup, Close 2, Far 2, 3-Pointer)
+    - Made shots by type (Layup, Close 2, Far 2, 3-Pointer, Free Throw)
     - Missed shots by type
-    - Field Goal % (2-pointers)
+    - Field Goal % (2-pointers: Layup, Close 2, Far 2)
     - 3-Point %
+    - Free Throw %
     - Total Points
     - Turnovers by type
     - Offensive Rebounds
@@ -242,6 +248,8 @@ Three view modes (toggled): **Edit**, **Stats**, **Log**
 - Events are never updated, only created or deleted (via undo)
 - Consider indexing on `game_id` and `team_id` for event queries
 - Consider soft-delete for games if we want to preserve history
+- Score is NOT stored in database - always calculated on the fly from make events
+  - This ensures score stays in sync with events and simplifies undo logic
 
 ### Mobile Performance
 - Minimize JavaScript bundle size
