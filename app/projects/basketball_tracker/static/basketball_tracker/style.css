@@ -544,10 +544,48 @@
     border-color: var(--bbt-primary-color);
 }
 
-/* Mobile Optimizations */
-@media (max-width: 375px) {
-    .bbt-action-box {
-        padding: var(--bbt-spacing-lg) var(--bbt-spacing-xs);
-        font-size: 0.85rem;
-    }
+/* Stats Collapsible Rows */
+.bbt-stats-detail {
+    display: none;
+    flex-direction: column;
+    background: rgba(0,0,0,0.02); /* Subtle tint for the expanded area */
+    border-radius: var(--bbt-border-radius-sm);
+    margin: 0 4px 4px 4px;
+}
+
+.bbt-stats-detail.active {
+    display: flex;
+}
+
+.bbt-stats-sub-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem 0.5rem 2rem;
+    font-size: 0.85rem;
+    color: var(--bbt-text-secondary);
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.bbt-stats-sub-row:last-child {
+    border-bottom: none;
+}
+
+.bbt-clickable-row {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.bbt-clickable-row:active {
+    background: var(--bbt-gray-medium);
+}
+
+.bbt-clickable-row::after {
+    content: '▼';
+    font-size: 0.6rem;
+    color: var(--bbt-text-light);
+    margin-left: 8px;
+}
+
+.bbt-clickable-row.open::after {
+    content: '▲';
 }

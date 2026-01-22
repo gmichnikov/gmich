@@ -263,67 +263,67 @@ This document outlines the detailed implementation plan for the Basketball Track
 
 ---
 
-## Phase 4: Stats & Log Views
+## [x] Phase 4: Stats & Log Views
 
-### [ ] 4.1 Stats View - Backend
-- [ ] Create helper function to calculate game stats
-  - [ ] Input: game_id
-  - [ ] Output: dict with stats for both teams
-  - [ ] For each team calculate:
-    - [ ] Makes by type (Layup, Close 2, Far 2, 3-Pointer, Free Throw)
-    - [ ] Misses by type
-    - [ ] Field Goal % (2-pointers only) - handle division by zero (if no attempts, return None or 0)
-    - [ ] 3-Point % - handle division by zero
-    - [ ] Free Throw % - handle division by zero
-    - [ ] Total Points
-    - [ ] Turnovers by type (Traveling, Steal, Other)
-    - [ ] Offensive Rebounds
-  - [ ] Ensure all percentage calculations check for zero attempts before dividing
-- [ ] Create API route `/game/<int:game_id>/stats` returning JSON stats
-  - [ ] Verify game belongs to current_user
-  - [ ] Call stats calculation function
-  - [ ] Return JSON
+### [x] 4.1 Stats View - Backend
+- [x] Create helper function to calculate game stats
+  - [x] Input: game_id
+  - [x] Output: dict with stats for both teams
+  - [x] For each team calculate:
+    - [x] Makes by type (Layup, Close 2, Far 2, 3-Pointer, Free Throw)
+    - [x] Misses by type
+    - [x] Field Goal % (2-pointers only) - handle division by zero (if no attempts, return None or 0)
+    - [x] 3-Point % - handle division by zero
+    - [x] Free Throw % - handle division by zero
+    - [x] Total Points
+    - [x] Turnovers by type (Traveling, Steal, Other)
+    - [x] Offensive Rebounds
+  - [x] Ensure all percentage calculations check for zero attempts before dividing
+- [x] Create API route `/game/<int:game_id>/stats` returning JSON stats
+  - [x] Verify game belongs to current_user
+  - [x] Call stats calculation function
+  - [x] Return JSON
 
-### [ ] 4.2 Stats View - Frontend
-- [ ] Add stats view section to game.html
-- [ ] Create HTML structure for displaying stats
-  - [ ] Two columns (one per team) or stacked for mobile
-  - [ ] Section for shooting (FG%, 3P%, FT%)
-  - [ ] Section for makes/misses breakdown
-  - [ ] Section for turnovers
-  - [ ] Section for rebounds
-  - [ ] Total points prominent at top
-  - [ ] Style with `.bbt-stats-view` class
-- [ ] Add JavaScript to fetch and display stats
-  - [ ] Fetch from `/game/<int:game_id>/stats` when view is shown
-  - [ ] Populate HTML with returned data
-  - [ ] Format percentages nicely (e.g., "45.5%" or "5/11")
-  - [ ] Handle null/zero percentages: show "-" or "0/0" instead of "NaN%" or error
-- [ ] Test: Add events, switch to stats view, verify calculations correct
-- [ ] Test: View stats with no events (all percentages should show gracefully)
+### [x] 4.2 Stats View - Frontend
+- [x] Add stats view section to game.html
+- [x] Create HTML structure for displaying stats
+  - [x] Two columns (one per team) or stacked for mobile
+  - [x] Section for shooting (FG%, 3P%, FT%)
+  - [x] Section for makes/misses breakdown
+  - [x] Section for turnovers
+  - [x] Section for rebounds
+  - [x] Total points prominent at top
+  - [x] Style with `.bbt-stats-view` class
+- [x] Add JavaScript to fetch and display stats
+  - [x] Fetch from `/game/<int:game_id>/stats` when view is shown
+  - [x] Populate HTML with returned data
+  - [x] Format percentages nicely (e.g., "45.5%" or "5/11")
+  - [x] Handle null/zero percentages: show "-" or "0/0" instead of "NaN%" or error
+- [x] Test: Add events, switch to stats view, verify calculations correct
+- [x] Test: View stats with no events (all percentages should show gracefully)
 
-### [ ] 4.3 Log View - Frontend
-- [ ] Add log view section to game.html
-- [ ] Create HTML structure for full event log
-  - [ ] Table or list showing all events (not just 10)
-  - [ ] Columns: Team, Event, Period, Time
-  - [ ] Newest first (reverse chronological)
-  - [ ] Style with `.bbt-log-view` class
-- [ ] Add JavaScript to display all events
-  - [ ] Use events already loaded from page/API
-  - [ ] Render all events (not just recent 10)
-  - [ ] Format period as "1st", "2nd", "3rd", "4th", "OT"
-  - [ ] Format timestamp nicely
-- [ ] Test: Add many events, switch to log view, verify all show correctly
+### [x] 4.3 Log View - Frontend
+- [x] Add log view section to game.html
+- [x] Create HTML structure for full event log
+  - [x] Table or list showing all events (not just 10)
+  - [x] Columns: Team, Event, Period, Time
+  - [x] Newest first (reverse chronological)
+  - [x] Style with `.bbt-log-view` class
+- [x] Add JavaScript to display all events
+  - [x] Use events already loaded from page/API
+  - [x] Render all events (not just recent 10)
+  - [x] Format period as "1st", "2nd", "3rd", "4th", "OT"
+  - [x] Format timestamp nicely
+- [x] Test: Add many events, switch to log view, verify all show correctly
 
-### [ ] 4.4 View Toggling - Polish
-- [ ] Ensure view toggle buttons are styled consistently
-  - [ ] Active view highlighted
-  - [ ] Inactive views clickable
-  - [ ] Mobile-friendly toggle (tabs or buttons)
-- [ ] Add smooth transitions between views (optional fade/slide)
-- [ ] Ensure stats/log refresh when switching to their views
-- [ ] Test: Toggle between all three views multiple times
+### [x] 4.4 View Toggling - Polish
+- [x] Ensure view toggle buttons are styled consistently
+  - [x] Active view highlighted
+  - [x] Inactive views clickable
+  - [x] Mobile-friendly toggle (tabs or buttons)
+- [x] Add smooth transitions between views (optional fade/slide)
+- [x] Ensure stats/log refresh when switching to their views
+- [x] Test: Toggle between all three views multiple times
 
 ---
 

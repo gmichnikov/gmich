@@ -234,21 +234,81 @@ def get_events(game_id):
     })
 
 
-@basketball_tracker.route('/game/<int:game_id>/period', methods=['POST'])
+def calculate_game_stats(game):
+    """Helper to calculate stats for both teams in a game"""
+    stats = {
+        'team1': {'id': game.team1_id, 'name': game.team1.name, 'points': 0, 'fgm': 0, 'fga': 0, 'tp_m': 0, 'tp_a': 0, 'ftm': 0, 'fta': 0, 'to': 0, 'reb': 0, 'to_travel': 0, 'to_steal': 0, 'to_other': 0, 'shot_layup_m': 0, 'shot_layup_a': 0, 'shot_close2_m': 0, 'shot_close2_a': 0, 'shot_far2_m': 0, 'shot_far2_a': 0},
+        'team2': {'id': game.team2_id, 'name': game.team2.name, 'points': 0, 'fgm': 0, 'fga': 0, 'tp_m': 0, 'tp_a': 0, 'ftm': 0, 'fta': 0, 'to': 0, 'reb': 0, 'to_travel': 0, 'to_steal': 0, 'to_other': 0, 'shot_layup_m': 0, 'shot_layup_a': 0, 'shot_close2_m': 0, 'shot_close2_a': 0, 'shot_far2_m': 0, 'shot_far2_a': 0}
+    }
+    
+    events = BasketballEvent.query.filter_by(game_id=game.id).all()
+    
+    for e in events:
+        team_key = 'team1' if e.team_id == game.team1_id else 'team2'
+        t = stats[team_key]
+        
+        if e.event_category == 'make':
+            if e.event_subcategory == 'Free Throw':
+                t['points'] += 1
+                t['ftm'] += 1
+                t['fta'] += 1
+            elif e.event_subcategory == '3-Pointer':
+                t['points'] += 3
+                t['tp_m'] += 1
+                t['tp_a'] += 1
+            else:
+                # 2-pointers
+                t['points'] += 2
+                t['fgm'] += 1
+                t['fga'] += 1
+                if e.event_subcategory == 'Layup': 
+                    t['shot_layup_m'] += 1
+                    t['shot_layup_a'] += 1
+                elif e.event_subcategory == 'Close 2': 
+                    t['shot_close2_m'] += 1
+                    t['shot_close2_a'] += 1
+                elif e.event_subcategory == 'Far 2': 
+                    t['shot_far2_m'] += 1
+                    t['shot_far2_a'] += 1
+                
+        elif e.event_category == 'miss':
+            if e.event_subcategory == 'Free Throw':
+                t['fta'] += 1
+            elif e.event_subcategory == '3-Pointer':
+                t['tp_a'] += 1
+            else:
+                t['fga'] += 1
+                if e.event_subcategory == 'Layup': t['shot_layup_a'] += 1
+                elif e.event_subcategory == 'Close 2': t['shot_close2_a'] += 1
+                elif e.event_subcategory == 'Far 2': t['shot_far2_a'] += 1
+                
+        elif e.event_category == 'turnover':
+            t['to'] += 1
+            if e.event_subcategory == 'Traveling': t['to_travel'] += 1
+            elif e.event_subcategory == 'Steal': t['to_steal'] += 1
+            else: t['to_other'] += 1
+            
+        elif e.event_category == 'rebound':
+            t['reb'] += 1
+
+    # Calculate percentages with division-by-zero protection
+    for key in ['team1', 'team2']:
+        t = stats[key]
+        t['fg_pct'] = (t['fgm'] / t['fga'] * 100) if t['fga'] > 0 else None
+        t['tp_pct'] = (t['tp_m'] / t['tp_a'] * 100) if t['tp_a'] > 0 else None
+        t['ft_pct'] = (t['ftm'] / t['fta'] * 100) if t['fta'] > 0 else None
+        
+    return stats
+
+
+@basketball_tracker.route('/game/<int:game_id>/stats')
 @login_required
-def update_period(game_id):
-    """Update current game period"""
+def get_game_stats(game_id):
+    """API endpoint for game statistics"""
     game_obj = BasketballGame.query.get_or_404(game_id)
     if game_obj.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
-    
-    data = request.get_json()
-    new_period = data.get('period')
-    
-    if new_period is None:
-        return jsonify({'error': 'No period provided'}), 400
-         
-    game_obj.current_period = new_period
-    db.session.commit()
-    
-    return jsonify({'success': True, 'period': game_obj.current_period})
+        
+    stats = calculate_game_stats(game_obj)
+    return jsonify(stats)
+

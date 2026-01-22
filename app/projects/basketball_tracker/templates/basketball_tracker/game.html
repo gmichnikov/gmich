@@ -455,68 +455,74 @@
         
         statsContent.innerHTML = '<p class="bbt-text-center bbt-p-1">Loading stats...</p>';
         
-        const calculateTeamStats = (teamId) => {
-            const teamEvents = events.filter(e => e.team_id === teamId);
-            const stats = {
-                points: 0,
-                fgm: 0, fga: 0,
-                tp_m: 0, tp_a: 0,
-                ftm: 0, fta: 0,
-                to: 0, reb: 0
-            };
+        try {
+            const response = await fetch(`/basketball-tracker/game/${gameId}/stats`);
+            const data = await response.json();
             
-            teamEvents.forEach(e => {
-                if (e.category === 'make') {
-                    if (e.subcategory === 'Free Throw') {
-                        stats.points += 1; stats.ftm++; stats.fta++;
-                    } else if (e.subcategory === '3-Pointer') {
-                        stats.points += 3; stats.tp_m++; stats.tp_a++;
-                    } else {
-                        stats.points += 2; stats.fgm++; stats.fga++;
-                    }
-                } else if (e.category === 'miss') {
-                    if (e.subcategory === 'Free Throw') stats.fta++;
-                    else if (e.subcategory === '3-Pointer') stats.tp_a++;
-                    else stats.fga++;
-                } else if (e.category === 'turnover') {
-                    stats.to++;
-                } else if (e.category === 'rebound') {
-                    stats.reb++;
-                }
-            });
+            const formatPct = (m, a, pct) => a === 0 ? "0/0 (-)" : `${m}/${a} (${Math.round(pct)}%)`;
             
-            return stats;
-        };
-
-        const stats1 = calculateTeamStats(team1Id);
-        const stats2 = calculateTeamStats(team2Id);
-
-        const formatPercent = (m, a) => a === 0 ? "0/0 (-)" : `${m}/${a} (${Math.round(m/a*100)}%)`;
-
-        statsContent.innerHTML = `
-            <div class="bbt-card">
-                <div class="bbt-card-title">${team1Name} Stats</div>
-                <div class="bbt-list">
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Points</span> <strong>${stats1.points}</strong></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Field Goals</span> <span>${formatPercent(stats1.fgm, stats1.fga)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>3-Pointers</span> <span>${formatPercent(stats1.tp_m, stats1.tp_a)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Free Throws</span> <span>${formatPercent(stats1.ftm, stats1.fta)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Turnovers</span> <span>${stats1.to}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Off Rebounds</span> <span>${stats1.reb}</span></div>
+            const renderTeamStats = (t, teamNum) => `
+                <div class="bbt-card">
+                    <div class="bbt-card-title">${t.name} Statistics</div>
+                    <div class="bbt-list">
+                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem; background: var(--bbt-gray-light);">
+                            <span>Total Points</span> <strong>${t.points}</strong>
+                        </div>
+                        <div class="bbt-list-item bbt-clickable-row" onclick="toggleStatsDetail('fg-${teamNum}', this)" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
+                            <span>Field Goals (2pt)</span> <span>${formatPct(t.fgm, t.fga, t.fg_pct)}</span>
+                        </div>
+                        <div id="fg-${teamNum}" class="bbt-stats-detail">
+                            <div class="bbt-stats-sub-row">
+                                <span>• Layups</span> <span>${t.shot_layup_m}/${t.shot_layup_a}</span>
+                            </div>
+                            <div class="bbt-stats-sub-row">
+                                <span>• Close 2s</span> <span>${t.shot_close2_m}/${t.shot_close2_a}</span>
+                            </div>
+                            <div class="bbt-stats-sub-row">
+                                <span>• Far 2s</span> <span>${t.shot_far2_m}/${t.shot_far2_a}</span>
+                            </div>
+                        </div>
+                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
+                            <span>3-Pointers</span> <span>${formatPct(t.tp_m, t.tp_a, t.tp_pct)}</span>
+                        </div>
+                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
+                            <span>Free Throws</span> <span>${formatPct(t.ftm, t.fta, t.ft_pct)}</span>
+                        </div>
+                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
+                            <span>Off Rebounds</span> <span>${t.reb}</span>
+                        </div>
+                        <div class="bbt-list-item bbt-clickable-row" onclick="toggleStatsDetail('to-${teamNum}', this)" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
+                            <span>Turnovers</span> <span>${t.to}</span>
+                        </div>
+                        <div id="to-${teamNum}" class="bbt-stats-detail">
+                            <div class="bbt-stats-sub-row">
+                                <span>• Traveling</span> <span>${t.to_travel}</span>
+                            </div>
+                            <div class="bbt-stats-sub-row">
+                                <span>• Steals</span> <span>${t.to_steal}</span>
+                            </div>
+                            <div class="bbt-stats-sub-row">
+                                <span>• Other</span> <span>${t.to_other}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="bbt-card">
-                <div class="bbt-card-title">${team2Name} Stats</div>
-                <div class="bbt-list">
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Points</span> <strong>${stats2.points}</strong></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Field Goals</span> <span>${formatPercent(stats2.fgm, stats2.fga)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>3-Pointers</span> <span>${formatPercent(stats2.tp_m, stats2.tp_a)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Free Throws</span> <span>${formatPercent(stats2.ftm, stats2.fta)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Turnovers</span> <span>${stats2.to}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Off Rebounds</span> <span>${stats2.reb}</span></div>
-                </div>
-            </div>
-        `;
+            `;
+            
+            statsContent.innerHTML = renderTeamStats(data.team1, 1) + renderTeamStats(data.team2, 2);
+            
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            statsContent.innerHTML = '<p class="bbt-text-center bbt-p-1 bbt-button-danger">Error loading statistics.</p>';
+        }
+    }
+
+    function toggleStatsDetail(id, rowElem) {
+        const detail = document.getElementById(id);
+        const isOpen = detail.classList.contains('active');
+        
+        detail.classList.toggle('active');
+        rowElem.classList.toggle('open');
     }
 </script>
 {% endblock %}
