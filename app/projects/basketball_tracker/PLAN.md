@@ -107,6 +107,14 @@ This document outlines the detailed implementation plan for the Basketball Track
 
 ## Phase 3: Event Tracking (Edit View)
 
+**Design Reference:** Use `game-ui-option-c.html` as the UI design template. Key features:
+- Sticky header with score always visible
+- Clickable period badge in header that opens modal (not inline period strip)
+- Compact action buttons (2x2 grid)
+- Shot drawer for shot type selection
+- Fixed bottom bar with undo button
+- Mobile-first, minimal scrolling design
+
 ### [ ] 3.1 Event Tracking - Backend
 - [ ] Create POST route `/game/<int:game_id>/event` to add event
   - [ ] Accept JSON: team_id, period, event_category, event_subcategory
@@ -135,17 +143,25 @@ This document outlines the detailed implementation plan for the Basketball Track
 - [ ] Add JavaScript to track selected team (store in variable)
 - [ ] Test: Click between teams, verify selection updates visually
 
-### [ ] 3.3 Edit View - Period Selector
-- [ ] Add period selector UI to edit view section
+### [ ] 3.3 Edit View - Period Selector (Modal)
+- [ ] Add clickable period badge in sticky header
   - [ ] Display current period (1st, 2nd, 3rd, 4th, or OT)
-  - [ ] Small but visible selector (dropdown or buttons)
+  - [ ] Add down arrow indicator (▼) to show it's clickable
+  - [ ] Style with `.bbt-period-badge` class
+- [ ] Create period selection modal
+  - [ ] Modal overlay with centered content
+  - [ ] List of period options as large buttons (1st, 2nd, 3rd, 4th, Overtime)
+  - [ ] Show current period as highlighted/active
+  - [ ] Disable past periods (grayed out, not clickable)
   - [ ] Only allow forward movement (1→2→3→4→OT)
-  - [ ] Style with `.bbt-period-selector` class
+  - [ ] Close modal on selection or cancel
+  - [ ] Style with `.bbt-period-modal` classes
 - [ ] Add JavaScript to track current period
 - [ ] Add JavaScript to prevent backward period changes
+- [ ] Add JavaScript to open/close modal (click outside or close button)
 - [ ] Update period in game model when changed (AJAX call)
 - [ ] Create POST route `/game/<int:game_id>/period` to update current_period
-- [ ] Test: Change period forward, verify UI updates, verify persistence
+- [ ] Test: Click period badge, select new period, verify UI updates, verify persistence
 
 ### [ ] 3.4 Edit View - Primary Action Buttons
 - [ ] Create HTML structure for four primary buttons
@@ -184,12 +200,13 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [ ] Update live score immediately
 - [ ] Test: Click each button combination, verify events save to database
 
-### [ ] 3.7 Edit View - Live Score Display
-- [ ] Add score display UI at top of edit view
-  - [ ] Show both team names and scores
-  - [ ] Format: "Team A: 45 - Team B: 38"
+### [ ] 3.7 Edit View - Live Score Display (Sticky Header)
+- [ ] Add sticky header with score display (remains at top when scrolling)
+  - [ ] Show both team names and scores in compact format
+  - [ ] Display period badge (clickable) in center
+  - [ ] Format: Team names above scores, period in center
   - [ ] Prominent, easy to read
-  - [ ] Style with `.bbt-score-display` class
+  - [ ] Style with `.bbt-score-header` class
 - [ ] Add JavaScript function to calculate score
   - [ ] Iterate through events where category='make'
   - [ ] Free Throw = 1 point
@@ -218,12 +235,14 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [ ] Event is undone (remove from list)
 - [ ] Test: Add multiple events, verify log shows newest first
 
-### [ ] 3.9 Edit View - Undo Button
-- [ ] Add undo button to edit view
-  - [ ] Position prominently but not in the way
-  - [ ] Label clearly ("Undo Last")
-  - [ ] Style with `.bbt-undo-btn` class
+### [ ] 3.9 Edit View - Undo Button (Fixed Bottom Bar)
+- [ ] Add fixed bottom bar with undo button
+  - [ ] Position fixed at bottom of screen (always visible)
+  - [ ] Large rounded button centered in bar
+  - [ ] Label clearly ("↶ Undo" or "↶ Undo Last")
+  - [ ] Style with `.bbt-undo-fab` class (floating action button style)
   - [ ] Disable when no events exist
+  - [ ] Ensure it doesn't overlap with content (add bottom padding to view)
 - [ ] Add JavaScript undo handler
   - [ ] DELETE to `/game/<int:game_id>/event/undo`
   - [ ] On success: remove event from log, recalculate score

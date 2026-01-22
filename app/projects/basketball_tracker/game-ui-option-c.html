@@ -56,6 +56,12 @@
             background: rgba(255,255,255,0.2);
             padding: 0.35rem 0.75rem;
             border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .period-compact:active {
+            background: rgba(255,255,255,0.3);
         }
         
         .quick-controls {
@@ -115,39 +121,86 @@
             display: block;
         }
         
-        .period-strip {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background: white;
-            border-radius: 8px;
-            overflow-x: auto;
+        .period-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
         }
         
-        .period-chip {
-            padding: 0.5rem 1rem;
+        .period-modal.active {
+            display: flex;
+        }
+        
+        .period-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 300px;
+            width: 90%;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .period-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .period-option {
+            padding: 1rem;
             border: 2px solid #e0e0e0;
             background: white;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            border-radius: 8px;
+            font-size: 1rem;
             cursor: pointer;
-            white-space: nowrap;
-            min-width: 60px;
             text-align: center;
             font-weight: 600;
+            transition: all 0.2s;
         }
         
-        .period-chip.active {
+        .period-option.active {
             background: #1e3c72;
             color: white;
             border-color: #1e3c72;
         }
         
-        .period-chip.past {
+        .period-option.past {
             background: #f5f5f5;
             color: #999;
             cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .period-option:not(.past):not(.active):active {
+            transform: scale(0.98);
+            background: #f8f9fa;
+        }
+        
+        .modal-close {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
         }
         
         .action-row {
@@ -338,7 +391,7 @@
                 <div class="team-name-compact">Warriors</div>
                 <div class="score-compact">45</div>
             </div>
-            <div class="period-compact">2nd</div>
+            <div class="period-compact" onclick="openPeriodModal()">2nd ▼</div>
             <div class="team-score-compact">
                 <div class="team-name-compact">Lakers</div>
                 <div class="score-compact">38</div>
@@ -357,16 +410,23 @@
         </div>
     </div>
     
+    <!-- PERIOD SELECTION MODAL -->
+    <div id="period-modal" class="period-modal" onclick="closePeriodModal(event)">
+        <div class="period-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">Select Period</div>
+            <div class="period-options">
+                <button class="period-option past">1st Period</button>
+                <button class="period-option active">2nd Period</button>
+                <button class="period-option">3rd Period</button>
+                <button class="period-option">4th Period</button>
+                <button class="period-option">Overtime</button>
+            </div>
+            <button class="modal-close" onclick="closePeriodModal()">Close</button>
+        </div>
+    </div>
+    
     <!-- ACTION VIEW -->
     <div id="action-view" class="view active">
-        <div class="period-strip">
-            <span class="period-chip past">1st</span>
-            <span class="period-chip active">2nd</span>
-            <span class="period-chip">3rd</span>
-            <span class="period-chip">4th</span>
-            <span class="period-chip">OT</span>
-        </div>
-        
         <div class="action-row">
             <button class="action-box green" onclick="toggleDrawer('make')">
                 <div>✓</div>
@@ -526,6 +586,16 @@
             
             if (!isActive) {
                 elem.classList.add('active');
+            }
+        }
+        
+        function openPeriodModal() {
+            document.getElementById('period-modal').classList.add('active');
+        }
+        
+        function closePeriodModal(event) {
+            if (!event || event.target.id === 'period-modal') {
+                document.getElementById('period-modal').classList.remove('active');
             }
         }
     </script>
