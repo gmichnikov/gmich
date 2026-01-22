@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tracker - Option C: Compact Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .score-bar {
+            display: flex;
+            padding: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        .team-score-compact {
+            text-align: center;
+        }
+        
+        .team-name-compact {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+        
+        .score-compact {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .period-compact {
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+        }
+        
+        .quick-controls {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .team-toggle {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-right: 1px solid #e0e0e0;
+            font-weight: 500;
+        }
+        
+        .team-toggle:last-child {
+            border-right: none;
+        }
+        
+        .team-toggle.active {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        
+        .nav-tab.active {
+            border-bottom-color: #1e3c72;
+            color: #1e3c72;
+        }
+        
+        .view {
+            display: none;
+            padding: 1rem;
+            padding-bottom: 80px;
+        }
+        
+        .view.active {
+            display: block;
+        }
+        
+        .period-strip {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .period-chip {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .period-chip.active {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+        
+        .period-chip.past {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .action-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .action-box {
+            flex: 1;
+            padding: 1.25rem 0.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .action-box.green {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .action-box.red {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .action-box.orange {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .action-box.blue {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .shot-drawer {
+            display: none;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .shot-drawer.active {
+            display: block;
+        }
+        
+        .drawer-title {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .shot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .shot-option {
+            padding: 0.75rem;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .shot-option:active {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .undo-fab {
+            padding: 1rem 2.5rem;
+            background: #607d8b;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .event-feed {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .feed-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .feed-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .feed-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1e3c72;
+            margin-right: 0.75rem;
+        }
+        
+        .feed-content {
+            flex: 1;
+        }
+        
+        .feed-meta {
+            font-size: 0.75rem;
+            color: #999;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="sticky-header">
+        <div class="score-bar">
+            <div class="team-score-compact">
+                <div class="team-name-compact">Warriors</div>
+                <div class="score-compact">45</div>
+            </div>
+            <div class="period-compact">2nd</div>
+            <div class="team-score-compact">
+                <div class="team-name-compact">Lakers</div>
+                <div class="score-compact">38</div>
+            </div>
+        </div>
+        
+        <div class="quick-controls">
+            <button class="team-toggle active">Warriors</button>
+            <button class="team-toggle">Lakers</button>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchView('action')">Track</button>
+            <button class="nav-tab" onclick="switchView('stats')">Stats</button>
+            <button class="nav-tab" onclick="switchView('log')">Log</button>
+        </div>
+    </div>
+    
+    <!-- ACTION VIEW -->
+    <div id="action-view" class="view active">
+        <div class="period-strip">
+            <span class="period-chip past">1st</span>
+            <span class="period-chip active">2nd</span>
+            <span class="period-chip">3rd</span>
+            <span class="period-chip">4th</span>
+            <span class="period-chip">OT</span>
+        </div>
+        
+        <div class="action-row">
+            <button class="action-box green" onclick="toggleDrawer('make')">
+                <div>✓</div>
+                <div>Make</div>
+            </button>
+            <button class="action-box red" onclick="toggleDrawer('miss')">
+                <div>✗</div>
+                <div>Miss</div>
+            </button>
+        </div>
+        
+        <div id="drawer-make" class="shot-drawer">
+            <div class="drawer-title">Select shot type:</div>
+            <div class="shot-grid">
+                <button class="shot-option">Layup</button>
+                <button class="shot-option">Close 2</button>
+                <button class="shot-option">Far 2</button>
+                <button class="shot-option">3-Pointer</button>
+                <button class="shot-option">Free Throw</button>
+            </div>
+        </div>
+        
+        <div class="action-row">
+            <button class="action-box orange">
+                <div>⚠</div>
+                <div>Turnover</div>
+            </button>
+            <button class="action-box blue">
+                <div>↑</div>
+                <div>Off Reb</div>
+            </button>
+        </div>
+        
+        <div class="event-feed">
+            <div class="feed-title">Recent Activity</div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Warriors</strong> Make 3-Pointer</div>
+                    <div class="feed-meta">2nd Period</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Lakers</strong> Miss Layup</div>
+                    <div class="feed-meta">2nd Period</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Warriors</strong> Turnover</div>
+                    <div class="feed-meta">2nd Period</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- STATS VIEW -->
+    <div id="stats-view" class="view">
+        <div class="stats-card">
+            <div class="stats-header">Warriors</div>
+            <div class="stat-item">
+                <span class="stat-label">Total Points</span>
+                <span class="stat-value">45</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Field Goals</span>
+                <span class="stat-value">15/28 (53.6%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">3-Pointers</span>
+                <span class="stat-value">5/12 (41.7%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Free Throws</span>
+                <span class="stat-value">10/12 (83.3%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Turnovers</span>
+                <span class="stat-value">6</span>
+            </div>
+        </div>
+        
+        <div class="stats-card">
+            <div class="stats-header">Lakers</div>
+            <div class="stat-item">
+                <span class="stat-label">Total Points</span>
+                <span class="stat-value">38</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Field Goals</span>
+                <span class="stat-value">12/30 (40.0%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">3-Pointers</span>
+                <span class="stat-value">4/15 (26.7%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Free Throws</span>
+                <span class="stat-value">10/14 (71.4%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Turnovers</span>
+                <span class="stat-value">8</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOG VIEW -->
+    <div id="log-view" class="view">
+        <div class="event-feed">
+            <div class="feed-title">Full Event Log</div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Warriors</strong> Make 3-Pointer</div>
+                    <div class="feed-meta">2nd Period • 3:45 PM</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Lakers</strong> Miss Layup</div>
+                    <div class="feed-meta">2nd Period • 3:44 PM</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-icon"></div>
+                <div class="feed-content">
+                    <div><strong>Warriors</strong> Turnover</div>
+                    <div class="feed-meta">2nd Period • 3:43 PM</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-bar">
+        <button class="undo-fab">↶ Undo</button>
+    </div>
+    
+    <script>
+        function switchView(view) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(view + '-view').classList.add('active');
+        }
+        
+        function toggleDrawer(type) {
+            const elem = document.getElementById('drawer-' + type);
+            const isActive = elem.classList.contains('active');
+            
+            document.querySelectorAll('.shot-drawer').forEach(d => d.classList.remove('active'));
+            
+            if (!isActive) {
+                elem.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
