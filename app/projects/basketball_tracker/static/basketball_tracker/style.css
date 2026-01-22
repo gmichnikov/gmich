@@ -1,9 +1,235 @@
 /* Basketball Tracker Styles - All classes prefixed with bbt- */
 
-/* Mobile-first approach */
-.bbt-container {
-    max-width: 100%;
-    padding: 1rem;
+/* ===== CSS Variables ===== */
+:root {
+    --bbt-primary-color: #1e3c72;
+    --bbt-primary-dark: #152a52;
+    --bbt-secondary-color: #2a5298;
+    --bbt-success-color: #2ecc71;
+    --bbt-danger-color: #e74c3c;
+    --bbt-warning-color: #ff9800;
+    --bbt-info-color: #2196f3;
+    --bbt-gray-light: #f5f5f5;
+    --bbt-gray-medium: #e0e0e0;
+    --bbt-gray-dark: #95a5a6;
+    --bbt-text-primary: #2c3e50;
+    --bbt-text-secondary: #666;
+    --bbt-text-light: #999;
+    
+    --bbt-spacing-xs: 0.25rem;
+    --bbt-spacing-sm: 0.5rem;
+    --bbt-spacing-md: 0.75rem;
+    --bbt-spacing-lg: 1rem;
+    --bbt-spacing-xl: 1.5rem;
+    
+    --bbt-border-radius-sm: 4px;
+    --bbt-border-radius-md: 8px;
+    --bbt-border-radius-lg: 12px;
+    --bbt-border-radius-xl: 20px;
+    
+    --bbt-button-height: 44px;
+    --bbt-button-height-lg: 56px;
+    
+    --bbt-font-size-sm: 0.85rem;
+    --bbt-font-size-base: 1rem;
+    --bbt-font-size-lg: 1.1rem;
 }
 
-/* Placeholder for basketball tracker styles */
+/* ===== Global Resets ===== */
+.bbt-container * {
+    box-sizing: border-box;
+}
+
+/* ===== Base Container ===== */
+.bbt-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fafafa;
+    min-height: 100vh;
+}
+
+/* ===== Navigation ===== */
+.bbt-nav {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--bbt-gray-medium);
+    gap: var(--bbt-spacing-sm);
+    padding: var(--bbt-spacing-sm);
+}
+
+.bbt-nav-link {
+    flex: 1;
+    padding: var(--bbt-spacing-md);
+    border: none;
+    background: white;
+    border-radius: var(--bbt-border-radius-md);
+    font-size: var(--bbt-font-size-base);
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--bbt-text-primary);
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s;
+    min-height: var(--bbt-button-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bbt-nav-link:hover,
+.bbt-nav-link.active {
+    background: var(--bbt-gray-light);
+}
+
+/* ===== Buttons ===== */
+.bbt-button {
+    min-height: var(--bbt-button-height);
+    padding: var(--bbt-spacing-md) var(--bbt-spacing-lg);
+    border: none;
+    border-radius: var(--bbt-border-radius-md);
+    font-size: var(--bbt-font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bbt-primary-color);
+    color: white;
+}
+
+.bbt-button:active {
+    transform: scale(0.98);
+}
+
+.bbt-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.bbt-button-success {
+    background: var(--bbt-success-color);
+}
+
+.bbt-button-danger {
+    background: var(--bbt-danger-color);
+}
+
+.bbt-button-warning {
+    background: var(--bbt-warning-color);
+}
+
+.bbt-button-info {
+    background: var(--bbt-info-color);
+}
+
+.bbt-button-secondary {
+    background: var(--bbt-gray-dark);
+}
+
+.bbt-button-outline {
+    background: white;
+    border: 2px solid var(--bbt-gray-medium);
+    color: var(--bbt-text-primary);
+}
+
+/* ===== Cards ===== */
+.bbt-card {
+    background: white;
+    border-radius: var(--bbt-border-radius-md);
+    padding: var(--bbt-spacing-lg);
+    margin-bottom: var(--bbt-spacing-lg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bbt-card-title {
+    font-size: var(--bbt-font-size-sm);
+    color: var(--bbt-text-secondary);
+    margin-bottom: var(--bbt-spacing-md);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ===== Forms ===== */
+.bbt-form-group {
+    margin-bottom: var(--bbt-spacing-lg);
+}
+
+.bbt-label {
+    display: block;
+    margin-bottom: var(--bbt-spacing-sm);
+    font-weight: 600;
+    color: var(--bbt-text-primary);
+    font-size: var(--bbt-font-size-base);
+}
+
+.bbt-input,
+.bbt-select {
+    width: 100%;
+    min-height: var(--bbt-button-height);
+    padding: var(--bbt-spacing-md);
+    border: 2px solid var(--bbt-gray-medium);
+    border-radius: var(--bbt-border-radius-md);
+    font-size: var(--bbt-font-size-base);
+    font-family: inherit;
+}
+
+.bbt-input:focus,
+.bbt-select:focus {
+    outline: none;
+    border-color: var(--bbt-primary-color);
+}
+
+/* ===== Lists ===== */
+.bbt-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bbt-list-item {
+    background: white;
+    border-radius: var(--bbt-border-radius-md);
+    padding: var(--bbt-spacing-lg);
+    margin-bottom: var(--bbt-spacing-sm);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Utility Classes ===== */
+.bbt-text-center {
+    text-align: center;
+}
+
+.bbt-mt-1 {
+    margin-top: var(--bbt-spacing-lg);
+}
+
+.bbt-mb-1 {
+    margin-bottom: var(--bbt-spacing-lg);
+}
+
+.bbt-p-1 {
+    padding: var(--bbt-spacing-lg);
+}
+
+/* ===== Empty States ===== */
+.bbt-empty-state {
+    text-align: center;
+    padding: var(--bbt-spacing-xl);
+    color: var(--bbt-text-secondary);
+}
+
+.bbt-empty-state-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: var(--bbt-spacing-lg);
+}
+
+/* ===== Mobile Optimizations ===== */
+@media (max-width: 375px) {
+    .bbt-container {
+        padding: 0;
+    }
+    
+    .bbt-card {
+        border-radius: 0;
+    }
+}

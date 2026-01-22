@@ -2,9 +2,76 @@
 
 {% block title %}Basketball Tracker - Teams{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_tracker.static', filename='basketball_tracker/style.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="bbt-container">
-    <h1>Basketball Tracker - Teams</h1>
-    <!-- To be implemented -->
+    <div class="bbt-nav">
+        <a href="{{ url_for('basketball_tracker.index') }}" class="bbt-nav-link">Games</a>
+        <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-nav-link active">Teams</a>
+    </div>
+    
+    <div class="bbt-p-1">
+        <h1 style="margin-bottom: 1.5rem;">Manage Teams</h1>
+        
+        <!-- Add Team Form -->
+        <div class="bbt-card">
+            <div class="bbt-card-title">Add New Team</div>
+            <form method="POST" action="{{ url_for('basketball_tracker.create_team') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="bbt-form-group">
+                    <label for="team_name" class="bbt-label">Team Name</label>
+                    <input type="text" 
+                           id="team_name" 
+                           name="team_name" 
+                           class="bbt-input" 
+                           placeholder="Enter team name"
+                           required
+                           maxlength="100">
+                </div>
+                <button type="submit" class="bbt-button" style="width: 100%;">
+                    Add Team
+                </button>
+            </form>
+        </div>
+        
+        <!-- Teams List -->
+        <div class="bbt-card">
+            <div class="bbt-card-title">Your Teams</div>
+            
+            {% if teams %}
+                <ul class="bbt-list">
+                    {% for team in teams %}
+                    <li class="bbt-list-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="font-size: 1.1rem;">{{ team.name }}</strong>
+                            <div style="font-size: 0.85rem; color: var(--bbt-text-secondary); margin-top: 0.25rem;">
+                                Created {{ team.created_at.strftime('%b %d, %Y') }}
+                            </div>
+                        </div>
+                        <form method="POST" 
+                              action="{{ url_for('basketball_tracker.delete_team', team_id=team.id) }}" 
+                              onsubmit="return confirm('Are you sure you want to delete {{ team.name }}? This cannot be undone.');"
+                              style="margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" 
+                                    class="bbt-button bbt-button-danger" 
+                                    style="min-height: 36px; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                Delete
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="bbt-empty-state">
+                    <div class="bbt-empty-state-icon">🏀</div>
+                    <p>No teams yet. Create your first team to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

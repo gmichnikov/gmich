@@ -2,9 +2,109 @@
 
 {% block title %}Basketball Tracker - Games{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_tracker.static', filename='basketball_tracker/style.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="bbt-container">
-    <h1>Basketball Tracker - Games</h1>
-    <!-- To be implemented -->
+    <div class="bbt-nav">
+        <a href="{{ url_for('basketball_tracker.index') }}" class="bbt-nav-link active">Games</a>
+        <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-nav-link">Teams</a>
+    </div>
+    
+    <div class="bbt-p-1">
+        <h1 style="margin-bottom: 1.5rem;">Basketball Tracker</h1>
+        
+        <!-- Create Game Section -->
+        <div class="bbt-card">
+            <div class="bbt-card-title">Create New Game</div>
+            
+            {% if teams|length < 2 %}
+                <div class="bbt-empty-state" style="padding: 1rem;">
+                    <p>You need at least two teams to create a game.</p>
+                    <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-button bbt-mt-1" style="display: inline-block; text-decoration: none;">Manage Teams</a>
+                </div>
+            {% else %}
+                <form method="POST" action="{{ url_for('basketball_tracker.create_game') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="bbt-form-group">
+                        <label for="team1_id" class="bbt-label">Team 1 (Home)</label>
+                        <select id="team1_id" name="team1_id" class="bbt-select" required>
+                            <option value="">Select Team 1</option>
+                            {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="bbt-form-group">
+                        <label for="team2_id" class="bbt-label">Team 2 (Away)</label>
+                        <select id="team2_id" name="team2_id" class="bbt-select" required>
+                            <option value="">Select Team 2</option>
+                            {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="bbt-form-group">
+                        <label for="game_date" class="bbt-label">Game Date</label>
+                        <input type="date" id="game_date" name="game_date" class="bbt-input" required value="{{ today_date if today_date else '' }}">
+                    </div>
+                    
+                    <button type="submit" class="bbt-button" style="width: 100%;">Create Game</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <!-- Games List -->
+        <div class="bbt-card">
+            <div class="bbt-card-title">Recent Games</div>
+            
+            {% if games %}
+                <ul class="bbt-list">
+                    {% for game in games %}
+                    <li class="bbt-list-item" style="padding: 0; overflow: hidden;">
+                        <a href="{{ url_for('basketball_tracker.game', game_id=game.id) }}" style="display: block; padding: 1rem; text-decoration: none; color: inherit;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">
+                                        {{ game.team1.name }} vs {{ game.team2.name }}
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: var(--bbt-text-secondary); margin-top: 0.25rem;">
+                                        {{ game.game_date.strftime('%b %d, %Y') }}
+                                    </div>
+                                </div>
+                                <div style="color: var(--bbt-gray-dark);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="bbt-empty-state">
+                    <div class="bbt-empty-state-icon">🕒</div>
+                    <p>No games tracked yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<script>
+    // Set default date to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('game_date');
+        if (dateInput && !dateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    });
+</script>
 {% endblock %}

@@ -1,10 +1,238 @@
 {% extends "base.html" %}
 
-{% block title %}Basketball Tracker - Game{% endblock %}
+{% block title %}Basketball Tracker - {{ game.team1.name }} vs {{ game.team2.name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_tracker.static', filename='basketball_tracker/style.css') }}">
+<style>
+    /* Option C specific styles that will move to style.css later */
+    .bbt-sticky-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 100;
+        margin: 0 -1rem; /* Offset bbt-p-1 padding */
+    }
+    
+    .bbt-score-bar {
+        display: flex;
+        padding: 1rem;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(90deg, var(--bbt-primary-color) 0%, var(--bbt-secondary-color) 100%);
+        color: white;
+    }
+    
+    .bbt-team-score-compact {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .bbt-team-name-compact {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .bbt-score-compact {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .bbt-period-badge {
+        font-size: 0.85rem;
+        background: rgba(255,255,255,0.2);
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin: 0 0.5rem;
+    }
+    
+    .bbt-period-badge:active {
+        background: rgba(255,255,255,0.3);
+    }
+    
+    .bbt-view-tabs {
+        display: flex;
+        background: white;
+        border-bottom: 1px solid var(--bbt-gray-medium);
+    }
+    
+    .bbt-view-tab {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        background: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+        color: var(--bbt-text-secondary);
+    }
+    
+    .bbt-view-tab.active {
+        border-bottom-color: var(--bbt-primary-color);
+        color: var(--bbt-primary-color);
+    }
+    
+    .bbt-view-content {
+        display: none;
+        padding-top: 1rem;
+    }
+    
+    .bbt-view-content.active {
+        display: block;
+    }
+
+    /* Modal styles */
+    .bbt-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .bbt-modal.active {
+        display: flex;
+    }
+    
+    .bbt-modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 300px;
+        width: 90%;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    
+    .bbt-modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--bbt-text-primary);
+        text-align: center;
+    }
+    
+    .bbt-modal-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="bbt-container">
-    <h1>Basketball Tracker - Game</h1>
-    <!-- To be implemented -->
+    <div class="bbt-nav">
+        <a href="{{ url_for('basketball_tracker.index') }}" class="bbt-nav-link">Games</a>
+        <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-nav-link">Teams</a>
+    </div>
+    
+    <div class="bbt-p-1" style="padding-top: 0;">
+        <!-- Sticky Header -->
+        <div class="bbt-sticky-header">
+            <div class="bbt-score-bar">
+                <div class="bbt-team-score-compact">
+                    <div class="bbt-team-name-compact">{{ game.team1.name }}</div>
+                    <div id="team1-score" class="bbt-score-compact">0</div>
+                </div>
+                <div id="period-display" class="bbt-period-badge" onclick="openPeriodModal()">
+                    {{ "OT" if game.current_period > 4 else game.current_period|string + ("st" if game.current_period == 1 else "nd" if game.current_period == 2 else "rd" if game.current_period == 3 else "th") }} ▼
+                </div>
+                <div class="bbt-team-score-compact">
+                    <div class="bbt-team-name-compact">{{ game.team2.name }}</div>
+                    <div id="team2-score" class="bbt-score-compact">0</div>
+                </div>
+            </div>
+            
+            <div class="bbt-view-tabs">
+                <button class="bbt-view-tab active" onclick="switchView('track')">Track</button>
+                <button class="bbt-view-tab" onclick="switchView('stats')">Stats</button>
+                <button class="bbt-view-tab" onclick="switchView('log')">Log</button>
+            </div>
+        </div>
+
+        <!-- Track View -->
+        <div id="track-view" class="bbt-view-content active">
+            <!-- To be implemented in Phase 3 -->
+            <p class="bbt-text-center bbt-mt-1">Tracking controls coming in Phase 3.</p>
+        </div>
+
+        <!-- Stats View -->
+        <div id="stats-view" class="bbt-view-content">
+            <!-- To be implemented in Phase 4 -->
+            <p class="bbt-text-center bbt-mt-1">Stats view coming in Phase 4.</p>
+        </div>
+
+        <!-- Log View -->
+        <div id="log-view" class="bbt-view-content">
+            <!-- To be implemented in Phase 4 -->
+            <p class="bbt-text-center bbt-mt-1">Full event log coming in Phase 4.</p>
+        </div>
+    </div>
 </div>
+
+<!-- Period Selection Modal -->
+<div id="period-modal" class="bbt-modal" onclick="closePeriodModal(event)">
+    <div class="bbt-modal-content" onclick="event.stopPropagation()">
+        <div class="bbt-modal-title">Select Period</div>
+        <div class="bbt-modal-options">
+            {% for p in range(1, 6) %}
+                {% set p_name = "OT" if p == 5 else p|string + ("st" if p == 1 else "nd" if p == 2 else "rd" if p == 3 else "th") %}
+                <button class="bbt-button bbt-button-outline period-option {% if p == game.current_period %}active{% elif p < game.current_period %}past{% endif %}"
+                        {% if p < game.current_period %}disabled{% endif %}
+                        onclick="updatePeriod({{ p }}, '{{ p_name }}')">
+                    {{ p_name }} Period
+                </button>
+            {% endfor %}
+        </div>
+        <button class="bbt-button bbt-button-secondary bbt-mt-1" style="width: 100%;" onclick="closePeriodModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    function switchView(viewName) {
+        // Update tabs
+        document.querySelectorAll('.bbt-view-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.textContent.toLowerCase() === viewName) {
+                tab.classList.add('active');
+            }
+        });
+        
+        // Update content
+        document.querySelectorAll('.bbt-view-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(viewName + '-view').classList.add('active');
+    }
+
+    function openPeriodModal() {
+        document.getElementById('period-modal').classList.add('active');
+    }
+
+    function closePeriodModal(event) {
+        if (!event || event.target.id === 'period-modal') {
+            document.getElementById('period-modal').classList.remove('active');
+        }
+    }
+
+    function updatePeriod(period, periodName) {
+        // To be implemented with AJAX in Phase 3
+        console.log('Update period to:', period);
+        document.getElementById('period-display').textContent = periodName + ' ▼';
+        closePeriodModal();
+    }
+</script>
 {% endblock %}

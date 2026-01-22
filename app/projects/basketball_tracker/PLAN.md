@@ -4,103 +4,103 @@ This document outlines the detailed implementation plan for the Basketball Track
 
 ---
 
-## Phase 1: Core Structure & Teams Management
+## [x] Phase 1: Core Structure & Teams Management
 
-### [ ] 1.1 Database Migration
-- [ ] Run `flask db migrate -m "Add basketball tracker models"`
-- [ ] Review generated migration file
-- [ ] Run `flask db upgrade`
-- [ ] Verify tables created: `basketball_team`, `basketball_game`, `basketball_event`
+### [x] 1.1 Database Migration
+- [x] Run `flask db migrate -m "Add basketball tracker models"`
+- [x] Review generated migration file
+- [x] Run `flask db upgrade`
+- [x] Verify tables created: `basketball_team`, `basketball_game`, `basketball_event`
 
-### [ ] 1.2 Base CSS Setup
-- [ ] Create base mobile-first CSS structure in `static/basketball_tracker/style.css`
-- [ ] Define CSS variables for colors, spacing, button sizes
-- [ ] Create `.bbt-container` base styles
-- [ ] Create `.bbt-button` base styles (minimum 44px height for touch)
-- [ ] Create `.bbt-nav` styles for internal navigation
+### [x] 1.2 Base CSS Setup
+- [x] Create base mobile-first CSS structure in `static/basketball_tracker/style.css`
+- [x] Define CSS variables for colors, spacing, button sizes
+- [x] Create `.bbt-container` base styles
+- [x] Create `.bbt-button` base styles (minimum 44px height for touch)
+- [x] Create `.bbt-nav` styles for internal navigation
 
-### [ ] 1.3 Internal Navigation Component
-- [ ] Create navigation partial/macro for "Games | Teams" navigation
-- [ ] Style navigation for mobile (prominent, easy to tap)
-- [ ] Ensure navigation appears on all three pages (index, teams, game)
+### [x] 1.3 Internal Navigation Component
+- [x] Create navigation partial/macro for "Games | Teams" navigation
+- [x] Style navigation for mobile (prominent, easy to tap)
+- [x] Ensure navigation appears on all three pages (index, teams, game)
 
-### [ ] 1.4 Teams Page - Backend
-- [ ] Create POST route `/teams/create` to add new team
-  - [ ] Validate team name is not empty
-  - [ ] Associate team with current_user
-  - [ ] Save to database
-  - [ ] Flash success message
-  - [ ] Redirect back to teams page
-- [ ] Create POST route `/teams/<int:team_id>/delete` to delete team
-  - [ ] Verify team belongs to current_user
-  - [ ] Check if team is used in any games (team1_id or team2_id in BasketballGame)
-  - [ ] If team has games: flash error message "Cannot delete team with existing games" and redirect
-  - [ ] If team has no games: delete team from database, flash success message, redirect
-- [ ] Update GET route `/teams` to fetch and pass user's teams to template
+### [x] 1.4 Teams Page - Backend
+- [x] Create POST route `/teams/create` to add new team
+  - [x] Validate team name is not empty
+  - [x] Associate team with current_user
+  - [x] Save to database
+  - [x] Flash success message
+  - [x] Redirect back to teams page
+- [x] Create POST route `/teams/<int:team_id>/delete` to delete team
+  - [x] Verify team belongs to current_user
+  - [x] Check if team is used in any games (team1_id or team2_id in BasketballGame)
+  - [x] If team has games: flash error message "Cannot delete team with existing games" and redirect
+  - [x] If team has no games: delete team from database, flash success message, redirect
+- [x] Update GET route `/teams` to fetch and pass user's teams to template
 
-### [ ] 1.5 Teams Page - Frontend
-- [ ] Update `templates/basketball_tracker/teams.html`
-- [ ] Add internal navigation (Games | Teams)
-- [ ] Create "Add Team" form
-  - [ ] Text input for team name (with proper label)
-  - [ ] Submit button
-  - [ ] Form styling for mobile
-- [ ] Display list of user's teams
-  - [ ] Show team name
-  - [ ] Add delete button for each team
-  - [ ] Style as mobile-friendly list
-- [ ] Add confirmation dialog for delete (JavaScript)
-- [ ] Test: Create team, view team, delete team
+### [x] 1.5 Teams Page - Frontend
+- [x] Update `templates/basketball_tracker/teams.html`
+- [x] Add internal navigation (Games | Teams)
+- [x] Create "Add Team" form
+  - [x] Text input for team name (with proper label)
+  - [x] Submit button
+  - [x] Form styling for mobile
+- [x] Display list of user's teams
+  - [x] Show team name
+  - [x] Add delete button for each team
+  - [x] Style as mobile-friendly list
+- [x] Add confirmation dialog for delete (JavaScript)
+- [x] Test: Create team, view team, delete team
 
 ---
 
-## Phase 2: Game Creation & List
+## [x] Phase 2: Game Creation & List
 
-### [ ] 2.1 Home Page - Backend
-- [ ] Create POST route `/games/create` to create new game
-  - [ ] Validate both teams are selected
-  - [ ] Validate date is provided
-  - [ ] Verify both teams belong to current_user
-  - [ ] Create game with team1_id, team2_id, game_date, current_period=1
-  - [ ] Associate with current_user
-  - [ ] Save to database
-  - [ ] Redirect to game page (edit view)
-- [ ] Update GET route `/` to fetch and pass:
-  - [ ] User's teams (for dropdown)
-  - [ ] User's games (ordered by date desc, then created_at desc)
+### [x] 2.1 Home Page - Backend
+- [x] Create POST route `/games/create` to create new game
+  - [x] Validate both teams are selected
+  - [x] Validate date is provided
+  - [x] Verify both teams belong to current_user
+  - [x] Create game with team1_id, team2_id, game_date, current_period=1
+  - [x] Associate with current_user
+  - [x] Save to database
+  - [x] Redirect to game page (edit view)
+- [x] Update GET route `/` to fetch and pass:
+  - [x] User's teams (for dropdown)
+  - [x] User's games (ordered by date desc, then created_at desc)
 
-### [ ] 2.2 Home Page - Frontend
-- [ ] Update `templates/basketball_tracker/index.html`
-- [ ] Add internal navigation (Games | Teams)
-- [ ] Create "Create Game" form section
-  - [ ] Team 1 dropdown (populated from user's teams)
-  - [ ] Team 2 dropdown (populated from user's teams)
-  - [ ] Date picker input (default to today's date)
-  - [ ] Submit button
-  - [ ] Style for mobile (large touch targets)
-- [ ] Display games list
-  - [ ] Show date (formatted nicely)
-  - [ ] Show "Team1 vs Team2" format
-  - [ ] Make entire game item clickable (link to game page)
-  - [ ] Style as compact mobile list
-- [ ] Handle empty states
-  - [ ] Show message if no teams exist (link to teams page)
-  - [ ] Show message if no games exist
-- [ ] Test: Create game with two teams and date, verify redirect to game page
+### [x] 2.2 Home Page - Frontend
+- [x] Update `templates/basketball_tracker/index.html`
+- [x] Add internal navigation (Games | Teams)
+- [x] Create "Create Game" form section
+  - [x] Team 1 dropdown (populated from user's teams)
+  - [x] Team 2 dropdown (populated from user's teams)
+  - [x] Date picker input (default to today's date)
+  - [x] Submit button
+  - [x] Style for mobile (large touch targets)
+- [x] Display games list
+  - [x] Show date (formatted nicely)
+  - [x] Show "Team1 vs Team2" format
+  - [x] Make entire game item clickable (link to game page)
+  - [x] Style as compact mobile list
+- [x] Handle empty states
+  - [x] Show message if no teams exist (link to teams page)
+  - [x] Show message if no games exist
+- [x] Test: Create game with two teams and date, verify redirect to game page
 
-### [ ] 2.3 Game Page - Basic Structure
-- [ ] Update GET route `/game/<int:game_id>`
-  - [ ] Fetch game by ID
-  - [ ] Verify game belongs to current_user (404 if not)
-  - [ ] Fetch team1 and team2 objects
-  - [ ] Pass game and team data to template
-- [ ] Update `templates/basketball_tracker/game.html`
-  - [ ] Add internal navigation (back to Games, link to Teams)
-  - [ ] Display game header: "Team1 vs Team2" and date
-  - [ ] Add placeholder for view toggle (Edit/Stats/Log)
-  - [ ] Create three sections (hidden/shown based on active view)
-  - [ ] Add basic "Edit View", "Stats View", "Log View" toggle buttons
-  - [ ] Add JavaScript to toggle between views (show/hide sections)
+### [x] 2.3 Game Page - Basic Structure
+- [x] Update GET route `/game/<int:game_id>`
+  - [x] Fetch game by ID
+  - [x] Verify game belongs to current_user (404 if not)
+  - [x] Fetch team1 and team2 objects
+  - [x] Pass game and team data to template
+- [x] Update `templates/basketball_tracker/game.html`
+  - [x] Add internal navigation (back to Games, link to Teams)
+  - [x] Display game header: "Team1 vs Team2" and date
+  - [x] Add placeholder for view toggle (Edit/Stats/Log)
+  - [x] Create three sections (hidden/shown based on active view)
+  - [x] Add basic "Edit View", "Stats View", "Log View" toggle buttons
+  - [x] Add JavaScript to toggle between views (show/hide sections)
 - [ ] Test: Navigate to created game, see game header, toggle between empty views
 
 ---
