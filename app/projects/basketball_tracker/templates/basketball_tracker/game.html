@@ -21,6 +21,8 @@
             <button id="tab-log" class="bbt-view-tab" onclick="switchView('log')">Log</button>
         </div>
 
+        <div id="bbt-toast" class="bbt-toast">Event Saved</div>
+
         <!-- Track View -->
         <div id="track-view" class="bbt-view-content active" style="padding: 0;">
             <!-- Sticky Tracking Header (Only in Track View) -->
@@ -271,6 +273,15 @@
         }
     }
 
+    function showToast(message) {
+        const toast = document.getElementById('bbt-toast');
+        toast.textContent = message;
+        toast.classList.add('active');
+        setTimeout(() => {
+            toast.classList.remove('active');
+        }, 2000);
+    }
+
     async function submitEvent(subcategory, category) {
         const cat = category || currentCategory;
         const eventData = {
@@ -279,6 +290,10 @@
             event_category: cat,
             event_subcategory: subcategory
         };
+
+        // Disable buttons briefly
+        const buttons = document.querySelectorAll('.bbt-action-box, .bbt-shot-option');
+        buttons.forEach(b => b.disabled = true);
 
         try {
             const response = await fetch(`/basketball-tracker/game/${gameId}/event`, {
@@ -299,20 +314,20 @@
                 document.getElementById('turnover-drawer').classList.remove('active');
                 currentCategory = null;
                 
-                // Haptic-like feedback (color flash)
+                showToast(`${data.event.category === 'rebound' ? 'Rebound' : data.event.subcategory} saved`);
+                
+                // Haptic feedback flash
                 const header = document.querySelector('.bbt-score-bar');
-                if (header) {
-                    header.style.transition = 'background 0.1s';
-                    const originalBg = header.style.background;
-                    header.style.background = '#2ecc71';
-                    setTimeout(() => { header.style.background = originalBg; }, 150);
-                }
+                header.classList.add('bbt-flash-success');
+                setTimeout(() => header.classList.remove('bbt-flash-success'), 400);
             } else {
                 alert(data.error || 'Failed to save event');
             }
         } catch (error) {
             console.error('Error saving event:', error);
             alert('Error connecting to server');
+        } finally {
+            buttons.forEach(b => b.disabled = false);
         }
     }
 
@@ -468,6 +483,22 @@
             statsContent.innerHTML = `
                 <div class="bbt-card" style="padding: 0; overflow: hidden;">
                     <div class="bbt-stats-comparison">
+                        <!-- ... comparison grid content ... -->
+                    </div>
+                </div>
+                
+                <!-- Danger Zone / Delete -->
+                <div style="margin-top: 2rem; padding: 1rem; text-align: center;">
+                    <button class="bbt-button bbt-button-outline bbt-button-danger" 
+                            style="font-size: 0.8rem; padding: 0.5rem 1rem; min-height: auto;"
+                            onclick="confirmDeleteGame()">
+                        Delete Game
+                    </button>
+                </div>
+            `;
+            
+            // Re-inject the grid content into the template string
+            const gridContent = `
                         <div class="bbt-comparison-header">
                             <div class="bbt-stat-label">STAT</div>
                             <div class="bbt-stat-value">${t1.name}</div>
@@ -545,9 +576,9 @@
                                 <div class="bbt-stat-value">${t2.to_other}</div>
                             </div>
                         </div>
-                    </div>
-                </div>
             `;
+            statsContent.querySelector('.bbt-stats-comparison').innerHTML = gridContent;
+
             
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -559,6 +590,30 @@
         const detail = document.getElementById(id);
         detail.classList.toggle('active');
         rowElem.classList.toggle('open');
+    }
+
+    async function confirmDeleteGame() {
+        if (!confirm('Are you sure you want to delete this entire game? This will permanently remove all tracked events and statistics. This cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/basketball-tracker/game/${gameId}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = "{{ url_for('basketball_tracker.index') }}";
+            } else {
+                alert(data.error || 'Failed to delete game');
+            }
+        } catch (error) {
+            console.error('Error deleting game:', error);
+            alert('Error connecting to server');
+        }
     }
 </script>
 {% endblock %}

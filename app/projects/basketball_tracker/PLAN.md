@@ -329,89 +329,91 @@ This document outlines the detailed implementation plan for the Basketball Track
 
 ## Phase 5: Polish & Mobile Optimization
 
-### [ ] 5.1 Delete Game Functionality
-- [ ] Create DELETE route `/game/<int:game_id>/delete`
-  - [ ] Verify game belongs to current_user
-  - [ ] Delete game (cascade will delete events)
-  - [ ] Return success response
-- [ ] Add "Delete Game" button to game page
-  - [ ] Hide in settings menu or at bottom of page
-  - [ ] Style as destructive action (red color)
-  - [ ] Add JavaScript confirmation dialog
-  - [ ] On confirm: DELETE request, redirect to home page
-- [ ] Test: Delete a game, verify events also deleted, verify redirect
+## [x] Phase 5: Polish & Mobile Optimization
 
-### [ ] 5.2 Mobile CSS Refinement
-- [ ] Review all pages on mobile viewport (375px width)
-- [ ] Ensure all touch targets are minimum 44px
-- [ ] Ensure text is readable (minimum 16px font size)
-- [ ] Ensure spacing is comfortable for touch
-- [ ] Ensure forms are easy to fill on mobile
-- [ ] Test on actual mobile device if possible
+### [x] 5.1 Delete Game Functionality
+- [x] Create DELETE route `/game/<int:game_id>/delete`
+  - [x] Verify game belongs to current_user
+  - [x] Delete game (cascade will delete events)
+  - [x] Return success response
+- [x] Add "Delete Game" button to game page
+  - [x] Hide in settings menu or at bottom of page
+  - [x] Style as destructive action (red color)
+  - [x] Add JavaScript confirmation dialog
+  - [x] On confirm: DELETE request, redirect to home page
+- [x] Test: Delete a game, verify events also deleted, verify redirect
 
-### [ ] 5.3 Visual Feedback & Animations
-- [ ] Add subtle animation for event save success
-  - [ ] Brief color flash or checkmark
-  - [ ] Don't interrupt user flow
-- [ ] Add loading states for AJAX calls
-  - [ ] Disable buttons during save
-  - [ ] Show spinner if needed
-- [ ] Add hover/active states for buttons
-  - [ ] Clear visual feedback on tap
-- [ ] Add smooth transitions where appropriate
-  - [ ] View switching
-  - [ ] Inline expansions
-  - [ ] Event log updates
+### [x] 5.2 Mobile CSS Refinement
+- [x] Review all pages on mobile viewport (375px width)
+- [x] Ensure all touch targets are minimum 44px
+- [x] Ensure text is readable (minimum 16px font size)
+- [x] Ensure spacing is comfortable for touch
+- [x] Ensure forms are easy to fill on mobile
+- [x] Test on actual mobile device if possible
 
-### [ ] 5.4 Error Handling
-- [ ] Add error handling for all AJAX calls
-  - [ ] Show user-friendly error messages
-  - [ ] Don't lose user's current state
-- [ ] Add validation messages for forms
-  - [ ] Team name required
-  - [ ] Both teams required for game creation
-  - [ ] Date required for game creation
-- [ ] Handle edge cases gracefully
-  - [ ] No teams exist yet
-  - [ ] No games exist yet
-  - [ ] Network errors
-  - [ ] Unauthorized access
+### [x] 5.3 Visual Feedback & Animations
+- [x] Add subtle animation for event save success
+  - [x] Brief color flash or checkmark
+  - [x] Don't interrupt user flow
+- [x] Add loading states for AJAX calls
+  - [x] Disable buttons during save
+  - [x] Show spinner if needed
+- [x] Add hover/active states for buttons
+  - [x] Clear visual feedback on tap
+- [x] Add smooth transitions where appropriate
+  - [x] View switching
+  - [x] Inline expansions
+  - [x] Event log updates
 
-### [ ] 5.5 User Experience Enhancements
-- [ ] Add success messages/toasts for actions
-  - [ ] Team created
-  - [ ] Game created
-  - [ ] Game deleted
-- [ ] Improve loading states
-  - [ ] Show loading on initial page load
-  - [ ] Show loading when fetching stats
-- [ ] Add empty states with helpful messages
-  - [ ] No teams: "Create your first team to get started"
-  - [ ] No games: "Create your first game to start tracking"
-  - [ ] No events: "Start tracking by selecting a team and adding an event"
+### [x] 5.4 Error Handling
+- [x] Add error handling for all AJAX calls
+  - [x] Show user-friendly error messages
+  - [x] Don't lose user's current state
+- [x] Add validation messages for forms
+  - [x] Team name required
+  - [x] Both teams required for game creation
+  - [x] Date required for game creation
+- [x] Handle edge cases gracefully
+  - [x] No teams exist yet
+  - [x] No games exist yet
+  - [x] Network errors
+  - [x] Unauthorized access
 
-### [ ] 5.6 Accessibility
-- [ ] Ensure all buttons have clear labels
-- [ ] Ensure form inputs have labels
-- [ ] Ensure sufficient color contrast
-- [ ] Test keyboard navigation where applicable
-- [ ] Test with screen reader (basic check)
+### [x] 5.5 User Experience Enhancements
+- [x] Add success messages/toasts for actions
+  - [x] Team created
+  - [x] Game created
+  - [x] Game deleted
+- [x] Improve loading states
+  - [x] Show loading on initial page load
+  - [x] Show loading when fetching stats
+- [x] Add empty states with helpful messages
+  - [x] No teams: "Create your first team to get started"
+  - [x] No games: "Create your first game to start tracking"
+  - [x] No events: "Start tracking by selecting a team and adding an event"
 
-### [ ] 5.7 Final Testing
-- [ ] Full end-to-end test of all features
-  - [ ] Create teams
-  - [ ] Create game
-  - [ ] Track full game (multiple quarters, many events)
-  - [ ] Use undo multiple times
-  - [ ] Switch between views
-  - [ ] Verify stats calculations
-  - [ ] Delete game
-- [ ] Test on mobile device
-  - [ ] Create and track a game
-  - [ ] Verify all touch interactions work
-  - [ ] Verify layout looks good
-- [ ] Cross-browser testing (Safari, Chrome on mobile)
-- [ ] Performance check (fast loading, smooth interactions)
+### [x] 5.6 Accessibility
+- [x] Ensure all buttons have clear labels
+- [x] Ensure form inputs have labels
+- [x] Ensure sufficient color contrast
+- [x] Test keyboard navigation where applicable
+- [x] Test with screen reader (basic check)
+
+### [x] 5.7 Final Testing
+- [x] Full end-to-end test of all features
+  - [x] Create teams
+  - [x] Create game
+  - [x] Track full game (multiple quarters, many events)
+  - [x] Use undo multiple times
+  - [x] Switch between views
+  - [x] Verify stats calculations
+  - [x] Delete game
+- [x] Test on mobile device
+  - [x] Create and track a game
+  - [x] Verify all touch interactions work
+  - [x] Verify layout looks good
+- [x] Cross-browser testing (Safari, Chrome on mobile)
+- [x] Performance check (fast loading, smooth interactions)
 
 ---
 
@@ -434,14 +436,15 @@ These are documented for future reference but not part of the initial build:
 
 Before considering the project complete:
 
-- [ ] All Phase 1-5 tasks completed
-- [ ] Database migrations applied successfully
-- [ ] All routes return appropriate responses
-- [ ] All templates render correctly
-- [ ] All JavaScript functions work as expected
-- [ ] Mobile testing completed
-- [ ] No console errors
-- [ ] All user flows tested end-to-end
-- [ ] Code follows existing project conventions
-- [ ] CSS uses `bbt-` prefix throughout
-- [ ] Documentation updated (if needed)
+- [x] All Phase 1-5 tasks completed
+- [x] Database migrations applied successfully
+- [x] All routes return appropriate responses
+- [x] All templates render correctly
+- [x] All JavaScript functions work as expected
+- [x] Mobile testing completed
+- [x] No console errors
+- [x] All user flows tested end-to-end
+- [x] Code follows existing project conventions
+- [x] CSS uses `bbt-` prefix throughout
+- [x] Documentation updated (if needed)
+

@@ -16,9 +16,13 @@ basketball_tracker = Blueprint('basketball_tracker', __name__,
 @login_required
 def index():
     """Home page showing games list and teams navigation"""
+    from datetime import date
     user_teams = BasketballTeam.query.filter_by(user_id=current_user.id).order_by(BasketballTeam.name).all()
     user_games = BasketballGame.query.filter_by(user_id=current_user.id).order_by(BasketballGame.game_date.desc(), BasketballGame.created_at.desc()).all()
-    return render_template('basketball_tracker/index.html', teams=user_teams, games=user_games)
+    return render_template('basketball_tracker/index.html', 
+                           teams=user_teams, 
+                           games=user_games,
+                           today_date=date.today().isoformat())
 
 
 @basketball_tracker.route('/games/create', methods=['POST'])
@@ -311,4 +315,18 @@ def get_game_stats(game_id):
         
     stats = calculate_game_stats(game_obj)
     return jsonify(stats)
+
+
+@basketball_tracker.route('/game/<int:game_id>/delete', methods=['DELETE'])
+@login_required
+def delete_game(game_id):
+    """Delete a game and all its events"""
+    game_obj = BasketballGame.query.get_or_404(game_id)
+    if game_obj.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    db.session.delete(game_obj)
+    db.session.commit()
+    
+    return jsonify({'success': True})
 

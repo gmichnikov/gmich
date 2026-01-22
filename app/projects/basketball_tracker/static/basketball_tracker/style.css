@@ -372,7 +372,57 @@
 .bbt-action-box.blue { background: var(--bbt-info-color); }
 
 .bbt-action-box:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
+    filter: brightness(0.9);
+}
+
+/* Success Flash Animation */
+@keyframes bbt-success-flash {
+    0% { background-color: var(--bbt-success-color); }
+    100% { background-color: transparent; }
+}
+
+.bbt-flash-success {
+    animation: bbt-success-flash 0.4s ease-out;
+}
+
+/* Loading Spinner */
+.bbt-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: bbt-spin 1s ease-in-out infinite;
+}
+
+@keyframes bbt-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Better Toast/Notification */
+.bbt-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.bbt-toast.active {
+    display: block;
+    opacity: 1;
 }
 
 /* Shot Drawer */
