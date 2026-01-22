@@ -544,35 +544,77 @@
     border-color: var(--bbt-primary-color);
 }
 
-/* Stats Collapsible Rows */
-.bbt-stats-detail {
+/* Stats Comparison Grid */
+.bbt-stats-comparison {
+    width: 100%;
+}
+
+.bbt-comparison-header {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    padding: 0.5rem 1rem;
+    background: var(--bbt-primary-color);
+    color: white;
+    border-radius: var(--bbt-border-radius-md) var(--bbt-border-radius-md) 0 0;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.bbt-comparison-header .bbt-stat-label {
+    text-align: left;
+}
+
+.bbt-comparison-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--bbt-gray-medium);
+    align-items: center;
+    text-align: center;
+}
+
+.bbt-comparison-row .bbt-stat-label {
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--bbt-text-primary);
+}
+
+.bbt-comparison-row .bbt-stat-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bbt-stats-detail-area {
     display: none;
-    flex-direction: column;
-    background: rgba(0,0,0,0.02); /* Subtle tint for the expanded area */
-    border-radius: var(--bbt-border-radius-sm);
-    margin: 0 4px 4px 4px;
+    background: rgba(0,0,0,0.02);
 }
 
-.bbt-stats-detail.active {
-    display: flex;
+.bbt-stats-detail-area.active {
+    display: block;
 }
 
-.bbt-stats-sub-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 1rem 0.5rem 2rem;
-    font-size: 0.85rem;
+.bbt-comparison-sub-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    padding: 0.5rem 1rem 0.5rem 1.5rem;
+    font-size: 0.8rem;
     color: var(--bbt-text-secondary);
     border-bottom: 1px solid rgba(0,0,0,0.03);
+    text-align: center;
 }
 
-.bbt-stats-sub-row:last-child {
-    border-bottom: none;
+.bbt-comparison-sub-row .bbt-stat-label {
+    text-align: left;
 }
 
-.bbt-clickable-row {
+/* Update clickable row for comparison */
+.bbt-clickable-row.comparison {
     cursor: pointer;
-    transition: background 0.2s;
+}
+
+.bbt-clickable-row.comparison:active {
+    background: var(--bbt-gray-light);
 }
 
 .bbt-clickable-row:active {

@@ -459,57 +459,95 @@
             const response = await fetch(`/basketball-tracker/game/${gameId}/stats`);
             const data = await response.json();
             
-            const formatPct = (m, a, pct) => a === 0 ? "0/0 (-)" : `${m}/${a} (${Math.round(pct)}%)`;
+            const formatPct = (m, a, pct) => a === 0 ? "0/0" : `${m}/${a}`;
+            const formatPctVal = (a, pct) => a === 0 ? "-" : `${Math.round(pct)}%`;
             
-            const renderTeamStats = (t, teamNum) => `
-                <div class="bbt-card">
-                    <div class="bbt-card-title">${t.name} Statistics</div>
-                    <div class="bbt-list">
-                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem; background: var(--bbt-gray-light);">
-                            <span>Total Points</span> <strong>${t.points}</strong>
+            const t1 = data.team1;
+            const t2 = data.team2;
+
+            statsContent.innerHTML = `
+                <div class="bbt-card" style="padding: 0; overflow: hidden;">
+                    <div class="bbt-stats-comparison">
+                        <div class="bbt-comparison-header">
+                            <div class="bbt-stat-label">STAT</div>
+                            <div class="bbt-stat-value">${t1.name}</div>
+                            <div class="bbt-stat-value">${t2.name}</div>
                         </div>
-                        <div class="bbt-list-item bbt-clickable-row" onclick="toggleStatsDetail('fg-${teamNum}', this)" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
-                            <span>Field Goals (2pt)</span> <span>${formatPct(t.fgm, t.fga, t.fg_pct)}</span>
+                        
+                        <div class="bbt-comparison-row" style="background: var(--bbt-gray-light); font-weight: bold;">
+                            <div class="bbt-stat-label">Total Points</div>
+                            <div class="bbt-stat-value">${t1.points}</div>
+                            <div class="bbt-stat-value">${t2.points}</div>
                         </div>
-                        <div id="fg-${teamNum}" class="bbt-stats-detail">
-                            <div class="bbt-stats-sub-row">
-                                <span>• Layups</span> <span>${t.shot_layup_m}/${t.shot_layup_a}</span>
+
+                        <!-- Field Goals Row -->
+                        <div class="bbt-comparison-row bbt-clickable-row comparison" onclick="toggleStatsDetail('fg-detail', this)">
+                            <div class="bbt-stat-label">Field Goals (2pt)</div>
+                            <div class="bbt-stat-value">${formatPct(t1.fgm, t1.fga)} (${formatPctVal(t1.fga, t1.fg_pct)})</div>
+                            <div class="bbt-stat-value">${formatPct(t2.fgm, t2.fga)} (${formatPctVal(t2.fga, t2.fg_pct)})</div>
+                        </div>
+                        <div id="fg-detail" class="bbt-stats-detail-area">
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Layups</div>
+                                <div class="bbt-stat-value">${t1.shot_layup_m}/${t1.shot_layup_a}</div>
+                                <div class="bbt-stat-value">${t2.shot_layup_m}/${t2.shot_layup_a}</div>
                             </div>
-                            <div class="bbt-stats-sub-row">
-                                <span>• Close 2s</span> <span>${t.shot_close2_m}/${t.shot_close2_a}</span>
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Close 2s</div>
+                                <div class="bbt-stat-value">${t1.shot_close2_m}/${t1.shot_close2_a}</div>
+                                <div class="bbt-stat-value">${t2.shot_close2_m}/${t2.shot_close2_a}</div>
                             </div>
-                            <div class="bbt-stats-sub-row">
-                                <span>• Far 2s</span> <span>${t.shot_far2_m}/${t.shot_far2_a}</span>
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Far 2s</div>
+                                <div class="bbt-stat-value">${t1.shot_far2_m}/${t1.shot_far2_a}</div>
+                                <div class="bbt-stat-value">${t2.shot_far2_m}/${t2.shot_far2_a}</div>
                             </div>
                         </div>
-                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
-                            <span>3-Pointers</span> <span>${formatPct(t.tp_m, t.tp_a, t.tp_pct)}</span>
+
+                        <div class="bbt-comparison-row">
+                            <div class="bbt-stat-label">3-Pointers</div>
+                            <div class="bbt-stat-value">${formatPct(t1.tp_m, t1.tp_a)} (${formatPctVal(t1.tp_a, t1.tp_pct)})</div>
+                            <div class="bbt-stat-value">${formatPct(t2.tp_m, t2.tp_a)} (${formatPctVal(t2.tp_a, t2.tp_pct)})</div>
                         </div>
-                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
-                            <span>Free Throws</span> <span>${formatPct(t.ftm, t.fta, t.ft_pct)}</span>
+
+                        <div class="bbt-comparison-row">
+                            <div class="bbt-stat-label">Free Throws</div>
+                            <div class="bbt-stat-value">${formatPct(t1.ftm, t1.fta)} (${formatPctVal(t1.fta, t1.ft_pct)})</div>
+                            <div class="bbt-stat-value">${formatPct(t2.ftm, t2.fta)} (${formatPctVal(t2.fta, t2.ft_pct)})</div>
                         </div>
-                        <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
-                            <span>Off Rebounds</span> <span>${t.reb}</span>
+
+                        <div class="bbt-comparison-row">
+                            <div class="bbt-stat-label">Off Rebounds</div>
+                            <div class="bbt-stat-value">${t1.reb}</div>
+                            <div class="bbt-stat-value">${t2.reb}</div>
                         </div>
-                        <div class="bbt-list-item bbt-clickable-row" onclick="toggleStatsDetail('to-${teamNum}', this)" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;">
-                            <span>Turnovers</span> <span>${t.to}</span>
+
+                        <!-- Turnovers Row -->
+                        <div class="bbt-comparison-row bbt-clickable-row comparison" onclick="toggleStatsDetail('to-detail', this)">
+                            <div class="bbt-stat-label">Turnovers</div>
+                            <div class="bbt-stat-value">${t1.to}</div>
+                            <div class="bbt-stat-value">${t2.to}</div>
                         </div>
-                        <div id="to-${teamNum}" class="bbt-stats-detail">
-                            <div class="bbt-stats-sub-row">
-                                <span>• Traveling</span> <span>${t.to_travel}</span>
+                        <div id="to-detail" class="bbt-stats-detail-area">
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Traveling</div>
+                                <div class="bbt-stat-value">${t1.to_travel}</div>
+                                <div class="bbt-stat-value">${t2.to_travel}</div>
                             </div>
-                            <div class="bbt-stats-sub-row">
-                                <span>• Steals</span> <span>${t.to_steal}</span>
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Steals</div>
+                                <div class="bbt-stat-value">${t1.to_steal}</div>
+                                <div class="bbt-stat-value">${t2.to_steal}</div>
                             </div>
-                            <div class="bbt-stats-sub-row">
-                                <span>• Other</span> <span>${t.to_other}</span>
+                            <div class="bbt-comparison-sub-row">
+                                <div class="bbt-stat-label">• Other</div>
+                                <div class="bbt-stat-value">${t1.to_other}</div>
+                                <div class="bbt-stat-value">${t2.to_other}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            statsContent.innerHTML = renderTeamStats(data.team1, 1) + renderTeamStats(data.team2, 2);
             
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -519,8 +557,6 @@
 
     function toggleStatsDetail(id, rowElem) {
         const detail = document.getElementById(id);
-        const isOpen = detail.classList.contains('active');
-        
         detail.classList.toggle('active');
         rowElem.classList.toggle('open');
     }
