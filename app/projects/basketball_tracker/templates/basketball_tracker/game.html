@@ -13,92 +13,97 @@
         <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-nav-link">Teams</a>
     </div>
     
-    <div class="bbt-p-1" style="padding-top: 0;">
-        <!-- Sticky Header -->
-        <div class="bbt-sticky-header">
-            <div class="bbt-score-bar">
-                <div class="bbt-team-score-compact">
-                    <div class="bbt-team-name-compact">{{ game.team1.name }}</div>
-                    <div id="team1-score" class="bbt-score-compact">0</div>
-                </div>
-                <div id="period-display" class="bbt-period-badge" onclick="openPeriodModal()">
-                    {{ "OT" if game.current_period > 4 else game.current_period|string + ("st" if game.current_period == 1 else "nd" if game.current_period == 2 else "rd" if game.current_period == 3 else "th") }} ▼
-                </div>
-                <div class="bbt-team-score-compact">
-                    <div class="bbt-team-name-compact">{{ game.team2.name }}</div>
-                    <div id="team2-score" class="bbt-score-compact">0</div>
-                </div>
-            </div>
-
-            <!-- Team Switcher -->
-            <div class="bbt-team-toggle-container">
-                <button id="team1-toggle" class="bbt-team-toggle active" onclick="switchTeam({{ game.team1_id }})">
-                    {{ game.team1.name }}
-                </button>
-                <button id="team2-toggle" class="bbt-team-toggle" onclick="switchTeam({{ game.team2_id }})">
-                    {{ game.team2.name }}
-                </button>
-            </div>
-            
-            <div class="bbt-view-tabs">
-                <button id="tab-track" class="bbt-view-tab active" onclick="switchView('track')">Track</button>
-                <button id="tab-stats" class="bbt-view-tab" onclick="switchView('stats')">Stats</button>
-                <button id="tab-log" class="bbt-view-tab" onclick="switchView('log')">Log</button>
-            </div>
+    <div class="bbt-p-1">
+        <!-- View Tabs at the very top of content -->
+        <div class="bbt-view-tabs" style="margin-bottom: 12px; border-radius: var(--bbt-border-radius-md); overflow: hidden; border: 1px solid var(--bbt-gray-medium);">
+            <button id="tab-track" class="bbt-view-tab active" onclick="switchView('track')">Track</button>
+            <button id="tab-stats" class="bbt-view-tab" onclick="switchView('stats')">Stats</button>
+            <button id="tab-log" class="bbt-view-tab" onclick="switchView('log')">Log</button>
         </div>
 
         <!-- Track View -->
-        <div id="track-view" class="bbt-view-content active">
-            <!-- Action Buttons -->
-            <div class="bbt-action-row">
-                <button class="bbt-action-box green" onclick="toggleShotDrawer('make')">
-                    <div class="icon">✓</div>
-                    <div>Make Shot</div>
-                </button>
-                <button class="bbt-action-box red" onclick="toggleShotDrawer('miss')">
-                    <div class="icon">✗</div>
-                    <div>Miss Shot</div>
-                </button>
-            </div>
+        <div id="track-view" class="bbt-view-content active" style="padding: 0;">
+            <!-- Sticky Tracking Header (Only in Track View) -->
+            <div class="bbt-sticky-header">
+                <div class="bbt-score-bar">
+                    <div class="bbt-team-score-compact">
+                        <div id="team1-score" class="bbt-score-compact">0</div>
+                    </div>
+                    <div id="period-display" class="bbt-period-badge" onclick="openPeriodModal()">
+                        {{ "OT" if game.current_period > 4 else game.current_period|string + ("st" if game.current_period == 1 else "nd" if game.current_period == 2 else "rd" if game.current_period == 3 else "th") }} ▼
+                    </div>
+                    <div class="bbt-team-score-compact">
+                        <div id="team2-score" class="bbt-score-compact">0</div>
+                    </div>
+                </div>
 
-            <!-- Shot Drawer -->
-            <div id="shot-drawer" class="bbt-shot-drawer">
-                <div id="drawer-title" class="bbt-drawer-title">Select shot type:</div>
-                <div class="bbt-shot-grid">
-                    <button class="bbt-shot-option" onclick="submitEvent('Layup')">Layup</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('Close 2')">Close 2</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('Far 2')">Far 2</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('3-Pointer')">3-Pointer</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('Free Throw')">Free Throw</button>
+                <!-- Team Switcher -->
+                <div class="bbt-team-toggle-container">
+                    <button id="team1-toggle" class="bbt-team-toggle active" onclick="switchTeam({{ game.team1_id }})">
+                        {{ game.team1.name }}
+                    </button>
+                    <button id="team2-toggle" class="bbt-team-toggle" onclick="switchTeam({{ game.team2_id }})">
+                        {{ game.team2.name }}
+                    </button>
                 </div>
             </div>
 
-            <div class="bbt-action-row">
-                <button class="bbt-action-box orange" onclick="toggleShotDrawer('turnover')">
-                    <div class="icon">⚠</div>
-                    <div>Turnover</div>
-                </button>
-                <button class="bbt-action-box blue" onclick="submitEvent('Offensive', 'rebound')">
-                    <div class="icon">↑</div>
-                    <div>Off Reb</div>
-                </button>
-            </div>
-
-            <!-- Turnover Drawer (shared with shots but different options) -->
-            <div id="turnover-drawer" class="bbt-shot-drawer">
-                <div class="bbt-drawer-title">Select turnover type:</div>
-                <div class="bbt-shot-grid">
-                    <button class="bbt-shot-option" onclick="submitEvent('Traveling', 'turnover')">Traveling</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('Steal', 'turnover')">Steal</button>
-                    <button class="bbt-shot-option" onclick="submitEvent('Other', 'turnover')">Other</button>
+            <div style="padding: var(--bbt-spacing-lg);">
+                <!-- Action Buttons -->
+                <div class="bbt-action-row">
+                    <button class="bbt-action-box green" onclick="toggleShotDrawer('make')">
+                        <div class="icon">✓</div>
+                        <div>Make Shot</div>
+                    </button>
+                    <button class="bbt-action-box red" onclick="toggleShotDrawer('miss')">
+                        <div class="icon">✗</div>
+                        <div>Miss Shot</div>
+                    </button>
                 </div>
-            </div>
 
-            <!-- Event Feed -->
-            <div class="bbt-event-feed">
-                <div class="bbt-feed-title">Recent Activity</div>
-                <div id="event-feed-list">
-                    <!-- Loaded via JS -->
+                <!-- Shot Drawer -->
+                <div id="shot-drawer" class="bbt-shot-drawer">
+                    <div id="drawer-title" class="bbt-drawer-title">Select shot type:</div>
+                    <div class="bbt-shot-grid">
+                        <button class="bbt-shot-option" onclick="submitEvent('Layup')">Layup</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('Close 2')">Close 2</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('Far 2')">Far 2</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('3-Pointer')">3-Pointer</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('Free Throw')">Free Throw</button>
+                    </div>
+                </div>
+
+                <div class="bbt-action-row">
+                    <button class="bbt-action-box orange" onclick="toggleShotDrawer('turnover')">
+                        <div class="icon">⚠</div>
+                        <div>Turnover</div>
+                    </button>
+                    <button class="bbt-action-box blue" onclick="submitEvent('Offensive', 'rebound')">
+                        <div class="icon">↑</div>
+                        <div>Off Reb</div>
+                    </button>
+                </div>
+
+                <!-- Turnover Drawer -->
+                <div id="turnover-drawer" class="bbt-shot-drawer">
+                    <div class="bbt-drawer-title">Select turnover type:</div>
+                    <div class="bbt-shot-grid">
+                        <button class="bbt-shot-option" onclick="submitEvent('Traveling', 'turnover')">Traveling</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('Steal', 'turnover')">Steal</button>
+                        <button class="bbt-shot-option" onclick="submitEvent('Other', 'turnover')">Other</button>
+                    </div>
+                </div>
+
+                <!-- Event Feed -->
+                <div class="bbt-event-feed">
+                    <div class="bbt-feed-title">Recent Activity</div>
+                    <!-- Inline Undo -->
+                    <div class="bbt-undo-inline" style="margin-bottom: var(--bbt-spacing-sm);">
+                        <button id="undo-btn" class="bbt-undo-button-small" onclick="undoLastEvent()" disabled>↶ Undo Last Action</button>
+                    </div>
+                    <div id="event-feed-list">
+                        <!-- Loaded via JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,11 +125,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- Undo Fixed Bottom Bar -->
-<div class="bbt-bottom-bar">
-    <button id="undo-btn" class="bbt-undo-fab" onclick="undoLastEvent()" disabled>↶ Undo</button>
 </div>
 
 <!-- Period Selection Modal -->
@@ -230,8 +230,8 @@
                 // Update modal buttons
                 document.querySelectorAll('.bbt-period-option').forEach(btn => {
                     btn.classList.remove('active');
-                    const btnPeriod = parseInt(btn.id.split('-').pop());
-                    if (btnPeriod === period) btn.classList.add('active');
+                    const btnId = btn.id;
+                    if (btnId === 'period-btn-' + period) btn.classList.add('active');
                 });
                 
                 closePeriodModal();
@@ -301,10 +301,12 @@
                 
                 // Haptic-like feedback (color flash)
                 const header = document.querySelector('.bbt-score-bar');
-                header.style.transition = 'background 0.1s';
-                const originalBg = header.style.background;
-                header.style.background = '#2ecc71';
-                setTimeout(() => { header.style.background = originalBg; }, 150);
+                if (header) {
+                    header.style.transition = 'background 0.1s';
+                    const originalBg = header.style.background;
+                    header.style.background = '#2ecc71';
+                    setTimeout(() => { header.style.background = originalBg; }, 150);
+                }
             } else {
                 alert(data.error || 'Failed to save event');
             }
@@ -355,14 +357,20 @@
             }
         });
         
-        document.getElementById('team1-score').textContent = score1;
-        document.getElementById('team2-score').textContent = score2;
+        const s1 = document.getElementById('team1-score');
+        const s2 = document.getElementById('team2-score');
+        if (s1) s1.textContent = score1;
+        if (s2) s2.textContent = score2;
     }
 
     function updateUI() {
         calculateScore();
         updateFeed();
-        document.getElementById('undo-btn').disabled = (events.length === 0);
+        
+        const undoBtn = document.getElementById('undo-btn');
+        if (undoBtn) {
+            undoBtn.disabled = (events.length === 0);
+        }
     }
 
     function getPeriodLabel(p) {
@@ -375,6 +383,8 @@
 
     function updateFeed() {
         const feedList = document.getElementById('event-feed-list');
+        if (!feedList) return;
+        
         feedList.innerHTML = '';
         
         // Show last 10
@@ -387,7 +397,7 @@
 
         recentEvents.forEach(e => {
             const item = document.createElement('div');
-            item.className = 'bbt-feed-item';
+            item.className = 'bbt-feed-item compact';
             
             let actionDesc = e.category === 'make' ? 'Make' : (e.category === 'miss' ? 'Miss' : '');
             if (e.category === 'turnover') actionDesc = 'Turnover';
@@ -398,8 +408,7 @@
             item.innerHTML = `
                 <div class="bbt-feed-icon"></div>
                 <div class="bbt-feed-content">
-                    <div><strong>${e.team_name}</strong> ${actionDesc}${subDesc}</div>
-                    <div class="feed-meta">${getPeriodLabel(e.period)} Period</div>
+                    <strong>${e.team_name}</strong> ${actionDesc}${subDesc} (${getPeriodLabel(e.period)})
                 </div>
             `;
             feedList.appendChild(item);
@@ -408,6 +417,8 @@
 
     function updateLogView() {
         const logList = document.getElementById('full-log-list');
+        if (!logList) return;
+        
         logList.innerHTML = '';
         
         if (events.length === 0) {
@@ -417,7 +428,7 @@
 
         events.forEach(e => {
             const item = document.createElement('div');
-            item.className = 'bbt-feed-item';
+            item.className = 'bbt-feed-item compact';
             
             let actionDesc = e.category === 'make' ? 'Make' : (e.category === 'miss' ? 'Miss' : '');
             if (e.category === 'turnover') actionDesc = 'Turnover';
@@ -425,13 +436,13 @@
             
             const subDesc = e.subcategory && e.subcategory !== 'Offensive' ? ` - ${e.subcategory}` : '';
             
-            const timeStr = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = new Date(e.created_at);
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
             item.innerHTML = `
                 <div class="bbt-feed-icon"></div>
                 <div class="bbt-feed-content">
-                    <div><strong>${e.team_name}</strong> ${actionDesc}${subDesc}</div>
-                    <div class="feed-meta">${getPeriodLabel(e.period)} Period • ${timeStr}</div>
+                    <strong>${e.team_name}</strong> ${actionDesc}${subDesc} (${getPeriodLabel(e.period)}) <span style="float: right; font-size: 0.75rem; color: var(--bbt-text-light);">${timeStr}</span>
                 </div>
             `;
             logList.appendChild(item);
@@ -440,10 +451,9 @@
 
     async function loadStats() {
         const statsContent = document.getElementById('stats-content');
-        statsContent.innerHTML = '<p class="bbt-text-center bbt-p-1">Loading stats...</p>';
+        if (!statsContent) return;
         
-        // For now, calculate stats on the frontend to keep it reactive
-        // We will move this to the backend in Phase 4 as planned
+        statsContent.innerHTML = '<p class="bbt-text-center bbt-p-1">Loading stats...</p>';
         
         const calculateTeamStats = (teamId) => {
             const teamEvents = events.filter(e => e.team_id === teamId);
@@ -487,23 +497,23 @@
             <div class="bbt-card">
                 <div class="bbt-card-title">${team1Name} Stats</div>
                 <div class="bbt-list">
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Points</span> <strong>${stats1.points}</strong></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Field Goals</span> <span>${formatPercent(stats1.fgm, stats1.fga)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>3-Pointers</span> <span>${formatPercent(stats1.tp_m, stats1.tp_a)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Free Throws</span> <span>${formatPercent(stats1.ftm, stats1.fta)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Turnovers</span> <span>${stats1.to}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Off Rebounds</span> <span>${stats1.reb}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Points</span> <strong>${stats1.points}</strong></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Field Goals</span> <span>${formatPercent(stats1.fgm, stats1.fga)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>3-Pointers</span> <span>${formatPercent(stats1.tp_m, stats1.tp_a)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Free Throws</span> <span>${formatPercent(stats1.ftm, stats1.fta)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Turnovers</span> <span>${stats1.to}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Off Rebounds</span> <span>${stats1.reb}</span></div>
                 </div>
             </div>
             <div class="bbt-card">
                 <div class="bbt-card-title">${team2Name} Stats</div>
                 <div class="bbt-list">
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Points</span> <strong>${stats2.points}</strong></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Field Goals</span> <span>${formatPercent(stats2.fgm, stats2.fga)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>3-Pointers</span> <span>${formatPercent(stats2.tp_m, stats2.tp_a)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Free Throws</span> <span>${formatPercent(stats2.ftm, stats2.fta)}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Turnovers</span> <span>${stats2.to}</span></div>
-                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Off Rebounds</span> <span>${stats2.reb}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Points</span> <strong>${stats2.points}</strong></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Field Goals</span> <span>${formatPercent(stats2.fgm, stats2.fga)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>3-Pointers</span> <span>${formatPercent(stats2.tp_m, stats2.tp_a)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Free Throws</span> <span>${formatPercent(stats2.ftm, stats2.fta)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Turnovers</span> <span>${stats2.to}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between; padding: 0.75rem 1rem;"><span>Off Rebounds</span> <span>${stats2.reb}</span></div>
                 </div>
             </div>
         `;

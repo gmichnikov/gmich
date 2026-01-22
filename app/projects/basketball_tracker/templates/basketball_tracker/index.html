@@ -18,45 +18,50 @@
         
         <!-- Create Game Section -->
         <div class="bbt-card">
-            <div class="bbt-card-title">Create New Game</div>
+            <div class="bbt-card-title" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleCreateForm()">
+                <span>Create New Game</span>
+                <span id="create-toggle-icon">⊕</span>
+            </div>
             
-            {% if teams|length < 2 %}
-                <div class="bbt-empty-state" style="padding: 1rem;">
-                    <p>You need at least two teams to create a game.</p>
-                    <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-button bbt-mt-1" style="display: inline-block; text-decoration: none;">Manage Teams</a>
-                </div>
-            {% else %}
-                <form method="POST" action="{{ url_for('basketball_tracker.create_game') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    
-                    <div class="bbt-form-group">
-                        <label for="team1_id" class="bbt-label">Team 1 (Home)</label>
-                        <select id="team1_id" name="team1_id" class="bbt-select" required>
-                            <option value="">Select Team 1</option>
-                            {% for team in teams %}
-                                <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
+            <div id="create-game-form" style="display: none; margin-top: 1rem;">
+                {% if teams|length < 2 %}
+                    <div class="bbt-empty-state" style="padding: 1rem;">
+                        <p>You need at least two teams to create a game.</p>
+                        <a href="{{ url_for('basketball_tracker.teams') }}" class="bbt-button bbt-mt-1" style="display: inline-block; text-decoration: none;">Manage Teams</a>
                     </div>
-                    
-                    <div class="bbt-form-group">
-                        <label for="team2_id" class="bbt-label">Team 2 (Away)</label>
-                        <select id="team2_id" name="team2_id" class="bbt-select" required>
-                            <option value="">Select Team 2</option>
-                            {% for team in teams %}
-                                <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="bbt-form-group">
-                        <label for="game_date" class="bbt-label">Game Date</label>
-                        <input type="date" id="game_date" name="game_date" class="bbt-input" required value="{{ today_date if today_date else '' }}">
-                    </div>
-                    
-                    <button type="submit" class="bbt-button" style="width: 100%;">Create Game</button>
-                </form>
-            {% endif %}
+                {% else %}
+                    <form method="POST" action="{{ url_for('basketball_tracker.create_game') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="bbt-form-group">
+                            <label for="team1_id" class="bbt-label">Team 1 (Home)</label>
+                            <select id="team1_id" name="team1_id" class="bbt-select" required>
+                                <option value="">Select Team 1</option>
+                                {% for team in teams %}
+                                    <option value="{{ team.id }}">{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="bbt-form-group">
+                            <label for="team2_id" class="bbt-label">Team 2 (Away)</label>
+                            <select id="team2_id" name="team2_id" class="bbt-select" required>
+                                <option value="">Select Team 2</option>
+                                {% for team in teams %}
+                                    <option value="{{ team.id }}">{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="bbt-form-group">
+                            <label for="game_date" class="bbt-label">Game Date</label>
+                            <input type="date" id="game_date" name="game_date" class="bbt-input" required value="{{ today_date if today_date else '' }}">
+                        </div>
+                        
+                        <button type="submit" class="bbt-button" style="width: 100%;">Create Game</button>
+                    </form>
+                {% endif %}
+            </div>
         </div>
         
         <!-- Games List -->
@@ -106,5 +111,17 @@
             dateInput.value = today;
         }
     });
+
+    function toggleCreateForm() {
+        const form = document.getElementById('create-game-form');
+        const icon = document.getElementById('create-toggle-icon');
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            icon.textContent = '⊖';
+        } else {
+            form.style.display = 'none';
+            icon.textContent = '⊕';
+        }
+    }
 </script>
 {% endblock %}

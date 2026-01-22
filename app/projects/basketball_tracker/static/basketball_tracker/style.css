@@ -51,34 +51,43 @@
 /* ===== Navigation ===== */
 .bbt-nav {
     display: flex;
-    background: white;
-    border-bottom: 1px solid var(--bbt-gray-medium);
-    gap: var(--bbt-spacing-sm);
-    padding: var(--bbt-spacing-sm);
+    justify-content: flex-start;
+    background: #eaeff2; /* Distinct grey-blue background */
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px; /* Clear separation from content */
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .bbt-nav-link {
-    flex: 1;
-    padding: var(--bbt-spacing-md);
-    border: none;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--bbt-gray-medium);
     background: white;
-    border-radius: var(--bbt-border-radius-md);
-    font-size: var(--bbt-font-size-base);
+    border-radius: 20px; /* Pill shape for "disconnected" look */
+    font-size: 0.8rem;
     cursor: pointer;
-    font-weight: 500;
-    color: var(--bbt-text-primary);
+    font-weight: 600;
+    color: var(--bbt-text-secondary);
     text-decoration: none;
     text-align: center;
-    transition: background 0.2s;
-    min-height: var(--bbt-button-height);
+    transition: all 0.2s;
+    min-height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.bbt-nav-link:hover,
-.bbt-nav-link.active {
+.bbt-nav-link:hover {
     background: var(--bbt-gray-light);
+    transform: translateY(-1px);
+}
+
+.bbt-nav-link.active {
+    background: var(--bbt-primary-color);
+    color: white;
+    border-color: var(--bbt-primary-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* ===== Buttons ===== */
@@ -234,7 +243,7 @@
 
 .bbt-score-bar {
     display: flex;
-    padding: 1rem;
+    padding: 0.5rem 1rem;
     justify-content: space-between;
     align-items: center;
     background: linear-gradient(90deg, var(--bbt-primary-color) 0%, var(--bbt-secondary-color) 100%);
@@ -245,15 +254,6 @@
 .bbt-team-score-compact {
     text-align: center;
     flex: 1;
-}
-
-.bbt-team-name-compact {
-    font-size: 0.75rem;
-    opacity: 0.9;
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .bbt-score-compact {
@@ -278,24 +278,23 @@
 .bbt-view-tabs {
     display: flex;
     background: white;
-    border-bottom: 1px solid var(--bbt-gray-medium);
 }
 
 .bbt-view-tab {
     flex: 1;
-    padding: 0.75rem;
+    padding: 0.6rem;
     border: none;
-    background: white;
-    font-size: 0.9rem;
+    background: var(--bbt-gray-light);
+    font-size: 0.85rem;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--bbt-text-secondary);
+    transition: all 0.2s;
 }
 
 .bbt-view-tab.active {
-    border-bottom-color: var(--bbt-primary-color);
-    color: var(--bbt-primary-color);
+    background: var(--bbt-primary-color);
+    color: white;
 }
 
 /* Team Toggle */
@@ -419,43 +418,31 @@
     color: white;
 }
 
-/* Undo Fixed Bottom Bar */
-.bbt-bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    padding: var(--bbt-spacing-lg);
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: center;
-    max-width: 600px;
-    margin: 0 auto;
-    z-index: 150;
+/* Undo Button (Inline) */
+.bbt-undo-inline {
+    margin-top: var(--bbt-spacing-md);
+    text-align: center;
 }
 
-.bbt-undo-fab {
-    padding: var(--bbt-spacing-lg) var(--bbt-spacing-xl);
-    background: #607d8b;
+.bbt-undo-button-small {
+    padding: 0.5rem 1rem;
+    background: var(--bbt-gray-dark);
     color: white;
     border: none;
-    border-radius: 25px;
-    font-size: var(--bbt-font-size-base);
+    border-radius: var(--bbt-border-radius-sm);
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    min-width: 150px;
+    transition: background 0.2s;
 }
 
-.bbt-undo-fab:active {
+.bbt-undo-button-small:active {
     transform: scale(0.95);
 }
 
-.bbt-undo-fab:disabled {
+.bbt-undo-button-small:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 /* Event Feed */
@@ -475,11 +462,15 @@
 .bbt-feed-item {
     display: flex;
     align-items: center;
-    padding: var(--bbt-spacing-md);
+    padding: var(--bbt-spacing-sm) var(--bbt-spacing-md);
     background: #f8f9fa;
     border-radius: var(--bbt-border-radius-sm);
-    margin-bottom: var(--bbt-spacing-sm);
-    font-size: 0.9rem;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.bbt-feed-item.compact {
+    padding: 4px var(--bbt-spacing-md);
 }
 
 .bbt-feed-icon {

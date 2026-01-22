@@ -233,14 +233,13 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [x] Event is undone (remove from list)
 - [x] Test: Add multiple events, verify log shows newest first
 
-### [x] 3.9 Edit View - Undo Button (Fixed Bottom Bar)
-- [x] Add fixed bottom bar with undo button
-  - [x] Position fixed at bottom of screen (always visible)
-  - [x] Large rounded button centered in bar
-  - [x] Label clearly ("↶ Undo" or "↶ Undo Last")
-  - [x] Style with `.bbt-undo-fab` class (floating action button style)
+### [x] 3.9 Edit View - Undo Button (Inline)
+- [x] Add inline undo button under Recent Activity list
+  - [x] Positioned directly after the most recent 10 events
+  - [x] Small, secondary button style
+  - [x] Label clearly ("↶ Undo Last Action")
+  - [x] Style with `.bbt-undo-inline` and `.bbt-undo-button-small` classes
   - [x] Disable when no events exist
-  - [x] Ensure it doesn't overlap with content (add bottom padding to view)
 - [x] Add JavaScript undo handler
   - [x] DELETE to `/game/<int:game_id>/event/undo`
   - [x] On success: remove event from log, recalculate score
