@@ -300,31 +300,51 @@
 /* Team Toggle */
 .bbt-team-toggle-container {
     display: flex;
-    background: #f0f2f5; /* Lighter background to separate from blue header */
-    padding: 4px;
-    gap: 4px;
+    background: #eaeff2;
+    padding: 6px;
+    gap: 6px;
     border-bottom: 1px solid var(--bbt-gray-medium);
 }
 
 .bbt-team-toggle {
     flex: 1;
-    padding: 0.6rem;
+    padding: 0.8rem;
     border: none;
-    background: transparent;
+    background: white;
     color: var(--bbt-text-secondary);
-    font-size: 0.9rem;
+    font-size: 1rem;
     cursor: pointer;
-    border-radius: 6px;
-    font-weight: 500;
-    min-height: 38px;
+    border-radius: var(--bbt-border-radius-md);
+    font-weight: 600;
+    min-height: 48px;
     transition: all 0.2s;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .bbt-team-toggle.active {
-    background: #34495e; /* Dark charcoal - very distinct from the primary blue */
+    background: #34495e;
     color: white;
-    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Possession Banner */
+.bbt-active-team-banner {
+    background: #f1c40f; /* Vibrant yellow */
+    color: #2c3e50; /* Dark text for better contrast on yellow */
+    padding: 0.4rem;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    border-radius: var(--bbt-border-radius-md);
+    margin-bottom: var(--bbt-spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Remove Possession Indicators */
+.bbt-possession-indicator {
+    display: none;
 }
 
 /* Action View */

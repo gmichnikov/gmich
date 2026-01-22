@@ -41,16 +41,21 @@
 
                 <!-- Team Switcher -->
                 <div class="bbt-team-toggle-container">
-                    <button id="team1-toggle" class="bbt-team-toggle active" onclick="switchTeam({{ game.team1_id }})">
+                    <button id="team1-toggle" class="bbt-team-toggle active" onclick="switchTeam({{ game.team1_id }}, team1Name)">
                         {{ game.team1.name }}
                     </button>
-                    <button id="team2-toggle" class="bbt-team-toggle" onclick="switchTeam({{ game.team2_id }})">
+                    <button id="team2-toggle" class="bbt-team-toggle" onclick="switchTeam({{ game.team2_id }}, team2Name)">
                         {{ game.team2.name }}
                     </button>
                 </div>
             </div>
 
             <div style="padding: var(--bbt-spacing-lg);">
+                <!-- Active Team Banner -->
+                <div class="bbt-active-team-banner" id="active-team-banner">
+                    <span id="active-team-name">{{ game.team1.name }}</span>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="bbt-action-row">
                     <button class="bbt-action-box green" onclick="toggleShotDrawer('make')">
@@ -180,6 +185,22 @@
         updateUI();
     });
 
+    function switchTeam(teamId, teamName) {
+        currentTeamId = teamId;
+        
+        // Update switcher buttons
+        document.querySelectorAll('.bbt-team-toggle').forEach(btn => btn.classList.remove('active'));
+        if (teamId === team1Id) {
+            document.getElementById('team1-toggle').classList.add('active');
+        } else {
+            document.getElementById('team2-toggle').classList.add('active');
+        }
+        
+        // Update banner
+        const activeName = teamName || (teamId === team1Id ? team1Name : team2Name);
+        document.getElementById('active-team-name').textContent = activeName;
+    }
+
     function switchView(viewName) {
         document.querySelectorAll('.bbt-view-tab').forEach(tab => tab.classList.remove('active'));
         document.getElementById('tab-' + viewName).classList.add('active');
@@ -191,16 +212,6 @@
             loadStats();
         } else if (viewName === 'log') {
             updateLogView();
-        }
-    }
-
-    function switchTeam(teamId) {
-        currentTeamId = teamId;
-        document.querySelectorAll('.bbt-team-toggle').forEach(btn => btn.classList.remove('active'));
-        if (teamId === team1Id) {
-            document.getElementById('team1-toggle').classList.add('active');
-        } else {
-            document.getElementById('team2-toggle').classList.add('active');
         }
     }
 
