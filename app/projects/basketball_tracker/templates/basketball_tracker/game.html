@@ -126,9 +126,19 @@
         <div id="log-view" class="bbt-view-content">
             <div class="bbt-event-feed">
                 <div class="bbt-feed-title">Full Event Log</div>
-                <div id="full-log-list">
-                    <!-- Loaded via JS -->
-                </div>
+                <table class="bbt-log-table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th style="text-align: center;">Per</th>
+                            <th>Event</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="full-log-list">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -457,13 +467,12 @@
         logList.innerHTML = '';
         
         if (events.length === 0) {
-            logList.innerHTML = '<p class="bbt-text-center bbt-p-1">No events yet.</p>';
+            logList.innerHTML = '<tr><td colspan="4" class="bbt-text-center bbt-p-1">No events yet.</td></tr>';
             return;
         }
 
         events.forEach(e => {
-            const item = document.createElement('div');
-            item.className = 'bbt-feed-item compact';
+            const row = document.createElement('tr');
             
             let actionDesc = e.category === 'make' ? 'Make' : (e.category === 'miss' ? 'Miss' : '');
             if (e.category === 'turnover') actionDesc = 'Turnover';
@@ -474,13 +483,13 @@
             const date = new Date(e.created_at);
             const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            item.innerHTML = `
-                <div class="bbt-feed-icon"></div>
-                <div class="bbt-feed-content">
-                    <strong>${e.team_name}</strong> ${actionDesc}${subDesc} (${getPeriodLabel(e.period)}) <span style="float: right; font-size: 0.75rem; color: var(--bbt-text-light);">${timeStr}</span>
-                </div>
+            row.innerHTML = `
+                <td class="bbt-log-team">${e.team_name}</td>
+                <td class="bbt-log-period">${getPeriodLabel(e.period)}</td>
+                <td class="bbt-log-event">${actionDesc}${subDesc}</td>
+                <td class="bbt-log-time">${timeStr}</td>
             `;
-            logList.appendChild(item);
+            logList.appendChild(row);
         });
     }
 

@@ -701,3 +701,81 @@
 .bbt-clickable-row.open::after {
     content: '▲';
 }
+
+/* Log View Table */
+.bbt-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: white;
+    border-radius: var(--bbt-border-radius-md);
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.bbt-log-table th,
+.bbt-log-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--bbt-gray-medium);
+}
+
+.bbt-log-table th {
+    background: var(--bbt-gray-light);
+    font-weight: 600;
+    color: var(--bbt-text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.bbt-log-table tr:last-child td {
+    border-bottom: none;
+}
+
+.bbt-log-team {
+    font-weight: 600;
+    color: var(--bbt-text-primary);
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bbt-log-period {
+    color: var(--bbt-text-secondary);
+    text-align: center;
+    width: 45px;
+}
+
+.bbt-log-event {
+    color: var(--bbt-text-secondary);
+}
+
+.bbt-log-time {
+    color: var(--bbt-text-light);
+    font-size: 0.75rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .bbt-log-time {
+        display: none;
+    }
+    
+    .bbt-log-table th:last-child,
+    .bbt-log-table td:last-child {
+        display: none;
+    }
+    
+    .bbt-log-table th,
+    .bbt-log-table td {
+        padding: 8px 4px;
+    }
+
+    .bbt-log-team {
+        max-width: 60px;
+    }
+}
+
