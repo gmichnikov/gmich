@@ -133,5 +133,122 @@ def game(game_id):
     if game_obj.user_id != current_user.id:
         flash('You do not have permission to view this game', 'error')
         return redirect(url_for('basketball_tracker.index'))
+    
+    # Fetch initial events to pass to template
+    initial_events = BasketballEvent.query.filter_by(game_id=game_id).order_by(BasketballEvent.created_at.desc()).all()
         
-    return render_template('basketball_tracker/game.html', game=game_obj)
+    return render_template('basketball_tracker/game.html', game=game_obj, initial_events=initial_events)
+
+
+@basketball_tracker.route('/game/<int:game_id>/event', methods=['POST'])
+@login_required
+def add_event(game_id):
+    """Add a new game event via AJAX"""
+    game_obj = BasketballGame.query.get_or_404(game_id)
+    if game_obj.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    team_id = data.get('team_id')
+    period = data.get('period')
+    category = data.get('event_category')
+    subcategory = data.get('event_subcategory')
+    
+    if not all([team_id, period, category, subcategory]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    # Verify team belongs to game
+    if team_id not in [game_obj.team1_id, game_obj.team2_id]:
+        return jsonify({'error': 'Invalid team for this game'}), 400
+    
+    new_event = BasketballEvent(
+        game_id=game_id,
+        team_id=team_id,
+        period=period,
+        event_category=category,
+        event_subcategory=subcategory
+    )
+    db.session.add(new_event)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'event': {
+            'id': new_event.id,
+            'team_id': new_event.team_id,
+            'team_name': new_event.team.name,
+            'period': new_event.period,
+            'category': new_event.event_category,
+            'subcategory': new_event.event_subcategory,
+            'created_at': new_event.created_at.isoformat()
+        }
+    })
+
+
+@basketball_tracker.route('/game/<int:game_id>/event/undo', methods=['DELETE'])
+@login_required
+def undo_event(game_id):
+    """Undo the most recent event for a game"""
+    game_obj = BasketballGame.query.get_or_404(game_id)
+    if game_obj.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    last_event = BasketballEvent.query.filter_by(game_id=game_id).order_by(BasketballEvent.created_at.desc()).first()
+    
+    if not last_event:
+        return jsonify({'error': 'No events to undo'}), 400
+    
+    deleted_id = last_event.id
+    db.session.delete(last_event)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'deleted_event_id': deleted_id
+    })
+
+
+@basketball_tracker.route('/game/<int:game_id>/events', methods=['GET'])
+@login_required
+def get_events(game_id):
+    """Fetch all events for a game"""
+    game_obj = BasketballGame.query.get_or_404(game_id)
+    if game_obj.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    events = BasketballEvent.query.filter_by(game_id=game_id).order_by(BasketballEvent.created_at.desc()).all()
+    
+    return jsonify({
+        'events': [{
+            'id': e.id,
+            'team_id': e.team_id,
+            'team_name': e.team.name,
+            'period': e.period,
+            'category': e.event_category,
+            'subcategory': e.event_subcategory,
+            'created_at': e.created_at.isoformat()
+        } for e in events]
+    })
+
+
+@basketball_tracker.route('/game/<int:game_id>/period', methods=['POST'])
+@login_required
+def update_period(game_id):
+    """Update current game period"""
+    game_obj = BasketballGame.query.get_or_404(game_id)
+    if game_obj.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    new_period = data.get('period')
+    
+    if new_period is None:
+        return jsonify({'error': 'No period provided'}), 400
+         
+    game_obj.current_period = new_period
+    db.session.commit()
+    
+    return jsonify({'success': True, 'period': game_obj.current_period})

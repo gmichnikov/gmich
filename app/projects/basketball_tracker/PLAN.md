@@ -105,7 +105,7 @@ This document outlines the detailed implementation plan for the Basketball Track
 
 ---
 
-## Phase 3: Event Tracking (Edit View)
+## [x] Phase 3: Event Tracking (Edit View)
 
 **Design Reference:** Use `game-ui-option-c.html` as the UI design template. Key features:
 - Sticky header with score always visible
@@ -115,154 +115,152 @@ This document outlines the detailed implementation plan for the Basketball Track
 - Fixed bottom bar with undo button
 - Mobile-first, minimal scrolling design
 
-### [ ] 3.1 Event Tracking - Backend
-- [ ] Create POST route `/game/<int:game_id>/event` to add event
-  - [ ] Accept JSON: team_id, period, event_category, event_subcategory
-  - [ ] Verify game belongs to current_user
-  - [ ] Verify team_id is either team1 or team2 of the game
-  - [ ] Create BasketballEvent with all fields
-  - [ ] Save to database
-  - [ ] Return JSON success response with event details
-- [ ] Create DELETE route `/game/<int:game_id>/event/undo` to undo last event
-  - [ ] Verify game belongs to current_user
-  - [ ] Find most recent event for this game (order by created_at desc)
-  - [ ] Delete the event
-  - [ ] Return JSON success response with deleted event_id
-- [ ] Create GET route `/game/<int:game_id>/events` to fetch events
-  - [ ] Verify game belongs to current_user
-  - [ ] Fetch all events for game (ordered by created_at desc)
-  - [ ] Return JSON array of events with all details
-- [ ] Update GET route `/game/<int:game_id>` to pass initial events to template
+### [x] 3.1 Event Tracking - Backend
+- [x] Create POST route `/game/<int:game_id>/event` to add event
+  - [x] Accept JSON: team_id, period, event_category, event_subcategory
+  - [x] Verify game belongs to current_user
+  - [x] Verify team_id is either team1 or team2 of the game
+  - [x] Create BasketballEvent with all fields
+  - [x] Save to database
+  - [x] Return JSON success response with event details
+- [x] Create DELETE route `/game/<int:game_id>/event/undo` to undo last event
+  - [x] Verify game belongs to current_user
+  - [x] Find most recent event for this game (order by created_at desc)
+  - [x] Delete the event
+  - [x] Return JSON success response with deleted event_id
+- [x] Create GET route `/game/<int:game_id>/events` to fetch events
+  - [x] Verify game belongs to current_user
+  - [x] Fetch all events for game (ordered by created_at desc)
+  - [x] Return JSON array of events with all details
+- [x] Update GET route `/game/<int:game_id>` to pass initial events to template
 
-### [ ] 3.2 Edit View - Team Switcher
-- [ ] Add team switcher UI to edit view section
-  - [ ] Toggle/segmented control showing both team names
-  - [ ] Clear visual indication of selected team
-  - [ ] Large touch target (44px min)
-  - [ ] Style with `.bbt-team-switcher` class
-- [ ] Add JavaScript to track selected team (store in variable)
-- [ ] Test: Click between teams, verify selection updates visually
+### [x] 3.2 Edit View - Team Switcher
+- [x] Add team switcher UI to edit view section
+  - [x] Toggle/segmented control showing both team names
+  - [x] Clear visual indication of selected team
+  - [x] Large touch target (44px min)
+  - [x] Style with `.bbt-team-switcher` class
+- [x] Add JavaScript to track selected team (store in variable)
+- [x] Test: Click between teams, verify selection updates visually
 
-### [ ] 3.3 Edit View - Period Selector (Modal)
-- [ ] Add clickable period badge in sticky header
-  - [ ] Display current period (1st, 2nd, 3rd, 4th, or OT)
-  - [ ] Add down arrow indicator (▼) to show it's clickable
-  - [ ] Style with `.bbt-period-badge` class
-- [ ] Create period selection modal
-  - [ ] Modal overlay with centered content
-  - [ ] List of period options as large buttons (1st, 2nd, 3rd, 4th, Overtime)
-  - [ ] Show current period as highlighted/active
-  - [ ] Disable past periods (grayed out, not clickable)
-  - [ ] Only allow forward movement (1→2→3→4→OT)
-  - [ ] Close modal on selection or cancel
-  - [ ] Style with `.bbt-period-modal` classes
-- [ ] Add JavaScript to track current period
-- [ ] Add JavaScript to prevent backward period changes
-- [ ] Add JavaScript to open/close modal (click outside or close button)
-- [ ] Update period in game model when changed (AJAX call)
-- [ ] Create POST route `/game/<int:game_id>/period` to update current_period
-- [ ] Test: Click period badge, select new period, verify UI updates, verify persistence
+### [x] 3.3 Edit View - Period Selector (Modal)
+- [x] Add clickable period badge in sticky header
+  - [x] Display current period (1st, 2nd, 3rd, 4th, or OT)
+  - [x] Add down arrow indicator (▼) to show it's clickable
+  - [x] Style with `.bbt-period-badge` class
+- [x] Create period selection modal
+  - [x] Modal overlay with centered content
+  - [x] List of period options as large buttons (1st, 2nd, 3rd, 4th, Overtime)
+  - [x] Show current period as highlighted/active
+  - [x] Allow movement between any periods (forward or backward)
+  - [x] Close modal on selection or cancel
+  - [x] Style with `.bbt-period-modal` classes
+- [x] Add JavaScript to track current period
+- [x] Add JavaScript to open/close modal (click outside or close button)
+- [x] Update period in game model when changed (AJAX call)
+- [x] Create POST route `/game/<int:game_id>/period` to update current_period
+- [x] Test: Click period badge, select new period, verify UI updates, verify persistence
 
-### [ ] 3.4 Edit View - Primary Action Buttons
-- [ ] Create HTML structure for four primary buttons
-  - [ ] "Make Shot" button
-  - [ ] "Miss Shot" button
-  - [ ] "Turnover" button
-  - [ ] "Offensive Rebound" button
-- [ ] Style buttons with `.bbt-action-btn` class
-  - [ ] Large (minimum 44px height)
-  - [ ] Clear labels
-  - [ ] Touch-friendly spacing
-  - [ ] Mobile-optimized layout (stack vertically or 2x2 grid)
+### [x] 3.4 Edit View - Primary Action Buttons
+- [x] Create HTML structure for four primary buttons
+  - [x] "Make Shot" button
+  - [x] "Miss Shot" button
+  - [x] "Turnover" button
+  - [x] "Offensive Rebound" button
+- [x] Style buttons with `.bbt-action-btn` class
+  - [x] Large (minimum 44px height)
+  - [x] Clear labels
+  - [x] Touch-friendly spacing
+  - [x] Mobile-optimized layout (stack vertically or 2x2 grid)
 
-### [ ] 3.5 Edit View - Inline Expansion UI
-- [ ] Create secondary button sets (hidden by default)
-  - [ ] Shot types: Layup, Close 2, Far 2, 3-Pointer, Free Throw
-  - [ ] Turnover types: Traveling, Steal, Other
-- [ ] Style secondary buttons with `.bbt-secondary-btn` class
-- [ ] Add JavaScript for inline expansion
-  - [ ] Click "Make Shot" → show shot type buttons inline (category='make', subcategory=shot type)
-  - [ ] Click "Miss Shot" → show shot type buttons inline (category='miss', subcategory=shot type)
-  - [ ] Click "Turnover" → show turnover type buttons inline (category='turnover', subcategory=turnover type)
-  - [ ] Click "Offensive Rebound" → save immediately with category='rebound', subcategory='Offensive' (no expansion needed)
-  - [ ] Click secondary button → save event and collapse
-  - [ ] Click outside or different primary → collapse current expansion
+### [x] 3.5 Edit View - Inline Expansion UI
+- [x] Create secondary button sets (hidden by default)
+  - [x] Shot types: Layup, Close 2, Far 2, 3-Pointer, Free Throw
+  - [x] Turnover types: Traveling, Steal, Other
+- [x] Style secondary buttons with `.bbt-secondary-btn` class
+- [x] Add JavaScript for inline expansion
+  - [x] Click "Make Shot" → show shot type buttons inline (category='make', subcategory=shot type)
+  - [x] Click "Miss Shot" → show shot type buttons inline (category='miss', subcategory=shot type)
+  - [x] Click "Turnover" → show turnover type buttons inline (category='turnover', subcategory=turnover type)
+  - [x] Click "Offensive Rebound" → save immediately with category='rebound', subcategory='Offensive' (no expansion needed)
+  - [x] Click secondary button → save event and collapse
+  - [x] Click outside or different primary → collapse current expansion
 
-### [ ] 3.6 Edit View - Event Saving
-- [ ] Add JavaScript function to save event via AJAX
-  - [ ] Gather: selected team, current period, category, subcategory
-  - [ ] POST to `/game/<int:game_id>/event`
-  - [ ] Handle success: update UI, show confirmation
-  - [ ] Handle error: show error message
-- [ ] Add visual feedback for save success
-  - [ ] Brief animation or color flash
-  - [ ] Update event log immediately
-  - [ ] Update live score immediately
-- [ ] Test: Click each button combination, verify events save to database
+### [x] 3.6 Edit View - Event Saving
+- [x] Add JavaScript function to save event via AJAX
+  - [x] Gather: selected team, current period, category, subcategory
+  - [x] POST to `/game/<int:game_id>/event`
+  - [x] Handle success: update UI, show confirmation
+  - [x] Handle error: show error message
+- [x] Add visual feedback for save success
+  - [x] Brief animation or color flash
+  - [x] Update event log immediately
+  - [x] Update live score immediately
+- [x] Test: Click each button combination, verify events save to database
 
-### [ ] 3.7 Edit View - Live Score Display (Sticky Header)
-- [ ] Add sticky header with score display (remains at top when scrolling)
-  - [ ] Show both team names and scores in compact format
-  - [ ] Display period badge (clickable) in center
-  - [ ] Format: Team names above scores, period in center
-  - [ ] Prominent, easy to read
-  - [ ] Style with `.bbt-score-header` class
-- [ ] Add JavaScript function to calculate score
-  - [ ] Iterate through events where category='make'
-  - [ ] Free Throw = 1 point
-  - [ ] Layup/Close 2/Far 2 = 2 points
-  - [ ] 3-Pointer = 3 points
-  - [ ] Sum by team_id
-- [ ] Call calculate score function on:
-  - [ ] Page load (from initial events)
-  - [ ] After event is added
-  - [ ] After event is undone
-- [ ] Test: Add various make events, verify score updates correctly
+### [x] 3.7 Edit View - Live Score Display (Sticky Header)
+- [x] Add sticky header with score display (remains at top when scrolling)
+  - [x] Show both team names and scores in compact format
+  - [x] Display period badge (clickable) in center
+  - [x] Format: Team names above scores, period in center
+  - [x] Prominent, easy to read
+  - [x] Style with `.bbt-score-header` class
+- [x] Add JavaScript function to calculate score
+  - [x] Iterate through events where category='make'
+  - [x] Free Throw = 1 point
+  - [x] Layup/Close 2/Far 2 = 2 points
+  - [x] 3-Pointer = 3 points
+  - [x] Sum by team_id
+- [x] Call calculate score function on:
+  - [x] Page load (from initial events)
+  - [x] After event is added
+  - [x] After event is undone
+- [x] Test: Add various make events, verify score updates correctly
 
-### [ ] 3.8 Edit View - Event Log Display
-- [ ] Add event log section to edit view
-  - [ ] Title: "Recent Events" or similar
-  - [ ] Show most recent 10 events
-  - [ ] Style with `.bbt-event-log` class
-- [ ] For each event, display:
-  - [ ] Team name
-  - [ ] Event category/subcategory (e.g., "Make - 3-Pointer")
-  - [ ] Period (e.g., "2nd")
-  - [ ] Timestamp or time ago (optional)
-- [ ] Style as mobile-friendly list (compact but readable)
-- [ ] Update log in JavaScript after:
-  - [ ] Event is added (prepend to list, trim to 10)
-  - [ ] Event is undone (remove from list)
-- [ ] Test: Add multiple events, verify log shows newest first
+### [x] 3.8 Edit View - Event Log Display
+- [x] Add event log section to edit view
+  - [x] Title: "Recent Events" or similar
+  - [x] Show most recent 10 events
+  - [x] Style with `.bbt-event-log` class
+- [x] For each event, display:
+  - [x] Team name
+  - [x] Event category/subcategory (e.g., "Make - 3-Pointer")
+  - [x] Period (e.g., "2nd")
+  - [x] Timestamp or time ago (optional)
+- [x] Style as mobile-friendly list (compact but readable)
+- [x] Update log in JavaScript after:
+  - [x] Event is added (prepend to list, trim to 10)
+  - [x] Event is undone (remove from list)
+- [x] Test: Add multiple events, verify log shows newest first
 
-### [ ] 3.9 Edit View - Undo Button (Fixed Bottom Bar)
-- [ ] Add fixed bottom bar with undo button
-  - [ ] Position fixed at bottom of screen (always visible)
-  - [ ] Large rounded button centered in bar
-  - [ ] Label clearly ("↶ Undo" or "↶ Undo Last")
-  - [ ] Style with `.bbt-undo-fab` class (floating action button style)
-  - [ ] Disable when no events exist
-  - [ ] Ensure it doesn't overlap with content (add bottom padding to view)
-- [ ] Add JavaScript undo handler
-  - [ ] DELETE to `/game/<int:game_id>/event/undo`
-  - [ ] On success: remove event from log, recalculate score
-  - [ ] On error: show error message
-- [ ] Test: Add events, undo one, verify event removed and score updated
-- [ ] Test: Undo multiple times, verify unlimited undo works
+### [x] 3.9 Edit View - Undo Button (Fixed Bottom Bar)
+- [x] Add fixed bottom bar with undo button
+  - [x] Position fixed at bottom of screen (always visible)
+  - [x] Large rounded button centered in bar
+  - [x] Label clearly ("↶ Undo" or "↶ Undo Last")
+  - [x] Style with `.bbt-undo-fab` class (floating action button style)
+  - [x] Disable when no events exist
+  - [x] Ensure it doesn't overlap with content (add bottom padding to view)
+- [x] Add JavaScript undo handler
+  - [x] DELETE to `/game/<int:game_id>/event/undo`
+  - [x] On success: remove event from log, recalculate score
+  - [x] On error: show error message
+- [x] Test: Add events, undo one, verify event removed and score updated
+- [x] Test: Undo multiple times, verify unlimited undo works
 
-### [ ] 3.10 Edit View - Integration Testing
-- [ ] Test full event tracking flow
-  - [ ] Select team, select period, add various events
-  - [ ] Verify score updates correctly
-  - [ ] Verify event log updates correctly
-  - [ ] Switch teams mid-game, add more events
-  - [ ] Change period, add events in new period
-  - [ ] Undo several events, verify everything updates
-  - [ ] Refresh page, verify state persists
-- [ ] Test edge cases
-  - [ ] Undo all events (score should be 0-0)
-  - [ ] Add events in OT period
-  - [ ] Rapid clicking (ensure no duplicate events)
+### [x] 3.10 Edit View - Integration Testing
+- [x] Test full event tracking flow
+  - [x] Select team, select period, add various events
+  - [x] Verify score updates correctly
+  - [x] Verify event log updates correctly
+  - [x] Switch teams mid-game, add more events
+  - [x] Change period, add events in new period
+  - [x] Undo several events, verify everything updates
+  - [x] Refresh page, verify state persists
+- [x] Test edge cases
+  - [x] Undo all events (score should be 0-0)
+  - [x] Add events in OT period
+  - [x] Rapid clicking (ensure no duplicate events)
 
 ---
 

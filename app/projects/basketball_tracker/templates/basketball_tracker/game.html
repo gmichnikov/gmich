@@ -4,132 +4,6 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('basketball_tracker.static', filename='basketball_tracker/style.css') }}">
-<style>
-    /* Option C specific styles that will move to style.css later */
-    .bbt-sticky-header {
-        position: sticky;
-        top: 0;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        z-index: 100;
-        margin: 0 -1rem; /* Offset bbt-p-1 padding */
-    }
-    
-    .bbt-score-bar {
-        display: flex;
-        padding: 1rem;
-        justify-content: space-between;
-        align-items: center;
-        background: linear-gradient(90deg, var(--bbt-primary-color) 0%, var(--bbt-secondary-color) 100%);
-        color: white;
-    }
-    
-    .bbt-team-score-compact {
-        text-align: center;
-        flex: 1;
-    }
-    
-    .bbt-team-name-compact {
-        font-size: 0.75rem;
-        opacity: 0.9;
-        margin-bottom: 0.25rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .bbt-score-compact {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-    
-    .bbt-period-badge {
-        font-size: 0.85rem;
-        background: rgba(255,255,255,0.2);
-        padding: 0.35rem 0.75rem;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: background 0.2s;
-        margin: 0 0.5rem;
-    }
-    
-    .bbt-period-badge:active {
-        background: rgba(255,255,255,0.3);
-    }
-    
-    .bbt-view-tabs {
-        display: flex;
-        background: white;
-        border-bottom: 1px solid var(--bbt-gray-medium);
-    }
-    
-    .bbt-view-tab {
-        flex: 1;
-        padding: 0.75rem;
-        border: none;
-        background: white;
-        font-size: 0.9rem;
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
-        font-weight: 500;
-        color: var(--bbt-text-secondary);
-    }
-    
-    .bbt-view-tab.active {
-        border-bottom-color: var(--bbt-primary-color);
-        color: var(--bbt-primary-color);
-    }
-    
-    .bbt-view-content {
-        display: none;
-        padding-top: 1rem;
-    }
-    
-    .bbt-view-content.active {
-        display: block;
-    }
-
-    /* Modal styles */
-    .bbt-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 200;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .bbt-modal.active {
-        display: flex;
-    }
-    
-    .bbt-modal-content {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        max-width: 300px;
-        width: 90%;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-    
-    .bbt-modal-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        color: var(--bbt-text-primary);
-        text-align: center;
-    }
-    
-    .bbt-modal-options {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
@@ -155,32 +29,102 @@
                     <div id="team2-score" class="bbt-score-compact">0</div>
                 </div>
             </div>
+
+            <!-- Team Switcher -->
+            <div class="bbt-team-toggle-container">
+                <button id="team1-toggle" class="bbt-team-toggle active" onclick="switchTeam({{ game.team1_id }})">
+                    {{ game.team1.name }}
+                </button>
+                <button id="team2-toggle" class="bbt-team-toggle" onclick="switchTeam({{ game.team2_id }})">
+                    {{ game.team2.name }}
+                </button>
+            </div>
             
             <div class="bbt-view-tabs">
-                <button class="bbt-view-tab active" onclick="switchView('track')">Track</button>
-                <button class="bbt-view-tab" onclick="switchView('stats')">Stats</button>
-                <button class="bbt-view-tab" onclick="switchView('log')">Log</button>
+                <button id="tab-track" class="bbt-view-tab active" onclick="switchView('track')">Track</button>
+                <button id="tab-stats" class="bbt-view-tab" onclick="switchView('stats')">Stats</button>
+                <button id="tab-log" class="bbt-view-tab" onclick="switchView('log')">Log</button>
             </div>
         </div>
 
         <!-- Track View -->
         <div id="track-view" class="bbt-view-content active">
-            <!-- To be implemented in Phase 3 -->
-            <p class="bbt-text-center bbt-mt-1">Tracking controls coming in Phase 3.</p>
+            <!-- Action Buttons -->
+            <div class="bbt-action-row">
+                <button class="bbt-action-box green" onclick="toggleShotDrawer('make')">
+                    <div class="icon">✓</div>
+                    <div>Make Shot</div>
+                </button>
+                <button class="bbt-action-box red" onclick="toggleShotDrawer('miss')">
+                    <div class="icon">✗</div>
+                    <div>Miss Shot</div>
+                </button>
+            </div>
+
+            <!-- Shot Drawer -->
+            <div id="shot-drawer" class="bbt-shot-drawer">
+                <div id="drawer-title" class="bbt-drawer-title">Select shot type:</div>
+                <div class="bbt-shot-grid">
+                    <button class="bbt-shot-option" onclick="submitEvent('Layup')">Layup</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('Close 2')">Close 2</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('Far 2')">Far 2</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('3-Pointer')">3-Pointer</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('Free Throw')">Free Throw</button>
+                </div>
+            </div>
+
+            <div class="bbt-action-row">
+                <button class="bbt-action-box orange" onclick="toggleShotDrawer('turnover')">
+                    <div class="icon">⚠</div>
+                    <div>Turnover</div>
+                </button>
+                <button class="bbt-action-box blue" onclick="submitEvent('Offensive', 'rebound')">
+                    <div class="icon">↑</div>
+                    <div>Off Reb</div>
+                </button>
+            </div>
+
+            <!-- Turnover Drawer (shared with shots but different options) -->
+            <div id="turnover-drawer" class="bbt-shot-drawer">
+                <div class="bbt-drawer-title">Select turnover type:</div>
+                <div class="bbt-shot-grid">
+                    <button class="bbt-shot-option" onclick="submitEvent('Traveling', 'turnover')">Traveling</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('Steal', 'turnover')">Steal</button>
+                    <button class="bbt-shot-option" onclick="submitEvent('Other', 'turnover')">Other</button>
+                </div>
+            </div>
+
+            <!-- Event Feed -->
+            <div class="bbt-event-feed">
+                <div class="bbt-feed-title">Recent Activity</div>
+                <div id="event-feed-list">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
         </div>
 
         <!-- Stats View -->
         <div id="stats-view" class="bbt-view-content">
-            <!-- To be implemented in Phase 4 -->
-            <p class="bbt-text-center bbt-mt-1">Stats view coming in Phase 4.</p>
+            <div id="stats-content">
+                <p class="bbt-text-center bbt-mt-1">Loading stats...</p>
+            </div>
         </div>
 
         <!-- Log View -->
         <div id="log-view" class="bbt-view-content">
-            <!-- To be implemented in Phase 4 -->
-            <p class="bbt-text-center bbt-mt-1">Full event log coming in Phase 4.</p>
+            <div class="bbt-event-feed">
+                <div class="bbt-feed-title">Full Event Log</div>
+                <div id="full-log-list">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
         </div>
     </div>
+</div>
+
+<!-- Undo Fixed Bottom Bar -->
+<div class="bbt-bottom-bar">
+    <button id="undo-btn" class="bbt-undo-fab" onclick="undoLastEvent()" disabled>↶ Undo</button>
 </div>
 
 <!-- Period Selection Modal -->
@@ -190,8 +134,8 @@
         <div class="bbt-modal-options">
             {% for p in range(1, 6) %}
                 {% set p_name = "OT" if p == 5 else p|string + ("st" if p == 1 else "nd" if p == 2 else "rd" if p == 3 else "th") %}
-                <button class="bbt-button bbt-button-outline period-option {% if p == game.current_period %}active{% elif p < game.current_period %}past{% endif %}"
-                        {% if p < game.current_period %}disabled{% endif %}
+                <button id="period-btn-{{ p }}" 
+                        class="bbt-button bbt-button-outline bbt-period-option {% if p == game.current_period %}active{% endif %}"
                         onclick="updatePeriod({{ p }}, '{{ p_name }}')">
                     {{ p_name }} Period
                 </button>
@@ -202,20 +146,60 @@
 </div>
 
 <script>
+    // State management
+    const gameId = {{ game.id }};
+    const team1Id = {{ game.team1_id }};
+    const team2Id = {{ game.team2_id }};
+    const team1Name = "{{ game.team1.name }}";
+    const team2Name = "{{ game.team2.name }}";
+    
+    let currentTeamId = team1Id;
+    let currentPeriod = {{ game.current_period }};
+    let currentCategory = null; // 'make', 'miss', 'turnover', 'rebound'
+    let events = [];
+
+    // Initialize initial events from server
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if initial_events %}
+            events = [
+                {% for e in initial_events %}
+                {
+                    id: {{ e.id }},
+                    team_id: {{ e.team_id }},
+                    team_name: "{{ e.team.name }}",
+                    period: {{ e.period }},
+                    category: "{{ e.event_category }}",
+                    subcategory: "{{ e.event_subcategory }}",
+                    created_at: "{{ e.created_at.isoformat() }}"
+                },
+                {% endfor %}
+            ];
+        {% endif %}
+        updateUI();
+    });
+
     function switchView(viewName) {
-        // Update tabs
-        document.querySelectorAll('.bbt-view-tab').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.textContent.toLowerCase() === viewName) {
-                tab.classList.add('active');
-            }
-        });
+        document.querySelectorAll('.bbt-view-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab-' + viewName).classList.add('active');
         
-        // Update content
-        document.querySelectorAll('.bbt-view-content').forEach(content => {
-            content.classList.remove('active');
-        });
+        document.querySelectorAll('.bbt-view-content').forEach(content => content.classList.remove('active'));
         document.getElementById(viewName + '-view').classList.add('active');
+        
+        if (viewName === 'stats') {
+            loadStats();
+        } else if (viewName === 'log') {
+            updateLogView();
+        }
+    }
+
+    function switchTeam(teamId) {
+        currentTeamId = teamId;
+        document.querySelectorAll('.bbt-team-toggle').forEach(btn => btn.classList.remove('active'));
+        if (teamId === team1Id) {
+            document.getElementById('team1-toggle').classList.add('active');
+        } else {
+            document.getElementById('team2-toggle').classList.add('active');
+        }
     }
 
     function openPeriodModal() {
@@ -228,11 +212,301 @@
         }
     }
 
-    function updatePeriod(period, periodName) {
-        // To be implemented with AJAX in Phase 3
-        console.log('Update period to:', period);
-        document.getElementById('period-display').textContent = periodName + ' ▼';
-        closePeriodModal();
+    async function updatePeriod(period, periodName) {
+        try {
+            const response = await fetch(`/basketball-tracker/game/${gameId}/period`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ period: period })
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentPeriod = period;
+                document.getElementById('period-display').textContent = periodName + ' ▼';
+                
+                // Update modal buttons
+                document.querySelectorAll('.bbt-period-option').forEach(btn => {
+                    btn.classList.remove('active');
+                    const btnPeriod = parseInt(btn.id.split('-').pop());
+                    if (btnPeriod === period) btn.classList.add('active');
+                });
+                
+                closePeriodModal();
+            } else {
+                alert(data.error || 'Failed to update period');
+            }
+        } catch (error) {
+            console.error('Error updating period:', error);
+            alert('Error connecting to server');
+        }
+    }
+
+    function toggleShotDrawer(category) {
+        const shotDrawer = document.getElementById('shot-drawer');
+        const turnoverDrawer = document.getElementById('turnover-drawer');
+        
+        // If clicking the same category that's already open, close it
+        if (currentCategory === category && (shotDrawer.classList.contains('active') || turnoverDrawer.classList.contains('active'))) {
+            shotDrawer.classList.remove('active');
+            turnoverDrawer.classList.remove('active');
+            currentCategory = null;
+            return;
+        }
+
+        currentCategory = category;
+        
+        if (category === 'make' || category === 'miss') {
+            turnoverDrawer.classList.remove('active');
+            shotDrawer.classList.add('active');
+            document.getElementById('drawer-title').textContent = `Select ${category} shot type:`;
+        } else if (category === 'turnover') {
+            shotDrawer.classList.remove('active');
+            turnoverDrawer.classList.add('active');
+        } else {
+            shotDrawer.classList.remove('active');
+            turnoverDrawer.classList.remove('active');
+        }
+    }
+
+    async function submitEvent(subcategory, category) {
+        const cat = category || currentCategory;
+        const eventData = {
+            team_id: currentTeamId,
+            period: currentPeriod,
+            event_category: cat,
+            event_subcategory: subcategory
+        };
+
+        try {
+            const response = await fetch(`/basketball-tracker/game/${gameId}/event`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(eventData)
+            });
+            const data = await response.json();
+            if (data.success) {
+                events.unshift(data.event);
+                updateUI();
+                
+                // Close drawers
+                document.getElementById('shot-drawer').classList.remove('active');
+                document.getElementById('turnover-drawer').classList.remove('active');
+                currentCategory = null;
+                
+                // Haptic-like feedback (color flash)
+                const header = document.querySelector('.bbt-score-bar');
+                header.style.transition = 'background 0.1s';
+                const originalBg = header.style.background;
+                header.style.background = '#2ecc71';
+                setTimeout(() => { header.style.background = originalBg; }, 150);
+            } else {
+                alert(data.error || 'Failed to save event');
+            }
+        } catch (error) {
+            console.error('Error saving event:', error);
+            alert('Error connecting to server');
+        }
+    }
+
+    async function undoLastEvent() {
+        if (events.length === 0) return;
+        
+        if (!confirm('Undo the most recent event?')) return;
+
+        try {
+            const response = await fetch(`/basketball-tracker/game/${gameId}/event/undo`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                events.shift();
+                updateUI();
+            } else {
+                alert(data.error || 'Failed to undo event');
+            }
+        } catch (error) {
+            console.error('Error undoing event:', error);
+            alert('Error connecting to server');
+        }
+    }
+
+    function calculateScore() {
+        let score1 = 0;
+        let score2 = 0;
+        
+        events.forEach(e => {
+            if (e.category === 'make') {
+                let points = 0;
+                if (e.subcategory === 'Free Throw') points = 1;
+                else if (e.subcategory === '3-Pointer') points = 3;
+                else points = 2; // Layup, Close 2, Far 2
+                
+                if (e.team_id === team1Id) score1 += points;
+                else score2 += points;
+            }
+        });
+        
+        document.getElementById('team1-score').textContent = score1;
+        document.getElementById('team2-score').textContent = score2;
+    }
+
+    function updateUI() {
+        calculateScore();
+        updateFeed();
+        document.getElementById('undo-btn').disabled = (events.length === 0);
+    }
+
+    function getPeriodLabel(p) {
+        if (p === 1) return "1st";
+        if (p === 2) return "2nd";
+        if (p === 3) return "3rd";
+        if (p === 4) return "4th";
+        return "OT";
+    }
+
+    function updateFeed() {
+        const feedList = document.getElementById('event-feed-list');
+        feedList.innerHTML = '';
+        
+        // Show last 10
+        const recentEvents = events.slice(0, 10);
+        
+        if (recentEvents.length === 0) {
+            feedList.innerHTML = '<p class="bbt-text-center bbt-p-1">No events yet.</p>';
+            return;
+        }
+
+        recentEvents.forEach(e => {
+            const item = document.createElement('div');
+            item.className = 'bbt-feed-item';
+            
+            let actionDesc = e.category === 'make' ? 'Make' : (e.category === 'miss' ? 'Miss' : '');
+            if (e.category === 'turnover') actionDesc = 'Turnover';
+            if (e.category === 'rebound') actionDesc = 'Off Reb';
+            
+            const subDesc = e.subcategory && e.subcategory !== 'Offensive' ? ` - ${e.subcategory}` : '';
+            
+            item.innerHTML = `
+                <div class="bbt-feed-icon"></div>
+                <div class="bbt-feed-content">
+                    <div><strong>${e.team_name}</strong> ${actionDesc}${subDesc}</div>
+                    <div class="feed-meta">${getPeriodLabel(e.period)} Period</div>
+                </div>
+            `;
+            feedList.appendChild(item);
+        });
+    }
+
+    function updateLogView() {
+        const logList = document.getElementById('full-log-list');
+        logList.innerHTML = '';
+        
+        if (events.length === 0) {
+            logList.innerHTML = '<p class="bbt-text-center bbt-p-1">No events yet.</p>';
+            return;
+        }
+
+        events.forEach(e => {
+            const item = document.createElement('div');
+            item.className = 'bbt-feed-item';
+            
+            let actionDesc = e.category === 'make' ? 'Make' : (e.category === 'miss' ? 'Miss' : '');
+            if (e.category === 'turnover') actionDesc = 'Turnover';
+            if (e.category === 'rebound') actionDesc = 'Off Reb';
+            
+            const subDesc = e.subcategory && e.subcategory !== 'Offensive' ? ` - ${e.subcategory}` : '';
+            
+            const timeStr = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            item.innerHTML = `
+                <div class="bbt-feed-icon"></div>
+                <div class="bbt-feed-content">
+                    <div><strong>${e.team_name}</strong> ${actionDesc}${subDesc}</div>
+                    <div class="feed-meta">${getPeriodLabel(e.period)} Period • ${timeStr}</div>
+                </div>
+            `;
+            logList.appendChild(item);
+        });
+    }
+
+    async function loadStats() {
+        const statsContent = document.getElementById('stats-content');
+        statsContent.innerHTML = '<p class="bbt-text-center bbt-p-1">Loading stats...</p>';
+        
+        // For now, calculate stats on the frontend to keep it reactive
+        // We will move this to the backend in Phase 4 as planned
+        
+        const calculateTeamStats = (teamId) => {
+            const teamEvents = events.filter(e => e.team_id === teamId);
+            const stats = {
+                points: 0,
+                fgm: 0, fga: 0,
+                tp_m: 0, tp_a: 0,
+                ftm: 0, fta: 0,
+                to: 0, reb: 0
+            };
+            
+            teamEvents.forEach(e => {
+                if (e.category === 'make') {
+                    if (e.subcategory === 'Free Throw') {
+                        stats.points += 1; stats.ftm++; stats.fta++;
+                    } else if (e.subcategory === '3-Pointer') {
+                        stats.points += 3; stats.tp_m++; stats.tp_a++;
+                    } else {
+                        stats.points += 2; stats.fgm++; stats.fga++;
+                    }
+                } else if (e.category === 'miss') {
+                    if (e.subcategory === 'Free Throw') stats.fta++;
+                    else if (e.subcategory === '3-Pointer') stats.tp_a++;
+                    else stats.fga++;
+                } else if (e.category === 'turnover') {
+                    stats.to++;
+                } else if (e.category === 'rebound') {
+                    stats.reb++;
+                }
+            });
+            
+            return stats;
+        };
+
+        const stats1 = calculateTeamStats(team1Id);
+        const stats2 = calculateTeamStats(team2Id);
+
+        const formatPercent = (m, a) => a === 0 ? "0/0 (-)" : `${m}/${a} (${Math.round(m/a*100)}%)`;
+
+        statsContent.innerHTML = `
+            <div class="bbt-card">
+                <div class="bbt-card-title">${team1Name} Stats</div>
+                <div class="bbt-list">
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Points</span> <strong>${stats1.points}</strong></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Field Goals</span> <span>${formatPercent(stats1.fgm, stats1.fga)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>3-Pointers</span> <span>${formatPercent(stats1.tp_m, stats1.tp_a)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Free Throws</span> <span>${formatPercent(stats1.ftm, stats1.fta)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Turnovers</span> <span>${stats1.to}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Off Rebounds</span> <span>${stats1.reb}</span></div>
+                </div>
+            </div>
+            <div class="bbt-card">
+                <div class="bbt-card-title">${team2Name} Stats</div>
+                <div class="bbt-list">
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Points</span> <strong>${stats2.points}</strong></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Field Goals</span> <span>${formatPercent(stats2.fgm, stats2.fga)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>3-Pointers</span> <span>${formatPercent(stats2.tp_m, stats2.tp_a)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Free Throws</span> <span>${formatPercent(stats2.ftm, stats2.fta)}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Turnovers</span> <span>${stats2.to}</span></div>
+                    <div class="bbt-list-item" style="display: flex; justify-content: space-between;"><span>Off Rebounds</span> <span>${stats2.reb}</span></div>
+                </div>
+            </div>
+        `;
     }
 </script>
 {% endblock %}
