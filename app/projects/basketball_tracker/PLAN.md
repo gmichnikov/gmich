@@ -194,6 +194,7 @@ This document outlines the detailed implementation plan for the Basketball Track
   - [x] Handle error: show error message
 - [x] Add visual feedback for save success
   - [x] Brief animation or color flash
+  - [x] **Auto-Switch Logic:** Automatically toggle team switcher to the other team after a Made FG (2 or 3) or Turnover.
   - [x] Update event log immediately
   - [x] Update live score immediately
 - [x] Test: Click each button combination, verify events save to database

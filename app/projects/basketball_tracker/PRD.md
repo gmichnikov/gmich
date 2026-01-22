@@ -124,9 +124,10 @@ Three view modes (toggled): **Edit**, **Stats**, **Log**
   3. User clicks primary button (Make Shot, Miss Shot, Turnover, or Offensive Rebound)
   4. If needed, secondary buttons appear inline (shot type or turnover type)
   5. Event is saved immediately
-  6. Event log updates
-  7. If mistake, user clicks Undo to remove last event
-  8. User can undo multiple times if needed
+  6. **Auto-Switch Logic:** If the event was a **Made Shot** (2 or 3 pointer, but NOT a free throw) or a **Turnover**, the active team automatically switches to the other team.
+  7. Event log updates
+  8. If mistake, user clicks Undo to remove last event
+  9. User can undo multiple times if needed
 
 #### Stats View
 - **Purpose:** Summary statistics for the current game
