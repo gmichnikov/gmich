@@ -668,6 +668,11 @@ def login_google():
         time_zone = "UTC"
     session["oauth_timezone"] = time_zone
 
+    # Store next page in session if provided
+    next_page = request.args.get("next")
+    if next_page:
+        session["next"] = next_page
+
     # Get the OAuth client
     google = oauth.google
 
