@@ -249,6 +249,16 @@ PROJECTS = [
         "type": "project",
         "order": 2,
     },
+    {
+        "id": "notes",
+        "name": "Notes",
+        "description": "Take and organize notes",
+        "url": "/notes",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "order": 7,
+    },
 ]
 
 
