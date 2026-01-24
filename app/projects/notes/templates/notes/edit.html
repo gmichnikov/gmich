@@ -1,11 +1,81 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Note{% endblock %}
+{% block title %}Edit: {{ note.title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Edit Note</h1>
-    <p>Note editor coming soon! (Note ID: {{ note_id }})</p>
-    <a href="{{ url_for('notes.index') }}">Back to Notes</a>
+<div class="notes-page">
+    <div class="notes-container">
+        <a href="{{ url_for('notes.index') }}" class="notes-back-link">← Back to Notes</a>
+
+        <div class="notes-header">
+            <h1 class="notes-title">Edit Note</h1>
+            <span id="save-indicator" style="color: var(--notes-text-muted); font-size: 0.9rem;"></span>
+        </div>
+
+        <form id="edit-form" action="{{ url_for('notes.save', note_id=note.id) }}" method="post" class="notes-card" style="padding: 24px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="redirect_to" id="redirect-to" value="edit">
+
+            <div class="notes-form-group">
+                <label for="title" class="notes-label">Title</label>
+                <input type="text" id="title" name="title" class="notes-input"
+                       value="{{ note.title }}" required>
+                {% if error %}
+                <p class="notes-error">{{ error }}</p>
+                {% endif %}
+            </div>
+
+            <div class="notes-form-group">
+                <label for="content" class="notes-label">Content (Markdown supported)</label>
+                <textarea id="content" name="content" class="notes-textarea">{{ note.content }}</textarea>
+            </div>
+
+            <div class="notes-form-actions">
+                <button type="submit" class="notes-btn notes-btn-primary">Save</button>
+                <button type="button" id="save-and-view-btn" class="notes-btn notes-btn-secondary">Save & View</button>
+                <a href="{{ url_for('notes.index') }}" class="notes-btn notes-btn-secondary">Back to Notes</a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+const form = document.getElementById('edit-form');
+const redirectInput = document.getElementById('redirect-to');
+const noteId = '{{ note.id }}';
+const scrollKey = 'notes-scroll-' + noteId;
+
+// Save scroll position before form submit
+form.addEventListener('submit', function() {
+    sessionStorage.setItem(scrollKey, window.scrollY);
+});
+
+// Restore scroll position on page load
+window.addEventListener('load', function() {
+    const savedScroll = sessionStorage.getItem(scrollKey);
+    if (savedScroll) {
+        window.scrollTo(0, parseInt(savedScroll));
+        sessionStorage.removeItem(scrollKey);
+    }
+});
+
+// Ctrl+S / Cmd+S to save
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        form.submit();
+    }
+});
+
+// Save & View button
+document.getElementById('save-and-view-btn').addEventListener('click', function() {
+    redirectInput.value = 'view';
+    sessionStorage.removeItem(scrollKey); // Don't restore scroll when going to view
+    form.submit();
+});
+</script>
 {% endblock %}

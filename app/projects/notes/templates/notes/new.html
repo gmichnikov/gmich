@@ -2,10 +2,34 @@
 
 {% block title %}New Note{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>New Note</h1>
-    <p>New note form coming soon!</p>
-    <a href="{{ url_for('notes.index') }}">Back to Notes</a>
+<div class="notes-page">
+    <div class="notes-container">
+        <a href="{{ url_for('notes.index') }}" class="notes-back-link">← Back to Notes</a>
+
+        <h1 class="notes-title">New Note</h1>
+
+        <form action="{{ url_for('notes.create') }}" method="post" class="notes-card" style="padding: 24px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="notes-form-group">
+                <label for="title" class="notes-label">Title</label>
+                <input type="text" id="title" name="title" class="notes-input"
+                       placeholder="Enter note title..." autofocus required>
+                {% if error %}
+                <p class="notes-error">{{ error }}</p>
+                {% endif %}
+            </div>
+
+            <div class="notes-form-actions">
+                <button type="submit" class="notes-btn notes-btn-primary">Create Note</button>
+                <a href="{{ url_for('notes.index') }}" class="notes-btn notes-btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

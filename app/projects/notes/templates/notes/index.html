@@ -2,89 +2,71 @@
 
 {% block title %}My Notes{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-        <h1 style="margin: 0; color: #2c3e50;">My Notes</h1>
-        <a href="{{ url_for('notes.new') }}" class="btn-primary" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">+ New Note</a>
-    </div>
-
-    <!-- Search Bar -->
-    <form action="{{ url_for('notes.search') }}" method="get" style="margin-bottom: 20px;">
-        <div style="display: flex; gap: 10px;">
-            <input type="text" name="q" placeholder="Search notes..."
-                   style="flex: 1; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
-                   id="search-input">
-            <button type="submit" id="search-btn" disabled
-                    style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; opacity: 0.5;">
-                Search
-            </button>
+<div class="notes-page">
+    <div class="notes-container">
+        <div class="notes-header">
+            <h1 class="notes-title">My Notes</h1>
+            <a href="{{ url_for('notes.new') }}" class="notes-btn notes-btn-primary">+ New Note</a>
         </div>
-    </form>
 
-    <!-- Archived Notes Link -->
-    <div style="margin-bottom: 20px;">
-        <a href="{{ url_for('notes.archived') }}" style="color: #667eea; text-decoration: none;">View Archived Notes</a>
-    </div>
+        <form action="{{ url_for('notes.search') }}" method="get" class="notes-search-form">
+            <input type="text" name="q" placeholder="Search notes..." class="notes-search-input" id="search-input">
+            <button type="submit" id="search-btn" class="notes-btn notes-btn-secondary" disabled>Search</button>
+        </form>
 
-    {% if notes %}
-    <!-- Notes Table -->
-    <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                    <th style="text-align: left; padding: 16px; color: #666; font-weight: 600;">Title</th>
-                    <th style="text-align: left; padding: 16px; color: #666; font-weight: 600;">Preview</th>
-                    <th style="text-align: left; padding: 16px; color: #666; font-weight: 600;">Created</th>
-                    <th style="text-align: left; padding: 16px; color: #666; font-weight: 600;">Modified</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for note in notes %}
-                <tr style="border-bottom: 1px solid #e0e0e0;">
-                    <td style="padding: 16px;">
-                        <a href="{{ url_for('notes.view', note_id=note.id) }}"
-                           style="color: #667eea; text-decoration: none; font-weight: 500;">
-                            {{ note.title }}
-                        </a>
-                    </td>
-                    <td style="padding: 16px; color: #666; font-size: 0.9rem;">
-                        {{ note.content|note_preview }}
-                    </td>
-                    <td style="padding: 16px; color: #888; font-size: 0.85rem; white-space: nowrap;">
-                        {{ note.created_at|note_datetime }}
-                    </td>
-                    <td style="padding: 16px; color: #888; font-size: 0.85rem; white-space: nowrap;">
-                        {{ note.modified_at|note_datetime }}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div style="margin-bottom: 20px;">
+            <a href="{{ url_for('notes.archived') }}" class="notes-link">View Archived Notes</a>
+        </div>
+
+        {% if notes %}
+        <div class="notes-card">
+            <table class="notes-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Preview</th>
+                        <th>Created</th>
+                        <th>Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="notes-table-title">
+                                {{ note.title }}
+                            </a>
+                        </td>
+                        <td class="notes-table-preview">{{ note.content|note_preview }}</td>
+                        <td class="notes-table-date">{{ note.created_at|note_datetime }}</td>
+                        <td class="notes-table-date">{{ note.modified_at|note_datetime }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="notes-empty">
+            <div class="notes-empty-icon">📝</div>
+            <p class="notes-empty-text">No notes yet. Create your first note!</p>
+            <a href="{{ url_for('notes.new') }}" class="notes-btn notes-btn-primary">+ Create Note</a>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <!-- Empty State -->
-    <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📝</div>
-        <p style="color: #666; font-size: 1.1rem; margin-bottom: 20px;">No notes yet. Create your first note!</p>
-        <a href="{{ url_for('notes.new') }}"
-           style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-            + Create Note
-        </a>
-    </div>
-    {% endif %}
 </div>
 
 <script>
-// Enable/disable search button based on input
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 
 searchInput.addEventListener('input', function() {
     const hasValue = this.value.trim().length > 0;
     searchBtn.disabled = !hasValue;
-    searchBtn.style.opacity = hasValue ? '1' : '0.5';
-    searchBtn.style.cursor = hasValue ? 'pointer' : 'not-allowed';
 });
 </script>
 {% endblock %}

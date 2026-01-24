@@ -1,11 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}View Note{% endblock %}
+{% block title %}{{ note.title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>View Note</h1>
-    <p>Note view coming soon! (Note ID: {{ note_id }})</p>
-    <a href="{{ url_for('notes.index') }}">Back to Notes</a>
+<div class="notes-page">
+    <div class="notes-container">
+        <a href="{{ url_for('notes.index') }}" class="notes-back-link">← Back to Notes</a>
+
+        <h1 class="notes-view-title">{{ note.title }}</h1>
+
+        <p class="notes-view-meta">
+            Created: {{ note.created_at|note_datetime }} ·
+            Last modified: {{ note.modified_at|note_datetime }}
+        </p>
+
+        <div class="notes-view-content">
+            {% if note.content %}
+                {{ note.content|markdown|safe }}
+            {% else %}
+                <p style="color: var(--notes-text-muted); font-style: italic;">No content yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="notes-view-actions">
+            <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="notes-btn notes-btn-primary">Edit</a>
+
+            {% if not note.is_archived %}
+            <form action="{{ url_for('notes.archive', note_id=note.id) }}" method="post" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="notes-btn notes-btn-secondary">Archive</button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('notes.unarchive', note_id=note.id) }}" method="post" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="notes-btn notes-btn-secondary">Unarchive</button>
+            </form>
+            {% endif %}
+
+            <form action="{{ url_for('notes.delete', note_id=note.id) }}" method="post" style="display: inline;"
+                  onsubmit="return confirm('Are you sure you want to permanently delete this note? This action cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="notes-btn notes-btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

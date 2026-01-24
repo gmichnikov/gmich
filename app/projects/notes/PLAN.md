@@ -98,107 +98,107 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 1.5 New Note Page
 
-- [ ] Implement `GET /notes/new` route
-  - [ ] Render form template
-- [ ] Implement `POST /notes/create` route
-  - [ ] Validate title is not empty
-  - [ ] Create new Note in database
-  - [ ] Set created_at and modified_at to current UTC time
-  - [ ] Redirect to edit page for new note
-- [ ] Create `notes/new.html` template
-  - [ ] Title input field (required)
-  - [ ] "Create Note" submit button
-  - [ ] "Cancel" button (returns to main list)
-  - [ ] Validation error display for empty title
+- [x] Implement `GET /notes/new` route
+  - [x] Render form template
+- [x] Implement `POST /notes/create` route
+  - [x] Validate title is not empty
+  - [x] Create new Note in database
+  - [x] Set created_at and modified_at to current UTC time
+  - [x] Redirect to edit page for new note
+- [x] Create `notes/new.html` template
+  - [x] Title input field (required)
+  - [x] "Create Note" submit button
+  - [x] "Cancel" button (returns to main list)
+  - [x] Validation error display for empty title
 
 **Manual Testing 1.5:**
-- [ ] Form displays correctly
-- [ ] Submitting empty title shows error, stays on page
-- [ ] Submitting valid title creates note and redirects to edit page
-- [ ] Cancel button returns to main list
-- [ ] New note appears in main list
+- [x] Form displays correctly
+- [x] Submitting empty title shows error, stays on page
+- [x] Submitting valid title creates note and redirects to edit page
+- [x] Cancel button returns to main list
+- [x] New note appears in main list
 
 ---
 
 ### 1.6 View Page
 
-- [ ] Implement `GET /notes/<id>` route
-  - [ ] Use authorization helper to get note
-  - [ ] Render markdown content to HTML
-  - [ ] Sanitize HTML output for XSS prevention
-- [ ] Create `notes/view.html` template
-  - [ ] Display title prominently
-  - [ ] Display rendered markdown content
-  - [ ] Display "Created: [date]" and "Last modified: [date]"
-  - [ ] "Edit" button (links to edit page) - available for both active and archived notes
-  - [ ] "Archive" button (only if not archived) - placeholder for Phase 2
-  - [ ] "Unarchive" button (only if archived) - placeholder for Phase 2
-  - [ ] "Delete" button with JS confirmation
-  - [ ] "Back to Notes" link
+- [x] Implement `GET /notes/<id>` route
+  - [x] Use authorization helper to get note
+  - [x] Render markdown content to HTML
+  - [x] Sanitize HTML output for XSS prevention
+- [x] Create `notes/view.html` template
+  - [x] Display title prominently
+  - [x] Display rendered markdown content
+  - [x] Display "Created: [date]" and "Last modified: [date]"
+  - [x] "Edit" button (links to edit page) - available for both active and archived notes
+  - [x] "Archive" button (only if not archived) - placeholder for Phase 2
+  - [x] "Unarchive" button (only if archived) - placeholder for Phase 2
+  - [x] "Delete" button with JS confirmation
+  - [x] "Back to Notes" link
 
 **Manual Testing 1.6:**
-- [ ] Note displays with correct title and content
-- [ ] Markdown renders correctly (headers, bold, lists, code blocks)
-- [ ] Dates display in correct format and timezone
-- [ ] Edit button links to edit page
-- [ ] Back to Notes returns to main list
-- [ ] Accessing another user's note returns 404
-- [ ] Accessing non-existent note ID returns 404
+- [x] Note displays with correct title and content
+- [x] Markdown renders correctly (headers, bold, lists, code blocks)
+- [x] Dates display in correct format and timezone
+- [x] Edit button links to edit page
+- [x] Back to Notes returns to main list
+- [x] Accessing another user's note returns 404
+- [x] Accessing non-existent note ID returns 404
 
 ---
 
 ### 1.7 Edit Page with Manual Save
 
-- [ ] Implement `GET /notes/<id>/edit` route
-  - [ ] Use authorization helper to get note
-  - [ ] Render edit form with current values
-- [ ] Implement `POST /notes/<id>/save` route
-  - [ ] Validate title is not empty
-  - [ ] Update title and content
-  - [ ] Update modified_at timestamp (only if title or content actually changed)
-  - [ ] Flash success message
-  - [ ] Redirect back to edit page
-- [ ] Create `notes/edit.html` template
-  - [ ] Title input field (required, pre-filled)
-  - [ ] Large textarea for content (pre-filled)
-  - [ ] "Save" button
-  - [ ] "View Note" button (links to view page)
-  - [ ] "Back to Notes" link
-  - [ ] Validation error display for empty title
-  - [ ] Placeholder for autosave indicator (Phase 3)
-- [ ] Implement Ctrl+S / Cmd+S keyboard shortcut
-  - [ ] Prevent browser default save dialog
-  - [ ] Submit form on keypress
+- [x] Implement `GET /notes/<id>/edit` route
+  - [x] Use authorization helper to get note
+  - [x] Render edit form with current values
+- [x] Implement `POST /notes/<id>/save` route
+  - [x] Validate title is not empty
+  - [x] Update title and content
+  - [x] Update modified_at timestamp (only if title or content actually changed)
+  - [x] Flash success message
+  - [x] Redirect back to edit page
+- [x] Create `notes/edit.html` template
+  - [x] Title input field (required, pre-filled)
+  - [x] Large textarea for content (pre-filled)
+  - [x] "Save" button
+  - [x] "Save & View" button (saves then views)
+  - [x] "Back to Notes" link
+  - [x] Validation error display for empty title
+  - [x] Placeholder for autosave indicator (Phase 3)
+- [x] Implement Ctrl+S / Cmd+S keyboard shortcut
+  - [x] Prevent browser default save dialog
+  - [x] Submit form on keypress
 
 **Manual Testing 1.7:**
-- [ ] Edit page loads with current note data
-- [ ] Saving with empty title shows error, stays on page
-- [ ] Saving valid changes updates note and shows success message
-- [ ] modified_at timestamp updates after save
-- [ ] Ctrl+S triggers save (Windows/Linux)
-- [ ] Cmd+S triggers save (Mac)
-- [ ] View Note button goes to view page
-- [ ] Back to Notes returns to main list
+- [x] Edit page loads with current note data
+- [x] Saving with empty title shows error, stays on page
+- [x] Saving valid changes updates note and shows success message
+- [x] modified_at timestamp updates after save
+- [x] Ctrl+S triggers save (Windows/Linux)
+- [x] Cmd+S triggers save (Mac)
+- [x] Save & View button saves then shows view page
+- [x] Back to Notes returns to main list
 
 ---
 
 ### 1.8 Delete Functionality
 
-- [ ] Implement `POST /notes/<id>/delete` route
-  - [ ] Use authorization helper to get note
-  - [ ] Delete note from database
-  - [ ] Flash success message
-  - [ ] Redirect to main notes list
-- [ ] Add JavaScript confirmation to delete button on view page
-  - [ ] Confirmation message: "Are you sure you want to permanently delete this note? This action cannot be undone."
-  - [ ] Only proceed if user confirms
+- [x] Implement `POST /notes/<id>/delete` route
+  - [x] Use authorization helper to get note
+  - [x] Delete note from database
+  - [x] Flash success message
+  - [x] Redirect to main notes list
+- [x] Add JavaScript confirmation to delete button on view page
+  - [x] Confirmation message: "Are you sure you want to permanently delete this note? This action cannot be undone."
+  - [x] Only proceed if user confirms
 
 **Manual Testing 1.8:**
-- [ ] Delete button shows confirmation dialog
-- [ ] Canceling confirmation does not delete note
-- [ ] Confirming deletion removes note from database
-- [ ] After deletion, redirected to main list with success message
-- [ ] Deleted note no longer appears in list
+- [x] Delete button shows confirmation dialog
+- [x] Canceling confirmation does not delete note
+- [x] Confirming deletion removes note from database
+- [x] After deletion, redirected to main list with success message
+- [x] Deleted note no longer appears in list
 
 ---
 

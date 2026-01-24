@@ -1,13 +1,18 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from zoneinfo import ZoneInfo
 
+from app import db
 from app.utils.logging import log_project_visit
 from app.projects.notes.models import Note
 
 notes_bp = Blueprint('notes', __name__,
                      url_prefix='/notes',
-                     template_folder='templates')
+                     template_folder='templates',
+                     static_folder='static',
+                     static_url_path='/notes/static')
 
 
 # --- Helper Functions ---
@@ -91,42 +96,80 @@ def new():
 @login_required
 def create():
     """Create a new note and redirect to edit page."""
-    # Placeholder - will be implemented in 1.5
-    flash('Create functionality coming soon', 'info')
-    return redirect(url_for('notes.index'))
+    title = request.form.get('title', '').strip()
+
+    if not title:
+        flash('Title cannot be empty', 'error')
+        return render_template('notes/new.html', error='Title cannot be empty')
+
+    now = datetime.utcnow()
+    note = Note(
+        user_id=current_user.id,
+        title=title,
+        content='',
+        created_at=now,
+        modified_at=now
+    )
+    db.session.add(note)
+    db.session.commit()
+
+    return redirect(url_for('notes.edit', note_id=note.id))
 
 
 @notes_bp.route('/<int:note_id>')
 @login_required
 def view(note_id):
     """View a note with rendered markdown."""
-    # Placeholder - will be implemented in 1.6
-    return render_template('notes/view.html', note_id=note_id)
+    note = get_note_or_404(note_id)
+    return render_template('notes/view.html', note=note)
 
 
 @notes_bp.route('/<int:note_id>/edit')
 @login_required
 def edit(note_id):
     """Edit a note."""
-    # Placeholder - will be implemented in 1.7
-    return render_template('notes/edit.html', note_id=note_id)
+    note = get_note_or_404(note_id)
+    return render_template('notes/edit.html', note=note)
 
 
 @notes_bp.route('/<int:note_id>/save', methods=['POST'])
 @login_required
 def save(note_id):
     """Save changes to a note."""
-    # Placeholder - will be implemented in 1.7
-    flash('Save functionality coming soon', 'info')
-    return redirect(url_for('notes.edit', note_id=note_id))
+    note = get_note_or_404(note_id)
+
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '')
+    redirect_to = request.form.get('redirect_to', 'edit')
+
+    if not title:
+        flash('Title cannot be empty', 'error')
+        return render_template('notes/edit.html', note=note, error='Title cannot be empty')
+
+    # Only update modified_at if content actually changed
+    if note.title != title or note.content != content:
+        note.title = title
+        note.content = content
+        note.modified_at = datetime.utcnow()
+        db.session.commit()
+        flash('Note saved', 'success')
+    else:
+        flash('No changes to save', 'info')
+
+    if redirect_to == 'view':
+        return redirect(url_for('notes.view', note_id=note.id))
+
+    return redirect(url_for('notes.edit', note_id=note.id))
 
 
 @notes_bp.route('/<int:note_id>/delete', methods=['POST'])
 @login_required
 def delete(note_id):
     """Permanently delete a note."""
-    # Placeholder - will be implemented in 1.8
-    flash('Delete functionality coming soon', 'info')
+    note = get_note_or_404(note_id)
+    db.session.delete(note)
+    db.session.commit()
+    flash('Note deleted', 'success')
     return redirect(url_for('notes.index'))
 
 
