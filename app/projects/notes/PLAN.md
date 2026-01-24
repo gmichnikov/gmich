@@ -296,16 +296,16 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 3.1 Autosave API Endpoint
 
-- [ ] Implement `POST /notes/api/<id>/autosave` route
-  - [ ] Accept JSON body: `{"title": "...", "content": "..."}`
-  - [ ] Validate title is not empty (return error JSON if empty)
-  - [ ] Use authorization helper to get note
-  - [ ] Update title and content
-  - [ ] Update modified_at timestamp (only if title or content actually changed)
-  - [ ] Return JSON: `{"status": "success", "modified_at": "..."}`
-  - [ ] Return appropriate error JSON on failure
-- [ ] Add CSRF token meta tag to base template
-  - [ ] `<meta name="csrf-token" content="{{ csrf_token() }}">`
+- [x] Implement `POST /notes/api/<id>/autosave` route
+  - [x] Accept JSON body: `{"title": "...", "content": "..."}`
+  - [x] Validate title is not empty (return error JSON if empty)
+  - [x] Use authorization helper to get note
+  - [x] Update title and content
+  - [x] Update modified_at timestamp (only if title or content actually changed)
+  - [x] Return JSON: `{"status": "success", "modified_at": "..."}`
+  - [x] Return appropriate error JSON on failure
+- [x] Add CSRF token meta tag to base template
+  - [x] `<meta name="csrf-token" content="{{ csrf_token() }}">`
 
 **Manual Testing 3.1:**
 - [ ] API returns success for valid request (test with curl/Postman)
@@ -317,19 +317,19 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 3.2 Autosave JavaScript Implementation
 
-- [ ] Create autosave JavaScript (in edit template or separate file)
-  - [ ] Debounce timer: 3 seconds of no typing
-  - [ ] Monitor both title input and content textarea
-  - [ ] Reset timer on each keystroke in either field
-  - [ ] Skip autosave if title is empty
-  - [ ] Send AJAX POST to `/notes/api/<id>/autosave`
-  - [ ] Include CSRF token in X-CSRFToken header
-- [ ] Implement visual indicator
-  - [ ] "Unsaved changes" when content differs from last save
-  - [ ] "Saving..." while request in progress
-  - [ ] "Saved" when autosave completes
-  - [ ] Error indicator on failure (clears on next successful save)
-- [ ] Update edit page template with indicator element
+- [x] Create autosave JavaScript (in edit template or separate file)
+  - [x] Debounce timer: 3 seconds of no typing
+  - [x] Monitor both title input and content textarea
+  - [x] Reset timer on each keystroke in either field
+  - [x] Skip autosave if title is empty
+  - [x] Send AJAX POST to `/notes/api/<id>/autosave`
+  - [x] Include CSRF token in X-CSRFToken header
+- [x] Implement visual indicator
+  - [x] "Unsaved changes" when content differs from last save
+  - [x] "Saving..." while request in progress
+  - [x] "Saved" when autosave completes
+  - [x] Error indicator on failure (clears on next successful save)
+- [x] Update edit page template with indicator element
 
 **Manual Testing 3.2:**
 - [ ] Typing triggers "Unsaved changes" indicator
@@ -345,17 +345,17 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 3.3 Mobile Responsiveness
 
-- [ ] Add responsive CSS for notes list
-  - [ ] Card view on small screens (instead of table)
-  - [ ] Stack elements vertically
-- [ ] Add responsive CSS for edit page
-  - [ ] Full-width textarea
-  - [ ] Large touch targets for buttons (min 44x44px)
-- [ ] Add responsive CSS for view page
-  - [ ] Readable content width
-  - [ ] Touch-friendly action buttons
-- [ ] Ensure minimum 16px font size throughout
-- [ ] Test navigation on small screens
+- [x] Add responsive CSS for notes list
+  - [x] Card view on small screens (instead of table)
+  - [x] Stack elements vertically
+- [x] Add responsive CSS for edit page
+  - [x] Full-width textarea
+  - [x] Large touch targets for buttons (min 44x44px)
+- [x] Add responsive CSS for view page
+  - [x] Readable content width
+  - [x] Touch-friendly action buttons
+- [x] Ensure minimum 16px font size throughout
+- [x] Test navigation on small screens
 
 **Manual Testing 3.3:**
 - [ ] Main list displays as cards on mobile viewport
@@ -369,18 +369,18 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 3.4 Error Handling & Edge Cases
 
-- [ ] Verify all routes return 404 for non-existent notes
-- [ ] Verify all routes return 404 for other users' notes
-- [ ] Add flash messages for all success/error scenarios
-  - [ ] "Note saved"
-  - [ ] "Note deleted"
-  - [ ] "Note archived"
-  - [ ] "Note unarchived"
-  - [ ] "Title cannot be empty"
-  - [ ] "Note not found"
-  - [ ] "Failed to save note. Please try again."
-- [ ] Handle network errors gracefully in autosave
-- [ ] Verify CSRF protection on all POST routes
+- [x] Verify all routes return 404 for non-existent notes
+- [x] Verify all routes return 404 for other users' notes
+- [x] Add flash messages for all success/error scenarios
+  - [x] "Note saved"
+  - [x] "Note deleted"
+  - [x] "Note archived"
+  - [x] "Note unarchived"
+  - [x] "Title cannot be empty"
+  - [x] "Note not found" (handled via 404)
+  - [x] "Failed to save note. Please try again." (handled in autosave JS)
+- [x] Handle network errors gracefully in autosave
+- [x] Verify CSRF protection on all POST routes
 
 **Manual Testing 3.4:**
 - [ ] All error scenarios show appropriate messages

@@ -10,6 +10,8 @@
     --notes-text: #1f2937;
     --notes-text-secondary: #6b7280;
     --notes-text-muted: #9ca3af;
+    --notes-success: #10b981;
+    --notes-error: #ef4444;
 }
 
 /* Full page wrapper to isolate from site background */
@@ -371,15 +373,81 @@
         font-size: 1.5rem;
     }
 
-    .notes-table th:nth-child(3),
-    .notes-table th:nth-child(4),
-    .notes-table td:nth-child(3),
-    .notes-table td:nth-child(4) {
+    .notes-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Convert table to card view on mobile */
+    .notes-card:has(.notes-table) {
+        background: transparent;
+        border: none;
+    }
+
+    .notes-table {
+        display: block;
+    }
+
+    .notes-table thead {
         display: none;
     }
 
+    .notes-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .notes-table tr {
+        display: block;
+        background: var(--notes-card);
+        border: 1px solid var(--notes-border);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .notes-table tr:hover td {
+        background: transparent;
+    }
+
+    .notes-table td {
+        display: block;
+        padding: 0;
+        border-bottom: none;
+    }
+
+    .notes-table td:first-child {
+        margin-bottom: 8px;
+    }
+
+    .notes-table-title {
+        font-size: 1.1rem;
+    }
+
+    .notes-table-preview {
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .notes-table-date {
+        display: inline-block;
+        margin-right: 16px;
+    }
+
+    /* Search form stacking */
+    .notes-search-form {
+        flex-direction: column;
+    }
+
+    .notes-search-form .notes-input {
+        width: 100%;
+    }
+
+    /* Ensure touch-friendly button targets */
     .notes-btn {
-        padding: 10px 16px;
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 1rem;
     }
 
     .notes-form-actions {
@@ -389,5 +457,29 @@
     .notes-form-actions .notes-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .notes-view-actions {
+        flex-direction: column;
+    }
+
+    .notes-view-actions .notes-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Ensure readable font sizes */
+    .notes-input,
+    .notes-textarea,
+    .notes-search-input {
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+
+    .notes-view-title {
+        font-size: 1.5rem;
+    }
+
+    .notes-view-content {
+        padding: 16px;
     }
 }

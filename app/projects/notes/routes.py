@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from zoneinfo import ZoneInfo
@@ -229,3 +229,32 @@ def search():
         notes = base_query.order_by(Note.modified_at.desc()).all()
 
     return render_template('notes/search.html', notes=notes, query=query, scope=scope)
+
+
+@notes_bp.route('/api/<int:note_id>/autosave', methods=['POST'])
+@login_required
+def autosave(note_id):
+    """Autosave endpoint for AJAX requests."""
+    note = get_note_or_404(note_id)
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Invalid JSON'}), 400
+
+    title = data.get('title', '').strip()
+    content = data.get('content', '')
+
+    if not title:
+        return jsonify({'status': 'error', 'message': 'Title cannot be empty'}), 400
+
+    # Only update if content actually changed
+    if note.title != title or note.content != content:
+        note.title = title
+        note.content = content
+        note.modified_at = datetime.utcnow()
+        db.session.commit()
+
+    return jsonify({
+        'status': 'success',
+        'modified_at': format_datetime_for_user(note.modified_at, current_user)
+    })
