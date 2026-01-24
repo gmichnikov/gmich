@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from zoneinfo import ZoneInfo
 
 from app import db
@@ -82,7 +83,11 @@ def index():
 @login_required
 def archived():
     """List of archived notes."""
-    return render_template('notes/archived.html')
+    notes = Note.query.filter_by(
+        user_id=current_user.id,
+        is_archived=True
+    ).order_by(Note.modified_at.desc()).all()
+    return render_template('notes/archived.html', notes=notes)
 
 
 @notes_bp.route('/new')
@@ -176,24 +181,51 @@ def delete(note_id):
 @notes_bp.route('/<int:note_id>/archive', methods=['POST'])
 @login_required
 def archive(note_id):
-    """Archive a note."""
-    # Placeholder - will be implemented in 2.1
-    flash('Archive functionality coming soon', 'info')
-    return redirect(url_for('notes.index'))
+    """Archive a note (does NOT update modified_at)."""
+    note = get_note_or_404(note_id)
+    note.is_archived = True
+    db.session.commit()
+    flash('Note archived', 'success')
+    return redirect(url_for('notes.archived'))
 
 
 @notes_bp.route('/<int:note_id>/unarchive', methods=['POST'])
 @login_required
 def unarchive(note_id):
-    """Unarchive a note."""
-    # Placeholder - will be implemented in 2.1
-    flash('Unarchive functionality coming soon', 'info')
+    """Unarchive a note (does NOT update modified_at)."""
+    note = get_note_or_404(note_id)
+    note.is_archived = False
+    db.session.commit()
+    flash('Note unarchived', 'success')
     return redirect(url_for('notes.index'))
 
 
 @notes_bp.route('/search')
 @login_required
 def search():
-    """Search notes."""
-    # Placeholder - will be implemented in 2.4
-    return render_template('notes/search.html')
+    """Search notes by title or content."""
+    query = request.args.get('q', '').strip()
+    scope = request.args.get('scope', 'all')
+
+    notes = []
+    if query:
+        base_query = Note.query.filter_by(
+            user_id=current_user.id,
+            is_archived=False
+        )
+
+        if scope == 'content':
+            base_query = base_query.filter(Note.content.ilike(f'%{query}%'))
+        elif scope == 'title':
+            base_query = base_query.filter(Note.title.ilike(f'%{query}%'))
+        else:  # 'all' - search both title and content
+            base_query = base_query.filter(
+                or_(
+                    Note.title.ilike(f'%{query}%'),
+                    Note.content.ilike(f'%{query}%')
+                )
+            )
+
+        notes = base_query.order_by(Note.modified_at.desc()).all()
+
+    return render_template('notes/search.html', notes=notes, query=query, scope=scope)

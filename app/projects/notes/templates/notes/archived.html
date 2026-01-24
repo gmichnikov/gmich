@@ -2,10 +2,53 @@
 
 {% block title %}Archived Notes{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Archived Notes</h1>
-    <p>Archived notes list coming soon!</p>
-    <a href="{{ url_for('notes.index') }}">Back to Active Notes</a>
+<div class="notes-page">
+    <div class="notes-container">
+        <a href="{{ url_for('notes.index') }}" class="notes-back-link">← Back to Active Notes</a>
+
+        <div class="notes-header">
+            <h1 class="notes-title">Archived Notes</h1>
+        </div>
+
+        {% if notes %}
+        <div class="notes-card">
+            <table class="notes-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Preview</th>
+                        <th>Created</th>
+                        <th>Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="notes-table-title">
+                                {{ note.title }}
+                            </a>
+                        </td>
+                        <td class="notes-table-preview">{{ note.content|note_preview }}</td>
+                        <td class="notes-table-date">{{ note.created_at|note_datetime }}</td>
+                        <td class="notes-table-date">{{ note.modified_at|note_datetime }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="notes-empty">
+            <div class="notes-empty-icon">📦</div>
+            <p class="notes-empty-text">No archived notes. Archive a note to see it here.</p>
+            <a href="{{ url_for('notes.index') }}" class="notes-btn notes-btn-secondary">Back to Active Notes</a>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

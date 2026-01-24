@@ -206,89 +206,89 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 2.1 Archive/Unarchive Functionality
 
-- [ ] Implement `POST /notes/<id>/archive` route
-  - [ ] Set is_archived=True (do NOT update modified_at)
-  - [ ] Flash success message
-  - [ ] Redirect to archived notes view
-- [ ] Implement `POST /notes/<id>/unarchive` route
-  - [ ] Set is_archived=False (do NOT update modified_at)
-  - [ ] Flash success message
-  - [ ] Redirect to main notes list
-- [ ] Update view page template
-  - [ ] Show "Archive" button only for active notes
-  - [ ] Show "Unarchive" button only for archived notes
+- [x] Implement `POST /notes/<id>/archive` route
+  - [x] Set is_archived=True (do NOT update modified_at)
+  - [x] Flash success message
+  - [x] Redirect to archived notes view
+- [x] Implement `POST /notes/<id>/unarchive` route
+  - [x] Set is_archived=False (do NOT update modified_at)
+  - [x] Flash success message
+  - [x] Redirect to main notes list
+- [x] Update view page template
+  - [x] Show "Archive" button only for active notes
+  - [x] Show "Unarchive" button only for archived notes
 
 **Manual Testing 2.1:**
-- [ ] Archive button sets is_archived=True
-- [ ] After archiving, redirected to archived view
-- [ ] Archived note no longer appears in main list
-- [ ] Unarchive button sets is_archived=False
-- [ ] After unarchiving, redirected to main list
-- [ ] modified_at is NOT changed by archive/unarchive
+- [x] Archive button sets is_archived=True
+- [x] After archiving, redirected to archived view
+- [x] Archived note no longer appears in main list
+- [x] Unarchive button sets is_archived=False
+- [x] After unarchiving, redirected to main list
+- [x] modified_at is NOT changed by archive/unarchive
 
 ---
 
 ### 2.2 Archived Notes Page
 
-- [ ] Implement `GET /notes/archived` route
-  - [ ] Query only archived notes (is_archived=True) for current user
-  - [ ] Order by modified_at DESC
-- [ ] Create `notes/archived.html` template
-  - [ ] Page header "Archived Notes"
-  - [ ] Same table format as main page
-  - [ ] "Back to Active Notes" link
-  - [ ] Empty state: "No archived notes. Archive a note to see it here."
+- [x] Implement `GET /notes/archived` route
+  - [x] Query only archived notes (is_archived=True) for current user
+  - [x] Order by modified_at DESC
+- [x] Create `notes/archived.html` template
+  - [x] Page header "Archived Notes"
+  - [x] Same table format as main page
+  - [x] "Back to Active Notes" link
+  - [x] Empty state: "No archived notes. Archive a note to see it here."
 
 **Manual Testing 2.2:**
-- [ ] Archived notes page shows only archived notes
-- [ ] Empty state displays when no archived notes
-- [ ] Notes are sorted by modified_at DESC
-- [ ] Clicking note title goes to view page
-- [ ] Can view, edit, and delete archived notes
-- [ ] Back to Active Notes link works
+- [x] Archived notes page shows only archived notes
+- [x] Empty state displays when no archived notes
+- [x] Notes are sorted by modified_at DESC
+- [x] Clicking note title goes to view page
+- [x] Can view, edit, and delete archived notes
+- [x] Back to Active Notes link works
 
 ---
 
 ### 2.3 Search - Main Page Integration
 
-- [ ] Update main page search bar
-  - [ ] Form submits to `/notes/search` with GET
-  - [ ] Search button disabled when input is empty (JavaScript)
-  - [ ] Pass query as `?q=` parameter
+- [x] Update main page search bar
+  - [x] Form submits to `/notes/search` with GET
+  - [x] Search button disabled when input is empty (JavaScript)
+  - [x] Pass query as `?q=` parameter
 
 **Manual Testing 2.3:**
-- [ ] Search button is disabled when input is empty
-- [ ] Search button enables when text is entered
-- [ ] Submitting search navigates to search results page with query in URL
+- [x] Search button is disabled when input is empty
+- [x] Search button enables when text is entered
+- [x] Submitting search navigates to search results page with query in URL
 
 ---
 
 ### 2.4 Search Results Page
 
-- [ ] Implement `GET /notes/search` route
-  - [ ] Accept `q` (query) and `scope` (title/content) parameters
-  - [ ] Default scope to "title"
-  - [ ] Perform case-insensitive search (ILIKE)
-  - [ ] Filter to active notes only (is_archived=False)
-  - [ ] Filter by current user
-  - [ ] Order by modified_at DESC
-- [ ] Create `notes/search.html` template
-  - [ ] Search input pre-filled with current query
-  - [ ] Scope dropdown (Title / Content)
-  - [ ] Auto-submit on scope change (JavaScript)
-  - [ ] Results table (same format as main page)
-  - [ ] Empty results message: "No notes found matching '[query]'"
-  - [ ] "Back to Notes" link
+- [x] Implement `GET /notes/search` route
+  - [x] Accept `q` (query) and `scope` (title/content) parameters
+  - [x] Default scope to "title"
+  - [x] Perform case-insensitive search (ILIKE)
+  - [x] Filter to active notes only (is_archived=False)
+  - [x] Filter by current user
+  - [x] Order by modified_at DESC
+- [x] Create `notes/search.html` template
+  - [x] Search input pre-filled with current query
+  - [x] Scope dropdown (Title / Content)
+  - [x] Auto-submit on scope change (JavaScript)
+  - [x] Results table (same format as main page)
+  - [x] Empty results message: "No notes found matching '[query]'"
+  - [x] "Back to Notes" link
 
 **Manual Testing 2.4:**
-- [ ] Title search finds notes with matching titles
-- [ ] Content search finds notes with matching content
-- [ ] Search is case-insensitive
-- [ ] Archived notes are NOT included in results
-- [ ] Changing scope dropdown re-submits with same query
-- [ ] Empty results show appropriate message
-- [ ] Results sorted by modified_at DESC
-- [ ] Other users' notes are not included
+- [x] Title search finds notes with matching titles
+- [x] Content search finds notes with matching content
+- [x] Search is case-insensitive
+- [x] Archived notes are NOT included in results
+- [x] Changing scope dropdown re-submits with same query
+- [x] Empty results show appropriate message
+- [x] Results sorted by modified_at DESC
+- [x] Other users' notes are not included
 
 ---
 

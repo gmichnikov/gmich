@@ -2,10 +2,78 @@
 
 {% block title %}Search Notes{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('notes.static', filename='notes.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Search Notes</h1>
-    <p>Search functionality coming soon!</p>
-    <a href="{{ url_for('notes.index') }}">Back to Notes</a>
+<div class="notes-page">
+    <div class="notes-container">
+        <a href="{{ url_for('notes.index') }}" class="notes-back-link">← Back to Notes</a>
+
+        <h1 class="notes-title">Search Notes</h1>
+
+        <form action="{{ url_for('notes.search') }}" method="get" class="notes-search-form" style="margin-bottom: 24px;">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search notes..."
+                   class="notes-search-input" id="search-input" autofocus>
+            <select name="scope" id="scope-select" class="notes-input" style="width: auto; min-width: 120px;">
+                <option value="all" {% if scope == 'all' %}selected{% endif %}>All</option>
+                <option value="title" {% if scope == 'title' %}selected{% endif %}>Title</option>
+                <option value="content" {% if scope == 'content' %}selected{% endif %}>Content</option>
+            </select>
+            <button type="submit" class="notes-btn notes-btn-primary">Search</button>
+        </form>
+
+        {% if query %}
+            {% if notes %}
+            <p style="color: var(--notes-text-secondary); margin-bottom: 16px;">
+                Found {{ notes|length }} note{% if notes|length != 1 %}s{% endif %} matching "{{ query }}"
+            </p>
+            <div class="notes-card">
+                <table class="notes-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Preview</th>
+                            <th>Created</th>
+                            <th>Modified</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in notes %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('notes.view', note_id=note.id) }}" class="notes-table-title">
+                                    {{ note.title }}
+                                </a>
+                            </td>
+                            <td class="notes-table-preview">{{ note.content|note_preview }}</td>
+                            <td class="notes-table-date">{{ note.created_at|note_datetime }}</td>
+                            <td class="notes-table-date">{{ note.modified_at|note_datetime }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="notes-empty">
+                <div class="notes-empty-icon">🔍</div>
+                <p class="notes-empty-text">No notes found matching "{{ query }}"</p>
+            </div>
+            {% endif %}
+        {% else %}
+        <p style="color: var(--notes-text-secondary);">Enter a search term above to find notes.</p>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+// Auto-submit when scope changes
+document.getElementById('scope-select').addEventListener('change', function() {
+    const query = document.getElementById('search-input').value.trim();
+    if (query) {
+        this.form.submit();
+    }
+});
+</script>
 {% endblock %}
