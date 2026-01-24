@@ -8,46 +8,46 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 1.1 Database Model Setup
 
-- [ ] Create `Note` model in `app/projects/notes/models.py`
-  - [ ] Define all fields: `id`, `user_id`, `title`, `content`, `is_archived`, `created_at`, `modified_at`
-  - [ ] Add foreign key relationship to User model
-  - [ ] Set appropriate defaults (`content=''`, `is_archived=False`)
-  - [ ] Add `__repr__` method for debugging
-- [ ] Create database migration
-  - [ ] Generate migration file with `flask db migrate`
-  - [ ] Review migration file for correctness
-  - [ ] Run migration with `flask db upgrade`
-- [ ] Add indexes for query optimization
-  - [ ] Composite index on `(user_id, is_archived, modified_at)`
-  - [ ] Index on `(user_id, modified_at)`
+- [x] Create `Note` model in `app/projects/notes/models.py`
+  - [x] Define all fields: `id`, `user_id`, `title`, `content`, `is_archived`, `created_at`, `modified_at`
+  - [x] Add foreign key relationship to User model
+  - [x] Set appropriate defaults (`content=''`, `is_archived=False`)
+  - [x] Add `__repr__` method for debugging
+- [x] Create database migration
+  - [x] Generate migration file with `flask db migrate`
+  - [x] Review migration file for correctness
+  - [x] Run migration with `flask db upgrade`
+- [x] Add indexes for query optimization
+  - [x] Composite index on `(user_id, is_archived, modified_at)`
+  - [x] Index on `(user_id, modified_at)`
 
 **Manual Testing 1.1:**
-- [ ] Verify table exists in database
-- [ ] Verify all columns have correct types and constraints
-- [ ] Verify indexes are created
+- [x] Verify table exists in database
+- [x] Verify all columns have correct types and constraints
+- [x] Verify indexes are created
 
 ---
 
 ### 1.2 Blueprint and Route Structure
 
-- [ ] Create notes blueprint in `app/projects/notes/__init__.py`
-  - [ ] Initialize blueprint with url_prefix `/notes`
-  - [ ] Register blueprint in main app
-- [ ] Create `routes.py` with placeholder routes
-  - [ ] `GET /notes/` - list notes (placeholder)
-  - [ ] `GET /notes/new` - new note form (placeholder)
-  - [ ] `POST /notes/create` - create note (placeholder)
-  - [ ] `GET /notes/<id>` - view note (placeholder)
-  - [ ] `GET /notes/<id>/edit` - edit note (placeholder)
-  - [ ] `POST /notes/<id>/save` - save note (placeholder)
-  - [ ] `POST /notes/<id>/delete` - delete note (placeholder)
-- [ ] Add `@login_required` decorator to all routes
-- [ ] Create empty templates directory structure
+- [x] Create notes blueprint in `app/projects/notes/__init__.py`
+  - [x] Initialize blueprint with url_prefix `/notes`
+  - [x] Register blueprint in main app
+- [x] Create `routes.py` with placeholder routes
+  - [x] `GET /notes/` - list notes (placeholder)
+  - [x] `GET /notes/new` - new note form (placeholder)
+  - [x] `POST /notes/create` - create note (placeholder)
+  - [x] `GET /notes/<id>` - view note (placeholder)
+  - [x] `GET /notes/<id>/edit` - edit note (placeholder)
+  - [x] `POST /notes/<id>/save` - save note (placeholder)
+  - [x] `POST /notes/<id>/delete` - delete note (placeholder)
+- [x] Add `@login_required` decorator to all routes
+- [x] Create empty templates directory structure
 
 **Manual Testing 1.2:**
-- [ ] Verify `/notes/` route loads (even if empty)
-- [ ] Verify unauthenticated users are redirected to login
-- [ ] Verify 404 for non-existent routes
+- [x] Verify `/notes/` route loads (even if empty)
+- [x] Verify unauthenticated users are redirected to login
+- [x] Verify 404 for non-existent routes
 
 ---
 

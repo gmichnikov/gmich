@@ -123,6 +123,7 @@ def create_app():
         BasketballGame,
         BasketballEvent,
     )
+    from app.projects.notes.models import Note
 
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")
