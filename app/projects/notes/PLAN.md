@@ -53,46 +53,46 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks.
 
 ### 1.3 Helper Functions
 
-- [ ] Create helper function to get note by ID with authorization check
-  - [ ] Return 404 if note doesn't exist
-  - [ ] Return 404 if note belongs to different user (don't reveal existence)
-- [ ] Create date formatting helper/template filter
-  - [ ] Convert UTC to user's timezone
-  - [ ] Format as "Jan 23, 2026 3:45 PM"
-  - [ ] Register as Jinja filter
-- [ ] Create content preview helper
-  - [ ] Truncate to 100 characters
-  - [ ] Add "..." if truncated
-  - [ ] Return "(empty)" if no content
+- [x] Create helper function to get note by ID with authorization check
+  - [x] Return 404 if note doesn't exist
+  - [x] Return 404 if note belongs to different user (don't reveal existence)
+- [x] Create date formatting helper/template filter
+  - [x] Convert UTC to user's timezone
+  - [x] Format as "Jan 23, 2026 3:45 PM"
+  - [x] Register as Jinja filter
+- [x] Create content preview helper
+  - [x] Truncate to 100 characters
+  - [x] Add "..." if truncated
+  - [x] Return "(empty)" if no content
 
 **Manual Testing 1.3:**
-- [ ] Test date formatting with various timezones
-- [ ] Test content preview with short, long, and empty content
+- [x] Test date formatting with various timezones
+- [x] Test content preview with short, long, and empty content
 
 ---
 
 ### 1.4 Main Page - Notes List
 
-- [ ] Implement `GET /notes/` route
-  - [ ] Query active notes (is_archived=False) for current user
-  - [ ] Order by modified_at DESC
-- [ ] Create `notes/index.html` template
-  - [ ] Page header "My Notes"
-  - [ ] "New Note" button (link to /notes/new)
-  - [ ] Search bar with input and disabled-when-empty button (functionality in Phase 2)
-  - [ ] "View Archived Notes" link
-  - [ ] Table/list displaying notes:
-    - [ ] Title (clickable link to view page)
-    - [ ] Content preview (100 chars)
-    - [ ] Date created
-    - [ ] Date modified
-  - [ ] Empty state message when no notes exist
+- [x] Implement `GET /notes/` route
+  - [x] Query active notes (is_archived=False) for current user
+  - [x] Order by modified_at DESC
+- [x] Create `notes/index.html` template
+  - [x] Page header "My Notes"
+  - [x] "New Note" button (link to /notes/new)
+  - [x] Search bar with input and disabled-when-empty button (functionality in Phase 2)
+  - [x] "View Archived Notes" link
+  - [x] Table/list displaying notes:
+    - [x] Title (clickable link to view page)
+    - [x] Content preview (100 chars)
+    - [x] Date created
+    - [x] Date modified
+  - [x] Empty state message when no notes exist
 
 **Manual Testing 1.4:**
-- [ ] Page loads without errors when logged in
-- [ ] Empty state shows when user has no notes
-- [ ] New Note button links to correct URL
-- [ ] Archived notes link present
+- [x] Page loads without errors when logged in
+- [x] Empty state shows when user has no notes
+- [x] New Note button links to correct URL
+- [x] Archived notes link present
 
 ---
 
