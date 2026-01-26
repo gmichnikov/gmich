@@ -5,5 +5,74 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Sports Schedule</h1>
+    <p>This is a proof-of-concept for Google ADK agent with tools.</p>
+    <p><strong>Available tools:</strong></p>
+    <ul>
+        <li><code>get_current_time(city)</code> - Get time in a city (New York, London, Tokyo, etc.)</li>
+        <li><code>add_numbers(a, b)</code> - Add two numbers</li>
+    </ul>
+
+    <div class="mb-3">
+        <label for="message" class="form-label">Ask the agent:</label>
+        <input type="text" class="form-control" id="message" placeholder="e.g., What time is it in Tokyo?" autofocus>
+    </div>
+    <button type="button" class="btn btn-primary" id="askBtn">Ask</button>
+
+    <div class="mt-4">
+        <h4>Response:</h4>
+        <div id="response" class="p-3 bg-light border rounded" style="min-height: 100px; white-space: pre-wrap;">
+            <em>Response will appear here...</em>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageInput = document.getElementById('message');
+    const askBtn = document.getElementById('askBtn');
+    const responseDiv = document.getElementById('response');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    async function askAgent() {
+        const message = messageInput.value.trim();
+        if (!message) {
+            responseDiv.innerHTML = '<em>Please enter a message.</em>';
+            return;
+        }
+
+        askBtn.disabled = true;
+        responseDiv.innerHTML = '<em>Thinking...</em>';
+
+        try {
+            const response = await fetch('{{ url_for("sports_schedule.ask_agent") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                responseDiv.textContent = data.response || 'No response received.';
+            } else {
+                responseDiv.innerHTML = '<span class="text-danger">Error: ' + (data.error || 'Unknown error') + '</span>';
+            }
+        } catch (error) {
+            responseDiv.innerHTML = '<span class="text-danger">Error: ' + error.message + '</span>';
+        } finally {
+            askBtn.disabled = false;
+        }
+    }
+
+    askBtn.addEventListener('click', askAgent);
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            askAgent();
+        }
+    });
+});
+</script>
 {% endblock %}

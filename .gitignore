@@ -8,3 +8,5 @@ pyvenv.cfg
 instance/
 *.db
 *.sqlite
+
+adk_debug.*

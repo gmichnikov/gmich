@@ -1,8 +1,8 @@
 alembic==1.12.0
 anthropic==0.67.0
-authlib==1.2.1
+authlib==1.6.6
 blinker==1.6.2
-click==8.1.7
+click==8.3.1
 email-validator==2.1.0.post1
 flask==2.3.3
 Flask-Admin==1.6.1
@@ -10,7 +10,11 @@ Flask-Login==0.6.2
 Flask-Migrate==4.0.5
 flask-sqlalchemy==3.1.1
 Flask-WTF==1.1.1
+google-adk==1.1.1
+deprecated
+google-genai
 google-generativeai==0.8.5
+pydantic
 greenlet
 gunicorn==21.2.0
 importlib-metadata==6.8.0
