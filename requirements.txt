@@ -28,6 +28,7 @@ packaging==23.1
 psycopg2-binary
 python-dotenv==1.0.0
 pytz==2023.3.post1
+requests
 SQLAlchemy==2.0.20
 typing-extensions==4.13.0
 tzdata
