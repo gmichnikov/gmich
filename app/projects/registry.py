@@ -259,6 +259,16 @@ PROJECTS = [
         "type": "project",
         "order": 7,
     },
+    {
+        "id": "sports_schedule",
+        "name": "Sports Schedule",
+        "description": "Track and manage sports schedules",
+        "url": "/sports-schedule",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "order": 8,
+    },
 ]
 
 
