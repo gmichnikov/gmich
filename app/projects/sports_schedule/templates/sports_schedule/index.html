@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         askBtn.disabled = true;
-        responseDiv.innerHTML = '<em>Thinking...</em>';
+        responseDiv.innerHTML = ''; // Clear previous response
 
         try {
             const response = await fetch('{{ url_for("sports_schedule.ask_agent") }}', {
@@ -53,15 +53,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ message: message })
             });
 
-            const data = await response.json();
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Unknown error');
+            }
 
-            if (response.ok) {
-                responseDiv.textContent = data.response || 'No response received.';
-            } else {
-                responseDiv.innerHTML = '<span class="text-danger">Error: ' + (data.error || 'Unknown error') + '</span>';
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let textSpan = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            
+                            if (data.type === 'text') {
+                                if (!textSpan) {
+                                    textSpan = document.createElement('span');
+                                    responseDiv.appendChild(textSpan);
+                                }
+                                textSpan.textContent += data.text;
+                            } else if (data.type === 'tool_call') {
+                                textSpan = null; // New section after tool call
+                                const toolNames = data.tool_calls.map(tc => tc.name).join(', ');
+                                const toolDiv = document.createElement('div');
+                                toolDiv.className = 'text-muted small italic mb-2';
+                                toolDiv.innerHTML = `<em>⚙️ Calling tool: <strong>${toolNames}</strong>...</em>`;
+                                responseDiv.appendChild(toolDiv);
+                            } else if (data.type === 'tool_response') {
+                                textSpan = null; // New section after tool response
+                                const toolResults = data.tool_responses.map(tr => tr.name).join(', ');
+                                const resultDiv = document.createElement('div');
+                                resultDiv.className = 'text-muted small italic mb-2';
+                                resultDiv.innerHTML = `<em>✅ Tool <strong>${toolResults}</strong> returned result.</em>`;
+                                responseDiv.appendChild(resultDiv);
+                            } else if (data.type === 'error') {
+                                throw new Error(data.message);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing SSE data:', e, line);
+                        }
+                    }
+                }
             }
         } catch (error) {
-            responseDiv.innerHTML = '<span class="text-danger">Error: ' + error.message + '</span>';
+            responseDiv.innerHTML += `<div class="text-danger mt-2">Error: ${error.message}</div>`;
         } finally {
             askBtn.disabled = false;
         }

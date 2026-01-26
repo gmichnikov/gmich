@@ -43,7 +43,44 @@ Flask is typically synchronous, while ADK is natively asynchronous.
 The `google-adk` package may have implicit dependencies that aren't always installed automatically depending on your environment.
 - Ensure `deprecated`, `pydantic`, and `google-genai` are in your `requirements.txt`.
 
-## 5. Debugging Tips
+## 6. Real-time Streaming (Step-by-Step)
+To show tool calls and partial text as they happen, use Server-Sent Events (SSE). 
+
+### The Threaded Queue Pattern
+Since Flask is synchronous and ADK is async, the most robust way to stream is to run the ADK loop in a separate thread and communicate via a `queue.Queue`.
+
+```python
+def generate():
+    import queue
+    import threading
+    q = queue.Queue()
+
+    def run_async_loop():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        async def run_it():
+            try:
+                # 1. Ensure Session (same loop as run_async)
+                # 2. async for event in runner.run_async(...)
+                # 3. q.put(json_payload)
+            finally:
+                q.put(None) # Signal end
+        loop.run_until_complete(run_it())
+
+    threading.Thread(target=run_async_loop).start()
+    while True:
+        item = q.get()
+        if item is None: break
+        yield f"data: {item}\n\n"
+```
+
+### Parsing Events
+The `Event` object from ADK contains different fields depending on the step:
+- **Tool Calls**: `event.get_function_calls()`
+- **Tool Responses**: `event.get_function_responses()`
+- **Text**: `event.content.parts` (look for `.text` attribute)
+
+## 7. Debugging Tips
 - Use `print(..., flush=True)` to ensure logs appear immediately in the terminal, as Flask's internal logger or standard stdout might be buffered.
 - Monitor the `ADK DEBUG` logs to verify the sequence: 
     1. Session Check -> 2. Session Creation (if needed) -> 3. `run_async` Call -> 4. Event Processing.
