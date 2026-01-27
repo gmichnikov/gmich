@@ -1,4 +1,4 @@
-"""ADK Agent for Sports Schedule project."""
+"""ADK Agent Demo project."""
 
 import datetime
 import requests
@@ -146,7 +146,7 @@ time_agent = Agent(
     instruction="""You are a time specialist. Your job is to:
 1. Immediately use the get_current_time tool for the city requested by the manager.
 2. Once you have the result, state it clearly.
-3. Then, use the escalate tool to return control to the sports_schedule_manager.
+3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[get_current_time],
 )
@@ -158,7 +158,7 @@ weather_agent = Agent(
     instruction="""You are a weather specialist. Your job is to:
 1. Provide weather data using the get_weather tool (and convert_c_to_f if requested).
 2. Once you have the results, state them clearly.
-3. Then, use the escalate tool to return control to the sports_schedule_manager.
+3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[get_weather, convert_c_to_f],
 )
@@ -170,7 +170,7 @@ math_agent = Agent(
     instruction="""You are a math specialist. Your job is to:
 1. Use the add_numbers tool to calculate the result based on information in the chat history.
 2. Once you have the result, state it clearly.
-3. Then, use the escalate tool to return control to the sports_schedule_manager.
+3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[add_numbers],
 )
@@ -189,11 +189,11 @@ search_agent = Agent(
 search_tool = AgentTool(agent=search_agent)
 
 # Create the root agent
-sports_agent = Agent(
-    name="sports_schedule_manager",
+adk_agent = Agent(
+    name="adk_agent_demo_manager",
     model="gemini-2.5-flash",
     description="A manager that delegates tasks to specialized agents for time, weather, math, and web search.",
-    instruction="""You are the Sports Schedule Manager. You are the sole orchestrator.
+    instruction="""You are the ADK Agent Demo Manager. You are the sole orchestrator.
 Your job is to manage the workflow:
 1. Analyze the user's request.
 2. If you need specific data, transfer control to the appropriate specialist one at a time.

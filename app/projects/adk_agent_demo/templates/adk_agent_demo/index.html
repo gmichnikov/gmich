@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Sports Schedule{% endblock %}
+{% block title %}ADK Agent Demo{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Sports Schedule</h1>
+    <h1>ADK Agent Demo</h1>
     <p>This is a multi-agent orchestration system powered by the <strong>Google Agent Development Kit (ADK)</strong>. The system uses a manager-specialist architecture to handle complex requests through specialized sub-agents and tools.</p>
     
     <div class="mt-4">
@@ -13,7 +13,7 @@
             <div class="col-md-6">
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h6 class="card-title"><strong>sports_schedule_manager</strong></h6>
+                        <h6 class="card-title"><strong>adk_agent_demo_manager</strong></h6>
                         <p class="card-text small text-muted">The root orchestrator. It analyzes your request and delegates it to the correct specialist agent.</p>
                         <span class="badge bg-light text-dark border">Manager</span>
                     </div>
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
         responseDiv.innerHTML = ''; // Clear previous response
 
         try {
-            const response = await fetch('{{ url_for("sports_schedule.ask_agent") }}', {
+            const response = await fetch('{{ url_for("adk_agent_demo.ask_agent") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

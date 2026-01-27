@@ -7,27 +7,27 @@ from google.adk.runners import InMemoryRunner
 from google.genai import types as genai_types
 
 from app.utils.logging import log_project_visit
-from app.projects.sports_schedule.agent import sports_agent
+from app.projects.adk_agent_demo.agent import adk_agent
 
-sports_schedule_bp = Blueprint('sports_schedule', __name__,
-                               url_prefix='/sports-schedule',
+adk_agent_demo_bp = Blueprint('adk_agent_demo', __name__,
+                               url_prefix='/adk-agent-demo',
                                template_folder='templates',
                                static_folder='static',
-                               static_url_path='/sports-schedule/static')
+                               static_url_path='/adk-agent-demo/static')
 
 # Create a runner for the agent
-runner = InMemoryRunner(agent=sports_agent, app_name=sports_agent.name)
+runner = InMemoryRunner(agent=adk_agent, app_name=adk_agent.name)
 
 
-@sports_schedule_bp.route('/')
+@adk_agent_demo_bp.route('/')
 @login_required
 def index():
     """Main page."""
-    log_project_visit('sports_schedule', 'Sports Schedule')
-    return render_template('sports_schedule/index.html')
+    log_project_visit('adk_agent_demo', 'ADK Agent Demo')
+    return render_template('adk_agent_demo/index.html')
 
 
-@sports_schedule_bp.route('/ask', methods=['POST'])
+@adk_agent_demo_bp.route('/ask', methods=['POST'])
 @login_required
 def ask_agent():
     """Send a message to the agent and get a streaming response."""
@@ -41,7 +41,7 @@ def ask_agent():
 
     user_id = str(current_user.id)
     session_id = f"session_{current_user.id}"
-    app_name = sports_agent.name
+    app_name = adk_agent.name
 
     def generate():
         # Use a queue to communicate between the async world and the sync generator

@@ -79,7 +79,7 @@ def create_app():
     from app.projects.better_signups.routes import bp as better_signups_bp
     from app.projects.basketball_tracker.routes import basketball_tracker
     from app.projects.notes.routes import notes_bp
-    from app.projects.sports_schedule.routes import sports_schedule_bp
+    from app.projects.adk_agent_demo.routes import adk_agent_demo_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -103,7 +103,7 @@ def create_app():
     app.register_blueprint(better_signups_bp)  # Has its own url_prefix defined
     app.register_blueprint(basketball_tracker, url_prefix="/basketball-tracker")
     app.register_blueprint(notes_bp)  # Has its own url_prefix defined
-    app.register_blueprint(sports_schedule_bp)  # Has its own url_prefix defined
+    app.register_blueprint(adk_agent_demo_bp)  # Has its own url_prefix defined
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
