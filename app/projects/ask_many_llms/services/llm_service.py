@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict
 import openai
 from anthropic import Anthropic
-import google.generativeai as genai
+from google import genai
 import time
 import signal
 from contextlib import contextmanager
@@ -105,13 +105,7 @@ class LLMService:
         self.anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
         
         # Initialize Google Gemini
-        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
-        self.gemini_models = {}
-        for model_name in [m for m in MODEL_MAPPINGS.values() if m.startswith('gemini')]:
-            try:
-                self.gemini_models[model_name] = genai.GenerativeModel(model_name)
-            except Exception as e:
-                logger.error(f"Error initializing Gemini model '{model_name}': {e}", exc_info=True)
+        self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
         """Calculate the cost of a response based on token usage."""
@@ -264,18 +258,16 @@ class LLMService:
 
     def _get_gemini_response(self, question: str, model_name: str) -> Dict:
         """Get response from Google Gemini model."""
-        if model_name not in self.gemini_models:
-            raise Exception(f"Gemini model '{model_name}' is not available.")
-        
         max_tokens = MAX_OUTPUT_TOKENS.get(model_name, 1000)  # Default to 1000 if not found
         
         start_time = time.time()
         
         try:
             with timeout_handler(90):  # 90 second timeout for Gemini calls
-                response = self.gemini_models[model_name].generate_content(
-                    question,
-                    generation_config={"max_output_tokens": max_tokens}
+                response = self.gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=question,
+                    config={"max_output_tokens": max_tokens}
                 )
         except TimeoutError as e:
             logger.error(f"Gemini model '{model_name}' request timed out after 90 seconds")
@@ -287,17 +279,13 @@ class LLMService:
         response_time = time.time() - start_time
         
         # Extract token counts from Gemini response
-        usage_metadata = getattr(response, 'usage_metadata', None)
+        usage_metadata = response.usage_metadata
         if usage_metadata:
-            input_tokens = getattr(usage_metadata, 'prompt_token_count', 0)
-            output_tokens = getattr(usage_metadata, 'candidates_token_count', 0)
-            total_tokens = getattr(usage_metadata, 'total_token_count', 0)
-            
-            # If total_token_count is 0, calculate from input + output
-            if total_tokens == 0 and (input_tokens > 0 or output_tokens > 0):
-                total_tokens = input_tokens + output_tokens
+            input_tokens = usage_metadata.prompt_token_count or 0
+            output_tokens = usage_metadata.candidates_token_count or 0
+            total_tokens = usage_metadata.total_token_count or 0
         else:
-            logger.warning(f"Gemini model '{model_name}' response has no usage_metadata attribute")
+            logger.warning(f"Gemini model '{model_name}' response has no usage_metadata")
             input_tokens = 0
             output_tokens = 0
             total_tokens = 0
@@ -316,7 +304,6 @@ class LLMService:
                 'input_cost': input_cost,
                 'output_cost': output_cost,
                 'model': model_name,
-                'safety_ratings': getattr(response, 'safety_ratings', None),
                 'response_time': response_time
             }
         }
