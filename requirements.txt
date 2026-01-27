@@ -10,10 +10,9 @@ Flask-Login==0.6.2
 Flask-Migrate==4.0.5
 flask-sqlalchemy==3.1.1
 Flask-WTF==1.1.1
-google-adk==1.1.1
+google-adk==1.23.0
 deprecated
-google-genai
-google-generativeai==0.8.5
+google-cloud-storage>=3.0.0
 pydantic
 greenlet
 gunicorn==21.2.0
@@ -24,7 +23,7 @@ Mako==1.2.4
 markdown==3.9
 MarkupSafe==2.1.3
 openai>=2.0.0
-packaging==23.1
+packaging>=24.0
 psycopg2-binary
 python-dotenv==1.0.0
 pytz==2023.3.post1
