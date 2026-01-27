@@ -18,7 +18,10 @@ def get_current_time(city: str) -> dict:
     """
     city_timezones = {
         "new york": "America/New_York",
+        "nyc": "America/New_York",
+        "new york city": "America/New_York",
         "los angeles": "America/Los_Angeles",
+        "la": "America/Los_Angeles",
         "chicago": "America/Chicago",
         "london": "Europe/London",
         "paris": "Europe/Paris",
@@ -133,20 +136,54 @@ def convert_c_to_f(celsius: float) -> dict:
     }
 
 
-# Create the agent
-sports_agent = Agent(
-    name="sports_schedule_agent",
+# Create the specialized agents
+time_agent = Agent(
+    name="time_specialist",
     model="gemini-2.5-flash",
-    description="A helpful assistant that can tell time, do math, and check weather.",
-    instruction="""You are a helpful assistant. You can:
-1. Tell the current time in various cities using the get_current_time tool
-2. Add numbers together using the add_numbers tool
-3. Check the weather in various cities using the get_weather tool
-4. Convert Celsius to Fahrenheit using the convert_c_to_f tool
+    description="A specialist that can tell the current time in various cities.",
+    instruction="""You are a time specialist. 
+Your only job is to provide the current time using the get_current_time tool. 
+1. Immediately use the get_current_time tool for the requested city. 
+2. Once you have the result, if you were asked by the manager, use the escalate tool to return the result to the manager. 
+3. Only provide a final text response if you were contacted directly by the user.""",
+    tools=[get_current_time],
+)
 
-When the user asks about time, weather, or wants to add numbers, use the appropriate tool.
-If a user asks for a temperature in Fahrenheit, first get the weather (which provides Celsius) and then use the convert_c_to_f tool to provide the conversion. Only perform the conversion if specifically requested by the user.
+weather_agent = Agent(
+    name="weather_specialist",
+    model="gemini-2.5-flash",
+    description="A specialist that can check the weather and convert temperatures.",
+    instruction="""You are a weather specialist. Your job is to:
+1. Provide current weather using the get_weather tool. 
+2. If Fahrenheit is needed, use convert_c_to_f as well.
+3. Once you have the results, if you were asked by the manager, use the escalate tool to return the result to the manager. 
+4. Only provide a final text response if you were contacted directly by the user.""",
+    tools=[get_weather, convert_c_to_f],
+)
 
-Always be friendly and helpful in your responses.""",
-    tools=[get_current_time, add_numbers, get_weather, convert_c_to_f],
+math_agent = Agent(
+    name="math_specialist",
+    model="gemini-2.5-flash",
+    description="A specialist that can perform mathematical calculations.",
+    instruction="""You are a math specialist. 
+Your job is to add numbers together using the add_numbers tool. 
+Look at the previous conversation to find the numbers you need to add. 
+Once you have the result, provide the final answer to the user.""",
+    tools=[add_numbers],
+)
+
+# Create the root agent
+sports_agent = Agent(
+    name="sports_schedule_manager",
+    model="gemini-2.5-flash",
+    description="A manager that delegates tasks to specialized agents for time, weather, and math.",
+    instruction="""You are the Sports Schedule Manager. You coordinate specialists.
+For complex requests (e.g., adding a temperature to an hour):
+1. Transfer to the time_specialist and tell it to "get the hour for [City] and escalate back to me".
+2. Once it escalates, transfer to the weather_specialist and tell it to "get the temp for [City] and escalate back to me".
+3. Finally, transfer to the math_specialist to perform the calculation with the data gathered.
+
+Do not try to answer the user until you have gathered all necessary data from the specialists. 
+Your goal is to coordinate the flow of information.""",
+    sub_agents=[time_agent, weather_agent, math_agent],
 )

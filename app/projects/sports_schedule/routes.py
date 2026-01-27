@@ -85,6 +85,7 @@ def ask_agent():
                         new_message=user_message
                     ):
                         payload = {}
+                        # Handle tool calls
                         func_calls = event.get_function_calls()
                         if func_calls:
                             payload['type'] = 'tool_call'
@@ -95,12 +96,20 @@ def ask_agent():
                                 payload['type'] = 'tool_response'
                                 payload['tool_responses'] = [{'name': fr.name, 'response': fr.response} for fr in func_responses]
                             elif event.content and event.content.parts:
-                                text = "".join([p.text for p in event.content.parts if hasattr(p, 'text') and p.text])
+                                text_parts = []
+                                for p in event.content.parts:
+                                    if hasattr(p, 'thought') and p.thought and p.text:
+                                        q.put(f"data: {json.dumps({'type': 'thought', 'text': p.text, 'agent': event.author})}\n\n")
+                                    elif hasattr(p, 'text') and p.text:
+                                        text_parts.append(p.text)
+                                
+                                text = "".join(text_parts)
                                 if text:
                                     payload['type'] = 'text'
                                     payload['text'] = text
                         
                         if payload:
+                            payload['agent'] = event.author
                             q.put(f"data: {json.dumps(payload)}\n\n")
                             
                 except Exception as e:
