@@ -109,7 +109,16 @@ manager = Agent(
 )
 ```
 
-## 9. Debugging Tips
+## 9. Orchestration Patterns (Hub-and-Spoke)
+For complex multi-step tasks, the **Hub-and-Spoke** (or Star) pattern is generally more stable than a decentralized "Mesh."
+
+### Key Principles:
+1. **Central Control**: Only the Manager (Hub) is allowed to delegate tasks (using `transfer_to_agent`).
+2. **Specialist Autonomy**: Specialists (Spokes) focus strictly on their one job.
+3. **Always Return**: Specialists are instructed to use the `escalate` tool immediately after providing their data, handing control back to the Manager.
+4. **Final Synthesis**: The Manager is responsible for collecting all gathered data from the history and providing the final summary to the user.
+
+## 10. Debugging Tips
 - Use `print(..., flush=True)` to ensure logs appear immediately in the terminal, as Flask's internal logger or standard stdout might be buffered.
 - Monitor the `ADK DEBUG` logs to verify the sequence: 
     1. Session Check -> 2. Session Creation (if needed) -> 3. `run_async` Call -> 4. Event Processing.

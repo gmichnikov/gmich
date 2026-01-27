@@ -143,11 +143,11 @@ time_agent = Agent(
     name="time_specialist",
     model="gemini-2.5-flash",
     description="A specialist that can tell the current time in various cities.",
-    instruction="""You are a time specialist. 
-Your only job is to provide the current time using the get_current_time tool. 
-1. Immediately use the get_current_time tool for the requested city. 
-2. Once you have the result, if you were asked by the manager, use the escalate tool to return the result to the manager. 
-3. Only provide a final text response if you were contacted directly by the user.""",
+    instruction="""You are a time specialist. Your job is to:
+1. Immediately use the get_current_time tool for the city requested by the manager.
+2. Once you have the result, state it clearly.
+3. Then, use the escalate tool to return control to the sports_schedule_manager.
+Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[get_current_time],
 )
 
@@ -156,10 +156,10 @@ weather_agent = Agent(
     model="gemini-2.5-flash",
     description="A specialist that can check the weather and convert temperatures.",
     instruction="""You are a weather specialist. Your job is to:
-1. Provide current weather using the get_weather tool. 
-2. If Fahrenheit is needed, use convert_c_to_f as well.
-3. Once you have the results, if you were asked by the manager, use the escalate tool to return the result to the manager. 
-4. Only provide a final text response if you were contacted directly by the user.""",
+1. Provide weather data using the get_weather tool (and convert_c_to_f if requested).
+2. Once you have the results, state them clearly.
+3. Then, use the escalate tool to return control to the sports_schedule_manager.
+Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[get_weather, convert_c_to_f],
 )
 
@@ -167,10 +167,11 @@ math_agent = Agent(
     name="math_specialist",
     model="gemini-2.5-flash",
     description="A specialist that can perform mathematical calculations.",
-    instruction="""You are a math specialist. 
-Your job is to add numbers together using the add_numbers tool. 
-Look at the previous conversation to find the numbers you need to add. 
-Once you have the result, provide the final answer to the user.""",
+    instruction="""You are a math specialist. Your job is to:
+1. Use the add_numbers tool to calculate the result based on information in the chat history.
+2. Once you have the result, state it clearly.
+3. Then, use the escalate tool to return control to the sports_schedule_manager.
+Do not attempt to perform any other tasks or talk to other specialists.""",
     tools=[add_numbers],
 )
 
@@ -178,9 +179,10 @@ search_agent = Agent(
     name="search_specialist",
     model="gemini-2.5-flash",
     description="A specialist that can search the web for real-time information.",
-    instruction="""You are a search specialist. 
-Your only job is to use the google_search tool to find real-time information, news, or facts on the web. 
-State your findings clearly based on the search results.""",
+    instruction="""You are a search specialist. Your job is to:
+1. Use the google_search tool to find the information requested.
+2. State your findings clearly.
+3. Your results will automatically be returned to the manager.""",
     tools=[google_search],
 )
 
@@ -191,16 +193,15 @@ sports_agent = Agent(
     name="sports_schedule_manager",
     model="gemini-2.5-flash",
     description="A manager that delegates tasks to specialized agents for time, weather, math, and web search.",
-    instruction="""You are the Sports Schedule Manager. You coordinate specialists.
-For complex requests (e.g., adding a temperature to an hour):
-1. Transfer to the time_specialist and tell it to "get the hour for [City] and escalate back to me".
-2. Once it escalates, transfer to the weather_specialist and tell it to "get the temp for [City] and escalate back to me".
-3. Finally, transfer to the math_specialist to perform the calculation with the data gathered.
+    instruction="""You are the Sports Schedule Manager. You are the sole orchestrator.
+Your job is to manage the workflow:
+1. Analyze the user's request.
+2. If you need specific data, transfer control to the appropriate specialist one at a time.
+3. Wait for the specialist to escalate back to you with the data.
+4. If more data is needed, transfer to the next specialist.
+5. Once all information is gathered, synthesize everything into a final friendly answer for the user.
 
-For information you don't have a tool for, call the search_specialist tool.
-
-Do not try to answer the user until you have gathered all necessary data from the specialists. 
-Your goal is to coordinate the flow of information.""",
+Crucially: You are the only one who decides the sequence of events. Do not provide a final answer until all steps are complete.""",
     sub_agents=[time_agent, weather_agent, math_agent],
     tools=[search_tool],
 )
