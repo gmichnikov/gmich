@@ -3,7 +3,6 @@ import json
 
 from flask import Blueprint, render_template, request, jsonify, current_app, Response, stream_with_context
 from flask_login import login_required, current_user
-from app import db
 from google.adk.runners import InMemoryRunner
 from google.genai import types as genai_types
 
@@ -48,8 +47,10 @@ def ask_agent():
     if current_user.credits < 1:
         return jsonify({'error': 'Insufficient credits'}), 400
 
-    current_user.credits -= 1
+    from app import db
     from app.models import LogEntry
+    
+    current_user.credits -= 1
     log = LogEntry(
         actor_id=current_user.id,
         project='adk_agent_demo',
