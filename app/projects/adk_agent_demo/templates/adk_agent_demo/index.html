@@ -3,74 +3,306 @@
 {% block title %}ADK Agent Demo{% endblock %}
 
 {% block content %}
+<style>
+    /* Prefixing all styles with adk-demo- to avoid collisions */
+    .adk-demo-wrapper {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 3rem;
+        color: #333;
+    }
+
+    .adk-demo-header {
+        border-bottom: 2px solid #f0f2f5;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+    }
+
+    .adk-demo-title {
+        color: #1a1a1a;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .adk-demo-subtitle {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    /* Specialist Agents Cards */
+    .adk-demo-agents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .adk-demo-agent-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .adk-demo-agent-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+    }
+
+    .adk-demo-agent-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .adk-demo-agent-desc {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .adk-demo-tool-badge {
+        font-size: 0.7rem;
+        background: #e3f2fd;
+        color: #0d47a1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 4px;
+        margin-bottom: 4px;
+        display: inline-block;
+        border: 1px solid #bbdefb;
+    }
+
+    /* Input Area */
+    .adk-demo-input-container {
+        background: #f1f3f5;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .adk-demo-textarea {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+        resize: none;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .adk-demo-textarea:focus {
+        outline: none;
+        border-color: #4dabf7;
+        box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.1);
+    }
+
+    .adk-demo-btn {
+        background: #228be6;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .adk-demo-btn:hover {
+        background: #1c7ed6;
+    }
+
+    .adk-demo-btn:disabled {
+        background: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    /* Response Feed */
+    .adk-demo-response-area {
+        border: 2px solid #f1f3f5;
+        border-radius: 12px;
+        padding: 1.5rem;
+        min-height: 200px;
+        background: #fff;
+    }
+
+    .adk-demo-response-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .adk-demo-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .adk-demo-event {
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    .adk-demo-agent-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .adk-demo-agent-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .adk-demo-badge-manager { background: #339af0; color: white; }
+    .adk-demo-badge-specialist { background: #51cf66; color: white; }
+
+    .adk-demo-thought {
+        background: #fff9db;
+        border-left: 4px solid #fcc419;
+        padding: 0.75rem 1rem;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.9rem;
+        color: #856404;
+        margin: 0.5rem 0;
+    }
+
+    .adk-demo-tool-call {
+        background: #e7f5ff;
+        border-left: 4px solid #339af0;
+        padding: 0.75rem 1rem;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.85rem;
+        margin: 0.5rem 0;
+    }
+
+    .adk-demo-tool-response {
+        background: #ebfbee;
+        border-left: 4px solid #40c057;
+        padding: 0.75rem 1rem;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.85rem;
+        margin: 0.5rem 0;
+    }
+
+    .adk-demo-text {
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    .adk-demo-indent-1 { margin-left: 2rem; border-left: 2px solid #e9ecef; padding-left: 1rem; }
+    .adk-demo-indent-2 { margin-left: 4rem; border-left: 2px solid #e9ecef; padding-left: 1rem; }
+
+    .adk-demo-json {
+        font-family: monospace;
+        font-size: 0.75rem;
+        background: rgba(0,0,0,0.05);
+        padding: 2px 4px;
+        border-radius: 4px;
+        display: block;
+        margin-top: 4px;
+        overflow-x: auto;
+    }
+</style>
+
 <div class="container mt-4">
-    <h1>ADK Agent Demo</h1>
-    <p>This is a multi-agent orchestration system powered by the <strong>Google Agent Development Kit (ADK)</strong>. The system uses a manager-specialist architecture to handle complex requests through specialized sub-agents and tools.</p>
-    
-    <div class="mt-4">
-        <h5>👤 Agents & ⚙️ Tools</h5>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title"><strong>adk_agent_demo_manager</strong></h6>
-                        <p class="card-text small text-muted">The root orchestrator. It analyzes your request and delegates it to the correct specialist agent.</p>
-                        <span class="badge bg-light text-dark border">Manager</span>
+    <div class="adk-demo-wrapper">
+        <header class="adk-demo-header">
+            <h1 class="adk-demo-title">ADK Agent Demo</h1>
+            <p class="adk-demo-subtitle">Multi-agent orchestration powered by Google Agent Development Kit</p>
+        </header>
+
+        <section class="mb-5">
+            <h5 class="mb-3 d-flex align-items-center gap-2">
+                <span style="font-size: 1.2rem;">🤖</span> Specialized Agents
+            </h5>
+            <div class="adk-demo-agents-grid">
+                <!-- Manager -->
+                <div class="adk-demo-agent-card" style="grid-column: 1 / -1; background: #e7f5ff; border-color: #a5d8ff;">
+                    <div class="adk-demo-agent-name">
+                        <span>🎯</span> adk_agent_demo_manager
+                    </div>
+                    <div class="adk-demo-agent-desc">The root orchestrator. Analyzes requests and delegates to specialists.</div>
+                    <div><span class="adk-demo-tool-badge" style="background:#fff; border-color:#339af0">Orchestrator</span></div>
+                </div>
+
+                <!-- Weather -->
+                <div class="adk-demo-agent-card">
+                    <div class="adk-demo-agent-name"><span>🌤️</span> weather_specialist</div>
+                    <div class="adk-demo-agent-desc">Handles weather queries and temperature conversions.</div>
+                    <div class="mt-2">
+                        <span class="adk-demo-tool-badge">get_weather</span>
+                        <span class="adk-demo-tool-badge">convert_c_to_f</span>
                     </div>
                 </div>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title"><strong>weather_specialist</strong></h6>
-                        <p class="card-text small text-muted">Handles all weather-related queries and temperature conversions.</p>
-                        <div class="mt-2">
-                            <span class="badge bg-info text-dark">get_weather</span>
-                            <span class="badge bg-info text-dark">convert_c_to_f</span>
-                        </div>
+
+                <!-- Time -->
+                <div class="adk-demo-agent-card">
+                    <div class="adk-demo-agent-name"><span>⏰</span> time_specialist</div>
+                    <div class="adk-demo-agent-desc">Focused on providing current time across timezones.</div>
+                    <div class="mt-2">
+                        <span class="adk-demo-tool-badge">get_current_time</span>
+                    </div>
+                </div>
+
+                <!-- Math -->
+                <div class="adk-demo-agent-card">
+                    <div class="adk-demo-agent-name"><span>🔢</span> math_specialist</div>
+                    <div class="adk-demo-agent-desc">A precise agent for mathematical additions.</div>
+                    <div class="mt-2">
+                        <span class="adk-demo-tool-badge">add_numbers</span>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="adk-demo-agent-card">
+                    <div class="adk-demo-agent-name"><span>🔍</span> search_specialist</div>
+                    <div class="adk-demo-agent-desc">Searches the web for real-time information.</div>
+                    <div class="mt-2">
+                        <span class="adk-demo-tool-badge">google_search</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title"><strong>time_specialist</strong></h6>
-                        <p class="card-text small text-muted">Focused on providing current time across different timezones.</p>
-                        <div class="mt-2">
-                            <span class="badge bg-info text-dark">get_current_time</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title"><strong>math_specialist</strong></h6>
-                        <p class="card-text small text-muted">A precise agent for mathematical additions.</p>
-                        <div class="mt-2">
-                            <span class="badge bg-info text-dark">add_numbers</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title"><strong>search_specialist</strong></h6>
-                        <p class="card-text small text-muted">A specialist that can search the web for real-time information.</p>
-                        <div class="mt-2">
-                            <span class="badge bg-info text-dark">google_search</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        </section>
+
+        <div class="adk-demo-input-container">
+            <label for="message" class="form-label fw-bold mb-2">What would you like to ask?</label>
+            <textarea class="adk-demo-textarea" id="message" rows="3" placeholder="e.g., What time is it in Tokyo? Or: add the hour in NYC now with the temp in paris now" autofocus></textarea>
+            <button type="button" class="adk-demo-btn" id="askBtn">
+                <span id="btnIcon">🚀</span>
+                <span id="btnText">Ask Agent</span>
+            </button>
         </div>
-    </div>
 
-    <div class="mb-3">
-        <label for="message" class="form-label">Ask the agent:</label>
-        <textarea class="form-control form-control-lg" id="message" rows="3" placeholder="e.g., What time is it in Tokyo? Or: add the hour in NYC now with the temp in paris now" autofocus></textarea>
-    </div>
-    <button type="button" class="btn btn-primary" id="askBtn">Ask</button>
-
-    <div class="mt-4">
-        <h4>Response:</h4>
-        <div id="response" class="p-3 bg-light border rounded" style="min-height: 100px; white-space: pre-wrap;">
-            <em>Response will appear here...</em>
+        <div class="adk-demo-response-area">
+            <h4 class="adk-demo-response-title">
+                <span>💬</span> Agent Response
+            </h4>
+            <div id="responseFeed" class="adk-demo-feed">
+                <div class="text-muted small italic">Agent output will appear here as it processes your request...</div>
+            </div>
         </div>
     </div>
 </div>
@@ -79,18 +311,55 @@
 document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('message');
     const askBtn = document.getElementById('askBtn');
-    const responseDiv = document.getElementById('response');
+    const btnText = document.getElementById('btnText');
+    const btnIcon = document.getElementById('btnIcon');
+    const responseFeed = document.getElementById('responseFeed');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    let currentAgent = null;
+    let agentLevels = {}; // Map agent names to indentation level
+    let activeContainer = responseFeed;
+    let textSpan = null;
+
+    function getAgentLevel(agentName) {
+        if (agentName === 'adk_agent_demo_manager') return 0;
+        // Simple logic: if not manager, it's a specialist (level 1)
+        // In a deeper hierarchy we could track who called whom
+        return agentName.includes('manager') ? 0 : 1;
+    }
+
+    function createAgentHeader(agentName) {
+        const level = getAgentLevel(agentName);
+        const headerDiv = document.createElement('div');
+        headerDiv.className = `adk-demo-agent-header adk-demo-indent-${level}`;
+        
+        const isManager = agentName.includes('manager');
+        const badgeClass = isManager ? 'adk-demo-badge-manager' : 'adk-demo-badge-specialist';
+        const icon = isManager ? '🎯' : '👤';
+
+        headerDiv.innerHTML = `
+            <span class="adk-demo-agent-badge ${badgeClass}">${icon} ${agentName}</span>
+        `;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = `adk-demo-event adk-demo-indent-${level}`;
+        
+        responseFeed.appendChild(headerDiv);
+        responseFeed.appendChild(contentDiv);
+        return contentDiv;
+    }
 
     async function askAgent() {
         const message = messageInput.value.trim();
-        if (!message) {
-            responseDiv.innerHTML = '<em>Please enter a message.</em>';
-            return;
-        }
+        if (!message) return;
 
         askBtn.disabled = true;
-        responseDiv.innerHTML = ''; // Clear previous response
+        btnText.textContent = 'Thinking...';
+        btnIcon.textContent = '⏳';
+        responseFeed.innerHTML = '';
+        currentAgent = null;
+        activeContainer = responseFeed;
+        textSpan = null;
 
         try {
             const response = await fetch('{{ url_for("adk_agent_demo.ask_agent") }}', {
@@ -109,8 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let textSpan = null;
-            let lastAgent = null;
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -124,68 +391,54 @@ document.addEventListener('DOMContentLoaded', function() {
                         try {
                             const data = JSON.parse(line.substring(6));
                             
-                            // Handle Agent Handoff/Name Display
-                            if (data.agent && data.agent !== lastAgent) {
-                                textSpan = null; // Reset text span for new agent
-                                const agentDiv = document.createElement('div');
-                                agentDiv.className = 'badge bg-secondary mb-2';
-                                agentDiv.textContent = `👤 ${data.agent}`;
-                                responseDiv.appendChild(agentDiv);
-                                lastAgent = data.agent;
+                            // Handle Agent Handoff
+                            if (data.agent && data.agent !== currentAgent) {
+                                currentAgent = data.agent;
+                                activeContainer = createAgentHeader(currentAgent);
+                                textSpan = null;
                             }
 
                             if (data.type === 'text') {
                                 if (!textSpan) {
-                                    textSpan = document.createElement('span');
-                                    responseDiv.appendChild(textSpan);
+                                    textSpan = document.createElement('div');
+                                    textSpan.className = 'adk-demo-text';
+                                    activeContainer.appendChild(textSpan);
                                 }
                                 textSpan.textContent += data.text;
                             } else if (data.type === 'thought') {
-                                const thoughtDiv = document.createElement('div');
-                                thoughtDiv.className = 'text-muted small italic mb-1 border-start ps-2 ms-2';
-                                thoughtDiv.style.borderLeftColor = '#dee2e6';
-                                thoughtDiv.innerHTML = `<em>💭 Thinking: ${data.text}</em>`;
-                                responseDiv.appendChild(thoughtDiv);
                                 textSpan = null;
+                                const thoughtDiv = document.createElement('div');
+                                thoughtDiv.className = 'adk-demo-thought';
+                                thoughtDiv.innerHTML = `<em>💭 ${data.text}</em>`;
+                                activeContainer.appendChild(thoughtDiv);
                             } else if (data.type === 'tool_call') {
-                                textSpan = null; // New section after tool call
-                                let isTransfer = data.tool_calls.some(tc => tc.name === 'transfer_to_agent');
-                                
+                                textSpan = null;
                                 const toolDiv = document.createElement('div');
-                                toolDiv.className = 'text-muted small italic mb-2';
+                                toolDiv.className = 'adk-demo-tool-call';
                                 
                                 data.tool_calls.forEach(tc => {
                                     const callInfo = document.createElement('div');
-                                    callInfo.className = 'ms-3 border-start ps-2 mb-1';
-                                    callInfo.style.fontSize = '0.85rem';
-                                    
                                     if (tc.name === 'transfer_to_agent') {
-                                        const targetAgent = tc.args.agent_name || 'another specialist';
-                                        callInfo.innerHTML = `🤝 <strong>Delegating to:</strong> ${targetAgent}`;
+                                        callInfo.innerHTML = `🤝 <strong>Delegating to:</strong> ${tc.args.agent_name || 'specialist'}`;
                                     } else if (tc.name === 'escalate') {
-                                        callInfo.innerHTML = `🔙 <strong>Escalating back to Manager...</strong>`;
+                                        callInfo.innerHTML = `🔙 <strong>Escalating back...</strong>`;
                                     } else {
-                                        callInfo.innerHTML = `⚙️ <strong>Tool:</strong> ${tc.name}<br><span class="text-secondary">Args: ${JSON.stringify(tc.args)}</span>`;
+                                        callInfo.innerHTML = `⚙️ <strong>Calling tool:</strong> <code>${tc.name}</code><div class="adk-demo-json">${JSON.stringify(tc.args)}</div>`;
                                     }
                                     toolDiv.appendChild(callInfo);
                                 });
-                                
-                                responseDiv.appendChild(toolDiv);
+                                activeContainer.appendChild(toolDiv);
                             } else if (data.type === 'tool_response') {
-                                textSpan = null; // New section after tool response
-                                const resultDiv = document.createElement('div');
-                                resultDiv.className = 'text-muted small italic mb-2';
+                                textSpan = null;
+                                const respDiv = document.createElement('div');
+                                respDiv.className = 'adk-demo-tool-response';
                                 
                                 data.tool_responses.forEach(tr => {
                                     const respInfo = document.createElement('div');
-                                    respInfo.className = 'ms-3 border-start ps-2 mb-1';
-                                    respInfo.style.fontSize = '0.85rem';
-                                    respInfo.style.borderLeftColor = '#28a745';
-                                    respInfo.innerHTML = `✅ <strong>Result from ${tr.name}:</strong><br><span class="text-secondary">${JSON.stringify(tr.response)}</span>`;
-                                    resultDiv.appendChild(respInfo);
+                                    respInfo.innerHTML = `✅ <strong>Result from ${tr.name}:</strong> <div class="adk-demo-json">${JSON.stringify(tr.response)}</div>`;
+                                    respDiv.appendChild(respInfo);
                                 });
-                                
-                                responseDiv.appendChild(resultDiv);
+                                activeContainer.appendChild(respDiv);
                             } else if (data.type === 'error') {
                                 throw new Error(data.message);
                             }
@@ -194,17 +447,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
+                // Scroll to bottom
+                responseFeed.scrollTop = responseFeed.scrollHeight;
             }
         } catch (error) {
-            responseDiv.innerHTML += `<div class="text-danger mt-2">Error: ${error.message}</div>`;
+            const errDiv = document.createElement('div');
+            errDiv.className = 'alert alert-danger mt-3';
+            errDiv.textContent = `Error: ${error.message}`;
+            responseFeed.appendChild(errDiv);
         } finally {
             askBtn.disabled = false;
+            btnText.textContent = 'Ask Agent';
+            btnIcon.textContent = '🚀';
         }
     }
 
     askBtn.addEventListener('click', askAgent);
     messageInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             askAgent();
         }
     });
