@@ -80,7 +80,36 @@ The `Event` object from ADK contains different fields depending on the step:
 - **Tool Responses**: `event.get_function_responses()`
 - **Text**: `event.content.parts` (look for `.text` attribute)
 
-## 7. Debugging Tips
+## 8. Using Built-in Tools (Google Search, etc.)
+The Gemini API has a limitation: you cannot mix "Built-in" tools (like `google_search`) with "Function Calling" (like `transfer_to_agent`, `escalate`, or custom Python tools) in the same agent request.
+
+### The AgentTool Pattern
+To use `google_search` in a multi-agent system, wrap it in an `AgentTool`. This isolates the built-in tool from the manager's orchestration logic.
+
+```python
+from google.adk.tools import google_search
+from google.adk.tools.agent_tool import AgentTool
+
+# 1. Create a specialist with ONLY the built-in tool
+search_agent = Agent(
+    name="search_specialist",
+    tools=[google_search],
+    instruction="Use google_search to find facts and state them."
+)
+
+# 2. Wrap it as a tool
+search_tool = AgentTool(agent=search_agent)
+
+# 3. Add the WRAPPED tool to the Manager's tools list (NOT sub_agents)
+manager = Agent(
+    name="manager",
+    tools=[search_tool],
+    sub_agents=[other_agents],
+    instruction="Call the search_specialist tool for web info."
+)
+```
+
+## 9. Debugging Tips
 - Use `print(..., flush=True)` to ensure logs appear immediately in the terminal, as Flask's internal logger or standard stdout might be buffered.
 - Monitor the `ADK DEBUG` logs to verify the sequence: 
     1. Session Check -> 2. Session Creation (if needed) -> 3. `run_async` Call -> 4. Event Processing.

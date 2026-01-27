@@ -48,13 +48,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>search_specialist</strong></h6>
+                        <p class="card-text small text-muted">A specialist that can search the web for real-time information.</p>
+                        <div class="mt-2">
+                            <span class="badge bg-info text-dark">google_search</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="mb-3">
         <label for="message" class="form-label">Ask the agent:</label>
-        <input type="text" class="form-control" id="message" placeholder="e.g., What time is it in Tokyo?" autofocus>
+        <textarea class="form-control form-control-lg" id="message" rows="3" placeholder="e.g., What time is it in Tokyo? Or: add the hour in NYC now with the temp in paris now" autofocus></textarea>
     </div>
     <button type="button" class="btn btn-primary" id="askBtn">Ask</button>
 

@@ -5,6 +5,8 @@ import requests
 from zoneinfo import ZoneInfo
 
 from google.adk.agents import Agent
+from google.adk.tools import google_search
+from google.adk.tools.agent_tool import AgentTool
 
 
 def get_current_time(city: str) -> dict:
@@ -172,18 +174,33 @@ Once you have the result, provide the final answer to the user.""",
     tools=[add_numbers],
 )
 
+search_agent = Agent(
+    name="search_specialist",
+    model="gemini-2.5-flash",
+    description="A specialist that can search the web for real-time information.",
+    instruction="""You are a search specialist. 
+Your only job is to use the google_search tool to find real-time information, news, or facts on the web. 
+State your findings clearly based on the search results.""",
+    tools=[google_search],
+)
+
+search_tool = AgentTool(agent=search_agent)
+
 # Create the root agent
 sports_agent = Agent(
     name="sports_schedule_manager",
     model="gemini-2.5-flash",
-    description="A manager that delegates tasks to specialized agents for time, weather, and math.",
+    description="A manager that delegates tasks to specialized agents for time, weather, math, and web search.",
     instruction="""You are the Sports Schedule Manager. You coordinate specialists.
 For complex requests (e.g., adding a temperature to an hour):
 1. Transfer to the time_specialist and tell it to "get the hour for [City] and escalate back to me".
 2. Once it escalates, transfer to the weather_specialist and tell it to "get the temp for [City] and escalate back to me".
 3. Finally, transfer to the math_specialist to perform the calculation with the data gathered.
 
+For information you don't have a tool for, call the search_specialist tool.
+
 Do not try to answer the user until you have gathered all necessary data from the specialists. 
 Your goal is to coordinate the flow of information.""",
     sub_agents=[time_agent, weather_agent, math_agent],
+    tools=[search_tool],
 )
