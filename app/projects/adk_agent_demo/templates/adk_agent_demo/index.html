@@ -300,6 +300,9 @@
             <h4 class="adk-demo-response-title">
                 <span>💬</span> Agent Response
             </h4>
+            <div id="creditsDisplay" class="mb-3 text-muted small">
+                You have <strong>{{ credits }} credits</strong> (1 credit per question)
+            </div>
             <div id="responseFeed" class="adk-demo-feed">
                 <div class="text-muted small italic">Agent output will appear here as it processes your request...</div>
             </div>
@@ -314,12 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnText = document.getElementById('btnText');
     const btnIcon = document.getElementById('btnIcon');
     const responseFeed = document.getElementById('responseFeed');
+    const creditsDisplay = document.getElementById('creditsDisplay');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     let currentAgent = null;
     let agentLevels = {}; // Map agent names to indentation level
     let activeContainer = responseFeed;
     let textSpan = null;
+    let currentCredits = {{ credits }};
+
+    function updateCreditsDisplay(credits) {
+        currentCredits = credits;
+        creditsDisplay.innerHTML = `You have <strong>${credits} credits</strong> (1 credit per question)`;
+    }
 
     function getAgentLevel(agentName) {
         if (agentName === 'adk_agent_demo_manager') return 0;
@@ -352,6 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
     async function askAgent() {
         const message = messageInput.value.trim();
         if (!message) return;
+
+        if (currentCredits < 1) {
+            alert("You do not have enough credits to ask a question.");
+            return;
+        }
 
         askBtn.disabled = true;
         btnText.textContent = 'Thinking...';
@@ -391,6 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         try {
                             const data = JSON.parse(line.substring(6));
                             
+                            // Update credits if provided in the stream
+                            if (data.remaining_credits !== undefined) {
+                                updateCreditsDisplay(data.remaining_credits);
+                            }
+
                             // Handle Agent Handoff
                             if (data.agent && data.agent !== currentAgent) {
                                 currentAgent = data.agent;
