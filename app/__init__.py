@@ -128,6 +128,13 @@ def create_app():
         BasketballEvent,
     )
     from app.projects.notes.models import Note
+    from app.projects.betfake.models import (
+        BetfakeAccount,
+        BetfakeGame,
+        BetfakeMarket,
+        BetfakeBet,
+        BetfakeTransaction,
+    )
 
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")
