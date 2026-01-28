@@ -1,0 +1,18 @@
+/* Prefixed styles to avoid collisions as per user rules */
+.betfake-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.betfake-placeholder {
+    padding: 2rem;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    margin-top: 2rem;
+    text-align: center;
+    color: #666;
+}

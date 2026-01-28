@@ -269,6 +269,16 @@ PROJECTS = [
         "type": "project",
         "order": 8,
     },
+    {
+        "id": "betfake",
+        "name": "BetFake",
+        "description": "Sports betting with entirely fake money",
+        "url": "/betfake",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "order": 9,
+    },
 ]
 
 

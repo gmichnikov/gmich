@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}BetFake - Sports Betting for Fun{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="betfake-container">
+    <h1>Welcome to BetFake</h1>
+    <p>The sports betting site where the money is fake, but the fun is real.</p>
+    
+    <div class="betfake-placeholder">
+        <p>Models and betting logic coming soon!</p>
+    </div>
+</div>
+{% endblock %}
