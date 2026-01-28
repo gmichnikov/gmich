@@ -162,18 +162,27 @@ block content %}
   .ys-category-cell {
     text-align: left !important;
     font-weight: 700;
-    background-color: #fafafa !important;
-    width: 140px;
+    background-color: #f8f9fa !important;
+    width: 120px;
     color: #444;
-    border-right: 1px solid #f0f0f0;
+    border-right: 2px solid #ddd;
     padding-left: 10px !important;
     font-size: 13px;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+  }
+
+  .ys-table th.ys-category-cell {
+    z-index: 20;
   }
 
   .ys-player-header {
     color: #333;
     font-weight: 700;
     font-size: 14px;
+    width: 100px;
+    min-width: 100px;
   }
 
   .ys-player-progress {
@@ -334,23 +343,34 @@ block content %}
       border-radius: 0;
       box-shadow: none;
     }
+    .ys-table {
+      min-width: auto;
+    }
     .ys-table th, .ys-table td {
-      padding: 8px 4px;
+      padding: 4px 1px;
     }
     .ys-category-cell {
-      width: 130px;
-      font-size: 13px;
-      padding-left: 10px !important;
+      width: 90px;
+      font-size: 11px;
+      padding-left: 5px !important;
     }
-    .ys-toggle-btn {
-      padding: 6px 8px;
-      min-width: 40px;
+    .ys-player-header {
+      width: 70px;
+      min-width: 70px;
       font-size: 12px;
     }
+    .ys-player-progress, .ys-progress-footer {
+      font-size: 9px;
+    }
     .ys-input-number, .ys-select {
-      width: 60px;
-      padding: 6px;
-      font-size: 14px;
+      width: 48px;
+      padding: 2px;
+      font-size: 12px;
+    }
+    .ys-toggle-btn {
+      padding: 4px 2px;
+      min-width: 30px;
+      font-size: 10px;
     }
   }
 </style>
@@ -483,12 +503,12 @@ block content %}
       div.className = 'ys-name-input';
       div.innerHTML = `
         <label>Player ${i}</label>
-        <input type="text" id="ysPlayer${i}" placeholder="Enter Name" value="Player ${i}">
+        <input type="text" id="ysPlayer${i}" placeholder="Player ${i}" value="">
       `;
       container.appendChild(div);
     }
     // Auto-focus first name
-    container.querySelector('input').select();
+    container.querySelector('input').focus();
   }
 
   function startGame() {
