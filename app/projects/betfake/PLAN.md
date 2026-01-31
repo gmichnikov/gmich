@@ -186,15 +186,15 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks. 
     - [ ] Set status to Scheduled
   - [ ] Return count of imported/updated games
 - [ ] Create function `import_odds_for_sport(sport_key, markets)`
-  - [ ] Fetch odds from API
+  - [ ] Fetch odds from API for bookmakers: `draftkings,fanduel`
   - [ ] For each event in response:
     - [ ] Get or create corresponding BetfakeGame
-    - [ ] For each bookmaker:
+    - [ ] For each bookmaker (processed in order: draftkings, then fanduel):
       - [ ] For each market:
         - [ ] Check if active market exists for this game/type/bookmaker
         - [ ] If odds changed: mark old market inactive, create new market
         - [ ] Create BetfakeOutcome records for each outcome
-        - [ ] Store odds (already integers), point_value (if applicable)
+        - [ ] Store odds (American integers), point_value (if applicable)
   - [ ] Return count of markets/outcomes created
 - [ ] Create function `import_futures(sport_key)`
   - [ ] Fetch odds for futures sport (e.g., basketball_nba_championship_winner)
@@ -255,7 +255,9 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks. 
 
 - [ ] Implement `GET /sports/<sport_key>` route
   - [ ] Query active games for sport (status=Scheduled, commence_time > now)
-  - [ ] Query markets/outcomes for each game
+  - [ ] For each game, select the "Best Available" market of each type:
+    - [ ] Priority 1: DraftKings (Primary)
+    - [ ] Priority 2: FanDuel (Fallback)
   - [ ] Group outcomes by game and market type
   - [ ] Order games by commence_time ASC
   - [ ] Pass to template

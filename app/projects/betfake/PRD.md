@@ -54,7 +54,11 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - **Auto-Sync**: Daily fetching of odds and scores via automated task (e.g., Heroku Scheduler).
 - **Manual Admin Fetch**: Admins must have the ability to manually trigger a sync (odds and scores) via an admin-only dashboard page.
 - Storing games and markets locally to minimize API calls and ensure performance.
-- **Bookmaker Selection**: Fetch odds from 1-2 major bookmakers (e.g., FanDuel, DraftKings) to minimize data volume while maintaining competitive odds.
+- **Bookmaker Selection**: Fetch odds from exactly 2 major bookmakers: **DraftKings** (Primary) and **FanDuel** (Secondary).
+- **UI Display Logic**: 
+    - For simplicity, the UI will display lines from the **Primary** bookmaker (DraftKings) by default.
+    - If DraftKings is missing a specific game or market, the UI will automatically fall back to **FanDuel**.
+    - This ensures maximum coverage of games and markets while keeping the UI clean and consistent (avoiding the complexity of comparing different point spreads or totals across bookmakers).
 - **Market Update Logic**:
     - **Immutability**: Once a `BetfakeMarket` and its `BetfakeOutcome` records are created, they are never updated.
     - If **anything** changes (odds move, spread points move, or total points move), the existing market is marked `is_active=False` and a **new** `BetfakeMarket` with new `BetfakeOutcome` records is created.
