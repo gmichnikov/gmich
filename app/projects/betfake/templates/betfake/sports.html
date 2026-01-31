@@ -9,11 +9,6 @@
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <div class="bf-header">
-            <h1>Browsing {{ sport_key }}</h1>
-            <p>Real-time odds for {{ sport_key }} will appear here in Phase 2.</p>
-        </div>
-
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link {% if sport_key == 'basketball_nba' %}active{% endif %}">NBA</a>
@@ -23,11 +18,77 @@
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
 
-        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
-            <p>Odds API integration is coming in Phase 2!</p>
-            <p>Soon you'll see upcoming {{ sport_key }} games here.</p>
-            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Back to Dashboard</a>
+        <div class="bf-header">
+            <h1>{{ sport_key.replace('basketball_', '').replace('soccer_', '').replace('americanfootball_', '').upper() }} Games</h1>
+            <p>Select a line to place a bet.</p>
         </div>
+
+        {% if games %}
+            {% for game in games %}
+            <div class="bf-game-card">
+                <div class="bf-game-header">
+                    <span class="bf-game-teams">{{ game.home_team }} vs {{ game.away_team }}</span>
+                    <span class="bf-game-time">{{ (game.commence_time|bf_local_time).strftime('%b %d, %I:%M %p') }}</span>
+                </div>
+
+                <div class="bf-market-row">
+                    <!-- Moneyline Column -->
+                    <div class="bf-market-column">
+                        <span class="bf-market-label">Moneyline</span>
+                        {% if 'h2h' in game.display_markets %}
+                            {% for outcome in game.display_markets['h2h'].outcomes %}
+                            <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                                <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                                <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 0.8rem; text-align: center; color: #999;">N/A</span>
+                        {% endif %}
+                    </div>
+
+                    {% if sport_key != 'soccer_epl' %}
+                    <!-- Spreads Column -->
+                    <div class="bf-market-column">
+                        <span class="bf-market-label">Spread</span>
+                        {% if 'spreads' in game.display_markets %}
+                            {% for outcome in game.display_markets['spreads'].outcomes %}
+                            <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                                <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                                <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                                <span class="bf-odds-point">{{ outcome.point_value if outcome.point_value > 0 else outcome.point_value }}</span>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 0.8rem; text-align: center; color: #999;">N/A</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Totals Column -->
+                    <div class="bf-market-column">
+                        <span class="bf-market-label">Total</span>
+                        {% if 'totals' in game.display_markets %}
+                            {% for outcome in game.display_markets['totals'].outcomes %}
+                            <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                                <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                                <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                                <span class="bf-odds-point">{{ outcome.point_value }}</span>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 0.8rem; text-align: center; color: #999;">N/A</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
+                <p>No upcoming {{ sport_key }} games found.</p>
+                <p>Try syncing data from the Admin panel.</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

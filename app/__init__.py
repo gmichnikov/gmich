@@ -150,7 +150,11 @@ def create_app():
     from app.projects.better_signups.commands import (
         init_app as init_better_signups_commands,
     )
+    from app.projects.betfake.commands import (
+        init_app as init_betfake_commands,
+    )
 
     init_better_signups_commands(app)
+    init_betfake_commands(app)
 
     return app

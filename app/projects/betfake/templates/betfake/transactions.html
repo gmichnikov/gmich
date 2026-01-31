@@ -1,19 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Transactions - BetFake{% endblock %}
+{% block title %}Transactions - {{ account.name }} - BetFake{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+<style>
+    .bf-transaction-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .bf-transaction-table th, .bf-transaction-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--bf-border);
+    }
+    .bf-transaction-table th {
+        background: #f8f9fa;
+        color: var(--bf-text-light);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+    .bf-amount-positive { color: var(--bf-success); font-weight: bold; }
+    .bf-amount-negative { color: var(--bf-danger); font-weight: bold; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <div class="bf-header">
-            <h1>Account Transactions</h1>
-            <p>Detailed log of wagers, payouts, and account activity.</p>
-        </div>
-
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
@@ -23,10 +42,61 @@
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
 
-        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
-            <p>Detailed transaction logs are coming in Phase 3.4!</p>
-            <p>Account ID: {{ account_id }}</p>
-            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Back to Dashboard</a>
+        <div class="bf-header">
+            <h1>Transaction History</h1>
+            <p>Activity for <strong>{{ account.name }}</strong></p>
+        </div>
+
+        <div class="bf-stat-card" style="margin-bottom: 30px;">
+            <span class="bf-stat-label">Current Balance</span>
+            <span class="bf-stat-value">{{ account.balance|bf_currency }}</span>
+        </div>
+
+        {% if transactions %}
+        <table class="bf-transaction-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ (tx.created_at|bf_local_time).strftime('%b %d, %Y %I:%M %p') }}</td>
+                    <td>
+                        <span style="text-transform: capitalize;">{{ tx.type.value.replace('_', ' ') }}</span>
+                    </td>
+                    <td>
+                        {% if tx.type.value == 'Wager' and tx.bet %}
+                            Wager on {{ tx.bet.outcome_name_at_time }}
+                        {% elif tx.type.value == 'Payout' and tx.bet %}
+                            Payout for {{ tx.bet.outcome_name_at_time }}
+                        {% elif tx.type.value == 'Account_Creation' %}
+                            Initial Balance
+                        {% else %}
+                            --
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="{% if tx.amount > 0 %}bf-amount-positive{% else %}bf-amount-negative{% endif %}">
+                            {% if tx.amount > 0 %}+{% endif %}{{ tx.amount|bf_currency }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; border: 2px dashed var(--bf-border);">
+            <p>No transactions found for this account.</p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-outline">Back to Dashboard</a>
         </div>
     </div>
 </div>

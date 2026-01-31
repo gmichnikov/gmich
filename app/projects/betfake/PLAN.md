@@ -4,292 +4,298 @@ This plan follows the PRD phases but breaks them into smaller, testable chunks. 
 
 ---
 
-## Phase 1: Core Data & Basic Dashboard
+## Phase 1: Core Data & Basic Dashboard [COMPLETED]
 
-### 1.1 Database Model Setup
+### 1.1 Database Model Setup [COMPLETED]
 
-- [ ] Create all enum classes in `models.py`
-  - [ ] `GameStatus` enum (Scheduled, Live, Completed)
-  - [ ] `MarketType` enum (h2h, spreads, totals, outrights)
-  - [ ] `BetStatus` enum (Pending, Won, Lost, Push)
-  - [ ] `TransactionType` enum (Wager, Payout, Account_Creation)
-- [ ] Create `BetfakeAccount` model
-  - [ ] Define fields: `id`, `user_id`, `name`, `balance`, `created_at`
-  - [ ] Set default balance to 100.0
-  - [ ] Add foreign key relationship to User model
-  - [ ] Add `__repr__` method
-- [ ] Create `BetfakeGame` model
-  - [ ] Define fields: `id`, `external_id`, `sport_key`, `sport_title`
-  - [ ] Add `home_team`, `away_team` (nullable for futures)
-  - [ ] Add `commence_time`, `status`, `home_score`, `away_score` (nullable)
-  - [ ] Add `last_update` timestamp
-  - [ ] Add `__repr__` method
-- [ ] Create `BetfakeMarket` model
-  - [ ] Define fields: `id`, `game_id` (nullable), `type`, `label` (nullable)
-  - [ ] Add `bookmaker_key`, `external_market_id` (nullable)
-  - [ ] Add `is_active`, `created_at`, `marked_inactive_at` (nullable)
-  - [ ] Add foreign key to BetfakeGame
-  - [ ] Add `__repr__` method
-- [ ] Create `BetfakeOutcome` model
-  - [ ] Define fields: `id`, `market_id`, `outcome_name`
-  - [ ] Add `odds` (Integer), `point_value` (nullable Float)
-  - [ ] Add `is_active` (mirrors parent market)
-  - [ ] Add foreign key to BetfakeMarket
-  - [ ] Add `__repr__` method
-- [ ] Create `BetfakeBet` model
-  - [ ] Define fields: `id`, `user_id`, `account_id`, `outcome_id`
-  - [ ] Add `wager_amount`, `odds_at_time`, `line_at_time` (nullable)
-  - [ ] Add `outcome_name_at_time`, `potential_payout`
-  - [ ] Add `status`, `placed_at`, `settled_at` (nullable)
-  - [ ] Add foreign keys to User, BetfakeAccount, BetfakeOutcome
-  - [ ] Add `__repr__` method
-- [ ] Create `BetfakeTransaction` model
-  - [ ] Define fields: `id`, `user_id`, `account_id`, `bet_id` (nullable)
-  - [ ] Add `amount`, `type`, `created_at`
-  - [ ] Add foreign keys to User, BetfakeAccount, BetfakeBet
-  - [ ] Add `__repr__` method
+- [x] Create all enum classes in `models.py`
+  - [x] `GameStatus` enum (Scheduled, Live, Completed)
+  - [x] `MarketType` enum (h2h, spreads, totals, outrights)
+  - [x] `BetStatus` enum (Pending, Won, Lost, Push)
+  - [x] `TransactionType` enum (Wager, Payout, Account_Creation)
+- [x] Create `BetfakeAccount` model
+  - [x] Define fields: `id`, `user_id`, `name`, `balance`, `created_at`
+  - [x] Set default balance to 100.0
+  - [x] Add foreign key relationship to User model
+  - [x] Add `__repr__` method
+- [x] Create `BetfakeGame` model
+  - [x] Define fields: `id`, `external_id`, `sport_key`, `sport_title`
+  - [x] Add `home_team`, `away_team` (nullable for futures)
+  - [x] Add `commence_time`, `status`, `home_score`, `away_score` (nullable)
+  - [x] Add `last_update` timestamp
+  - [x] Add `__repr__` method
+- [x] Create `BetfakeMarket` model
+  - [x] Define fields: `id`, `game_id` (nullable), `type`, `label` (nullable)
+  - [x] Add `bookmaker_key`, `external_market_id` (nullable)
+  - [x] Add `is_active`, `created_at`, `marked_inactive_at` (nullable)
+  - [x] Add `last_update` (timestamp from API)
+  - [x] Add foreign key to BetfakeGame
+  - [x] Add `__repr__` method
+- [x] Create `BetfakeOutcome` model
+  - [x] Define fields: `id`, `market_id`, `outcome_name`
+  - [x] Add `odds` (Integer), `point_value` (nullable Float)
+  - [x] Add `is_active` (mirrors parent market)
+  - [x] Add foreign key to BetfakeMarket
+  - [x] Add `__repr__` method
+- [x] Create `BetfakeBet` model
+  - [x] Define fields: `id`, `user_id`, `account_id`, `outcome_id`
+  - [x] Add `wager_amount`, `odds_at_time`, `line_at_time` (nullable)
+  - [x] Add `outcome_name_at_time`, `potential_payout`
+  - [x] Add `status`, `placed_at`, `settled_at` (nullable)
+  - [x] Add foreign keys to User, BetfakeAccount, BetfakeOutcome
+  - [x] Add `__repr__` method
+- [x] Create `BetfakeTransaction` model
+  - [x] Define fields: `id`, `user_id`, `account_id`, `bet_id` (nullable)
+  - [x] Add `amount`, `type`, `created_at`
+  - [x] Add foreign keys to User, BetfakeAccount, BetfakeBet
+  - [x] Add `__repr__` method
 
 **Manual Testing 1.1:**
-- [ ] Run `flask db migrate -m "Add betfake models"`
-- [ ] Review migration file for correctness (check all tables, enums, constraints)
-- [ ] Run `flask db upgrade`
-- [ ] Verify all 6 tables exist in database with correct schema
-- [ ] Verify enum types are created correctly
-- [ ] Verify foreign key relationships are correct
+- [x] Run `flask db migrate -m "Add betfake models"`
+- [x] Review migration file for correctness (check all tables, enums, constraints)
+- [x] Run `flask db upgrade`
+- [x] Verify all 6 tables exist in database with correct schema
+- [x] Verify enum types are created correctly
+- [x] Verify foreign key relationships are correct
 
 ---
 
-### 1.2 Blueprint and Route Structure
+### 1.2 Blueprint and Route Structure [COMPLETED]
 
-- [ ] Update `__init__.py` to initialize blueprint properly
-  - [ ] Import Blueprint and register with url_prefix `/betfake`
-- [ ] Create `routes.py` with placeholder routes
-  - [ ] `GET /` - dashboard (placeholder)
-  - [ ] `GET /accounts` - list accounts (placeholder)
-  - [ ] `POST /accounts/create` - create account (placeholder)
-  - [ ] `GET /sports/<sport_key>` - browse games (placeholder)
-  - [ ] `GET /futures` - futures markets (placeholder)
-  - [ ] `GET /history` - bet history (placeholder)
-- [ ] Add `@login_required` decorator to all routes
-- [ ] Verify blueprint is registered in main app `__init__.py`
-- [ ] Create templates directory structure
-  - [ ] Create `templates/betfake/` directory
-  - [ ] Create `static/betfake/` directory for CSS/JS
+- [x] Update `__init__.py` to initialize blueprint properly
+  - [x] Import Blueprint and register with url_prefix `/betfake`
+- [x] Create `routes.py` with placeholder routes
+  - [x] `GET /` - dashboard (placeholder)
+  - [x] `GET /accounts` - list accounts (placeholder)
+  - [x] `POST /accounts/create` - create account (placeholder)
+  - [x] `GET /sports/<sport_key>` - browse games (placeholder)
+  - [x] `GET /futures` - futures markets (placeholder)
+  - [x] `GET /history` - bet history (placeholder)
+- [x] Add `@login_required` decorator to all routes
+- [x] Verify blueprint is registered in main app `__init__.py`
+- [x] Create templates directory structure
+  - [x] Create `templates/betfake/` directory
+  - [x] Create `static/betfake/` directory for CSS/JS
 
 **Manual Testing 1.2:**
-- [ ] Verify `/betfake/` route loads (even if empty)
-- [ ] Verify unauthenticated users are redirected to login
-- [ ] Verify 404 for non-existent routes under `/betfake`
+- [x] Verify `/betfake/` route loads (even if empty)
+- [x] Verify unauthenticated users are redirected to login
+- [x] Verify 404 for non-existent routes under `/betfake`
 
 ---
 
-### 1.3 Helper Functions & Utilities
+### 1.3 Helper Functions & Utilities [COMPLETED]
 
-- [ ] Create `utils.py` for helper functions
-  - [ ] `get_account_by_id(account_id, user_id)` - fetch account with auth check
-  - [ ] `calculate_american_odds_payout(wager, odds)` - payout calculation (American odds only)
-  - [ ] `format_odds_display(odds)` - format odds for display (+150, -110)
-  - [ ] `is_game_bettable(game)` - check if betting window is open
-- [ ] Create date/time formatting helpers
-  - [ ] Convert UTC to user's timezone (use user.time_zone)
-  - [ ] Format as "Jan 31, 2026 3:45 PM"
-  - [ ] Register as Jinja filters if needed
-- [ ] Add CSS base styles in `static/betfake/style.css`
-  - [ ] Define CSS variables for colors, spacing
-  - [ ] All classes use `bf-` prefix
-  - [ ] Mobile-first responsive design
-  - [ ] Base button styles (min 44px height)
+- [x] Create `utils.py` for helper functions
+  - [x] `get_account_by_id(account_id, user_id)` - fetch account with auth check
+  - [x] `calculate_american_odds_payout(wager, odds)` - payout calculation (American odds only)
+  - [x] `format_odds_display(odds)` - format odds for display (+150, -110)
+  - [x] `is_game_bettable(game)` - check if betting window is open
+- [x] Create date/time formatting helpers
+  - [x] Convert UTC to user's timezone (use user.time_zone)
+  - [x] Format as "Jan 31, 2026 3:45 PM"
+  - [x] Register as Jinja filters if needed
+- [x] Add CSS base styles in `static/betfake/style.css`
+  - [x] Define CSS variables for colors, spacing
+  - [x] All classes use `bf-` prefix
+  - [x] Mobile-first responsive design
+  - [x] Base button styles (min 44px height)
 
 **Manual Testing 1.3:**
-- [ ] Test payout calculation with positive and negative odds
-- [ ] Test date formatting with different timezones
-- [ ] Test account authorization (try accessing another user's account)
+- [x] Test payout calculation with positive and negative odds
+- [x] Test date formatting with different timezones
+- [x] Test account authorization (try accessing another user's account)
 
 ---
 
-### 1.4 Dashboard - Accounts Management
+### 1.4 Dashboard - Accounts Management [COMPLETED]
 
-- [ ] Implement `GET /` dashboard route
-  - [ ] Query user's accounts (ordered by created_at)
-  - [ ] Query pending bets for user
-  - [ ] Calculate total balance across accounts
-  - [ ] Calculate total profit/loss (sum of Won/Lost bet outcomes)
-- [ ] Implement `POST /accounts/create` route
-  - [ ] Validate account name is not empty
-  - [ ] Create new account with balance=100.0
-  - [ ] Create transaction record (type=Account_Creation, amount=100)
-  - [ ] Flash success message
-  - [ ] Redirect to dashboard
-- [ ] Create `betfake/index.html` template
-  - [ ] Page header "BetFake - Sports Betting Simulator"
-  - [ ] Accounts section
-    - [ ] Display each account with name and balance
-    - [ ] "Create New Account" button/form
-  - [ ] Quick stats section
-    - [ ] Total balance across all accounts
-    - [ ] Total profit/loss (placeholder if no bets)
-  - [ ] Pending bets section
-    - [ ] List of active bets with game, outcome, wager
-    - [ ] Empty state: "No active bets"
-  - [ ] Navigation to sports/futures/history
-  - [ ] Use `bf-` prefix for all CSS classes
+- [x] Implement `GET /` dashboard route
+  - [x] Query user's accounts (ordered by created_at)
+  - [x] Query pending bets for user
+  - [x] Calculate total balance across accounts
+  - [x] Calculate total profit/loss (sum of Won/Lost bet outcomes)
+- [x] Implement `POST /accounts/create` route
+  - [x] Validate account name is not empty
+  - [x] Create new account with balance=100.0
+  - [x] Create transaction record (type=Account_Creation, amount=100)
+  - [x] Flash success message
+  - [x] Redirect to dashboard
+- [x] Create `betfake/index.html` template
+  - [x] Page header "BetFake - Sports Betting Simulator"
+  - [x] Accounts section
+    - [x] Display each account with name and balance
+    - [x] "Create New Account" button/form
+  - [x] Quick stats section
+    - [x] Total balance across all accounts
+    - [x] Total profit/loss (placeholder if no bets)
+  - [x] Pending bets section
+    - [x] List of active bets with game, outcome, wager
+    - [x] Empty state: "No active bets"
+  - [x] Navigation to sports/futures/history
+  - [x] Use `bf-` prefix for all CSS classes
 
 **Manual Testing 1.4:**
-- [ ] Dashboard loads for authenticated user
-- [ ] Create an account, verify balance=$100
-- [ ] Verify transaction record created
-- [ ] Empty states display correctly
-- [ ] Navigation links work
+- [x] Dashboard loads for authenticated user
+- [x] Create an account, verify balance=$100
+- [x] Verify transaction record created
+- [x] Empty states display correctly
+- [x] Navigation links work
 
 ---
 
-## Phase 2: Odds API Integration (Read-only)
+## Phase 2: Odds API Integration (Read-only) [COMPLETED]
 
-### 2.1 API Service Setup
+### 2.1 API Service Setup [COMPLETED]
 
-- [ ] Create `services/odds_api.py` module
-  - [ ] Add configuration (API key from environment)
-  - [ ] Add base URL and bookmaker settings (fanduel,draftkings)
-  - [ ] Create session with proper headers
-- [ ] Create function `fetch_sports_list()`
-  - [ ] GET /v4/sports endpoint
-  - [ ] Return list of active sports
-- [ ] Create function `fetch_events(sport_key)`
-  - [ ] GET /v4/sports/{sport}/events endpoint
-  - [ ] Return list of upcoming events
-- [ ] Create function `fetch_odds(sport_key, markets)`
-  - [ ] GET /v4/sports/{sport}/odds endpoint
-  - [ ] Use bookmakers parameter (not regions)
-  - [ ] Return list of events with odds
-- [ ] Create function `fetch_scores(sport_key)`
-  - [ ] GET /v4/sports/{sport}/scores endpoint
-  - [ ] Return list of completed/live games with scores
-- [ ] Add error handling and logging for all API calls
+- [x] Create `services/odds_api.py` module
+  - [x] Add configuration (API key from environment)
+  - [x] Add base URL and bookmaker settings (fanduel,draftkings)
+  - [x] Create session with proper headers
+- [x] Create function `fetch_sports_list()`
+  - [x] GET /v4/sports endpoint
+  - [x] Return list of active sports
+- [x] Create function `fetch_events(sport_key)`
+  - [x] GET /v4/sports/{sport}/events endpoint
+  - [x] Return list of upcoming events
+- [x] Create function `fetch_odds(sport_key, markets)`
+  - [x] GET /v4/sports/{sport}/odds endpoint
+  - [x] Use bookmakers parameter (not regions)
+  - [x] Return list of events with odds
+- [x] Create function `fetch_scores(sport_key)`
+  - [x] GET /v4/sports/{sport}/scores endpoint
+  - [x] Return list of completed/live games with scores
+- [x] Add error handling and logging for all API calls
 
 **Manual Testing 2.1:**
-- [ ] Test each function individually in Python shell
-- [ ] Verify API key works
-- [ ] Verify response structure matches expectations
-- [ ] Test error handling (invalid sport_key, network error)
+- [x] Test each function individually in Python shell
+- [x] Verify API key works
+- [x] Verify response structure matches expectations
+- [x] Test error handling (invalid sport_key, network error)
 
 ---
 
-### 2.2 Data Import - Games & Markets
+### 2.2 Data Import - Games & Markets [COMPLETED]
 
-- [ ] Create `services/data_import.py` module
-- [ ] Create function `import_games_for_sport(sport_key)`
-  - [ ] Fetch events from API
-  - [ ] For each event:
-    - [ ] Check if game exists by external_id
-    - [ ] Create or update BetfakeGame record
-    - [ ] Convert commence_time string to datetime
-    - [ ] Set status to Scheduled
-  - [ ] Return count of imported/updated games
-- [ ] Create function `import_odds_for_sport(sport_key, markets)`
-  - [ ] Fetch odds from API for bookmakers: `draftkings,fanduel`
-  - [ ] For each event in response:
-    - [ ] Get or create corresponding BetfakeGame
-    - [ ] For each bookmaker (processed in order: draftkings, then fanduel):
-      - [ ] For each market:
-        - [ ] Check if active market exists for this game/type/bookmaker
-        - [ ] If odds changed: mark old market inactive, create new market
-        - [ ] Create BetfakeOutcome records for each outcome
-        - [ ] Store odds (American integers), point_value (if applicable)
-  - [ ] Return count of markets/outcomes created
-- [ ] Create function `import_futures(sport_key)`
-  - [ ] Fetch odds for futures sport (e.g., basketball_nba_championship_winner)
-  - [ ] Create BetfakeGame with null home/away teams
-  - [ ] Create BetfakeMarket with type=outrights
-  - [ ] Create BetfakeOutcome for each team/participant
-  - [ ] Return count of futures imported
-- [ ] Add logging for import operations
+- [x] Create `services/data_import.py` module
+- [x] Create function `import_games_for_sport(sport_key)`
+  - [x] Fetch events from API
+  - [x] For each event:
+    - [x] Check if game exists by external_id
+    - [x] Create or update BetfakeGame record
+    - [x] Convert commence_time string to datetime
+    - [x] Set status to Scheduled
+  - [x] Return count of imported/updated games
+- [x] Create function `import_odds_for_sport(sport_key, markets)`
+  - [x] Fetch odds from API for bookmakers: `draftkings,fanduel`
+  - [x] For each event in response:
+    - [x] Get or create corresponding BetfakeGame
+    - [x] For each bookmaker (processed in order: draftkings, then fanduel):
+      - [x] For each market:
+        - [x] Check if active market exists for this game/type/bookmaker
+        - [x] If odds changed: mark old market inactive, create new market
+        - [x] Create BetfakeOutcome records for each outcome
+        - [x] Store odds (American integers), point_value (if applicable)
+  - [x] Return count of markets/outcomes created
+- [x] Create function `import_futures(sport_key)`
+  - [x] Fetch odds for futures sport (e.g., basketball_nba_championship_winner)
+  - [x] Create BetfakeGame with null home/away teams
+  - [x] Create BetfakeMarket with type=outrights
+  - [x] Create BetfakeOutcome for each team/participant
+  - [x] Return count of futures imported
+- [x] Add logging for import operations
 
 **Manual Testing 2.2:**
-- [ ] Run import_games_for_sport('basketball_nba')
-- [ ] Verify games appear in database
-- [ ] Run import_odds_for_sport('basketball_nba', 'h2h,spreads,totals')
-- [ ] Verify markets and outcomes in database
-- [ ] Check that outcomes link to correct games
-- [ ] Run import_futures('basketball_nba_championship_winner')
-- [ ] Verify futures market created with 30 outcomes
-- [ ] Run import again, verify no duplicates created
+- [x] Run import_games_for_sport('basketball_nba')
+- [x] Verify games appear in database
+- [x] Run import_odds_for_sport('basketball_nba', 'h2h,spreads,totals')
+- [x] Verify markets and outcomes in database
+- [x] Check that outcomes link to correct games
+- [x] Run import_futures('basketball_nba_championship_winner')
+- [x] Verify futures market created with 30 outcomes
+- [x] Run import again, verify no duplicates created
 
 ---
 
-### 2.3 Management Command for Imports
+### 2.3 Management Command for Imports [COMPLETED]
 
-- [ ] Create Flask CLI command `flask betfake sync`
-  - [ ] Add command decorator in routes.py or commands.py
-  - [ ] Sync NBA: games, odds (h2h,spreads,totals), futures
-  - [ ] Sync NFL: games, odds (h2h,spreads,totals)
-  - [ ] Sync EPL: games, odds (h2h only - soccer is h2h only)
-  - [ ] Print summary of imported records
-  - [ ] Add `--sport` flag to sync specific sport only
-- [ ] Test command runs successfully
-- [ ] Document command in README or PLAN
+- [x] Create Flask CLI command `flask betfake sync`
+  - [x] Add command decorator in routes.py or commands.py
+  - [x] Sync NBA: games, odds (h2h,spreads,totals), futures
+  - [x] Sync NFL: games, odds (h2h,spreads,totals)
+  - [x] Sync EPL: games, odds (h2h only - soccer is h2h only)
+  - [x] Print summary of imported records
+  - [x] Add `--sport` flag to sync specific sport only
+- [x] Test command runs successfully
+- [x] Document command in README or PLAN
+
+**Manual Testing 2.3:**
+- [x] Run `flask betfake sync`
+- [x] Verify all sports imported
+- [x] Check database has games and odds
+- [x] Run again, verify idempotency (no duplicates)
+- [x] Run `flask betfake sync --sport nba`
+- [x] Verify only NBA data refreshed
 
 ---
 
-### 2.4 Admin Manual Sync UI
+### 2.4 Admin Manual Sync UI [COMPLETED]
 
-- [ ] Create `GET /admin/sync` route in `routes.py` (or a separate admin controller)
-  - [ ] Add `@admin_required` decorator
-  - [ ] Display sync status and "Trigger Sync" button
-- [ ] Implement `POST /admin/sync/trigger`
-  - [ ] Call the sync logic (import games, odds, futures)
-  - [ ] Flash success message with summary
-- [ ] Create `betfake/admin_sync.html` template
-  - [ ] Button to trigger full sync
-  - [ ] Links to trigger sport-specific syncs
-- [ ] Register this page in the main app Admin menu (`app/templates/base.html`)
+- [x] Create `GET /admin/sync` route (restricted to admins)
+  - [x] Display sync status and "Trigger Sync" button
+- [x] Implement `POST /admin/sync/trigger`
+  - [x] Call the sync logic (import games, odds, futures)
+  - [x] Flash success message with summary
+- [x] Create `betfake/admin_sync.html` template
+- [x] Register this page in the main app Admin menu
 
 **Manual Testing 2.4:**
-- [ ] Login as admin
-- [ ] Navigate to BetFake Admin Sync page
-- [ ] Click "Trigger Sync"
-- [ ] Verify data is imported into database
+- [x] Login as admin
+- [x] Navigate to BetFake Admin Sync page
+- [x] Click "Trigger Sync"
+- [x] Verify data is imported into database
 
 ---
 
-### 2.5 Browse Games UI
+### 2.5 Browse Games UI [COMPLETED]
 
-- [ ] Implement `GET /sports/<sport_key>` route
-  - [ ] Query active games for sport (status=Scheduled, commence_time > now)
-  - [ ] For each game, select the "Best Available" market of each type:
-    - [ ] Priority 1: DraftKings (Primary)
-    - [ ] Priority 2: FanDuel (Fallback)
-  - [ ] Group outcomes by game and market type
-  - [ ] Order games by commence_time ASC
-  - [ ] Pass to template
-- [ ] Create `betfake/sports.html` template
-  - [ ] Page header with sport name
-  - [ ] Navigation back to dashboard
-  - [ ] Links to other sports (NBA, NFL, EPL)
-  - [ ] List of upcoming games
-    - [ ] Display game matchup (Team1 vs Team2)
-    - [ ] Display date/time in user's timezone
-    - [ ] Display "Betting closed" if game started
-    - [ ] For each bettable game, show odds buttons:
-      - [ ] Moneyline (h2h) outcomes with odds
-      - [ ] Spread outcomes with point value and odds (if available)
-      - [ ] Totals outcomes with point value and odds (if available)
-    - [ ] Each outcome button shows: outcome name, odds, point (if applicable)
-    - [ ] Clicking outcome button goes to bet placement page
-  - [ ] Empty state if no upcoming games
-  - [ ] Use `bf-` CSS prefix
+- [x] Implement `GET /sports/<sport_key>` route
+  - [x] Query active games for sport (status=Scheduled, commence_time > now)
+  - [x] For each game, select the "Best Available" market of each type:
+    - [x] Priority 1: DraftKings (Primary)
+    - [x] Priority 2: FanDuel (Fallback)
+  - [x] Group outcomes by game and market type
+  - [x] Order games by commence_time ASC
+  - [x] Pass to template
+- [x] Create `betfake/sports.html` template
+  - [x] Page header with sport name
+  - [x] Navigation back to dashboard
+  - [x] Links to other sports (NBA, NFL, EPL)
+  - [x] List of upcoming games
+    - [x] Display game matchup (Team1 vs Team2)
+    - [x] Display date/time in user's timezone
+    - [x] Display "Betting closed" if game started
+    - [x] For each bettable game, show odds buttons:
+      - [x] Moneyline (h2h) outcomes with odds
+      - [x] Spread outcomes with point value and odds (if available)
+      - [x] Totals outcomes with point value and odds (if available)
+    - [x] Each outcome button shows: outcome name, odds, point (if applicable)
+    - [x] Clicking outcome button goes to bet placement page
+  - [x] Empty state if no upcoming games
+  - [x] Use `bf-` CSS prefix
 
 **Manual Testing 2.5:**
-- [ ] Navigate to /betfake/sports/basketball_nba
-- [ ] Verify upcoming games display
-- [ ] Verify odds display correctly (formatted as +150, -110)
-- [ ] Verify spreads show point value (-7.5, +7.5)
-- [ ] Verify totals show point value (Over 225.5, Under 225.5)
-- [ ] Verify games past commence_time show "Betting closed"
-- [ ] Test on mobile viewport (odds readable, buttons tappable)
+- [x] Navigate to /betfake/sports/basketball_nba
+- [x] Verify upcoming games display
+- [x] Verify odds display correctly (formatted as +150, -110)
+- [x] Verify spreads show point value (-7.5, +7.5)
+- [x] Verify totals show point value (Over 225.5, Under 225.5)
+- [x] Verify games past commence_time show "Betting closed"
+- [x] Test on mobile viewport (odds readable, buttons tappable)
 
 ---
 
-## Phase 3: Bet Placement
+## Phase 3: Bet Placement [IN PROGRESS]
 
 ### 3.1 Bet Placement UI
 

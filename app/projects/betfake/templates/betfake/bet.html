@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Place Bet - BetFake{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+<style>
+    .bf-bet-card {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .bf-bet-header {
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--bf-border);
+        padding-bottom: 15px;
+    }
+    .bf-bet-game {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--bf-primary);
+    }
+    .bf-bet-outcome {
+        font-size: 1.5rem;
+        margin: 15px 0;
+        font-weight: bold;
+    }
+    .bf-bet-odds {
+        color: var(--bf-secondary);
+        font-size: 1.2rem;
+    }
+    .bf-payout-preview {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    .bf-payout-item span {
+        display: block;
+    }
+    .bf-payout-label {
+        font-size: 0.8rem;
+        color: var(--bf-text-light);
+        text-transform: uppercase;
+    }
+    .bf-payout-value {
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bf-page-wrapper">
+    <div class="bf-dashboard-container">
+        <nav class="bf-nav-tabs">
+            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link">NFL</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link">EPL</a>
+            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
+            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
+        </nav>
+
+        <div class="bf-header">
+            <h1>Confirm Your Bet</h1>
+            <p>Review the details and enter your wager.</p>
+        </div>
+
+        <div class="bf-bet-card">
+            <div class="bf-bet-header">
+                <div class="bf-bet-game">
+                    {% if game.home_team and game.away_team %}
+                        {{ game.home_team }} vs {{ game.away_team }}
+                    {% else %}
+                        {{ game.sport_title }}
+                    {% endif %}
+                </div>
+                <div class="bf-bet-meta">
+                    {{ (game.commence_time|bf_local_time).strftime('%b %d, %I:%M %p') }}
+                </div>
+            </div>
+
+            <div class="bf-bet-outcome">
+                {{ outcome.outcome_name }}
+                {% if outcome.point_value %}
+                    <span class="bf-odds-point">({{ outcome.point_value }})</span>
+                {% endif %}
+                <span class="bf-bet-odds">{{ outcome.odds|bf_odds }}</span>
+            </div>
+
+            <form action="{{ url_for('betfake.place_bet', outcome_id=outcome.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="bf-form-group" style="flex-direction: column; gap: 15px;">
+                    <div>
+                        <label class="bf-stat-label" style="text-align: left;">Select Account</label>
+                        <select name="account_id" class="bf-form-input" style="width: 100%;" required>
+                            {% for account in accounts %}
+                                <option value="{{ account.id }}">{{ account.name }} (Balance: {{ account.balance|bf_currency }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="bf-stat-label" style="text-align: left;">Wager Amount</label>
+                        <input type="number" name="wager_amount" id="wager_input" class="bf-form-input" style="width: 100%;" step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <div class="bf-payout-preview">
+                    <div class="bf-payout-item">
+                        <span class="bf-payout-label">To Win</span>
+                        <span class="bf-payout-value" id="to_win_display">$0.00</span>
+                    </div>
+                    <div class="bf-payout-item">
+                        <span class="bf-payout-label">Potential Return</span>
+                        <span class="bf-payout-value" id="total_return_display">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="bf-account-actions" style="justify-content: center; margin-top: 20px;">
+                    <button type="submit" class="bf-btn bf-btn-primary" style="padding: 15px 40px;">Place Bet</button>
+                    <a href="{{ url_for('betfake.browse_sport', sport_key=game.sport_key) }}" class="bf-btn bf-btn-outline" style="padding: 15px 40px;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const wagerInput = document.getElementById('wager_input');
+    const toWinDisplay = document.getElementById('to_win_display');
+    const totalReturnDisplay = document.getElementById('total_return_display');
+    const odds = {{ outcome.odds }};
+
+    wagerInput.addEventListener('input', function() {
+        const wager = parseFloat(this.value) || 0;
+        let profit = 0;
+
+        if (odds > 0) {
+            profit = wager * (odds / 100);
+        } else {
+            profit = wager * (100 / Math.abs(odds));
+        }
+
+        const totalReturn = profit + wager;
+
+        toWinDisplay.textContent = '$' + profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        totalReturnDisplay.textContent = '$' + totalReturn.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    });
+</script>
+{% endblock %}

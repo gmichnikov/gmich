@@ -248,6 +248,7 @@
 .bf-nav-tabs {
   display: flex;
   gap: 10px;
+  margin-top: 10px;
   margin-bottom: 30px;
   background: var(--bf-white);
   padding: 10px;
@@ -271,19 +272,124 @@
 }
 
 .bf-nav-link:hover:not(.active) {
-  background: var(--bf-bg);
+    background: var(--bf-bg);
+}
+
+/* Odds Buttons Styles */
+.bf-game-card {
+    background: var(--bf-white);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid var(--bf-border);
+}
+
+.bf-game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--bf-border);
+    padding-bottom: 10px;
+}
+
+.bf-game-teams {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.bf-game-time {
+    font-size: 0.85rem;
+    color: var(--bf-text-light);
+}
+
+.bf-market-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.bf-market-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bf-market-label {
+    font-size: 0.75rem;
+    color: var(--bf-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.bf-odds-btn {
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 8px;
+    text-decoration: none;
+    color: var(--bf-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.bf-odds-btn:hover {
+    background: #e9ecef;
+    border-color: var(--bf-primary);
+    transform: translateY(-1px);
+}
+
+.bf-odds-name {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.bf-odds-value {
+    font-weight: bold;
+    color: var(--bf-primary);
+}
+
+.bf-odds-point {
+    font-size: 0.8rem;
+    color: var(--bf-text-light);
+}
+
+.bf-closed-tag {
+    background: var(--bf-pending);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
 }
 
 @media (max-width: 600px) {
-  .bf-form-group {
-    flex-direction: column;
-  }
-
-  .bf-stat-card {
-    padding: 15px;
-  }
-
-  .bf-stat-value {
-    font-size: 1.4rem;
-  }
+    .bf-market-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .bf-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bf-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .bf-nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .bf-nav-link {
+        flex: none;
+        width: 30%;
+        font-size: 0.8rem;
+        padding: 5px;
+    }
 }
+

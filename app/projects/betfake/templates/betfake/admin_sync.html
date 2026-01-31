@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Sync - BetFake{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+<style>
+    .bf-admin-card {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .bf-admin-title {
+        color: var(--bf-primary);
+        margin-top: 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--bf-border);
+        padding-bottom: 10px;
+    }
+    .bf-sync-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bf-page-wrapper">
+    <div class="bf-dashboard-container">
+        <nav class="bf-nav-tabs">
+            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link">NFL</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link">EPL</a>
+            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
+            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
+        </nav>
+
+        <div class="bf-header">
+            <h1>BetFake Admin Sync</h1>
+            <p>Manually trigger Odds API data refresh.</p>
+        </div>
+
+        <div class="bf-admin-card">
+            <h2 class="bf-admin-title">Trigger Data Sync</h2>
+            <p>This will fetch the latest games, odds, and scores from the Odds API. This consumes API quota.</p>
+            
+            <div class="bf-sync-options">
+                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="bf-btn bf-btn-primary">Sync All Sports</button>
+                </form>
+
+                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="sport" value="basketball_nba">
+                    <button type="submit" class="bf-btn bf-btn-outline">Sync NBA</button>
+                </form>
+
+                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="sport" value="americanfootball_nfl">
+                    <button type="submit" class="bf-btn bf-btn-outline">Sync NFL</button>
+                </form>
+
+                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="sport" value="soccer_epl">
+                    <button type="submit" class="bf-btn bf-btn-outline">Sync EPL</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-outline">Back to BetFake Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

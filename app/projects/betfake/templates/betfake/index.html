@@ -9,11 +9,6 @@
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <div class="bf-header">
-            <h1>BetFake Dashboard</h1>
-            <p>Real-time odds. Fake money.</p>
-        </div>
-
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link active">Dashboard</a>
             <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
@@ -23,22 +18,27 @@
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
 
-        <div class="bf-stats-grid">
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Total Balance</span>
-                <span class="bf-stat-value">${{ "{:,.2f}".format(total_balance) }}</span>
-            </div>
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Total Profit/Loss</span>
-                <span class="bf-stat-value {% if total_pl > 0 %}bf-positive{% elif total_pl < 0 %}bf-negative{% endif %}">
-                    {% if total_pl > 0 %}+{% endif %}${{ "{:,.2f}".format(total_pl) }}
-                </span>
-            </div>
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Pending Bets</span>
-                <span class="bf-stat-value">{{ pending_bets|length }}</span>
-            </div>
+        <div class="bf-header">
+            <h1>BetFake Dashboard</h1>
+            <p>Real-time odds. Fake money.</p>
         </div>
+
+    <div class="bf-stats-grid">
+        <div class="bf-stat-card">
+            <span class="bf-stat-label">Total Balance</span>
+            <span class="bf-stat-value">{{ total_balance|bf_currency }}</span>
+        </div>
+        <div class="bf-stat-card">
+            <span class="bf-stat-label">Total Profit/Loss</span>
+            <span class="bf-stat-value {% if total_pl > 0 %}bf-positive{% elif total_pl < 0 %}bf-negative{% endif %}">
+                {{ formatted_total_pl }}
+            </span>
+        </div>
+        <div class="bf-stat-card">
+            <span class="bf-stat-label">Pending Bets</span>
+            <span class="bf-stat-value" style="color: var(--bf-pending);">{{ pending_bets|length }}</span>
+        </div>
+    </div>
 
         <div class="bf-section-title">
             <h2>My Betting Accounts</h2>
@@ -48,10 +48,10 @@
         <div class="bf-accounts-grid">
             {% for account in accounts %}
             <div class="bf-account-card">
-                <div class="bf-account-header">
-                    <span class="bf-account-name">{{ account.name }}</span>
-                    <span class="bf-account-balance">${{ "{:,.2f}".format(account.balance) }}</span>
-                </div>
+            <div class="bf-account-header">
+                <span class="bf-account-name">{{ account.name }}</span>
+                <span class="bf-account-balance">{{ account.balance|bf_currency }}</span>
+            </div>
                 <div class="bf-account-actions">
                     <a href="{{ url_for('betfake.transactions', account_id=account.id) }}" class="bf-btn bf-btn-outline bf-btn-sm">Transactions</a>
                 </div>
@@ -93,10 +93,10 @@
                             Odds: {{ bet.odds_at_time }} | Account: {{ bet.account.name }}
                         </div>
                     </div>
-                    <div class="bf-bet-wager">
-                        <span class="bf-wager-label">Wager</span>
-                        <span class="bf-wager-amount">${{ "{:,.2f}".format(bet.wager_amount) }}</span>
-                    </div>
+                <div class="bf-bet-wager">
+                    <span class="bf-wager-label">Wager</span>
+                    <span class="bf-wager-amount">{{ bet.wager_amount|bf_currency }}</span>
+                </div>
                 </li>
                 {% endfor %}
             </ul>

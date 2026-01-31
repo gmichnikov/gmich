@@ -4,16 +4,27 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+<style>
+    .bf-futures-sport {
+        margin-bottom: 40px;
+    }
+    .bf-futures-sport h2 {
+        color: var(--bf-primary);
+        border-bottom: 2px solid var(--bf-border);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .bf-outcomes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <div class="bf-header">
-            <h1>Futures Markets</h1>
-            <p>Long-term bets on season outcomes.</p>
-        </div>
-
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
@@ -23,10 +34,36 @@
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
 
-        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
-            <p>Futures markets (like NBA Championship Winner) are coming in Phase 5!</p>
-            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Back to Dashboard</a>
+        <div class="bf-header">
+            <h1>Futures Markets</h1>
+            <p>Long-term bets on championship winners and season outcomes.</p>
         </div>
+
+        {% if organized_futures %}
+            {% for sport, markets in organized_futures.items() %}
+            <div class="bf-futures-sport">
+                <h2>{{ sport }}</h2>
+                {% for market in markets %}
+                <div class="bf-market-info" style="margin-bottom: 15px; color: var(--bf-text-light); font-size: 0.9rem;">
+                    Ends: {{ (market.end_date|bf_local_time).strftime('%b %d, %Y') }}
+                </div>
+                <div class="bf-outcomes-grid">
+                    {% for outcome in market.outcomes %}
+                    <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                        <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                        <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
+                <p>No active futures markets found.</p>
+                <p>Try syncing NBA data from the Admin panel.</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

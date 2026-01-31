@@ -4,16 +4,44 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+<style>
+    .bf-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .bf-history-table th, .bf-history-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--bf-border);
+    }
+    .bf-history-table th {
+        background: #f8f9fa;
+        color: var(--bf-text-light);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+    .bf-status-pill {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .bf-status-won { background: #d4edda; color: #155724; }
+    .bf-status-lost { background: #f8d7da; color: #721c24; }
+    .bf-status-pending { background: #e2e3e5; color: #383d41; }
+    .bf-status-push { background: #fff3cd; color: #856404; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <div class="bf-header">
-            <h1>Bet History</h1>
-            <p>Your past wagers and their results.</p>
-        </div>
-
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
@@ -23,10 +51,80 @@
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link active">History</a>
         </nav>
 
-        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
-            <p>Bet History and status tracking are coming in Phase 3!</p>
-            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Back to Dashboard</a>
+        <div class="bf-header">
+            <h1>Bet History</h1>
+            <p>Your past wagers and their results.</p>
         </div>
+
+        <div class="bf-stats-grid">
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Wagered</span>
+                <span class="bf-stat-value">{{ stats.total_wagered|bf_currency }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Won</span>
+                <span class="bf-stat-value bf-positive">{{ stats.total_payout|bf_currency }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Record</span>
+                <span class="bf-stat-value">{{ stats.wins }}W - {{ stats.losses }}L - {{ stats.pushes }}P</span>
+            </div>
+        </div>
+
+        {% if bets %}
+        <table class="bf-history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Event / Outcome</th>
+                    <th>Wager</th>
+                    <th>Odds</th>
+                    <th>Status</th>
+                    <th>Payout</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bet in bets %}
+                <tr>
+                    <td>{{ (bet.placed_at|bf_local_time).strftime('%b %d, %Y') }}</td>
+                    <td>
+                        <div style="font-weight: bold;">{{ bet.outcome_name_at_time }}</div>
+                        <div style="font-size: 0.8rem; color: #666;">
+                            {% if bet.outcome.market.game.home_team %}
+                                {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                            {% else %}
+                                {{ bet.outcome.market.game.sport_title }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ bet.wager_amount|bf_currency }}</td>
+                    <td>{{ bet.odds_at_time|bf_odds }}</td>
+                    <td>
+                        <span class="bf-status-pill bf-status-{{ bet.status.value.lower() }}">
+                            {{ bet.status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if bet.status.value == 'Won' %}
+                            <span class="bf-positive">{{ bet.potential_payout|bf_currency }}</span>
+                        {% elif bet.status.value == 'Push' %}
+                            {{ bet.wager_amount|bf_currency }}
+                        {% elif bet.status.value == 'Lost' %}
+                            $0.00
+                        {% else %}
+                            <span style="color: #999;">--</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; border: 2px dashed var(--bf-border);">
+            <p>You haven't placed any bets yet.</p>
+            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Browse Sports</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
