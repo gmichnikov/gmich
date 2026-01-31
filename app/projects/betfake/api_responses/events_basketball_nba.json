@@ -1,0 +1,50 @@
+[
+  {
+    "id": "aa882fea7fec7b31dbc6a87eee5c02a1",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-01-31T17:10:00Z",
+    "home_team": "Charlotte Hornets",
+    "away_team": "San Antonio Spurs"
+  },
+  {
+    "id": "79e56ddda6c5f8ca7c8e523a44812b9b",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-02-01T00:10:00Z",
+    "home_team": "Indiana Pacers",
+    "away_team": "Atlanta Hawks"
+  },
+  {
+    "id": "639d6371d85a020efe8c387843e9092f",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-02-01T00:40:00Z",
+    "home_team": "Philadelphia 76ers",
+    "away_team": "New Orleans Pelicans"
+  },
+  {
+    "id": "bb1faa7d4ba9e18e6320126f16d9d022",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-02-01T01:10:00Z",
+    "home_team": "Miami Heat",
+    "away_team": "Chicago Bulls"
+  },
+  {
+    "id": "6a1114f766765812787e265c826a1215",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-02-01T01:10:00Z",
+    "home_team": "Memphis Grizzlies",
+    "away_team": "Minnesota Timberwolves"
+  },
+  {
+    "id": "16920e071fabb84ce3950f02ec4aabf3",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-02-01T01:40:00Z",
+    "home_team": "Houston Rockets",
+    "away_team": "Dallas Mavericks"
+  }
+]

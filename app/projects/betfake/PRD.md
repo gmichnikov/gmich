@@ -36,19 +36,27 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - Balance is updated when a bet is settled (payout).
 
 ### 2. Market Support
-- **Moneyline**: Betting on the winner.
-- **Point Spreads**: Betting on the margin of victory.
-- **Over/Under (Totals)**: Betting on the combined score.
-- **Futures**: Long-term bets on outcomes like "Who will win the NBA Championship". These are markets not necessarily tied to a specific game.
+- **Moneyline (h2h)**: Betting on the winner.
+  - For basketball/American sports: 2 outcomes (home/away)
+  - For soccer: 3 outcomes (home/away/draw)
+- **Point Spreads**: Betting on the margin of victory (mainly available for US sports like NBA, NFL).
+- **Over/Under (Totals)**: Betting on the combined score (mainly available for US sports).
+- **Futures (outrights)**: Long-term bets on outcomes like "Who will win the NBA Championship". These are markets not necessarily tied to a specific game.
+
+**V1 Sport-Specific Support:**
+- **Basketball (NBA)**: h2h, spreads, totals, futures (championship winner)
+- **Football (NFL)**: h2h, spreads, totals
+- **Soccer (EPL)**: h2h only (spreads/totals have limited bookmaker coverage)
 
 ### 3. Odds API Integration
 - Periodic fetching of odds (e.g., every 15-30 minutes).
 - Storing games and markets locally to minimize API calls and ensure performance.
+- **Bookmaker Selection**: Fetch odds from 1-2 major bookmakers (e.g., FanDuel, DraftKings) to minimize data volume while maintaining competitive odds.
 - **Market Update Logic**:
-    - **Immutability**: Once a `BetfakeMarket` is created, it is never updated.
-    - If **anything** changes (odds move, spread points move, or total points move), the existing market is marked `is_active=False` and a **new** `BetfakeMarket` record is created.
+    - **Immutability**: Once a `BetfakeMarket` and its `BetfakeOutcome` records are created, they are never updated.
+    - If **anything** changes (odds move, spread points move, or total points move), the existing market is marked `is_active=False` and a **new** `BetfakeMarket` with new `BetfakeOutcome` records is created.
     - This maintains a full historical record of every line and price offered for every event.
-- **Automated Settlement**: The Odds API provides event results (scores). We will use these results to automatically grade bets once the events are concluded.
+- **Automated Settlement**: The Odds API provides event results (scores as strings, need conversion to integers). We will use these results to automatically grade bets once the events are concluded.
 
 ### 4. Bet Placement & Settlement
 - Bets must be placed before the event start time (except for futures which have their own closing times).
@@ -70,6 +78,8 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 
 **Note on Enums**: Fields marked as `enum` should use Python Enum types to prevent typos and improve code maintainability.
 
+**Note on Market Structure**: Markets can have multiple outcomes (e.g., soccer has home/away/draw). The `BetfakeMarket` represents the market container, while `BetfakeOutcome` represents each betting option within that market. When odds change, we deactivate the entire market and all its outcomes, then create new records.
+
 ### BetfakeAccount
 - `id`
 - `user_id` (FK to User)
@@ -80,35 +90,42 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 ### BetfakeGame
 - `id`
 - `external_id` (ID from Odds API)
-- `sport_key` (e.g., 'americanfootball_nfl')
+- `sport_key` (e.g., 'americanfootball_nfl', 'basketball_nba')
 - `sport_title` (e.g., 'NFL', 'NBA') - user-friendly display name
-- `home_team`, `away_team`
-- `commence_time` (UTC, displayed to users in their account timezone)
+- `home_team`, `away_team` (nullable for futures markets which don't have games)
+- `commence_time` (UTC, displayed to users in their account timezone. For futures, this is the championship end date)
 - `status` (enum: Scheduled, Live, Completed)
-- `home_score`, `away_score` (updated when game ends)
+- `home_score`, `away_score` (nullable, updated when game ends)
 
 ### BetfakeMarket
 - `id`
 - `game_id` (FK to BetfakeGame, nullable for futures)
-- `type` (enum: moneyline, spread, total, future)
-- `label` (e.g., "NBA Championship Winner 2026")
-- `outcome_name` (e.g., "Lakers", "Over 45.5", "Team A -7")
-- `odds` (American/Decimal odds)
-- `point_value` (For spreads and totals)
-- `external_market_id`
+- `type` (enum: h2h, spreads, totals, outrights)
+- `label` (e.g., "NBA Championship Winner 2026", nullable for game-tied markets)
+- `bookmaker_key` (string, e.g., "fanduel", "draftkings")
+- `external_market_id` (string, nullable)
 - `is_active` (boolean)
+- `created_at` (timestamp)
 - `marked_inactive_at` (timestamp, nullable - tracks when market was deactivated)
+
+### BetfakeOutcome
+- `id`
+- `market_id` (FK to BetfakeMarket)
+- `outcome_name` (e.g., "Lakers", "Draw", "Over", "Under")
+- `odds` (Integer, American odds e.g. -110 or +150)
+- `point_value` (Float, nullable - for spreads and totals, e.g., -7.5 or 210.5)
+- `is_active` (boolean, mirrors parent market's is_active)
 
 ### BetfakeBet
 - `id`
 - `user_id` (FK to User)
 - `account_id` (FK to BetfakeAccount)
-- `market_id` (FK to BetfakeMarket)
-- `wager_amount`
+- `outcome_id` (FK to BetfakeOutcome)
+- `wager_amount` (Float)
 - `odds_at_time` (Integer, American odds e.g. -110 or +150)
 - `line_at_time` (Float, nullable, for spreads/totals e.g. -7.5 or 210.5)
-- `outcome_name_at_time` (String, e.g. "Lakers" or "Over")
-- `potential_payout`
+- `outcome_name_at_time` (String, e.g. "Lakers", "Draw", "Over")
+- `potential_payout` (Float)
 - `status` (enum: Pending, Won, Lost, Push)
 - `placed_at` (Timestamp)
 - `settled_at` (Timestamp, nullable)
@@ -194,8 +211,22 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - **Odds Format Preference**: Let users choose between American vs Decimal odds display format.
 - **Account Creation Limits**: Implement restrictions to prevent exploitation through unlimited account creation.
 
+## Technical Notes
+
+### API Response Details (from exploration)
+- **Bookmaker Count**: The Odds API returns ~9 bookmakers per region. We will fetch only 1-2 (FanDuel, DraftKings) to minimize data volume and API costs.
+- **Bookmaker Variance**: Odds can vary significantly between bookmakers (e.g., Thunder +110 on FanDuel vs +130 on DraftKings for NBA Championship).
+- **Event IDs**: Stable across all endpoints (events, odds, scores) - perfect for data linking.
+- **Scores Format**: API returns scores as strings (e.g., `"113"`). Must convert to integers when storing.
+- **Scores Structure**: Upcoming/future games have `completed: false` and `scores: null`. Completed games have `completed: true` and populated scores array.
+- **Three-Way Markets**: Soccer h2h markets have 3 outcomes (home/away/draw). Basketball/football have 2 (home/away).
+- **Futures Structure**: Futures are separate sport entries (e.g., `basketball_nba_championship_winner`) with null home/away teams, single "outrights" market, and many outcomes (30 teams for NBA).
+- **Futures Commence Time**: Represents the championship end date (e.g., June 10 for NBA Finals), not individual game dates.
+- **Market Availability**: Not all bookmakers support spreads/totals for soccer. Focus on h2h for soccer in V1.
+- **Bookmaker Updates**: Each bookmaker updates independently, so timestamps vary within the same game.
+
 ## User TODOs & Open Questions
-- [ ] **Futures Structure**: Investigate the Odds API response for futures. Decide if we need a `BetfakeFutureGroup` or `BetfakeCompetition` model to organize them (since they aren't tied to games).
-- [ ] **API Scope**: Define exactly which sports and leagues to fetch (e.g., NFL, NBA, MLB, EPL).
+- [ ] **API Scope**: Define exactly which sports and leagues to fetch beyond NBA and EPL (e.g., NFL, MLB).
 - [ ] **Sync Frequency**: Finalize the refresh timing (planned for daily, but might need adjustment for game starts).
 - [ ] **Settlement Logic**: Decide if the settlement process (grading bets) should be combined with the odds fetching process or stay separate, based on how the API returns scores.
+- [ ] **Futures Organization**: Decide how to display/organize futures markets in the UI (they're not tied to specific games).

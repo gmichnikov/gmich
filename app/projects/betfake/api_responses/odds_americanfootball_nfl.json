@@ -1,0 +1,118 @@
+[
+  {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-01-31T12:01:56Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-01-31T12:01:56Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 190
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -230
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-01-31T12:01:56Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": -105,
+                "point": 4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -115,
+                "point": -4.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-01-31T12:01:56Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -112,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -108,
+                "point": 45.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-01-31T12:02:32Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-01-31T12:02:32Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 190
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -230
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-01-31T12:02:32Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": -108,
+                "point": 4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -112,
+                "point": -4.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-01-31T12:02:32Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
