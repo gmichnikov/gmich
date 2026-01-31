@@ -34,11 +34,13 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - Users can choose which account to use when placing a bet.
 - Balance is updated immediately when a bet is placed (deduction).
 - Balance is updated when a bet is settled (payout).
+- **Transaction History**: Users can view a log of all balance changes (wagers, payouts, account creation) for each account.
 
 ### 2. Market Support
+- **American Odds Only**: All odds are displayed and stored in American format (e.g., -110, +150).
 - **Moneyline (h2h)**: Betting on the winner.
   - For basketball/American sports: 2 outcomes (home/away)
-  - For soccer: 3 outcomes (home/away/draw)
+  - For soccer: 3 outcomes (home/away/draw) - **Soccer is h2h only in V1.**
 - **Point Spreads**: Betting on the margin of victory (mainly available for US sports like NBA, NFL).
 - **Over/Under (Totals)**: Betting on the combined score (mainly available for US sports).
 - **Futures (outrights)**: Long-term bets on outcomes like "Who will win the NBA Championship". These are markets not necessarily tied to a specific game.
@@ -46,10 +48,11 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 **V1 Sport-Specific Support:**
 - **Basketball (NBA)**: h2h, spreads, totals, futures (championship winner)
 - **Football (NFL)**: h2h, spreads, totals
-- **Soccer (EPL)**: h2h only (spreads/totals have limited bookmaker coverage)
+- **Soccer (EPL)**: h2h only (no spreads or totals)
 
 ### 3. Odds API Integration
-- Periodic fetching of odds (e.g., every 15-30 minutes).
+- **Auto-Sync**: Daily fetching of odds and scores via automated task (e.g., Heroku Scheduler).
+- **Manual Admin Fetch**: Admins must have the ability to manually trigger a sync (odds and scores) via an admin-only dashboard page.
 - Storing games and markets locally to minimize API calls and ensure performance.
 - **Bookmaker Selection**: Fetch odds from 1-2 major bookmakers (e.g., FanDuel, DraftKings) to minimize data volume while maintaining competitive odds.
 - **Market Update Logic**:
@@ -66,7 +69,7 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
     - Minimum bet: None (can bet any amount > $0)
     - Decimal precision: Up to 2 decimal places (like dollars and cents)
 - **Snapshot Capture**: When a user places a bet, we capture a snapshot of the market at that exact moment on the `BetfakeBet` record:
-    - `odds_at_time`: The American or Decimal odds.
+    - `odds_at_time`: The American odds (e.g., -110).
     - `line_at_time`: The point value (for spreads and totals).
     - `outcome_name_at_time`: The name of the outcome (for display).
 - This ensures the user's payout and grading are based on the exact conditions when they placed the bet, even if that specific market record is later deactivated.
@@ -208,7 +211,7 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - **Popular Bets Section**: Show which games have the most betting action.
 - **Account Descriptions**: Add optional description field to accounts for user notes like "Conservative Strategy".
 - **Bet Confirmation Message**: After placing bet, show success message with reference number or link to view it.
-- **Odds Format Preference**: Let users choose between American vs Decimal odds display format.
+- **Odds Format Preference**: Let users choose between different display themes (e.g., Dark/Light mode).
 - **Account Creation Limits**: Implement restrictions to prevent exploitation through unlimited account creation.
 
 ## Technical Notes
