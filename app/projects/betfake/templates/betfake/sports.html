@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Browse {{ sport_key }} - BetFake{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bf-page-wrapper">
+    <div class="bf-dashboard-container">
+        <div class="bf-header">
+            <h1>Browsing {{ sport_key }}</h1>
+            <p>Real-time odds for {{ sport_key }} will appear here in Phase 2.</p>
+        </div>
+
+        <nav class="bf-nav-tabs">
+            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link {% if sport_key == 'basketball_nba' %}active{% endif %}">NBA</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link {% if sport_key == 'americanfootball_nfl' %}active{% endif %}">NFL</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link {% if sport_key == 'soccer_epl' %}active{% endif %}">EPL</a>
+            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
+            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
+        </nav>
+
+        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
+            <p>Odds API integration is coming in Phase 2!</p>
+            <p>Soon you'll see upcoming {{ sport_key }} games here.</p>
+            <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-primary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

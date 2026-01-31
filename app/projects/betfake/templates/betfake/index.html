@@ -1,18 +1,112 @@
 {% extends "base.html" %}
 
-{% block title %}BetFake - Sports Betting for Fun{% endblock %}
+{% block title %}BetFake - Sports Betting Simulator{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="betfake-container">
-    <h1>Welcome to BetFake</h1>
-    <p>The sports betting site where the money is fake, but the fun is real.</p>
-    
-    <div class="betfake-placeholder">
-        <p>Models and betting logic coming soon!</p>
+<div class="bf-page-wrapper">
+    <div class="bf-dashboard-container">
+        <div class="bf-header">
+            <h1>BetFake Dashboard</h1>
+            <p>Real-time odds. Fake money.</p>
+        </div>
+
+        <nav class="bf-nav-tabs">
+            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link active">Dashboard</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link">NFL</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link">EPL</a>
+            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
+            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
+        </nav>
+
+        <div class="bf-stats-grid">
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Balance</span>
+                <span class="bf-stat-value">${{ "{:,.2f}".format(total_balance) }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Profit/Loss</span>
+                <span class="bf-stat-value {% if total_pl > 0 %}bf-positive{% elif total_pl < 0 %}bf-negative{% endif %}">
+                    {% if total_pl > 0 %}+{% endif %}${{ "{:,.2f}".format(total_pl) }}
+                </span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Pending Bets</span>
+                <span class="bf-stat-value">{{ pending_bets|length }}</span>
+            </div>
+        </div>
+
+        <div class="bf-section-title">
+            <h2>My Betting Accounts</h2>
+        </div>
+
+        {% if accounts %}
+        <div class="bf-accounts-grid">
+            {% for account in accounts %}
+            <div class="bf-account-card">
+                <div class="bf-account-header">
+                    <span class="bf-account-name">{{ account.name }}</span>
+                    <span class="bf-account-balance">${{ "{:,.2f}".format(account.balance) }}</span>
+                </div>
+                <div class="bf-account-actions">
+                    <a href="{{ url_for('betfake.transactions', account_id=account.id) }}" class="bf-btn bf-btn-outline bf-btn-sm">Transactions</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
+            <p>You don't have any betting accounts yet.</p>
+            <p>Create your first account below to get $100.00 in fake money!</p>
+        </div>
+        {% endif %}
+
+        <div class="bf-create-account-form">
+            <h3>Create New Account</h3>
+            <form action="{{ url_for('betfake.create_account') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="bf-form-group">
+                    <input type="text" name="name" class="bf-form-input" placeholder="e.g., My Main Account" required>
+                    <button type="submit" class="bf-btn bf-btn-primary">Create & Get $100</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bf-section-title">
+            <h2>Recent Pending Bets</h2>
+        </div>
+
+        <div class="bf-pending-bets-card">
+            {% if pending_bets %}
+            <ul class="bf-bet-list">
+                {% for bet in pending_bets %}
+                <li class="bf-bet-item">
+                    <div class="bf-bet-info">
+                        <h4>{{ bet.outcome_name_at_time }}</h4>
+                        <div class="bf-bet-meta">
+                            {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                            <br>
+                            Odds: {{ bet.odds_at_time }} | Account: {{ bet.account.name }}
+                        </div>
+                    </div>
+                    <div class="bf-bet-wager">
+                        <span class="bf-wager-label">Wager</span>
+                        <span class="bf-wager-amount">${{ "{:,.2f}".format(bet.wager_amount) }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="text-align: center; color: var(--bf-text-light); margin: 20px 0;">No active bets at the moment. Time to place some wagers!</p>
+            <div style="text-align: center;">
+                <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-btn bf-btn-primary">Browse NBA Games</a>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
