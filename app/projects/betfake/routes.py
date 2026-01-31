@@ -12,6 +12,7 @@ from app.models import User
 from app.core.admin import admin_required
 from app.projects.betfake.services.data_import import DataImportService
 from app.projects.betfake.utils import format_odds_display, format_currency, get_user_localized_time
+from app.models import User, LogEntry
 
 betfake_bp = Blueprint(
     'betfake', 
@@ -32,6 +33,12 @@ def bf_currency_filter(amount):
 def bf_local_time_filter(utc_dt):
     user_tz = current_user.time_zone if current_user.is_authenticated else 'UTC'
     return get_user_localized_time(utc_dt, user_tz)
+
+@betfake_bp.app_template_filter('bf_point')
+def bf_point_filter(point):
+    if point is None:
+        return ""
+    return f"{point:+g}"
 
 @betfake_bp.app_template_filter('bf_bet_outcome')
 def bf_bet_outcome_filter(bet):
@@ -106,6 +113,15 @@ def create_account():
     )
     db.session.add(new_account)
     db.session.flush() # Get the ID
+    
+    # Log the account creation
+    log_entry = LogEntry(
+        project='betfake',
+        category='Account',
+        actor_id=current_user.id,
+        description=f"{current_user.email} created BetFake account '{account_name}'"
+    )
+    db.session.add(log_entry)
     
     # Create transaction record
     transaction = BetfakeTransaction(
@@ -270,6 +286,17 @@ def place_bet(outcome_id):
     db.session.add(bet)
     db.session.add(transaction)
     
+    # Log the bet placement
+    matchup = f"{game.home_team} vs {game.away_team}" if game.home_team else game.sport_title
+    odds_str = f"+{bet.odds_at_time}" if bet.odds_at_time > 0 else str(bet.odds_at_time)
+    log_entry = LogEntry(
+        project='betfake',
+        category='Bet',
+        actor_id=current_user.id,
+        description=f"{current_user.email} wagered ${wager_amount:,.2f} on {bet.outcome_name_at_time} in {matchup} ({odds_str})"
+    )
+    db.session.add(log_entry)
+    
     try:
         db.session.commit()
         # Link transaction to bet after commit to get bet.id
@@ -367,8 +394,12 @@ def admin_sync():
 @admin_required
 def admin_sync_trigger():
     """Route to trigger the sync process."""
+    from app.projects.betfake.services.bet_grader import BetGraderService
+    import time
+    
     sport = request.form.get('sport')
     importer = DataImportService()
+    grader = BetGraderService()
     
     try:
         if sport:
@@ -381,9 +412,23 @@ def admin_sync_trigger():
             importer.import_scores_for_sport(sport)
             if sport == 'basketball_nba':
                 importer.import_futures('basketball_nba_championship_winner')
-            flash(f"Successfully synced {sport}.", "success")
+            
+            # Also settle bets
+            settled_count = grader.settle_pending_bets()
+            
+            # Log the manual sync
+            log_entry = LogEntry(
+                project='betfake',
+                category='Sync',
+                actor_id=current_user.id,
+                description=f"Admin {current_user.email} triggered manual sync for {sport}. Settled {settled_count} bets."
+            )
+            db.session.add(log_entry)
+            
+            flash(f"Successfully synced {sport} and settled {settled_count} bets.", "success")
         else:
             # Full sync
+            synced_sports = []
             for s in ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']:
                 importer.import_games_for_sport(s)
                 markets = "h2h,spreads,totals"
@@ -391,8 +436,22 @@ def admin_sync_trigger():
                     markets = "h2h"
                 importer.import_odds_for_sport(s, markets_str=markets)
                 importer.import_scores_for_sport(s)
+                synced_sports.append(s)
+                time.sleep(0.5) # Small buffer
+                
             importer.import_futures('basketball_nba_championship_winner')
-            flash("Full sync completed successfully.", "success")
+            settled_count = grader.settle_pending_bets()
+            
+            # Log the manual sync
+            log_entry = LogEntry(
+                project='betfake',
+                category='Sync',
+                actor_id=current_user.id,
+                description=f"Admin {current_user.email} triggered full manual sync. Settled {settled_count} bets."
+            )
+            db.session.add(log_entry)
+            
+            flash(f"Full sync completed for {', '.join(synced_sports)}. Settled {settled_count} bets.", "success")
     except Exception as e:
         logging.error(f"Sync error: {str(e)}")
         flash(f"Error during sync: {str(e)}", "error")

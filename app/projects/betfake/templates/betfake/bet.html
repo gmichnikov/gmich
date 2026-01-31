@@ -88,8 +88,8 @@
 
             <div class="bf-bet-outcome">
                 {{ outcome.outcome_name }}
-                {% if outcome.point_value %}
-                    <span class="bf-odds-point">({{ outcome.point_value }})</span>
+                {% if outcome.point_value is not none %}
+                    <span class="bf-odds-point">({{ outcome.point_value|bf_point }})</span>
                 {% endif %}
                 <span class="bf-bet-odds">{{ outcome.odds|bf_odds }}</span>
             </div>

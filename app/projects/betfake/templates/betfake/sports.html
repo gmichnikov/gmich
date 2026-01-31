@@ -56,7 +56,7 @@
                             <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
                                 <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
                                 <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
-                                <span class="bf-odds-point">{{ outcome.point_value if outcome.point_value > 0 else outcome.point_value }}</span>
+                                <span class="bf-odds-point">{{ outcome.point_value|bf_point }}</span>
                             </a>
                             {% endfor %}
                         {% else %}
