@@ -68,6 +68,8 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 
 ## Data Model (V1)
 
+**Note on Enums**: Fields marked as `enum` should use Python Enum types to prevent typos and improve code maintainability.
+
 ### BetfakeAccount
 - `id`
 - `user_id` (FK to User)
@@ -79,21 +81,23 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - `id`
 - `external_id` (ID from Odds API)
 - `sport_key` (e.g., 'americanfootball_nfl')
+- `sport_title` (e.g., 'NFL', 'NBA') - user-friendly display name
 - `home_team`, `away_team`
 - `commence_time` (UTC, displayed to users in their account timezone)
-- `status` (Scheduled, Live, Completed)
+- `status` (enum: Scheduled, Live, Completed)
 - `home_score`, `away_score` (updated when game ends)
 
 ### BetfakeMarket
 - `id`
 - `game_id` (FK to BetfakeGame, nullable for futures)
-- `type` (moneyline, spread, total, future)
+- `type` (enum: moneyline, spread, total, future)
 - `label` (e.g., "NBA Championship Winner 2026")
 - `outcome_name` (e.g., "Lakers", "Over 45.5", "Team A -7")
 - `odds` (American/Decimal odds)
 - `point_value` (For spreads and totals)
 - `external_market_id`
 - `is_active` (boolean)
+- `marked_inactive_at` (timestamp, nullable - tracks when market was deactivated)
 
 ### BetfakeBet
 - `id`
@@ -105,9 +109,9 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - `line_at_time` (Float, nullable, for spreads/totals e.g. -7.5 or 210.5)
 - `outcome_name_at_time` (String, e.g. "Lakers" or "Over")
 - `potential_payout`
-- `status` (Pending, Won, Lost, Push)
+- `status` (enum: Pending, Won, Lost, Push)
 - `placed_at` (Timestamp)
-- `settled_at` (Timestamp)
+- `settled_at` (Timestamp, nullable)
 
 ### BetfakeTransaction
 - `id`
@@ -115,7 +119,7 @@ BetFake is a sports betting simulator that allows users to place wagers on real 
 - `account_id` (FK to BetfakeAccount)
 - `bet_id` (FK to BetfakeBet, optional)
 - `amount` (+/- change)
-- `type` (Wager, Payout, Account Creation)
+- `type` (enum: Wager, Payout, Account_Creation)
 - `created_at`
 
 ## Pages & Navigation
