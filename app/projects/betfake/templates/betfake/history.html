@@ -88,13 +88,16 @@
                 <tr>
                     <td>{{ (bet.placed_at|bf_local_time).strftime('%b %d, %Y') }}</td>
                     <td>
-                        <div style="font-weight: bold;">{{ bet.outcome_name_at_time }}</div>
+                        <div style="font-weight: bold;">{{ bet|bf_bet_outcome }}</div>
                         <div style="font-size: 0.8rem; color: #666;">
-                            {% if bet.outcome.market.game.home_team %}
+                            {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
                                 {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
                             {% else %}
                                 {{ bet.outcome.market.game.sport_title }}
                             {% endif %}
+                            <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
+                                ({{ (bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
+                            </span>
                         </div>
                     </td>
                     <td>{{ bet.wager_amount|bf_currency }}</td>

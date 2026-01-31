@@ -33,6 +33,23 @@ def bf_local_time_filter(utc_dt):
     user_tz = current_user.time_zone if current_user.is_authenticated else 'UTC'
     return get_user_localized_time(utc_dt, user_tz)
 
+@betfake_bp.app_template_filter('bf_bet_outcome')
+def bf_bet_outcome_filter(bet):
+    market_type = bet.outcome.market.type
+    outcome_name = bet.outcome_name_at_time
+    line = bet.line_at_time
+    
+    if market_type == MarketType.h2h:
+        if outcome_name == "Draw":
+            return "Draw"
+        return f"{outcome_name} to win"
+    elif market_type == MarketType.spreads:
+        line_str = f"{line:+g}" if line is not None else ""
+        return f"{outcome_name} {line_str}"
+    elif market_type == MarketType.totals:
+        return f"{outcome_name} {line}"
+    return outcome_name
+
 @betfake_bp.route('/')
 @login_required
 def index():

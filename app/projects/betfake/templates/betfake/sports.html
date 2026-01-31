@@ -28,7 +28,7 @@
             <div class="bf-game-card">
                 <div class="bf-game-header">
                     <span class="bf-game-teams">{{ game.home_team }} vs {{ game.away_team }}</span>
-                    <span class="bf-game-time">{{ (game.commence_time|bf_local_time).strftime('%b %d, %I:%M %p') }}</span>
+                    <span class="bf-game-time">{{ (game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }}</span>
                 </div>
 
                 <div class="bf-market-row">

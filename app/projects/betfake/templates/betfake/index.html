@@ -86,11 +86,18 @@
                 {% for bet in pending_bets %}
                 <li class="bf-bet-item">
                     <div class="bf-bet-info">
-                        <h4>{{ bet.outcome_name_at_time }}</h4>
+                        <h4>{{ bet|bf_bet_outcome }}</h4>
                         <div class="bf-bet-meta">
-                            {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                            {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
+                                {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                            {% else %}
+                                {{ bet.outcome.market.game.sport_title }}
+                            {% endif %}
+                            <span style="font-size: 0.75rem; margin-left: 5px; color: #888;">
+                                ({{ (bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
+                            </span>
                             <br>
-                            Odds: {{ bet.odds_at_time }} | Account: {{ bet.account.name }}
+                            Odds: {{ bet.odds_at_time|bf_odds }} | Account: {{ bet.account.name }}
                         </div>
                     </div>
                 <div class="bf-bet-wager">
