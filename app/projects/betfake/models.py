@@ -29,6 +29,7 @@ class BetfakeSport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sport_key = db.Column(db.String(100), unique=True, nullable=False)
     sport_title = db.Column(db.String(100), nullable=False)
+    sport_group = db.Column(db.String(100), nullable=True)
     has_spreads = db.Column(db.Boolean, default=True)
     sync_scores = db.Column(db.Boolean, default=False)
     sync_odds = db.Column(db.Boolean, default=False)

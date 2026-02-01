@@ -33,6 +33,26 @@
     .bf-tab-content.active {
         display: block;
     }
+    /* Sport Type Pills */
+    .bf-sport-type-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .bf-type-game {
+        background: #e7f1ff;
+        color: #0d6efd;
+        border: 1px solid #9ec5fe;
+    }
+    .bf-type-future {
+        background: #f3e8ff;
+        color: #6f42c1;
+        border: 1px solid #d8b4fe;
+    }
 </style>
 {% endblock %}
 
@@ -81,6 +101,8 @@
                         <thead>
                             <tr>
                                 <th>Sport</th>
+                                <th>Group</th>
+                                <th>Type</th>
                                 <th>Nickname</th>
                                 <th>Key</th>
                                 <th>Nav</th>
@@ -94,6 +116,14 @@
                             {% for sport in reg_active %}
                             <tr>
                                 <td><strong>{{ sport.sport_title }}</strong></td>
+                                <td style="font-size: 0.75rem; color: #888;">{{ sport.sport_group or '--' }}</td>
+                                <td style="font-size: 0.75rem;">
+                                    {% if sport.is_outright %}
+                                        <span class="bf-sport-type-pill bf-type-future">Future</span>
+                                    {% else %}
+                                        <span class="bf-sport-type-pill bf-type-game">Game</span>
+                                    {% endif %}
+                                </td>
                                 <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="sport_id" value="{{ sport.id }}">
@@ -163,6 +193,8 @@
                         <thead>
                             <tr>
                                 <th>Sport</th>
+                                <th>Group</th>
+                                <th>Type</th>
                                 <th>Key</th>
                                 <th>Action</th>
                             </tr>
@@ -171,6 +203,14 @@
                             {% for sport in reg_available %}
                             <tr>
                                 <td>{{ sport.sport_title }}</td>
+                                <td style="font-size: 0.75rem; color: #888;">{{ sport.sport_group or '--' }}</td>
+                                <td style="font-size: 0.75rem;">
+                                    {% if sport.is_outright %}
+                                        <span class="bf-sport-type-pill bf-type-future">Future</span>
+                                    {% else %}
+                                        <span class="bf-sport-type-pill bf-type-game">Game</span>
+                                    {% endif %}
+                                </td>
                                 <td><code>{{ sport.sport_key }}</code></td>
                                 <td>
                                     <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST" style="display: inline;">
@@ -199,6 +239,10 @@
                         <div style="margin-bottom: 15px;">
                             <label style="display:block; margin-bottom:5px;">Display Title</label>
                             <input type="text" name="sport_title" class="bf-form-input" placeholder="e.g. NBA Championship" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display:block; margin-bottom:5px;">Group / Category</label>
+                            <input type="text" name="sport_group" class="bf-form-input" placeholder="e.g. Basketball">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label class="bf-switch">
@@ -272,19 +316,25 @@
     function filterTable(tableId, inputId) {
         const input = document.getElementById(inputId);
         const filter = input.value.toUpperCase();
+        const terms = filter.split(/\s+/).filter(term => term.length > 0);
         const table = document.getElementById(tableId);
         const tr = table.getElementsByTagName("tr");
 
         for (let i = 1; i < tr.length; i++) {
-            const tdTitle = tr[i].getElementsByTagName("td")[0];
-            const tdKey = tr[i].getElementsByTagName("td")[1];
-            if (tdTitle || tdKey) {
-                const txtValue = (tdTitle.textContent || tdTitle.innerText) + " " + (tdKey.textContent || tdKey.innerText);
-                if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
+            let rowText = "";
+            const tds = tr[i].getElementsByTagName("td");
+            for (let j = 0; j < tds.length; j++) {
+                rowText += (tds[j].textContent || tds[j].innerText) + " ";
+            }
+            rowText = rowText.toUpperCase();
+            
+            // Check if all search terms are present in the row text
+            const matchesAll = terms.every(term => rowText.indexOf(term) > -1);
+            
+            if (matchesAll) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
             }
         }
     }

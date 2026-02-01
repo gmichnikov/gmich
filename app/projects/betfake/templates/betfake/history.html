@@ -231,6 +231,7 @@
                     const sportValue = sportFilter.value;
                     const marketValue = marketFilter.value;
                     const searchValue = searchFilter.value.toLowerCase().trim();
+                    const searchTerms = searchValue.split(/\s+/).filter(term => term.length > 0);
                     let visibleCount = 0;
 
                     // New stats
@@ -260,7 +261,9 @@
                                             (statusValue === 'settled' ? rowStatus !== 'pending' : rowStatus === statusValue);
                         const sportMatch = sportValue === 'all' || rowSport === sportValue;
                         const marketMatch = marketValue === 'all' || rowMarket === marketValue;
-                        const searchMatch = !searchValue || rowSearch.includes(searchValue);
+                        
+                        // Check if all search terms are present in the row text
+                        const searchMatch = searchTerms.length === 0 || searchTerms.every(term => rowSearch.includes(term));
 
                         if (accountMatch && statusMatch && sportMatch && marketMatch && searchMatch) {
                             row.style.display = '';

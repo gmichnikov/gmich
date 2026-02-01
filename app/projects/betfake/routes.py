@@ -616,6 +616,7 @@ def admin_refresh_sports():
             sport = BetfakeSport(
                 sport_key=s['key'],
                 sport_title=s['title'],
+                sport_group=s.get('group'),
                 has_spreads=True, # Default to True
                 sync_scores=False,
                 sync_odds=False,
@@ -628,6 +629,9 @@ def admin_refresh_sports():
             changed = False
             if sport.sport_title != s['title']:
                 sport.sport_title = s['title']
+                changed = True
+            if sport.sport_group != s.get('group'):
+                sport.sport_group = s.get('group')
                 changed = True
             if sport.is_outright != s.get('has_outrights', False):
                 sport.is_outright = s.get('has_outrights', False)
@@ -703,6 +707,7 @@ def admin_add_sport_manual():
     
     key = request.form.get('sport_key', '').strip()
     title = request.form.get('sport_title', '').strip()
+    group = request.form.get('sport_group', '').strip()
     
     is_outright = 'is_outright' in request.form
     
@@ -718,6 +723,7 @@ def admin_add_sport_manual():
     new_sport = BetfakeSport(
         sport_key=key,
         sport_title=title,
+        sport_group=group if group else None,
         sync_scores=False,
         sync_odds=False,
         show_in_nav=False,
