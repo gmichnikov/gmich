@@ -217,17 +217,19 @@
             <h2>Available Lines</h2>
         </div>
         <div class="bf-game-card">
-            <div class="bf-market-row">
+            <div class="bf-market-row" style="grid-template-columns: repeat({% if 'spreads' in display_markets or 'totals' in display_markets %}3{% else %}1{% endif %}, 1fr);">
                 <!-- Moneyline Column -->
                 <div class="bf-market-column">
                     <span class="bf-market-label">Moneyline</span>
                     {% if 'h2h' in display_markets %}
-                        {% for outcome in display_markets['h2h'].outcomes %}
-                        <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
-                            <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
-                            <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
-                        </a>
-                        {% endfor %}
+                        <div class="{% if 'spreads' not in display_markets and 'totals' not in display_markets %}bf-outcomes-container-horizontal{% else %}bf-market-column{% endif %}" style="gap: 8px;">
+                            {% for outcome in display_markets['h2h'].outcomes %}
+                            <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                                <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                                <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
                     {% else %}
                         <span style="font-size: 0.8rem; text-align: center; color: #999;">N/A</span>
                     {% endif %}
@@ -277,32 +279,36 @@
             <h2>Closing / Final Lines</h2>
         </div>
         <div class="bf-game-card" style="background: #f8f9fa;">
-            <div class="bf-market-row">
+            <div class="bf-market-row" style="grid-template-columns: repeat({% if 'spreads' in historical_markets or 'totals' in historical_markets %}3{% else %}1{% endif %}, 1fr);">
                 {% for type_key in ['h2h', 'spreads', 'totals'] %}
+                {% if type_key == 'h2h' or type_key in historical_markets %}
                 <div class="bf-market-column">
                     <span class="bf-market-label">
                         {% if type_key == 'h2h' %}Moneyline{% elif type_key == 'spreads' %}Spread{% else %}Total{% endif %}
                     </span>
                     {% if type_key in historical_markets %}
                         {% set market = historical_markets[type_key] %}
-                        <div class="bf-historical-market-box" style="padding: 10px; border: 1px solid var(--bf-border); border-radius: 5px; background: white; text-align: center;">
+                        <div class="{% if type_key == 'h2h' and 'spreads' not in historical_markets and 'totals' not in historical_markets %}bf-outcomes-container-horizontal{% else %}bf-market-column{% endif %}" style="gap: 8px;">
                             {% for outcome in market.outcomes %}
-                            <div style="margin-bottom: 5px; font-size: 0.9rem;">
-                                <span style="color: var(--bf-text-light);">{{ outcome.outcome_name }}:</span>
-                                <strong style="color: var(--bf-primary);">{{ outcome.odds|bf_odds }}</strong>
-                                {% if outcome.point_value is not none %}
-                                <span style="font-size: 0.8rem; color: var(--bf-secondary);">({{ outcome.point_value|bf_point }})</span>
-                                {% endif %}
+                            <div class="bf-historical-market-box" style="padding: 10px; border: 1px solid var(--bf-border); border-radius: 5px; background: white; text-align: center; {% if type_key == 'h2h' and 'spreads' not in historical_markets and 'totals' not in historical_markets %}flex: 1;{% endif %}">
+                                <div style="margin-bottom: 5px; font-size: 0.9rem;">
+                                    <span style="color: var(--bf-text-light);">{{ outcome.outcome_name }}:</span>
+                                    <strong style="color: var(--bf-primary);">{{ outcome.odds|bf_odds }}</strong>
+                                    {% if outcome.point_value is not none %}
+                                    <span style="font-size: 0.8rem; color: var(--bf-secondary);">({{ outcome.point_value|bf_point }})</span>
+                                    {% endif %}
+                                </div>
+                                <div style="font-size: 0.65rem; color: #aaa; margin-top: 5px; border-top: 1px solid #eee; padding-top: 3px;">
+                                    {{ market.bookmaker_key|upper }} | {{ (market.created_at|bf_local_time).strftime('%m/%d %H:%M') }}
+                                </div>
                             </div>
                             {% endfor %}
-                            <div style="font-size: 0.65rem; color: #aaa; margin-top: 5px; border-top: 1px solid #eee; padding-top: 3px;">
-                                {{ market.bookmaker_key|upper }} | {{ (market.created_at|bf_local_time).strftime('%m/%d %H:%M') }}
-                            </div>
                         </div>
                     {% else %}
                         <span style="font-size: 0.8rem; text-align: center; color: #999;">N/A</span>
                     {% endif %}
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>

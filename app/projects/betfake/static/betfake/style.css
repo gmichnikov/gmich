@@ -627,6 +627,16 @@
   gap: 8px;
 }
 
+.bf-outcomes-container-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.bf-outcomes-container-horizontal .bf-odds-btn {
+  flex: 1;
+}
+
 .bf-market-label {
   font-size: 0.75rem;
   color: var(--bf-text-light);
@@ -919,4 +929,30 @@ input:checked + .bf-slider:before {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.bf-search-bar {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--bf-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.bf-search-bar:focus {
+  outline: none;
+  border-color: var(--bf-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bf-no-results-msg {
+  padding: 30px;
+  text-align: center;
+  color: var(--bf-text-light);
+  background: white;
+  border-radius: 10px;
+  margin: 10px 0;
+  border: 1px dashed var(--bf-border);
 }
