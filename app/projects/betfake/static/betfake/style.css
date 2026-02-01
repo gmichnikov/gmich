@@ -589,11 +589,84 @@
   }
 
   .bf-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .bf-stat-card {
+    padding: 12px 8px;
+  }
+
+  .bf-stat-label {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+  }
+
+  .bf-stat-value {
+    font-size: 1.2rem;
+  }
+
+  .bf-accounts-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .bf-account-card {
+    padding: 12px 15px;
+  }
+
+  .bf-account-header {
+    margin-bottom: 0;
+    align-items: center;
+  }
+
+  .bf-account-name {
+    font-size: 1rem;
+  }
+
+  .bf-account-balance {
+    font-size: 1.1rem;
+  }
+
+  .bf-account-actions {
+    display: none;
+  }
+
+  .bf-header {
+    margin-bottom: 15px;
   }
 
   .bf-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+  }
+
+  .bf-header p {
+    font-size: 0.85rem;
+    margin-top: 0;
+  }
+
+  .bf-section-title {
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+  }
+
+  .bf-section-title h2 {
+    font-size: 1.1rem;
+  }
+
+  .bf-dashboard-container {
+    padding: 0 10px;
+  }
+
+  .bf-page-wrapper {
+    padding: 10px 0;
+  }
+
+  .bf-nav-tabs {
+    margin-bottom: 20px;
+    padding: 5px;
+    gap: 5px;
   }
 
   .bf-nav-tabs {
@@ -601,10 +674,32 @@
   }
 
   .bf-nav-link {
-    flex: none;
-    width: 30%;
-    font-size: 0.8rem;
-    padding: 5px;
+    flex: 1 1 auto;
+    width: auto;
+    font-size: 0.75rem;
+    padding: 8px 4px;
+    min-width: 70px;
+  }
+
+  .bf-create-account-form {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .bf-create-account-form h3 {
+    font-size: 1rem;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .bf-form-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bf-btn {
+    padding: 8px 12px;
+    font-size: 0.9rem;
   }
 }
 
