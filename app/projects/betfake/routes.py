@@ -659,6 +659,10 @@ def admin_update_sport_config():
     
     try:
         db.session.commit()
+        from app.models import LogEntry
+        log_desc = f"Admin updated {sport.sport_title} config: Nav={sport.show_in_nav}, Odds={sport.sync_odds}, Scores={sport.sync_scores}, Spreads={sport.has_spreads}, Future={sport.is_outright}"
+        db.session.add(LogEntry(project='betfake', category='Admin', description=log_desc))
+        db.session.commit()
         flash(f"Updated configuration for {sport.sport_title}.", "success")
     except Exception as e:
         db.session.rollback()
@@ -695,6 +699,10 @@ def admin_add_sport_manual():
     db.session.add(new_sport)
     
     try:
+        db.session.commit()
+        from app.models import LogEntry
+        msg = f"Admin manually added sport: {title} ({key})"
+        db.session.add(LogEntry(project='betfake', category='Admin', description=msg))
         db.session.commit()
         flash(f"Manually added {title}.", "success")
     except Exception as e:
