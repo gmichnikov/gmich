@@ -42,9 +42,9 @@
     <div class="bf-dashboard-container">
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link {% if sport_key == 'basketball_nba' %}active{% endif %}">NBA</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link {% if sport_key == 'americanfootball_nfl' %}active{% endif %}">NFL</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link {% if sport_key == 'soccer_epl' %}active{% endif %}">EPL</a>
+            {% for sport in active_sports %}
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link {% if sport_key == sport.sport_key %}active{% endif %}">{{ sport.sport_title }}</a>
+            {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
@@ -71,7 +71,7 @@
                         <span class="bf-game-time">{{ (game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }}</span>
                     </div>
 
-                    <div class="bf-market-row">
+                    <div class="bf-market-row" style="grid-template-columns: repeat({% if has_spreads %}3{% else %}1{% endif %}, 1fr);">
                         <!-- Moneyline Column -->
                         <div class="bf-market-column">
                             <span class="bf-market-label">Moneyline</span>
@@ -87,7 +87,7 @@
                             {% endif %}
                         </div>
 
-                        {% if sport_key != 'soccer_epl' %}
+                        {% if has_spreads %}
                         <!-- Spreads Column -->
                         <div class="bf-market-column">
                             <span class="bf-market-label">Spread</span>

@@ -33,9 +33,9 @@
     <div class="bf-dashboard-container">
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link">NFL</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link">EPL</a>
+            {% for sport in active_sports %}
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.sport_title }}</a>
+            {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link active">History</a>
         </nav>

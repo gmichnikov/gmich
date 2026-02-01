@@ -41,9 +41,9 @@
     <div class="bf-dashboard-container">
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='basketball_nba') }}" class="bf-nav-link">NBA</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='americanfootball_nfl') }}" class="bf-nav-link">NFL</a>
-            <a href="{{ url_for('betfake.browse_sport', sport_key='soccer_epl') }}" class="bf-nav-link">EPL</a>
+            {% for sport in active_sports %}
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.sport_title }}</a>
+            {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
         </nav>
@@ -66,8 +66,8 @@
             </div>
 
             <div class="bf-admin-tabs">
-                <div class="bf-admin-tab active" onclick="switchTab('active-sports', this)">Active ({{ active_sports|length }})</div>
-                <div class="bf-admin-tab" onclick="switchTab('available-sports', this)">Available ({{ available_sports|length }})</div>
+                <div class="bf-admin-tab active" onclick="switchTab('active-sports', this)">Active ({{ reg_active|length }})</div>
+                <div class="bf-admin-tab" onclick="switchTab('available-sports', this)">Available ({{ reg_available|length }})</div>
                 <div class="bf-admin-tab" onclick="switchTab('manual-add', this)">Manual Add</div>
             </div>
 
@@ -87,7 +87,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for sport in active_sports %}
+                            {% for sport in reg_active %}
                             <tr>
                                 <td><strong>{{ sport.sport_title }}</strong></td>
                                 <td><code>{{ sport.sport_key }}</code></td>
@@ -125,7 +125,7 @@
                                 </form>
                             </tr>
                             {% endfor %}
-                            {% if not active_sports %}
+                            {% if not reg_active %}
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 30px; color: var(--bf-text-light);">
                                     No active sports. Go to "Available" tab to turn some on.
@@ -149,7 +149,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for sport in available_sports %}
+                            {% for sport in reg_available %}
                             <tr>
                                 <td>{{ sport.sport_title }}</td>
                                 <td><code>{{ sport.sport_key }}</code></td>

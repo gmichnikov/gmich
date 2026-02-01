@@ -21,6 +21,19 @@ betfake_bp = Blueprint(
     static_folder='static'
 )
 
+@betfake_bp.app_context_processor
+def inject_active_sports():
+    """Inject active sports into all betfake templates for navigation."""
+    from app.projects.betfake.models import BetfakeSport
+    # Get sports marked for navigation, but exclude futures/outrights from the top bar
+    active_sports = BetfakeSport.query.filter(
+        BetfakeSport.show_in_nav == True,
+        ~BetfakeSport.sport_title.contains('Winner'),
+        ~BetfakeSport.sport_title.contains('Championship'),
+        ~BetfakeSport.sport_title.contains('Outright')
+    ).order_by(BetfakeSport.sport_title).all()
+    return dict(active_sports=active_sports)
+
 @betfake_bp.app_template_filter('bf_odds')
 def bf_odds_filter(odds):
     return format_odds_display(odds)
@@ -61,9 +74,8 @@ def bf_bet_outcome_filter(bet):
 @login_required
 def index():
     """Dashboard showing accounts and recent bets."""
+    from app.projects.betfake.models import BetfakeSport
     accounts = BetfakeAccount.query.filter_by(user_id=current_user.id).order_by(BetfakeAccount.created_at).all()
-    
-    # If no accounts, we'll show a prompt to create one in the template
     
     pending_bets = BetfakeBet.query.filter_by(user_id=current_user.id, status='Pending').order_by(BetfakeBet.placed_at.desc()).all()
     
@@ -107,12 +119,14 @@ def index():
         fmt = format_currency(pl)
         if pl > 0: fmt = "+" + fmt
         formatted_account_pls[acc_id] = {'raw': pl, 'formatted': fmt}
-        
-    # Get 3 most recent settled bets
+
     recent_settled = BetfakeBet.query.filter(
         BetfakeBet.user_id == current_user.id,
         BetfakeBet.status.in_(['Won', 'Lost', 'Push'])
     ).order_by(BetfakeBet.settled_at.desc()).limit(3).all()
+
+    # Get the first active sport for the "Browse" button
+    first_sport = BetfakeSport.query.filter_by(show_in_nav=True).order_by(BetfakeSport.sport_title).first()
             
     return render_template('betfake/index.html', 
                            accounts=accounts, 
@@ -122,7 +136,8 @@ def index():
                            total_pl=total_pl,
                            formatted_total_pl=formatted_total_pl,
                            account_pls=formatted_account_pls,
-                           recent_settled=recent_settled)
+                           recent_settled=recent_settled,
+                           first_sport=first_sport)
 
 @betfake_bp.route('/accounts/create', methods=['POST'])
 @login_required
@@ -175,6 +190,14 @@ def create_account():
 def browse_sport(sport_key):
     """Browse games for a specific sport with upcoming and recent sections."""
     from datetime import timedelta
+    from app.projects.betfake.models import BetfakeSport
+    
+    # Get sport details from registry
+    sport = BetfakeSport.query.filter_by(sport_key=sport_key).first()
+    if not sport:
+        flash(f"Sport {sport_key} not found.", "error")
+        return redirect(url_for('betfake.index'))
+
     now = datetime.utcnow()
     one_day_ago = now - timedelta(hours=24)
     seven_days_ago = now - timedelta(days=7)
@@ -190,7 +213,9 @@ def browse_sport(sport_key):
     for game in upcoming_games:
         game.display_markets = {}
         market_types = [MarketType.h2h]
-        if sport_key != 'soccer_epl':
+        
+        # Use has_spreads flag from DB
+        if sport.has_spreads:
             market_types.extend([MarketType.spreads, MarketType.totals])
             
         for mt in market_types:
@@ -211,7 +236,7 @@ def browse_sport(sport_key):
                 game.display_markets[mt.value] = market
 
     # 2. Recent Games (Last 24h OR (Last 7d AND user bet))
-    # Get all games in last 7 days for this sport
+    # ... (same logic as before) ...
     recent_candidates = BetfakeGame.query.filter(
         BetfakeGame.sport_key == sport_key,
         BetfakeGame.commence_time >= seven_days_ago,
@@ -234,14 +259,13 @@ def browse_sport(sport_key):
             
     recent_games.sort(key=lambda x: x.commence_time, reverse=True)
 
-    sport_label = sport_key.replace('basketball_', '').replace('soccer_', '').replace('americanfootball_', '').upper()
-
     return render_template('betfake/sports.html', 
                            sport_key=sport_key, 
-                           sport_label=sport_label,
+                           sport_label=sport.sport_title, # Use title from DB
                            upcoming_games=upcoming_games,
                            recent_games=recent_games,
-                           now=now)
+                           now=now,
+                           has_spreads=sport.has_spreads) # Pass flag to template
 
 @betfake_bp.route('/bet/<int:outcome_id>')
 @login_required
@@ -553,14 +577,13 @@ def admin_sync():
     # Get all sports from DB
     all_sports = BetfakeSport.query.order_by(BetfakeSport.sport_title).all()
     
-    # Group into active vs available
-    # Active = anything with a toggle turned ON
-    active_sports = [s for s in all_sports if s.sync_scores or s.sync_odds or s.show_in_nav]
-    available_sports = [s for s in all_sports if not (s.sync_scores or s.sync_odds or s.show_in_nav)]
+    # Group into active vs available for the registry table
+    reg_active = [s for s in all_sports if s.sync_scores or s.sync_odds or s.show_in_nav]
+    reg_available = [s for s in all_sports if not (s.sync_scores or s.sync_odds or s.show_in_nav)]
     
     return render_template('betfake/admin_sync.html', 
-                           active_sports=active_sports, 
-                           available_sports=available_sports)
+                           reg_active=reg_active, 
+                           reg_available=reg_available)
 
 @betfake_bp.route('/admin/sports/refresh', methods=['POST'])
 @login_required
