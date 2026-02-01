@@ -138,6 +138,23 @@ class BetGraderService:
                     )
                     db.session.add(transaction)
                 
+                # Log the settlement to Admin logs
+                from app.models import LogEntry
+                matchup = f"{game.home_team} vs {game.away_team}" if game.home_team else game.sport_title
+                log_desc = f"Settled bet {bet.id}: {bet.outcome_name_at_time} in {matchup} as {new_status.value}."
+                if new_status == BetStatus.Won:
+                    log_desc += f" Payout: ${bet.potential_payout:,.2f}"
+                elif new_status == BetStatus.Push:
+                    log_desc += f" Refund: ${bet.wager_amount:,.2f}"
+                
+                log_entry = LogEntry(
+                    project='betfake',
+                    category='Settlement',
+                    actor_id=bet.user_id,
+                    description=log_desc
+                )
+                db.session.add(log_entry)
+                
                 db.session.commit()
                 settled_count += 1
                 logger.info(f"Settled bet {bet.id} as {new_status.value}")

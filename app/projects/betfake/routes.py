@@ -564,12 +564,12 @@ def admin_sync_trigger():
     
     try:
         if sport:
-            importer.import_games_for_sport(sport)
+            game_count = importer.import_games_for_sport(sport)
             # For sport-specific sync, we need to know which markets to sync
             markets = "h2h,spreads,totals"
             if sport == 'soccer_epl':
                 markets = "h2h"
-            importer.import_odds_for_sport(sport, markets_str=markets)
+            market_count = importer.import_odds_for_sport(sport, markets_str=markets)
             importer.import_scores_for_sport(sport)
             if sport == 'basketball_nba':
                 importer.import_futures('basketball_nba_championship_winner')
@@ -582,20 +582,25 @@ def admin_sync_trigger():
                 project='betfake',
                 category='Sync',
                 actor_id=current_user.id,
-                description=f"Admin {current_user.email} triggered manual sync for {sport}. Settled {settled_count} bets."
+                description=f"Admin {current_user.email} triggered manual sync for {sport}. "
+                            f"Imported {game_count} games, {market_count} markets. "
+                            f"Settled {settled_count} bets."
             )
             db.session.add(log_entry)
+            db.session.commit()
             
             flash(f"Successfully synced {sport} and settled {settled_count} bets.", "success")
         else:
             # Full sync
             synced_sports = []
+            total_games = 0
+            total_markets = 0
             for s in ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']:
-                importer.import_games_for_sport(s)
+                total_games += importer.import_games_for_sport(s)
                 markets = "h2h,spreads,totals"
                 if s == 'soccer_epl':
                     markets = "h2h"
-                importer.import_odds_for_sport(s, markets_str=markets)
+                total_markets += importer.import_odds_for_sport(s, markets_str=markets)
                 importer.import_scores_for_sport(s)
                 synced_sports.append(s)
                 time.sleep(0.5) # Small buffer
@@ -608,9 +613,12 @@ def admin_sync_trigger():
                 project='betfake',
                 category='Sync',
                 actor_id=current_user.id,
-                description=f"Admin {current_user.email} triggered full manual sync. Settled {settled_count} bets."
+                description=f"Admin {current_user.email} triggered full manual sync. "
+                            f"Imported {total_games} games, {total_markets} markets across {', '.join(synced_sports)}. "
+                            f"Settled {settled_count} bets."
             )
             db.session.add(log_entry)
+            db.session.commit()
             
             flash(f"Full sync completed for {', '.join(synced_sports)}. Settled {settled_count} bets.", "success")
     except Exception as e:

@@ -57,6 +57,18 @@ def sync_command(sport):
     click.echo(f"Settle complete! {settled_count} bets settled.")
     click.echo("Sync complete!")
 
+    # Log the sync event to Admin logs
+    from app.models import LogEntry
+    from app import db
+    log_entry = LogEntry(
+        project='betfake',
+        category='Sync',
+        description=f"Automated/CLI sync completed for {', '.join(sports_to_sync)}. "
+                    f"Settled {settled_count} bets."
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
 @betfake_cli.command('settle')
 @click.option('--game-id', default=None, type=int, help='Settle bets for a specific game ID')
 @with_appcontext
