@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{% block bf_title %}BetFake{% endblock %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+{% block bf_styles %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="bf-page-wrapper">
+    <div class="bf-dashboard-container">
+        <!-- New Two-Tier Navigation -->
+        <div class="bf-nav-container">
+            <!-- Tier 1: User Nav -->
+            <nav class="bf-main-nav">
+                <a href="{{ url_for('betfake.index') }}" class="bf-main-nav-link {% if request.endpoint == 'betfake.index' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('betfake.history') }}" class="bf-main-nav-link {% if request.endpoint == 'betfake.history' %}active{% endif %}">History</a>
+                <a href="{{ url_for('betfake.futures') }}" class="bf-main-nav-link {% if request.endpoint == 'betfake.futures' %}active{% endif %}">Futures</a>
+            </nav>
+
+            <!-- Tier 2: Sports Carousel -->
+            <div class="bf-sports-nav">
+                <div class="bf-sports-carousel">
+                    {% for sport in active_sports %}
+                    <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" 
+                       class="bf-sport-pill {% if sport_key == sport.sport_key %}active{% endif %}">
+                        {{ sport.display_title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% block bf_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

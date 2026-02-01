@@ -1,23 +1,8 @@
-{% extends "base.html" %}
+{% extends "betfake/layout.html" %}
 
-{% block title %}BetFake - Sports Betting Simulator{% endblock %}
+{% block bf_title %}BetFake - Sports Betting Simulator{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="bf-page-wrapper">
-    <div class="bf-dashboard-container">
-        <nav class="bf-nav-tabs">
-            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link active">Dashboard</a>
-            {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.display_title }}</a>
-            {% endfor %}
-            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
-            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
-        </nav>
-
+{% block bf_content %}
         <div class="bf-header">
             <h1>BetFake Dashboard</h1>
             <p>Real-time odds. Fake money.</p>
@@ -183,6 +168,4 @@
             <p style="margin: 0; font-size: 0.9rem; color: var(--bf-text-light);">No recently settled bets. Results will appear here once your games finish!</p>
         </div>
         {% endif %}
-    </div>
-</div>
 {% endblock %}

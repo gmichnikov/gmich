@@ -271,7 +271,7 @@
 }
 
 .bf-nav-link:hover:not(.active) {
-  background: var(--bf-bg);
+  background: #f8f9fa;
 }
 
 /* Status Pills */
@@ -359,6 +359,101 @@
   overflow-x: auto;
   border-radius: 10px;
   margin-bottom: 20px;
+}
+
+/* Navigation Improvements */
+.bf-nav-container {
+  margin-bottom: 25px;
+  background: var(--bf-white);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.bf-main-nav {
+  display: flex;
+  border-bottom: 1px solid var(--bf-border);
+}
+
+.bf-main-nav-link {
+  flex: 1;
+  text-align: center;
+  padding: 12px 10px;
+  text-decoration: none;
+  color: var(--bf-text);
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.bf-main-nav-link:hover {
+  background: #f8f9fa;
+  color: var(--bf-primary);
+}
+
+.bf-main-nav-link.active {
+  color: var(--bf-primary);
+  border-bottom-color: var(--bf-primary);
+}
+
+.bf-sports-nav {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.bf-sports-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.bf-sports-carousel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.bf-sport-pill {
+  flex: 0 0 auto;
+  background: var(--bf-white);
+  border: 1px solid var(--bf-border);
+  padding: 6px 15px;
+  border-radius: 20px;
+  text-decoration: none;
+  color: var(--bf-text-light);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.bf-sport-pill:hover {
+  border-color: var(--bf-primary);
+  color: var(--bf-primary);
+}
+
+.bf-sport-pill.active {
+  background: var(--bf-primary);
+  color: white;
+  border-color: var(--bf-primary);
+}
+
+@media (max-width: 600px) {
+  .bf-nav-container {
+    margin: -10px -10px 15px -10px;
+    border-radius: 0;
+  }
+
+  .bf-main-nav-link {
+    font-size: 0.8rem;
+    padding: 10px 5px;
+  }
+
+  .bf-sport-pill {
+    padding: 5px 12px;
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,9 +1,8 @@
-{% extends "base.html" %}
+{% extends "betfake/layout.html" %}
 
-{% block title %}Futures - BetFake{% endblock %}
+{% block bf_title %}Futures - BetFake{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
+{% block bf_styles %}
 <style>
     .bf-futures-sport {
         margin-bottom: 40px;
@@ -22,18 +21,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="bf-page-wrapper">
-    <div class="bf-dashboard-container">
-        <nav class="bf-nav-tabs">
-            <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
-            {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.display_title }}</a>
-            {% endfor %}
-            <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link active">Futures</a>
-            <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
-        </nav>
-
+{% block bf_content %}
         <div class="bf-header">
             <h1>Futures Markets</h1>
             <p>Long-term bets on championship winners and season outcomes.</p>
@@ -64,6 +52,4 @@
                 <p>Try syncing NBA data from the Admin panel.</p>
             </div>
         {% endif %}
-    </div>
-</div>
 {% endblock %}
