@@ -644,18 +644,31 @@ def admin_refresh_sports():
 @login_required
 @admin_required
 def admin_update_sport_config():
-    """Update settings (sync_scores, sync_odds, show_in_nav, has_spreads) for a sport."""
+    """Update settings (sync_scores, sync_odds, show_in_nav, has_spreads, is_outright) for a sport."""
     from app.projects.betfake.models import BetfakeSport
     
     sport_id = request.form.get('sport_id')
     sport = BetfakeSport.query.get_or_404(sport_id)
     
-    # Update fields based on checkboxes (checkboxes only sent if checked)
-    sport.sync_scores = 'sync_scores' in request.form
-    sport.sync_odds = 'sync_odds' in request.form
-    sport.show_in_nav = 'show_in_nav' in request.form
-    sport.has_spreads = 'has_spreads' in request.form
-    sport.is_outright = 'is_outright' in request.form
+    # Only update fields that were actually sent in the form
+    # This prevents the "Enable All" button from overwriting is_outright/has_spreads
+    if 'sync_scores_sent' in request.form or 'sync_scores' in request.form:
+        sport.sync_scores = 'sync_scores' in request.form
+    if 'sync_odds_sent' in request.form or 'sync_odds' in request.form:
+        sport.sync_odds = 'sync_odds' in request.form
+    if 'show_in_nav_sent' in request.form or 'show_in_nav' in request.form:
+        sport.show_in_nav = 'show_in_nav' in request.form
+    if 'has_spreads_sent' in request.form or 'has_spreads' in request.form:
+        sport.has_spreads = 'has_spreads' in request.form
+    if 'is_outright_sent' in request.form or 'is_outright' in request.form:
+        sport.is_outright = 'is_outright' in request.form
+    
+    # Fallback for the "Enable All" button which sends explicit 'on' values
+    if request.form.get('all_enabled') == 'true':
+        sport.sync_scores = True
+        sport.sync_odds = True
+        sport.show_in_nav = True
+        # Note: We specifically DON'T touch is_outright or has_spreads here
     
     try:
         db.session.commit()
@@ -680,6 +693,8 @@ def admin_add_sport_manual():
     key = request.form.get('sport_key', '').strip()
     title = request.form.get('sport_title', '').strip()
     
+    is_outright = 'is_outright' in request.form
+    
     if not key or not title:
         flash("Both key and title are required.", "error")
         return redirect(url_for('betfake.admin_sync'))
@@ -694,14 +709,15 @@ def admin_add_sport_manual():
         sport_title=title,
         sync_scores=False,
         sync_odds=False,
-        show_in_nav=False
+        show_in_nav=False,
+        is_outright=is_outright
     )
     db.session.add(new_sport)
     
     try:
         db.session.commit()
         from app.models import LogEntry
-        msg = f"Admin manually added sport: {title} ({key})"
+        msg = f"Admin manually added sport: {title} ({key}), Future={is_outright}"
         db.session.add(LogEntry(project='betfake', category='Admin', description=msg))
         db.session.commit()
         flash(f"Manually added {title}.", "success")

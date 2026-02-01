@@ -95,6 +95,12 @@
                                 <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="sport_id" value="{{ sport.id }}">
+                                    <!-- Sentinel fields to tell the backend which toggles were present -->
+                                    <input type="hidden" name="show_in_nav_sent" value="1">
+                                    <input type="hidden" name="sync_odds_sent" value="1">
+                                    <input type="hidden" name="sync_scores_sent" value="1">
+                                    <input type="hidden" name="is_outright_sent" value="1">
+                                    <input type="hidden" name="has_spreads_sent" value="1">
                                     <td>
                                         <label class="bf-switch">
                                             <input type="checkbox" name="show_in_nav" {% if sport.show_in_nav %}checked{% endif %} onchange="this.form.submit()">
@@ -164,9 +170,7 @@
                                     <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST" style="display: inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="sport_id" value="{{ sport.id }}">
-                                        <input type="hidden" name="show_in_nav" value="on">
-                                        <input type="hidden" name="sync_odds" value="on">
-                                        <input type="hidden" name="sync_scores" value="on">
+                                        <input type="hidden" name="all_enabled" value="true">
                                         <button type="submit" class="bf-btn bf-btn-sm bf-btn-outline">Enable All</button>
                                     </form>
                                 </td>
@@ -189,6 +193,13 @@
                         <div style="margin-bottom: 15px;">
                             <label style="display:block; margin-bottom:5px;">Display Title</label>
                             <input type="text" name="sport_title" class="bf-form-input" placeholder="e.g. NBA Championship" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label class="bf-switch">
+                                <input type="checkbox" name="is_outright">
+                                <span class="bf-slider"></span>
+                            </label>
+                            <span style="margin-left: 10px; font-size: 0.9rem;">Is this a Future/Outright?</span>
                         </div>
                         <button type="submit" class="bf-btn bf-btn-primary">Add to Registry</button>
                     </form>
