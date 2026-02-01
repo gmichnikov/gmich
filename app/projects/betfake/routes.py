@@ -595,7 +595,7 @@ def admin_sync_trigger():
                 log_desc = f"UI Sync Odds: {s} imported {game_count} games, {market_count} markets."
                 if quota: log_desc += f" API Quota remaining: {quota}"
                 db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
-                results.append(f"{s} odds ({game_count}g, {market_count}m)")
+                results.append(f"{s} odds ({game_count} games, {market_count} markets)")
                 
                 if s == 'basketball_nba':
                     f_count = importer.import_futures('basketball_nba_championship_winner')
