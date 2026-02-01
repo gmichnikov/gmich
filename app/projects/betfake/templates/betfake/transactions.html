@@ -61,7 +61,19 @@
 
         <div class="bf-header">
             <h1>Transaction History</h1>
-            <p>Activity for <strong>{{ account.name }}</strong></p>
+            <p>Activity for 
+                {% if all_accounts|length > 1 %}
+                    <select id="account-selector" onchange="window.location.href=this.value" style="padding: 2px 5px; border-radius: 4px; border: 1px solid var(--bf-border); font-weight: bold; background: #f8f9fa; cursor: pointer;">
+                        {% for acc in all_accounts %}
+                            <option value="{{ url_for('betfake.transactions', account_id=acc.id) }}" {% if acc.id == account.id %}selected{% endif %}>
+                                {{ acc.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <strong>{{ account.name }}</strong>
+                {% endif %}
+            </p>
         </div>
 
         <div class="bf-stats-grid">
@@ -143,7 +155,9 @@
                             <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                                    {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                    <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
+                                        {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                    </a>
                                 {% else %}
                                     {{ tx.bet.outcome.market.game.sport_title }}
                                 {% endif %}
@@ -159,7 +173,9 @@
                             <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                                    {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                    <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
+                                        {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                    </a>
                                 {% else %}
                                     {{ tx.bet.outcome.market.game.sport_title }}
                                 {% endif %}
@@ -264,6 +280,23 @@
 
                 // Initial run to show summary
                 filterTable();
+
+                // Ensure filters and account selector are in sync when using browser back button
+                window.addEventListener('pageshow', function(event) {
+                    filterTable();
+                    
+                    const accountSelector = document.getElementById('account-selector');
+                    if (accountSelector) {
+                        const currentPath = window.location.pathname;
+                        for (let i = 0; i < accountSelector.options.length; i++) {
+                            const option = accountSelector.options[i];
+                            if (currentPath.includes(option.value)) {
+                                accountSelector.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                });
             });
         </script>
         {% else %}

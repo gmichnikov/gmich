@@ -156,7 +156,9 @@
                         <div style="font-weight: bold;">{{ bet|bf_bet_outcome }}</div>
                         <div style="font-size: 0.8rem; color: #666;">
                             {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
-                                {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                                <a href="{{ url_for('betfake.game_detail', game_id=bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
+                                    {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                                </a>
                             {% else %}
                                 {{ bet.outcome.market.game.sport_title }}
                             {% endif %}
@@ -331,6 +333,11 @@
 
                 // Initial run to set reset button state if needed (though it starts all)
                 filterTable();
+
+                // Ensure filters are in sync when using browser back button
+                window.addEventListener('pageshow', function(event) {
+                    filterTable();
+                });
             });
         </script>
         {% else %}

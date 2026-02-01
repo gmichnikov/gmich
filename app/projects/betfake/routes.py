@@ -173,34 +173,33 @@ def create_account():
 @betfake_bp.route('/sports/<sport_key>')
 @login_required
 def browse_sport(sport_key):
-    """Browse games for a specific sport with bookmaker fallback logic."""
-    # Query active games for sport (Scheduled, not yet started)
+    """Browse games for a specific sport with upcoming and recent sections."""
+    from datetime import timedelta
     now = datetime.utcnow()
-    games = BetfakeGame.query.filter(
+    one_day_ago = now - timedelta(hours=24)
+    seven_days_ago = now - timedelta(days=7)
+    
+    # 1. Upcoming Games (Scheduled, not yet started)
+    upcoming_games = BetfakeGame.query.filter(
         BetfakeGame.sport_key == sport_key,
         BetfakeGame.status == GameStatus.Scheduled,
         BetfakeGame.commence_time > now
     ).order_by(BetfakeGame.commence_time.asc()).all()
     
-    # For each game, select the "Best Available" market of each type
-    for game in games:
+    # For each upcoming game, select the "Best Available" market
+    for game in upcoming_games:
         game.display_markets = {}
-        
-        # We support h2h, spreads, totals for V1 (soccer only h2h)
         market_types = [MarketType.h2h]
         if sport_key != 'soccer_epl':
             market_types.extend([MarketType.spreads, MarketType.totals])
             
         for mt in market_types:
-            # 1. Try DraftKings (Primary)
             market = BetfakeMarket.query.filter_by(
                 game_id=game.id,
                 type=mt,
                 bookmaker_key='draftkings',
                 is_active=True
             ).first()
-            
-            # 2. Fallback to FanDuel
             if not market:
                 market = BetfakeMarket.query.filter_by(
                     game_id=game.id,
@@ -208,13 +207,40 @@ def browse_sport(sport_key):
                     bookmaker_key='fanduel',
                     is_active=True
                 ).first()
-            
             if market:
                 game.display_markets[mt.value] = market
 
+    # 2. Recent Games (Last 24h OR (Last 7d AND user bet))
+    # Get all games in last 7 days for this sport
+    recent_candidates = BetfakeGame.query.filter(
+        BetfakeGame.sport_key == sport_key,
+        BetfakeGame.commence_time >= seven_days_ago,
+        BetfakeGame.commence_time <= now
+    ).all()
+    
+    # Get IDs of games the user bet on
+    user_bet_game_ids = [r[0] for r in db.session.query(BetfakeMarket.game_id)
+                        .join(BetfakeOutcome)
+                        .join(BetfakeBet)
+                        .filter(BetfakeBet.user_id == current_user.id)
+                        .distinct().all()]
+    
+    recent_games = []
+    for game in recent_candidates:
+        is_last_24h = game.commence_time >= one_day_ago
+        has_user_bet = game.id in user_bet_game_ids
+        if is_last_24h or has_user_bet:
+            recent_games.append(game)
+            
+    recent_games.sort(key=lambda x: x.commence_time, reverse=True)
+
+    sport_label = sport_key.replace('basketball_', '').replace('soccer_', '').replace('americanfootball_', '').upper()
+
     return render_template('betfake/sports.html', 
                            sport_key=sport_key, 
-                           games=games,
+                           sport_label=sport_label,
+                           upcoming_games=upcoming_games,
+                           recent_games=recent_games,
                            now=now)
 
 @betfake_bp.route('/bet/<int:outcome_id>')
@@ -441,12 +467,80 @@ def transactions(account_id):
     # Reverse to show newest first
     transactions.reverse()
     
+    # Get all accounts for switching
+    all_accounts = BetfakeAccount.query.filter_by(user_id=current_user.id).order_by(BetfakeAccount.created_at).all()
+    
     return render_template('betfake/transactions.html', 
                            account=account, 
                            transactions=transactions,
                            account_equity=account_equity,
                            account_pl=account_pl,
-                           formatted_account_pl=formatted_account_pl)
+                           formatted_account_pl=formatted_account_pl,
+                           all_accounts=all_accounts)
+
+
+@betfake_bp.route('/game/<int:game_id>')
+@login_required
+def game_detail(game_id):
+    """View details for a specific game, including scores and user bets."""
+    game = BetfakeGame.query.get_or_404(game_id)
+    
+    # Don't show detail page for futures (they don't have teams)
+    if not game.home_team or not game.away_team:
+        return redirect(url_for('betfake.futures'))
+        
+    # Get all bets the user has on this game
+    # We join through outcome and market to filter by game_id
+    user_bets = BetfakeBet.query.join(BetfakeOutcome).join(BetfakeMarket).filter(
+        BetfakeBet.user_id == current_user.id,
+        BetfakeMarket.game_id == game.id
+    ).order_by(BetfakeBet.placed_at.desc()).all()
+    
+    # Calculate game P/L
+    game_pl = 0
+    for bet in user_bets:
+        if bet.status == BetStatus.Won:
+            game_pl += (bet.potential_payout - bet.wager_amount)
+        elif bet.status == BetStatus.Lost:
+            game_pl -= bet.wager_amount
+            
+    formatted_game_pl = format_currency(game_pl)
+    if game_pl > 0:
+        formatted_game_pl = "+" + formatted_game_pl
+        
+    # Get available markets if the game hasn't started
+    now = datetime.utcnow()
+    display_markets = {}
+    if game.commence_time > now:
+        market_types = [MarketType.h2h, MarketType.spreads, MarketType.totals]
+        for mt in market_types:
+            # 1. Try DraftKings (Primary)
+            market = BetfakeMarket.query.filter_by(
+                game_id=game.id,
+                type=mt,
+                bookmaker_key='draftkings',
+                is_active=True
+            ).first()
+            
+            # 2. Fallback to FanDuel
+            if not market:
+                market = BetfakeMarket.query.filter_by(
+                    game_id=game.id,
+                    type=mt,
+                    bookmaker_key='fanduel',
+                    is_active=True
+                ).first()
+            
+            if market:
+                display_markets[mt.value] = market
+                
+    return render_template('betfake/game.html', 
+                           game=game, 
+                           user_bets=user_bets,
+                           game_pl=game_pl,
+                           formatted_game_pl=formatted_game_pl,
+                           display_markets=display_markets,
+                           now=now)
 
 
 @betfake_bp.route('/admin/sync')
