@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Sync - BetFake{% endblock %}
+{% block title %}Admin Sync & Sport Management - BetFake{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
@@ -18,11 +18,20 @@
         margin-bottom: 20px;
         border-bottom: 1px solid var(--bf-border);
         padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     .bf-sync-options {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
+    }
+    .bf-tab-content {
+        display: none;
+    }
+    .bf-tab-content.active {
+        display: block;
     }
 </style>
 {% endblock %}
@@ -40,13 +49,152 @@
         </nav>
 
         <div class="bf-header">
-            <h1>BetFake Admin Sync</h1>
-            <p>Manually trigger Odds API data refresh.</p>
+            <h1>BetFake Admin Portal</h1>
+            <p>Manage sports registry and manual data sync.</p>
         </div>
 
+        <!-- Sport Management Section -->
         <div class="bf-admin-card">
-            <h2 class="bf-admin-title">Granular Sync Controls</h2>
-            <p>Scores are fast and settle bets. Odds are heavy and fetch new lines. All actions consume API quota.</p>
+            <div class="bf-admin-title">
+                <h2>Sport Registry</h2>
+                <div class="bf-compact-form">
+                    <form action="{{ url_for('betfake.admin_refresh_sports') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="bf-btn bf-btn-sm bf-btn-primary">Refresh Sport List from API</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bf-admin-tabs">
+                <div class="bf-admin-tab active" onclick="switchTab('active-sports', this)">Active ({{ active_sports|length }})</div>
+                <div class="bf-admin-tab" onclick="switchTab('available-sports', this)">Available ({{ available_sports|length }})</div>
+                <div class="bf-admin-tab" onclick="switchTab('manual-add', this)">Manual Add</div>
+            </div>
+
+            <div id="active-sports" class="bf-tab-content active">
+                <input type="text" id="activeSearch" class="bf-admin-search" placeholder="Search active sports..." onkeyup="filterTable('activeTable', 'activeSearch')">
+                <div class="bf-admin-table-container">
+                    <table class="bf-admin-table" id="activeTable">
+                        <thead>
+                            <tr>
+                                <th>Sport Title</th>
+                                <th>Key</th>
+                                <th>Nav</th>
+                                <th>Sync Odds</th>
+                                <th>Sync Scores</th>
+                                <th>Spreads</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sport in active_sports %}
+                            <tr>
+                                <td><strong>{{ sport.sport_title }}</strong></td>
+                                <td><code>{{ sport.sport_key }}</code></td>
+                                <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="sport_id" value="{{ sport.id }}">
+                                    <td>
+                                        <label class="bf-switch">
+                                            <input type="checkbox" name="show_in_nav" {% if sport.show_in_nav %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="bf-slider"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="bf-switch">
+                                            <input type="checkbox" name="sync_odds" {% if sport.sync_odds %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="bf-slider"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="bf-switch">
+                                            <input type="checkbox" name="sync_scores" {% if sport.sync_scores %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="bf-slider"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="bf-switch">
+                                            <input type="checkbox" name="has_spreads" {% if sport.has_spreads %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="bf-slider"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <button type="submit" style="display:none"></button>
+                                        <span style="font-size: 0.7rem; color: var(--bf-text-light)">Auto-saves</span>
+                                    </td>
+                                </form>
+                            </tr>
+                            {% endfor %}
+                            {% if not active_sports %}
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 30px; color: var(--bf-text-light);">
+                                    No active sports. Go to "Available" tab to turn some on.
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="available-sports" class="bf-tab-content">
+                <input type="text" id="availableSearch" class="bf-admin-search" placeholder="Search hundreds of available sports..." onkeyup="filterTable('availableTable', 'availableSearch')">
+                <div class="bf-admin-table-container">
+                    <table class="bf-admin-table" id="availableTable">
+                        <thead>
+                            <tr>
+                                <th>Sport Title</th>
+                                <th>Key</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sport in available_sports %}
+                            <tr>
+                                <td>{{ sport.sport_title }}</td>
+                                <td><code>{{ sport.sport_key }}</code></td>
+                                <td>
+                                    <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST" style="display: inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="sport_id" value="{{ sport.id }}">
+                                        <input type="hidden" name="show_in_nav" value="on">
+                                        <input type="hidden" name="sync_odds" value="on">
+                                        <input type="hidden" name="sync_scores" value="on">
+                                        <button type="submit" class="bf-btn bf-btn-sm bf-btn-outline">Enable All</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="manual-add" class="bf-tab-content">
+                <div style="max-width: 500px; margin: 20px 0;">
+                    <p style="margin-bottom: 15px; font-size: 0.9rem;">Add a sport manually if it doesn't appear in the list (e.g. specific futures keys).</p>
+                    <form action="{{ url_for('betfake.admin_add_sport_manual') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display:block; margin-bottom:5px;">Sport Key</label>
+                            <input type="text" name="sport_key" class="bf-form-input" placeholder="e.g. basketball_nba_championship_winner" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display:block; margin-bottom:5px;">Display Title</label>
+                            <input type="text" name="sport_title" class="bf-form-input" placeholder="e.g. NBA Championship" required>
+                        </div>
+                        <button type="submit" class="bf-btn bf-btn-primary">Add to Registry</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Controls Section (Existing functionality) -->
+        <div class="bf-admin-card">
+            <h2 class="bf-admin-title">Manual Sync Triggers</h2>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--bf-text-light);">
+                These triggers will only loop through sports marked with <strong>Sync Odds</strong> or <strong>Sync Scores</strong> above.
+            </p>
             
             <div style="margin-bottom: 25px;">
                 <h3 style="font-size: 1rem; margin-bottom: 15px;">1. High Priority: Scores & Settlement</h3>
@@ -54,25 +202,7 @@
                     <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="sync_type" value="scores">
-                        <button type="submit" class="bf-btn bf-btn-primary">Sync All Scores</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="scores">
-                        <input type="hidden" name="sport" value="basketball_nba">
-                        <button type="submit" class="bf-btn bf-btn-outline">NBA Scores</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="scores">
-                        <input type="hidden" name="sport" value="americanfootball_nfl">
-                        <button type="submit" class="bf-btn bf-btn-outline">NFL Scores</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="scores">
-                        <input type="hidden" name="sport" value="soccer_epl">
-                        <button type="submit" class="bf-btn bf-btn-outline">EPL Scores</button>
+                        <button type="submit" class="bf-btn bf-btn-primary">Sync Enabled Scores</button>
                     </form>
                 </div>
             </div>
@@ -83,25 +213,7 @@
                     <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="sync_type" value="odds">
-                        <button type="submit" class="bf-btn bf-btn-primary" style="background: #6c757d;">Sync All Odds</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="odds">
-                        <input type="hidden" name="sport" value="basketball_nba">
-                        <button type="submit" class="bf-btn bf-btn-outline">NBA Odds</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="odds">
-                        <input type="hidden" name="sport" value="americanfootball_nfl">
-                        <button type="submit" class="bf-btn bf-btn-outline">NFL Odds</button>
-                    </form>
-                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sync_type" value="odds">
-                        <input type="hidden" name="sport" value="soccer_epl">
-                        <button type="submit" class="bf-btn bf-btn-outline">EPL Odds</button>
+                        <button type="submit" class="bf-btn bf-btn-primary" style="background: #6c757d;">Sync Enabled Odds</button>
                     </form>
                 </div>
             </div>
@@ -111,7 +223,7 @@
                 <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="sync_type" value="full">
-                    <button type="submit" class="bf-btn bf-btn-outline" style="border-color: #dc3545; color: #dc3545;">Sync All (Scores + Odds)</button>
+                    <button type="submit" class="bf-btn bf-btn-outline" style="border-color: #dc3545; color: #dc3545;">Full Sync (Scores + Odds)</button>
                 </form>
             </div>
         </div>
@@ -121,4 +233,36 @@
         </div>
     </div>
 </div>
+
+<script>
+    function switchTab(tabId, el) {
+        // Update tab buttons
+        document.querySelectorAll('.bf-admin-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        
+        // Update content
+        document.querySelectorAll('.bf-tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function filterTable(tableId, inputId) {
+        const input = document.getElementById(inputId);
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById(tableId);
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            const tdTitle = tr[i].getElementsByTagName("td")[0];
+            const tdKey = tr[i].getElementsByTagName("td")[1];
+            if (tdTitle || tdKey) {
+                const txtValue = (tdTitle.textContent || tdTitle.innerText) + " " + (tdKey.textContent || tdKey.innerText);
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
 {% endblock %}

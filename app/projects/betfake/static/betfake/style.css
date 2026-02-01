@@ -456,3 +456,116 @@
     }
 }
 
+/* Admin Management Styles */
+.bf-admin-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--bf-border);
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.bf-admin-tab {
+    padding: 10px 5px;
+    color: var(--bf-text-light);
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+
+.bf-admin-tab.active {
+    color: var(--bf-primary);
+    border-bottom-color: var(--bf-primary);
+}
+
+.bf-admin-table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.bf-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.bf-admin-table th, .bf-admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--bf-border);
+}
+
+.bf-admin-table th {
+    background-color: #f8f9fa;
+    color: var(--bf-text-light);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.bf-admin-table tr:hover {
+    background-color: #fcfcfc;
+}
+
+.bf-admin-search {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--bf-border);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+/* Custom Checkbox / Toggle Switch */
+.bf-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+}
+
+.bf-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.bf-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.bf-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .bf-slider {
+    background-color: var(--bf-primary);
+}
+
+input:checked + .bf-slider:before {
+    transform: translateX(14px);
+}
+
+.bf-compact-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+

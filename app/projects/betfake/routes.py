@@ -547,8 +547,131 @@ def game_detail(game_id):
 @login_required
 @admin_required
 def admin_sync():
-    """Admin page to manually trigger Odds API sync."""
-    return render_template('betfake/admin_sync.html')
+    """Admin page to manually trigger Odds API sync and manage sports."""
+    from app.projects.betfake.models import BetfakeSport
+    
+    # Get all sports from DB
+    all_sports = BetfakeSport.query.order_by(BetfakeSport.sport_title).all()
+    
+    # Group into active vs available
+    # Active = anything with a toggle turned ON
+    active_sports = [s for s in all_sports if s.sync_scores or s.sync_odds or s.show_in_nav]
+    available_sports = [s for s in all_sports if not (s.sync_scores or s.sync_odds or s.show_in_nav)]
+    
+    return render_template('betfake/admin_sync.html', 
+                           active_sports=active_sports, 
+                           available_sports=available_sports)
+
+@betfake_bp.route('/admin/sports/refresh', methods=['POST'])
+@login_required
+@admin_required
+def admin_refresh_sports():
+    """Fetch all sports from the Odds API and update the database registry."""
+    from app.projects.betfake.services.odds_api import OddsAPIService
+    from app.projects.betfake.models import BetfakeSport
+    from app.models import LogEntry
+    
+    api = OddsAPIService()
+    sports_data = api.fetch_sports_list()
+    
+    if not sports_data:
+        flash("Failed to fetch sports from API.", "error")
+        return redirect(url_for('betfake.admin_sync'))
+        
+    new_count = 0
+    updated_count = 0
+    
+    for s in sports_data:
+        sport = BetfakeSport.query.filter_by(sport_key=s['key']).first()
+        if not sport:
+            sport = BetfakeSport(
+                sport_key=s['key'],
+                sport_title=s['title'],
+                has_spreads=True, # Default to True
+                sync_scores=False,
+                sync_odds=False,
+                show_in_nav=False
+            )
+            db.session.add(sport)
+            new_count += 1
+        else:
+            if sport.sport_title != s['title']:
+                sport.sport_title = s['title']
+                updated_count += 1
+                
+    try:
+        db.session.commit()
+        msg = f"Sports registry updated. Added {new_count} new, updated {updated_count} names."
+        flash(msg, "success")
+        db.session.add(LogEntry(project='betfake', category='Admin', description=msg))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating sports registry: {str(e)}", "error")
+        
+    return redirect(url_for('betfake.admin_sync'))
+
+@betfake_bp.route('/admin/sports/update', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_sport_config():
+    """Update settings (sync_scores, sync_odds, show_in_nav, has_spreads) for a sport."""
+    from app.projects.betfake.models import BetfakeSport
+    
+    sport_id = request.form.get('sport_id')
+    sport = BetfakeSport.query.get_or_404(sport_id)
+    
+    # Update fields based on checkboxes (checkboxes only sent if checked)
+    sport.sync_scores = 'sync_scores' in request.form
+    sport.sync_odds = 'sync_odds' in request.form
+    sport.show_in_nav = 'show_in_nav' in request.form
+    sport.has_spreads = 'has_spreads' in request.form
+    
+    try:
+        db.session.commit()
+        flash(f"Updated configuration for {sport.sport_title}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating {sport.sport_title}: {str(e)}", "error")
+        
+    return redirect(url_for('betfake.admin_sync'))
+
+@betfake_bp.route('/admin/sports/add-manual', methods=['POST'])
+@login_required
+@admin_required
+def admin_add_sport_manual():
+    """Manually add a sport key (useful for futures or niche markets)."""
+    from app.projects.betfake.models import BetfakeSport
+    
+    key = request.form.get('sport_key', '').strip()
+    title = request.form.get('sport_title', '').strip()
+    
+    if not key or not title:
+        flash("Both key and title are required.", "error")
+        return redirect(url_for('betfake.admin_sync'))
+        
+    existing = BetfakeSport.query.filter_by(sport_key=key).first()
+    if existing:
+        flash(f"Sport with key {key} already exists.", "warning")
+        return redirect(url_for('betfake.admin_sync'))
+        
+    new_sport = BetfakeSport(
+        sport_key=key,
+        sport_title=title,
+        sync_scores=False,
+        sync_odds=False,
+        show_in_nav=False
+    )
+    db.session.add(new_sport)
+    
+    try:
+        db.session.commit()
+        flash(f"Manually added {title}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adding sport: {str(e)}", "error")
+        
+    return redirect(url_for('betfake.admin_sync'))
 
 @betfake_bp.route('/admin/sync/trigger', methods=['POST'])
 @login_required
@@ -563,20 +686,41 @@ def admin_sync_trigger():
     importer = DataImportService()
     grader = BetGraderService()
     
-    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    # NEW: Fetch dynamic sports from DB based on toggles
+    from app.projects.betfake.models import BetfakeSport
     
+    if sport:
+        # If a specific sport was passed (rare in new UI but kept for compatibility)
+        sports_to_sync_objs = BetfakeSport.query.filter_by(sport_key=sport).all()
+    else:
+        # Get all sports where the relevant sync toggle is ON
+        if sync_type == 'scores':
+            sports_to_sync_objs = BetfakeSport.query.filter_by(sync_scores=True).all()
+        elif sync_type == 'odds':
+            sports_to_sync_objs = BetfakeSport.query.filter_by(sync_odds=True).all()
+        else: # full
+            sports_to_sync_objs = BetfakeSport.query.filter((BetfakeSport.sync_scores == True) | (BetfakeSport.sync_odds == True)).all()
+
+    if not sports_to_sync_objs:
+        flash("No sports are enabled for sync. Please enable them in the registry below.", "warning")
+        return redirect(url_for('betfake.admin_sync'))
+
     try:
         results = []
         
         # 1. Sync Scores
         if sync_type in ['scores', 'full']:
-            for s in sports_to_sync:
-                count = importer.import_scores_for_sport(s)
+            for s_obj in sports_to_sync_objs:
+                if not s_obj.sync_scores and sync_type != 'full':
+                    continue
+                    
+                s_key = s_obj.sport_key
+                count = importer.import_scores_for_sport(s_key)
                 quota = importer.api.last_remaining_quota
-                log_desc = f"UI Sync Scores: {s} updated {count} games."
+                log_desc = f"UI Sync Scores: {s_key} updated {count} games."
                 if quota: log_desc += f" API Quota remaining: {quota}"
                 db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
-                results.append(f"{s} scores ({count})")
+                results.append(f"{s_obj.sport_title} scores ({count})")
             
             # Settle bets
             settled_count = grader.settle_pending_bets()
@@ -586,22 +730,22 @@ def admin_sync_trigger():
 
         # 2. Sync Odds
         if sync_type in ['odds', 'full']:
-            for s in sports_to_sync:
-                game_count = importer.import_games_for_sport(s)
-                markets = "h2h" if s == 'soccer_epl' else "h2h,spreads,totals"
-                market_count = importer.import_odds_for_sport(s, markets_str=markets)
+            for s_obj in sports_to_sync_objs:
+                if not s_obj.sync_odds and sync_type != 'full':
+                    continue
+                    
+                s_key = s_obj.sport_key
+                game_count = importer.import_games_for_sport(s_key)
+                
+                # Use the has_spreads flag from DB
+                markets = "h2h,spreads,totals" if s_obj.has_spreads else "h2h"
+                market_count = importer.import_odds_for_sport(s_key, markets_str=markets)
                 quota = importer.api.last_remaining_quota
                 
-                log_desc = f"UI Sync Odds: {s} imported {game_count} games, {market_count} markets."
+                log_desc = f"UI Sync Odds: {s_key} imported {game_count} games, {market_count} markets."
                 if quota: log_desc += f" API Quota remaining: {quota}"
                 db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
-                results.append(f"{s} odds ({game_count} games, {market_count} markets)")
-                
-                if s == 'basketball_nba':
-                    f_count = importer.import_futures('basketball_nba_championship_winner')
-                    f_quota = importer.api.last_remaining_quota
-                    db.session.add(LogEntry(project='betfake', category='Sync Step', 
-                                            description=f"UI Sync Futures: NBA updated. Quota: {f_quota}"))
+                results.append(f"{s_obj.sport_title} odds ({game_count} games, {market_count} markets)")
                 
                 time.sleep(0.5) # Small buffer between sports
 
