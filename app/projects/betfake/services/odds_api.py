@@ -18,6 +18,7 @@ class OddsAPIService:
         self.bookmakers = "draftkings,fanduel"
         self.regions = "us" # Default region
         self.odds_format = "american"
+        self.last_remaining_quota = None
 
     def _get(self, endpoint, params=None):
         """Internal helper for GET requests."""
@@ -36,6 +37,7 @@ class OddsAPIService:
             # Check remaining quota in headers
             remaining = response.headers.get('x-requests-remaining')
             if remaining:
+                self.last_remaining_quota = remaining
                 logger.info(f"Odds API requests remaining: {remaining}")
                 
             return response.json()

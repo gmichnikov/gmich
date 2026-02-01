@@ -11,63 +11,85 @@ def betfake_cli():
     """BetFake project commands."""
     pass
 
-@betfake_cli.command('sync')
+@betfake_cli.command('sync-scores')
 @click.option('--sport', default=None, help='Specific sport key to sync (e.g. basketball_nba)')
 @with_appcontext
-def sync_command(sport):
-    """Sync games, odds, and scores from the Odds API."""
+def sync_scores_command(sport):
+    """Sync scores only and settle bets."""
     importer = DataImportService()
     grader = BetGraderService()
+    from app.models import LogEntry
+    from app import db
     
-    sports_to_sync = []
-    if sport:
-        sports_to_sync.append(sport)
-    else:
-        # Default sports for V1
-        sports_to_sync = ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
     
     for sport_key in sports_to_sync:
-        click.echo(f"Syncing {sport_key}...")
-        
-        # 1. Sync Games
-        game_count = importer.import_games_for_sport(sport_key)
-        click.echo(f"  - Imported/Updated {game_count} games")
-        
-        # 2. Sync Odds
-        markets = "h2h,spreads,totals"
-        if sport_key == 'soccer_epl':
-            markets = "h2h"
-            
-        market_count = importer.import_odds_for_sport(sport_key, markets_str=markets)
-        click.echo(f"  - Imported {market_count} markets")
-        
-        # 3. Sync Scores
+        click.echo(f"Syncing scores for {sport_key}...")
         score_count = importer.import_scores_for_sport(sport_key)
-        click.echo(f"  - Updated {score_count} completed games with scores")
+        quota = importer.api.last_remaining_quota
         
-        # 4. Sync Futures (only for NBA in V1)
+        log_desc = f"Sync Scores: {sport_key} updated {score_count} games."
+        if quota: log_desc += f" API Quota remaining: {quota}"
+        
+        db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
+        db.session.commit()
+        click.echo(f"  - Updated {score_count} games. Quota: {quota}")
+
+    click.echo("Settling pending bets...")
+    settled_count = grader.settle_pending_bets()
+    db.session.add(LogEntry(project='betfake', category='Settlement', description=f"Settled {settled_count} bets after score sync."))
+    db.session.commit()
+    click.echo(f"Settle complete! {settled_count} bets settled.")
+
+@betfake_cli.command('sync-odds')
+@click.option('--sport', default=None, help='Specific sport key to sync (e.g. basketball_nba)')
+@with_appcontext
+def sync_odds_command(sport):
+    """Sync upcoming games and odds only."""
+    importer = DataImportService()
+    from app.models import LogEntry
+    from app import db
+    
+    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    
+    for sport_key in sports_to_sync:
+        click.echo(f"Syncing odds for {sport_key}...")
+        
+        # 1. Games
+        game_count = importer.import_games_for_sport(sport_key)
+        game_quota = importer.api.last_remaining_quota
+        
+        # 2. Odds
+        markets = "h2h" if sport_key == 'soccer_epl' else "h2h,spreads,totals"
+        market_count = importer.import_odds_for_sport(sport_key, markets_str=markets)
+        odds_quota = importer.api.last_remaining_quota
+        
+        log_desc = f"Sync Odds: {sport_key} imported {game_count} games, {market_count} markets."
+        if odds_quota: log_desc += f" API Quota remaining: {odds_quota}"
+        
+        db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
+        db.session.commit()
+        click.echo(f"  - {game_count} games, {market_count} markets. Quota: {odds_quota}")
+
+        # 3. Futures
         if sport_key == 'basketball_nba':
             click.echo(f"  - Syncing NBA Futures...")
             futures_count = importer.import_futures('basketball_nba_championship_winner')
-            click.echo(f"    - Imported {futures_count} futures markets")
+            f_quota = importer.api.last_remaining_quota
+            db.session.add(LogEntry(project='betfake', category='Sync Step', 
+                                    description=f"Sync Futures: NBA Championship Winner updated. Quota: {f_quota}"))
+            db.session.commit()
 
-    # 5. Settle Bets
-    click.echo("Settling pending bets...")
-    settled_count = grader.settle_pending_bets()
-    click.echo(f"Settle complete! {settled_count} bets settled.")
-    click.echo("Sync complete!")
-
-    # Log the sync event to Admin logs
-    from app.models import LogEntry
-    from app import db
-    log_entry = LogEntry(
-        project='betfake',
-        category='Sync',
-        description=f"Automated/CLI sync completed for {', '.join(sports_to_sync)}. "
-                    f"Settled {settled_count} bets."
-    )
-    db.session.add(log_entry)
-    db.session.commit()
+@betfake_cli.command('sync')
+@click.option('--sport', default=None, help='Specific sport key to sync (e.g. basketball_nba)')
+@click.pass_context
+@with_appcontext
+def sync_command(ctx, sport):
+    """Full sync: scores, then odds."""
+    click.echo("Starting Full Sync...")
+    ctx.invoke(sync_scores_command, sport=sport)
+    ctx.invoke(sync_odds_command, sport=sport)
+    click.echo("Full Sync complete!")
 
 @betfake_cli.command('settle')
 @click.option('--game-id', default=None, type=int, help='Settle bets for a specific game ID')

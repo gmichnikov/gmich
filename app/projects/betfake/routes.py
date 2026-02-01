@@ -554,74 +554,62 @@ def admin_sync():
 @login_required
 @admin_required
 def admin_sync_trigger():
-    """Route to trigger the sync process."""
+    """Route to trigger the sync process with granular control."""
     from app.projects.betfake.services.bet_grader import BetGraderService
     import time
     
     sport = request.form.get('sport')
+    sync_type = request.form.get('sync_type', 'full') # 'scores', 'odds', or 'full'
     importer = DataImportService()
     grader = BetGraderService()
     
+    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    
     try:
-        if sport:
-            game_count = importer.import_games_for_sport(sport)
-            # For sport-specific sync, we need to know which markets to sync
-            markets = "h2h,spreads,totals"
-            if sport == 'soccer_epl':
-                markets = "h2h"
-            market_count = importer.import_odds_for_sport(sport, markets_str=markets)
-            importer.import_scores_for_sport(sport)
-            if sport == 'basketball_nba':
-                importer.import_futures('basketball_nba_championship_winner')
+        results = []
+        
+        # 1. Sync Scores
+        if sync_type in ['scores', 'full']:
+            for s in sports_to_sync:
+                count = importer.import_scores_for_sport(s)
+                quota = importer.api.last_remaining_quota
+                log_desc = f"UI Sync Scores: {s} updated {count} games."
+                if quota: log_desc += f" API Quota remaining: {quota}"
+                db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
+                results.append(f"{s} scores ({count})")
             
-            # Also settle bets
+            # Settle bets
             settled_count = grader.settle_pending_bets()
-            
-            # Log the manual sync
-            log_entry = LogEntry(
-                project='betfake',
-                category='Sync',
-                actor_id=current_user.id,
-                description=f"Admin {current_user.email} triggered manual sync for {sport}. "
-                            f"Imported {game_count} games, {market_count} markets. "
-                            f"Settled {settled_count} bets."
-            )
-            db.session.add(log_entry)
-            db.session.commit()
-            
-            flash(f"Successfully synced {sport} and settled {settled_count} bets.", "success")
-        else:
-            # Full sync
-            synced_sports = []
-            total_games = 0
-            total_markets = 0
-            for s in ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']:
-                total_games += importer.import_games_for_sport(s)
-                markets = "h2h,spreads,totals"
-                if s == 'soccer_epl':
-                    markets = "h2h"
-                total_markets += importer.import_odds_for_sport(s, markets_str=markets)
-                importer.import_scores_for_sport(s)
-                synced_sports.append(s)
-                time.sleep(0.5) # Small buffer
+            db.session.add(LogEntry(project='betfake', category='Settlement', 
+                                    description=f"UI Settlement: Settled {settled_count} bets."))
+            results.append(f"Settled {settled_count} bets")
+
+        # 2. Sync Odds
+        if sync_type in ['odds', 'full']:
+            for s in sports_to_sync:
+                game_count = importer.import_games_for_sport(s)
+                markets = "h2h" if s == 'soccer_epl' else "h2h,spreads,totals"
+                market_count = importer.import_odds_for_sport(s, markets_str=markets)
+                quota = importer.api.last_remaining_quota
                 
-            importer.import_futures('basketball_nba_championship_winner')
-            settled_count = grader.settle_pending_bets()
-            
-            # Log the manual sync
-            log_entry = LogEntry(
-                project='betfake',
-                category='Sync',
-                actor_id=current_user.id,
-                description=f"Admin {current_user.email} triggered full manual sync. "
-                            f"Imported {total_games} games, {total_markets} markets across {', '.join(synced_sports)}. "
-                            f"Settled {settled_count} bets."
-            )
-            db.session.add(log_entry)
-            db.session.commit()
-            
-            flash(f"Full sync completed for {', '.join(synced_sports)}. Settled {settled_count} bets.", "success")
+                log_desc = f"UI Sync Odds: {s} imported {game_count} games, {market_count} markets."
+                if quota: log_desc += f" API Quota remaining: {quota}"
+                db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
+                results.append(f"{s} odds ({game_count}g, {market_count}m)")
+                
+                if s == 'basketball_nba':
+                    f_count = importer.import_futures('basketball_nba_championship_winner')
+                    f_quota = importer.api.last_remaining_quota
+                    db.session.add(LogEntry(project='betfake', category='Sync Step', 
+                                            description=f"UI Sync Futures: NBA updated. Quota: {f_quota}"))
+                
+                time.sleep(0.5) # Small buffer between sports
+
+        db.session.commit()
+        flash(f"Sync complete: {', '.join(results)}", "success")
+        
     except Exception as e:
+        db.session.rollback()
         logging.error(f"Sync error: {str(e)}")
         flash(f"Error during sync: {str(e)}", "error")
         

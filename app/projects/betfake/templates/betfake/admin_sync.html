@@ -45,31 +45,73 @@
         </div>
 
         <div class="bf-admin-card">
-            <h2 class="bf-admin-title">Trigger Data Sync</h2>
-            <p>This will fetch the latest games, odds, and scores from the Odds API. This consumes API quota.</p>
+            <h2 class="bf-admin-title">Granular Sync Controls</h2>
+            <p>Scores are fast and settle bets. Odds are heavy and fetch new lines. All actions consume API quota.</p>
             
-            <div class="bf-sync-options">
-                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="bf-btn bf-btn-primary">Sync All Sports</button>
-                </form>
+            <div style="margin-bottom: 25px;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px;">1. High Priority: Scores & Settlement</h3>
+                <div class="bf-sync-options">
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="scores">
+                        <button type="submit" class="bf-btn bf-btn-primary">Sync All Scores</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="scores">
+                        <input type="hidden" name="sport" value="basketball_nba">
+                        <button type="submit" class="bf-btn bf-btn-outline">NBA Scores</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="scores">
+                        <input type="hidden" name="sport" value="americanfootball_nfl">
+                        <button type="submit" class="bf-btn bf-btn-outline">NFL Scores</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="scores">
+                        <input type="hidden" name="sport" value="soccer_epl">
+                        <button type="submit" class="bf-btn bf-btn-outline">EPL Scores</button>
+                    </form>
+                </div>
+            </div>
 
-                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="sport" value="basketball_nba">
-                    <button type="submit" class="bf-btn bf-btn-outline">Sync NBA</button>
-                </form>
+            <div style="margin-bottom: 25px;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px;">2. Low Priority: Games & Odds</h3>
+                <div class="bf-sync-options">
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="odds">
+                        <button type="submit" class="bf-btn bf-btn-primary" style="background: #6c757d;">Sync All Odds</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="odds">
+                        <input type="hidden" name="sport" value="basketball_nba">
+                        <button type="submit" class="bf-btn bf-btn-outline">NBA Odds</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="odds">
+                        <input type="hidden" name="sport" value="americanfootball_nfl">
+                        <button type="submit" class="bf-btn bf-btn-outline">NFL Odds</button>
+                    </form>
+                    <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sync_type" value="odds">
+                        <input type="hidden" name="sport" value="soccer_epl">
+                        <button type="submit" class="bf-btn bf-btn-outline">EPL Odds</button>
+                    </form>
+                </div>
+            </div>
 
+            <div>
+                <h3 style="font-size: 1rem; margin-bottom: 15px;">3. Full Refresh</h3>
                 <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="sport" value="americanfootball_nfl">
-                    <button type="submit" class="bf-btn bf-btn-outline">Sync NFL</button>
-                </form>
-
-                <form action="{{ url_for('betfake.admin_sync_trigger') }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="sport" value="soccer_epl">
-                    <button type="submit" class="bf-btn bf-btn-outline">Sync EPL</button>
+                    <input type="hidden" name="sync_type" value="full">
+                    <button type="submit" class="bf-btn bf-btn-outline" style="border-color: #dc3545; color: #dc3545;">Sync All (Scores + Odds)</button>
                 </form>
             </div>
         </div>
