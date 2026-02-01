@@ -34,6 +34,11 @@ class BetfakeSport(db.Model):
     sync_odds = db.Column(db.Boolean, default=False)
     show_in_nav = db.Column(db.Boolean, default=False)
     is_outright = db.Column(db.Boolean, default=False)
+    preferred_label = db.Column(db.String(100), nullable=True)
+
+    @property
+    def display_title(self):
+        return self.preferred_label if self.preferred_label else self.sport_title
 
     def __repr__(self):
         return f'<BetfakeSport {self.sport_title} ({self.sport_key})>'
@@ -64,6 +69,17 @@ class BetfakeGame(db.Model):
     home_score = db.Column(db.Integer, nullable=True)
     away_score = db.Column(db.Integer, nullable=True)
     last_update = db.Column(db.DateTime, nullable=True)
+
+    @property
+    def display_sport_title(self):
+        """Returns the preferred label of the sport if available, otherwise the API title."""
+        # Using a direct query here. In a high-traffic app this might be better handled 
+        # with a relationship or pre-fetching, but for this app it's fine.
+        from app.projects.betfake.models import BetfakeSport
+        sport = BetfakeSport.query.filter_by(sport_key=self.sport_key).first()
+        if sport:
+            return sport.display_title
+        return self.sport_title
 
     def __repr__(self):
         if self.home_team and self.away_team:

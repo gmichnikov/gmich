@@ -259,7 +259,7 @@ def browse_sport(sport_key):
 
     return render_template('betfake/sports.html', 
                            sport_key=sport_key, 
-                           sport_label=sport.sport_title, # Use title from DB
+                           sport_label=sport.display_title, # Use title from DB (preferred if exists)
                            upcoming_games=upcoming_games,
                            recent_games=recent_games,
                            now=now,
@@ -409,7 +409,7 @@ def futures():
         ).first()
         
         if market:
-            sport_title = game.sport_title
+            sport_title = game.display_sport_title
             if sport_title not in organized_futures:
                 organized_futures[sport_title] = []
             
@@ -417,7 +417,7 @@ def futures():
             sorted_outcomes = sorted(market.outcomes, key=lambda x: x.odds)
             
             organized_futures[sport_title].append({
-                'label': game.sport_title,
+                'label': game.display_sport_title,
                 'end_date': game.commence_time,
                 'outcomes': sorted_outcomes
             })
@@ -662,6 +662,9 @@ def admin_update_sport_config():
         sport.has_spreads = 'has_spreads' in request.form
     if 'is_outright_sent' in request.form or 'is_outright' in request.form:
         sport.is_outright = 'is_outright' in request.form
+    if 'preferred_label_sent' in request.form:
+        new_label = request.form.get('preferred_label', '').strip()
+        sport.preferred_label = new_label if new_label else None
     
     # Fallback for the "Enable All" button which sends explicit 'on' values
     if request.form.get('all_enabled') == 'true':
@@ -774,7 +777,7 @@ def admin_sync_trigger():
                 log_desc = f"UI Sync Scores: {s_key} updated {count} games."
                 if quota: log_desc += f" API Quota remaining: {quota}"
                 db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
-                results.append(f"{s_obj.sport_title} scores ({count})")
+                results.append(f"{s_obj.display_title} scores ({count})")
             
             # Settle bets
             settled_count = grader.settle_pending_bets()
@@ -805,7 +808,7 @@ def admin_sync_trigger():
                 log_desc = f"UI Sync Odds: {s_key} imported {game_count} games, {market_count} markets."
                 if quota: log_desc += f" API Quota remaining: {quota}"
                 db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
-                results.append(f"{s_obj.sport_title} odds ({game_count} games, {market_count} markets)")
+                results.append(f"{s_obj.display_title} odds ({game_count} games, {market_count} markets)")
                 
                 time.sleep(0.5) # Small buffer between sports
 

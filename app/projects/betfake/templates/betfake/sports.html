@@ -43,7 +43,7 @@
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link {% if sport_key == sport.sport_key %}active{% endif %}">{{ sport.sport_title }}</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link {% if sport_key == sport.sport_key %}active{% endif %}">{{ sport.display_title }}</a>
             {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>

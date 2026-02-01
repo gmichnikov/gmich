@@ -42,7 +42,7 @@
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.sport_title }}</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.display_title }}</a>
             {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
@@ -78,6 +78,7 @@
                         <thead>
                             <tr>
                                 <th>Sport Title</th>
+                                <th>Preferred Label</th>
                                 <th>Key</th>
                                 <th>Nav</th>
                                 <th>Sync Odds</th>
@@ -91,16 +92,23 @@
                             {% for sport in reg_active %}
                             <tr>
                                 <td><strong>{{ sport.sport_title }}</strong></td>
-                                <td><code>{{ sport.sport_key }}</code></td>
                                 <form action="{{ url_for('betfake.admin_update_sport_config') }}" method="POST">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="sport_id" value="{{ sport.id }}">
+                                    <td>
+                                        <input type="text" name="preferred_label" value="{{ sport.preferred_label or '' }}" 
+                                               placeholder="Optional nickname" class="bf-form-input" 
+                                               style="width: 120px; font-size: 0.8rem; padding: 4px 8px;"
+                                               onchange="this.form.submit()">
+                                    </td>
+                                    <td><code>{{ sport.sport_key }}</code></td>
                                     <!-- Sentinel fields to tell the backend which toggles were present -->
                                     <input type="hidden" name="show_in_nav_sent" value="1">
                                     <input type="hidden" name="sync_odds_sent" value="1">
                                     <input type="hidden" name="sync_scores_sent" value="1">
                                     <input type="hidden" name="is_outright_sent" value="1">
                                     <input type="hidden" name="has_spreads_sent" value="1">
+                                    <input type="hidden" name="preferred_label_sent" value="1">
                                     <td>
                                         <label class="bf-switch">
                                             <input type="checkbox" name="show_in_nav" {% if sport.show_in_nav %}checked{% endif %} onchange="this.form.submit()">

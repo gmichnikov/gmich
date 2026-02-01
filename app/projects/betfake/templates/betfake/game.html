@@ -74,7 +74,7 @@
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.sport_title }}</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.display_title }}</a>
             {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link">History</a>
@@ -83,7 +83,7 @@
         <div class="bf-game-center-header">
             <div style="font-size: 0.9rem; color: #999; margin-bottom: 10px;">
                 <a href="{{ url_for('betfake.browse_sport', sport_key=game.sport_key) }}" style="color: inherit; text-decoration: none; font-weight: 500;" onmouseover="this.style.color='var(--bf-primary)'" onmouseout="this.style.color='inherit'">
-                    {{ game.sport_title }}
+                    {{ game.display_sport_title }}
                 </a> | {{ (game.commence_time|bf_local_time).strftime('%b %d, %Y %I:%M %p %Z') }}
             </div>
             
@@ -235,7 +235,7 @@
 
         <div style="margin-top: 30px; text-align: center; display: flex; justify-content: center; gap: 15px;">
             <a href="{{ url_for('betfake.browse_sport', sport_key=game.sport_key) }}" class="bf-btn bf-btn-primary">
-                Back to {{ game.sport_title }}
+                Back to {{ game.display_sport_title }}
             </a>
             <a href="{{ url_for('betfake.index') }}" class="bf-btn bf-btn-outline">Back to Dashboard</a>
         </div>

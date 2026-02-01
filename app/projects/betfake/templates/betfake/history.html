@@ -34,7 +34,7 @@
         <nav class="bf-nav-tabs">
             <a href="{{ url_for('betfake.index') }}" class="bf-nav-link">Dashboard</a>
             {% for sport in active_sports %}
-            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.sport_title }}</a>
+            <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" class="bf-nav-link">{{ sport.display_title }}</a>
             {% endfor %}
             <a href="{{ url_for('betfake.futures') }}" class="bf-nav-link">Futures</a>
             <a href="{{ url_for('betfake.history') }}" class="bf-nav-link active">History</a>
@@ -73,7 +73,7 @@
                     <option value="all">All Sports</option>
                     {% set found_sports = [] %}
                     {% for bet in bets %}
-                        {% set sport_title = bet.outcome.market.game.sport_title %}
+                        {% set sport_title = bet.outcome.market.game.display_sport_title %}
                         {% if sport_title not in found_sports %}
                             <option value="{{ sport_title }}">{{ sport_title }}</option>
                             {% set _ = found_sports.append(sport_title) %}
@@ -136,12 +136,12 @@
             <tbody>
                 {% for bet in bets %}
                 {% set market_type = bet.outcome.market.type.value %}
-                {% set sport_title = bet.outcome.market.game.sport_title %}
+                {% set sport_title = bet.outcome.market.game.display_sport_title %}
                 {% set search_text = "" %}
                 {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
                     {% set search_text = bet.outcome.market.game.home_team ~ " " ~ bet.outcome.market.game.away_team ~ " " ~ bet|bf_bet_outcome %}
                 {% else %}
-                    {% set search_text = bet.outcome.market.game.sport_title ~ " " ~ bet|bf_bet_outcome %}
+                    {% set search_text = bet.outcome.market.game.display_sport_title ~ " " ~ bet|bf_bet_outcome %}
                 {% endif %}
                 <tr class="bf-history-row" 
                     data-account="{{ bet.account_id }}" 
@@ -160,7 +160,7 @@
                                     {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
                                 </a>
                             {% else %}
-                                {{ bet.outcome.market.game.sport_title }}
+                                {{ bet.outcome.market.game.display_sport_title }}
                             {% endif %}
                             <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
                                 ({{ (bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
