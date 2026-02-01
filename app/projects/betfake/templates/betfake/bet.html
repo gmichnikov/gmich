@@ -76,7 +76,7 @@
             <div class="bf-bet-header">
                 <div class="bf-bet-game">
                     {% if game.home_team and game.away_team %}
-                        {{ game.home_team }} vs {{ game.away_team }}
+                        {{ game.away_team }} @ {{ game.home_team }}
                     {% else %}
                         {{ game.display_sport_title }}
                     {% endif %}

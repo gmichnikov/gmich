@@ -102,7 +102,7 @@
                         <div class="bf-bet-meta">
                             {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
                                 <a href="{{ url_for('betfake.game_detail', game_id=bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                    {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                                    {{ bet.outcome.market.game.away_team }} @ {{ bet.outcome.market.game.home_team }}
                                 </a>
                             {% else %}
                                 {{ bet.outcome.market.game.display_sport_title }}
@@ -152,7 +152,7 @@
                         <div class="bf-bet-meta">
                             {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
                                 <a href="{{ url_for('betfake.game_detail', game_id=bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                    {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                                    {{ bet.outcome.market.game.away_team }} @ {{ bet.outcome.market.game.home_team }}
                                 </a>
                             {% else %}
                                 {{ bet.outcome.market.game.display_sport_title }}

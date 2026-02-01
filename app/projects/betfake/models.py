@@ -84,7 +84,7 @@ class BetfakeGame(db.Model):
 
     def __repr__(self):
         if self.home_team and self.away_team:
-            return f'<BetfakeGame {self.home_team} vs {self.away_team} @ {self.commence_time}>'
+            return f'<BetfakeGame {self.away_team} @ {self.home_team} @ {self.commence_time}>'
         return f'<BetfakeGame {self.sport_title} @ {self.commence_time}>'
 
 class BetfakeMarket(db.Model):

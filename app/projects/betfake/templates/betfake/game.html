@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ game.home_team }} vs {{ game.away_team }} - BetFake{% endblock %}
+{% block title %}{{ game.away_team }} @ {{ game.home_team }} - BetFake{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('betfake.static', filename='betfake/style.css') }}">
@@ -89,25 +89,6 @@
             
             <div class="bf-score-display">
                 <div class="bf-team-score">
-                    <span class="bf-team-name-big {% if game.status.value == 'Completed' and game.home_score is not none and game.away_score is not none and game.home_score > game.away_score %}bf-winner{% endif %}">
-                        {{ game.home_team }}
-                    </span>
-                    {% if game.home_score is not none %}
-                        <span class="bf-score-val {% if game.status.value == 'Completed' and game.away_score is not none and game.home_score > game.away_score %}bf-winner{% endif %}">{{ game.home_score }}</span>
-                    {% else %}
-                        <span class="bf-score-val" style="color: #eee;">--</span>
-                    {% endif %}
-                    <span class="bf-team-label">HOME</span>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: #ccc;">VS</span>
-                    <span class="bf-game-status-big bf-game-status-{{ game.status.value.lower() }}">
-                        {{ game.status.value }}
-                    </span>
-                </div>
-
-                <div class="bf-team-score">
                     <span class="bf-team-name-big {% if game.status.value == 'Completed' and game.home_score is not none and game.away_score is not none and game.away_score > game.home_score %}bf-winner{% endif %}">
                         {{ game.away_team }}
                     </span>
@@ -117,6 +98,25 @@
                         <span class="bf-score-val" style="color: #eee;">--</span>
                     {% endif %}
                     <span class="bf-team-label">AWAY</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <span style="font-weight: bold; color: #ccc;">@</span>
+                    <span class="bf-game-status-big bf-game-status-{{ game.status.value.lower() }}">
+                        {{ game.status.value }}
+                    </span>
+                </div>
+
+                <div class="bf-team-score">
+                    <span class="bf-team-name-big {% if game.status.value == 'Completed' and game.home_score is not none and game.away_score is not none and game.home_score > game.away_score %}bf-winner{% endif %}">
+                        {{ game.home_team }}
+                    </span>
+                    {% if game.home_score is not none %}
+                        <span class="bf-score-val {% if game.status.value == 'Completed' and game.away_score is not none and game.home_score > game.away_score %}bf-winner{% endif %}">{{ game.home_score }}</span>
+                    {% else %}
+                        <span class="bf-score-val" style="color: #eee;">--</span>
+                    {% endif %}
+                    <span class="bf-team-label">HOME</span>
                 </div>
             </div>
         </div>

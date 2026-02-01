@@ -139,7 +139,7 @@
                 {% set sport_title = bet.outcome.market.game.display_sport_title %}
                 {% set search_text = "" %}
                 {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
-                    {% set search_text = bet.outcome.market.game.home_team ~ " " ~ bet.outcome.market.game.away_team ~ " " ~ bet|bf_bet_outcome %}
+                    {% set search_text = bet.outcome.market.game.away_team ~ " " ~ bet.outcome.market.game.home_team ~ " " ~ bet|bf_bet_outcome %}
                 {% else %}
                     {% set search_text = bet.outcome.market.game.display_sport_title ~ " " ~ bet|bf_bet_outcome %}
                 {% endif %}
@@ -157,7 +157,7 @@
                         <div style="font-size: 0.8rem; color: #666;">
                             {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
                                 <a href="{{ url_for('betfake.game_detail', game_id=bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                    {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                                    {{ bet.outcome.market.game.away_team }} @ {{ bet.outcome.market.game.home_team }}
                                 </a>
                             {% else %}
                                 {{ bet.outcome.market.game.display_sport_title }}

@@ -66,7 +66,7 @@
                 <div class="bf-game-card">
                     <div class="bf-game-header">
                         <a href="{{ url_for('betfake.game_detail', game_id=game.id) }}" style="text-decoration: none; color: inherit;">
-                            <span class="bf-game-teams">{{ game.home_team }} vs {{ game.away_team }}</span>
+                            <span class="bf-game-teams">{{ game.away_team }} @ {{ game.home_team }}</span>
                         </a>
                         <span class="bf-game-time">{{ (game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }}</span>
                     </div>

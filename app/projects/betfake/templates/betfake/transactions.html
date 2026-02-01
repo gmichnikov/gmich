@@ -137,7 +137,7 @@
                 {% set search_text = "" %}
                 {% if tx.bet %}
                     {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                        {% set search_text = tx.bet.outcome.market.game.home_team ~ " " ~ tx.bet.outcome.market.game.away_team ~ " " ~ tx.bet|bf_bet_outcome %}
+                        {% set search_text = tx.bet.outcome.market.game.away_team ~ " " ~ tx.bet.outcome.market.game.home_team ~ " " ~ tx.bet|bf_bet_outcome %}
                     {% else %}
                         {% set search_text = tx.bet.outcome.market.game.display_sport_title ~ " " ~ tx.bet|bf_bet_outcome %}
                     {% endif %}
@@ -156,7 +156,7 @@
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
                                     <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                        {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                        {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
                                     </a>
                                 {% else %}
                                     {{ tx.bet.outcome.market.game.display_sport_title }}
@@ -174,7 +174,7 @@
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
                                     <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                        {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
+                                        {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
                                     </a>
                                 {% else %}
                                     {{ tx.bet.outcome.market.game.display_sport_title }}

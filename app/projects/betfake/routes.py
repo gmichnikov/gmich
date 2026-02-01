@@ -363,7 +363,7 @@ def place_bet(outcome_id):
     db.session.add(transaction)
     
     # Log the bet placement
-    matchup = f"{game.home_team} vs {game.away_team}" if game.home_team else game.sport_title
+    matchup = f"{game.away_team} @ {game.home_team}" if game.home_team else game.display_sport_title
     odds_str = f"+{bet.odds_at_time}" if bet.odds_at_time > 0 else str(bet.odds_at_time)
     log_entry = LogEntry(
         project='betfake',

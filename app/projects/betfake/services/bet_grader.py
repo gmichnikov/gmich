@@ -140,7 +140,7 @@ class BetGraderService:
                 
                 # Log the settlement to Admin logs
                 from app.models import LogEntry
-                matchup = f"{game.home_team} vs {game.away_team}" if game.home_team else game.sport_title
+                matchup = f"{game.away_team} @ {game.home_team}" if game.home_team else game.display_sport_title
                 log_desc = f"Settled bet {bet.id}: {bet.outcome_name_at_time} in {matchup} as {new_status.value}."
                 if new_status == BetStatus.Won:
                     log_desc += f" Payout: ${bet.potential_payout:,.2f}"
