@@ -24,6 +24,19 @@ class TransactionType(enum.Enum):
     Payout = "Payout"
     Account_Creation = "Account_Creation"
 
+class BetfakeSport(db.Model):
+    __tablename__ = 'betfake_sports'
+    id = db.Column(db.Integer, primary_key=True)
+    sport_key = db.Column(db.String(100), unique=True, nullable=False)
+    sport_title = db.Column(db.String(100), nullable=False)
+    has_spreads = db.Column(db.Boolean, default=True)
+    sync_scores = db.Column(db.Boolean, default=False)
+    sync_odds = db.Column(db.Boolean, default=False)
+    show_in_nav = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f'<BetfakeSport {self.sport_title} ({self.sport_key})>'
+
 class BetfakeAccount(db.Model):
     __tablename__ = 'betfake_accounts'
     id = db.Column(db.Integer, primary_key=True)

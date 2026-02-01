@@ -11,14 +11,14 @@ We will create a new table to serve as the master registry for all sports suppor
 ### Fields:
 - `id` (Primary Key)
 - `sport_key` (String, Unique): e.g., `basketball_nba`, `basketball_nba_championship_winner`.
-- `sport_title` (String): e.g., "NBA", "NBA Championship Winner".
+- `sport_title` (String): The display name (e.g., "NBA", "NFL"). **This replaces the hardcoded label logic.**
 - `has_spreads` (Boolean): If true, the UI and sync will look for Spreads/Totals.
 - `sync_scores` (Boolean): If true, `sync-scores` command will fetch results for this sport.
 - `sync_odds` (Boolean): If true, `sync-odds` command will fetch upcoming games and lines.
 - `show_in_nav` (Boolean): If true, the sport appears in the Dashboard and navigation tabs.
 
-### Note on Futures:
-Futures are treated as **separate sports rows** in the database (matching the Odds API structure). This allows independent control over syncing odds for a championship winner vs. scores for the actual season games.
+### Note on Collisions & Futures:
+Futures (e.g., `basketball_nba_championship_winner`) are treated as **separate rows**. Because we use the unique `sport_key` from the API as our identifier, there is no risk of colliding a future with a regular game.
 
 ---
 
@@ -27,11 +27,12 @@ Futures are treated as **separate sports rows** in the database (matching the Od
 ### A. Navigation & UI
 - Remove hardcoded links for NBA, NFL, and Soccer from all templates.
 - Update the `index` route to fetch all sports where `show_in_nav=True`.
-- **Sorting**: Active sports (sync or nav = True) will be sorted to the top, then alphabetically.
+- **Labels**: Instead of stripping "americanfootball_" from keys, we will simply display the `sport_title` stored in the database.
+- **Dashboard**: Update the "Browse NBA Games" button on the dashboard to dynamically link to the first active sport.
 
 ### B. Sync Commands & Services
 - Update `sync-scores` and `sync-odds` in `commands.py` to loop through sports defined in the database where the respective sync flag is `True`.
-- This automatically handles API quota management: simply toggle a sport "OFF" to stop making calls for it.
+- Update `DataImportService` to use the `has_spreads` flag from the database instead of checking if the key is `soccer_epl`.
 
 ---
 
@@ -41,33 +42,33 @@ A new section on the **BetFake Admin Sync** page:
 ### Features:
 - **Registry Table**: List all sports in the DB with toggle switches for Scores, Odds, and Nav.
 - **Clutter Management**:
-    - **Live vs. Available Tabs**: Separate "Active" (enabled) sports from the hundreds of "Inactive" ones.
+    - **Active vs. Available Tabs**: Separate sports with any toggle enabled from the hundreds of inactive ones.
     - **Instant Search/Filter**: A search box to quickly find sports by title or key (e.g., "NHL").
 - **"Refresh Sport List" Button**: 
     - Calls the Odds API `/sports` endpoint.
     - **New Sports**: Automatically adds them to the DB (all toggles set to `OFF`).
     - **Existing Sports**: Updates the `sport_title` if it has changed.
-    - **Missing Sports**: If a sport is in the DB but NOT in the API response (e.g., off-season), it is **preserved** so settings aren't lost.
 - **Manual Add**: Option to add a specific `sport_key` manually if needed.
 
 ---
 
-## 4. Implementation Phases
+## 4. Implementation Phases (Re-ordered to avoid empty nav)
 
-### Phase 1: Database & Seeding
-1. Define the `BetfakeSport` model in `models.py`.
+### Phase 1: Database & Model
+1. Define the `BetfakeSport` model in `models.py`. (**Done**)
 2. **User Action**: Run `flask db migrate` and `upgrade`.
-3. Create a seed script to add the initial 3 sports (NBA, NFL, Soccer) plus NBA Futures into the table with their current settings.
 
-### Phase 2: Refactor Navigation
-1. Create a context processor or update routes to provide the dynamic `active_sports` list to templates.
-2. Update all navigation templates to loop through this list.
-
-### Phase 3: Refactor Sync Logic
-1. Update `DataImportService` and `commands.py` to query the `BetfakeSport` table instead of using hardcoded lists.
-2. Update the `admin_sync_trigger` to respect these dynamic settings.
-
-### Phase 4: Admin UI
+### Phase 2: Admin UI (The Control Panel)
 1. Build the management table on the Admin page.
 2. Implement the "Refresh Sport List" API integration.
 3. Add the toggle submission logic.
+4. **User Action**: Refresh the list and turn "ON" NBA, NFL, and Soccer so they exist in the DB.
+
+### Phase 3: Refactor Navigation
+1. Create a context processor or update routes to provide the dynamic `active_sports` list to templates.
+2. Update all navigation templates to loop through this list.
+3. Update the Dashboard "Browse" button.
+
+### Phase 4: Refactor Sync Logic
+1. Update `DataImportService` and `commands.py` to query the `BetfakeSport` table.
+2. Update the `admin_sync_trigger` to respect these dynamic settings.
