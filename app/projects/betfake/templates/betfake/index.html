@@ -103,6 +103,9 @@
                 <div class="bf-bet-wager">
                     <span class="bf-wager-label">Wager</span>
                     <span class="bf-wager-amount">{{ bet.wager_amount|bf_currency }}</span>
+                    <span style="font-size: 0.7rem; color: var(--bf-secondary); margin-top: 4px;">
+                        To win: {{ (bet.potential_payout - bet.wager_amount)|bf_currency }}
+                    </span>
                 </div>
                 </li>
                 {% endfor %}

@@ -3,7 +3,7 @@ from datetime import datetime
 from app import db
 from app.projects.betfake.models import (
     BetfakeBet, BetfakeGame, BetfakeAccount, 
-    BetfakeTransaction, BetStatus, TransactionType, MarketType
+    BetfakeTransaction, BetStatus, TransactionType, MarketType, GameStatus
 )
 
 logger = logging.getLogger(__name__)
