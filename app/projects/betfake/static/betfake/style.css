@@ -491,7 +491,7 @@
 }
 
 .bf-admin-table th, .bf-admin-table td {
-    padding: 12px 15px;
+    padding: 10px 8px;
     text-align: left;
     border-bottom: 1px solid var(--bf-border);
 }
@@ -515,6 +515,15 @@
     border-radius: 5px;
     margin-bottom: 20px;
     font-size: 0.95rem;
+}
+
+.bf-admin-table td code {
+    font-size: 0.75rem;
+    color: var(--bf-text-light);
+    background: #f1f3f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    word-break: break-all;
 }
 
 /* Custom Checkbox / Toggle Switch */

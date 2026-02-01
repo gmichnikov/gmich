@@ -556,12 +556,20 @@ def game_detail(game_id):
             if market:
                 display_markets[mt.value] = market
                 
+    # Get the latest "Closing" or "Last Known" lines for historical reference
+    historical_markets = {}
+    for mt in [MarketType.h2h, MarketType.spreads, MarketType.totals]:
+        m = BetfakeMarket.query.filter_by(game_id=game.id, type=mt).order_by(BetfakeMarket.created_at.desc()).first()
+        if m:
+            historical_markets[mt.value] = m
+
     return render_template('betfake/game.html', 
                            game=game, 
                            user_bets=user_bets,
                            game_pl=game_pl,
                            formatted_game_pl=formatted_game_pl,
                            display_markets=display_markets,
+                           historical_markets=historical_markets,
                            now=now)
 
 
