@@ -27,6 +27,23 @@
     }
     .bf-amount-positive { color: var(--bf-success); font-weight: bold; }
     .bf-amount-negative { color: var(--bf-danger); font-weight: bold; }
+    .bf-transaction-table tbody tr:nth-child(even) {
+        background-color: #fcfcfc;
+    }
+    .bf-transaction-table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    .bf-type-pill {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+    .bf-type-wager { background: #e9ecef; color: #495057; border: 1px solid #dee2e6; }
+    .bf-type-payout { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .bf-type-account_creation { background: #cfe2ff; color: #084298; border: 1px solid #b6d4fe; }
 </style>
 {% endblock %}
 
@@ -47,13 +64,53 @@
             <p>Activity for <strong>{{ account.name }}</strong></p>
         </div>
 
-        <div class="bf-stat-card" style="margin-bottom: 30px;">
-            <span class="bf-stat-label">Current Balance</span>
-            <span class="bf-stat-value">{{ account.balance|bf_currency }}</span>
+        <div class="bf-stats-grid">
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Current Balance</span>
+                <span class="bf-stat-value">{{ account.balance|bf_currency }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Account Equity</span>
+                <span class="bf-stat-value" style="color: var(--bf-accent);">{{ account_equity|bf_currency }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Profit / Loss</span>
+                <span class="bf-stat-value {% if account_pl > 0 %}bf-positive{% elif account_pl < 0 %}bf-negative{% endif %}">
+                    {{ formatted_account_pl }}
+                </span>
+            </div>
         </div>
 
         {% if transactions %}
-        <table class="bf-transaction-table">
+        <div class="bf-filters" style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; align-items: center;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label for="type-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Filter by Type</label>
+                <select id="type-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border); min-width: 150px;">
+                    <option value="all">All Types</option>
+                    {% set found_types = [] %}
+                    {% for tx in transactions %}
+                        {% set type_label = tx.type.value.replace('_', ' ') %}
+                        {% if type_label not in found_types %}
+                            <option value="{{ type_label|lower }}">{{ type_label }}</option>
+                            {% set _ = found_types.append(type_label) %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+                <label for="search-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Search Bets (Team/Sport)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="search-filter" class="bf-input" placeholder="Search team names..." style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border); flex-grow: 1;">
+                    <button id="reset-filters" class="bf-btn bf-btn-outline" style="padding: 8px 15px; font-size: 0.8rem; white-space: nowrap; display: none;">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="filter-summary" style="margin-bottom: 15px; font-size: 0.85rem; color: #666; font-weight: 500;">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <table class="bf-transaction-table" id="transactions-table">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -64,14 +121,26 @@
             </thead>
             <tbody>
                 {% for tx in transactions %}
-                <tr>
+                {% set type_label = tx.type.value.replace('_', ' ') %}
+                {% set search_text = "" %}
+                {% if tx.bet %}
+                    {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
+                        {% set search_text = tx.bet.outcome.market.game.home_team ~ " " ~ tx.bet.outcome.market.game.away_team ~ " " ~ tx.bet|bf_bet_outcome %}
+                    {% else %}
+                        {% set search_text = tx.bet.outcome.market.game.sport_title ~ " " ~ tx.bet|bf_bet_outcome %}
+                    {% endif %}
+                {% endif %}
+                <tr class="bf-tx-row" 
+                    data-type="{{ type_label|lower }}" 
+                    data-search="{{ search_text|lower }}"
+                    data-amount="{{ tx.amount }}">
                     <td>{{ (tx.created_at|bf_local_time).strftime('%b %d, %Y %I:%M %p') }}</td>
                     <td>
-                        <span style="text-transform: capitalize;">{{ tx.type.value.replace('_', ' ') }}</span>
+                        <span class="bf-type-pill bf-type-{{ tx.type.value.lower() }}">{{ type_label }}</span>
                     </td>
                     <td>
                         {% if tx.type.value == 'Wager' and tx.bet %}
-                            <div style="font-weight: bold;">Wager on {{ tx.bet|bf_bet_outcome }}</div>
+                            <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
                                     {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
@@ -87,7 +156,7 @@
                                 </span>
                             </div>
                         {% elif tx.type.value == 'Payout' and tx.bet %}
-                            <div style="font-weight: bold;">Payout for {{ tx.bet|bf_bet_outcome }}</div>
+                            <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
                             <div style="font-size: 0.8rem; color: #666;">
                                 {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
                                     {{ tx.bet.outcome.market.game.home_team }} vs {{ tx.bet.outcome.market.game.away_team }}
@@ -112,11 +181,91 @@
                         <span class="{% if tx.amount > 0 %}bf-amount-positive{% else %}bf-amount-negative{% endif %}">
                             {% if tx.amount > 0 %}+{% endif %}{{ tx.amount|bf_currency }}
                         </span>
+                        <div style="font-size: 0.75rem; color: #999; margin-top: 2px;">
+                            Bal: {{ tx.balance_after|bf_currency }}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+        <div id="no-results" style="display: none; padding: 40px; text-align: center; background: white; border-radius: 10px; margin-top: 10px;">
+            <p style="color: #666;">No transactions match your filters.</p>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const typeFilter = document.getElementById('type-filter');
+                const searchFilter = document.getElementById('search-filter');
+                const resetBtn = document.getElementById('reset-filters');
+                const rows = document.querySelectorAll('.bf-tx-row');
+                const noResults = document.getElementById('no-results');
+                const table = document.getElementById('transactions-table');
+                const summaryDiv = document.getElementById('filter-summary');
+
+                function formatCurrencyJS(amount) {
+                    const absAmount = Math.abs(amount);
+                    const formatted = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                    }).format(absAmount);
+                    return amount < 0 ? `-${formatted}` : (amount > 0 ? `+${formatted}` : formatted);
+                }
+
+                function filterTable() {
+                    const typeValue = typeFilter.value;
+                    const searchValue = searchFilter.value.toLowerCase().trim();
+                    let visibleCount = 0;
+                    let netChange = 0;
+
+                    // Show/hide reset button
+                    const isFiltered = typeValue !== 'all' || searchValue !== '';
+                    resetBtn.style.display = isFiltered ? 'block' : 'none';
+
+                    rows.forEach(row => {
+                        const rowType = row.getAttribute('data-type');
+                        const rowSearch = row.getAttribute('data-search');
+                        const rowAmount = parseFloat(row.getAttribute('data-amount') || 0);
+
+                        const typeMatch = typeValue === 'all' || rowType === typeValue;
+                        const searchMatch = !searchValue || rowSearch.includes(searchValue);
+
+                        if (typeMatch && searchMatch) {
+                            row.style.display = '';
+                            visibleCount++;
+                            netChange += rowAmount;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    if (visibleCount === 0) {
+                        table.style.display = 'none';
+                        noResults.style.display = 'block';
+                        summaryDiv.style.display = 'none';
+                    } else {
+                        table.style.display = '';
+                        noResults.style.display = 'none';
+                        summaryDiv.style.display = 'block';
+                        summaryDiv.innerHTML = `Showing ${visibleCount} transactions | Net Change: <span style="color: ${netChange >= 0 ? 'var(--bf-success)' : 'var(--bf-danger)'}">${formatCurrencyJS(netChange)}</span>`;
+                    }
+                }
+
+                function resetFilters() {
+                    typeFilter.value = 'all';
+                    searchFilter.value = '';
+                    filterTable();
+                }
+
+                typeFilter.addEventListener('change', filterTable);
+                searchFilter.addEventListener('input', filterTable);
+                resetBtn.addEventListener('click', resetFilters);
+
+                // Initial run to show summary
+                filterTable();
+            });
+        </script>
         {% else %}
         <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; border: 2px dashed var(--bf-border);">
             <p>No transactions found for this account.</p>

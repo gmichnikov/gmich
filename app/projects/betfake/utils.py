@@ -22,7 +22,9 @@ def format_odds_display(odds):
     return str(odds)
 
 def format_currency(amount):
-    """Format amount as $X.XX."""
+    """Format amount as $X.XX or -$X.XX for negative values."""
+    if amount < 0:
+        return f"-${abs(amount):,.2f}"
     return f"${amount:,.2f}"
 
 def get_user_localized_time(utc_dt, user_timezone='UTC'):

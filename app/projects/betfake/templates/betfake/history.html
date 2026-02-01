@@ -25,17 +25,6 @@
         font-size: 0.75rem;
         letter-spacing: 1px;
     }
-    .bf-status-pill {
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
-    .bf-status-won { background: #d4edda; color: #155724; }
-    .bf-status-lost { background: #f8d7da; color: #721c24; }
-    .bf-status-pending { background: #e2e3e5; color: #383d41; }
-    .bf-status-push { background: #fff3cd; color: #856404; }
 </style>
 {% endblock %}
 
@@ -56,23 +45,84 @@
             <p>Your past wagers and their results.</p>
         </div>
 
-        <div class="bf-stats-grid">
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Total Wagered</span>
-                <span class="bf-stat-value">{{ stats.total_wagered|bf_currency }}</span>
+        {% if bets %}
+        <div class="bf-filters" style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; align-items: flex-end;">
+            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                <label for="account-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Account</label>
+                <select id="account-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                    <option value="all">All Accounts</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.id }}">{{ account.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Total Won</span>
-                <span class="bf-stat-value bf-positive">{{ stats.total_payout|bf_currency }}</span>
+            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px;">
+                <label for="status-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Status</label>
+                <select id="status-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                    <option value="all">All Statuses</option>
+                    <option value="settled">Settled</option>
+                    <option value="pending">Pending</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                    <option value="push">Push</option>
+                </select>
             </div>
-            <div class="bf-stat-card">
-                <span class="bf-stat-label">Record</span>
-                <span class="bf-stat-value">{{ stats.wins }}W - {{ stats.losses }}L - {{ stats.pushes }}P</span>
+            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                <label for="sport-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Sport</label>
+                <select id="sport-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                    <option value="all">All Sports</option>
+                    {% set found_sports = [] %}
+                    {% for bet in bets %}
+                        {% set sport_title = bet.outcome.market.game.sport_title %}
+                        {% if sport_title not in found_sports %}
+                            <option value="{{ sport_title }}">{{ sport_title }}</option>
+                            {% set _ = found_sports.append(sport_title) %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                <label for="market-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Market Type</label>
+                <select id="market-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                    <option value="all">All Markets</option>
+                    <option value="h2h">Moneyline</option>
+                    <option value="spreads">Spread</option>
+                    <option value="totals">Over/Under</option>
+                    <option value="outrights">Future</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px; flex: 2; min-width: 200px;">
+                <label for="search-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Search Bets</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="search-filter" class="bf-input" placeholder="Search teams or outcomes..." style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border); flex-grow: 1;">
+                    <button id="reset-filters" class="bf-btn bf-btn-outline" style="padding: 8px 15px; font-size: 0.8rem; white-space: nowrap; display: none;">Reset Filters</button>
+                </div>
             </div>
         </div>
 
-        {% if bets %}
-        <table class="bf-history-table">
+        <div class="bf-stats-grid">
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Wagered</span>
+                <span class="bf-stat-value" id="stat-total-wagered">{{ stats.total_wagered|bf_currency }}</span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Total Won</span>
+                {% set roi = 0 %}
+                {% if stats.total_wagered > 0 %}
+                    {% set roi = (((stats.total_payout / stats.total_wagered) - 1) * 100)|round|int %}
+                {% endif %}
+                <span class="bf-stat-value {% if stats.total_payout > stats.total_wagered %}bf-positive{% elif stats.total_payout < stats.total_wagered %}bf-negative{% endif %}" id="stat-total-won-container">
+                    <span id="stat-total-won">{{ stats.total_payout|bf_currency }}</span>
+                    <span id="stat-roi" style="font-size: 1rem; margin-left: 5px;">({% if roi > 0 %}+{% endif %}{{ roi }}%)</span>
+                </span>
+            </div>
+            <div class="bf-stat-card">
+                <span class="bf-stat-label">Record</span>
+                <span class="bf-stat-value" id="stat-record">{{ stats.wins }}W - {{ stats.losses }}L - {{ stats.pushes }}P</span>
+            </div>
+        </div>
+
+        <table class="bf-history-table" id="history-table">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -85,7 +135,22 @@
             </thead>
             <tbody>
                 {% for bet in bets %}
-                <tr>
+                {% set market_type = bet.outcome.market.type.value %}
+                {% set sport_title = bet.outcome.market.game.sport_title %}
+                {% set search_text = "" %}
+                {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
+                    {% set search_text = bet.outcome.market.game.home_team ~ " " ~ bet.outcome.market.game.away_team ~ " " ~ bet|bf_bet_outcome %}
+                {% else %}
+                    {% set search_text = bet.outcome.market.game.sport_title ~ " " ~ bet|bf_bet_outcome %}
+                {% endif %}
+                <tr class="bf-history-row" 
+                    data-account="{{ bet.account_id }}" 
+                    data-status="{{ bet.status.value|lower }}" 
+                    data-market="{{ market_type }}"
+                    data-sport="{{ sport_title }}"
+                    data-search="{{ search_text|lower }}"
+                    data-wager="{{ bet.wager_amount }}"
+                    data-payout="{{ bet.potential_payout }}">
                     <td>{{ (bet.placed_at|bf_local_time).strftime('%b %d, %Y') }}</td>
                     <td>
                         <div style="font-weight: bold;">{{ bet|bf_bet_outcome }}</div>
@@ -125,6 +190,149 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <div id="no-results" style="display: none; padding: 40px; text-align: center; background: white; border-radius: 10px; margin-top: 10px;">
+            <p style="color: #666;">No bets match your filters.</p>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const accountFilter = document.getElementById('account-filter');
+                const statusFilter = document.getElementById('status-filter');
+                const sportFilter = document.getElementById('sport-filter');
+                const marketFilter = document.getElementById('market-filter');
+                const searchFilter = document.getElementById('search-filter');
+                const resetBtn = document.getElementById('reset-filters');
+                const rows = document.querySelectorAll('.bf-history-row');
+                const noResults = document.getElementById('no-results');
+                const table = document.getElementById('history-table');
+
+                // Stat elements
+                const statTotalWagered = document.getElementById('stat-total-wagered');
+                const statTotalWon = document.getElementById('stat-total-won');
+                const statTotalWonContainer = document.getElementById('stat-total-won-container');
+                const statRoi = document.getElementById('stat-roi');
+                const statRecord = document.getElementById('stat-record');
+
+                function formatCurrencyJS(amount) {
+                    const absAmount = Math.abs(amount);
+                    const formatted = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                    }).format(absAmount);
+                    return amount < 0 ? `-${formatted}` : formatted;
+                }
+
+                function filterTable() {
+                    const accountValue = accountFilter.value;
+                    const statusValue = statusFilter.value;
+                    const sportValue = sportFilter.value;
+                    const marketValue = marketFilter.value;
+                    const searchValue = searchFilter.value.toLowerCase().trim();
+                    let visibleCount = 0;
+
+                    // New stats
+                    let totalWagered = 0;
+                    let totalWon = 0;
+                    let wins = 0;
+                    let losses = 0;
+                    let pushes = 0;
+
+                    // Show/hide reset button
+                    const isFiltered = accountValue !== 'all' || statusValue !== 'all' || 
+                                       sportValue !== 'all' || marketValue !== 'all' || 
+                                       searchValue !== '';
+                    resetBtn.style.display = isFiltered ? 'block' : 'none';
+
+                    rows.forEach(row => {
+                        const rowAccount = row.getAttribute('data-account');
+                        const rowStatus = row.getAttribute('data-status');
+                        const rowSport = row.getAttribute('data-sport');
+                        const rowMarket = row.getAttribute('data-market');
+                        const rowSearch = row.getAttribute('data-search');
+                        const rowWager = parseFloat(row.getAttribute('data-wager') || 0);
+                        const rowPayout = parseFloat(row.getAttribute('data-payout') || 0);
+
+                        const accountMatch = accountValue === 'all' || rowAccount === accountValue;
+                        const statusMatch = statusValue === 'all' || 
+                                            (statusValue === 'settled' ? rowStatus !== 'pending' : rowStatus === statusValue);
+                        const sportMatch = sportValue === 'all' || rowSport === sportValue;
+                        const marketMatch = marketValue === 'all' || rowMarket === marketValue;
+                        const searchMatch = !searchValue || rowSearch.includes(searchValue);
+
+                        if (accountMatch && statusMatch && sportMatch && marketMatch && searchMatch) {
+                            row.style.display = '';
+                            visibleCount++;
+
+                            // Update stats
+                            if (rowStatus !== 'pending') {
+                                totalWagered += rowWager;
+                            }
+                            
+                            if (rowStatus === 'won') {
+                                totalWon += rowPayout;
+                                wins++;
+                            } else if (rowStatus === 'lost') {
+                                losses++;
+                            } else if (rowStatus === 'push') {
+                                totalWon += rowWager; // Push returns the wager
+                                pushes++;
+                            }
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    // Update UI stats
+                    statTotalWagered.textContent = formatCurrencyJS(totalWagered);
+                    statTotalWon.textContent = formatCurrencyJS(totalWon);
+                    
+                    // Update ROI
+                    let roi = 0;
+                    if (totalWagered > 0) {
+                        roi = Math.round(((totalWon / totalWagered) - 1) * 100);
+                    }
+                    statRoi.textContent = `(${(roi > 0 ? "+" : "")}${roi}%)`;
+
+                    // Update Colors
+                    statTotalWonContainer.classList.remove('bf-positive', 'bf-negative');
+                    if (totalWon > totalWagered) {
+                        statTotalWonContainer.classList.add('bf-positive');
+                    } else if (totalWon < totalWagered) {
+                        statTotalWonContainer.classList.add('bf-negative');
+                    }
+
+                    statRecord.textContent = `${wins}W - ${losses}L - ${pushes}P`;
+
+                    if (visibleCount === 0) {
+                        table.style.display = 'none';
+                        noResults.style.display = 'block';
+                    } else {
+                        table.style.display = '';
+                        noResults.style.display = 'none';
+                    }
+                }
+
+                function resetFilters() {
+                    accountFilter.value = 'all';
+                    statusFilter.value = 'all';
+                    sportFilter.value = 'all';
+                    marketFilter.value = 'all';
+                    searchFilter.value = '';
+                    filterTable();
+                }
+
+                accountFilter.addEventListener('change', filterTable);
+                statusFilter.addEventListener('change', filterTable);
+                sportFilter.addEventListener('change', filterTable);
+                marketFilter.addEventListener('change', filterTable);
+                searchFilter.addEventListener('input', filterTable);
+                resetBtn.addEventListener('click', resetFilters);
+
+                // Initial run to set reset button state if needed (though it starts all)
+                filterTable();
+            });
+        </script>
         {% else %}
         <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; border: 2px dashed var(--bf-border);">
             <p>You haven't placed any bets yet.</p>

@@ -70,31 +70,59 @@ def index():
     # Calculate total balance across accounts
     total_balance = sum(account.balance for account in accounts)
     
+    # Calculate total pending wagers for equity
+    total_pending_wagers = sum(bet.wager_amount for bet in pending_bets)
+    total_equity = total_balance + total_pending_wagers
+    
     # Calculate total profit/loss (Won - Lost)
     # This will be more accurate once we have settled bets
     settled_bets = BetfakeBet.query.filter(
         BetfakeBet.user_id == current_user.id,
-        BetfakeBet.status.in_(['Won', 'Lost'])
+        BetfakeBet.status.in_(['Won', 'Lost', 'Push'])
     ).all()
     
     total_pl = 0
+    # Dictionary to track P/L per account
+    account_pls = {account.id: 0 for account in accounts}
+    
     for bet in settled_bets:
+        bet_pl = 0
         if bet.status.value == 'Won':
-            total_pl += (bet.potential_payout - bet.wager_amount)
+            bet_pl = (bet.potential_payout - bet.wager_amount)
         elif bet.status.value == 'Lost':
-            total_pl -= bet.wager_amount
+            bet_pl = -bet.wager_amount
+            
+        total_pl += bet_pl
+        if bet.account_id in account_pls:
+            account_pls[bet.account_id] += bet_pl
             
     # Format PL for display
     formatted_total_pl = format_currency(total_pl)
     if total_pl > 0:
         formatted_total_pl = "+" + formatted_total_pl
+        
+    # Format account PLs for display
+    formatted_account_pls = {}
+    for acc_id, pl in account_pls.items():
+        fmt = format_currency(pl)
+        if pl > 0: fmt = "+" + fmt
+        formatted_account_pls[acc_id] = {'raw': pl, 'formatted': fmt}
+        
+    # Get 3 most recent settled bets
+    recent_settled = BetfakeBet.query.filter(
+        BetfakeBet.user_id == current_user.id,
+        BetfakeBet.status.in_(['Won', 'Lost', 'Push'])
+    ).order_by(BetfakeBet.settled_at.desc()).limit(3).all()
             
     return render_template('betfake/index.html', 
                            accounts=accounts, 
                            pending_bets=pending_bets,
                            total_balance=total_balance,
+                           total_equity=total_equity,
                            total_pl=total_pl,
-                           formatted_total_pl=formatted_total_pl)
+                           formatted_total_pl=formatted_total_pl,
+                           account_pls=formatted_account_pls,
+                           recent_settled=recent_settled)
 
 @betfake_bp.route('/accounts/create', methods=['POST'])
 @login_required
@@ -355,18 +383,20 @@ def history():
     """View full bet history."""
     # Query all bets for user, joined with necessary info
     bets = BetfakeBet.query.filter_by(user_id=current_user.id).order_by(BetfakeBet.placed_at.desc()).all()
+    accounts = BetfakeAccount.query.filter_by(user_id=current_user.id).all()
     
     # Summary stats
     stats = {
-        'total_wagered': sum(b.wager_amount for b in bets),
-        'total_payout': sum(b.potential_payout for b in bets if b.status.value == 'Won'),
+        'total_wagered': sum(b.wager_amount for b in bets if b.status.value != 'Pending'),
+        'total_payout': sum(b.potential_payout for b in bets if b.status.value == 'Won') + 
+                        sum(b.wager_amount for b in bets if b.status.value == 'Push'),
         'wins': len([b for b in bets if b.status.value == 'Won']),
         'losses': len([b for b in bets if b.status.value == 'Lost']),
         'pushes': len([b for b in bets if b.status.value == 'Push']),
         'pending': len([b for b in bets if b.status.value == 'Pending'])
     }
     
-    return render_template('betfake/history.html', bets=bets, stats=stats)
+    return render_template('betfake/history.html', bets=bets, stats=stats, accounts=accounts)
 
 @betfake_bp.route('/transactions/<int:account_id>')
 @login_required
@@ -377,9 +407,46 @@ def transactions(account_id):
         flash("Unauthorized account.", "error")
         return redirect(url_for('betfake.index'))
         
-    transactions = BetfakeTransaction.query.filter_by(account_id=account.id).order_by(BetfakeTransaction.created_at.desc()).all()
+    # Calculate account-level stats
+    pending_wagers = db.session.query(db.func.sum(BetfakeBet.wager_amount)).filter(
+        BetfakeBet.account_id == account.id,
+        BetfakeBet.status == BetStatus.Pending
+    ).scalar() or 0
+    account_equity = account.balance + pending_wagers
     
-    return render_template('betfake/transactions.html', account=account, transactions=transactions)
+    settled_bets = BetfakeBet.query.filter(
+        BetfakeBet.account_id == account.id,
+        BetfakeBet.status.in_([BetStatus.Won, BetStatus.Lost, BetStatus.Push])
+    ).all()
+    
+    account_pl = 0
+    for bet in settled_bets:
+        if bet.status == BetStatus.Won:
+            account_pl += (bet.potential_payout - bet.wager_amount)
+        elif bet.status == BetStatus.Lost:
+            account_pl -= bet.wager_amount
+            
+    formatted_account_pl = format_currency(account_pl)
+    if account_pl > 0:
+        formatted_account_pl = "+" + formatted_account_pl
+
+    # Order by creation to calculate running balance
+    transactions = BetfakeTransaction.query.filter_by(account_id=account.id).order_by(BetfakeTransaction.created_at.asc()).all()
+    
+    running_balance = 0
+    for tx in transactions:
+        running_balance += tx.amount
+        tx.balance_after = running_balance
+        
+    # Reverse to show newest first
+    transactions.reverse()
+    
+    return render_template('betfake/transactions.html', 
+                           account=account, 
+                           transactions=transactions,
+                           account_equity=account_equity,
+                           account_pl=account_pl,
+                           formatted_account_pl=formatted_account_pl)
 
 
 @betfake_bp.route('/admin/sync')

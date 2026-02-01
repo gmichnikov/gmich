@@ -29,6 +29,10 @@
             <span class="bf-stat-value">{{ total_balance|bf_currency }}</span>
         </div>
         <div class="bf-stat-card">
+            <span class="bf-stat-label">Total Equity</span>
+            <span class="bf-stat-value" style="color: var(--bf-accent);">{{ total_equity|bf_currency }}</span>
+        </div>
+        <div class="bf-stat-card">
             <span class="bf-stat-label">Total Profit/Loss</span>
             <span class="bf-stat-value {% if total_pl > 0 %}bf-positive{% elif total_pl < 0 %}bf-negative{% endif %}">
                 {{ formatted_total_pl }}
@@ -47,13 +51,21 @@
         {% if accounts %}
         <div class="bf-accounts-grid">
             {% for account in accounts %}
-            <div class="bf-account-card">
+            {% set acc_pl = account_pls.get(account.id) %}
+            <div class="bf-account-card" onclick="window.location.href='{{ url_for('betfake.transactions', account_id=account.id) }}'">
             <div class="bf-account-header">
-                <span class="bf-account-name">{{ account.name }}</span>
+                <div>
+                    <span class="bf-account-name">{{ account.name }}</span>
+                    {% if acc_pl and acc_pl.raw != 0 %}
+                    <div style="font-size: 0.75rem; font-weight: bold; margin-top: 2px;" class="{% if acc_pl.raw > 0 %}bf-positive{% else %}bf-negative{% endif %}">
+                        P/L: {{ acc_pl.formatted }}
+                    </div>
+                    {% endif %}
+                </div>
                 <span class="bf-account-balance">{{ account.balance|bf_currency }}</span>
             </div>
                 <div class="bf-account-actions">
-                    <a href="{{ url_for('betfake.transactions', account_id=account.id) }}" class="bf-btn bf-btn-outline bf-btn-sm">Transactions</a>
+                    <span class="bf-btn bf-btn-outline bf-btn-sm">Transactions</span>
                 </div>
             </div>
             {% endfor %}
@@ -66,7 +78,7 @@
         {% endif %}
 
         <div class="bf-create-account-form">
-            <h3>Create New Account</h3>
+            <h3>Create New Betting Account</h3>
             <form action="{{ url_for('betfake.create_account') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="bf-form-group">
@@ -77,7 +89,7 @@
         </div>
 
         <div class="bf-section-title">
-            <h2>Recent Pending Bets</h2>
+            <h2>Pending Bets</h2>
         </div>
 
         <div class="bf-pending-bets-card">
@@ -101,7 +113,6 @@
                         </div>
                     </div>
                 <div class="bf-bet-wager">
-                    <span class="bf-wager-label">Wager</span>
                     <span class="bf-wager-amount">{{ bet.wager_amount|bf_currency }}</span>
                     <span style="font-size: 0.7rem; color: var(--bf-secondary); margin-top: 4px;">
                         To win: {{ (bet.potential_payout - bet.wager_amount)|bf_currency }}
@@ -117,6 +128,55 @@
             </div>
             {% endif %}
         </div>
+
+        {% if recent_settled %}
+        <div class="bf-section-title" style="margin-top: 40px;">
+            <h2>Recently Settled</h2>
+            <a href="{{ url_for('betfake.history') }}" style="font-size: 0.9rem; color: var(--bf-primary); text-decoration: none; font-weight: bold;">View Full History →</a>
+        </div>
+        <div class="bf-pending-bets-card" style="border-bottom: 4px solid var(--bf-secondary);">
+            <ul class="bf-bet-list">
+                {% for bet in recent_settled %}
+                <li class="bf-bet-item">
+                    <div class="bf-bet-info">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <h4 style="margin: 0;">{{ bet|bf_bet_outcome }}</h4>
+                            <span class="bf-status-pill bf-status-{{ bet.status.value.lower() }}" style="font-size: 0.65rem; padding: 2px 6px;">
+                                {{ bet.status.value }}
+                            </span>
+                        </div>
+                        <div class="bf-bet-meta">
+                            {% if bet.outcome.market.game.home_team and bet.outcome.market.game.away_team %}
+                                {{ bet.outcome.market.game.home_team }} vs {{ bet.outcome.market.game.away_team }}
+                            {% else %}
+                                {{ bet.outcome.market.game.sport_title }}
+                            {% endif %}
+                            <br>
+                            Account: {{ bet.account.name }}
+                        </div>
+                    </div>
+                    <div class="bf-bet-wager" style="text-align: right;">
+                        {% if bet.status.value == 'Won' %}
+                            <span class="bf-positive" style="font-weight: bold; font-size: 1.1rem;">+{{ (bet.potential_payout - bet.wager_amount)|bf_currency }}</span>
+                        {% elif bet.status.value == 'Lost' %}
+                            <span class="bf-negative" style="font-weight: bold; font-size: 1.1rem;">-{{ bet.wager_amount|bf_currency }}</span>
+                        {% elif bet.status.value == 'Push' %}
+                            <span style="font-weight: bold; font-size: 1.1rem; color: #856404;">PUSH</span>
+                        {% endif %}
+                        <div style="font-size: 0.75rem; color: #999;">{{ bet.wager_amount|bf_currency }} wager</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="bf-section-title" style="margin-top: 40px;">
+            <h2>Recently Settled</h2>
+        </div>
+        <div class="bf-placeholder-card" style="background: white; padding: 20px; text-align: center; border-radius: 10px; border: 1px solid var(--bf-border); opacity: 0.7;">
+            <p style="margin: 0; font-size: 0.9rem; color: var(--bf-text-light);">No recently settled bets. Results will appear here once your games finish!</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

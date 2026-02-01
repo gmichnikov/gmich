@@ -272,17 +272,80 @@
 }
 
 .bf-nav-link:hover:not(.active) {
-    background: var(--bf-bg);
+  background: var(--bf-bg);
+}
+
+/* Status Pills */
+.bf-status-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+}
+.bf-status-won {
+  background: #d4edda;
+  color: #155724;
+}
+.bf-status-lost {
+  background: #f8d7da;
+  color: #721c24;
+}
+.bf-status-pending {
+  background: #e2e3e5;
+  color: #383d41;
+}
+.bf-status-push {
+  background: #fff3cd;
+  color: #856404;
 }
 
 /* Odds Buttons Styles */
 .bf-game-card {
-    background: var(--bf-white);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border: 1px solid var(--bf-border);
+  background: var(--bf-white);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--bf-border);
+}
+
+/* Animations */
+@keyframes bfFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bf-page-wrapper {
+  animation: bfFadeIn 0.4s ease-out;
+}
+
+/* Card Hover Effects */
+.bf-stat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bf-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.bf-account-card {
+  cursor: pointer;
+  position: relative;
+}
+
+.bf-account-card:hover {
+  border-color: var(--bf-primary);
+}
+
+/* Sticky Table Headers */
+.bf-transaction-table th, .bf-history-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 0 var(--bf-border);
 }
 
 .bf-game-header {
