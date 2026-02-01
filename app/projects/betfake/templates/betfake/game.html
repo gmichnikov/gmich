@@ -46,6 +46,12 @@
         margin-top: 4px;
         letter-spacing: 2px;
     }
+    .bf-status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
     .bf-winner {
         color: var(--bf-success) !important;
     }
@@ -64,6 +70,51 @@
         0% { opacity: 1; }
         50% { opacity: 0.6; }
         100% { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        .bf-game-center-header {
+            padding: 20px 15px;
+        }
+        .bf-score-display {
+            flex-direction: column;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .bf-team-score {
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            background: #fcfcfc;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+        .bf-score-val {
+            font-size: 2rem;
+            order: 2;
+        }
+        .bf-team-name-big {
+            font-size: 1rem;
+            text-align: left;
+            order: 1;
+            flex: 1;
+        }
+        .bf-team-label {
+            display: none; /* Hide 'HOME'/'AWAY' text labels on mobile to save space */
+        }
+        .bf-status-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            order: 1.5; /* Place between away and home */
+        }
+        .bf-game-status-big {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+        }
     }
 </style>
 {% endblock %}
@@ -100,7 +151,7 @@
                     <span class="bf-team-label">AWAY</span>
                 </div>
                 
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <div class="bf-status-container">
                     <span style="font-weight: bold; color: #ccc;">@</span>
                     <span class="bf-game-status-big bf-game-status-{{ game.status.value.lower() }}">
                         {{ game.status.value }}

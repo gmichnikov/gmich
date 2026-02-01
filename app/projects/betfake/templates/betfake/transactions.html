@@ -122,89 +122,91 @@
             <!-- Will be populated by JS -->
         </div>
 
-        <table class="bf-transaction-table" id="transactions-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in transactions %}
-                {% set type_label = tx.type.value.replace('_', ' ') %}
-                {% set search_text = "" %}
-                {% if tx.bet %}
-                    {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                        {% set search_text = tx.bet.outcome.market.game.away_team ~ " " ~ tx.bet.outcome.market.game.home_team ~ " " ~ tx.bet|bf_bet_outcome %}
-                    {% else %}
-                        {% set search_text = tx.bet.outcome.market.game.display_sport_title ~ " " ~ tx.bet|bf_bet_outcome %}
-                    {% endif %}
-                {% endif %}
-                <tr class="bf-tx-row" 
-                    data-type="{{ type_label|lower }}" 
-                    data-search="{{ search_text|lower }}"
-                    data-amount="{{ tx.amount }}">
-                    <td>{{ (tx.created_at|bf_local_time).strftime('%b %d, %Y %I:%M %p') }}</td>
-                    <td>
-                        <span class="bf-type-pill bf-type-{{ tx.type.value.lower() }}">{{ type_label }}</span>
-                    </td>
-                    <td>
-                        {% if tx.type.value == 'Wager' and tx.bet %}
-                            <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
-                            <div style="font-size: 0.8rem; color: #666;">
-                                {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                                    <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                        {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
-                                    </a>
-                                {% else %}
-                                    {{ tx.bet.outcome.market.game.display_sport_title }}
-                                {% endif %}
-                                <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
-                                    ({{ (tx.bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
-                                </span>
-                                <br>
-                                <span style="font-size: 0.75rem; color: #888;">
-                                    Odds: {{ tx.bet.odds_at_time|bf_odds }}
-                                </span>
-                            </div>
-                        {% elif tx.type.value == 'Payout' and tx.bet %}
-                            <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
-                            <div style="font-size: 0.8rem; color: #666;">
-                                {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
-                                    <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
-                                        {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
-                                    </a>
-                                {% else %}
-                                    {{ tx.bet.outcome.market.game.display_sport_title }}
-                                {% endif %}
-                                <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
-                                    ({{ (tx.bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
-                                </span>
-                                <br>
-                                <span style="font-size: 0.75rem; color: #888;">
-                                    Odds: {{ tx.bet.odds_at_time|bf_odds }}
-                                </span>
-                            </div>
-                        {% elif tx.type.value == 'Account_Creation' %}
-                            Initial Balance
+        <div class="bf-table-container">
+            <table class="bf-transaction-table" id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    {% set type_label = tx.type.value.replace('_', ' ') %}
+                    {% set search_text = "" %}
+                    {% if tx.bet %}
+                        {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
+                            {% set search_text = tx.bet.outcome.market.game.away_team ~ " " ~ tx.bet.outcome.market.game.home_team ~ " " ~ tx.bet|bf_bet_outcome %}
                         {% else %}
-                            --
+                            {% set search_text = tx.bet.outcome.market.game.display_sport_title ~ " " ~ tx.bet|bf_bet_outcome %}
                         {% endif %}
-                    </td>
-                    <td>
-                        <span class="{% if tx.amount > 0 %}bf-amount-positive{% else %}bf-amount-negative{% endif %}">
-                            {% if tx.amount > 0 %}+{% endif %}{{ tx.amount|bf_currency }}
-                        </span>
-                        <div style="font-size: 0.75rem; color: #999; margin-top: 2px;">
-                            Bal: {{ tx.balance_after|bf_currency }}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    {% endif %}
+                    <tr class="bf-tx-row" 
+                        data-type="{{ type_label|lower }}" 
+                        data-search="{{ search_text|lower }}"
+                        data-amount="{{ tx.amount }}">
+                        <td data-label="Date">{{ (tx.created_at|bf_local_time).strftime('%b %d, %Y %I:%M %p') }}</td>
+                        <td data-label="Type">
+                            <span class="bf-type-pill bf-type-{{ tx.type.value.lower() }}">{{ type_label }}</span>
+                        </td>
+                        <td data-label="Description">
+                            {% if tx.type.value == 'Wager' and tx.bet %}
+                                <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
+                                <div style="font-size: 0.8rem; color: #666;">
+                                    {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
+                                        <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
+                                            {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
+                                        </a>
+                                    {% else %}
+                                        {{ tx.bet.outcome.market.game.display_sport_title }}
+                                    {% endif %}
+                                    <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
+                                        ({{ (tx.bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
+                                    </span>
+                                    <br>
+                                    <span style="font-size: 0.75rem; color: #888;">
+                                        Odds: {{ tx.bet.odds_at_time|bf_odds }}
+                                    </span>
+                                </div>
+                            {% elif tx.type.value == 'Payout' and tx.bet %}
+                                <div style="font-weight: bold;">{{ tx.bet|bf_bet_outcome }}</div>
+                                <div style="font-size: 0.8rem; color: #666;">
+                                    {% if tx.bet.outcome.market.game.home_team and tx.bet.outcome.market.game.away_team %}
+                                        <a href="{{ url_for('betfake.game_detail', game_id=tx.bet.outcome.market.game.id) }}" style="color: var(--bf-primary); text-decoration: none; font-weight: 500;">
+                                            {{ tx.bet.outcome.market.game.away_team }} @ {{ tx.bet.outcome.market.game.home_team }}
+                                        </a>
+                                    {% else %}
+                                        {{ tx.bet.outcome.market.game.display_sport_title }}
+                                    {% endif %}
+                                    <span style="font-size: 0.75rem; margin-left: 3px; color: #999;">
+                                        ({{ (tx.bet.outcome.market.game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }})
+                                    </span>
+                                    <br>
+                                    <span style="font-size: 0.75rem; color: #888;">
+                                        Odds: {{ tx.bet.odds_at_time|bf_odds }}
+                                    </span>
+                                </div>
+                            {% elif tx.type.value == 'Account_Creation' %}
+                                Initial Balance
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td data-label="Amount">
+                            <span class="{% if tx.amount > 0 %}bf-amount-positive{% else %}bf-amount-negative{% endif %}">
+                                {% if tx.amount > 0 %}+{% endif %}{{ tx.amount|bf_currency }}
+                            </span>
+                            <div style="font-size: 0.75rem; color: #999; margin-top: 2px;">
+                                Bal: {{ tx.balance_after|bf_currency }}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <div id="no-results" style="display: none; padding: 40px; text-align: center; background: white; border-radius: 10px; margin-top: 10px;">
             <p style="color: #666;">No transactions match your filters.</p>

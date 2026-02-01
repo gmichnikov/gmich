@@ -25,9 +25,8 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 15px;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
 .bf-header {
@@ -313,8 +312,14 @@
 
 /* Animations */
 @keyframes bfFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .bf-page-wrapper {
@@ -328,7 +333,7 @@
 
 .bf-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .bf-account-card {
@@ -341,240 +346,387 @@
 }
 
 /* Sticky Table Headers */
-.bf-transaction-table th, .bf-history-table th {
+.bf-transaction-table th,
+.bf-history-table th {
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 1px 0 var(--bf-border);
 }
 
+.bf-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  /* Responsive Tables -> Cards */
+  .bf-history-table,
+  .bf-history-table thead,
+  .bf-history-table tbody,
+  .bf-history-table th,
+  .bf-history-table td,
+  .bf-history-table tr,
+  .bf-transaction-table,
+  .bf-transaction-table thead,
+  .bf-transaction-table tbody,
+  .bf-transaction-table th,
+  .bf-transaction-table td,
+  .bf-transaction-table tr {
+    display: block;
+  }
+
+  .bf-history-table thead tr,
+  .bf-transaction-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .bf-history-row,
+  .bf-tx-row {
+    background: white;
+    border: 1px solid var(--bf-border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    padding: 12px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: grid !important;
+    grid-template-areas:
+      "meta meta"
+      "header header"
+      "stat1 stat2";
+    gap: 4px;
+    position: relative;
+  }
+
+  .bf-history-table td,
+  .bf-transaction-table td {
+    border: none !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    display: block !important;
+    text-align: left !important;
+  }
+
+  /* Column Mapping for History */
+  .bf-history-row td[data-label="Date"] {
+    grid-area: meta;
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .bf-history-row td[data-label="Event"] {
+    grid-area: header;
+    font-size: 1rem;
+    padding-right: 80px !important; /* Make room for status badge */
+    margin-bottom: 4px;
+  }
+  .bf-history-row td[data-label="Wager"] {
+    grid-area: stat1;
+    font-size: 0.85rem;
+  }
+  .bf-history-row td[data-label="Odds"] {
+    display: none !important;
+  } /* Hide odds on mobile card to save space */
+  .bf-history-row td[data-label="Status"] {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+  .bf-history-row td[data-label="Payout"] {
+    grid-area: stat2;
+    text-align: right !important;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  /* Column Mapping for Transactions */
+  .bf-tx-row td[data-label="Date"] {
+    grid-area: meta;
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .bf-tx-row td[data-label="Type"] {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+  .bf-tx-row td[data-label="Description"] {
+    grid-area: header;
+    font-size: 0.95rem;
+    padding-right: 100px !important; /* Make room for type badge */
+    margin-bottom: 4px;
+  }
+  .bf-tx-row td[data-label="Amount"] {
+    grid-area: stat1;
+    grid-column: span 2;
+    border-top: 1px solid #f0f0f0 !important;
+    padding-top: 8px !important;
+    margin-top: 4px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+  }
+  .bf-tx-row td[data-label="Amount"] > div {
+    margin-top: 0 !important;
+  }
+
+  .bf-history-table td::before,
+  .bf-transaction-table td::before {
+    content: none !important; /* Remove generic labels */
+  }
+
+  /* Custom labels for specific fields in grid */
+  .bf-history-row td[data-label="Wager"]::before {
+    content: "Wager: ";
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+  }
+
+  .bf-history-row td[data-label="Payout"]::before {
+    content: "Result: ";
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+  }
+}
+
 .bf-game-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--bf-border);
-    padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--bf-border);
+  padding-bottom: 10px;
 }
 
 .bf-game-teams {
-    font-weight: bold;
-    font-size: 1.1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
 .bf-game-time {
-    font-size: 0.85rem;
-    color: var(--bf-text-light);
+  font-size: 0.85rem;
+  color: var(--bf-text-light);
 }
 
 .bf-market-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 10px;
 }
 
 .bf-market-column {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .bf-market-label {
-    font-size: 0.75rem;
-    color: var(--bf-text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    text-align: center;
+  font-size: 0.75rem;
+  color: var(--bf-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .bf-odds-btn {
-    background: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    padding: 8px;
-    text-decoration: none;
-    color: var(--bf-text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: all 0.2s;
+  background: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  padding: 8px;
+  text-decoration: none;
+  color: var(--bf-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s;
 }
 
 .bf-odds-btn:hover {
-    background: #e9ecef;
-    border-color: var(--bf-primary);
-    transform: translateY(-1px);
+  background: #e9ecef;
+  border-color: var(--bf-primary);
+  transform: translateY(-1px);
 }
 
 .bf-odds-name {
-    font-size: 0.8rem;
-    margin-bottom: 2px;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
 }
 
 .bf-odds-value {
-    font-weight: bold;
-    color: var(--bf-primary);
+  font-weight: bold;
+  color: var(--bf-primary);
 }
 
 .bf-odds-point {
-    font-size: 0.8rem;
-    color: var(--bf-text-light);
+  font-size: 0.8rem;
+  color: var(--bf-text-light);
 }
 
 .bf-closed-tag {
-    background: var(--bf-pending);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
+  background: var(--bf-pending);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
 }
 
 @media (max-width: 600px) {
-    .bf-market-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .bf-stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .bf-header h1 {
-        font-size: 1.5rem;
-    }
-    
-    .bf-nav-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .bf-nav-link {
-        flex: none;
-        width: 30%;
-        font-size: 0.8rem;
-        padding: 5px;
-    }
+  .bf-market-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bf-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bf-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .bf-nav-tabs {
+    flex-wrap: wrap;
+  }
+
+  .bf-nav-link {
+    flex: none;
+    width: 30%;
+    font-size: 0.8rem;
+    padding: 5px;
+  }
 }
 
 /* Admin Management Styles */
 .bf-admin-tabs {
-    display: flex;
-    border-bottom: 2px solid var(--bf-border);
-    margin-bottom: 20px;
-    gap: 20px;
+  display: flex;
+  border-bottom: 2px solid var(--bf-border);
+  margin-bottom: 20px;
+  gap: 20px;
 }
 
 .bf-admin-tab {
-    padding: 10px 5px;
-    color: var(--bf-text-light);
-    text-decoration: none;
-    font-weight: bold;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
+  padding: 10px 5px;
+  color: var(--bf-text-light);
+  text-decoration: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
 }
 
 .bf-admin-tab.active {
-    color: var(--bf-primary);
-    border-bottom-color: var(--bf-primary);
+  color: var(--bf-primary);
+  border-bottom-color: var(--bf-primary);
 }
 
 .bf-admin-table-container {
-    overflow-x: auto;
-    margin-bottom: 20px;
+  overflow-x: auto;
+  margin-bottom: 20px;
 }
 
 .bf-admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
-.bf-admin-table th, .bf-admin-table td {
-    padding: 10px 8px;
-    text-align: left;
-    border-bottom: 1px solid var(--bf-border);
+.bf-admin-table th,
+.bf-admin-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--bf-border);
 }
 
 .bf-admin-table th {
-    background-color: #f8f9fa;
-    color: var(--bf-text-light);
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
+  background-color: #f8f9fa;
+  color: var(--bf-text-light);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
 }
 
 .bf-admin-table tr:hover {
-    background-color: #fcfcfc;
+  background-color: #fcfcfc;
 }
 
 .bf-admin-search {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid var(--bf-border);
-    border-radius: 5px;
-    margin-bottom: 20px;
-    font-size: 0.95rem;
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid var(--bf-border);
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
 }
 
 .bf-admin-table td code {
-    font-size: 0.75rem;
-    color: var(--bf-text-light);
-    background: #f1f3f5;
-    padding: 2px 4px;
-    border-radius: 3px;
-    word-break: break-all;
+  font-size: 0.75rem;
+  color: var(--bf-text-light);
+  background: #f1f3f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  word-break: break-all;
 }
 
 /* Custom Checkbox / Toggle Switch */
 .bf-switch {
-    position: relative;
-    display: inline-block;
-    width: 34px;
-    height: 20px;
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
 }
 
 .bf-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 .bf-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 20px;
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 20px;
 }
 
 .bf-slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
 }
 
 input:checked + .bf-slider {
-    background-color: var(--bf-primary);
+  background-color: var(--bf-primary);
 }
 
 input:checked + .bf-slider:before {
-    transform: translateX(14px);
+  transform: translateX(14px);
 }
 
 .bf-compact-form {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
