@@ -33,6 +33,7 @@ class BetfakeSport(db.Model):
     sync_scores = db.Column(db.Boolean, default=False)
     sync_odds = db.Column(db.Boolean, default=False)
     show_in_nav = db.Column(db.Boolean, default=False)
+    is_outright = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<BetfakeSport {self.sport_title} ({self.sport_key})>'

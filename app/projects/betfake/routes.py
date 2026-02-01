@@ -26,11 +26,9 @@ def inject_active_sports():
     """Inject active sports into all betfake templates for navigation."""
     from app.projects.betfake.models import BetfakeSport
     # Get sports marked for navigation, but exclude futures/outrights from the top bar
-    active_sports = BetfakeSport.query.filter(
-        BetfakeSport.show_in_nav == True,
-        ~BetfakeSport.sport_title.contains('Winner'),
-        ~BetfakeSport.sport_title.contains('Championship'),
-        ~BetfakeSport.sport_title.contains('Outright')
+    active_sports = BetfakeSport.query.filter_by(
+        show_in_nav=True,
+        is_outright=False
     ).order_by(BetfakeSport.sport_title).all()
     return dict(active_sports=active_sports)
 
@@ -613,13 +611,21 @@ def admin_refresh_sports():
                 has_spreads=True, # Default to True
                 sync_scores=False,
                 sync_odds=False,
-                show_in_nav=False
+                show_in_nav=False,
+                is_outright=s.get('has_outrights', False)
             )
             db.session.add(sport)
             new_count += 1
         else:
+            changed = False
             if sport.sport_title != s['title']:
                 sport.sport_title = s['title']
+                changed = True
+            if sport.is_outright != s.get('has_outrights', False):
+                sport.is_outright = s.get('has_outrights', False)
+                changed = True
+            
+            if changed:
                 updated_count += 1
                 
     try:
@@ -649,6 +655,7 @@ def admin_update_sport_config():
     sport.sync_odds = 'sync_odds' in request.form
     sport.show_in_nav = 'show_in_nav' in request.form
     sport.has_spreads = 'has_spreads' in request.form
+    sport.is_outright = 'is_outright' in request.form
     
     try:
         db.session.commit()
@@ -762,7 +769,13 @@ def admin_sync_trigger():
                 
                 # Use the has_spreads flag from DB
                 markets = "h2h,spreads,totals" if s_obj.has_spreads else "h2h"
-                market_count = importer.import_odds_for_sport(s_key, markets_str=markets)
+                
+                # Check if it's a futures sport (outright)
+                if s_obj.is_outright:
+                    market_count = importer.import_futures(s_key)
+                else:
+                    market_count = importer.import_odds_for_sport(s_key, markets_str=markets)
+                
                 quota = importer.api.last_remaining_quota
                 
                 log_desc = f"UI Sync Odds: {s_key} imported {game_count} games, {market_count} markets."

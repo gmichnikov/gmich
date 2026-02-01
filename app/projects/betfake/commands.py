@@ -19,16 +19,25 @@ def sync_scores_command(sport):
     importer = DataImportService()
     grader = BetGraderService()
     from app.models import LogEntry
+    from app.projects.betfake.models import BetfakeSport
     from app import db
     
-    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    if sport:
+        sports_to_sync = BetfakeSport.query.filter_by(sport_key=sport).all()
+    else:
+        sports_to_sync = BetfakeSport.query.filter_by(sync_scores=True).all()
     
-    for sport_key in sports_to_sync:
-        click.echo(f"Syncing scores for {sport_key}...")
+    if not sports_to_sync:
+        click.echo("No sports enabled for score sync.")
+        return
+
+    for s_obj in sports_to_sync:
+        sport_key = s_obj.sport_key
+        click.echo(f"Syncing scores for {s_obj.sport_title}...")
         score_count = importer.import_scores_for_sport(sport_key)
         quota = importer.api.last_remaining_quota
         
-        log_desc = f"Sync Scores: {sport_key} updated {score_count} games."
+        log_desc = f"Sync Scores: {s_obj.sport_title} updated {score_count} games."
         if quota: log_desc += f" API Quota remaining: {quota}"
         
         db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
@@ -48,37 +57,43 @@ def sync_odds_command(sport):
     """Sync upcoming games and odds only."""
     importer = DataImportService()
     from app.models import LogEntry
+    from app.projects.betfake.models import BetfakeSport
     from app import db
     
-    sports_to_sync = [sport] if sport else ['basketball_nba', 'americanfootball_nfl', 'soccer_epl']
+    if sport:
+        sports_to_sync = BetfakeSport.query.filter_by(sport_key=sport).all()
+    else:
+        sports_to_sync = BetfakeSport.query.filter_by(sync_odds=True).all()
+
+    if not sports_to_sync:
+        click.echo("No sports enabled for odds sync.")
+        return
     
-    for sport_key in sports_to_sync:
-        click.echo(f"Syncing odds for {sport_key}...")
+    for s_obj in sports_to_sync:
+        sport_key = s_obj.sport_key
+        click.echo(f"Syncing odds for {s_obj.sport_title}...")
         
         # 1. Games
         game_count = importer.import_games_for_sport(sport_key)
-        game_quota = importer.api.last_remaining_quota
         
         # 2. Odds
-        markets = "h2h" if sport_key == 'soccer_epl' else "h2h,spreads,totals"
-        market_count = importer.import_odds_for_sport(sport_key, markets_str=markets)
+        markets = "h2h,spreads,totals" if s_obj.has_spreads else "h2h"
+        
+        # Check if it's a futures sport (outright)
+        if s_obj.is_outright:
+            click.echo(f"  - Syncing Outrights for {s_obj.sport_title}...")
+            market_count = importer.import_futures(sport_key)
+        else:
+            market_count = importer.import_odds_for_sport(sport_key, markets_str=markets)
+            
         odds_quota = importer.api.last_remaining_quota
         
-        log_desc = f"Sync Odds: {sport_key} imported {game_count} games, {market_count} markets."
+        log_desc = f"Sync Odds: {s_obj.sport_title} imported {game_count} games, {market_count} markets."
         if odds_quota: log_desc += f" API Quota remaining: {odds_quota}"
         
         db.session.add(LogEntry(project='betfake', category='Sync Step', description=log_desc))
         db.session.commit()
         click.echo(f"  - {game_count} games, {market_count} markets. Quota: {odds_quota}")
-
-        # 3. Futures
-        if sport_key == 'basketball_nba':
-            click.echo(f"  - Syncing NBA Futures...")
-            futures_count = importer.import_futures('basketball_nba_championship_winner')
-            f_quota = importer.api.last_remaining_quota
-            db.session.add(LogEntry(project='betfake', category='Sync Step', 
-                                    description=f"Sync Futures: NBA Championship Winner updated. Quota: {f_quota}"))
-            db.session.commit()
 
 @betfake_cli.command('sync')
 @click.option('--sport', default=None, help='Specific sport key to sync (e.g. basketball_nba)')

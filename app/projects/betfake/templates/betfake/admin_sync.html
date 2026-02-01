@@ -82,6 +82,7 @@
                                 <th>Nav</th>
                                 <th>Sync Odds</th>
                                 <th>Sync Scores</th>
+                                <th>Future</th>
                                 <th>Spreads</th>
                                 <th>Action</th>
                             </tr>
@@ -109,6 +110,12 @@
                                     <td>
                                         <label class="bf-switch">
                                             <input type="checkbox" name="sync_scores" {% if sport.sync_scores %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="bf-slider"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="bf-switch">
+                                            <input type="checkbox" name="is_outright" {% if sport.is_outright %}checked{% endif %} onchange="this.form.submit()">
                                             <span class="bf-slider"></span>
                                         </label>
                                     </td>
