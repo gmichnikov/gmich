@@ -70,6 +70,19 @@
         50% { opacity: 0.6; }
         100% { opacity: 1; }
     }
+    
+    /* Outcome result highlighting */
+    .bf-outcome-won {
+        background: #d4edda !important;
+        border-color: #28a745 !important;
+    }
+    .bf-outcome-lost {
+        opacity: 0.5;
+    }
+    .bf-outcome-push {
+        background: #fff3cd !important;
+        border-color: #ffc107 !important;
+    }
 
     @media (max-width: 768px) {
         .bf-game-center-header {
@@ -290,12 +303,18 @@
                         {% set market = historical_markets[type_key] %}
                         <div class="{% if type_key == 'h2h' and 'spreads' not in historical_markets and 'totals' not in historical_markets %}bf-outcomes-container-horizontal{% else %}bf-market-column{% endif %}" style="gap: 8px;">
                             {% for outcome in market.outcomes %}
-                            <div class="bf-historical-market-box" style="padding: 10px; border: 1px solid var(--bf-border); border-radius: 5px; background: white; text-align: center; {% if type_key == 'h2h' and 'spreads' not in historical_markets and 'totals' not in historical_markets %}flex: 1;{% endif %}">
+                            {% set result = outcome_results.get(outcome.id) %}
+                            <div class="bf-historical-market-box {% if result == 'won' %}bf-outcome-won{% elif result == 'lost' %}bf-outcome-lost{% elif result == 'push' %}bf-outcome-push{% endif %}" style="padding: 10px; border: 1px solid var(--bf-border); border-radius: 5px; background: white; text-align: center; {% if type_key == 'h2h' and 'spreads' not in historical_markets and 'totals' not in historical_markets %}flex: 1;{% endif %}">
                                 <div style="margin-bottom: 5px; font-size: 0.9rem;">
                                     <span style="color: var(--bf-text-light);">{{ outcome.outcome_name }}:</span>
                                     <strong style="color: var(--bf-primary);">{{ outcome.odds|bf_odds }}</strong>
                                     {% if outcome.point_value is not none %}
                                     <span style="font-size: 0.8rem; color: var(--bf-secondary);">({{ outcome.point_value|bf_point }})</span>
+                                    {% endif %}
+                                    {% if result == 'won' %}
+                                    <span style="color: #28a745; font-size: 0.7rem; margin-left: 3px;">✓</span>
+                                    {% elif result == 'push' %}
+                                    <span style="color: #856404; font-size: 0.7rem; margin-left: 3px;">PUSH</span>
                                     {% endif %}
                                 </div>
                                 <div style="font-size: 0.65rem; color: #aaa; margin-top: 5px; border-top: 1px solid #eee; padding-top: 3px;">
