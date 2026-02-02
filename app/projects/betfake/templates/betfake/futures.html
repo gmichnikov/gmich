@@ -5,13 +5,36 @@
 {% block bf_styles %}
 <style>
     .bf-futures-sport {
-        margin-bottom: 40px;
-    }
-    .bf-futures-sport h2 {
-        color: var(--bf-primary);
-        border-bottom: 2px solid var(--bf-border);
-        padding-bottom: 10px;
         margin-bottom: 20px;
+        border: 1px solid var(--bf-border);
+        border-radius: 8px;
+        background: white;
+    }
+    .bf-futures-sport summary {
+        color: var(--bf-primary);
+        padding: 15px 20px;
+        font-size: 1.4rem;
+        font-weight: bold;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .bf-futures-sport summary::-webkit-details-marker {
+        display: none;
+    }
+    .bf-futures-sport summary::after {
+        content: '▼';
+        font-size: 0.8rem;
+        transition: transform 0.2s ease;
+    }
+    .bf-futures-sport[open] summary::after {
+        transform: rotate(180deg);
+    }
+    .bf-futures-sport-content {
+        padding: 0 20px 20px 20px;
+        border-top: 1px solid var(--bf-border);
     }
     .bf-outcomes-grid {
         display: grid;
@@ -29,22 +52,24 @@
 
         {% if organized_futures %}
             {% for sport, markets in organized_futures.items() %}
-            <div class="bf-futures-sport">
-                <h2>{{ sport }}</h2>
-                {% for market in markets %}
-                <div class="bf-market-info" style="margin-bottom: 15px; color: var(--bf-text-light); font-size: 0.9rem;">
-                    Ends: {{ (market.end_date|bf_local_time).strftime('%b %d, %Y') }}
-                </div>
-                <div class="bf-outcomes-grid">
-                    {% for outcome in market.outcomes %}
-                    <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
-                        <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
-                        <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
-                    </a>
+            <details class="bf-futures-sport" open>
+                <summary>{{ sport }}</summary>
+                <div class="bf-futures-sport-content">
+                    {% for market in markets %}
+                    <div class="bf-market-info" style="margin-bottom: 15px; color: var(--bf-text-light); font-size: 0.9rem;">
+                        Ends: {{ (market.end_date|bf_local_time).strftime('%b %d, %Y') }}
+                    </div>
+                    <div class="bf-outcomes-grid">
+                        {% for outcome in market.outcomes %}
+                        <a href="{{ url_for('betfake.bet_page', outcome_id=outcome.id) }}" class="bf-odds-btn">
+                            <span class="bf-odds-name">{{ outcome.outcome_name }}</span>
+                            <span class="bf-odds-value">{{ outcome.odds|bf_odds }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
                     {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
+            </details>
             {% endfor %}
         {% else %}
             <div class="bf-placeholder-card" style="background: white; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 30px; border: 2px dashed var(--bf-border);">
