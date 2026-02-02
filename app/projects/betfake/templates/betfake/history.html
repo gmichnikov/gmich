@@ -25,7 +25,42 @@
         letter-spacing: 1px;
     }
     
-    /* Mobile filter improvements */
+    /* Collapsible filters */
+    .bf-filters-toggle {
+        margin-bottom: 15px;
+        border: 1px solid var(--bf-border);
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+    .bf-filters-toggle summary {
+        padding: 12px 15px;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        color: var(--bf-primary);
+        font-size: 0.9rem;
+    }
+    .bf-filters-toggle summary::-webkit-details-marker {
+        display: none;
+    }
+    .bf-filters-toggle summary::after {
+        content: '▼';
+        font-size: 0.7rem;
+        transition: transform 0.2s ease;
+    }
+    .bf-filters-toggle[open] summary::after {
+        transform: rotate(180deg);
+    }
+    .bf-filters-toggle .bf-filters {
+        margin-bottom: 0;
+        border-radius: 0 0 8px 8px;
+        border-top: 1px solid var(--bf-border);
+    }
+    
+    /* Mobile improvements */
     @media (max-width: 768px) {
         .bf-filters select {
             font-size: 16px !important; /* Prevents iOS zoom on focus */
@@ -42,6 +77,10 @@
             font-size: 16px !important;
             min-height: 44px;
         }
+        /* Hide Record stat on mobile */
+        .bf-stat-card-record {
+            display: none;
+        }
     }
 </style>
 {% endblock %}
@@ -53,59 +92,62 @@
         </div>
 
         {% if bets %}
-        <div class="bf-filters" style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; align-items: flex-end;">
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
-                <label for="account-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Account</label>
-                <select id="account-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
-                    <option value="all">All Accounts</option>
-                    {% for account in accounts %}
-                    <option value="{{ account.id }}">{{ account.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px;">
-                <label for="status-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Status</label>
-                <select id="status-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
-                    <option value="all">All Statuses</option>
-                    <option value="settled">Settled</option>
-                    <option value="pending">Pending</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
-                    <option value="push">Push</option>
-                </select>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
-                <label for="sport-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Sport</label>
-                <select id="sport-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
-                    <option value="all">All Sports</option>
-                    {% set found_sports = [] %}
-                    {% for bet in bets %}
-                        {% set sport_title = bet.outcome.market.game.display_sport_title %}
-                        {% if sport_title not in found_sports %}
-                            <option value="{{ sport_title }}">{{ sport_title }}</option>
-                            {% set _ = found_sports.append(sport_title) %}
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
-                <label for="market-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Market Type</label>
-                <select id="market-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
-                    <option value="all">All Markets</option>
-                    <option value="h2h">Moneyline</option>
-                    <option value="spreads">Spread</option>
-                    <option value="totals">Over/Under</option>
-                    <option value="outrights">Future</option>
-                </select>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 2; min-width: 200px;">
-                <label for="search-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Search Bets</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="search-filter" class="bf-input" placeholder="Search teams or outcomes..." style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border); flex-grow: 1;">
-                    <button id="reset-filters" class="bf-btn bf-btn-outline" style="padding: 8px 15px; font-size: 0.8rem; white-space: nowrap; display: none;">Reset Filters</button>
+        <details class="bf-filters-toggle" id="filters-toggle">
+            <summary>Filters <span id="active-filter-count" style="font-size: 0.75rem; font-weight: normal; color: #666;"></span></summary>
+            <div class="bf-filters" style="display: flex; gap: 15px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; align-items: flex-end;">
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                    <label for="account-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Account</label>
+                    <select id="account-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                        <option value="all">All Accounts</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px;">
+                    <label for="status-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Status</label>
+                    <select id="status-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                        <option value="all">All Statuses</option>
+                        <option value="settled">Settled</option>
+                        <option value="pending">Pending</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                        <option value="push">Push</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                    <label for="sport-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Sport</label>
+                    <select id="sport-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                        <option value="all">All Sports</option>
+                        {% set found_sports = [] %}
+                        {% for bet in bets %}
+                            {% set sport_title = bet.outcome.market.game.display_sport_title %}
+                            {% if sport_title not in found_sports %}
+                                <option value="{{ sport_title }}">{{ sport_title }}</option>
+                                {% set _ = found_sports.append(sport_title) %}
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px;">
+                    <label for="market-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Market Type</label>
+                    <select id="market-filter" class="bf-input" style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border);">
+                        <option value="all">All Markets</option>
+                        <option value="h2h">Moneyline</option>
+                        <option value="spreads">Spread</option>
+                        <option value="totals">Over/Under</option>
+                        <option value="outrights">Future</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 2; min-width: 200px;">
+                    <label for="search-filter" style="font-size: 0.8rem; font-weight: bold; color: #666;">Search Bets</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="search-filter" class="bf-input" placeholder="Search teams or outcomes..." style="padding: 8px; border-radius: 4px; border: 1px solid var(--bf-border); flex-grow: 1;">
+                        <button id="reset-filters" class="bf-btn bf-btn-outline" style="padding: 8px 15px; font-size: 0.8rem; white-space: nowrap; display: none;">Reset Filters</button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </details>
 
         <div class="bf-stats-grid">
             <div class="bf-stat-card">
@@ -123,7 +165,7 @@
                     <span id="stat-roi" style="font-size: 1rem; margin-left: 5px;">({% if roi > 0 %}+{% endif %}{{ roi }}%)</span>
                 </span>
             </div>
-            <div class="bf-stat-card">
+            <div class="bf-stat-card bf-stat-card-record">
                 <span class="bf-stat-label">Record</span>
                 <span class="bf-stat-value" id="stat-record">{{ stats.wins }}W - {{ stats.losses }}L - {{ stats.pushes }}P</span>
             </div>
@@ -224,6 +266,7 @@
                 const statTotalWonContainer = document.getElementById('stat-total-won-container');
                 const statRoi = document.getElementById('stat-roi');
                 const statRecord = document.getElementById('stat-record');
+                const activeFilterCount = document.getElementById('active-filter-count');
 
                 function formatCurrencyJS(amount) {
                     const absAmount = Math.abs(amount);
@@ -250,11 +293,17 @@
                     let losses = 0;
                     let pushes = 0;
 
-                    // Show/hide reset button
-                    const isFiltered = accountValue !== 'all' || statusValue !== 'all' || 
-                                       sportValue !== 'all' || marketValue !== 'all' || 
-                                       searchValue !== '';
+                    // Count active filters
+                    let filterCount = 0;
+                    if (accountValue !== 'all') filterCount++;
+                    if (statusValue !== 'all') filterCount++;
+                    if (sportValue !== 'all') filterCount++;
+                    if (marketValue !== 'all') filterCount++;
+                    if (searchValue !== '') filterCount++;
+                    
+                    const isFiltered = filterCount > 0;
                     resetBtn.style.display = isFiltered ? 'block' : 'none';
+                    activeFilterCount.textContent = isFiltered ? `(${filterCount} active)` : '';
 
                     rows.forEach(row => {
                         const rowAccount = row.getAttribute('data-account');
@@ -348,6 +397,12 @@
 
                 // Initial run to set reset button state if needed (though it starts all)
                 filterTable();
+                
+                // Expand filters by default on desktop
+                const filtersToggle = document.getElementById('filters-toggle');
+                if (window.innerWidth > 768) {
+                    filtersToggle.setAttribute('open', '');
+                }
 
                 // Ensure filters are in sync when using browser back button
                 window.addEventListener('pageshow', function(event) {
