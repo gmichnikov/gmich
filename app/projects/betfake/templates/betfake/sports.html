@@ -37,12 +37,7 @@
 {% endblock %}
 
 {% block bf_content %}
-        <div class="bf-header">
-            <h1>{{ sport_label }} Games</h1>
-            <p>Select a line to place a bet.</p>
-        </div>
-
-        <div class="bf-search-container" style="margin-bottom: 25px;">
+        <div class="bf-search-container" style="margin-bottom: 20px;">
             <input type="text" id="gameSearch" class="bf-search-bar" placeholder="Search teams...">
         </div>
 
@@ -152,7 +147,7 @@
                                 <span class="bf-game-status-big bf-game-status-{{ game.status.value.lower() }}" style="font-size: 0.65rem; padding: 2px 8px;">
                                     {{ game.status.value }}
                                 </span>
-                                <span style="font-size: 0.7rem; color: #999; margin-top: 4px;">{{ (game.commence_time|bf_local_time).strftime('%m/%d') }}</span>
+                                <span style="font-size: 0.7rem; color: #999; margin-top: 4px;">{{ (game.commence_time|bf_local_time).strftime('%m/%d %H:%M') }}</span>
                             </div>
 
                             <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; flex-direction: row-reverse;">

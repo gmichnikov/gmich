@@ -10,7 +10,13 @@
 {% block content %}
 <div class="bf-page-wrapper">
     <div class="bf-dashboard-container">
-        <!-- New Two-Tier Navigation -->
+        <!-- Brand Header -->
+        <a href="{{ url_for('betfake.index') }}" class="bf-brand">
+            <span class="bf-brand-icon">🎲</span>
+            <span class="bf-brand-text">BetFake</span>
+        </a>
+        
+        <!-- Two-Tier Navigation -->
         <div class="bf-nav-container">
             <!-- Tier 1: User Nav -->
             <nav class="bf-main-nav">

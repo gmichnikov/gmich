@@ -45,11 +45,6 @@
 {% endblock %}
 
 {% block bf_content %}
-        <div class="bf-header">
-            <h1>Futures Markets</h1>
-            <p>Long-term bets on championship winners and season outcomes.</p>
-        </div>
-
         {% if organized_futures %}
             {% for sport, markets in organized_futures.items() %}
             <details class="bf-futures-sport" open>
