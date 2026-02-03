@@ -164,9 +164,17 @@
                     hamburger.classList.toggle('hamburger-active');
                 });
                 
-                // Close menu when clicking a link
-                const navLinks = navMenu.querySelectorAll('.nav-link');
+                // Close menu when clicking a real link (not the Admin dropdown toggle)
+                const navLinks = navMenu.querySelectorAll('a.nav-link');
                 navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navMenu.classList.remove('nav-menu-active');
+                        hamburger.classList.remove('hamburger-active');
+                    });
+                });
+                // Also close when clicking admin dropdown items (they use nav-dropdown-item, not nav-link)
+                const dropdownItemsForClose = navMenu.querySelectorAll('.nav-dropdown-item');
+                dropdownItemsForClose.forEach(link => {
                     link.addEventListener('click', function() {
                         navMenu.classList.remove('nav-menu-active');
                         hamburger.classList.remove('hamburger-active');
