@@ -777,7 +777,8 @@
     font-size: 1.1rem;
   }
 
-  .bf-account-actions {
+  /* Only hide actions on account cards (e.g. Deposit/Withdraw), not on bet form (Place Bet/Cancel) */
+  .bf-account-card .bf-account-actions {
     display: none;
   }
 
