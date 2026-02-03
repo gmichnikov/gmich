@@ -1,4 +1,8 @@
 /* BetFake Styles - All classes prefixed with bf- */
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --bf-primary: #1a472a;
   --bf-secondary: #2d5a27;

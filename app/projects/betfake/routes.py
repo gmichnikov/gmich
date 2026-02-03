@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from datetime import datetime
 import logging
+import re
 
 from app.projects.betfake.models import (
     BetfakeAccount,
@@ -478,7 +479,21 @@ def futures():
                 }
             )
 
-    return render_template("betfake/futures.html", organized_futures=organized_futures)
+    # Build sections with slugs for anchor links; nav chips use these on the Futures page
+    def _slug(s):
+        slug = re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
+        return slug or "section"
+
+    future_sections = [
+        {"title": title, "slug": _slug(title), "markets": markets}
+        for title, markets in organized_futures.items()
+    ]
+
+    return render_template(
+        "betfake/futures.html",
+        organized_futures=organized_futures,
+        future_sections=future_sections,
+    )
 
 
 @betfake_bp.route("/history")

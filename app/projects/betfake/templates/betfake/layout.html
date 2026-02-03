@@ -25,15 +25,21 @@
                 <a href="{{ url_for('betfake.futures') }}" class="bf-main-nav-link {% if request.endpoint == 'betfake.futures' %}active{% endif %}">Futures</a>
             </nav>
 
-            <!-- Tier 2: Sports Carousel -->
+            <!-- Tier 2: Sports Carousel (game sports) or Futures jump links (on Futures page) -->
             <div class="bf-sports-nav">
                 <div class="bf-sports-carousel">
-                    {% for sport in active_sports %}
-                    <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" 
-                       class="bf-sport-pill {% if sport_key == sport.sport_key %}active{% endif %}">
-                        {{ sport.display_title }}
-                    </a>
-                    {% endfor %}
+                    {% if request.endpoint == 'betfake.futures' and future_sections is defined and future_sections %}
+                        {% for section in future_sections %}
+                        <a href="#{{ section.slug }}" class="bf-sport-pill">{{ section.title }}</a>
+                        {% endfor %}
+                    {% else %}
+                        {% for sport in active_sports %}
+                        <a href="{{ url_for('betfake.browse_sport', sport_key=sport.sport_key) }}" 
+                           class="bf-sport-pill {% if sport_key == sport.sport_key %}active{% endif %}">
+                            {{ sport.display_title }}
+                        </a>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
