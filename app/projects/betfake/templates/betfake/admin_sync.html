@@ -96,7 +96,6 @@
                                 <th>Nav</th>
                                 <th>Odds</th>
                                 <th>Scores</th>
-                                <th>Fut</th>
                                 <th>Spr</th>
                             </tr>
                         </thead>
@@ -126,7 +125,6 @@
                                     <input type="hidden" name="show_in_nav_sent" value="1">
                                     <input type="hidden" name="sync_odds_sent" value="1">
                                     <input type="hidden" name="sync_scores_sent" value="1">
-                                    <input type="hidden" name="is_outright_sent" value="1">
                                     <input type="hidden" name="has_spreads_sent" value="1">
                                     <input type="hidden" name="preferred_label_sent" value="1">
                                     <td>
@@ -149,12 +147,6 @@
                                     </td>
                                     <td>
                                         <label class="bf-switch">
-                                            <input type="checkbox" name="is_outright" {% if sport.is_outright %}checked{% endif %} onchange="this.form.submit()">
-                                            <span class="bf-slider"></span>
-                                        </label>
-                                    </td>
-                                    <td>
-                                        <label class="bf-switch">
                                             <input type="checkbox" name="has_spreads" {% if sport.has_spreads %}checked{% endif %} onchange="this.form.submit()">
                                             <span class="bf-slider"></span>
                                         </label>
@@ -164,7 +156,7 @@
                             {% endfor %}
                             {% if not reg_active %}
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 30px; color: var(--bf-text-light);">
+                                <td colspan="9" style="text-align: center; padding: 30px; color: var(--bf-text-light);">
                                     No active sports. Go to "Available" tab to turn some on.
                                 </td>
                             </tr>
@@ -232,13 +224,7 @@
                             <label style="display:block; margin-bottom:5px;">Group / Category</label>
                             <input type="text" name="sport_group" class="bf-form-input" placeholder="e.g. Basketball">
                         </div>
-                        <div style="margin-bottom: 15px;">
-                            <label class="bf-switch">
-                                <input type="checkbox" name="is_outright">
-                                <span class="bf-slider"></span>
-                            </label>
-                            <span style="margin-left: 10px; font-size: 0.9rem;">Is this a Future/Outright?</span>
-                        </div>
+                        <p style="font-size: 0.85rem; color: var(--bf-text-light); margin-bottom: 15px;">Type (Game vs Future) is set from the API when the key is in the sports list; otherwise it defaults to Game.</p>
                         <button type="submit" class="bf-btn bf-btn-primary">Add to Registry</button>
                     </form>
                 </div>

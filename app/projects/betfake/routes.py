@@ -770,8 +770,7 @@ def admin_update_sport_config():
         sport.show_in_nav = "show_in_nav" in request.form
     if "has_spreads_sent" in request.form or "has_spreads" in request.form:
         sport.has_spreads = "has_spreads" in request.form
-    if "is_outright_sent" in request.form or "is_outright" in request.form:
-        sport.is_outright = "is_outright" in request.form
+    # is_outright is never updated from the form; we rely on the API (Refresh from API) for that.
     if "preferred_label_sent" in request.form:
         new_label = request.form.get("preferred_label", "").strip()
         sport.preferred_label = new_label if new_label else None
@@ -787,7 +786,7 @@ def admin_update_sport_config():
         db.session.commit()
         from app.models import LogEntry
 
-        log_desc = f"Admin updated {sport.sport_title} config: Nav={sport.show_in_nav}, Odds={sport.sync_odds}, Scores={sport.sync_scores}, Spreads={sport.has_spreads}, Future={sport.is_outright}"
+        log_desc = f"Admin updated {sport.sport_title} config: Nav={sport.show_in_nav}, Odds={sport.sync_odds}, Scores={sport.sync_scores}, Spreads={sport.has_spreads}"
         db.session.add(
             LogEntry(project="betfake", category="Admin", description=log_desc)
         )
@@ -806,12 +805,11 @@ def admin_update_sport_config():
 def admin_add_sport_manual():
     """Manually add a sport key (useful for futures or niche markets)."""
     from app.projects.betfake.models import BetfakeSport
+    from app.projects.betfake.services.odds_api import OddsAPIService
 
     key = request.form.get("sport_key", "").strip()
     title = request.form.get("sport_title", "").strip()
     group = request.form.get("sport_group", "").strip()
-
-    is_outright = "is_outright" in request.form
 
     if not key or not title:
         flash("Both key and title are required.", "error")
@@ -821,6 +819,16 @@ def admin_add_sport_manual():
     if existing:
         flash(f"Sport with key {key} already exists.", "warning")
         return redirect(url_for("betfake.admin_sync"))
+
+    # Get is_outright from API when possible (we always trust the API for type)
+    is_outright = False
+    api = OddsAPIService()
+    sports_data = api.fetch_sports_list()
+    if sports_data:
+        for s in sports_data:
+            if s.get("key") == key:
+                is_outright = s.get("has_outrights", False)
+                break
 
     new_sport = BetfakeSport(
         sport_key=key,
@@ -837,7 +845,7 @@ def admin_add_sport_manual():
         db.session.commit()
         from app.models import LogEntry
 
-        msg = f"Admin manually added sport: {title} ({key}), Future={is_outright}"
+        msg = f"Admin manually added sport: {title} ({key})"
         db.session.add(LogEntry(project="betfake", category="Admin", description=msg))
         db.session.commit()
         flash(f"Manually added {title}.", "success")
