@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Meals{% endblock %}
+
+{% block content %}
+<div class="meals-container">
+    <h1 class="meals-title">Meals</h1>
+    <p class="meals-description">Welcome to the Meals project. This is a basic setup.</p>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('meals.static', filename='meals/style.css') }}">
+{% endblock %}

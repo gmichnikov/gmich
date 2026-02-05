@@ -279,6 +279,17 @@ PROJECTS = [
         "type": "project",
         "order": 9,
     },
+    {
+        "id": "meals",
+        "name": "Meals",
+        "description": "Manage your meals and recipes",
+        "url": "/meals",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🍽️",
+        "order": 10,
+    },
 ]
 
 

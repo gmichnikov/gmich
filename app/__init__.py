@@ -81,6 +81,7 @@ def create_app():
     from app.projects.notes.routes import notes_bp
     from app.projects.adk_agent_demo.routes import adk_agent_demo_bp
     from app.projects.betfake.routes import betfake_bp
+    from app.projects.meals.routes import meals_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -106,6 +107,7 @@ def create_app():
     app.register_blueprint(notes_bp)  # Has its own url_prefix defined
     app.register_blueprint(adk_agent_demo_bp)  # Has its own url_prefix defined
     app.register_blueprint(betfake_bp, url_prefix="/betfake")
+    app.register_blueprint(meals_bp)  # url_prefix is defined in the blueprint
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
