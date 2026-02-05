@@ -28,23 +28,26 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
   - [ ] `AddGuestMemberForm` (display_name)
 - [ ] Create `utils.py` for helper functions.
   - [ ] `get_user_family_groups(user)`
-  - [ ] `is_user_in_group(user, group_id)`
+  - [ ] `is_user_in_group(user, group_id)` - **CRITICAL**: Use this for all group-specific access control.
 - [ ] Implement `GET /meals/` (Dashboard placeholder)
 - [ ] Implement `POST /meals/groups/create`
   - [ ] Create group and add current user as the first linked member.
 - [ ] Implement `POST /meals/groups/<int:group_id>/invite` (Link existing User)
+  - [ ] **Access Check**: Verify requester is in the group.
   - [ ] Accept email, find user, create `MealsFamilyMember` linked to `user_id`.
 - [ ] Implement `POST /meals/groups/<int:group_id>/members/add` (Add Guest Member)
+  - [ ] **Access Check**: Verify requester is in the group.
   - [ ] Create `MealsFamilyMember` with only `display_name`.
 
 **Manual Testing 1.2:**
 - [ ] Create a group and verify it appears on your dashboard.
 - [ ] Add a guest member (e.g., "Kid 1") and verify they show up in the member list.
 - [ ] Invite another user by email and verify they can see the group when they log in.
+- [ ] **Security Test**: Try to access or invite to a group ID you are not a member of; verify it returns 404/Denied.
 
 ---
 
-## Phase 2: Basic Logging
+## Phase 2: Core Logging (Mobile-First)
 
 ### 2.1 Meals Entry Model
 - [ ] Create `MealsEntry` model in `models.py`
@@ -54,76 +57,59 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 **Manual Testing 2.1:**
 - [ ] Run `flask db migrate -m "Add meals_entry model"`
 - [ ] Run `flask db upgrade`
-- [ ] Verify table `meals_entry` exists.
 
-### 2.2 Individual Logging UI
+### 2.2 Multi-Member Logging UI
 - [ ] Create `LogMealForm` in `forms.py`
   - [ ] `date`, `meal_type`, `food_name`, `location`.
-- [ ] Implement `POST /meals/log`
-  - [ ] Save entry to DB.
-- [ ] Update `templates/meals/index.html`
-  - [ ] Add "Log a Meal" form.
-  - [ ] Add "Recent History" list (last 10 entries for the family).
+  - [ ] `member_ids`: Multiple selection of family members.
+- [ ] Implement `POST /meals/groups/<int:group_id>/log`
+  - [ ] **Access Check**: Verify requester is in the group.
+  - [ ] Iterate over selected members and create individual `MealsEntry` records.
+- [ ] Update `templates/meals/index.html` (Mobile-First)
+  - [ ] Add "Log a Meal" form optimized for touch (large targets).
+  - [ ] Add "Recent History" list.
 - [ ] Add `static/meals/style.css` (with `meals-` prefixes).
 
 **Manual Testing 2.2:**
-- [ ] Log a meal for yourself and verify it appears in the recent history.
-- [ ] Verify the data is correctly saved in the DB.
+- [ ] Log a meal for two people at once and verify two separate records are created.
+- [ ] Verify the UI looks and feels good on a mobile viewport.
 
 ---
 
-## Phase 3: Bulk Logging & UI Polish
+## Phase 3: Smart Entry & Dashboard Views
 
-### 3.1 Bulk Member Selection
-- [ ] Update `LogMealForm` to handle multiple member selections (using `SelectMultipleField` or custom checkboxes).
-- [ ] Update `POST /meals/log` to iterate and create multiple `MealsEntry` records.
-- [ ] UI: Add "Select All" / "Deselect All" buttons.
+### 3.1 Dual Autocomplete API
+- [ ] Implement `GET /meals/groups/<int:group_id>/api/suggestions/food`
+  - [ ] Return unique `food_name` strings from family history.
+- [ ] Implement `GET /meals/groups/<int:group_id>/api/suggestions/location`
+  - [ ] Return unique `location` strings from family history.
+- [ ] Integrate both autocompletes into the logging form.
 
-### 3.2 "Same as..." Shortcuts
-- [ ] Implement a "Quick Copy" JS helper in `static/meals/script.js`.
-- [ ] Add buttons to the UI to populate the form from another family member's last entry.
+### 3.2 Common Meals & Trends
+- [ ] Implement the "Common Meals" table (Individual vs Family toggle).
+- [ ] Implement "Location Trends" stats (Home vs Out).
 
 **Manual Testing 3.1 & 3.2:**
-- [ ] Log a meal for three people at once and verify three separate records are created.
-- [ ] Use the "Quick Copy" to fill the form and verify it works.
+- [ ] Type a food name and verify suggestions match food history, not location history.
+- [ ] Verify "Common Meals" table calculates correctly.
 
 ---
 
-## Phase 4: Autocomplete & Smart History
+## Phase 4: Calendar Views (Mobile-First)
 
-### 4.1 Autocomplete API
-- [ ] Implement `GET /meals/api/suggestions?query=...`
-  - [ ] Return unique `food_name` and `location` pairs from the group's history.
-- [ ] Integrate autocomplete on the `food_name` and `location` inputs.
-
-### 4.2 Common Meals & Stats
-- [ ] Implement the "Common Meals" table logic.
-  - [ ] Query and group by food/location, count occurrences.
-- [ ] Implement "Location Trends" (Home vs Out) calculations.
-- [ ] Update dashboard with these new components.
-
-**Manual Testing 4.1 & 4.2:**
-- [ ] Type a meal name you've used before and verify it suggests the full name and location.
-- [ ] Check that the "Common Meals" table correctly ranks your most frequent foods.
-
----
-
-## Phase 5: Calendar Views
-
-### 5.1 Weekly & Monthly Grids
-- [ ] Implement `GET /meals/calendar` with `view=week` or `view=month`.
-- [ ] Create `templates/meals/calendar.html`
-- [ ] Weekly view: 7 columns, 3 rows (B, L, D).
-- [ ] Monthly view: 5-week grid.
+### 4.1 Weekly & Monthly Grids
+- [ ] Implement `GET /meals/groups/<int:group_id>/calendar`
+- [ ] Weekly view: Optimized for mobile (scrollable or stacked).
+- [ ] Monthly view: Optimized for mobile.
 - [ ] Implement the "Family Overlay" (showing all members in the same cell).
 
-**Manual Testing 5.1:**
-- [ ] Verify that meals show up on the correct day and meal slot in both views.
-- [ ] Toggle between views and verify navigation (Previous/Next week/month) works.
+**Manual Testing 4.1:**
+- [ ] Verify calendar navigation works well on mobile.
+- [ ] Verify family overlay doesn't break the layout.
 
 ---
 
-## Phase 6: Final Polishing
-- [ ] Mobile Responsiveness: Ensure logging and calendar work on small screens.
-- [ ] CSS Audit: Ensure all classes use the `meals-` prefix.
-- [ ] Accessibility: Add proper labels and ARIA roles for the complex calendar grid.
+## Phase 5: Final Review & Polish
+- [ ] **Mobile Audit**: Final pass on all pages at 375px width.
+- [ ] **CSS Audit**: Verify `meals-` prefix everywhere.
+- [ ] **Permission Audit**: Verify every single route has an `is_user_in_group` check.

@@ -35,13 +35,19 @@ The Meals project is a family-oriented food tracker designed to help families lo
   - **Linked Members**: Members who have their own account on the site (linked via email).
   - **Guest Members**: Members who do not have an account (e.g., young children, pets). These only have a `display_name`.
 - **Sharing**: Users can invite others to their group by entering the other person's email address.
-- **Automatic Access**: If the invited email matches an existing user, that user automatically gains access to the group and can be linked to a member profile.
-- **Equality**: All members linked to a `User` account have equal permissions (edit, invite, delete).
+- **Automatic Access**: If the invited email matches an existing user, that user automatically gains access to the group.
+- **Permissions & Lifecycle**:
+  - **Flat Permissions**: Every member linked to a `User` account has full permissions to log, edit, or invite others within that group.
+  - **No Exit/Deletion**: Once a user is added to a group, they cannot leave it (in V1). Groups cannot be deleted.
+  - **Access Control**: Users must be denied access to any page or API endpoint for a group they are not a member of.
 
 ### 2. Meal Logging
 - **The "Big Three"**: Logging is restricted to Breakfast, Lunch, and Dinner.
-- **Individual Logs**: Each log entry is tied to a specific `Family Member` profile.
-- **Bulk Logging**: The UI must provide a way to "check off" multiple family members when logging a meal (e.g., "Log Pizza for Dad, Mom, and Kid"). This creates individual records for each selected member.
+- **Bulk Logging (Primary Entry Method)**: Instead of logging per-person and then "copying," the primary UI for adding a meal involves:
+  1. Selecting the Date and Meal Type (B, L, or D).
+  2. Selecting one or more Family Members from the group.
+  3. Entering the Food and Location.
+  4. Upon saving, individual `meals_entry` records are created for each selected member.
 - **Fields**:
   - `food_name` (String, required)
   - `location` (String, e.g., "Home", "Italian Restaurant", "School")
@@ -49,8 +55,9 @@ The Meals project is a family-oriented food tracker designed to help families lo
   - `meal_type` (Enum: Breakfast, Lunch, Dinner)
 
 ### 3. Smart Entry & History
-- **Meal Library**: The system tracks a "library" of unique food/location combinations used by the family.
-- **Surfacing Past Meals**: When typing a meal, the system provides autocomplete suggestions based on the family's history.
+- **Dual Autocomplete**: 
+  - The `food_name` field provides suggestions based only on the unique food names logged in that family group's history.
+  - The `location` field provides suggestions based only on the unique locations logged in that family group's history.
 - **Common Meals View**: A table showing the most frequently logged meals.
   - **Filters**: Single family member or the entire family.
   - **Data**: Shows the food name, location, and total count of occurrences.
