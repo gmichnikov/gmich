@@ -61,6 +61,7 @@
                     <div style="flex-shrink: 0;">
                         {% if not user.email_verified %}
                             <form method="POST" action="{{ url_for('admin.verify_user_email', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to manually verify {{ user.email }}?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
                                     Verify Email
                                 </button>

@@ -41,6 +41,7 @@
             </div>
             <div class="ask-many-llms-mt-20">
                 <form method="POST" action="{{ url_for('ask_many_llms.admin_delete_question', question_id=question.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this question?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="ask-many-llms-btn ask-many-llms-btn-danger ask-many-llms-btn-sm">
                         <i class="fas fa-trash"></i> Delete
                     </button>
