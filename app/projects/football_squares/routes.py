@@ -1,9 +1,10 @@
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.projects.football_squares import football_squares_bp
 from app.projects.football_squares.models import FootballSquaresGrid, FootballSquaresParticipant, FootballSquaresSquare, FootballSquaresQuarter, AxisType
 import uuid
+import random
 
 @football_squares_bp.route("/")
 @login_required
@@ -22,12 +23,24 @@ def create():
         team2_name = request.form.get("team2_name")
         team2_color_primary = request.form.get("team2_color_primary", "#000000")
         team2_color_secondary = request.form.get("team2_color_secondary", "#FFFFFF")
-        axis_type = request.form.get("axis_type", "Draft")
+        axis_type_str = request.form.get("axis_type", "Draft")
         
         if not name or not team1_name or not team2_name:
             flash("Please fill in all required fields.")
             return render_template("football_squares/create_edit.html", mode="create")
         
+        axis_type = AxisType[axis_type_str]
+        team1_digits = "0,1,2,3,4,5,6,7,8,9"
+        team2_digits = "0,1,2,3,4,5,6,7,8,9"
+        
+        if axis_type == AxisType.Random:
+            d1 = list(range(10))
+            d2 = list(range(10))
+            random.shuffle(d1)
+            random.shuffle(d2)
+            team1_digits = ",".join(map(str, d1))
+            team2_digits = ",".join(map(str, d2))
+
         grid = FootballSquaresGrid(
             user_id=current_user.id,
             name=name,
@@ -38,10 +51,18 @@ def create():
             team2_name=team2_name,
             team2_color_primary=team2_color_primary,
             team2_color_secondary=team2_color_secondary,
-            axis_type=AxisType[axis_type]
+            axis_type=axis_type,
+            team1_digits=team1_digits,
+            team2_digits=team2_digits
         )
         
         db.session.add(grid)
+        # Initialize 100 empty squares
+        for x in range(10):
+            for y in range(10):
+                square = FootballSquaresSquare(grid=grid, x_coord=x, y_coord=y)
+                db.session.add(square)
+        
         db.session.commit()
         
         flash(f"Grid '{name}' created successfully!")
@@ -55,7 +76,14 @@ def dashboard(grid_id):
     grid = FootballSquaresGrid.query.get_or_404(grid_id)
     if grid.user_id != current_user.id:
         abort(404)
-    return render_template("football_squares/dashboard.html", grid=grid)
+    
+    total_assigned_squares = sum(p.square_count for p in grid.participants)
+    is_locked = any(s.participant_id is not None for s in grid.squares)
+    
+    return render_template("football_squares/dashboard.html", 
+                         grid=grid, 
+                         total_assigned_squares=total_assigned_squares,
+                         is_locked=is_locked)
 
 @football_squares_bp.route("/<int:grid_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -90,6 +118,105 @@ def delete(grid_id):
     db.session.commit()
     flash("Grid deleted successfully!")
     return redirect(url_for("football_squares.index"))
+
+@football_squares_bp.route("/<int:grid_id>/participants/add", methods=["POST"])
+@login_required
+def add_participant(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+    
+    # Check if locked
+    if any(s.participant_id is not None for s in grid.squares):
+        flash("Cannot add participants after squares have been assigned.")
+        return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+        
+    name = request.form.get("name")
+    square_count = int(request.form.get("square_count", 0))
+    
+    if name:
+        participant = FootballSquaresParticipant(grid_id=grid.id, name=name, square_count=square_count)
+        db.session.add(participant)
+        db.session.commit()
+        flash(f"Added participant {name}.")
+    
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/participants/<int:participant_id>/update", methods=["POST"])
+@login_required
+def update_participant(participant_id):
+    participant = FootballSquaresParticipant.query.get_or_404(participant_id)
+    grid = participant.grid
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    square_count = int(request.form.get("square_count", 0))
+    participant.square_count = square_count
+    db.session.commit()
+    
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/participants/<int:participant_id>/delete", methods=["POST"])
+@login_required
+def delete_participant(participant_id):
+    participant = FootballSquaresParticipant.query.get_or_404(participant_id)
+    grid = participant.grid
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    # Check if locked
+    if any(s.participant_id is not None for s in grid.squares):
+        flash("Cannot remove participants after squares have been assigned.")
+        return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+        
+    db.session.delete(participant)
+    db.session.commit()
+    flash("Participant removed.")
+    
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/<int:grid_id>/axis/toggle", methods=["POST"])
+@login_required
+def toggle_axis(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    if grid.axis_type == AxisType.Draft:
+        grid.axis_type = AxisType.Random
+        # Shuffle when switching to random
+        d1 = list(range(10))
+        d2 = list(range(10))
+        random.shuffle(d1)
+        random.shuffle(d2)
+        grid.team1_digits = ",".join(map(str, d1))
+        grid.team2_digits = ",".join(map(str, d2))
+    else:
+        grid.axis_type = AxisType.Draft
+        grid.team1_digits = "0,1,2,3,4,5,6,7,8,9"
+        grid.team2_digits = "0,1,2,3,4,5,6,7,8,9"
+        
+    db.session.commit()
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/<int:grid_id>/axis/shuffle", methods=["POST"])
+@login_required
+def shuffle_axis(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    if grid.axis_type == AxisType.Random:
+        d1 = list(range(10))
+        d2 = list(range(10))
+        random.shuffle(d1)
+        random.shuffle(d2)
+        grid.team1_digits = ",".join(map(str, d1))
+        grid.team2_digits = ",".join(map(str, d2))
+        db.session.commit()
+        flash("Axes re-shuffled.")
+    
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
 
 @football_squares_bp.route("/view/<string:share_slug>")
 def public_view(share_slug):

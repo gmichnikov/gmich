@@ -261,12 +261,18 @@
     gap: 2rem;
 }
 
+.fs-sidebar .fs-btn {
+    font-size: 0.85rem;
+    padding: 0 0.75rem;
+}
+
 .fs-card {
     background: var(--fs-white);
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 8px;
     box-shadow: var(--fs-shadow);
     margin-bottom: 1.5rem;
+    overflow: hidden;
 }
 
 .fs-placeholder {
@@ -274,4 +280,119 @@
     font-style: italic;
     text-align: center;
     padding: 2rem 0;
+}
+
+/* Participant List */
+.fs-participant-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.fs-participant-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--fs-border);
+}
+
+.fs-participant-info {
+    flex: 1;
+}
+
+.fs-participant-name {
+    display: block;
+    font-weight: 500;
+}
+
+.fs-participant-count {
+    font-size: 0.85rem;
+    color: var(--fs-text-light);
+}
+
+.fs-participant-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.fs-participant-form input[type="number"] {
+    width: 60px;
+    height: 32px;
+    padding: 0.25rem;
+    border: 1px solid var(--fs-border);
+    border-radius: 4px;
+}
+
+/* Square Counter */
+.fs-square-counter {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--fs-border);
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fs-counter-bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.fs-counter-fill {
+    height: 100%;
+    background: var(--fs-primary);
+    transition: width 0.3s ease;
+}
+
+.fs-counter-fill.full {
+    background: var(--fs-danger);
+}
+
+/* Axis Config */
+.fs-axis-config {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.fs-axis-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: #f4f4f4;
+    padding: 0.75rem;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.fs-axis-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.fs-axis-label {
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: var(--fs-text-light);
+    text-transform: uppercase;
+}
+
+.fs-digits {
+    font-family: monospace;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    background: white;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--fs-border);
+    word-break: break-all;
+    display: block;
 }

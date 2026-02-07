@@ -53,15 +53,15 @@ Set up the blueprint, routes for the grid dashboard, and grid creation.
 ## Phase 3: Participant & Configuration UI
 Add participants, set allocations, and configure the axis.
 
-- [ ] 3.1 Participant management:
-    - [ ] Add/Delete participants on the grid dashboard.
-    - [ ] Form to set/update `square_count` for each participant.
-    - [ ] **Square Counter**: Real-time display of "Total Squares Assigned (X/100)".
-    - [ ] Implement "Lock" logic: Disable adding/removing participants once a square is assigned.
-- [ ] 3.2 Axis configuration:
-    - [ ] Toggle between "Draft Order" (0-9) and "Random" (shuffled).
-    - [ ] Initialize digits on grid creation based on this setting.
-    - [ ] Add "Re-shuffle Digits" button (only for Random mode).
+- [x] 3.1 Participant management:
+    - [x] Add/Delete participants on the grid dashboard.
+    - [x] Form to set/update `square_count` for each participant.
+    - [x] **Square Counter**: Real-time display of "Total Squares Assigned (X/100)".
+    - [x] Implement "Lock" logic: Disable adding/removing participants once a square is assigned.
+- [x] 3.2 Axis configuration:
+    - [x] Toggle between "Draft Order" (0-9) and "Random" (shuffled).
+    - [x] Initialize digits on grid creation based on this setting.
+    - [x] Add "Re-shuffle Digits" button (only for Random mode).
 
 **Manual Testing 3:**
 - [ ] Add 3 participants with different square allocations (e.g., 20, 30, 50).

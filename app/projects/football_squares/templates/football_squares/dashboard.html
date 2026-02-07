@@ -6,22 +6,108 @@
 <div class="fs-dashboard-header">
     <div class="fs-grid-meta">
         <h1>{{ grid.name }}</h1>
-        <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
+        <p>{{ grid.team1_name }} (X) vs {{ grid.team2_name }} (Y)</p>
     </div>
     <div class="fs-share-box">
         <label>Shareable Link:</label>
         <div class="fs-copy-input">
             <input type="text" value="{{ url_for('football_squares.public_view', share_slug=grid.share_slug, _external=True) }}" readonly id="shareLink">
-            <button onclick="copyLink()" class="fs-btn fs-btn-sm">Copy</button>
+            <button onclick="copyLink()" class="fs-btn fs-btn-sm fs-btn-outline">Copy</button>
         </div>
     </div>
 </div>
 
 <div class="fs-dashboard-grid">
     <div class="fs-sidebar">
+        <!-- Participants Section -->
         <section class="fs-card">
-            <h3>Participants</h3>
-            <p class="fs-placeholder">Participant management coming in Phase 3.</p>
+            <div class="fs-card-header">
+                <h3>Participants</h3>
+                {% if is_locked %}
+                <span class="fs-status-pill fs-status-locked" title="Locked: Squares have been assigned">🔒 Locked</span>
+                {% endif %}
+            </div>
+            
+            <ul class="fs-participant-list">
+                {% for participant in grid.participants %}
+                <li class="fs-participant-item">
+                    <div class="fs-participant-info">
+                        <span class="fs-participant-name">{{ participant.name }}</span>
+                        <span class="fs-participant-count">{{ participant.square_count }} squares</span>
+                    </div>
+                    <div class="fs-participant-actions">
+                        <form action="{{ url_for('football_squares.update_participant', participant_id=participant.id) }}" method="POST" class="fs-participant-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="number" name="square_count" value="{{ participant.square_count }}" min="0" max="100">
+                            <button type="submit" class="fs-btn fs-btn-sm fs-btn-outline">✓</button>
+                        </form>
+                        {% if not is_locked %}
+                        <form action="{{ url_for('football_squares.delete_participant', participant_id=participant.id) }}" method="POST" style="margin-top: 5px;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="fs-btn fs-btn-sm fs-btn-danger" style="width: 100%;">Remove</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if not is_locked %}
+            <form action="{{ url_for('football_squares.add_participant', grid_id=grid.id) }}" method="POST" class="fs-add-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="fs-form-group">
+                    <input type="text" name="name" placeholder="Name" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--fs-border); border-radius: 4px;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" name="square_count" placeholder="Squares" value="0" min="0" max="100" style="flex: 1; padding: 0.5rem; border: 1px solid var(--fs-border); border-radius: 4px;">
+                        <button type="submit" class="fs-btn fs-btn-primary">Add</button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
+            <div class="fs-square-counter">
+                <span>Total Allocated:</span>
+                <span>{{ total_assigned_squares }}/100</span>
+            </div>
+            <div class="fs-counter-bar">
+                <div class="fs-counter-fill {% if total_assigned_squares > 100 %}full{% endif %}" style="width: {{ total_assigned_squares }}%"></div>
+            </div>
+            {% if total_assigned_squares > 100 %}
+            <p style="color: var(--fs-danger); font-size: 0.8rem; margin-top: 5px;">Warning: More than 100 squares allocated!</p>
+            {% endif %}
+        </section>
+
+        <!-- Axis Configuration Section -->
+        <section class="fs-card">
+            <h3>Axis Configuration</h3>
+            <div class="fs-axis-config">
+                <div class="fs-axis-display">
+                    <div class="fs-axis-row">
+                        <span class="fs-axis-label">{{ grid.team1_name }} (X):</span>
+                        <span class="fs-digits">{{ grid.team1_digits }}</span>
+                    </div>
+                    <div class="fs-axis-row">
+                        <span class="fs-axis-label">{{ grid.team2_name }} (Y):</span>
+                        <span class="fs-digits">{{ grid.team2_digits }}</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <form action="{{ url_for('football_squares.toggle_axis', grid_id=grid.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="fs-btn fs-btn-outline" style="width: 100%;">
+                            Switch to {{ "Draft (0-9)" if grid.axis_type.value == "Random" else "Random" }} Mode
+                        </button>
+                    </form>
+                    
+                    {% if grid.axis_type.value == "Random" %}
+                    <form action="{{ url_for('football_squares.shuffle_axis', grid_id=grid.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="fs-btn fs-btn-outline" style="width: 100%;">Re-shuffle Digits</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
         </section>
 
         <section class="fs-card">
@@ -47,4 +133,25 @@ function copyLink() {
     alert("Copied to clipboard!");
 }
 </script>
+
+<style>
+.fs-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.fs-card-header h3 { margin: 0; }
+.fs-status-pill {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #eee;
+}
+.fs-status-locked {
+    background: #fff3f3;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+}
+</style>
 {% endblock %}
