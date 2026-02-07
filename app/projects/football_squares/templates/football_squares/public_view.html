@@ -99,12 +99,16 @@
                             <table class="fs-squares-table">
                                 <thead>
                                     <tr>
-                                        <th colspan="2" rowspan="2" style="border: none;"></th>
-                                        <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }};">
+                                        <!-- Team names now scroll away -->
+                                        <th colspan="2" style="border: none;"></th>
+                                        <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }}; border-radius: 4px 4px 0 0;">
                                             {{ grid.team1_name }}
                                         </th>
                                     </tr>
                                     <tr>
+                                        <!-- Sticky Corner for Digits -->
+                                        <th colspan="2" class="fs-grid-corner" style="border: none;"></th>
+                                        <!-- Team 1 Digits -->
                                         {% set team1_digits = grid.team1_digits.split(',') %}
                                         {% for digit in team1_digits %}
                                         <th class="fs-axis-digit">{{ digit }}</th>
@@ -116,11 +120,14 @@
                                     {% for y in range(10) %}
                                     <tr>
                                         {% if loop.first %}
-                                        <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }};">
+                                        <!-- Team 2 Name Sidebar (Now scrolls away) -->
+                                        <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }}; border-radius: 4px 0 0 4px;">
                                             <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
                                         </th>
                                         {% endif %}
+                                        <!-- Sticky Y-Axis Digit -->
                                         <th class="fs-axis-digit">{{ team2_digits[y] }}</th>
+                                        <!-- Squares -->
                                         {% for x in range(10) %}
                                             {% set square = squares_map.get((x, y)) %}
                                             {% set is_winner = false %}

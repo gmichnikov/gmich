@@ -20,10 +20,10 @@ Create the core data structures for grids, participants, squares, and quarters.
 - [x] 1.2 Register models in `app/__init__.py`
 
 **Manual Testing 1:**
-- [ ] Run `flask db migrate -m "Add football_squares models"`
-- [ ] Verify migration file contains all 4 tables and correct fields.
-- [ ] Run `flask db upgrade`
-- [ ] Verify tables exist in the database (e.g., via `psql` or a DB explorer).
+- [x] Run `flask db migrate -m "Add football_squares models"`
+- [x] Verify migration file contains all 4 tables and correct fields.
+- [x] Run `flask db upgrade`
+- [x] Verify tables exist in the database (e.g., via `psql` or a DB explorer).
 
 ---
 
@@ -44,9 +44,9 @@ Set up the blueprint, routes for the grid dashboard, and grid creation.
     - [x] `football_squares/dashboard.html` - Main control center for a specific grid.
 
 **Manual Testing 2:**
-- [ ] Navigate to `/football-squares/`.
-- [ ] Create a new grid and verify it redirects to the grid dashboard.
-- [ ] Verify the grid appears in the list view.
+- [x] Navigate to `/football-squares/`.
+- [x] Create a new grid and verify it redirects to the grid dashboard.
+- [x] Verify the grid appears in the list view.
 
 ---
 
@@ -64,9 +64,9 @@ Add participants, set allocations, and configure the axis.
     - [x] Add "Re-shuffle Digits" button (only for Random mode).
 
 **Manual Testing 3:**
-- [ ] Add 3 participants with different square allocations (e.g., 20, 30, 50).
-- [ ] Toggle the axis to "Random" and verify digits are shuffled in the DB.
-- [ ] Verify you can't add/remove participants after a square is manually assigned.
+- [x] Add 3 participants with different square allocations (e.g., 20, 30, 50).
+- [x] Toggle the axis to "Random" and verify digits are shuffled in the DB.
+- [x] Verify you can't add/remove participants after a square is manually assigned.
 
 ---
 
@@ -84,9 +84,9 @@ Build the interactive grid and randomization algorithms.
     - [x] Validation: Ensure total assigned squares does not exceed 100.
 
 **Manual Testing 4:**
-- [ ] Manually assign 5 squares.
-- [ ] Click "Fill Remaining Randomly" and verify all 100 squares are filled.
-- [ ] Verify the final count of squares matches the participant's `square_count`.
+- [x] Manually assign 5 squares.
+- [x] Click "Fill Remaining Randomly" and verify all 100 squares are filled.
+- [x] Verify the final count of squares matches the participant's `square_count`.
 
 ---
 
@@ -105,23 +105,23 @@ Enter scores, calculate winners, and provide the shareable link.
     - [x] Create `football_squares/public_view.html` (Read-only version of the grid).
 
 **Manual Testing 5:**
-- [ ] Enter a score of 17-14 for Q1.
-- [ ] Verify the square at (7, 4) is highlighted as the winner.
-- [ ] Open the public view URL in an Incognito window and verify the grid is visible but not editable.
+- [x] Enter a score of 17-14 for Q1.
+- [x] Verify the square at (7, 4) is highlighted as the winner.
+- [x] Open the public view URL in an Incognito window and verify the grid is visible but not editable.
 
 ---
 
 ## Phase 6: Styling & Polish
 Apply team colors and ensure responsive design.
 
-- [ ] 6.1 Dynamic Styling:
-    - [ ] Inject team colors into the CSS for the grid axes and headers.
-    - [ ] Ensure the `fs-` prefix is used for all custom styles in `static/football_squares/style.css`.
-- [ ] 6.2 Responsive Design:
-    - [ ] Optimize the grid for mobile (may require horizontal scrolling or smaller cells).
-    - [ ] Clean up forms and navigation.
+- [x] 6.1 Dynamic Styling:
+    - [x] Inject team colors into the CSS for the grid axes and headers.
+    - [x] Ensure the `fs-` prefix is used for all custom styles in `static/football_squares/style.css`.
+- [x] 6.2 Responsive Design:
+    - [x] Optimize the grid for mobile (may require horizontal scrolling or smaller cells).
+    - [x] Clean up forms and navigation.
 
 **Manual Testing 6:**
-- [ ] Change a team's primary color to Green and verify the axis label changes color.
-- [ ] View the grid on a mobile device/emulator and verify it's usable.
-- [ ] Run a final sweep for any missing `fs-` prefixes.
+- [x] Change a team's primary color to Green and verify the axis label changes color.
+- [x] View the grid on a mobile device/emulator and verify it's usable.
+- [x] Run a final sweep for any missing `fs-` prefixes.

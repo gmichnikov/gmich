@@ -189,12 +189,16 @@
                 <table class="fs-squares-table" id="squaresTable">
                     <thead>
                         <tr>
-                            <th colspan="2" rowspan="2" style="border: none;"></th>
-                            <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }};">
+                            <!-- Team names now scroll away -->
+                            <th colspan="2" style="border: none;"></th>
+                            <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }}; border-radius: 4px 4px 0 0;">
                                 {{ grid.team1_name }}
                             </th>
                         </tr>
                         <tr>
+                            <!-- Sticky Corner for Digits -->
+                            <th colspan="2" class="fs-grid-corner" style="border: none;"></th>
+                            <!-- Team 1 Digits -->
                             {% set team1_digits = grid.team1_digits.split(',') %}
                             {% for digit in team1_digits %}
                             <th class="fs-axis-digit">{{ digit }}</th>
@@ -206,11 +210,14 @@
                         {% for y in range(10) %}
                         <tr>
                             {% if loop.first %}
-                            <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }};">
+                            <!-- Team 2 Name Sidebar (Now scrolls away) -->
+                            <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }}; border-radius: 4px 0 0 4px;">
                                 <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
                             </th>
                             {% endif %}
+                            <!-- Sticky Y-Axis Digit -->
                             <th class="fs-axis-digit">{{ team2_digits[y] }}</th>
+                            <!-- Squares -->
                             {% for x in range(10) %}
                                 {% set square = squares_map.get((x, y)) %}
                                 {% set is_winner = false %}
@@ -235,6 +242,8 @@
                 </table>
             </div>
 
+            {% set empty_squares_count = grid.squares|selectattr('participant_id', 'none')|list|length %}
+            {% if empty_squares_count > 0 %}
             <div class="fs-grid-actions-bar">
                 <form action="{{ url_for('football_squares.randomize_remaining', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('Fill all remaining empty squares randomly?');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -245,6 +254,7 @@
                     <button type="submit" class="fs-btn fs-btn-outline">Randomize All</button>
                 </form>
             </div>
+            {% endif %}
         </section>
     </div>
 </div>
@@ -252,8 +262,15 @@
 <!-- Assignment Modal -->
 <div id="assignmentModal" class="fs-modal-overlay">
     <div class="fs-modal">
-        <h3 id="modalTitle">Assign Square (0,0)</h3>
-        <p>Select a participant for this square:</p>
+        <h3 style="margin-bottom: 0.5rem;">Assign Square</h3>
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f4f4f4; border-radius: 4px; text-align: center; border: 1px solid var(--fs-border);">
+            <div style="font-size: 0.9rem; color: var(--fs-text-light); text-transform: uppercase;">Matchup</div>
+            <div style="font-size: 1.2rem; font-weight: bold; color: var(--fs-primary);">
+                {{ grid.team1_name }}: <span id="modalXDigit"></span><br>
+                {{ grid.team2_name }}: <span id="modalYDigit"></span>
+            </div>
+        </div>
+        <p>Select participant:</p>
         <select id="participantSelect" class="fs-modal-select">
             <option value="">-- Unassigned --</option>
             {% for participant in grid.participants %}
@@ -274,7 +291,14 @@ let currentY = null;
 function openAssignmentModal(x, y, participantName, participantId) {
     currentX = x;
     currentY = y;
-    document.getElementById('modalTitle').textContent = `Assign Square (${x}, ${y})`;
+    
+    // Get the digits from the headers
+    const team1Digits = "{{ grid.team1_digits }}".split(',');
+    const team2Digits = "{{ grid.team2_digits }}".split(',');
+    
+    document.getElementById('modalXDigit').textContent = team1Digits[x];
+    document.getElementById('modalYDigit').textContent = team2Digits[y];
+    
     document.getElementById('participantSelect').value = participantId || "";
     document.getElementById('assignmentModal').style.display = 'flex';
 }

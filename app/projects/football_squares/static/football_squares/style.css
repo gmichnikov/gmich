@@ -260,7 +260,55 @@
 .fs-dashboard-grid {
     display: grid;
     grid-template-columns: 250px 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .fs-page-wrapper {
+        padding: 1rem 0.5rem;
+    }
+
+    .fs-container {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .fs-dashboard-grid {
+        grid-template-columns: 100%;
+        display: block;
+    }
+    
+    .fs-sidebar {
+        margin-top: 2rem;
+    }
+    
+    .fs-main-panel {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .fs-squares-table th, 
+    .fs-squares-table td {
+        width: 45px;
+        height: 45px;
+        font-size: 0.7rem;
+    }
+    
+    .fs-axis-digit {
+        width: 45px;
+        height: 45px;
+        font-size: 0.9rem;
+    }
+
+    .fs-axis-team-label-y {
+        min-width: 30px;
+        width: 30px !important;
+    }
+
+    .fs-squares-table tbody th.fs-axis-digit {
+        left: 30px;
+    }
 }
 
 .fs-sidebar .fs-btn {
@@ -278,10 +326,9 @@
 }
 
 /* Scoring Table */
-.fs-scoring-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
+.fs-scoring-table-horizontal {
+    width: auto;
+    min-width: 100%;
 }
 
 .fs-scoring-table th, 
@@ -406,12 +453,13 @@
     height: auto;
     font-size: 1rem;
     padding: 0.75rem;
+    /* Removed sticky from team names to prioritize digits */
 }
 
 .fs-axis-team-label-y {
     width: 40px !important;
     min-width: 40px;
-    height: 600px; /* 10 squares * 60px */
+    height: 600px;
 }
 
 .fs-axis-vertical {
@@ -428,6 +476,43 @@
     color: var(--fs-primary);
     width: 60px;
     height: 60px;
+    position: sticky;
+    z-index: 20; /* High z-index to stay on top */
+}
+
+/* X-Axis Digits (Top Row) */
+.fs-squares-table thead tr:nth-child(2) th.fs-axis-digit {
+    top: 0;
+    border-bottom: 2px solid var(--fs-primary);
+}
+
+/* Y-Axis Digits (Left Column) */
+.fs-squares-table tbody th.fs-axis-digit {
+    left: 0;
+    border-right: 2px solid var(--fs-primary);
+}
+
+/* The Corner - Now just the digit column header */
+.fs-grid-corner {
+    background: var(--fs-white);
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 30;
+}
+
+.fs-grid-wrapper {
+    overflow: auto;
+    max-height: 80vh;
+    border: 1px solid var(--fs-border);
+    border-radius: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fs-scoring-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
 }
 
 .fs-square-cell {
@@ -464,6 +549,7 @@
     margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--fs-border);
+    flex-wrap: wrap;
 }
 
 .fs-grid-legend {
