@@ -11,21 +11,21 @@
         
         <div class="fs-form-group">
             <label for="name">Grid Name</label>
-            <input type="text" id="name" name="name" value="{{ grid.name if mode == 'edit' else '' }}" placeholder="e.g., Super Bowl LIX" required>
+            <input type="text" id="name" name="name" value="{{ grid.name if mode == 'edit' else 'Super Bowl LX' }}" placeholder="e.g., Super Bowl LIX" required>
         </div>
 
         <div class="fs-form-row">
             <div class="fs-form-column">
-                <h3>Team 1 (X-Axis)</h3>
+                <h3>Team 1 (Top)</h3>
                 <div class="fs-form-group">
                     <label for="team1_name">Team Name</label>
-                    <input type="text" id="team1_name" name="team1_name" value="{{ grid.team1_name if mode == 'edit' else '' }}" required>
+                    <input type="text" id="team1_name" name="team1_name" value="{{ grid.team1_name if mode == 'edit' else 'Patriots' }}" required>
                 </div>
                 <div class="fs-form-group">
                     <label for="team1_color_primary">Primary Color</label>
                     <div class="fs-color-input-wrapper">
-                        <input type="color" id="team1_color_primary" name="team1_color_primary" value="{{ grid.team1_color_primary if mode == 'edit' else '#000000' }}" oninput="updateColorLabel(this)">
-                        <span class="fs-color-value">{{ grid.team1_color_primary if mode == 'edit' else '#000000' }}</span>
+                        <input type="color" id="team1_color_primary" name="team1_color_primary" value="{{ grid.team1_color_primary if mode == 'edit' else '#002244' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team1_color_primary if mode == 'edit' else '#002244' }}</span>
                     </div>
                 </div>
                 <div class="fs-form-group">
@@ -38,16 +38,16 @@
             </div>
 
             <div class="fs-form-column">
-                <h3>Team 2 (Y-Axis)</h3>
+                <h3>Team 2 (Left)</h3>
                 <div class="fs-form-group">
                     <label for="team2_name">Team Name</label>
-                    <input type="text" id="team2_name" name="team2_name" value="{{ grid.team2_name if mode == 'edit' else '' }}" required>
+                    <input type="text" id="team2_name" name="team2_name" value="{{ grid.team2_name if mode == 'edit' else 'Seahawks' }}" required>
                 </div>
                 <div class="fs-form-group">
                     <label for="team2_color_primary">Primary Color</label>
                     <div class="fs-color-input-wrapper">
-                        <input type="color" id="team2_color_primary" name="team2_color_primary" value="{{ grid.team2_color_primary if mode == 'edit' else '#000000' }}" oninput="updateColorLabel(this)">
-                        <span class="fs-color-value">{{ grid.team2_color_primary if mode == 'edit' else '#000000' }}</span>
+                        <input type="color" id="team2_color_primary" name="team2_color_primary" value="{{ grid.team2_color_primary if mode == 'edit' else '#69be28' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team2_color_primary if mode == 'edit' else '#69be28' }}</span>
                     </div>
                 </div>
                 <div class="fs-form-group">

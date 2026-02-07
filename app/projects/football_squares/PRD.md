@@ -47,16 +47,20 @@ Football Squares is an app that allows a single user to create and manage multip
 - Users can add/remove participants to a specific grid.
 - **Locking**: Once any square has been assigned to a participant, the participant list for that grid is locked (no adding or removing participants).
 - **Square Allocation**: Users can specify the number of squares each participant is intended to have. This does not have to be an even split.
+- **Participant Colors**: Each participant is assigned a random light color when added. The user can edit this color.
+- **Text Contrast**: The app automatically determines whether to show a participant's name in white or black text based on the brightness of their background color to ensure readability.
 - Participants are just names for this project (not linked to system users).
 
 ### 4. Grid Filling Logic
 - **Manual Fill**: The user can click any square and select a participant from a dropdown to assign it.
 - **Auto-Fill Remainder**: A feature to take participants and their allocated square counts to fill the remaining empty squares.
 - **Full Randomization**: A feature to clear the grid and assign all 100 squares randomly based on the specified square counts for each participant.
+- **Assignment Locking**: Once any scores are entered for the game, all square assignments (manual and random) are locked and cannot be changed. Clicking a square will still show info but the selection will be disabled.
 
 ### 5. Scoring & Winners
 - **Point Values**: Users can enter a "points" or "prize" value for Quarter 1, Quarter 2, Quarter 3, Quarter 4, and an optional Overtime period.
 - **Score Entry**: Users can enter the score for each team at the end of each period.
+- **Collapsible UI**: On mobile, the scoring and participant sidebar can be collapsed to maximize grid visibility.
 - **Period Handling**: 
     - Q1, Q2, Q3, Q4, and OT are treated as distinct scoring events.
     - There is no "Final Score" period; OT is its own separate entry.
@@ -65,6 +69,8 @@ Football Squares is an app that allows a single user to create and manage multip
     - The app takes the last digit of each team's score for the given period.
     - It finds the square at the intersection of those two digits on the axes.
     - It identifies the participant assigned to that square as the winner.
+    - The winning square is highlighted with a gold border and a badge showing which quarter was won.
+    - Clicking a winning square in the dashboard shows a summary of the win details (quarter, score, prize).
 
 ## Data Model
 
