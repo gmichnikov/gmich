@@ -77,13 +77,27 @@ def dashboard(grid_id):
     if grid.user_id != current_user.id:
         abort(404)
     
+    # Ensure squares are initialized (for grids created before initialization was added)
+    if len(grid.squares) == 0:
+        for x in range(10):
+            for y in range(10):
+                square = FootballSquaresSquare(grid_id=grid.id, x_coord=x, y_coord=y)
+                db.session.add(square)
+        db.session.commit()
+        # Refresh grid object
+        grid = FootballSquaresGrid.query.get(grid_id)
+
     total_assigned_squares = sum(p.square_count for p in grid.participants)
     is_locked = any(s.participant_id is not None for s in grid.squares)
+    
+    # Create a mapping of squares for easier lookup in template
+    squares_map = {(s.x_coord, s.y_coord): s for s in grid.squares}
     
     return render_template("football_squares/dashboard.html", 
                          grid=grid, 
                          total_assigned_squares=total_assigned_squares,
-                         is_locked=is_locked)
+                         is_locked=is_locked,
+                         squares_map=squares_map)
 
 @football_squares_bp.route("/<int:grid_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -216,6 +230,101 @@ def shuffle_axis(grid_id):
         db.session.commit()
         flash("Axes re-shuffled.")
     
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/<int:grid_id>/squares/assign", methods=["POST"])
+@login_required
+def assign_square(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    data = request.get_json()
+    x = data.get("x")
+    y = data.get("y")
+    participant_id = data.get("participant_id") # Can be null to unassign
+    
+    square = FootballSquaresSquare.query.filter_by(grid_id=grid.id, x_coord=x, y_coord=y).first()
+    if not square:
+        return jsonify({"success": False, "error": "Square not found"}), 404
+        
+    if participant_id:
+        # Check if participant belongs to this grid
+        participant = FootballSquaresParticipant.query.get(participant_id)
+        if not participant or participant.grid_id != grid.id:
+            return jsonify({"success": False, "error": "Invalid participant"}), 400
+        square.participant_id = participant_id
+    else:
+        square.participant_id = None
+        
+    db.session.commit()
+    return jsonify({"success": True})
+
+@football_squares_bp.route("/<int:grid_id>/randomize/all", methods=["POST"])
+@login_required
+def randomize_all(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    # Clear all assignments
+    for square in grid.squares:
+        square.participant_id = None
+        
+    # Get participants and their target counts
+    participants = grid.participants
+    pool = []
+    for p in participants:
+        pool.extend([p.id] * p.square_count)
+    
+    # Trim or pad pool to 100 if necessary (though user should ideally set it to 100)
+    pool = pool[:100]
+    random.shuffle(pool)
+    
+    # Assign to squares
+    squares = list(grid.squares)
+    random.shuffle(squares)
+    
+    for i, p_id in enumerate(pool):
+        if i < len(squares):
+            squares[i].participant_id = p_id
+            
+    db.session.commit()
+    flash("Grid randomized successfully.")
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
+@football_squares_bp.route("/<int:grid_id>/randomize/remaining", methods=["POST"])
+@login_required
+def randomize_remaining(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    # Calculate how many squares each participant already has
+    participant_counts = {}
+    for p in grid.participants:
+        current_count = FootballSquaresSquare.query.filter_by(grid_id=grid.id, participant_id=p.id).count()
+        remaining = max(0, p.square_count - current_count)
+        participant_counts[p.id] = remaining
+        
+    # Create a pool of remaining assignments
+    pool = []
+    for p_id, count in participant_counts.items():
+        pool.extend([p_id] * count)
+        
+    random.shuffle(pool)
+    
+    # Get empty squares
+    empty_squares = [s for s in grid.squares if s.participant_id is None]
+    random.shuffle(empty_squares)
+    
+    # Assign
+    for i, p_id in enumerate(pool):
+        if i < len(empty_squares):
+            empty_squares[i].participant_id = p_id
+            
+    db.session.commit()
+    flash("Remaining squares randomized.")
     return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
 
 @football_squares_bp.route("/view/<string:share_slug>")

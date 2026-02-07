@@ -17,7 +17,7 @@
 }
 
 .fs-container {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
@@ -280,6 +280,155 @@
     font-style: italic;
     text-align: center;
     padding: 2rem 0;
+}
+
+/* Grid Display */
+.fs-grid-wrapper {
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.fs-squares-table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    user-select: none;
+    table-layout: fixed;
+    width: max-content;
+}
+
+.fs-squares-table th, 
+.fs-squares-table td {
+    border: 1px solid var(--fs-border);
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Override for team labels */
+.fs-squares-table th.fs-axis-team-label {
+    width: auto;
+    height: auto;
+    font-size: 1rem;
+    padding: 0.75rem;
+}
+
+.fs-axis-team-label-y {
+    width: 40px !important;
+    min-width: 40px;
+    height: 600px; /* 10 squares * 60px */
+}
+
+.fs-axis-vertical {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.fs-axis-digit {
+    background: #f9f9f9;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--fs-primary);
+    width: 60px;
+    height: 60px;
+}
+
+.fs-square-cell {
+    cursor: pointer;
+    background: white;
+    font-size: 0.75rem;
+    transition: background 0.2s;
+}
+
+.fs-square-cell:hover {
+    background: #f0f7f0;
+}
+
+.fs-square-cell.assigned {
+    background: #e8f5e9;
+}
+
+.fs-square-cell.active {
+    outline: 2px solid var(--fs-primary);
+    z-index: 1;
+}
+
+.fs-square-participant {
+    display: block;
+    word-break: break-word;
+    padding: 2px;
+}
+
+/* Grid Actions */
+.fs-grid-actions-bar {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--fs-border);
+}
+
+.fs-grid-legend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+}
+
+.fs-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.fs-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.fs-dot-x { background: var(--fs-primary); }
+.fs-dot-y { background: #666; }
+
+/* Modal/Overlay */
+.fs-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.fs-modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 350px;
+    max-width: 90%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.fs-modal h3 {
+    margin-top: 0;
+}
+
+.fs-modal-select {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border: 1px solid var(--fs-border);
+    border-radius: 4px;
 }
 
 /* Participant List */

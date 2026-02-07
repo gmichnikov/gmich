@@ -73,15 +73,15 @@ Add participants, set allocations, and configure the axis.
 ## Phase 4: The 10x10 Grid & Filling Logic
 Build the interactive grid and randomization algorithms.
 
-- [ ] 4.1 Grid Visualization:
-    - [ ] Render a 10x10 HTML table with axis labels.
-    - [ ] Highlight squares that are already assigned.
-- [ ] 4.2 Filling Logic:
-    - [ ] Manual assignment: Click a square, select a participant from a dropdown.
-    - [ ] AJAX/Fetch endpoint to update `FootballSquaresSquare` in real-time.
-    - [ ] "Randomize All": Clear all squares and distribute based on participant `square_count`.
-    - [ ] "Fill Remaining Randomly": Only fill empty squares using remaining `square_count` balances.
-    - [ ] Validation: Ensure total assigned squares does not exceed 100.
+- [x] 4.1 Grid Visualization:
+    - [x] Render a 10x10 HTML table with axis labels.
+    - [x] Highlight squares that are already assigned.
+- [x] 4.2 Filling Logic:
+    - [x] Manual assignment: Click a square, select a participant from a dropdown.
+    - [x] AJAX/Fetch endpoint to update `FootballSquaresSquare` in real-time.
+    - [x] "Randomize All": Clear all squares and distribute based on participant `square_count`.
+    - [x] "Fill Remaining Randomly": Only fill empty squares using remaining `square_count` balances.
+    - [x] Validation: Ensure total assigned squares does not exceed 100.
 
 **Manual Testing 4:**
 - [ ] Manually assign 5 squares.

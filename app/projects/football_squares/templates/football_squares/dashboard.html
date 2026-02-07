@@ -118,13 +118,133 @@
 
     <div class="fs-main-panel">
         <section class="fs-card fs-grid-display">
-            <h3>10x10 Grid</h3>
-            <p class="fs-placeholder">Interactive grid coming in Phase 4.</p>
+            <div class="fs-card-header">
+                <h3>10x10 Grid</h3>
+                <div class="fs-grid-legend">
+                    <span class="fs-legend-item"><span class="fs-dot fs-dot-x"></span> {{ grid.team1_name }} (X)</span>
+                    <span class="fs-legend-item"><span class="fs-dot fs-dot-y"></span> {{ grid.team2_name }} (Y)</span>
+                </div>
+            </div>
+
+            <div class="fs-grid-wrapper">
+                <table class="fs-squares-table" id="squaresTable">
+                    <thead>
+                        <tr>
+                            <!-- Empty corner spans 2 columns and 2 rows -->
+                            <th colspan="2" rowspan="2" style="border: none;"></th>
+                            <!-- Team 1 Name Header -->
+                            <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }};">
+                                {{ grid.team1_name }}
+                            </th>
+                        </tr>
+                        <tr>
+                            <!-- Team 1 Digits -->
+                            {% set team1_digits = grid.team1_digits.split(',') %}
+                            {% for digit in team1_digits %}
+                            <th class="fs-axis-digit">{{ digit }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set team2_digits = grid.team2_digits.split(',') %}
+                        {% for y in range(10) %}
+                        <tr>
+                            {% if loop.first %}
+                            <!-- Team 2 Name Sidebar -->
+                            <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }};">
+                                <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
+                            </th>
+                            {% endif %}
+                            <!-- Team 2 Digit -->
+                            <th class="fs-axis-digit">{{ team2_digits[y] }}</th>
+                            <!-- Squares -->
+                            {% for x in range(10) %}
+                                {% set square = squares_map.get((x, y)) %}
+                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %}" 
+                                    data-x="{{ x }}" 
+                                    data-y="{{ y }}" 
+                                    onclick="openAssignmentModal({{ x }}, {{ y }}, '{{ square.participant.name if square and square.participant_id else '' }}', {{ square.participant_id if square and square.participant_id else 'null' }})">
+                                    <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="fs-grid-actions-bar">
+                <form action="{{ url_for('football_squares.randomize_remaining', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('Fill all remaining empty squares randomly?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="fs-btn fs-btn-outline">Fill Remaining Randomly</button>
+                </form>
+                <form action="{{ url_for('football_squares.randomize_all', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('This will CLEAR all current assignments and randomize the entire grid. Continue?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="fs-btn fs-btn-outline">Randomize All</button>
+                </form>
+            </div>
         </section>
     </div>
 </div>
 
+<!-- Assignment Modal -->
+<div id="assignmentModal" class="fs-modal-overlay">
+    <div class="fs-modal">
+        <h3 id="modalTitle">Assign Square (0,0)</h3>
+        <p>Select a participant for this square:</p>
+        <select id="participantSelect" class="fs-modal-select">
+            <option value="">-- Unassigned --</option>
+            {% for participant in grid.participants %}
+            <option value="{{ participant.id }}">{{ participant.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="fs-modal-actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button onclick="closeAssignmentModal()" class="fs-btn fs-btn-outline fs-btn-sm">Cancel</button>
+            <button onclick="saveAssignment()" class="fs-btn fs-btn-primary fs-btn-sm">Save</button>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentX = null;
+let currentY = null;
+
+function openAssignmentModal(x, y, participantName, participantId) {
+    currentX = x;
+    currentY = y;
+    document.getElementById('modalTitle').textContent = `Assign Square (${x}, ${y})`;
+    document.getElementById('participantSelect').value = participantId || "";
+    document.getElementById('assignmentModal').style.display = 'flex';
+}
+
+function closeAssignmentModal() {
+    document.getElementById('assignmentModal').style.display = 'none';
+    currentX = null;
+    currentY = null;
+}
+
+async function saveAssignment() {
+    const participantId = document.getElementById('participantSelect').value;
+    const response = await fetch(`{{ url_for('football_squares.assign_square', grid_id=grid.id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            x: currentX,
+            y: currentY,
+            participant_id: participantId === "" ? null : participantId
+        })
+    });
+
+    if (response.ok) {
+        window.location.reload(); // Refresh to show changes and update lock status
+    } else {
+        alert("Failed to save assignment.");
+    }
+}
+
 function copyLink() {
     var copyText = document.getElementById("shareLink");
     copyText.select();
