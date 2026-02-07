@@ -218,9 +218,14 @@ def add_participant(grid_id):
         
     name = request.form.get("name")
     square_count = int(request.form.get("square_count", 0))
+    color = request.form.get("color")
+    
+    if not color:
+        # Generate a random light color
+        color = "#%06x" % random.randint(0x888888, 0xFFFFFF)
     
     if name:
-        participant = FootballSquaresParticipant(grid_id=grid.id, name=name, square_count=square_count)
+        participant = FootballSquaresParticipant(grid_id=grid.id, name=name, square_count=square_count, color=color)
         db.session.add(participant)
         db.session.commit()
         flash(f"Added participant {name}.")
@@ -236,7 +241,11 @@ def update_participant(participant_id):
         abort(404)
         
     square_count = int(request.form.get("square_count", 0))
+    color = request.form.get("color")
+    
     participant.square_count = square_count
+    if color:
+        participant.color = color
     db.session.commit()
     
     return redirect(url_for("football_squares.dashboard", grid_id=grid.id))

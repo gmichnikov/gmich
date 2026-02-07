@@ -425,8 +425,7 @@
 
 /* Winner Highlights */
 .fs-square-cell.is-winner {
-    background: #fff9c4 !important; /* Brighter yellow */
-    box-shadow: inset 0 0 0 2px #fbc02d !important; /* Brighter gold border */
+    box-shadow: inset 0 0 0 3px #fbc02d !important; /* Thicker brighter gold border */
     font-weight: bold;
     color: var(--fs-primary);
     z-index: 5;
@@ -574,7 +573,7 @@
 }
 
 .fs-square-cell.assigned {
-    background: #e8f5e9;
+    /* background color is set dynamically per participant */
 }
 
 .fs-square-cell.active {

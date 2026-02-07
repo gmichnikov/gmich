@@ -36,14 +36,22 @@
                 {% for participant in grid.participants %}
                 <li class="fs-participant-item">
                     <div class="fs-participant-info">
-                        <span class="fs-participant-name">{{ participant.name }}</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ participant.color }}; border: 1px solid var(--fs-border);"></div>
+                            <span class="fs-participant-name">{{ participant.name }}</span>
+                        </div>
                         <span class="fs-participant-count">{{ participant.square_count }} squares</span>
                     </div>
                     <div class="fs-participant-actions">
                         <form action="{{ url_for('football_squares.update_participant', participant_id=participant.id) }}" method="POST" class="fs-participant-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="number" name="square_count" value="{{ participant.square_count }}" min="0" max="100">
-                            <button type="submit" class="fs-btn fs-btn-sm fs-btn-outline">✓</button>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                    <input type="number" name="square_count" value="{{ participant.square_count }}" min="0" max="100" style="width: 50px;">
+                                    <input type="color" name="color" value="{{ participant.color }}" style="width: 30px; height: 32px; padding: 2px; border: 1px solid var(--fs-border); border-radius: 4px; cursor: pointer;">
+                                    <button type="submit" class="fs-btn fs-btn-sm fs-btn-outline">✓</button>
+                                </div>
+                            </div>
                         </form>
                         {% if not is_locked %}
                         <form action="{{ url_for('football_squares.delete_participant', participant_id=participant.id) }}" method="POST" style="margin-top: 5px;">
@@ -247,8 +255,9 @@
                                         {% set _ = square_winners.append({'q': q_num, 't1': winner.team1_score, 't2': winner.team2_score, 'payout': winner.payout}) %}
                                     {% endif %}
                                 {% endfor %}
-                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}" 
-                                    data-x="{{ x }}" 
+                                            <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}" 
+                                                style="{% if square and square.participant_id %}background-color: {{ square.participant.color }};{% endif %}"
+                                                data-x="{{ x }}" 
                                     data-y="{{ y }}" 
                                     onclick='openAssignmentModal({{ x }}, {{ y }}, {{ (square.participant.name if square and square.participant_id else "")|tojson }}, {{ square.participant_id if square and square.participant_id else "null" }}, {{ square_winners|tojson }})'>
                                     <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>

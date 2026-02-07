@@ -133,7 +133,7 @@ Integrate specific team logos and finalize the UI.
 
 - [x] 7.1 Display Patriots/Seahawks logos when team names match (case-insensitive).
 - [x] 7.2 Ensure proper logo scaling and rotation in both horizontal and vertical axes.
-- [x] 7.3 Final UI cleanup (condensed scoring, collapsible sections, winning square highlights).
+- [x] 7.3 Final UI cleanup (condensed scoring, collapsible sections, winning square gold highlights & badges).
 - [x] 7.4 Assignment Lock: Disable editing squares once any scores are entered.
 
 **Manual Testing 7:**

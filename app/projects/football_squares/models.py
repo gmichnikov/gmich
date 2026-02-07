@@ -34,6 +34,7 @@ class FootballSquaresParticipant(db.Model):
     grid_id = db.Column(db.Integer, db.ForeignKey('football_squares_grids.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     square_count = db.Column(db.Integer, nullable=False, default=0)
+    color = db.Column(db.String(7), nullable=False, default="#e8f5e9")
 
     grid = db.relationship('FootballSquaresGrid', backref=db.backref('participants', lazy=True, cascade="all, delete-orphan"))
 
