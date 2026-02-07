@@ -23,9 +23,10 @@ Football Squares is an app that allows a single user to create and manage multip
 3. **As a user**, I want to choose whether the digits (0-9) on the axes are in draft order (0-9) or randomized.
 4. **As a user**, I want to manually click a square and assign it to a participant.
 5. **As a user**, I want to click a button to fill all remaining empty squares randomly from my participant list.
-6. **As a user**, I want to assign different point values (prizes) to each of the four quarters and an optional overtime period.
+6. **As a user**, I want to assign different point values (prizes) to each of the four quarters and an optional overtime period (as separate events).
 7. **As a user**, I want to enter the score at the end of each quarter (and OT if applicable) and see which participant won.
 8. **As a user**, I want to share a read-only link with my friends so they can see the grid without logging in.
+9. **As a user**, I want to specify exactly how many squares each participant should receive before randomizing.
 
 ## Functional Requirements
 
@@ -44,20 +45,22 @@ Football Squares is an app that allows a single user to create and manage multip
 
 ### 3. Participant Management
 - Users can add/remove participants to a specific grid.
+- **Locking**: Once any square has been assigned to a participant, the participant list for that grid is locked (no adding or removing participants).
+- **Square Allocation**: Users can specify the number of squares each participant is intended to have. This does not have to be an even split.
 - Participants are just names for this project (not linked to system users).
 
 ### 4. Grid Filling Logic
 - **Manual Fill**: The user can click any square and select a participant from a dropdown to assign it.
-- **Auto-Fill Remainder**: A feature to take all participants and distribute the remaining empty squares among them as evenly as possible.
-- **Full Randomization**: A feature to clear the grid and assign all 100 squares randomly to the list of participants.
+- **Auto-Fill Remainder**: A feature to take participants and their allocated square counts to fill the remaining empty squares.
+- **Full Randomization**: A feature to clear the grid and assign all 100 squares randomly based on the specified square counts for each participant.
 
 ### 5. Scoring & Winners
-- **Point Values**: Users can enter a "points" or "prize" value for Quarter 1, Quarter 2, Quarter 3, Quarter 4 (End of Regulation), and an optional Overtime/Final Score.
-- **Score Entry**: Users can enter the score for each team at the end of each quarter.
-- **Overtime Handling**: 
-    - The app should provide a specific field for the Final Score (including OT).
-    - If the game ends in regulation, the Quarter 4 score and Final Score are identical.
-    - If the game goes to OT, the user enters the OT final score separately to determine the OT winner.
+- **Point Values**: Users can enter a "points" or "prize" value for Quarter 1, Quarter 2, Quarter 3, Quarter 4, and an optional Overtime period.
+- **Score Entry**: Users can enter the score for each team at the end of each period.
+- **Period Handling**: 
+    - Q1, Q2, Q3, Q4, and OT are treated as distinct scoring events.
+    - There is no "Final Score" period; OT is its own separate entry.
+    - If the game goes to OT, the user enters the score at the end of OT to determine the OT winner.
 - **Winner Calculation**: 
     - The app takes the last digit of each team's score for the given period.
     - It finds the square at the intersection of those two digits on the axes.
@@ -85,6 +88,7 @@ Football Squares is an app that allows a single user to create and manage multip
 - `id`: Primary Key
 - `grid_id`: FK to FootballSquaresGrid
 - `name`: String
+- `square_count`: Integer (Target number of squares for this participant)
 
 ### FootballSquaresSquare
 - `id`: Primary Key
