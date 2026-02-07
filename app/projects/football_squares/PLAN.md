@@ -7,17 +7,17 @@ This plan breaks down the development of the Football Squares project into testa
 ## Phase 1: Database Models & Migrations
 Create the core data structures for grids, participants, squares, and quarters.
 
-- [ ] 1.1 Create `models.py` in `app/projects/football_squares/`
-    - [ ] Define `FootballSquaresGrid` model
-        - Fields for `team1_digits` and `team2_digits` (JSON strings)
-        - `share_slug` for public access
-    - [ ] Define `FootballSquaresParticipant` model
-        - `square_count`: Target number of squares (Integer)
-    - [ ] Define `FootballSquaresSquare` model
-        - (x, y) coordinates and foreign key to participant
-    - [ ] Define `FootballSquaresQuarter` model
-        - Periods 1-4 (Q1-Q4) and Period 5 (OT)
-- [ ] 1.2 Register models in `app/__init__.py`
+- [x] 1.1 Create `models.py` in `app/projects/football_squares/`
+    - [x] Define `FootballSquaresGrid` model
+        - [x] Fields for `team1_digits` and `team2_digits` (JSON strings)
+        - [x] `share_slug` for public access
+    - [x] Define `FootballSquaresParticipant` model
+        - [x] `square_count`: Target number of squares (Integer)
+    - [x] Define `FootballSquaresSquare` model
+        - [x] (x, y) coordinates and foreign key to participant
+    - [x] Define `FootballSquaresQuarter` model
+        - [x] Periods 1-4 (Q1-Q4) and Period 5 (OT)
+- [x] 1.2 Register models in `app/__init__.py`
 
 **Manual Testing 1:**
 - [ ] Run `flask db migrate -m "Add football_squares models"`

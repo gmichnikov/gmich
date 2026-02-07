@@ -139,6 +139,12 @@ def create_app():
         BetfakeBet,
         BetfakeTransaction,
     )
+    from app.projects.football_squares.models import (
+        FootballSquaresGrid,
+        FootballSquaresParticipant,
+        FootballSquaresSquare,
+        FootballSquaresQuarter,
+    )
 
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")
