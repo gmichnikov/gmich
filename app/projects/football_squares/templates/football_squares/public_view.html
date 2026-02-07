@@ -156,7 +156,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}"
-                                                style="{% if square and square.participant_id %}background-color: {{ square.participant.color }};{% endif %}">
+                                                style="{% if square and square.participant_id %}background-color: {{ square.participant.color }}; color: {{ square.participant.text_color }};{% endif %}">
                                                 <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
                                                 {% if win_state.is_winner %}
                                                 <div class="fs-winner-badge" title="Winner!">

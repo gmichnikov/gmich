@@ -135,6 +135,7 @@ Integrate specific team logos and finalize the UI.
 - [x] 7.2 Ensure proper logo scaling and rotation in both horizontal and vertical axes.
 - [x] 7.3 Final UI cleanup (condensed scoring, collapsible sections, winning square gold highlights & badges).
 - [x] 7.4 Assignment Lock: Disable editing squares once any scores are entered.
+- [x] 7.5 Dynamic Text Contrast: Automatically switch between black and white text based on square background color.
 
 **Manual Testing 7:**
 - [x] Set team name to "Patriots" and verify the logo appears in the grid axis.

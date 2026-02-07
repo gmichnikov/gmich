@@ -256,7 +256,7 @@
                                     {% endif %}
                                 {% endfor %}
                                             <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}" 
-                                                style="{% if square and square.participant_id %}background-color: {{ square.participant.color }};{% endif %}"
+                                                style="{% if square and square.participant_id %}background-color: {{ square.participant.color }}; color: {{ square.participant.text_color }};{% endif %}"
                                                 data-x="{{ x }}" 
                                     data-y="{{ y }}" 
                                     onclick='openAssignmentModal({{ x }}, {{ y }}, {{ (square.participant.name if square and square.participant_id else "")|tojson }}, {{ square.participant_id if square and square.participant_id else "null" }}, {{ square_winners|tojson }})'>
