@@ -36,9 +36,11 @@ Set up the blueprint, routes for the grid dashboard, and grid creation.
     - [ ] `GET /create` - Form to create a new grid.
     - [ ] `POST /create` - Handle grid creation (generate `share_slug`).
     - [ ] `GET /<grid_id>` - Dashboard for a specific grid.
+    - [ ] `GET /<grid_id>/edit` - Form to edit grid name/teams/colors.
+    - [ ] `POST /<grid_id>/delete` - Route to delete a grid.
 - [ ] 2.3 Create templates:
-    - [ ] `football_squares/list.html` - Show all grids.
-    - [ ] `football_squares/create.html` - Form for new grid.
+    - [ ] `football_squares/list.html` - Show all grids with "Delete" buttons.
+    - [ ] `football_squares/create_edit.html` - Unified form for new/edit grid.
     - [ ] `football_squares/dashboard.html` - Main control center for a specific grid.
 
 **Manual Testing 2:**
@@ -93,10 +95,11 @@ Enter scores, calculate winners, and provide the shareable link.
 
 - [ ] 5.1 Scoring UI:
     - [ ] Form to enter scores for Q1, Q2, Q3, Q4, and OT.
-    - [ ] Fields for "Payout Description" for each period.
-- [ ] 5.2 Winner Calculation:
+    - [ ] Fields for "Payout Description" (points/prizes) for each period.
+- [ ] 5.2 Winner Calculation & Summary:
     - [ ] Logic to find the winning square based on the last digits of the scores.
-    - [ ] Display the winner's name prominently on the dashboard.
+    - [ ] **Winner Summary Table**: Show each participant and the total points/prizes they won across all periods.
+    - [ ] Display the winner's name prominently on the grid for each completed period.
 - [ ] 5.3 Public View:
     - [ ] Implement `GET /view/<share_slug>` route (No login required).
     - [ ] Create `football_squares/public_view.html` (Read-only version of the grid).
