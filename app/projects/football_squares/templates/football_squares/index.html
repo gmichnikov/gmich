@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Football Squares{% endblock %}
+
+{% block styles %}
+<style>
+    .fs-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .fs-title {
+        color: #1a1a1a;
+        margin-bottom: 1rem;
+    }
+    .fs-placeholder {
+        color: #666;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fs-container">
+    <h1 class="fs-title">Football Squares</h1>
+    <p class="fs-placeholder">Welcome to the Football Squares project! This is a placeholder for now.</p>
+</div>
+{% endblock %}

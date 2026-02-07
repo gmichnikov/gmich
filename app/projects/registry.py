@@ -290,6 +290,17 @@ PROJECTS = [
         "icon": "🍽️",
         "order": 10,
     },
+    {
+        "id": "football_squares",
+        "name": "Football Squares",
+        "description": "Football squares game for your next big game party",
+        "url": "/football-squares",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🏈",
+        "order": 11,
+    },
 ]
 
 
