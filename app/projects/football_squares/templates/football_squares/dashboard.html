@@ -1,0 +1,50 @@
+{% extends "football_squares/layout.html" %}
+
+{% block fs_title %}{{ grid.name }} - Dashboard{% endblock %}
+
+{% block fs_content %}
+<div class="fs-dashboard-header">
+    <div class="fs-grid-meta">
+        <h1>{{ grid.name }}</h1>
+        <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
+    </div>
+    <div class="fs-share-box">
+        <label>Shareable Link:</label>
+        <div class="fs-copy-input">
+            <input type="text" value="{{ url_for('football_squares.public_view', share_slug=grid.share_slug, _external=True) }}" readonly id="shareLink">
+            <button onclick="copyLink()" class="fs-btn fs-btn-sm">Copy</button>
+        </div>
+    </div>
+</div>
+
+<div class="fs-dashboard-grid">
+    <div class="fs-sidebar">
+        <section class="fs-card">
+            <h3>Participants</h3>
+            <p class="fs-placeholder">Participant management coming in Phase 3.</p>
+        </section>
+
+        <section class="fs-card">
+            <h3>Scoring</h3>
+            <p class="fs-placeholder">Scoring management coming in Phase 5.</p>
+        </section>
+    </div>
+
+    <div class="fs-main-panel">
+        <section class="fs-card fs-grid-display">
+            <h3>10x10 Grid</h3>
+            <p class="fs-placeholder">Interactive grid coming in Phase 4.</p>
+        </section>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    var copyText = document.getElementById("shareLink");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    alert("Copied to clipboard!");
+}
+</script>
+{% endblock %}

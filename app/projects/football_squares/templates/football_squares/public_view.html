@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ grid.name }} - Football Squares{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('football_squares.static', filename='football_squares/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="fs-page-wrapper">
+    <div class="fs-container">
+        <header class="fs-header">
+            <div class="fs-brand">
+                <span class="fs-brand-icon">🏈</span>
+                <span class="fs-brand-text">Football Squares</span>
+            </div>
+        </header>
+
+        <main class="fs-main">
+            <div class="fs-public-header">
+                <h1>{{ grid.name }}</h1>
+                <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
+            </div>
+
+            <section class="fs-card">
+                <h3>The Grid</h3>
+                <p class="fs-placeholder">Grid view coming in Phase 5.</p>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

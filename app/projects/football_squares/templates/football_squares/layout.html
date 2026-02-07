@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{% block fs_title %}Football Squares{% endblock %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('football_squares.static', filename='football_squares/style.css') }}">
+{% block fs_styles %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="fs-page-wrapper">
+    <div class="fs-container">
+        <header class="fs-header">
+            <a href="{{ url_for('football_squares.index') }}" class="fs-brand">
+                <span class="fs-brand-icon">🏈</span>
+                <span class="fs-brand-text">Football Squares</span>
+            </a>
+            {% if grid and grid.id %}
+            <nav class="fs-nav">
+                <a href="{{ url_for('football_squares.dashboard', grid_id=grid.id) }}" class="fs-nav-link {% if request.endpoint == 'football_squares.dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('football_squares.edit', grid_id=grid.id) }}" class="fs-nav-link {% if request.endpoint == 'football_squares.edit' %}active{% endif %}">Settings</a>
+            </nav>
+            {% endif %}
+        </header>
+
+        <main class="fs-main">
+            {% block fs_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

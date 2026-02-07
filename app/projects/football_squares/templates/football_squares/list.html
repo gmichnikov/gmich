@@ -1,0 +1,36 @@
+{% extends "football_squares/layout.html" %}
+
+{% block fs_title %}My Grids - Football Squares{% endblock %}
+
+{% block fs_content %}
+<div class="fs-list-header">
+    <h1>My Football Squares Grids</h1>
+    <a href="{{ url_for('football_squares.create') }}" class="fs-btn fs-btn-primary">Create New Grid</a>
+</div>
+
+<div class="fs-grid-list">
+    {% if grids %}
+        {% for grid in grids %}
+        <div class="fs-grid-card">
+            <div class="fs-grid-info">
+                <h3>{{ grid.name }}</h3>
+                <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
+                <small>Created on {{ grid.created_at.strftime('%Y-%m-%d') }}</small>
+            </div>
+            <div class="fs-grid-actions">
+                <a href="{{ url_for('football_squares.dashboard', grid_id=grid.id) }}" class="fs-btn fs-btn-outline">View Dashboard</a>
+                <form action="{{ url_for('football_squares.delete', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this grid?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="fs-btn fs-btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="fs-empty-state">
+            <p>You haven't created any grids yet.</p>
+            <a href="{{ url_for('football_squares.create') }}" class="fs-btn fs-btn-primary">Create Your First Grid</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

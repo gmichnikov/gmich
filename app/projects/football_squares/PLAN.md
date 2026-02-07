@@ -30,18 +30,18 @@ Create the core data structures for grids, participants, squares, and quarters.
 ## Phase 2: Project Structure & Basic Management
 Set up the blueprint, routes for the grid dashboard, and grid creation.
 
-- [ ] 2.1 Update `app/projects/football_squares/__init__.py` (already done, but verify).
-- [ ] 2.2 Implement basic routes in `routes.py`:
-    - [ ] `GET /` - List all grids for the current user.
-    - [ ] `GET /create` - Form to create a new grid.
-    - [ ] `POST /create` - Handle grid creation (generate `share_slug`).
-    - [ ] `GET /<grid_id>` - Dashboard for a specific grid.
-    - [ ] `GET /<grid_id>/edit` - Form to edit grid name/teams/colors.
-    - [ ] `POST /<grid_id>/delete` - Route to delete a grid.
-- [ ] 2.3 Create templates:
-    - [ ] `football_squares/list.html` - Show all grids with "Delete" buttons.
-    - [ ] `football_squares/create_edit.html` - Unified form for new/edit grid.
-    - [ ] `football_squares/dashboard.html` - Main control center for a specific grid.
+- [x] 2.1 Update `app/projects/football_squares/__init__.py` (already done, but verify).
+- [x] 2.2 Implement basic routes in `routes.py`:
+    - [x] `GET /` - List all grids for the current user.
+    - [x] `GET /create` - Form to create a new grid.
+    - [x] `POST /create` - Handle grid creation (generate `share_slug`).
+    - [x] `GET /<grid_id>` - Dashboard for a specific grid.
+    - [x] `GET /<grid_id>/edit` - Form to edit grid name/teams/colors.
+    - [x] `POST /<grid_id>/delete` - Route to delete a grid.
+- [x] 2.3 Create templates:
+    - [x] `football_squares/list.html` - Show all grids with "Delete" buttons.
+    - [x] `football_squares/create_edit.html` - Unified form for new/edit grid.
+    - [x] `football_squares/dashboard.html` - Main control center for a specific grid.
 
 **Manual Testing 2:**
 - [ ] Navigate to `/football-squares/`.

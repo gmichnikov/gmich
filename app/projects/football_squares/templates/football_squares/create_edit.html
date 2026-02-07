@@ -1,0 +1,94 @@
+{% extends "football_squares/layout.html" %}
+
+{% block fs_title %}{{ "Edit" if mode == "edit" else "Create" }} Grid - Football Squares{% endblock %}
+
+{% block fs_content %}
+<div class="fs-form-container">
+    <h1>{{ "Edit" if mode == "edit" else "Create a New" }} Football Squares Grid</h1>
+    
+    <form method="POST" class="fs-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="fs-form-group">
+            <label for="name">Grid Name</label>
+            <input type="text" id="name" name="name" value="{{ grid.name if mode == 'edit' else '' }}" placeholder="e.g., Super Bowl LIX" required>
+        </div>
+
+        <div class="fs-form-row">
+            <div class="fs-form-column">
+                <h3>Team 1 (X-Axis)</h3>
+                <div class="fs-form-group">
+                    <label for="team1_name">Team Name</label>
+                    <input type="text" id="team1_name" name="team1_name" value="{{ grid.team1_name if mode == 'edit' else '' }}" required>
+                </div>
+                <div class="fs-form-group">
+                    <label for="team1_color_primary">Primary Color</label>
+                    <div class="fs-color-input-wrapper">
+                        <input type="color" id="team1_color_primary" name="team1_color_primary" value="{{ grid.team1_color_primary if mode == 'edit' else '#000000' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team1_color_primary if mode == 'edit' else '#000000' }}</span>
+                    </div>
+                </div>
+                <div class="fs-form-group">
+                    <label for="team1_color_secondary">Secondary Color</label>
+                    <div class="fs-color-input-wrapper">
+                        <input type="color" id="team1_color_secondary" name="team1_color_secondary" value="{{ grid.team1_color_secondary if mode == 'edit' else '#FFFFFF' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team1_color_secondary if mode == 'edit' else '#FFFFFF' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fs-form-column">
+                <h3>Team 2 (Y-Axis)</h3>
+                <div class="fs-form-group">
+                    <label for="team2_name">Team Name</label>
+                    <input type="text" id="team2_name" name="team2_name" value="{{ grid.team2_name if mode == 'edit' else '' }}" required>
+                </div>
+                <div class="fs-form-group">
+                    <label for="team2_color_primary">Primary Color</label>
+                    <div class="fs-color-input-wrapper">
+                        <input type="color" id="team2_color_primary" name="team2_color_primary" value="{{ grid.team2_color_primary if mode == 'edit' else '#000000' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team2_color_primary if mode == 'edit' else '#000000' }}</span>
+                    </div>
+                </div>
+                <div class="fs-form-group">
+                    <label for="team2_color_secondary">Secondary Color</label>
+                    <div class="fs-color-input-wrapper">
+                        <input type="color" id="team2_color_secondary" name="team2_color_secondary" value="{{ grid.team2_color_secondary if mode == 'edit' else '#FFFFFF' }}" oninput="updateColorLabel(this)">
+                        <span class="fs-color-value">{{ grid.team2_color_secondary if mode == 'edit' else '#FFFFFF' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if mode == "create" %}
+        <div class="fs-form-group">
+            <label>Axis Digits Mode</label>
+            <div class="fs-radio-group">
+                <label>
+                    <input type="radio" name="axis_type" value="Draft" checked> Draft Order (0-9)
+                </label>
+                <label>
+                    <input type="radio" name="axis_type" value="Random"> Randomized
+                </label>
+            </div>
+            <p class="fs-help-text">Choose how the 0-9 digits are arranged on the axes.</p>
+        </div>
+        {% endif %}
+
+        <div class="fs-form-actions">
+            <button type="submit" class="fs-btn fs-btn-primary">{{ "Update Grid" if mode == "edit" else "Create Grid" }}</button>
+            <a href="{{ url_for('football_squares.index') }}" class="fs-btn fs-btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function updateColorLabel(input) {
+    const wrapper = input.closest('.fs-color-input-wrapper');
+    const label = wrapper.querySelector('.fs-color-value');
+    if (label) {
+        label.textContent = input.value.toUpperCase();
+    }
+}
+</script>
+{% endblock %}
