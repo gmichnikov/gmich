@@ -17,7 +17,7 @@
 }
 
 .fs-container {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -234,6 +234,22 @@
     justify-content: space-between;
     align-items: flex-end;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.fs-mobile-sidebar-toggle {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .fs-mobile-sidebar-toggle {
+        display: inline-flex;
+    }
+    
+    .fs-sidebar.collapsed {
+        display: none;
+    }
 }
 
 .fs-share-box label {
@@ -409,16 +425,27 @@
 
 /* Winner Highlights */
 .fs-square-cell.is-winner {
-    background: #fff9c4 !important; /* Light yellow */
-    box-shadow: inset 0 0 0 2px #fbc02d;
+    background: #fff9c4 !important; /* Brighter yellow */
+    box-shadow: inset 0 0 0 2px #fbc02d !important; /* Brighter gold border */
+    font-weight: bold;
+    color: var(--fs-primary);
+    z-index: 5;
 }
 
 .fs-winner-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    font-size: 1rem;
-    z-index: 2;
+    top: 2px;
+    right: 2px;
+    font-size: 0.75rem;
+    z-index: 6;
+    background: white;
+    border-radius: 10px;
+    padding: 2px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    border: 1px solid #ffd700;
 }
 
 /* Grid Display */
@@ -480,6 +507,20 @@
     z-index: 20; /* High z-index to stay on top */
 }
 
+.fs-team-logo {
+    height: 24px;
+    width: auto;
+    vertical-align: middle;
+    margin: 0 8px;
+}
+
+.fs-axis-vertical .fs-team-logo {
+    height: auto;
+    width: 24px;
+    margin: 8px 0;
+    transform: rotate(90deg);
+}
+
 /* X-Axis Digits (Top Row) */
 .fs-squares-table thead tr:nth-child(2) th.fs-axis-digit {
     top: 0;
@@ -502,11 +543,17 @@
 }
 
 .fs-grid-wrapper {
-    overflow: auto;
-    max-height: 80vh;
+    overflow-x: auto;
     border: 1px solid var(--fs-border);
     border-radius: 4px;
     -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 900px) {
+    .fs-grid-wrapper {
+        max-height: 80vh;
+        overflow: auto;
+    }
 }
 
 .fs-scoring-table-wrapper {

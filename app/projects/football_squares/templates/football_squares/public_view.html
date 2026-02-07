@@ -7,6 +7,12 @@
 {% endblock %}
 
 {% block content %}
+{% set logo_map = {
+    'patriots': 'New_England_Patriots_logo.svg.webp',
+    'new england patriots': 'New_England_Patriots_logo.svg.webp',
+    'seahawks': 'Seattle_Seahawks_logo.svg.webp',
+    'seattle seahawks': 'Seattle_Seahawks_logo.svg.webp'
+} %}
 <div class="fs-page-wrapper">
     <div class="fs-container">
         <header class="fs-header">
@@ -20,10 +26,15 @@
             <div class="fs-public-header" style="text-align: center; margin-bottom: 2rem;">
                 <h1>{{ grid.name }}</h1>
                 <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
+                <div class="fs-header-actions" style="margin-top: 1rem;">
+                    <button type="button" class="fs-btn fs-btn-outline fs-btn-sm fs-mobile-sidebar-toggle" onclick="toggleSidebar()" style="margin: 0 auto;">
+                        📋 <span id="sidebarToggleText">Show Sidebar</span>
+                    </button>
+                </div>
             </div>
 
             <div class="fs-dashboard-grid" style="grid-template-columns: 250px 1fr;">
-                <div class="fs-sidebar">
+                <div class="fs-sidebar collapsed" id="fsSidebar">
                     <section class="fs-card">
                         <h3>Participants</h3>
                         <ul class="fs-participant-list">
@@ -103,6 +114,9 @@
                                         <th colspan="2" style="border: none;"></th>
                                         <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }}; border-radius: 4px 4px 0 0;">
                                             {{ grid.team1_name }}
+                                            {% if grid.team1_name.lower() in logo_map %}
+                                            <img src="{{ url_for('football_squares.static', filename=logo_map[grid.team1_name.lower()]) }}" class="fs-team-logo" alt="{{ grid.team1_name }} logo">
+                                            {% endif %}
                                         </th>
                                     </tr>
                                     <tr>
@@ -122,7 +136,12 @@
                                         {% if loop.first %}
                                         <!-- Team 2 Name Sidebar (Now scrolls away) -->
                                         <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }}; border-radius: 4px 0 0 4px;">
-                                            <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
+                                            <span class="fs-axis-vertical">
+                                                {{ grid.team2_name }}
+                                                {% if grid.team2_name.lower() in logo_map %}
+                                                <img src="{{ url_for('football_squares.static', filename=logo_map[grid.team2_name.lower()]) }}" class="fs-team-logo" alt="{{ grid.team2_name }} logo">
+                                                {% endif %}
+                                            </span>
                                         </th>
                                         {% endif %}
                                         <!-- Sticky Y-Axis Digit -->
@@ -130,16 +149,29 @@
                                         <!-- Squares -->
                                         {% for x in range(10) %}
                                             {% set square = squares_map.get((x, y)) %}
-                                            {% set is_winner = false %}
+                                            {% set win_state = namespace(is_winner=false) %}
                                             {% for q_num, winner in winners.items() %}
                                                 {% if winner.x == x and winner.y == y %}
-                                                    {% set is_winner = true %}
+                                                    {% set win_state.is_winner = true %}
                                                 {% endif %}
                                             {% endfor %}
-                                            <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if is_winner %}is-winner{% endif %}">
+                                            <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}">
                                                 <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
-                                                {% if is_winner %}
-                                                <div class="fs-winner-badge">🏆</div>
+                                                {% if win_state.is_winner %}
+                                                <div class="fs-winner-badge" title="Winner!">
+                                                    {% set q_labels = [] %}
+                                                    {% for q_num, winner in winners.items() %}
+                                                        {% if winner.x == x and winner.y == y %}
+                                                            {% if q_num == 5 %}
+                                                                {% set _ = q_labels.append('OT') %}
+                                                            {% else %}
+                                                                {% set _ = q_labels.append('Q' ~ q_num) %}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    <span style="font-size: 0.6rem; margin-right: 2px;">{{ q_labels|join(',') }}</span>
+                                                    🏆
+                                                </div>
                                                 {% endif %}
                                             </td>
                                         {% endfor %}
@@ -154,4 +186,21 @@
         </main>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('fsSidebar');
+    const toggleText = document.getElementById('sidebarToggleText');
+    
+    if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        toggleText.textContent = 'Hide Sidebar';
+    } else {
+        sidebar.classList.add('collapsed');
+        toggleText.textContent = 'Show Sidebar';
+    }
+}
+</script>
 {% endblock %}

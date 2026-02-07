@@ -114,11 +114,13 @@ def dashboard(grid_id):
                 x = team1_digits.index(last_digit1)
                 y = team2_digits.index(last_digit2)
                 winning_square = squares_map.get((x, y))
-                if winning_square and winning_square.participant:
+                if winning_square:
                     winners[q.quarter_number] = {
-                        'participant': winning_square.participant.name,
+                        'participant': winning_square.participant.name if winning_square.participant else None,
                         'x': x,
                         'y': y,
+                        'team1_score': q.team1_score,
+                        'team2_score': q.team2_score,
                         'payout': q.payout_description
                     }
             except ValueError:
@@ -128,6 +130,8 @@ def dashboard(grid_id):
     participant_summary = {}
     for q_num, winner_info in winners.items():
         name = winner_info['participant']
+        if not name:
+            continue
         payout = winner_info['payout'] or "Winner"
         if name not in participant_summary:
             participant_summary[name] = []
@@ -311,6 +315,11 @@ def assign_square(grid_id):
     y = data.get("y")
     participant_id = data.get("participant_id") # Can be null to unassign
     
+    # Check if any scores have been entered
+    has_scores = any(q.team1_score is not none or q.team2_score is not none for q in grid.quarters)
+    if has_scores:
+        return jsonify({"success": False, "error": "Cannot change assignments after scores have been entered"}), 400
+    
     square = FootballSquaresSquare.query.filter_by(grid_id=grid.id, x_coord=x, y_coord=y).first()
     if not square:
         return jsonify({"success": False, "error": "Square not found"}), 404
@@ -334,6 +343,12 @@ def randomize_all(grid_id):
     if grid.user_id != current_user.id:
         abort(404)
         
+    # Check if any scores have been entered
+    has_scores = any(q.team1_score is not None or q.team2_score is not None for q in grid.quarters)
+    if has_scores:
+        flash("Cannot change assignments after scores have been entered.")
+        return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
     # Clear all assignments
     for square in grid.squares:
         square.participant_id = None
@@ -367,6 +382,12 @@ def randomize_remaining(grid_id):
     if grid.user_id != current_user.id:
         abort(404)
         
+    # Check if any scores have been entered
+    has_scores = any(q.team1_score is not None or q.team2_score is not None for q in grid.quarters)
+    if has_scores:
+        flash("Cannot change assignments after scores have been entered.")
+        return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
+
     # Calculate how many squares each participant already has
     participant_counts = {}
     for p in grid.participants:
@@ -412,11 +433,13 @@ def public_view(share_slug):
                 x = team1_digits.index(last_digit1)
                 y = team2_digits.index(last_digit2)
                 winning_square = squares_map.get((x, y))
-                if winning_square and winning_square.participant:
+                if winning_square:
                     winners[q.quarter_number] = {
-                        'participant': winning_square.participant.name,
+                        'participant': winning_square.participant.name if winning_square.participant else None,
                         'x': x,
                         'y': y,
+                        'team1_score': q.team1_score,
+                        'team2_score': q.team2_score,
                         'payout': q.payout_description
                     }
             except ValueError: pass
@@ -424,6 +447,7 @@ def public_view(share_slug):
     participant_summary = {}
     for q_num, winner_info in winners.items():
         name = winner_info['participant']
+        if not name: continue
         payout = winner_info['payout'] or "Winner"
         if name not in participant_summary: participant_summary[name] = []
         participant_summary[name].append(f"Q{q_num if q_num < 5 else 'OT'}: {payout}")

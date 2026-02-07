@@ -3,15 +3,26 @@
 {% block fs_title %}{{ grid.name }} - Dashboard{% endblock %}
 
 {% block fs_content %}
+{% set logo_map = {
+    'patriots': 'New_England_Patriots_logo.svg.webp',
+    'new england patriots': 'New_England_Patriots_logo.svg.webp',
+    'seahawks': 'Seattle_Seahawks_logo.svg.webp',
+    'seattle seahawks': 'Seattle_Seahawks_logo.svg.webp'
+} %}
 <div class="fs-dashboard-header">
     <div class="fs-grid-meta">
         <h1>{{ grid.name }}</h1>
         <p>{{ grid.team1_name }} (X) vs {{ grid.team2_name }} (Y)</p>
     </div>
+    <div class="fs-header-actions">
+        <button type="button" class="fs-btn fs-btn-outline fs-btn-sm fs-mobile-sidebar-toggle" onclick="toggleSidebar()">
+            📋 <span id="sidebarToggleText">Show Sidebar</span>
+        </button>
+    </div>
 </div>
 
 <div class="fs-dashboard-grid">
-    <div class="fs-sidebar">
+    <div class="fs-sidebar collapsed" id="fsSidebar">
         <!-- Participants Section -->
         <section class="fs-card">
             <div class="fs-card-header">
@@ -193,6 +204,9 @@
                             <th colspan="2" style="border: none;"></th>
                             <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }}; border-radius: 4px 4px 0 0;">
                                 {{ grid.team1_name }}
+                                {% if grid.team1_name.lower() in logo_map %}
+                                <img src="{{ url_for('football_squares.static', filename=logo_map[grid.team1_name.lower()]) }}" class="fs-team-logo" alt="{{ grid.team1_name }} logo">
+                                {% endif %}
                             </th>
                         </tr>
                         <tr>
@@ -212,7 +226,12 @@
                             {% if loop.first %}
                             <!-- Team 2 Name Sidebar (Now scrolls away) -->
                             <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }}; border-radius: 4px 0 0 4px;">
-                                <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
+                                <span class="fs-axis-vertical">
+                                    {{ grid.team2_name }}
+                                    {% if grid.team2_name.lower() in logo_map %}
+                                    <img src="{{ url_for('football_squares.static', filename=logo_map[grid.team2_name.lower()]) }}" class="fs-team-logo" alt="{{ grid.team2_name }} logo">
+                                    {% endif %}
+                                </span>
                             </th>
                             {% endif %}
                             <!-- Sticky Y-Axis Digit -->
@@ -220,19 +239,34 @@
                             <!-- Squares -->
                             {% for x in range(10) %}
                                 {% set square = squares_map.get((x, y)) %}
-                                {% set is_winner = false %}
+                                {% set win_state = namespace(is_winner=false) %}
+                                {% set square_winners = [] %}
                                 {% for q_num, winner in winners.items() %}
                                     {% if winner.x == x and winner.y == y %}
-                                        {% set is_winner = true %}
+                                        {% set win_state.is_winner = true %}
+                                        {% set _ = square_winners.append({'q': q_num, 't1': winner.team1_score, 't2': winner.team2_score, 'payout': winner.payout}) %}
                                     {% endif %}
                                 {% endfor %}
-                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if is_winner %}is-winner{% endif %}" 
+                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if win_state.is_winner %}is-winner{% endif %}" 
                                     data-x="{{ x }}" 
                                     data-y="{{ y }}" 
-                                    onclick="openAssignmentModal({{ x }}, {{ y }}, '{{ square.participant.name if square and square.participant_id else '' }}', {{ square.participant_id if square and square.participant_id else 'null' }})">
+                                    onclick='openAssignmentModal({{ x }}, {{ y }}, {{ (square.participant.name if square and square.participant_id else "")|tojson }}, {{ square.participant_id if square and square.participant_id else "null" }}, {{ square_winners|tojson }})'>
                                     <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
-                                    {% if is_winner %}
-                                    <div class="fs-winner-badge">🏆</div>
+                                    {% if win_state.is_winner %}
+                                    <div class="fs-winner-badge" title="Winner!">
+                                        {% set q_labels = [] %}
+                                        {% for q_num, winner in winners.items() %}
+                                            {% if winner.x == x and winner.y == y %}
+                                                {% if q_num == 5 %}
+                                                    {% set _ = q_labels.append('OT') %}
+                                                {% else %}
+                                                    {% set _ = q_labels.append('Q' ~ q_num) %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span style="font-size: 0.6rem; margin-right: 2px;">{{ q_labels|join(',') }}</span>
+                                        🏆
+                                    </div>
                                     {% endif %}
                                 </td>
                             {% endfor %}
@@ -242,19 +276,20 @@
                 </table>
             </div>
 
-            {% set empty_squares_count = grid.squares|selectattr('participant_id', 'none')|list|length %}
-            {% if empty_squares_count > 0 %}
-            <div class="fs-grid-actions-bar">
-                <form action="{{ url_for('football_squares.randomize_remaining', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('Fill all remaining empty squares randomly?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="fs-btn fs-btn-outline">Fill Remaining Randomly</button>
-                </form>
-                <form action="{{ url_for('football_squares.randomize_all', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('This will CLEAR all current assignments and randomize the entire grid. Continue?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="fs-btn fs-btn-outline">Randomize All</button>
-                </form>
-            </div>
-            {% endif %}
+{% set empty_squares_count = grid.squares|selectattr('participant_id', 'none')|list|length %}
+{% set has_scores = grid.quarters|rejectattr('team1_score', 'none')|list|length > 0 or grid.quarters|rejectattr('team2_score', 'none')|list|length > 0 %}
+{% if empty_squares_count > 0 and not has_scores %}
+<div class="fs-grid-actions-bar">
+    <form action="{{ url_for('football_squares.randomize_remaining', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('Fill all remaining empty squares randomly?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="fs-btn fs-btn-outline">Fill Remaining Randomly</button>
+    </form>
+    <form action="{{ url_for('football_squares.randomize_all', grid_id=grid.id) }}" method="POST" onsubmit="return confirm('This will CLEAR all current assignments and randomize the entire grid. Continue?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="fs-btn fs-btn-outline">Randomize All</button>
+    </form>
+</div>
+{% endif %}
         </section>
     </div>
 </div>
@@ -270,6 +305,14 @@
                 {{ grid.team2_name }}: <span id="modalYDigit"></span>
             </div>
         </div>
+
+        <div id="modalWinnerInfo" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: #fff9c4; border: 1px solid #fbc02d; border-radius: 4px;">
+            <div style="font-weight: bold; color: #856404; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                🏆 Winner Information
+            </div>
+            <div id="modalWinnerDetails" style="font-size: 0.85rem;"></div>
+        </div>
+
         <p>Select participant:</p>
         <select id="participantSelect" class="fs-modal-select">
             <option value="">-- Unassigned --</option>
@@ -279,7 +322,7 @@
         </select>
         <div class="fs-modal-actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button onclick="closeAssignmentModal()" class="fs-btn fs-btn-outline fs-btn-sm">Cancel</button>
-            <button onclick="saveAssignment()" class="fs-btn fs-btn-primary fs-btn-sm">Save</button>
+            <button id="saveAssignmentBtn" onclick="saveAssignment()" class="fs-btn fs-btn-primary fs-btn-sm">Save</button>
         </div>
     </div>
 </div>
@@ -288,9 +331,24 @@
 let currentX = null;
 let currentY = null;
 
-function openAssignmentModal(x, y, participantName, participantId) {
+function openAssignmentModal(x, y, participantName, participantId, squareWinners = []) {
     currentX = x;
     currentY = y;
+    
+    // Check if scores have been entered for any quarter
+    const scoringInputs = Array.from(document.querySelectorAll('.fs-scoring-table input[type="number"]'));
+    const hasScores = scoringInputs.some(input => input.value.trim() !== "");
+    
+    const select = document.getElementById('participantSelect');
+    const saveBtn = document.getElementById('saveAssignmentBtn');
+    
+    if (hasScores) {
+        select.disabled = true;
+        saveBtn.style.display = 'none';
+    } else {
+        select.disabled = false;
+        saveBtn.style.display = 'inline-flex';
+    }
     
     // Get the digits from the headers
     const team1Digits = "{{ grid.team1_digits }}".split(',');
@@ -298,6 +356,23 @@ function openAssignmentModal(x, y, participantName, participantId) {
     
     document.getElementById('modalXDigit').textContent = team1Digits[x];
     document.getElementById('modalYDigit').textContent = team2Digits[y];
+    
+    // Handle Winner Info
+    const winnerInfo = document.getElementById('modalWinnerInfo');
+    const winnerDetails = document.getElementById('modalWinnerDetails');
+    
+    if (squareWinners && squareWinners.length > 0) {
+        winnerInfo.style.display = 'block';
+        winnerDetails.innerHTML = squareWinners.map(w => {
+            const qLabel = w.q === 5 ? 'OT' : `Q${w.q}`;
+            return `<div style="margin-bottom: 0.25rem;">
+                <strong>${qLabel}:</strong> Score ${w.t1}-${w.t2} 
+                ${w.payout ? `<br><span style="color: #666; font-style: italic;">Prize: ${w.payout}</span>` : ''}
+            </div>`;
+        }).join('<hr style="margin: 0.5rem 0; border: 0; border-top: 1px solid rgba(0,0,0,0.1);">');
+    } else {
+        winnerInfo.style.display = 'none';
+    }
     
     document.getElementById('participantSelect').value = participantId || "";
     document.getElementById('assignmentModal').style.display = 'flex';
@@ -345,6 +420,19 @@ function toggleScoring() {
         el.style.display = 'block';
     } else {
         el.style.display = 'none';
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('fsSidebar');
+    const toggleText = document.getElementById('sidebarToggleText');
+    
+    if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        toggleText.textContent = 'Hide Sidebar';
+    } else {
+        sidebar.classList.add('collapsed');
+        toggleText.textContent = 'Show Sidebar';
     }
 }
 </script>

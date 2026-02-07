@@ -125,3 +125,20 @@ Apply team colors and ensure responsive design.
 - [x] Change a team's primary color to Green and verify the axis label changes color.
 - [x] View the grid on a mobile device/emulator and verify it's usable.
 - [x] Run a final sweep for any missing `fs-` prefixes.
+
+---
+
+## Phase 7: Team Logos & Final Touches
+Integrate specific team logos and finalize the UI.
+
+- [x] 7.1 Display Patriots/Seahawks logos when team names match (case-insensitive).
+- [x] 7.2 Ensure proper logo scaling and rotation in both horizontal and vertical axes.
+- [x] 7.3 Final UI cleanup (condensed scoring, collapsible sections, winning square highlights).
+- [x] 7.4 Assignment Lock: Disable editing squares once any scores are entered.
+
+**Manual Testing 7:**
+- [x] Set team name to "Patriots" and verify the logo appears in the grid axis.
+- [x] Set team name to "Seattle Seahawks" and verify the logo appears in the grid axis.
+- [x] Check that logos look correct on both the horizontal (X) and vertical (Y) axes.
+- [x] Verify the "Show/Hide" toggle for the scoring section works as expected.
+- [x] Enter a winning score and verify the winning square is subtly highlighted with a gold border and a badge showing the quarter number.
