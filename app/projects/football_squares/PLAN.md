@@ -93,16 +93,16 @@ Build the interactive grid and randomization algorithms.
 ## Phase 5: Scoring, Winners & Public Sharing
 Enter scores, calculate winners, and provide the shareable link.
 
-- [ ] 5.1 Scoring UI:
-    - [ ] Form to enter scores for Q1, Q2, Q3, Q4, and OT.
-    - [ ] Fields for "Payout Description" (points/prizes) for each period.
-- [ ] 5.2 Winner Calculation & Summary:
-    - [ ] Logic to find the winning square based on the last digits of the scores.
-    - [ ] **Winner Summary Table**: Show each participant and the total points/prizes they won across all periods.
-    - [ ] Display the winner's name prominently on the grid for each completed period.
-- [ ] 5.3 Public View:
-    - [ ] Implement `GET /view/<share_slug>` route (No login required).
-    - [ ] Create `football_squares/public_view.html` (Read-only version of the grid).
+- [x] 5.1 Scoring UI:
+    - [x] Form to enter scores for Q1, Q2, Q3, Q4, and OT.
+    - [x] Fields for "Payout Description" (points/prizes) for each period.
+- [x] 5.2 Winner Calculation & Summary:
+    - [x] Logic to find the winning square based on the last digits of the scores.
+    - [x] **Winner Summary Table**: Show each participant and the total points/prizes they won across all periods.
+    - [x] Display the winner's name prominently on the grid for each completed period.
+- [x] 5.3 Public View:
+    - [x] Implement `GET /view/<share_slug>` route (No login required).
+    - [x] Create `football_squares/public_view.html` (Read-only version of the grid).
 
 **Manual Testing 5:**
 - [ ] Enter a score of 17-14 for Q1.

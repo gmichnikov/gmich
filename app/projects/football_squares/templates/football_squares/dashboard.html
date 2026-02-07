@@ -8,13 +8,6 @@
         <h1>{{ grid.name }}</h1>
         <p>{{ grid.team1_name }} (X) vs {{ grid.team2_name }} (Y)</p>
     </div>
-    <div class="fs-share-box">
-        <label>Shareable Link:</label>
-        <div class="fs-copy-input">
-            <input type="text" value="{{ url_for('football_squares.public_view', share_slug=grid.share_slug, _external=True) }}" readonly id="shareLink">
-            <button onclick="copyLink()" class="fs-btn fs-btn-sm fs-btn-outline">Copy</button>
-        </div>
-    </div>
 </div>
 
 <div class="fs-dashboard-grid">
@@ -110,35 +103,98 @@
             </div>
         </section>
 
+        <!-- Shareable Link Section -->
         <section class="fs-card">
-            <h3>Scoring</h3>
-            <p class="fs-placeholder">Scoring management coming in Phase 5.</p>
+            <div class="fs-share-box">
+                <label>Shareable Link:</label>
+                <div class="fs-copy-input">
+                    <input type="text" value="{{ url_for('football_squares.public_view', share_slug=grid.share_slug, _external=True) }}" readonly id="shareLink" style="width: 100%;">
+                    <button onclick="copyLink()" class="fs-btn fs-btn-sm fs-btn-outline" style="margin-top: 5px; width: 100%;">Copy Link</button>
+                </div>
+            </div>
         </section>
+
+        <!-- Winnings Summary Section (Removed from here) -->
     </div>
 
     <div class="fs-main-panel">
-        <section class="fs-card fs-grid-display">
-            <div class="fs-card-header">
-                <h3>10x10 Grid</h3>
-                <div class="fs-grid-legend">
-                    <span class="fs-legend-item"><span class="fs-dot fs-dot-x"></span> {{ grid.team1_name }} (X)</span>
-                    <span class="fs-legend-item"><span class="fs-dot fs-dot-y"></span> {{ grid.team2_name }} (Y)</span>
-                </div>
+        <!-- Scoring & Payouts Section -->
+        <section class="fs-card">
+            <div class="fs-card-header" style="margin-bottom: 0.5rem;">
+                <h3 style="font-size: 1rem;">Scoring & Payouts</h3>
+                <button type="button" class="fs-btn fs-btn-outline fs-btn-sm" onclick="toggleScoring()">Show/Hide</button>
             </div>
+            
+            <div id="scoringCollapsible">
+                <form action="{{ url_for('football_squares.update_scores', grid_id=grid.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="fs-scoring-table-wrapper">
+                        <table class="fs-scoring-table fs-scoring-table-horizontal">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    {% for i in range(1, 6) %}
+                                    <th>{{ "OT" if i == 5 else "Q" ~ i }}</th>
+                                    {% endfor %}
+                                    <th rowspan="4" style="vertical-align: middle; padding-left: 1rem;">
+                                        <button type="submit" class="fs-btn fs-btn-primary fs-btn-sm">Update</button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>{{ grid.team1_name[:10] }}</strong></td>
+                                    {% for i in range(1, 6) %}
+                                    {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                    <td><input type="number" name="q{{ i }}_t1" value="{{ q.team1_score if q.team1_score is not none else '' }}" min="0"></td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>{{ grid.team2_name[:10] }}</strong></td>
+                                    {% for i in range(1, 6) %}
+                                    {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                    <td><input type="number" name="q{{ i }}_t2" value="{{ q.team2_score if q.team2_score is not none else '' }}" min="0"></td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>Prize</strong></td>
+                                    {% for i in range(1, 6) %}
+                                    {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                    <td><input type="text" name="q{{ i }}_payout" value="{{ q.payout_description or '' }}" placeholder="Prize"></td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
 
+                {% if participant_summary %}
+                <div class="fs-winner-summary">
+                    <h4>Winnings Summary</h4>
+                    <div class="fs-summary-grid">
+                        {% for name, winnings in participant_summary.items() %}
+                        <div class="fs-summary-item">
+                            <strong>{{ name }}:</strong> {{ winnings|join(', ') }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Grid Display Section -->
+        <section class="fs-card fs-grid-display" style="padding-top: 0.5rem;">
             <div class="fs-grid-wrapper">
                 <table class="fs-squares-table" id="squaresTable">
                     <thead>
                         <tr>
-                            <!-- Empty corner spans 2 columns and 2 rows -->
                             <th colspan="2" rowspan="2" style="border: none;"></th>
-                            <!-- Team 1 Name Header -->
                             <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }};">
                                 {{ grid.team1_name }}
                             </th>
                         </tr>
                         <tr>
-                            <!-- Team 1 Digits -->
                             {% set team1_digits = grid.team1_digits.split(',') %}
                             {% for digit in team1_digits %}
                             <th class="fs-axis-digit">{{ digit }}</th>
@@ -150,21 +206,27 @@
                         {% for y in range(10) %}
                         <tr>
                             {% if loop.first %}
-                            <!-- Team 2 Name Sidebar -->
                             <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }};">
                                 <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
                             </th>
                             {% endif %}
-                            <!-- Team 2 Digit -->
                             <th class="fs-axis-digit">{{ team2_digits[y] }}</th>
-                            <!-- Squares -->
                             {% for x in range(10) %}
                                 {% set square = squares_map.get((x, y)) %}
-                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %}" 
+                                {% set is_winner = false %}
+                                {% for q_num, winner in winners.items() %}
+                                    {% if winner.x == x and winner.y == y %}
+                                        {% set is_winner = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if is_winner %}is-winner{% endif %}" 
                                     data-x="{{ x }}" 
                                     data-y="{{ y }}" 
                                     onclick="openAssignmentModal({{ x }}, {{ y }}, '{{ square.participant.name if square and square.participant_id else '' }}', {{ square.participant_id if square and square.participant_id else 'null' }})">
                                     <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
+                                    {% if is_winner %}
+                                    <div class="fs-winner-badge">🏆</div>
+                                    {% endif %}
                                 </td>
                             {% endfor %}
                         </tr>
@@ -239,7 +301,7 @@ async function saveAssignment() {
     });
 
     if (response.ok) {
-        window.location.reload(); // Refresh to show changes and update lock status
+        window.location.reload();
     } else {
         alert("Failed to save assignment.");
     }
@@ -251,6 +313,15 @@ function copyLink() {
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
     alert("Copied to clipboard!");
+}
+
+function toggleScoring() {
+    const el = document.getElementById('scoringCollapsible');
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
 }
 </script>
 

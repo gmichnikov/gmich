@@ -77,14 +77,21 @@ def dashboard(grid_id):
     if grid.user_id != current_user.id:
         abort(404)
     
-    # Ensure squares are initialized (for grids created before initialization was added)
+    # Ensure squares are initialized
     if len(grid.squares) == 0:
         for x in range(10):
             for y in range(10):
                 square = FootballSquaresSquare(grid_id=grid.id, x_coord=x, y_coord=y)
                 db.session.add(square)
         db.session.commit()
-        # Refresh grid object
+        grid = FootballSquaresGrid.query.get(grid_id)
+
+    # Ensure quarters are initialized
+    if len(grid.quarters) == 0:
+        for i in range(1, 6):
+            q = FootballSquaresQuarter(grid_id=grid.id, quarter_number=i)
+            db.session.add(q)
+        db.session.commit()
         grid = FootballSquaresGrid.query.get(grid_id)
 
     total_assigned_squares = sum(p.square_count for p in grid.participants)
@@ -93,11 +100,71 @@ def dashboard(grid_id):
     # Create a mapping of squares for easier lookup in template
     squares_map = {(s.x_coord, s.y_coord): s for s in grid.squares}
     
+    # Calculate winners for each quarter
+    winners = {}
+    team1_digits = [int(d) for d in grid.team1_digits.split(',')]
+    team2_digits = [int(d) for d in grid.team2_digits.split(',')]
+    
+    for q in grid.quarters:
+        if q.team1_score is not None and q.team2_score is not None:
+            last_digit1 = q.team1_score % 10
+            last_digit2 = q.team2_score % 10
+            
+            try:
+                x = team1_digits.index(last_digit1)
+                y = team2_digits.index(last_digit2)
+                winning_square = squares_map.get((x, y))
+                if winning_square and winning_square.participant:
+                    winners[q.quarter_number] = {
+                        'participant': winning_square.participant.name,
+                        'x': x,
+                        'y': y,
+                        'payout': q.payout_description
+                    }
+            except ValueError:
+                pass
+
+    # Calculate summary of winnings per participant
+    participant_summary = {}
+    for q_num, winner_info in winners.items():
+        name = winner_info['participant']
+        payout = winner_info['payout'] or "Winner"
+        if name not in participant_summary:
+            participant_summary[name] = []
+        participant_summary[name].append(f"Q{q_num if q_num < 5 else 'OT'}: {payout}")
+
     return render_template("football_squares/dashboard.html", 
                          grid=grid, 
                          total_assigned_squares=total_assigned_squares,
                          is_locked=is_locked,
-                         squares_map=squares_map)
+                         squares_map=squares_map,
+                         winners=winners,
+                         participant_summary=participant_summary)
+
+@football_squares_bp.route("/<int:grid_id>/scores/update", methods=["POST"])
+@login_required
+def update_scores(grid_id):
+    grid = FootballSquaresGrid.query.get_or_404(grid_id)
+    if grid.user_id != current_user.id:
+        abort(404)
+        
+    for i in range(1, 6):
+        q = FootballSquaresQuarter.query.filter_by(grid_id=grid.id, quarter_number=i).first()
+        if not q:
+            q = FootballSquaresQuarter(grid_id=grid.id, quarter_number=i)
+            db.session.add(q)
+            
+        t1_score = request.form.get(f"q{i}_t1")
+        t2_score = request.form.get(f"q{i}_t2")
+        payout = request.form.get(f"q{i}_payout")
+        
+        q.team1_score = int(t1_score) if t1_score and t1_score.strip() != "" else None
+        q.team2_score = int(t2_score) if t2_score and t2_score.strip() != "" else None
+        q.payout_description = payout
+        
+    db.session.commit()
+    flash("Scores and payouts updated.")
+    return redirect(url_for("football_squares.dashboard", grid_id=grid.id))
 
 @football_squares_bp.route("/<int:grid_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -330,4 +397,39 @@ def randomize_remaining(grid_id):
 @football_squares_bp.route("/view/<string:share_slug>")
 def public_view(share_slug):
     grid = FootballSquaresGrid.query.filter_by(share_slug=share_slug).first_or_404()
-    return render_template("football_squares/public_view.html", grid=grid)
+    
+    # Logic similar to dashboard for winners
+    squares_map = {(s.x_coord, s.y_coord): s for s in grid.squares}
+    winners = {}
+    team1_digits = [int(d) for d in grid.team1_digits.split(',')]
+    team2_digits = [int(d) for d in grid.team2_digits.split(',')]
+    
+    for q in grid.quarters:
+        if q.team1_score is not None and q.team2_score is not None:
+            last_digit1 = q.team1_score % 10
+            last_digit2 = q.team2_score % 10
+            try:
+                x = team1_digits.index(last_digit1)
+                y = team2_digits.index(last_digit2)
+                winning_square = squares_map.get((x, y))
+                if winning_square and winning_square.participant:
+                    winners[q.quarter_number] = {
+                        'participant': winning_square.participant.name,
+                        'x': x,
+                        'y': y,
+                        'payout': q.payout_description
+                    }
+            except ValueError: pass
+
+    participant_summary = {}
+    for q_num, winner_info in winners.items():
+        name = winner_info['participant']
+        payout = winner_info['payout'] or "Winner"
+        if name not in participant_summary: participant_summary[name] = []
+        participant_summary[name].append(f"Q{q_num if q_num < 5 else 'OT'}: {payout}")
+
+    return render_template("football_squares/public_view.html", 
+                         grid=grid, 
+                         squares_map=squares_map,
+                         winners=winners,
+                         participant_summary=participant_summary)

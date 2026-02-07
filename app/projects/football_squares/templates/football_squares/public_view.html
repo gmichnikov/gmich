@@ -17,15 +17,133 @@
         </header>
 
         <main class="fs-main">
-            <div class="fs-public-header">
+            <div class="fs-public-header" style="text-align: center; margin-bottom: 2rem;">
                 <h1>{{ grid.name }}</h1>
                 <p>{{ grid.team1_name }} vs {{ grid.team2_name }}</p>
             </div>
 
-            <section class="fs-card">
-                <h3>The Grid</h3>
-                <p class="fs-placeholder">Grid view coming in Phase 5.</p>
-            </section>
+            <div class="fs-dashboard-grid" style="grid-template-columns: 250px 1fr;">
+                <div class="fs-sidebar">
+                    <section class="fs-card">
+                        <h3>Participants</h3>
+                        <ul class="fs-participant-list">
+                            {% for participant in grid.participants %}
+                            <li class="fs-participant-item">
+                                <div class="fs-participant-info">
+                                    <span class="fs-participant-name">{{ participant.name }}</span>
+                                    <span class="fs-participant-count">{{ participant.square_count }} squares</span>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="fs-main-panel">
+                    <section class="fs-card">
+                        <div class="fs-card-header">
+                            <h3>Scores & Payouts</h3>
+                        </div>
+                        <div class="fs-scoring-table-wrapper">
+                            <table class="fs-scoring-table fs-scoring-table-horizontal">
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        {% for i in range(1, 6) %}
+                                        <th>{{ "OT" if i == 5 else "Q" ~ i }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>{{ grid.team1_name[:10] }}</strong></td>
+                                        {% for i in range(1, 6) %}
+                                        {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                        <td>{{ q.team1_score if q.team1_score is not none else '-' }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ grid.team2_name[:10] }}</strong></td>
+                                        {% for i in range(1, 6) %}
+                                        {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                        <td>{{ q.team2_score if q.team2_score is not none else '-' }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Prize</strong></td>
+                                        {% for i in range(1, 6) %}
+                                        {% set q = grid.quarters|selectattr('quarter_number', 'equalto', i)|first %}
+                                        <td>{{ q.payout_description or '-' }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if participant_summary %}
+                        <div class="fs-winner-summary">
+                            <h4>Winnings Summary</h4>
+                            <div class="fs-summary-grid">
+                                {% for name, winnings in participant_summary.items() %}
+                                <div class="fs-summary-item">
+                                    <strong>{{ name }}:</strong> {{ winnings|join(', ') }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </section>
+
+                    <section class="fs-card fs-grid-display">
+                        <div class="fs-grid-wrapper">
+                            <table class="fs-squares-table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2" rowspan="2" style="border: none;"></th>
+                                        <th colspan="10" class="fs-axis-team-label" style="background: {{ grid.team1_color_primary }}; color: {{ grid.team1_color_secondary }};">
+                                            {{ grid.team1_name }}
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        {% set team1_digits = grid.team1_digits.split(',') %}
+                                        {% for digit in team1_digits %}
+                                        <th class="fs-axis-digit">{{ digit }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set team2_digits = grid.team2_digits.split(',') %}
+                                    {% for y in range(10) %}
+                                    <tr>
+                                        {% if loop.first %}
+                                        <th rowspan="10" class="fs-axis-team-label fs-axis-team-label-y" style="background: {{ grid.team2_color_primary }}; color: {{ grid.team2_color_secondary }};">
+                                            <span class="fs-axis-vertical">{{ grid.team2_name }}</span>
+                                        </th>
+                                        {% endif %}
+                                        <th class="fs-axis-digit">{{ team2_digits[y] }}</th>
+                                        {% for x in range(10) %}
+                                            {% set square = squares_map.get((x, y)) %}
+                                            {% set is_winner = false %}
+                                            {% for q_num, winner in winners.items() %}
+                                                {% if winner.x == x and winner.y == y %}
+                                                    {% set is_winner = true %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            <td class="fs-square-cell {% if square and square.participant_id %}assigned{% endif %} {% if is_winner %}is-winner{% endif %}">
+                                                <span class="fs-square-participant">{{ square.participant.name if square and square.participant_id else '' }}</span>
+                                                {% if is_winner %}
+                                                <div class="fs-winner-badge">🏆</div>
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </main>
     </div>
 </div>

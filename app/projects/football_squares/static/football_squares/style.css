@@ -25,8 +25,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--fs-border);
 }
 
@@ -244,15 +244,17 @@
 
 .fs-copy-input {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
 }
 
 .fs-copy-input input {
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem;
     border: 1px solid var(--fs-border);
     border-radius: 4px;
-    background: #eee;
-    width: 200px;
+    background: #fdfdfd;
+    width: 100%;
+    font-size: 0.8rem;
 }
 
 .fs-dashboard-grid {
@@ -275,11 +277,101 @@
     overflow: hidden;
 }
 
-.fs-placeholder {
-    color: var(--fs-text-light);
-    font-style: italic;
+/* Scoring Table */
+.fs-scoring-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.fs-scoring-table th, 
+.fs-scoring-table td {
+    padding: 0.5rem 0.25rem;
+    border-bottom: 1px solid var(--fs-border);
     text-align: center;
-    padding: 2rem 0;
+}
+
+.fs-scoring-table input[type="number"] {
+    width: 45px;
+    padding: 0.25rem;
+    border: 1px solid var(--fs-border);
+    border-radius: 4px;
+}
+
+.fs-scoring-table input[type="text"] {
+    width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--fs-border);
+    border-radius: 4px;
+}
+
+.fs-scoring-table-horizontal th, 
+.fs-scoring-table-horizontal td {
+    padding: 0.4rem 0.25rem;
+    min-width: 60px;
+}
+
+.fs-scoring-table-horizontal input[type="text"] {
+    min-width: 80px;
+    height: 28px;
+    padding: 0.1rem 0.25rem;
+    font-size: 0.8rem;
+}
+
+.fs-scoring-table-horizontal input[type="number"] {
+    width: 40px;
+    height: 28px;
+    padding: 0.1rem;
+}
+
+.fs-winner-summary {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--fs-border);
+}
+
+.fs-winner-summary h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.fs-summary-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.fs-summary-item {
+    background: #fdfdfd;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    font-size: 0.8rem;
+}
+
+.fs-summary-list {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.fs-summary-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Winner Highlights */
+.fs-square-cell.is-winner {
+    background: #fff9c4 !important; /* Light yellow */
+    box-shadow: inset 0 0 0 2px #fbc02d;
+}
+
+.fs-winner-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 1rem;
+    z-index: 2;
 }
 
 /* Grid Display */
