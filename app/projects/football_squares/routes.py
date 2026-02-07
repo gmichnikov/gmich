@@ -316,7 +316,7 @@ def assign_square(grid_id):
     participant_id = data.get("participant_id") # Can be null to unassign
     
     # Check if any scores have been entered
-    has_scores = any(q.team1_score is not none or q.team2_score is not none for q in grid.quarters)
+    has_scores = any(q.team1_score is not None or q.team2_score is not None for q in grid.quarters)
     if has_scores:
         return jsonify({"success": False, "error": "Cannot change assignments after scores have been entered"}), 400
     
