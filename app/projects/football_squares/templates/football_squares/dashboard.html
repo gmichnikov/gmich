@@ -91,31 +91,28 @@
 
         <!-- Axis Configuration Section -->
         <section class="fs-card">
-            <h3>Axis Configuration</h3>
+            <h3>Axis Digits</h3>
             <div class="fs-axis-config">
-                <div class="fs-axis-display">
-                    <div class="fs-axis-row">
-                        <span class="fs-axis-label">{{ grid.team1_name }}:</span>
-                        <span class="fs-digits">{{ grid.team1_digits }}</span>
-                    </div>
-                    <div class="fs-axis-row">
-                        <span class="fs-axis-label">{{ grid.team2_name }}:</span>
-                        <span class="fs-digits">{{ grid.team2_digits }}</span>
-                    </div>
-                </div>
+                <p style="font-size: 0.85rem; color: var(--fs-text-light); margin-bottom: 0.75rem;">
+                    Currently: <strong>{{ "Random" if grid.axis_type.value == "Random" else "Sorted (0-9)" }}</strong>
+                </p>
                 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% if grid.axis_type.value == "Random" %}
+                    <div style="display: flex; gap: 0.5rem;">
+                        <form action="{{ url_for('football_squares.toggle_axis', grid_id=grid.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="fs-btn fs-btn-sm fs-btn-outline" style="width: 100%;">Sort 0-9</button>
+                        </form>
+                        <form action="{{ url_for('football_squares.shuffle_axis', grid_id=grid.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="fs-btn fs-btn-sm fs-btn-outline" style="width: 100%;">Reshuffle</button>
+                        </form>
+                    </div>
+                    {% else %}
                     <form action="{{ url_for('football_squares.toggle_axis', grid_id=grid.id) }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="fs-btn fs-btn-outline" style="width: 100%;">
-                            Switch to {{ "Draft (0-9)" if grid.axis_type.value == "Random" else "Random" }} Mode
-                        </button>
-                    </form>
-                    
-                    {% if grid.axis_type.value == "Random" %}
-                    <form action="{{ url_for('football_squares.shuffle_axis', grid_id=grid.id) }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="fs-btn fs-btn-outline" style="width: 100%;">Re-shuffle Digits</button>
+                        <button type="submit" class="fs-btn fs-btn-outline" style="width: 100%;">Randomize Digits</button>
                     </form>
                     {% endif %}
                 </div>
