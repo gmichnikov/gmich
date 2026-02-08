@@ -4,16 +4,170 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('passport-photo-file-input');
     const editorSection = document.getElementById('passport-photo-editor-section');
     const imageElement = document.getElementById('passport-photo-image');
+    const whitenBtn = document.getElementById('passport-photo-whiten-btn');
     const generateBtn = document.getElementById('passport-photo-generate-btn');
     const previewSection = document.getElementById('passport-photo-preview-section');
     const printCanvas = document.getElementById('passport-photo-print-canvas');
     const downloadBtn = document.getElementById('passport-photo-download-btn');
     const resetBtn = document.getElementById('passport-photo-reset-btn');
+    const undoBtn = document.getElementById('passport-photo-undo-btn');
+    const brightnessInput = document.getElementById('passport-photo-brightness');
+    const brightnessValue = document.getElementById('passport-photo-brightness-value');
+    const contrastInput = document.getElementById('passport-photo-contrast');
+    const contrastValue = document.getElementById('passport-photo-contrast-value');
 
     let cropper = null;
+    let selfieSegmentation = null;
+    let originalImageDataUrl = null;
+
+    // Apply Adjustments to UI
+    function applyAdjustments() {
+        const brightness = brightnessInput.value;
+        const contrast = contrastInput.value;
+        
+        brightnessValue.innerText = `${brightness}%`;
+        contrastValue.innerText = `${contrast}%`;
+        
+        // Apply filter to the cropper container for preview
+        const container = document.querySelector('.cropper-container');
+        if (container) {
+            container.style.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+        }
+    }
+
+    brightnessInput.addEventListener('input', applyAdjustments);
+    contrastInput.addEventListener('input', applyAdjustments);
+
+    // Initialize MediaPipe
+    function initSegmentation() {
+        if (selfieSegmentation) return;
+        
+        selfieSegmentation = new SelfieSegmentation({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+            }
+        });
+
+        selfieSegmentation.setOptions({
+            modelSelection: 1, // 1 for landscape/better detail
+        });
+
+        selfieSegmentation.onResults(onSegmentationResults);
+    }
+
+    let segmentationResolve = null;
+    function onSegmentationResults(results) {
+        if (segmentationResolve) {
+            segmentationResolve(results);
+        }
+    }
+
+    async function whitenImageBackground(inputCanvas) {
+        initSegmentation();
+        
+        return new Promise((resolve) => {
+            segmentationResolve = async (results) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = inputCanvas.width;
+                canvas.height = inputCanvas.height;
+                const ctx = canvas.getContext('2d');
+
+                // Draw the mask directly (Very first version approach)
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+
+                // Use the mask to draw the original image
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+                // Fill the background with white
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                resolve(canvas.toDataURL('image/jpeg', 0.95));
+            };
+
+            selfieSegmentation.send({image: inputCanvas});
+        });
+    }
+
+    // Whiten Background Button
+    whitenBtn.addEventListener('click', async () => {
+        if (!cropper) return;
+        
+        // Save original on first run
+        if (!originalImageDataUrl) {
+            originalImageDataUrl = imageElement.src;
+        }
+
+        const originalText = whitenBtn.innerText;
+        whitenBtn.innerText = 'Processing...';
+        whitenBtn.disabled = true;
+
+        try {
+            const tempCanvas = document.createElement('canvas');
+            const img = new Image();
+            img.src = originalImageDataUrl; // Always work from the true original
+            
+            await new Promise(r => img.onload = r);
+            
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            const whitenedDataUrl = await whitenImageBackground(tempCanvas);
+            
+            const cropData = cropper.getData();
+            imageElement.src = whitenedDataUrl;
+            
+            setTimeout(() => {
+                initCropper();
+                setTimeout(() => {
+                    if (cropper) cropper.setData(cropData);
+                    undoBtn.classList.remove('passport-photo-hidden');
+                }, 100);
+            }, 50);
+
+        } catch (err) {
+            console.error('Segmentation error:', err);
+            alert('Failed to whiten background.');
+        } finally {
+            whitenBtn.innerText = originalText;
+            whitenBtn.disabled = false;
+        }
+    });
+
+    // Undo Button
+    undoBtn.addEventListener('click', () => {
+        if (!originalImageDataUrl) return;
+        
+        const cropData = cropper.getData();
+        imageElement.src = originalImageDataUrl;
+        
+        setTimeout(() => {
+            initCropper();
+            setTimeout(() => {
+                if (cropper) cropper.setData(cropData);
+                undoBtn.classList.add('passport-photo-hidden');
+            }, 100);
+        }, 50);
+    });
 
     // Handle Upload
-    uploadSection.addEventListener('click', () => fileInput.click());
+    const selectBtn = document.querySelector('.passport-photo-upload-section .passport-photo-btn-primary');
+    const triggerUpload = () => fileInput.click();
+    
+    uploadSection.addEventListener('click', triggerUpload);
+    if (selectBtn) {
+        selectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            triggerUpload();
+        });
+    }
 
     uploadSection.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -124,6 +278,24 @@ document.addEventListener('DOMContentLoaded', function() {
             imageSmoothingQuality: 'high',
         });
 
+        // 1.5 Apply brightness/contrast to the cropped result
+        const brightness = brightnessInput.value;
+        const contrast = contrastInput.value;
+        if (brightness !== "100" || contrast !== "100") {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 600;
+            tempCanvas.height = 600;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+            tempCtx.drawImage(croppedCanvas, 0, 0);
+            
+            // Swap out the canvas
+            croppedCanvas.width = 600;
+            croppedCanvas.height = 600;
+            const ctx2 = croppedCanvas.getContext('2d');
+            ctx2.drawImage(tempCanvas, 0, 0);
+        }
+
         // 2. Setup 4x6 print canvas (1200x1800 for 300dpi)
         // Orientation: 4" wide (1200px) x 6" high (1800px)
         const ctx = printCanvas.getContext('2d');
@@ -172,6 +344,15 @@ document.addEventListener('DOMContentLoaded', function() {
         previewSection.style.display = 'none';
         uploadSection.classList.remove('passport-photo-hidden');
         fileInput.value = '';
+        originalImageDataUrl = null;
+        undoBtn.classList.add('passport-photo-hidden');
+        
+        // Reset adjustments
+        brightnessInput.value = 100;
+        contrastInput.value = 100;
+        brightnessValue.innerText = '100%';
+        contrastValue.innerText = '100%';
+        
         if (cropper) {
             cropper.destroy();
             cropper = null;

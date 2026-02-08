@@ -20,7 +20,7 @@ Build a web-based tool that converts user photos into passport-sized photos, for
 - Final photo dimensions: 2x2 inches at 300 DPI (600x600 pixels)
 - Head should occupy 50-70% of the frame height
 - Show visual guides (ghostly silhouette overlay) for proper head positioning
-- Plain background (user provides)
+- Plain background (user provides, or use built-in AI background whitener)
 
 ### 4. Print Layout Generation
 - Create a 4x6 inch print sheet at 300 DPI (1200x1800 pixels)
@@ -75,13 +75,13 @@ Build a web-based tool that converts user photos into passport-sized photos, for
 
 ## Optional Enhancements
 
-## Optional Enhancements (Removed for MVP)
-- Background removal or blur
-- Face detection to auto-center crop
-- Brightness/contrast adjustment
-- Support for different passport photo standards (US, UK, EU, etc.)
+## Included Features
+- Background removal/whitening using MediaPipe AI
+- Interactive cropping with positioning guides
+- 4x6" print sheet generation with 2x2" photo tiling
+- High-quality JPEG download
 
-### Advanced Features (Future)
+## Optional Enhancements (Removed for MVP)
 - Multiple photo sizes in one tool (passport, visa, ID card)
 - Print at home vs professional print optimization
 - Save crop settings for retakes

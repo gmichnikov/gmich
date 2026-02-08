@@ -30,13 +30,28 @@
                 <img id="passport-photo-image">
             </div>
             
-            <div class="passport-photo-controls">
-                <button id="passport-photo-reset-btn" class="passport-photo-btn-secondary">Start Over</button>
-                <button id="passport-photo-generate-btn" class="passport-photo-btn-primary">Generate Print Sheet</button>
-            </div>
+        <div class="passport-photo-controls">
+            <button id="passport-photo-reset-btn" class="passport-photo-btn-secondary">Start Over</button>
+            <button id="passport-photo-whiten-btn" class="passport-photo-btn-secondary">Whiten Background (AI)</button>
+            <button id="passport-photo-undo-btn" class="passport-photo-btn-secondary passport-photo-hidden">Restore Original</button>
+            <button id="passport-photo-generate-btn" class="passport-photo-btn-primary">Generate Print Sheet</button>
+        </div>
 
             <div class="passport-photo-instructions" style="margin-top: 1.5rem; text-align: center; color: #666; font-size: 0.9rem;">
-                <p><strong>Instructions:</strong> Align your face with the blue guide <strong>inside</strong> the cropping square. Move the square or zoom the image until your head fits the guide.</p>
+            <p><strong>Instructions:</strong> Align your face with the blue guide <strong>inside</strong> the cropping square. Move the square or zoom the image until your head fits the guide.</p>
+        </div>
+
+        <!-- Adjustments Section -->
+        <div class="passport-photo-adjustments">
+            <div class="passport-photo-adjustment-group">
+                <label for="passport-photo-brightness">Brightness</label>
+                <input type="range" id="passport-photo-brightness" min="50" max="150" value="100">
+                <span id="passport-photo-brightness-value">100%</span>
+            </div>
+            <div class="passport-photo-adjustment-group">
+                <label for="passport-photo-contrast">Contrast</label>
+                <input type="range" id="passport-photo-contrast" min="50" max="150" value="100">
+                <span id="passport-photo-contrast-value">100%</span>
             </div>
         </div>
 
@@ -59,5 +74,7 @@
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<!-- MediaPipe Selfie Segmentation -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
 <script src="{{ url_for('passport_photo.static', filename='passport_photo/script.js') }}"></script>
 {% endblock %}

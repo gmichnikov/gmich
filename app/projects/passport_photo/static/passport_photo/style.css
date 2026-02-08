@@ -154,3 +154,39 @@
 .passport-photo-hidden {
     display: none !important;
 }
+
+/* Adjustments */
+.passport-photo-adjustments {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.passport-photo-adjustment-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.passport-photo-adjustment-group label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.passport-photo-adjustment-group input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+
+.passport-photo-adjustment-group span {
+    font-size: 0.8rem;
+    color: #718096;
+}
