@@ -1,0 +1,150 @@
+.passport-photo-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+.passport-photo-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.passport-photo-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.passport-photo-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Upload Section */
+.passport-photo-upload-section {
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: #f8fafc;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.passport-photo-upload-section:hover, .passport-photo-upload-section.dragover {
+    border-color: #4299e1;
+    background: #ebf8ff;
+}
+
+.passport-photo-upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.passport-photo-btn-primary {
+    background-color: #3182ce;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.passport-photo-btn-primary:hover {
+    background-color: #2b6cb0;
+}
+
+.passport-photo-btn-secondary {
+    background-color: #edf2f7;
+    color: #4a5568;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    border: 1px solid #cbd5e0;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.passport-photo-btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+/* Cropper Section */
+.passport-photo-editor-section {
+    display: none;
+    margin-top: 2rem;
+}
+
+.passport-photo-cropper-container {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#passport-photo-image {
+    max-width: 100%;
+    display: block;
+}
+
+/* Positioning Overlay (Ghostly Silhouette) */
+.passport-photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none; /* Let clicks pass through to cropper */
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+}
+
+.passport-photo-overlay svg {
+    width: 100%;
+    height: 100%;
+}
+
+.passport-photo-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Preview Section */
+.passport-photo-preview-section {
+    display: none;
+    margin-top: 3rem;
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.passport-photo-preview-canvas-container {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+}
+
+#passport-photo-print-canvas {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+}
+
+.passport-photo-hidden {
+    display: none !important;
+}

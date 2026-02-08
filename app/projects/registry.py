@@ -301,6 +301,17 @@ PROJECTS = [
         "icon": "🏈",
         "order": 11,
     },
+    {
+        "id": "passport_photo",
+        "name": "Passport Photo",
+        "description": "Generate and format passport-sized photos",
+        "url": "/passport-photo",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "📷",
+        "order": 12,
+    },
 ]
 
 
