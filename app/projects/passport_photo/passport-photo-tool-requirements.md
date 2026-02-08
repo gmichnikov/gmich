@@ -24,9 +24,9 @@ Build a web-based tool that converts user photos into passport-sized photos, for
 
 ### 4. Print Layout Generation
 - Create a 4x6 inch print sheet at 300 DPI (1200x1800 pixels)
-- Tile 6 passport photos (2x3 grid) on the sheet
-- Photos will be centered on the sheet with a small "safe zone" margin to prevent printer clipping
-- Add light cut lines between photos
+- Tile 2 passport photos (1x2 grid) centered on the sheet
+- This provides a 1-inch "safe zone" margin on all sides to prevent printer clipping
+- Add light cut lines around photos
 - Maintain high quality throughout resize process
 
 ### 5. Download

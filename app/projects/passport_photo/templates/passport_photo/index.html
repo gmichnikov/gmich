@@ -9,61 +9,49 @@
 
 {% block content %}
 <div class="passport-photo-container">
-    <header class="passport-photo-header">
-        <h1>Passport Photo Tool</h1>
-        <p>Create a printable 4x6" sheet with six 2x2" passport photos.</p>
-    </header>
+    <div class="passport-photo-card">
+        <header class="passport-photo-header">
+            <h1>Passport Photo Tool</h1>
+            <p>Create a printable 4x6" sheet with two 2x2" passport photos.</p>
+        </header>
 
-    <!-- Phase 1: Upload Section -->
-    <div id="passport-photo-upload-section" class="passport-photo-upload-section">
-        <span class="passport-photo-upload-icon">📷</span>
-        <h2>Upload Your Photo</h2>
-        <p>Drag and drop or click to select a JPEG or PNG image.</p>
-        <input type="file" id="passport-photo-file-input" class="passport-photo-hidden" accept="image/jpeg,image/png">
-        <button class="passport-photo-btn-primary">Select Photo</button>
-    </div>
+        <!-- Phase 1: Upload Section -->
+        <div id="passport-photo-upload-section" class="passport-photo-upload-section">
+            <span class="passport-photo-upload-icon">📷</span>
+            <h2>Upload Your Photo</h2>
+            <p>Drag and drop or click to select a JPEG or PNG image.</p>
+            <input type="file" id="passport-photo-file-input" class="passport-photo-hidden" accept="image/jpeg,image/png">
+            <button class="passport-photo-btn-primary">Select Photo</button>
+        </div>
 
-    <!-- Phase 2: Editor Section -->
-    <div id="passport-photo-editor-section" class="passport-photo-editor-section">
-        <div class="passport-photo-cropper-container">
-            <img id="passport-photo-image">
+        <!-- Phase 2: Editor Section -->
+        <div id="passport-photo-editor-section" class="passport-photo-editor-section">
+            <div class="passport-photo-cropper-container">
+                <img id="passport-photo-image">
+            </div>
             
-            <!-- Positioning Overlay (Ghostly Silhouette) -->
-            <div class="passport-photo-overlay">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-                    <!-- Head outline -->
-                    <path d="M50,15 C35,15 25,25 25,40 C25,55 35,65 50,65 C65,65 75,55 75,40 C75,25 65,15 50,15 Z" 
-                          fill="none" stroke="white" stroke-width="0.5" stroke-dasharray="1,1" />
-                    <!-- Eyes guide line -->
-                    <line x1="30" y1="40" x2="70" y2="40" stroke="white" stroke-width="0.3" stroke-dasharray="1,1" opacity="0.5" />
-                    <!-- Shoulders -->
-                    <path d="M15,90 C15,80 25,70 50,70 C75,70 85,80 85,90" 
-                          fill="none" stroke="white" stroke-width="0.5" stroke-dasharray="1,1" />
-                </svg>
+            <div class="passport-photo-controls">
+                <button id="passport-photo-reset-btn" class="passport-photo-btn-secondary">Start Over</button>
+                <button id="passport-photo-generate-btn" class="passport-photo-btn-primary">Generate Print Sheet</button>
+            </div>
+
+            <div class="passport-photo-instructions" style="margin-top: 1.5rem; text-align: center; color: #666; font-size: 0.9rem;">
+                <p><strong>Instructions:</strong> Align your face with the blue guide <strong>inside</strong> the cropping square. Move the square or zoom the image until your head fits the guide.</p>
             </div>
         </div>
-        
-        <div class="passport-photo-controls">
-            <button id="passport-photo-reset-btn" class="passport-photo-btn-secondary">Start Over</button>
-            <button id="passport-photo-generate-btn" class="passport-photo-btn-primary">Generate Print Sheet</button>
-        </div>
 
-        <div class="passport-photo-instructions" style="margin-top: 1.5rem; text-align: center; color: #666; font-size: 0.9rem;">
-            <p><strong>Instructions:</strong> Align your head within the dashed guide. The top of your head should be near the top of the circle, and your chin near the bottom.</p>
-        </div>
-    </div>
-
-    <!-- Phase 3: Preview Section -->
-    <div id="passport-photo-preview-section" class="passport-photo-preview-section">
-        <h2>Your Print Sheet (4x6")</h2>
-        <p>Ready to print at CVS, Walgreens, or home.</p>
-        
-        <div class="passport-photo-preview-canvas-container">
-            <canvas id="passport-photo-print-canvas"></canvas>
-        </div>
-        
-        <div class="passport-photo-controls">
-            <button id="passport-photo-download-btn" class="passport-photo-btn-primary">Download Print Sheet (JPG)</button>
+        <!-- Phase 3: Preview Section -->
+        <div id="passport-photo-preview-section" class="passport-photo-preview-section">
+            <h2>Your Print Sheet (4x6")</h2>
+            <p>Ready to print at CVS, Walgreens, or home.</p>
+            
+            <div class="passport-photo-preview-canvas-container">
+                <canvas id="passport-photo-print-canvas"></canvas>
+            </div>
+            
+            <div class="passport-photo-controls">
+                <button id="passport-photo-download-btn" class="passport-photo-btn-primary">Download Print Sheet (JPG)</button>
+            </div>
         </div>
     </div>
 </div>

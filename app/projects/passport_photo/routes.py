@@ -2,7 +2,8 @@ from flask import Blueprint, render_template
 from app.utils.logging import log_project_visit
 
 passport_photo_bp = Blueprint('passport_photo', __name__, 
-                             template_folder='templates')
+                             template_folder='templates',
+                             static_folder='static')
 
 @passport_photo_bp.route('/')
 def index():

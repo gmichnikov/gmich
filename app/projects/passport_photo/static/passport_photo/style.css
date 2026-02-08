@@ -1,8 +1,15 @@
 .passport-photo-container {
-    max-width: 1000px;
+    max-width: 800px;
     margin: 2rem auto;
     padding: 0 1rem;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.passport-photo-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     color: #333;
 }
 
@@ -97,23 +104,22 @@
 }
 
 /* Positioning Overlay (Ghostly Silhouette) */
-.passport-photo-overlay {
+/* This will now be injected into the cropper's face element */
+.passport-photo-cropper-guide {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    pointer-events: none; /* Let clicks pass through to cropper */
-    z-index: 10;
+    pointer-events: none;
+    z-index: 100; /* Ensure it is above everything else in the crop box */
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.5;
 }
 
-.passport-photo-overlay svg {
-    width: 100%;
-    height: 100%;
+.cropper-view-box {
+    overflow: visible !important; /* Allow the guide to potentially bleed out if needed, though it shouldn't */
 }
 
 .passport-photo-controls {
