@@ -33,12 +33,14 @@
                 
                 <div class="meals-form-group">
                     {{ log_form.food_name.label }}
-                    {{ log_form.food_name(class="meals-input", placeholder="e.g., Pizza and Salad") }}
+                    {{ log_form.food_name(class="meals-input", placeholder="e.g., Pizza and Salad", list="food-suggestions") }}
+                    <datalist id="food-suggestions"></datalist>
                 </div>
                 
                 <div class="meals-form-group">
                     {{ log_form.location.label }}
-                    {{ log_form.location(class="meals-input", placeholder="e.g., Home or Restaurant Name") }}
+                    {{ log_form.location(class="meals-input", placeholder="e.g., Home or Restaurant Name", list="location-suggestions") }}
+                    <datalist id="location-suggestions"></datalist>
                 </div>
 
                 <div class="meals-form-group">
@@ -62,6 +64,70 @@
 
                 {{ log_form.submit(class="meals-button meals-button-primary") }}
             </form>
+        </div>
+    </div>
+
+    <div class="meals-section">
+        <div class="meals-stats-row">
+            <div class="meals-stats-card">
+                <h2>Common Meals</h2>
+                <div class="meals-filter-bar">
+                    <form action="{{ url_for('meals.group_detail', group_id=group.id) }}" method="GET" class="meals-inline-form">
+                        <select name="member_id" onchange="this.form.submit()" class="meals-input-sm">
+                            <option value="">Family View</option>
+                            {% for member in group.members %}
+                                <option value="{{ member.id }}" {% if member_filter == member.id %}selected{% endif %}>{{ member.display_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                {% if common_meals %}
+                    <table class="meals-table">
+                        <thead>
+                            <tr>
+                                <th>Food</th>
+                                <th>Location</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for food, loc, count in common_meals %}
+                                <tr>
+                                    <td>{{ food }}</td>
+                                    <td>{{ loc or '-' }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="meals-empty-text">Not enough data for common meals.</p>
+                {% endif %}
+            </div>
+
+            <div class="meals-stats-card">
+                <h2>Location Trends</h2>
+                {% if home_count or out_count %}
+                    <div class="meals-trends">
+                        <div class="meals-trend-item">
+                            <span class="meals-trend-label">Home</span>
+                            <div class="meals-trend-bar-container">
+                                <div class="meals-trend-bar meals-trend-home" style="width: {{ (home_count / (home_count + out_count) * 100)|round|int if (home_count + out_count) > 0 else 0 }}%"></div>
+                            </div>
+                            <span class="meals-trend-value">{{ home_count }}</span>
+                        </div>
+                        <div class="meals-trend-item">
+                            <span class="meals-trend-label">Eating Out</span>
+                            <div class="meals-trend-bar-container">
+                                <div class="meals-trend-bar meals-trend-out" style="width: {{ (out_count / (home_count + out_count) * 100)|round|int if (home_count + out_count) > 0 else 0 }}%"></div>
+                            </div>
+                            <span class="meals-trend-value">{{ out_count }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="meals-empty-text">No location data yet.</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -155,5 +221,33 @@ function clearAllMembers() {
     const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
     checkboxes.forEach(cb => cb.checked = false);
 }
+
+// Autocomplete logic
+async function setupAutocomplete(inputId, datalistId, apiUrl) {
+    const input = document.getElementById(inputId);
+    const datalist = document.getElementById(datalistId);
+    
+    // Fetch initial suggestions
+    const updateSuggestions = async (query = '') => {
+        try {
+            const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
+            const suggestions = await response.json();
+            datalist.innerHTML = suggestions
+                .map(s => `<option value="${s}">`)
+                .join('');
+        } catch (e) {
+            console.error('Failed to fetch suggestions', e);
+        }
+    };
+
+    // Update on focus and as typing
+    input.addEventListener('focus', () => updateSuggestions(input.value));
+    input.addEventListener('input', () => updateSuggestions(input.value));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupAutocomplete('food_name', 'food-suggestions', "{{ url_for('meals.suggest_food', group_id=group.id) }}");
+    setupAutocomplete('location', 'location-suggestions', "{{ url_for('meals.suggest_location', group_id=group.id) }}");
+});
 </script>
 {% endblock %}

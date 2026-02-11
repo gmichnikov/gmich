@@ -37,43 +37,32 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 
 ### 2.1 Meals Entry Model
 - [x] Create `MealsEntry` model in `models.py`
-  - [x] Fields: `id`, `family_group_id` (FK), `member_id` (FK), `food_name`, `location`, `meal_type` (Enum: Breakfast, Lunch, Dinner), `date` (Date), `created_by_id` (FK to User), `created_at`
-  - [x] Add relationships to group and member.
-
-**Manual Testing 2.1:**
-- [ ] Run `flask db migrate -m "Add meals_entry model"`
-- [ ] Run `flask db upgrade`
+- [x] Run `flask db migrate -m "Add meals_entry model"`
+- [x] Run `flask db upgrade`
 
 ### 2.2 Multi-Member Logging UI
-- [ ] Create `LogMealForm` in `forms.py`
-  - [ ] `date`, `meal_type`, `food_name`, `location`.
-  - [ ] `member_ids`: Multiple selection of family members.
-- [ ] Implement `POST /meals/groups/<int:group_id>/log`
-  - [ ] **Access Check**: Verify requester is in the group.
-  - [ ] Iterate over selected members and create individual `MealsEntry` records.
-- [ ] Update `templates/meals/index.html` (Mobile-First)
-  - [ ] Add "Log a Meal" form optimized for touch (large targets).
-  - [ ] Add "Recent History" list.
-- [ ] Add `static/meals/style.css` (with `meals-` prefixes).
+- [x] Create `LogMealForm` in `forms.py`
+- [x] Implement `POST /meals/groups/<int:group_id>/log`
+- [x] Update `templates/meals/group_detail.html` (Mobile-First)
+- [x] Add `static/meals/style.css` (with `meals-` prefixes)
+- [x] Add "Recent History" list.
 
 **Manual Testing 2.2:**
-- [ ] Log a meal for two people at once and verify two separate records are created.
-- [ ] Verify the UI looks and feels good on a mobile viewport.
+- [x] Log a meal for two people at once and verify two separate records are created.
+- [x] Verify the UI looks and feels good on a mobile viewport.
 
 ---
 
 ## Phase 3: Smart Entry & Dashboard Views
 
 ### 3.1 Dual Autocomplete API
-- [ ] Implement `GET /meals/groups/<int:group_id>/api/suggestions/food`
-  - [ ] Return unique `food_name` strings from family history.
-- [ ] Implement `GET /meals/groups/<int:group_id>/api/suggestions/location`
-  - [ ] Return unique `location` strings from family history.
-- [ ] Integrate both autocompletes into the logging form.
+- [x] Implement `GET /meals/groups/<int:group_id>/api/suggestions/food`
+- [x] Implement `GET /meals/groups/<int:group_id>/api/suggestions/location`
+- [x] Integrate both autocompletes into the logging form.
 
 ### 3.2 Common Meals & Trends
-- [ ] Implement the "Common Meals" table (Individual vs Family toggle).
-- [ ] Implement "Location Trends" stats (Home vs Out).
+- [x] Implement the "Common Meals" table (Individual vs Family toggle).
+- [x] Implement "Location Trends" stats (Home vs Out).
 
 **Manual Testing 3.1 & 3.2:**
 - [ ] Type a food name and verify suggestions match food history, not location history.

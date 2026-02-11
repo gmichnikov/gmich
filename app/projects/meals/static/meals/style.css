@@ -321,10 +321,108 @@
     text-decoration: underline;
 }
 
-.meals-empty {
-    text-align: center;
-    padding: 40px;
-    color: #95a5a6;
+.meals-stats-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 992px) {
+    .meals-stats-row {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+.meals-stats-card {
     background: white;
+    padding: 20px;
     border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.meals-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.meals-table th, .meals-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.meals-table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #95a5a6;
+    letter-spacing: 0.5px;
+}
+
+.meals-table td {
+    font-size: 0.95rem;
+    color: #2c3e50;
+}
+
+.meals-input-sm {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #2c3e50;
+    background: #f8f9fa;
+}
+
+.meals-trends {
+    margin-top: 20px;
+}
+
+.meals-trend-item {
+    margin-bottom: 20px;
+}
+
+.meals-trend-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #34495e;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.meals-trend-bar-container {
+    background: #f1f2f6;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.meals-trend-bar {
+    height: 100%;
+    border-radius: 6px;
+}
+
+.meals-trend-home {
+    background: #2ecc71;
+}
+
+.meals-trend-out {
+    background: #e67e22;
+}
+
+.meals-trend-value {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    font-weight: 700;
+}
+
+.meals-empty-text {
+    color: #95a5a6;
+    font-style: italic;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.meals-filter-bar {
+    margin-bottom: 10px;
 }

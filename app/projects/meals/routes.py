@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from sqlalchemy import func
 from flask_login import login_required, current_user
 from app import db
 from app.models import User
@@ -144,9 +145,72 @@ def group_detail(group_id):
     
     recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
     
+    # Common Meals Stats
+    member_filter = request.args.get('member_id', type=int)
+    common_query = db.session.query(
+        MealsEntry.food_name, 
+        MealsEntry.location, 
+        func.count(MealsEntry.id).label('count')
+    ).filter(MealsEntry.family_group_id == group_id)
+    
+    if member_filter:
+        common_query = common_query.filter(MealsEntry.member_id == member_filter)
+    
+    common_meals = common_query.group_by(
+        MealsEntry.food_name, 
+        MealsEntry.location
+    ).order_by(func.count(MealsEntry.id).desc()).limit(10).all()
+    
+    # Location Trends (Home vs Out)
+    home_count = MealsEntry.query.filter(
+        MealsEntry.family_group_id == group_id,
+        MealsEntry.location.ilike('home')
+    ).count()
+    
+    total_with_location = MealsEntry.query.filter(
+        MealsEntry.family_group_id == group_id,
+        MealsEntry.location.isnot(None),
+        MealsEntry.location != ''
+    ).count()
+    
+    out_count = total_with_location - home_count
+    
     return render_template('meals/group_detail.html', 
                            group=group, 
                            invite_form=invite_form, 
                            guest_form=guest_form,
                            log_form=log_form,
-                           recent_entries=recent_entries)
+                           recent_entries=recent_entries,
+                           common_meals=common_meals,
+                           home_count=home_count,
+                           out_count=out_count,
+                           member_filter=member_filter)
+
+@meals_bp.route('/groups/<int:group_id>/api/suggestions/food')
+@login_required
+def suggest_food(group_id):
+    if not is_user_in_group(current_user, group_id):
+        return {"error": "Unauthorized"}, 403
+    
+    query = request.args.get('q', '').lower()
+    suggestions = db.session.query(MealsEntry.food_name).filter(
+        MealsEntry.family_group_id == group_id,
+        MealsEntry.food_name.ilike(f'%{query}%')
+    ).distinct().limit(10).all()
+    
+    return [s[0] for s in suggestions]
+
+@meals_bp.route('/groups/<int:group_id>/api/suggestions/location')
+@login_required
+def suggest_location(group_id):
+    if not is_user_in_group(current_user, group_id):
+        return {"error": "Unauthorized"}, 403
+    
+    query = request.args.get('q', '').lower()
+    suggestions = db.session.query(MealsEntry.location).filter(
+        MealsEntry.family_group_id == group_id,
+        MealsEntry.location.ilike(f'%{query}%'),
+        MealsEntry.location.isnot(None)
+    ).distinct().limit(10).all()
+    
+    return [s[0] for s in suggestions]
