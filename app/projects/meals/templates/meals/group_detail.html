@@ -11,9 +11,89 @@
     <div class="meals-header">
         <h1 class="meals-title">{{ group.name }}</h1>
         <div class="meals-actions">
-            {# Future location for Log Meal button #}
-            <button class="meals-button" disabled>Log a Meal (Phase 2)</button>
+            <a href="#log-meal" class="meals-button">Log a Meal</a>
         </div>
+    </div>
+
+    <div class="meals-section" id="log-meal">
+        <div class="meals-card meals-log-card">
+            <h2>Log a Meal</h2>
+            <form action="{{ url_for('meals.log_meal', group_id=group.id) }}" method="POST" novalidate>
+                {{ log_form.hidden_tag() }}
+                <div class="meals-form-row">
+                    <div class="meals-form-group">
+                        {{ log_form.date.label }}
+                        {{ log_form.date(class="meals-input", type="date") }}
+                    </div>
+                    <div class="meals-form-group">
+                        {{ log_form.meal_type.label }}
+                        {{ log_form.meal_type(class="meals-input") }}
+                    </div>
+                </div>
+                
+                <div class="meals-form-group">
+                    {{ log_form.food_name.label }}
+                    {{ log_form.food_name(class="meals-input", placeholder="e.g., Pizza and Salad") }}
+                </div>
+                
+                <div class="meals-form-group">
+                    {{ log_form.location.label }}
+                    {{ log_form.location(class="meals-input", placeholder="e.g., Home or Restaurant Name") }}
+                </div>
+
+                <div class="meals-form-group">
+                    <div class="meals-label-row">
+                        <label>Who ate this?</label>
+                        <div class="meals-selection-helpers">
+                            <button type="button" class="meals-helper-btn" onclick="selectAllMembers()">Select All</button>
+                            <span class="meals-helper-divider">|</span>
+                            <button type="button" class="meals-helper-btn" onclick="clearAllMembers()">Clear All</button>
+                        </div>
+                    </div>
+                    <div class="meals-checkbox-group" id="member-checkbox-group">
+                        {% for subfield in log_form.member_ids %}
+                            <div class="meals-checkbox-item">
+                                {{ subfield(required=False) }}
+                                {{ subfield.label }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {{ log_form.submit(class="meals-button meals-button-primary") }}
+            </form>
+        </div>
+    </div>
+
+    <div class="meals-section">
+        <h2>Recent History</h2>
+        {% if recent_entries %}
+            <div class="meals-history-list">
+                {% set last_date = None %}
+                {% for entry in recent_entries %}
+                    {% if entry.date != last_date %}
+                        <div class="meals-history-date-header">{{ entry.date.strftime('%A, %B %d') }}</div>
+                        {% set last_date = entry.date %}
+                    {% endif %}
+                    <div class="meals-history-item">
+                        <div class="meals-history-main">
+                            <span class="meals-history-type">{{ entry.meal_type }}:</span>
+                            <span class="meals-history-food">{{ entry.food_name }}</span>
+                            {% if entry.location %}
+                                <span class="meals-history-location">@ {{ entry.location }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="meals-history-meta">
+                            <span class="meals-history-member">{{ entry.member.display_name }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="meals-empty">
+                <p>No meals logged yet.</p>
+            </div>
+        {% endif %}
     </div>
 
     <div class="meals-section">
@@ -62,4 +142,18 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('meals.static', filename='meals/style.css') }}">
+{% endblock %}
+
+{% block scripts %}
+<script>
+function selectAllMembers() {
+    const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = true);
+}
+
+function clearAllMembers() {
+    const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+}
+</script>
 {% endblock %}

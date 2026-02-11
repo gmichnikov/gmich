@@ -7,52 +7,38 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 ## Phase 1: Foundations & Sharing
 
 ### 1.1 Database Model Setup
-- [ ] Create `MealsFamilyGroup` model in `models.py`
-  - [ ] Fields: `id`, `name`, `created_at`
-- [ ] Create `MealsFamilyMember` model in `models.py`
-  - [ ] Fields: `id`, `family_group_id` (FK), `user_id` (FK, nullable), `display_name` (String), `created_at`
-  - [ ] Add relationship to `MealsFamilyGroup`
-  - [ ] Add relationship to `User` (backref `meals_memberships`)
-- [ ] Update `app/__init__.py` to import these models for discovery by Flask-Migrate
+- [x] Create `MealsFamilyGroup` model in `models.py`
+- [x] Create `MealsFamilyMember` model in `models.py`
+- [x] Update `app/__init__.py` to import these models for discovery by Flask-Migrate
 
 **Manual Testing 1.1:**
-- [ ] Run `flask db migrate -m "Add meals core models"`
-- [ ] Run `flask db upgrade`
-- [ ] Verify tables `meals_family_group` and `meals_family_member` exist in the database with correct schema.
+- [x] Run `flask db migrate -m "Add meals core models"`
+- [x] Run `flask db upgrade`
+- [x] Verify tables `meals_family_group` and `meals_family_member` exist in the database with correct schema.
 
 ### 1.2 Blueprints & Basic Routes
-- [ ] Ensure `routes.py` is properly set up with the `meals_bp` blueprint.
-- [ ] Create `forms.py` for Meals project forms.
-  - [ ] `CreateFamilyGroupForm` (name)
-  - [ ] `InviteMemberForm` (email)
-  - [ ] `AddGuestMemberForm` (display_name)
-- [ ] Create `utils.py` for helper functions.
-  - [ ] `get_user_family_groups(user)`
-  - [ ] `is_user_in_group(user, group_id)` - **CRITICAL**: Use this for all group-specific access control.
-- [ ] Implement `GET /meals/` (Dashboard placeholder)
-- [ ] Implement `POST /meals/groups/create`
-  - [ ] Create group and add current user as the first linked member.
-- [ ] Implement `POST /meals/groups/<int:group_id>/invite` (Link existing User)
-  - [ ] **Access Check**: Verify requester is in the group.
-  - [ ] Accept email, find user, create `MealsFamilyMember` linked to `user_id`.
-- [ ] Implement `POST /meals/groups/<int:group_id>/members/add` (Add Guest Member)
-  - [ ] **Access Check**: Verify requester is in the group.
-  - [ ] Create `MealsFamilyMember` with only `display_name`.
+- [x] Ensure `routes.py` is properly set up with the `meals_bp` blueprint.
+- [x] Create `forms.py` for Meals project forms.
+- [x] Create `utils.py` for helper functions.
+- [x] Implement `GET /meals/` (Dashboard placeholder)
+- [x] Implement `POST /meals/groups/create`
+- [x] Implement `POST /meals/groups/<int:group_id>/invite` (Link existing User)
+- [x] Implement `POST /meals/groups/<int:group_id>/members/add` (Add Guest Member)
 
 **Manual Testing 1.2:**
-- [ ] Create a group and verify it appears on your dashboard.
-- [ ] Add a guest member (e.g., "Kid 1") and verify they show up in the member list.
-- [ ] Invite another user by email and verify they can see the group when they log in.
-- [ ] **Security Test**: Try to access or invite to a group ID you are not a member of; verify it returns 404/Denied.
+- [x] Create a group and verify it appears on your dashboard.
+- [x] Add a guest member (e.g., "Kid 1") and verify they show up in the member list.
+- [x] Invite another user by email and verify they can see the group when they log in.
+- [x] **Security Test**: Try to access or invite to a group ID you are not a member of; verify it returns 404/Denied.
 
 ---
 
 ## Phase 2: Core Logging (Mobile-First)
 
 ### 2.1 Meals Entry Model
-- [ ] Create `MealsEntry` model in `models.py`
-  - [ ] Fields: `id`, `family_group_id` (FK), `member_id` (FK), `food_name`, `location`, `meal_type` (Enum: Breakfast, Lunch, Dinner), `date` (Date), `created_by_id` (FK to User), `created_at`
-  - [ ] Add relationships to group and member.
+- [x] Create `MealsEntry` model in `models.py`
+  - [x] Fields: `id`, `family_group_id` (FK), `member_id` (FK), `food_name`, `location`, `meal_type` (Enum: Breakfast, Lunch, Dinner), `date` (Date), `created_by_id` (FK to User), `created_at`
+  - [x] Add relationships to group and member.
 
 **Manual Testing 2.1:**
 - [ ] Run `flask db migrate -m "Add meals_entry model"`

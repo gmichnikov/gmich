@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from app.models import User
-from app.projects.meals.models import MealsFamilyGroup, MealsFamilyMember
-from app.projects.meals.forms import CreateFamilyGroupForm, InviteMemberForm, AddGuestMemberForm
+from app.projects.meals.models import MealsFamilyGroup, MealsFamilyMember, MealsEntry
+from app.projects.meals.forms import CreateFamilyGroupForm, InviteMemberForm, AddGuestMemberForm, LogMealForm
 from app.projects.meals.utils import get_user_family_groups, is_user_in_group
 
 meals_bp = Blueprint('meals', __name__, 
@@ -95,6 +95,38 @@ def add_guest_member(group_id):
         
     return render_template('meals/add_guest.html', group=group, form=form)
 
+@meals_bp.route('/groups/<int:group_id>/log', methods=['POST'])
+@login_required
+def log_meal(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    
+    group = MealsFamilyGroup.query.get_or_404(group_id)
+    form = LogMealForm()
+    form.member_ids.choices = [(m.id, m.display_name) for m in group.members]
+    
+    if form.validate_on_submit():
+        for member_id in form.member_ids.data:
+            entry = MealsEntry(
+                family_group_id=group_id,
+                member_id=member_id,
+                food_name=form.food_name.data,
+                location=form.location.data,
+                meal_type=form.meal_type.data,
+                date=form.date.data,
+                created_by_id=current_user.id
+            )
+            db.session.add(entry)
+        
+        db.session.commit()
+        flash(f'Logged {form.meal_type.data} for {len(form.member_ids.data)} members!', 'success')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Error in {field}: {error}', 'danger')
+                
+    return redirect(url_for('meals.group_detail', group_id=group_id))
+
 @meals_bp.route('/groups/<int:group_id>')
 @login_required
 def group_detail(group_id):
@@ -104,7 +136,17 @@ def group_detail(group_id):
     group = MealsFamilyGroup.query.get_or_404(group_id)
     invite_form = InviteMemberForm()
     guest_form = AddGuestMemberForm()
+    
+    log_form = LogMealForm()
+    log_form.member_ids.choices = [(m.id, m.display_name) for m in group.members]
+    # Default to all members selected for convenience
+    log_form.member_ids.data = [m.id for m in group.members]
+    
+    recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
+    
     return render_template('meals/group_detail.html', 
                            group=group, 
                            invite_form=invite_form, 
-                           guest_form=guest_form)
+                           guest_form=guest_form,
+                           log_form=log_form,
+                           recent_entries=recent_entries)

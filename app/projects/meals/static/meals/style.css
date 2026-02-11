@@ -121,6 +121,154 @@
     background: #27ae60;
 }
 
+.meals-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.meals-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.meals-checkbox-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.meals-checkbox-item:hover {
+    background: #eef2f7;
+}
+
+.meals-checkbox-item input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.meals-checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+.meals-history-list {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.meals-history-date-header {
+    background: #f1f2f6;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meals-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f2f6;
+}
+
+.meals-history-item:last-child {
+    border-bottom: none;
+}
+
+.meals-history-type {
+    font-weight: 700;
+    color: #3498db;
+    margin-right: 5px;
+}
+
+.meals-history-food {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.meals-history-location {
+    color: #95a5a6;
+    font-style: italic;
+    font-size: 0.9rem;
+    margin-left: 5px;
+}
+
+.meals-history-member {
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+.meals-log-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.meals-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.meals-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.meals-label-row label {
+    margin-bottom: 0;
+}
+
+.meals-selection-helpers {
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.meals-helper-btn {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.meals-helper-btn:hover {
+    text-decoration: underline;
+}
+
+.meals-helper-divider {
+    margin: 0 5px;
+    color: #ddd;
+}
+
 .meals-members-list {
     background: white;
     border-radius: 12px;
