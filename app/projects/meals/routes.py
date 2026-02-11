@@ -141,7 +141,7 @@ def group_detail(group_id):
     guest_form = AddGuestMemberForm()
     
     log_form = LogMealForm()
-    log_form.member_ids.choices = [(m.id, m.display_name) for m in group.members]
+    log_form.member_ids.choices = [(m.id, m.name) for m in group.members]
     
     recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
     

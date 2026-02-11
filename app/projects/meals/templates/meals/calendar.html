@@ -20,7 +20,7 @@
                     <select name="member_id" onchange="this.form.submit()" class="meals-input-sm">
                         <option value="">Family View</option>
                         {% for member in group.members %}
-                            <option value="{{ member.id }}" {% if member_filter == member.id %}selected{% endif %}>{{ member.display_name }}</option>
+                            <option value="{{ member.id }}" {% if member_filter == member.id %}selected{% endif %}>{{ member.name }}</option>
                         {% endfor %}
                     </select>
                 </form>
@@ -78,7 +78,7 @@
                                                 {% endif %}
                                                 <div class="meals-cal-members">
                                                     {% for e in entries %}
-                                                        <span class="meals-cal-member-dot" title="{{ e.member.display_name }}">{{ e.member.display_name[0] }}</span>
+                                                        <span class="meals-cal-member-dot" title="{{ e.member.name }}">{{ e.member.name[0] }}</span>
                                                     {% endfor %}
                                                 </div>
                                             </div>

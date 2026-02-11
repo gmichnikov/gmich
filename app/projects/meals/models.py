@@ -33,6 +33,16 @@ class MealsFamilyMember(db.Model):
     user = db.relationship('User', backref=db.backref('meals_memberships', lazy=True))
     entries = db.relationship('MealsEntry', backref='member', lazy=True, cascade="all, delete-orphan")
 
+    @property
+    def name(self):
+        """
+        Returns the current short_name of the linked user, 
+        or the stored display_name if it's a guest member.
+        """
+        if self.user:
+            return self.user.short_name
+        return self.display_name
+
     def __repr__(self):
         return f"<MealsFamilyMember {self.id}: {self.display_name} (group_id={self.family_group_id})>"
 

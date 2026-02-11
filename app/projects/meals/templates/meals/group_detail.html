@@ -153,10 +153,10 @@
                                 <span class="meals-history-location">@ {{ entry.location }}</span>
                             {% endif %}
                         </div>
-                        <div class="meals-history-meta">
-                            <span class="meals-history-member">{{ entry.member.display_name }}</span>
-                            <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})">&times;</button>
-                        </div>
+                    <div class="meals-history-meta">
+                        <span class="meals-history-member">{{ entry.member.name }}</span>
+                        <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})">&times;</button>
+                    </div>
                     </div>
                 {% endfor %}
             </div>
@@ -172,7 +172,7 @@
         <div class="meals-members-list">
             {% for member in group.members %}
                 <div class="meals-member-item">
-                    <span class="meals-member-name">{{ member.display_name }}</span>
+                    <span class="meals-member-name">{{ member.name }}</span>
                     {% if member.user_id %}
                         <span class="meals-badge">Linked</span>
                     {% else %}
