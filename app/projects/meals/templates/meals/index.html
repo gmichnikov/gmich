@@ -1,11 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}Meals{% endblock %}
+{% block title %}Meals Dashboard{% endblock %}
 
 {% block content %}
 <div class="meals-container">
-    <h1 class="meals-title">Meals</h1>
-    <p class="meals-description">Welcome to the Meals project. This is a basic setup.</p>
+    <div class="meals-header">
+        <h1 class="meals-title">Meals Tracker</h1>
+        <p class="meals-description">Track your family's Breakfast, Lunch, and Dinner.</p>
+    </div>
+
+    <div class="meals-section">
+        <h2>My Family Groups</h2>
+        {% if groups %}
+            <div class="meals-grid">
+                {% for group in groups %}
+                    <a href="{{ url_for('meals.group_detail', group_id=group.id) }}" class="meals-card">
+                        <h3>{{ group.name }}</h3>
+                        <p>{{ group.members|length }} Members</p>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="meals-empty">
+                <p>You haven't joined any family groups yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="meals-section">
+        <div class="meals-card meals-create-card">
+            <h3>Create a New Family Group</h3>
+            <form action="{{ url_for('meals.create_group') }}" method="POST">
+                {{ create_form.hidden_tag() }}
+                <div class="meals-form-group">
+                    {{ create_form.name.label }}
+                    {{ create_form.name(class="meals-input", placeholder="e.g., The Smith Family") }}
+                </div>
+                {{ create_form.submit(class="meals-button") }}
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

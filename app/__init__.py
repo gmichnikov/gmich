@@ -147,6 +147,11 @@ def create_app():
         FootballSquaresSquare,
         FootballSquaresQuarter,
     )
+    from app.projects.meals.models import (
+        MealsFamilyGroup,
+        MealsFamilyMember,
+        MealsEntry,
+    )
 
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")

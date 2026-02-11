@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Add Guest - {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="meals-container">
+    <div class="meals-nav">
+        <a href="{{ url_for('meals.group_detail', group_id=group.id) }}" class="meals-back-link">&larr; Back to Group</a>
+    </div>
+
+    <div class="meals-header">
+        <h1>Add Guest Member to {{ group.name }}</h1>
+    </div>
+
+    <div class="meals-card">
+        <form action="{{ url_for('meals.add_guest_member', group_id=group.id) }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div class="meals-form-group">
+                {{ form.display_name.label }}
+                {{ form.display_name(class="meals-input", placeholder="Name") }}
+            </div>
+            {{ form.submit(class="meals-button") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('meals.static', filename='meals/style.css') }}">
+{% endblock %}
