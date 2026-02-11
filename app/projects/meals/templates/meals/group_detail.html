@@ -133,16 +133,19 @@
     </div>
 
     <div class="meals-section">
-        <h2>Recent History</h2>
+        <div class="meals-history-header">
+            <h2>Recent History</h2>
+            <button type="button" class="meals-delete-toggle" onclick="toggleDeleteMode(this)">Delete</button>
+        </div>
         {% if recent_entries %}
-            <div class="meals-history-list">
+            <div class="meals-history-list" id="meals-history-list">
                 {% set last_date = None %}
                 {% for entry in recent_entries %}
                     {% if entry.date != last_date %}
-                        <div class="meals-history-date-header">{{ entry.date.strftime('%A, %B %d') }}</div>
+                        <div class="meals-history-date-header" data-date="{{ entry.date }}">{{ entry.date.strftime('%A, %B %d') }}</div>
                         {% set last_date = entry.date %}
                     {% endif %}
-                    <div class="meals-history-item">
+                    <div class="meals-history-item" id="entry-{{ entry.id }}">
                         <div class="meals-history-main">
                             <span class="meals-history-type">{{ entry.meal_type }}:</span>
                             <span class="meals-history-food">{{ entry.food_name }}</span>
@@ -152,6 +155,7 @@
                         </div>
                         <div class="meals-history-meta">
                             <span class="meals-history-member">{{ entry.member.display_name }}</span>
+                            <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})">&times;</button>
                         </div>
                     </div>
                 {% endfor %}
@@ -221,6 +225,49 @@ function selectAllMembers() {
 function clearAllMembers() {
     const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
     checkboxes.forEach(cb => cb.checked = false);
+}
+
+// Delete Mode logic
+function toggleDeleteMode(btn) {
+    const list = document.getElementById('meals-history-list');
+    const isDeleting = list.classList.toggle('meals-delete-mode');
+    btn.textContent = isDeleting ? 'Done' : 'Delete';
+    btn.classList.toggle('meals-delete-active', isDeleting);
+}
+
+async function deleteEntry(entryId, groupId) {
+    if (!confirm('Delete this entry?')) return;
+    
+    try {
+        const response = await fetch(`/meals/groups/${groupId}/entries/${entryId}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': "{{ csrf_token() }}",
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const entryRow = document.getElementById(`entry-${entryId}`);
+            // Check if this was the last entry under a date header
+            const prevHeader = entryRow.previousElementSibling;
+            const nextElem = entryRow.nextElementSibling;
+            
+            entryRow.remove();
+            
+            // If the header is followed by another header or nothing, remove the header too
+            if (prevHeader && prevHeader.classList.contains('meals-history-date-header')) {
+                if (!nextElem || nextElem.classList.contains('meals-history-date-header')) {
+                    prevHeader.remove();
+                }
+            }
+        } else {
+            alert('Failed to delete entry.');
+        }
+    } catch (e) {
+        console.error('Delete failed', e);
+        alert('An error occurred.');
+    }
 }
 
 // Autocomplete logic

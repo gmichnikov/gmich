@@ -142,8 +142,6 @@ def group_detail(group_id):
     
     log_form = LogMealForm()
     log_form.member_ids.choices = [(m.id, m.display_name) for m in group.members]
-    # Default to all members selected for convenience
-    log_form.member_ids.data = [m.id for m in group.members]
     
     recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
     
@@ -201,10 +199,12 @@ def calendar_view(group_id):
     year = request.args.get('year', date.today().year, type=int)
     month = request.args.get('month', date.today().month, type=int)
     day = request.args.get('day', date.today().day, type=int)
+    member_filter = request.args.get('member_id', type=int)
     
     current_focus = date(year, month, day)
     
     if view_type == 'monthly':
+        # ... existing logic ...
         start_date = date(year, month, 1)
         _, last_day = calendar.monthrange(year, month)
         end_date = date(year, month, last_day)
@@ -225,11 +225,16 @@ def calendar_view(group_id):
         next_date = start_date + timedelta(days=7)
 
     # Fetch entries
-    entries = MealsEntry.query.filter(
+    query = MealsEntry.query.filter(
         MealsEntry.family_group_id == group_id,
         MealsEntry.date >= start_date,
         MealsEntry.date <= end_date
-    ).order_by(MealsEntry.date, MealsEntry.meal_type).all()
+    )
+    
+    if member_filter:
+        query = query.filter(MealsEntry.member_id == member_filter)
+        
+    entries = query.order_by(MealsEntry.date, MealsEntry.meal_type).all()
     
     # Group entries by date and meal type, then by food+location for "Family Overlay"
     calendar_data = {}
@@ -260,7 +265,22 @@ def calendar_view(group_id):
                            next_date=next_date,
                            month_name=calendar.month_name[month],
                            year=year,
-                           date=date)
+                           date=date,
+                           member_filter=member_filter)
+
+@meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/delete', methods=['POST'])
+@login_required
+def delete_entry(group_id, entry_id):
+    if not is_user_in_group(current_user, group_id):
+        return {"error": "Unauthorized"}, 403
+    
+    entry = MealsEntry.query.get_or_404(entry_id)
+    if entry.family_group_id != group_id:
+        return {"error": "Invalid entry"}, 400
+        
+    db.session.delete(entry)
+    db.session.commit()
+    return {"success": True}
 
 @meals_bp.route('/groups/<int:group_id>/api/suggestions/food')
 @login_required
