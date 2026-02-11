@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from sqlalchemy import func
 from flask_login import login_required, current_user
+import calendar
+from datetime import date, timedelta, datetime
 from app import db
 from app.models import User
 from app.projects.meals.models import MealsFamilyGroup, MealsFamilyMember, MealsEntry
@@ -185,6 +187,80 @@ def group_detail(group_id):
                            home_count=home_count,
                            out_count=out_count,
                            member_filter=member_filter)
+
+@meals_bp.route('/groups/<int:group_id>/calendar')
+@login_required
+def calendar_view(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+        
+    group = MealsFamilyGroup.query.get_or_404(group_id)
+    view_type = request.args.get('view', 'monthly') # 'monthly' or 'weekly'
+    
+    # Get current date or date from params
+    year = request.args.get('year', date.today().year, type=int)
+    month = request.args.get('month', date.today().month, type=int)
+    day = request.args.get('day', date.today().day, type=int)
+    
+    current_focus = date(year, month, day)
+    
+    if view_type == 'monthly':
+        start_date = date(year, month, 1)
+        _, last_day = calendar.monthrange(year, month)
+        end_date = date(year, month, last_day)
+        
+        # Adjust start_date to the beginning of the week (Sunday)
+        start_date = start_date - timedelta(days=(start_date.weekday() + 1) % 7)
+        # Adjust end_date to the end of the week (Saturday)
+        end_date = end_date + timedelta(days=(5 - end_date.weekday() + 1) % 7)
+        
+        prev_date = (date(year, month, 1) - timedelta(days=1))
+        next_date = (date(year, month, 1) + timedelta(days=32)).replace(day=1)
+    else: # weekly
+        # Adjust start_date to the beginning of the current week (Sunday)
+        start_date = current_focus - timedelta(days=(current_focus.weekday() + 1) % 7)
+        end_date = start_date + timedelta(days=6)
+        
+        prev_date = start_date - timedelta(days=7)
+        next_date = start_date + timedelta(days=7)
+
+    # Fetch entries
+    entries = MealsEntry.query.filter(
+        MealsEntry.family_group_id == group_id,
+        MealsEntry.date >= start_date,
+        MealsEntry.date <= end_date
+    ).order_by(MealsEntry.date, MealsEntry.meal_type).all()
+    
+    # Group entries by date and meal type, then by food+location for "Family Overlay"
+    calendar_data = {}
+    curr = start_date
+    while curr <= end_date:
+        calendar_data[curr] = {
+            'Breakfast': {}, # { 'food+loc': [entries] }
+            'Lunch': {},
+            'Dinner': {}
+        }
+        curr += timedelta(days=1)
+        
+    for entry in entries:
+        if entry.date in calendar_data:
+            meal_key = f"{entry.food_name}|{entry.location or ''}"
+            if meal_key not in calendar_data[entry.date][entry.meal_type]:
+                calendar_data[entry.date][entry.meal_type][meal_key] = []
+            calendar_data[entry.date][entry.meal_type][meal_key].append(entry)
+
+    return render_template('meals/calendar.html',
+                           group=group,
+                           view_type=view_type,
+                           calendar_data=calendar_data,
+                           start_date=start_date,
+                           end_date=end_date,
+                           current_focus=current_focus,
+                           prev_date=prev_date,
+                           next_date=next_date,
+                           month_name=calendar.month_name[month],
+                           year=year,
+                           date=date)
 
 @meals_bp.route('/groups/<int:group_id>/api/suggestions/food')
 @login_required

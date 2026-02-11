@@ -65,18 +65,18 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 - [x] Implement "Location Trends" stats (Home vs Out).
 
 **Manual Testing 3.1 & 3.2:**
-- [ ] Type a food name and verify suggestions match food history, not location history.
-- [ ] Verify "Common Meals" table calculates correctly.
+- [x] Type a food name and verify suggestions match food history, not location history.
+- [x] Verify "Common Meals" table calculates correctly.
 
 ---
 
 ## Phase 4: Calendar Views (Mobile-First)
 
 ### 4.1 Weekly & Monthly Grids
-- [ ] Implement `GET /meals/groups/<int:group_id>/calendar`
-- [ ] Weekly view: Optimized for mobile (scrollable or stacked).
-- [ ] Monthly view: Optimized for mobile.
-- [ ] Implement the "Family Overlay" (showing all members in the same cell).
+- [x] Implement `GET /meals/groups/<int:group_id>/calendar`
+- [x] Weekly view: Optimized for mobile (scrollable or stacked).
+- [x] Monthly view: Optimized for mobile.
+- [x] Implement the "Family Overlay" (showing all members in the same cell).
 
 **Manual Testing 4.1:**
 - [ ] Verify calendar navigation works well on mobile.
@@ -85,6 +85,10 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 ---
 
 ## Phase 5: Final Review & Polish
-- [ ] **Mobile Audit**: Final pass on all pages at 375px width.
-- [ ] **CSS Audit**: Verify `meals-` prefix everywhere.
-- [ ] **Permission Audit**: Verify every single route has an `is_user_in_group` check.
+- [x] **Mobile Audit**: Final pass on all pages at 375px width.
+- [x] **CSS Audit**: Verify `meals-` prefix everywhere.
+- [x] **Permission Audit**: Verify every single route has an `is_user_in_group` check.
+
+**Manual Testing 5:**
+- [x] Check Dashboard, Group Detail, and Calendar on a mobile device or simulator.
+- [x] Verify that navigating to another user's group ID returns a 404 or redirect.

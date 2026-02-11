@@ -11,6 +11,7 @@
     <div class="meals-header">
         <h1 class="meals-title">{{ group.name }}</h1>
         <div class="meals-actions">
+            <a href="{{ url_for('meals.calendar_view', group_id=group.id) }}" class="meals-button meals-button-info">View Calendar</a>
             <a href="#log-meal" class="meals-button">Log a Meal</a>
         </div>
     </div>

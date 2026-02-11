@@ -12,10 +12,234 @@
     }
 }
 
-.meals-header {
-    margin-bottom: 30px;
-    border-bottom: 2px solid #e9ecef;
-    padding-bottom: 20px;
+.meals-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.meals-button-info {
+    background: #9b59b6;
+    color: white;
+}
+
+.meals-button-info:hover {
+    background: #8e44ad;
+}
+
+/* Calendar Styles */
+.meals-calendar-container {
+    max-width: 1200px;
+}
+
+.meals-calendar-header {
+    margin-bottom: 20px;
+}
+
+.meals-calendar-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.meals-view-toggle {
+    display: flex;
+    background: #eee;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.meals-toggle-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.meals-toggle-btn.active {
+    background: white;
+    color: #2c3e50;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.meals-calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.meals-calendar-nav-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.meals-today-btn {
+    font-size: 0.75rem;
+    text-decoration: none;
+    color: #95a5a6;
+    background: #f8f9fa;
+    padding: 2px 10px;
+    border-radius: 4px;
+    border: 1px solid #eee;
+}
+
+.meals-today-btn:hover {
+    background: #e9ecef;
+    color: #2c3e50;
+}
+
+.meals-nav-btn {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: 600;
+}
+
+.meals-current-date {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.meals-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #e9ecef;
+    gap: 1px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.meals-cal-day-header {
+    background: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+}
+
+.meals-cal-day {
+    background: white;
+    min-height: 120px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.meals-cal-other-month {
+    background: #fdfdfd;
+}
+
+.meals-cal-other-month .meals-cal-day-num {
+    color: #ced4da;
+}
+
+.meals-cal-today {
+    background: #fff9db;
+}
+
+.meals-cal-day-num {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.meals-cal-day-content {
+    flex-grow: 1;
+    font-size: 0.8rem;
+}
+
+.meals-cal-meal-group {
+    margin-bottom: 8px;
+}
+
+.meals-cal-meal-label {
+    font-weight: 800;
+    color: #3498db;
+    margin-right: 4px;
+}
+
+.meals-cal-meal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.meals-cal-meal-entry {
+    background: #f1f3f5;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border-left: 3px solid #3498db;
+}
+
+.meals-cal-food {
+    font-weight: 600;
+    display: block;
+}
+
+.meals-cal-loc {
+    color: #868e96;
+    font-size: 0.7rem;
+    display: block;
+}
+
+.meals-cal-members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.meals-cal-member-dot {
+    width: 16px;
+    height: 16px;
+    background: #3498db;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+}
+
+/* Weekly view specific */
+.meals-calendar-weekly .meals-cal-day {
+    min-height: 300px;
+}
+
+@media (max-width: 767px) {
+    .meals-calendar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .meals-cal-day-header {
+        display: none;
+    }
+    
+    .meals-cal-day {
+        min-height: auto;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .meals-cal-day-num {
+        background: #f8f9fa;
+        margin: -10px -10px 10px -10px;
+        padding: 5px 10px;
+    }
 }
 
 .meals-title {

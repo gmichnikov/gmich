@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar - {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="meals-container meals-calendar-container">
+    <div class="meals-nav">
+        <a href="{{ url_for('meals.group_detail', group_id=group.id) }}" class="meals-back-link">&larr; Back to Group</a>
+    </div>
+
+    <div class="meals-calendar-header">
+        <div class="meals-calendar-title-row">
+            <h1>{{ group.name }} - {{ month_name if view_type == 'monthly' else 'Weekly View' }} {{ year }}</h1>
+            <div class="meals-view-toggle">
+                <a href="{{ url_for('meals.calendar_view', group_id=group.id, view='monthly', year=current_focus.year, month=current_focus.month) }}" 
+                   class="meals-toggle-btn {{ 'active' if view_type == 'monthly' }}">Monthly</a>
+                <a href="{{ url_for('meals.calendar_view', group_id=group.id, view='weekly', year=current_focus.year, month=current_focus.month, day=current_focus.day) }}" 
+                   class="meals-toggle-btn {{ 'active' if view_type == 'weekly' }}">Weekly</a>
+            </div>
+        </div>
+
+        <div class="meals-calendar-nav">
+            <a href="{{ url_for('meals.calendar_view', group_id=group.id, view=view_type, year=prev_date.year, month=prev_date.month, day=prev_date.day) }}" class="meals-nav-btn">&larr; Prev</a>
+            <div class="meals-calendar-nav-center">
+                <span class="meals-current-date">
+                    {% if view_type == 'monthly' %}
+                        {{ month_name }} {{ year }}
+                    {% else %}
+                        {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </span>
+                <a href="{{ url_for('meals.calendar_view', group_id=group.id, view=view_type) }}" class="meals-today-btn">Today</a>
+            </div>
+            <a href="{{ url_for('meals.calendar_view', group_id=group.id, view=view_type, year=next_date.year, month=next_date.month, day=next_date.day) }}" class="meals-nav-btn">Next &rarr;</a>
+        </div>
+    </div>
+
+    <div class="meals-calendar-grid-wrapper">
+        <div class="meals-calendar-grid {{ 'meals-calendar-monthly' if view_type == 'monthly' else 'meals-calendar-weekly' }}">
+            {# Week headers #}
+            <div class="meals-cal-day-header">Sun</div>
+            <div class="meals-cal-day-header">Mon</div>
+            <div class="meals-cal-day-header">Tue</div>
+            <div class="meals-cal-day-header">Wed</div>
+            <div class="meals-cal-day-header">Thu</div>
+            <div class="meals-cal-day-header">Fri</div>
+            <div class="meals-cal-day-header">Sat</div>
+
+            {% for day, day_meals in calendar_data.items()|sort %}
+                <div class="meals-cal-day {{ 'meals-cal-other-month' if day.month != current_focus.month and view_type == 'monthly' }} {{ 'meals-cal-today' if day == date.today() }}">
+                    <div class="meals-cal-day-num">{{ day.day }}</div>
+                    <div class="meals-cal-day-content">
+                        {% for type in ['Breakfast', 'Lunch', 'Dinner'] %}
+                            {% if day_meals[type] %}
+                                <div class="meals-cal-meal-group">
+                                    <span class="meals-cal-meal-label">{{ type[0] }}:</span>
+                                    <div class="meals-cal-meal-list">
+                                        {% for meal_key, entries in day_meals[type].items() %}
+                                            {% set first = entries[0] %}
+                                            <div class="meals-cal-meal-entry">
+                                                <span class="meals-cal-food">{{ first.food_name }}</span>
+                                                {% if first.location %}
+                                                    <span class="meals-cal-loc">@{{ first.location }}</span>
+                                                {% endif %}
+                                                <div class="meals-cal-members">
+                                                    {% for e in entries %}
+                                                        <span class="meals-cal-member-dot" title="{{ e.member.display_name }}">{{ e.member.display_name[0] }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('meals.static', filename='meals/style.css') }}">
+{% endblock %}
