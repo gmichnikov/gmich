@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from sqlalchemy import func
 from flask_login import login_required, current_user
 import calendar
+import pytz
 from datetime import date, timedelta, datetime
 from app import db
 from app.models import User
@@ -140,7 +141,12 @@ def group_detail(group_id):
     invite_form = InviteMemberForm()
     guest_form = AddGuestMemberForm()
     
+    # Get user's local date for the log form default
+    user_tz = pytz.timezone(current_user.time_zone)
+    user_now = datetime.now(user_tz)
+    
     log_form = LogMealForm()
+    log_form.date.data = user_now.date()
     log_form.member_ids.choices = [(m.id, m.name) for m in group.members]
     
     recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
@@ -195,10 +201,14 @@ def calendar_view(group_id):
     group = MealsFamilyGroup.query.get_or_404(group_id)
     view_type = request.args.get('view', 'monthly') # 'monthly' or 'weekly'
     
+    # Get user's local date for defaults
+    user_tz = pytz.timezone(current_user.time_zone)
+    user_today = datetime.now(user_tz).date()
+    
     # Get current date or date from params
-    year = request.args.get('year', date.today().year, type=int)
-    month = request.args.get('month', date.today().month, type=int)
-    day = request.args.get('day', date.today().day, type=int)
+    year = request.args.get('year', user_today.year, type=int)
+    month = request.args.get('month', user_today.month, type=int)
+    day = request.args.get('day', user_today.day, type=int)
     member_filter = request.args.get('member_id', type=int)
     
     current_focus = date(year, month, day)
@@ -265,7 +275,7 @@ def calendar_view(group_id):
                            next_date=next_date,
                            month_name=calendar.month_name[month],
                            year=year,
-                           date=date,
+                           today=user_today,
                            member_filter=member_filter)
 
 @meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/delete', methods=['POST'])

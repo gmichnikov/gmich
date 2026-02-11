@@ -61,7 +61,7 @@
             <div class="meals-cal-day-header">Sat</div>
 
             {% for day, day_meals in calendar_data.items()|sort %}
-                <div class="meals-cal-day {{ 'meals-cal-other-month' if day.month != current_focus.month and view_type == 'monthly' }} {{ 'meals-cal-today' if day == date.today() }}">
+                <div class="meals-cal-day {{ 'meals-cal-other-month' if day.month != current_focus.month and view_type == 'monthly' }} {{ 'meals-cal-today' if day == today }}">
                     <div class="meals-cal-day-num">{{ day.day }}</div>
                     <div class="meals-cal-day-content">
                         {% for type in ['Breakfast', 'Lunch', 'Dinner'] %}

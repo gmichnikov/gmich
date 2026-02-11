@@ -20,7 +20,7 @@ class MultiCheckboxField(SelectMultipleField):
     option_widget = widgets.CheckboxInput()
 
 class LogMealForm(FlaskForm):
-    date = DateField('Date', validators=[DataRequired()], default=datetime.today)
+    date = DateField('Date', validators=[DataRequired()])
     meal_type = SelectField('Meal', choices=[
         ('Breakfast', 'Breakfast'),
         ('Lunch', 'Lunch'),
