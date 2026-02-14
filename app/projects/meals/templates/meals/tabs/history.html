@@ -6,8 +6,52 @@
 <div class="meals-section">
     <div class="meals-history-header">
         <h2>Recent History</h2>
-        <button type="button" class="meals-delete-toggle" onclick="toggleDeleteMode(this)">Delete</button>
+        <div class="meals-history-actions">
+            <button type="button" class="meals-filter-toggle-btn" onclick="toggleFilters()">
+                <span class="meals-filter-icon">🔍</span> Filters
+            </button>
+            <button type="button" class="meals-delete-toggle" onclick="toggleDeleteMode(this)">Delete</button>
+        </div>
     </div>
+
+    <div class="meals-history-filters" id="history-filters">
+        <div class="meals-filter-grid">
+            <div class="meals-filter-group">
+                <label>Date</label>
+                <input type="date" id="filter-date" class="meals-input-sm" oninput="applyFilters()">
+            </div>
+            <div class="meals-filter-group">
+                <label>Person</label>
+                <select id="filter-person" class="meals-input-sm" onchange="applyFilters()">
+                    <option value="">All People</option>
+                    {% for member in group.members %}
+                        <option value="{{ member.name }}">{{ member.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="meals-filter-group">
+                <label>Meal</label>
+                <select id="filter-meal" class="meals-input-sm" onchange="applyFilters()">
+                    <option value="">All Meals</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                </select>
+            </div>
+            <div class="meals-filter-group">
+                <label>Location</label>
+                <input type="text" id="filter-location" class="meals-input-sm" placeholder="Search location..." oninput="applyFilters()">
+            </div>
+            <div class="meals-filter-group">
+                <label>Food</label>
+                <input type="text" id="filter-food" class="meals-input-sm" placeholder="Search food..." oninput="applyFilters()">
+            </div>
+            <div class="meals-filter-group meals-filter-reset-cell">
+                <button type="button" class="meals-filter-reset-btn" onclick="resetFilters()">Reset All</button>
+            </div>
+        </div>
+    </div>
+
     {% if recent_entries %}
         <div class="meals-history-list" id="meals-history-list">
             {% set last_date = None %}
@@ -16,7 +60,13 @@
                     <div class="meals-history-date-header" data-date="{{ entry.date }}">{{ entry.date.strftime('%A, %B %d') }}</div>
                     {% set last_date = entry.date %}
                 {% endif %}
-                <div class="meals-history-item" id="entry-{{ entry.id }}">
+                <div class="meals-history-item" 
+                     id="entry-{{ entry.id }}"
+                     data-date="{{ entry.date }}"
+                     data-person="{{ entry.member.name|lower }}"
+                     data-meal="{{ entry.meal_type|lower }}"
+                     data-location="{{ (entry.location or '')|lower }}"
+                     data-food="{{ entry.food_name|lower }}">
                     <div class="meals-history-main">
                         <span class="meals-history-type">{{ entry.meal_type }}:</span>
                         <span class="meals-history-food">{{ entry.food_name }}</span>
@@ -30,6 +80,9 @@
                 </div>
                 </div>
             {% endfor %}
+            <div id="no-results-msg" class="meals-empty" style="display: none;">
+                <p>No meals match your filters.</p>
+            </div>
         </div>
     {% else %}
         <div class="meals-empty">
@@ -41,6 +94,70 @@
 
 {% block extra_scripts %}
 <script>
+function toggleFilters() {
+    const filters = document.getElementById('history-filters');
+    filters.classList.toggle('active');
+}
+
+function resetFilters() {
+    document.getElementById('filter-date').value = '';
+    document.getElementById('filter-person').value = '';
+    document.getElementById('filter-meal').value = '';
+    document.getElementById('filter-location').value = '';
+    document.getElementById('filter-food').value = '';
+    applyFilters();
+}
+
+function applyFilters() {
+    const fDate = document.getElementById('filter-date').value;
+    const fPerson = document.getElementById('filter-person').value.toLowerCase();
+    const fMeal = document.getElementById('filter-meal').value.toLowerCase();
+    const fLocation = document.getElementById('filter-location').value.toLowerCase();
+    const fFood = document.getElementById('filter-food').value.toLowerCase();
+
+    const items = document.querySelectorAll('.meals-history-item');
+    const headers = document.querySelectorAll('.meals-history-date-header');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+        const dDate = item.getAttribute('data-date');
+        const dPerson = item.getAttribute('data-person');
+        const dMeal = item.getAttribute('data-meal');
+        const dLocation = item.getAttribute('data-location');
+        const dFood = item.getAttribute('data-food');
+
+        const matchesDate = !fDate || dDate === fDate;
+        const matchesPerson = !fPerson || dPerson === fPerson;
+        const matchesMeal = !fMeal || dMeal === fMeal;
+        const matchesLocation = !fLocation || dLocation.includes(fLocation);
+        const matchesFood = !fFood || dFood.includes(fFood);
+
+        if (matchesDate && matchesPerson && matchesMeal && matchesLocation && matchesFood) {
+            item.style.display = 'flex';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    // Handle date headers - only show if at least one item under it is visible
+    headers.forEach(header => {
+        const dateStr = header.getAttribute('data-date');
+        const siblingItems = [];
+        let next = header.nextElementSibling;
+        while (next && next.classList.contains('meals-history-item')) {
+            siblingItems.push(next);
+            next = next.nextElementSibling;
+        }
+
+        const hasVisibleChild = siblingItems.some(child => child.style.display !== 'none');
+        header.style.display = hasVisibleChild ? 'block' : 'none';
+    });
+
+    // Show/hide no results message
+    document.getElementById('no-results-msg').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
 function toggleDeleteMode(btn) {
     const list = document.getElementById('meals-history-list');
     const isDeleting = list.classList.toggle('meals-delete-mode');

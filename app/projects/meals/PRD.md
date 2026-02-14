@@ -48,6 +48,10 @@ The Meals project is a family-oriented food tracker designed to help families lo
   3. **Stats**: Common meals and location trends.
   4. **Calendar**: Weekly/Monthly views of meals.
   5. **Family**: Member management and invitations.
+- **Client-Side Filtering**: The History tab includes filters for Date, Person, Meal Type, Location, and Food Name.
+  - Filters are additive (AND logic).
+  - Search is case-insensitive.
+  - Mobile view is collapsible to save space.
 - **Bulk Logging**: Instead of logging per-person and then "copying," the primary UI for adding a meal involves:
   1. Selecting the Date and Meal Type (B, L, or D).
   2. Selecting one or more Family Members from the group.

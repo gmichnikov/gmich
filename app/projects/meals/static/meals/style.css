@@ -781,6 +781,100 @@
     margin-bottom: 0;
 }
 
+.meals-history-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* History Filters */
+.meals-history-filters {
+    display: none; /* Collapsed by default on mobile */
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.meals-history-filters.active {
+    display: block;
+}
+
+.meals-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+@media (min-width: 768px) {
+    .meals-history-filters {
+        display: block; /* Always visible on desktop */
+        padding: 15px;
+    }
+    
+    .meals-filter-toggle-btn {
+        display: none; /* Hide toggle on desktop */
+    }
+
+    .meals-filter-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        align-items: flex-end;
+    }
+}
+
+.meals-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.meals-filter-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meals-filter-toggle-btn {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2c3e50;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.meals-filter-reset-btn {
+    background: #f1f2f6;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.meals-filter-reset-btn:hover {
+    background: #e1e2e6;
+    color: #2c3e50;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .meals-delete-toggle {
     background: none;
     border: 1px solid #e74c3c;
