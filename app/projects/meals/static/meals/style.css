@@ -12,6 +12,91 @@
     }
 }
 
+.meals-header {
+    margin-bottom: 20px;
+}
+
+/* Tabs Navigation */
+.meals-tabs {
+    display: flex;
+    background: #e9ecef;
+    padding: 5px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    gap: 5px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.meals-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 5px;
+    text-decoration: none;
+    color: #7f8c8d;
+    border-radius: 8px;
+    transition: all 0.2s;
+    min-width: 60px;
+}
+
+.meals-tab:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #2c3e50;
+}
+
+.meals-tab.active {
+    background: white;
+    color: #3498db;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.meals-tab-icon {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+.meals-tab-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (min-width: 768px) {
+    .meals-tab {
+        flex-direction: row;
+        gap: 8px;
+        padding: 12px 20px;
+    }
+    
+    .meals-tab-icon {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
+    .meals-tab-text {
+        font-size: 0.85rem;
+    }
+}
+
+.meals-tab-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.meals-calendar-view-title {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
 .meals-actions {
     display: flex;
     gap: 10px;

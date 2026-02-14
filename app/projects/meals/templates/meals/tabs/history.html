@@ -1,0 +1,84 @@
+{% extends "meals/group_base.html" %}
+
+{% block tab_title %}Recent History{% endblock %}
+
+{% block tab_content %}
+<div class="meals-section">
+    <div class="meals-history-header">
+        <h2>Recent History</h2>
+        <button type="button" class="meals-delete-toggle" onclick="toggleDeleteMode(this)">Delete</button>
+    </div>
+    {% if recent_entries %}
+        <div class="meals-history-list" id="meals-history-list">
+            {% set last_date = None %}
+            {% for entry in recent_entries %}
+                {% if entry.date != last_date %}
+                    <div class="meals-history-date-header" data-date="{{ entry.date }}">{{ entry.date.strftime('%A, %B %d') }}</div>
+                    {% set last_date = entry.date %}
+                {% endif %}
+                <div class="meals-history-item" id="entry-{{ entry.id }}">
+                    <div class="meals-history-main">
+                        <span class="meals-history-type">{{ entry.meal_type }}:</span>
+                        <span class="meals-history-food">{{ entry.food_name }}</span>
+                        {% if entry.location %}
+                            <span class="meals-history-location">@ {{ entry.location }}</span>
+                        {% endif %}
+                    </div>
+                <div class="meals-history-meta">
+                    <span class="meals-history-member">{{ entry.member.name }}</span>
+                    <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})">&times;</button>
+                </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="meals-empty">
+            <p>No meals logged yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleDeleteMode(btn) {
+    const list = document.getElementById('meals-history-list');
+    const isDeleting = list.classList.toggle('meals-delete-mode');
+    btn.textContent = isDeleting ? 'Done' : 'Delete';
+    btn.classList.toggle('meals-delete-active', isDeleting);
+}
+
+async function deleteEntry(entryId, groupId) {
+    if (!confirm('Delete this entry?')) return;
+    
+    try {
+        const response = await fetch(`/meals/groups/${groupId}/entries/${entryId}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': "{{ csrf_token() }}",
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const entryRow = document.getElementById(`entry-${entryId}`);
+            const prevHeader = entryRow.previousElementSibling;
+            const nextElem = entryRow.nextElementSibling;
+            
+            entryRow.remove();
+            
+            if (prevHeader && prevHeader.classList.contains('meals-history-date-header')) {
+                if (!nextElem || nextElem.classList.contains('meals-history-date-header')) {
+                    prevHeader.remove();
+                }
+            }
+        } else {
+            alert('Failed to delete entry.');
+        }
+    } catch (e) {
+        console.error('Delete failed', e);
+        alert('An error occurred.');
+    }
+}
+</script>
+{% endblock %}

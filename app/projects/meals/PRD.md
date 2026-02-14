@@ -41,9 +41,14 @@ The Meals project is a family-oriented food tracker designed to help families lo
   - **No Exit/Deletion**: Once a user is added to a group, they cannot leave it (in V1). Groups cannot be deleted.
   - **Access Control**: Users must be denied access to any page or API endpoint for a group they are not a member of.
 
-### 2. Meal Logging
-- **The "Big Three"**: Logging is restricted to Breakfast, Lunch, and Dinner.
-- **Bulk Logging (Primary Entry Method)**: Instead of logging per-person and then "copying," the primary UI for adding a meal involves:
+### 2. Meal Logging & Navigation
+- **Tabbed Interface**: The family group dashboard is split into five tabs for better organization:
+  1. **Log**: The primary entry form for new meals.
+  2. **History**: A scrollable list of recent meal entries.
+  3. **Stats**: Common meals and location trends.
+  4. **Calendar**: Weekly/Monthly views of meals.
+  5. **Family**: Member management and invitations.
+- **Bulk Logging**: Instead of logging per-person and then "copying," the primary UI for adding a meal involves:
   1. Selecting the Date and Meal Type (B, L, or D).
   2. Selecting one or more Family Members from the group.
   3. Entering the Food and Location.

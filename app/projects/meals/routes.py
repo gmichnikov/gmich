@@ -43,61 +43,30 @@ def create_group():
         flash(f'Family group "{group.name}" created!', 'success')
     return redirect(url_for('meals.index'))
 
-@meals_bp.route('/groups/<int:group_id>/invite', methods=['GET', 'POST'])
+@meals_bp.route('/groups/<int:group_id>')
 @login_required
-def invite_member(group_id):
+def group_detail(group_id):
+    """Default view for a group, redirects to logging a meal."""
     if not is_user_in_group(current_user, group_id):
         abort(404)
-        
-    group = MealsFamilyGroup.query.get_or_404(group_id)
-    form = InviteMemberForm()
-    
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if not user:
-            flash(f'User with email {form.email.data} not found.', 'danger')
-        else:
-            # Check if already a member
-            existing = MealsFamilyMember.query.filter_by(
-                family_group_id=group_id,
-                user_id=user.id
-            ).first()
-            
-            if existing:
-                flash(f'{user.full_name} is already a member of this group.', 'info')
-            else:
-                member = MealsFamilyMember(
-                    family_group_id=group_id,
-                    user_id=user.id,
-                    display_name=user.short_name
-                )
-                db.session.add(member)
-                db.session.commit()
-                flash(f'Invited {user.full_name} to the group.', 'success')
-        return redirect(url_for('meals.group_detail', group_id=group_id))
-        
-    return render_template('meals/invite.html', group=group, form=form)
+    return redirect(url_for('meals.log_meal_view', group_id=group_id))
 
-@meals_bp.route('/groups/<int:group_id>/members/add', methods=['GET', 'POST'])
+@meals_bp.route('/groups/<int:group_id>/log', methods=['GET'])
 @login_required
-def add_guest_member(group_id):
+def log_meal_view(group_id):
     if not is_user_in_group(current_user, group_id):
         abort(404)
-        
     group = MealsFamilyGroup.query.get_or_404(group_id)
-    form = AddGuestMemberForm()
     
-    if form.validate_on_submit():
-        member = MealsFamilyMember(
-            family_group_id=group_id,
-            display_name=form.display_name.data
-        )
-        db.session.add(member)
-        db.session.commit()
-        flash(f'Added guest member {form.display_name.data}.', 'success')
-        return redirect(url_for('meals.group_detail', group_id=group_id))
-        
-    return render_template('meals/add_guest.html', group=group, form=form)
+    # Get user's local date for the log form default
+    user_tz = pytz.timezone(current_user.time_zone)
+    user_now = datetime.now(user_tz)
+    
+    log_form = LogMealForm()
+    log_form.date.data = user_now.date()
+    log_form.member_ids.choices = [(m.id, m.name) for m in group.members]
+    
+    return render_template('meals/tabs/log.html', group=group, log_form=log_form, active_tab='log')
 
 @meals_bp.route('/groups/<int:group_id>/log', methods=['POST'])
 @login_required
@@ -124,34 +93,30 @@ def log_meal(group_id):
         
         db.session.commit()
         flash(f'Logged {form.meal_type.data} for {len(form.member_ids.data)} members!', 'success')
+        return redirect(url_for('meals.log_meal_view', group_id=group_id))
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'Error in {field}: {error}', 'danger')
                 
-    return redirect(url_for('meals.group_detail', group_id=group_id))
+    return redirect(url_for('meals.log_meal_view', group_id=group_id))
 
-@meals_bp.route('/groups/<int:group_id>')
+@meals_bp.route('/groups/<int:group_id>/history')
 @login_required
-def group_detail(group_id):
+def history_view(group_id):
     if not is_user_in_group(current_user, group_id):
         abort(404)
-        
     group = MealsFamilyGroup.query.get_or_404(group_id)
-    invite_form = InviteMemberForm()
-    guest_form = AddGuestMemberForm()
+    recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(50).all()
+    return render_template('meals/tabs/history.html', group=group, recent_entries=recent_entries, active_tab='history')
+
+@meals_bp.route('/groups/<int:group_id>/stats')
+@login_required
+def stats_view(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    group = MealsFamilyGroup.query.get_or_404(group_id)
     
-    # Get user's local date for the log form default
-    user_tz = pytz.timezone(current_user.time_zone)
-    user_now = datetime.now(user_tz)
-    
-    log_form = LogMealForm()
-    log_form.date.data = user_now.date()
-    log_form.member_ids.choices = [(m.id, m.name) for m in group.members]
-    
-    recent_entries = MealsEntry.query.filter_by(family_group_id=group_id).order_by(MealsEntry.date.desc(), MealsEntry.created_at.desc()).limit(20).all()
-    
-    # Common Meals Stats
     member_filter = request.args.get('member_id', type=int)
     common_query = db.session.query(
         MealsEntry.food_name, 
@@ -165,7 +130,7 @@ def group_detail(group_id):
     common_meals = common_query.group_by(
         MealsEntry.food_name, 
         MealsEntry.location
-    ).order_by(func.count(MealsEntry.id).desc()).limit(10).all()
+    ).order_by(func.count(MealsEntry.id).desc()).limit(20).all()
     
     # Location Trends (Home vs Out)
     home_count = MealsEntry.query.filter(
@@ -181,16 +146,61 @@ def group_detail(group_id):
     
     out_count = total_with_location - home_count
     
-    return render_template('meals/group_detail.html', 
+    return render_template('meals/tabs/stats.html', 
                            group=group, 
-                           invite_form=invite_form, 
-                           guest_form=guest_form,
-                           log_form=log_form,
-                           recent_entries=recent_entries,
                            common_meals=common_meals,
                            home_count=home_count,
                            out_count=out_count,
-                           member_filter=member_filter)
+                           member_filter=member_filter,
+                           active_tab='stats')
+
+@meals_bp.route('/groups/<int:group_id>/family')
+@login_required
+def family_view(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    group = MealsFamilyGroup.query.get_or_404(group_id)
+    invite_form = InviteMemberForm()
+    guest_form = AddGuestMemberForm()
+    return render_template('meals/tabs/family.html', 
+                           group=group, 
+                           invite_form=invite_form, 
+                           guest_form=guest_form,
+                           active_tab='family')
+
+@meals_bp.route('/groups/<int:group_id>/invite', methods=['POST'])
+@login_required
+def invite_member(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    form = InviteMemberForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user:
+            flash(f'User with email {form.email.data} not found.', 'danger')
+        else:
+            existing = MealsFamilyMember.query.filter_by(family_group_id=group_id, user_id=user.id).first()
+            if existing:
+                flash(f'{user.full_name} is already a member.', 'info')
+            else:
+                member = MealsFamilyMember(family_group_id=group_id, user_id=user.id, display_name=user.short_name)
+                db.session.add(member)
+                db.session.commit()
+                flash(f'Invited {user.full_name}.', 'success')
+    return redirect(url_for('meals.family_view', group_id=group_id))
+
+@meals_bp.route('/groups/<int:group_id>/members/add', methods=['POST'])
+@login_required
+def add_guest_member(group_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    form = AddGuestMemberForm()
+    if form.validate_on_submit():
+        member = MealsFamilyMember(family_group_id=group_id, display_name=form.display_name.data)
+        db.session.add(member)
+        db.session.commit()
+        flash(f'Added guest member {form.display_name.data}.', 'success')
+    return redirect(url_for('meals.family_view', group_id=group_id))
 
 @meals_bp.route('/groups/<int:group_id>/calendar')
 @login_required
@@ -214,47 +224,32 @@ def calendar_view(group_id):
     current_focus = date(year, month, day)
     
     if view_type == 'monthly':
-        # ... existing logic ...
         start_date = date(year, month, 1)
         _, last_day = calendar.monthrange(year, month)
         end_date = date(year, month, last_day)
-        
-        # Adjust start_date to the beginning of the week (Sunday)
         start_date = start_date - timedelta(days=(start_date.weekday() + 1) % 7)
-        # Adjust end_date to the end of the week (Saturday)
         end_date = end_date + timedelta(days=(5 - end_date.weekday() + 1) % 7)
-        
         prev_date = (date(year, month, 1) - timedelta(days=1))
         next_date = (date(year, month, 1) + timedelta(days=32)).replace(day=1)
     else: # weekly
-        # Adjust start_date to the beginning of the current week (Sunday)
         start_date = current_focus - timedelta(days=(current_focus.weekday() + 1) % 7)
         end_date = start_date + timedelta(days=6)
-        
         prev_date = start_date - timedelta(days=7)
         next_date = start_date + timedelta(days=7)
 
-    # Fetch entries
     query = MealsEntry.query.filter(
         MealsEntry.family_group_id == group_id,
         MealsEntry.date >= start_date,
         MealsEntry.date <= end_date
     )
-    
     if member_filter:
         query = query.filter(MealsEntry.member_id == member_filter)
-        
     entries = query.order_by(MealsEntry.date, MealsEntry.meal_type).all()
     
-    # Group entries by date and meal type, then by food+location for "Family Overlay"
     calendar_data = {}
     curr = start_date
     while curr <= end_date:
-        calendar_data[curr] = {
-            'Breakfast': {}, # { 'food+loc': [entries] }
-            'Lunch': {},
-            'Dinner': {}
-        }
+        calendar_data[curr] = {'Breakfast': {}, 'Lunch': {}, 'Dinner': {}}
         curr += timedelta(days=1)
         
     for entry in entries:
@@ -276,18 +271,17 @@ def calendar_view(group_id):
                            month_name=calendar.month_name[month],
                            year=year,
                            today=user_today,
-                           member_filter=member_filter)
+                           member_filter=member_filter,
+                           active_tab='calendar')
 
 @meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/delete', methods=['POST'])
 @login_required
 def delete_entry(group_id, entry_id):
     if not is_user_in_group(current_user, group_id):
         return {"error": "Unauthorized"}, 403
-    
     entry = MealsEntry.query.get_or_404(entry_id)
     if entry.family_group_id != group_id:
         return {"error": "Invalid entry"}, 400
-        
     db.session.delete(entry)
     db.session.commit()
     return {"success": True}
@@ -297,13 +291,11 @@ def delete_entry(group_id, entry_id):
 def suggest_food(group_id):
     if not is_user_in_group(current_user, group_id):
         return {"error": "Unauthorized"}, 403
-    
     query = request.args.get('q', '').lower()
     suggestions = db.session.query(MealsEntry.food_name).filter(
         MealsEntry.family_group_id == group_id,
         MealsEntry.food_name.ilike(f'%{query}%')
     ).distinct().limit(10).all()
-    
     return [s[0] for s in suggestions]
 
 @meals_bp.route('/groups/<int:group_id>/api/suggestions/location')
@@ -311,12 +303,10 @@ def suggest_food(group_id):
 def suggest_location(group_id):
     if not is_user_in_group(current_user, group_id):
         return {"error": "Unauthorized"}, 403
-    
     query = request.args.get('q', '').lower()
     suggestions = db.session.query(MealsEntry.location).filter(
         MealsEntry.family_group_id == group_id,
         MealsEntry.location.ilike(f'%{query}%'),
         MealsEntry.location.isnot(None)
     ).distinct().limit(10).all()
-    
     return [s[0] for s in suggestions]

@@ -1,0 +1,96 @@
+{% extends "meals/group_base.html" %}
+
+{% block tab_title %}Log a Meal{% endblock %}
+
+{% block tab_content %}
+<div class="meals-section">
+    <div class="meals-card meals-log-card">
+        <h2>Log a Meal</h2>
+        <form action="{{ url_for('meals.log_meal', group_id=group.id) }}" method="POST" novalidate>
+            {{ log_form.hidden_tag() }}
+            <div class="meals-form-row">
+                <div class="meals-form-group">
+                    <label for="date">Date <span class="meals-required">*</span></label>
+                    {{ log_form.date(class="meals-input", type="date") }}
+                </div>
+                <div class="meals-form-group">
+                    <label for="meal_type">Meal <span class="meals-required">*</span></label>
+                    {{ log_form.meal_type(class="meals-input") }}
+                </div>
+            </div>
+            
+            <div class="meals-form-group">
+                <label for="food_name">Food Name <span class="meals-required">*</span></label>
+                {{ log_form.food_name(class="meals-input", placeholder="e.g., Pizza and Salad", list="food-suggestions", autocomplete="off") }}
+                <datalist id="food-suggestions"></datalist>
+            </div>
+            
+            <div class="meals-form-group">
+                <label for="location">Location <span class="meals-required">*</span></label>
+                {{ log_form.location(class="meals-input", placeholder="e.g., Home or Restaurant Name", list="location-suggestions", autocomplete="off") }}
+                <datalist id="location-suggestions"></datalist>
+            </div>
+
+            <div class="meals-form-group">
+                <div class="meals-label-row">
+                    <label>Who ate this? <span class="meals-required">*</span></label>
+                    <div class="meals-selection-helpers">
+                        <button type="button" class="meals-helper-btn" onclick="selectAllMembers()">Select All</button>
+                        <span class="meals-helper-divider">|</span>
+                        <button type="button" class="meals-helper-btn" onclick="clearAllMembers()">Clear All</button>
+                    </div>
+                </div>
+                <div class="meals-checkbox-group" id="member-checkbox-group">
+                    {% for subfield in log_form.member_ids %}
+                        <div class="meals-checkbox-item">
+                            {{ subfield }}
+                            {{ subfield.label }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {{ log_form.submit(class="meals-button meals-button-primary") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function selectAllMembers() {
+    const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = true);
+}
+
+function clearAllMembers() {
+    const checkboxes = document.querySelectorAll('#member-checkbox-group input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
+async function setupAutocomplete(inputId, datalistId, apiUrl) {
+    const input = document.getElementById(inputId);
+    const datalist = document.getElementById(datalistId);
+    
+    const updateSuggestions = async (query = '') => {
+        try {
+            const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
+            const suggestions = await response.json();
+            datalist.innerHTML = suggestions
+                .map(s => `<option value="${s}">`)
+                .join('');
+        } catch (e) {
+            console.error('Failed to fetch suggestions', e);
+        }
+    };
+
+    input.addEventListener('focus', () => updateSuggestions(input.value));
+    input.addEventListener('input', () => updateSuggestions(input.value));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupAutocomplete('food_name', 'food-suggestions', "{{ url_for('meals.suggest_food', group_id=group.id) }}");
+    setupAutocomplete('location', 'location-suggestions', "{{ url_for('meals.suggest_location', group_id=group.id) }}");
+});
+</script>
+{% endblock %}

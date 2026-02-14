@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - {% block tab_title %}{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="meals-container {% block container_class %}{% endblock %}">
+    <div class="meals-nav">
+        <a href="{{ url_for('meals.index') }}" class="meals-back-link">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="meals-header">
+        <h1 class="meals-title">{{ group.name }}</h1>
+    </div>
+
+    <div class="meals-tabs">
+        <a href="{{ url_for('meals.log_meal_view', group_id=group.id) }}" class="meals-tab {% if active_tab == 'log' %}active{% endif %}">
+            <span class="meals-tab-icon">📝</span>
+            <span class="meals-tab-text">Log</span>
+        </a>
+        <a href="{{ url_for('meals.history_view', group_id=group.id) }}" class="meals-tab {% if active_tab == 'history' %}active{% endif %}">
+            <span class="meals-tab-icon">🕒</span>
+            <span class="meals-tab-text">History</span>
+        </a>
+        <a href="{{ url_for('meals.stats_view', group_id=group.id) }}" class="meals-tab {% if active_tab == 'stats' %}active{% endif %}">
+            <span class="meals-tab-icon">📊</span>
+            <span class="meals-tab-text">Stats</span>
+        </a>
+        <a href="{{ url_for('meals.calendar_view', group_id=group.id) }}" class="meals-tab {% if active_tab == 'calendar' %}active{% endif %}">
+            <span class="meals-tab-icon">📅</span>
+            <span class="meals-tab-text">Calendar</span>
+        </a>
+        <a href="{{ url_for('meals.family_view', group_id=group.id) }}" class="meals-tab {% if active_tab == 'family' %}active{% endif %}">
+            <span class="meals-tab-icon">👪</span>
+            <span class="meals-tab-text">Family</span>
+        </a>
+    </div>
+
+    <div class="meals-tab-content">
+        {% block tab_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('meals.static', filename='meals/style.css') }}">
+{% block extra_styles %}{% endblock %}
+{% endblock %}
+
+{% block scripts %}
+{% block extra_scripts %}{% endblock %}
+{% endblock %}

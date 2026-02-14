@@ -40,12 +40,14 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 - [x] Run `flask db migrate -m "Add meals_entry model"`
 - [x] Run `flask db upgrade`
 
-### 2.2 Multi-Member Logging UI
-- [x] Create `LogMealForm` in `forms.py`
-- [x] Implement `POST /meals/groups/<int:group_id>/log`
-- [x] Update `templates/meals/group_detail.html` (Mobile-First)
-- [x] Add `static/meals/style.css` (with `meals-` prefixes)
-- [x] Add "Recent History" list.
+### 2.2 Tabbed Navigation & Core Logging
+- [x] Create `meals/group_base.html` with tab navigation.
+- [x] Split `group_detail.html` into separate tab templates.
+- [x] Refactor `routes.py` to support `/log`, `/history`, `/stats`, and `/family` sub-routes.
+- [x] Update `static/meals/style.css` with tab styling.
+- [x] Implement `POST /meals/groups/<int:group_id>/log` with redirect to Log tab.
+- [x] Update `templates/meals/index.html` (Dashboard) if needed.
+- [x] Add "Recent History" list to History tab.
 
 **Manual Testing 2.2:**
 - [x] Log a meal for two people at once and verify two separate records are created.

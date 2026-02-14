@@ -1,0 +1,47 @@
+{% extends "meals/group_base.html" %}
+
+{% block tab_title %}Family Management{% endblock %}
+
+{% block tab_content %}
+<div class="meals-section">
+    <h2>Family Members</h2>
+    <div class="meals-members-list">
+        {% for member in group.members %}
+            <div class="meals-member-item">
+                <span class="meals-member-name">{{ member.name }}</span>
+                {% if member.user_id %}
+                    <span class="meals-badge">Linked</span>
+                {% else %}
+                    <span class="meals-badge meals-badge-guest">Guest</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="meals-grid">
+    <div class="meals-card">
+        <h3>Invite Member</h3>
+        <p class="meals-card-desc">Invite someone with an account via email.</p>
+        <form action="{{ url_for('meals.invite_member', group_id=group.id) }}" method="POST">
+            {{ invite_form.hidden_tag() }}
+            <div class="meals-form-group">
+                {{ invite_form.email(class="meals-input", placeholder="email@example.com") }}
+            </div>
+            {{ invite_form.submit(class="meals-button meals-button-secondary") }}
+        </form>
+    </div>
+
+    <div class="meals-card">
+        <h3>Add Guest</h3>
+        <p class="meals-card-desc">Add a member without an account (e.g., a child).</p>
+        <form action="{{ url_for('meals.add_guest_member', group_id=group.id) }}" method="POST">
+            {{ guest_form.hidden_tag() }}
+            <div class="meals-form-group">
+                {{ guest_form.display_name(class="meals-input", placeholder="Name") }}
+            </div>
+            {{ guest_form.submit(class="meals-button meals-button-secondary") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
