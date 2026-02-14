@@ -23,30 +23,30 @@
                 {{ log_form.hidden_tag() }}
                 <div class="meals-form-row">
                     <div class="meals-form-group">
-                        {{ log_form.date.label }}
+                        <label for="date">Date <span class="meals-required">*</span></label>
                         {{ log_form.date(class="meals-input", type="date") }}
                     </div>
                     <div class="meals-form-group">
-                        {{ log_form.meal_type.label }}
+                        <label for="meal_type">Meal <span class="meals-required">*</span></label>
                         {{ log_form.meal_type(class="meals-input") }}
                     </div>
                 </div>
                 
                 <div class="meals-form-group">
-                    {{ log_form.food_name.label }}
+                    <label for="food_name">Food Name <span class="meals-required">*</span></label>
                     {{ log_form.food_name(class="meals-input", placeholder="e.g., Pizza and Salad", list="food-suggestions") }}
                     <datalist id="food-suggestions"></datalist>
                 </div>
                 
                 <div class="meals-form-group">
-                    {{ log_form.location.label }}
+                    <label for="location">Location <span class="meals-required">*</span></label>
                     {{ log_form.location(class="meals-input", placeholder="e.g., Home or Restaurant Name", list="location-suggestions") }}
                     <datalist id="location-suggestions"></datalist>
                 </div>
 
                 <div class="meals-form-group">
                     <div class="meals-label-row">
-                        <label>Who ate this?</label>
+                        <label>Who ate this? <span class="meals-required">*</span></label>
                         <div class="meals-selection-helpers">
                             <button type="button" class="meals-helper-btn" onclick="selectAllMembers()">Select All</button>
                             <span class="meals-helper-divider">|</span>

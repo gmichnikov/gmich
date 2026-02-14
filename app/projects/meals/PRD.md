@@ -50,7 +50,7 @@ The Meals project is a family-oriented food tracker designed to help families lo
   4. Upon saving, individual `meals_entry` records are created for each selected member.
 - **Fields**:
   - `food_name` (String, required)
-  - `location` (String, e.g., "Home", "Italian Restaurant", "School")
+  - `location` (String, required, e.g., "Home", "Italian Restaurant", "School")
   - `date` (Date)
   - `meal_type` (Enum: Breakfast, Lunch, Dinner)
 

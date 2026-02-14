@@ -491,6 +491,11 @@
     color: #34495e;
 }
 
+.meals-required {
+    color: #e74c3c;
+    margin-left: 2px;
+}
+
 .meals-label-row {
     display: flex;
     justify-content: space-between;

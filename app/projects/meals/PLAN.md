@@ -88,6 +88,9 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 - [x] **Mobile Audit**: Final pass on all pages at 375px width.
 - [x] **CSS Audit**: Verify `meals-` prefix everywhere.
 - [x] **Permission Audit**: Verify every single route has an `is_user_in_group` check.
+- [x] **Requirement Update**: Make `location` a required field for meal entries.
+- [ ] **Data Cleanup**: Run `python update_meals_locations.py` to set "Home" for missing locations.
+- [ ] **Migration**: Run `flask db migrate -m "Make meal location required"` and `flask db upgrade`.
 
 **Manual Testing 5:**
 - [x] Check Dashboard, Group Detail, and Calendar on a mobile device or simulator.

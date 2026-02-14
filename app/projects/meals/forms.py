@@ -27,6 +27,6 @@ class LogMealForm(FlaskForm):
         ('Dinner', 'Dinner')
     ], validators=[DataRequired()])
     food_name = StringField('Food Name', validators=[DataRequired(), Length(max=200)])
-    location = StringField('Location', validators=[Length(max=200)])
+    location = StringField('Location', validators=[DataRequired(), Length(max=200)])
     member_ids = MultiCheckboxField('Members', coerce=int, validators=[InputRequired(message="Please select at least one member.")])
     submit = SubmitField('Log Meal')

@@ -54,7 +54,7 @@ class MealsEntry(db.Model):
     member_id = db.Column(db.Integer, db.ForeignKey('meals_family_member.id'), nullable=False)
     
     food_name = db.Column(db.String(200), nullable=False)
-    location = db.Column(db.String(200), nullable=True)
+    location = db.Column(db.String(200), nullable=False)
     meal_type = db.Column(db.String(20), nullable=False) # Breakfast, Lunch, Dinner
     date = db.Column(db.Date, nullable=False)
     
