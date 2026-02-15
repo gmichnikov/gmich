@@ -97,6 +97,91 @@
     color: #2c3e50;
 }
 
+/* Daily View Styles */
+.meals-daily-view {
+    background: white;
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.meals-daily-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.meals-daily-table th, .meals-daily-table td {
+    padding: 15px;
+    border: 1px solid #eee;
+    text-align: center;
+}
+
+.meals-daily-table th {
+    background: #f8f9fa;
+    color: #7f8c8d;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.meals-daily-member-name {
+    font-weight: 700;
+    color: #2c3e50;
+    text-align: left !important;
+    background: #f8f9fa;
+}
+
+.meals-daily-cell {
+    min-height: 80px;
+    vertical-align: middle;
+}
+
+.meals-daily-entry {
+    background: #e8f4fd;
+    border-left: 3px solid #3498db;
+    padding: 8px;
+    border-radius: 4px;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+.meals-daily-food {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.meals-daily-loc {
+    display: block;
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.meals-daily-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #f1f2f6;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.meals-daily-add-btn:hover {
+    background: #3498db;
+    color: white;
+    transform: scale(1.1);
+}
+
 .meals-actions {
     display: flex;
     gap: 10px;

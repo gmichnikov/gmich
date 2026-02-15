@@ -46,8 +46,9 @@ The Meals project is a family-oriented food tracker designed to help families lo
   1. **Log**: The primary entry form for new meals.
   2. **History**: A scrollable list of recent meal entries.
   3. **Stats**: Common meals and location trends.
-  4. **Calendar**: Weekly/Monthly views of meals.
+    4. **Calendar**: Weekly/Monthly views of meals, plus a **Daily matrix view** showing gaps in logging for each family member.
   5. **Family**: Member management and invitations.
+- **Pre-populated Logging**: Clicking the "+" icon in the Daily calendar view automatically fills the Date, Meal Type, and Person in the entry form.
 - **Client-Side Filtering**: The History tab includes filters for Date, Person, Meal Type, Location, and Food Name.
   - Filters are additive (AND logic).
   - Search is case-insensitive.

@@ -45,6 +45,8 @@ This plan follows the PRD but breaks it into smaller, testable chunks, mirroring
 - [x] Split `group_detail.html` into separate tab templates.
 - [x] Refactor `routes.py` to support `/log`, `/history`, `/stats`, and `/family` sub-routes.
 - [x] Implement client-side filtering on the History tab (Date, Person, Meal, Location, Food).
+- [x] Add **Daily View** to the Calendar tab with a member-by-meal matrix.
+- [x] Support pre-populating the Log form via URL parameters (date, meal_type, member_id).
 - [x] Update `static/meals/style.css` with tab and filter styling.
 - [x] Implement `POST /meals/groups/<int:group_id>/log` with redirect to Log tab.
 - [x] Update `templates/meals/index.html` (Dashboard) if needed.

@@ -63,8 +63,26 @@ def log_meal_view(group_id):
     user_now = datetime.now(user_tz)
     
     log_form = LogMealForm()
-    log_form.date.data = user_now.date()
+    
+    # Pre-populate from query parameters
+    pre_date = request.args.get('date')
+    pre_meal = request.args.get('meal_type')
+    pre_members = request.args.getlist('member_id', type=int)
+    
+    if pre_date:
+        try:
+            log_form.date.data = datetime.strptime(pre_date, '%Y-%m-%d').date()
+        except ValueError:
+            log_form.date.data = user_now.date()
+    else:
+        log_form.date.data = user_now.date()
+        
+    if pre_meal:
+        log_form.meal_type.data = pre_meal
+        
     log_form.member_ids.choices = [(m.id, m.name) for m in group.members]
+    if pre_members:
+        log_form.member_ids.data = pre_members
     
     return render_template('meals/tabs/log.html', group=group, log_form=log_form, active_tab='log')
 
@@ -209,7 +227,7 @@ def calendar_view(group_id):
         abort(404)
         
     group = MealsFamilyGroup.query.get_or_404(group_id)
-    view_type = request.args.get('view', 'monthly') # 'monthly' or 'weekly'
+    view_type = request.args.get('view', 'monthly') # 'monthly', 'weekly', or 'daily'
     
     # Get user's local date for defaults
     user_tz = pytz.timezone(current_user.time_zone)
@@ -231,11 +249,16 @@ def calendar_view(group_id):
         end_date = end_date + timedelta(days=(5 - end_date.weekday() + 1) % 7)
         prev_date = (date(year, month, 1) - timedelta(days=1))
         next_date = (date(year, month, 1) + timedelta(days=32)).replace(day=1)
-    else: # weekly
+    elif view_type == 'weekly':
         start_date = current_focus - timedelta(days=(current_focus.weekday() + 1) % 7)
         end_date = start_date + timedelta(days=6)
         prev_date = start_date - timedelta(days=7)
         next_date = start_date + timedelta(days=7)
+    else: # daily
+        start_date = current_focus
+        end_date = current_focus
+        prev_date = current_focus - timedelta(days=1)
+        next_date = current_focus + timedelta(days=1)
 
     query = MealsEntry.query.filter(
         MealsEntry.family_group_id == group_id,
@@ -259,10 +282,19 @@ def calendar_view(group_id):
                 calendar_data[entry.date][entry.meal_type][meal_key] = []
             calendar_data[entry.date][entry.meal_type][meal_key].append(entry)
 
+    # For daily view, we need a flat structure of member entries
+    daily_matrix = {} # {member_id: {meal_type: [entries]}}
+    if view_type == 'daily':
+        for member in group.members:
+            daily_matrix[member.id] = {'Breakfast': [], 'Lunch': [], 'Dinner': []}
+        for entry in entries:
+            daily_matrix[entry.member_id][entry.meal_type].append(entry)
+
     return render_template('meals/calendar.html',
                            group=group,
                            view_type=view_type,
                            calendar_data=calendar_data,
+                           daily_matrix=daily_matrix,
                            start_date=start_date,
                            end_date=end_date,
                            current_focus=current_focus,
