@@ -84,6 +84,7 @@ def create_app():
     from app.projects.meals.routes import meals_bp
     from app.projects.football_squares import football_squares_bp
     from app.projects.passport_photo.routes import passport_photo_bp
+    from app.projects.sports_schedule_admin.routes import sports_schedule_admin_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -112,6 +113,7 @@ def create_app():
     app.register_blueprint(meals_bp)  # url_prefix is defined in the blueprint
     app.register_blueprint(football_squares_bp, url_prefix="/football-squares")
     app.register_blueprint(passport_photo_bp, url_prefix="/passport-photo")
+    app.register_blueprint(sports_schedule_admin_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

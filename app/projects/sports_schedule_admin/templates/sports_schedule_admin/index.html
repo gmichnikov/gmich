@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Sports Schedule Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="project-header">
+        <h1>📅 Sports Schedule Admin</h1>
+        <p class="lead">Manage and update sports schedules.</p>
+    </div>
+
+    <div class="admin-dashboard">
+        <div class="card">
+            <div class="card-body">
+                <h3>Welcome to the Sports Schedule Admin</h3>
+                <p>This project is only accessible to administrators.</p>
+                <div class="alert alert-info">
+                    <p>Placeholder content for the Sports Schedule Admin project.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+
+<style>
+    .project-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .admin-dashboard {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    .mt-4 {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .alert {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 1rem;
+    }
+    .alert-info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}

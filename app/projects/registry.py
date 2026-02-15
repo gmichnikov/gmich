@@ -312,6 +312,18 @@ PROJECTS = [
         "icon": "📷",
         "order": 12,
     },
+    {
+        "id": "sports_schedule_admin",
+        "name": "Sports Schedule Admin",
+        "description": "Manage and update sports schedules (Admin only)",
+        "url": "/sports-schedule-admin",
+        "auth_required": True,
+        "admin_only": True,
+        "status": "active",
+        "type": "project",
+        "icon": "📅",
+        "order": 13,
+    },
 ]
 
 
@@ -383,13 +395,14 @@ def get_projects_by_auth(auth_required=None):
     return [p for p in get_all_projects() if p["auth_required"] == auth_required]
 
 
-def get_homepage_items(is_authenticated):
+def get_homepage_items(is_authenticated, is_admin=False):
     """
     Get items to display on the homepage (projects and categories, but not child projects).
     For use in templates to show what a user can access.
 
     Args:
         is_authenticated (bool): Whether the user is logged in
+        is_admin (bool): Whether the user is an admin
 
     Returns:
         list: Items with 'available' flag set based on auth status and feature flags
@@ -404,6 +417,10 @@ def get_homepage_items(is_authenticated):
         if is_project_hidden(project["id"]):
             continue
 
+        # Skip admin-only projects for non-admins
+        if project.get("admin_only") and not is_admin:
+            continue
+
         project_copy = project.copy()
         # Mark as available if active AND (no auth required OR user is authenticated)
         project_copy["available"] = project["status"] == "active" and (
@@ -414,13 +431,14 @@ def get_homepage_items(is_authenticated):
     return items
 
 
-def get_projects_for_user(is_authenticated):
+def get_projects_for_user(is_authenticated, is_admin=False):
     """
     Get projects appropriate for a user's authentication status.
     For use in templates to show what projects a user can access.
 
     Args:
         is_authenticated (bool): Whether the user is logged in
+        is_admin (bool): Whether the user is an admin
 
     Returns:
         list: Projects with 'available' flag set based on auth status
@@ -429,6 +447,10 @@ def get_projects_for_user(is_authenticated):
     for project in get_all_projects():
         # Check feature flag - if hidden, skip this project entirely
         if is_project_hidden(project["id"]):
+            continue
+
+        # Skip admin-only projects for non-admins
+        if project.get("admin_only") and not is_admin:
             continue
 
         project_copy = project.copy()
@@ -441,13 +463,14 @@ def get_projects_for_user(is_authenticated):
     return projects
 
 
-def get_children_of_category(category_id, is_authenticated=False):
+def get_children_of_category(category_id, is_authenticated=False, is_admin=False):
     """
     Get all child projects belonging to a specific category.
 
     Args:
         category_id (str): The category ID
         is_authenticated (bool): Whether the user is logged in
+        is_admin (bool): Whether the user is an admin
 
     Returns:
         list: Child projects with 'available' flag set
@@ -457,6 +480,10 @@ def get_children_of_category(category_id, is_authenticated=False):
         if project.get("parent") == category_id:
             # Check feature flag - if hidden, skip this project entirely
             if is_project_hidden(project["id"]):
+                continue
+
+            # Skip admin-only projects for non-admins
+            if project.get("admin_only") and not is_admin:
                 continue
 
             project_copy = project.copy()

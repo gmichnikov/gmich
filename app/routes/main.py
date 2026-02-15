@@ -10,7 +10,9 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     # Get homepage items (projects and categories, excluding child projects)
-    projects = get_homepage_items(current_user.is_authenticated)
+    is_authenticated = current_user.is_authenticated
+    is_admin = getattr(current_user, 'is_admin', False) if is_authenticated else False
+    projects = get_homepage_items(is_authenticated, is_admin)
     
     return render_template('index.html', projects=projects)
 
@@ -20,7 +22,9 @@ def games():
     category = get_project_by_id('simple_games')
     
     # Get all child projects
-    items = get_children_of_category('simple_games', current_user.is_authenticated)
+    is_authenticated = current_user.is_authenticated
+    is_admin = getattr(current_user, 'is_admin', False) if is_authenticated else False
+    items = get_children_of_category('simple_games', is_authenticated, is_admin)
     
     return render_template('category.html', category=category, items=items)
 
@@ -30,7 +34,9 @@ def game_night_tools():
     category = get_project_by_id('game_night_tools')
     
     # Get all child projects
-    items = get_children_of_category('game_night_tools', current_user.is_authenticated)
+    is_authenticated = current_user.is_authenticated
+    is_admin = getattr(current_user, 'is_admin', False) if is_authenticated else False
+    items = get_children_of_category('game_night_tools', is_authenticated, is_admin)
     
     return render_template('category.html', category=category, items=items)
 
@@ -40,7 +46,9 @@ def coding_bootcamp():
     category = get_project_by_id('coding_bootcamp')
     
     # Get all child projects
-    items = get_children_of_category('coding_bootcamp', current_user.is_authenticated)
+    is_authenticated = current_user.is_authenticated
+    is_admin = getattr(current_user, 'is_admin', False) if is_authenticated else False
+    items = get_children_of_category('coding_bootcamp', is_authenticated, is_admin)
     
     return render_template('category.html', category=category, items=items)
 
