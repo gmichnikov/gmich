@@ -282,7 +282,7 @@ PROJECTS = [
     {
         "id": "meals",
         "name": "Meals",
-        "description": "Manage your meals and recipes",
+        "description": "Track what everyone in your family eats each day",
         "url": "/meals",
         "auth_required": True,
         "status": "active",
@@ -293,7 +293,7 @@ PROJECTS = [
     {
         "id": "football_squares",
         "name": "Football Squares",
-        "description": "Football squares game for your next big game party",
+        "description": "Grid game based on final score digits for each quarter",
         "url": "/football-squares",
         "auth_required": True,
         "status": "active",
@@ -427,6 +427,10 @@ def get_projects_for_user(is_authenticated):
     """
     projects = []
     for project in get_all_projects():
+        # Check feature flag - if hidden, skip this project entirely
+        if is_project_hidden(project["id"]):
+            continue
+
         project_copy = project.copy()
         # Mark as available if active AND (no auth required OR user is authenticated)
         project_copy["available"] = project["status"] == "active" and (
@@ -451,6 +455,10 @@ def get_children_of_category(category_id, is_authenticated=False):
     children = []
     for project in get_all_projects():
         if project.get("parent") == category_id:
+            # Check feature flag - if hidden, skip this project entirely
+            if is_project_hidden(project["id"]):
+                continue
+
             project_copy = project.copy()
             project_copy["available"] = project["status"] == "active" and (
                 not project["auth_required"] or is_authenticated
