@@ -25,15 +25,12 @@ def sync_league_range(league_code, start_date, end_date, actor_id=None):
         games = espn.fetch_schedule(league_code, date_str)
         if games:
             total_games_found += len(games)
-            # Batch upsert to DoltHub
-            # The dolt_client uses INSERT ... ON DUPLICATE KEY UPDATE
-            # which prevents duplicate primary_key entries.
             result = dolt.batch_upsert("combined-schedule", games)
-            
-            if result and "error" not in result:
-                total_upserted += len(games)
-            else:
-                logger.error(f"Failed to upsert games for {date_str}: {result.get('error')}")
+            if result:
+                upserted = result.get("upserted", 0)
+                total_upserted += upserted
+                if "error" in result:
+                    logger.error(f"Partial upsert for {date_str}: {result.get('error')} ({upserted}/{len(games)} succeeded)")
         
         current_date += timedelta(days=1)
         # Polite delay to avoid rate limits
