@@ -48,17 +48,56 @@
 
     <!-- Operations Panel -->
     <div id="panel-operations" class="ssa-panel" role="tabpanel">
+        <div id="ssa-op-message" class="ssa-op-message" role="status" aria-live="polite"></div>
         <div class="ssa-grid">
             <div class="ssa-grid-card">
                 <h3 class="ssa-grid-card-title">Manual Sync</h3>
-                <p class="ssa-grid-card-desc">Trigger a manual data fetch from ESPN and update DoltHub.</p>
-                <div class="ssa-alert ssa-alert--info">Sync UI coming in the next step. For now, use the CLI.</div>
-                <code class="ssa-code">flask sports-admin sync --league NBA --days 7</code>
+                <p class="ssa-grid-card-desc">Fetch schedule data from ESPN and upsert to DoltHub. Max 30 days per run.</p>
+                <form id="ssa-sync-form" class="ssa-form">
+                    <div class="ssa-form-group">
+                        <label for="ssa-sync-league" class="ssa-label">League</label>
+                        <select id="ssa-sync-league" name="league" class="ssa-select" required>
+                            {% for code, label in leagues %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="ssa-form-group">
+                        <label for="ssa-sync-start" class="ssa-label">Start Date</label>
+                        <input type="date" id="ssa-sync-start" name="start_date" class="ssa-input" required>
+                    </div>
+                    <div class="ssa-form-group">
+                        <label for="ssa-sync-days" class="ssa-label">Number of Days</label>
+                        <input type="number" id="ssa-sync-days" name="days" class="ssa-input" min="1" max="30" value="7">
+                    </div>
+                    <div class="ssa-form-group">
+                        <code id="ssa-sync-preview" class="ssa-code ssa-code--preview">flask sports-admin sync --league NBA --start 2026-02-19 --days 7</code>
+                    </div>
+                    <button type="submit" id="ssa-sync-btn" class="ssa-btn ssa-btn--primary">Run Sync</button>
+                </form>
             </div>
             <div class="ssa-grid-card ssa-grid-card--danger">
-                <h3 class="ssa-grid-card-title ssa-grid-card-title--danger">Danger Zone</h3>
-                <p class="ssa-grid-card-desc">Permanently clear data for a specific league and date range.</p>
-                <code class="ssa-code">flask sports-admin clear-league --league NBA</code>
+                <h3 class="ssa-grid-card-title ssa-grid-card-title--danger">Clear League Data</h3>
+                <p class="ssa-grid-card-desc">Permanently delete data for a league. Optionally limit to dates on or after a start date.</p>
+                <form id="ssa-clear-form" class="ssa-form">
+                    <div class="ssa-form-group">
+                        <label for="ssa-clear-league" class="ssa-label">League</label>
+                        <select id="ssa-clear-league" name="league" class="ssa-select" required>
+                            {% for code, label in leagues %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="ssa-form-group">
+                        <label for="ssa-clear-start" class="ssa-label">Start Date (optional)</label>
+                        <input type="date" id="ssa-clear-start" name="start_date" class="ssa-input" placeholder="Leave empty for all dates">
+                    </div>
+                    <div class="ssa-form-group">
+                        <label for="ssa-clear-confirm" class="ssa-label">Type league code to confirm</label>
+                        <input type="text" id="ssa-clear-confirm" name="confirm" class="ssa-input" placeholder="e.g. NBA" autocomplete="off">
+                    </div>
+                    <button type="submit" id="ssa-clear-btn" class="ssa-btn ssa-btn--danger" disabled>Clear Data</button>
+                </form>
             </div>
         </div>
     </div>
@@ -68,31 +107,11 @@
         <div class="ssa-card">
             <div class="ssa-card-header">Recent Activity</div>
             <div class="ssa-card-body" style="padding: 0;">
-                <div class="ssa-table-wrap">
-                    <table class="ssa-table">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Actor</th>
-                                <th>Action</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for log in logs %}
-                            <tr>
-                                <td class="ssa-cell--muted">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                <td>{{ log.actor.email if log.actor else 'System' }}</td>
-                                <td><span class="ssa-badge ssa-badge--action">{{ log.category }}</span></td>
-                                <td>{{ log.description }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="ssa-empty">No recent activity found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div id="logs-table-container">
+                    <div class="ssa-spinner">
+                        <div class="ssa-spinner-icon" aria-hidden="true"></div>
+                        <span class="ssa-spinner-text">Loading logs...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,7 +153,129 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadCoverage();
         loadPreview();
+        loadLogs();
+        initSyncForm();
+        initClearForm();
     });
+
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    function showOpMessage(text, isError) {
+        const el = document.getElementById('ssa-op-message');
+        el.textContent = text;
+        el.className = 'ssa-op-message ssa-op-message--' + (isError ? 'error' : 'success');
+    }
+
+    function initSyncForm() {
+        const form = document.getElementById('ssa-sync-form');
+        const preview = document.getElementById('ssa-sync-preview');
+        const leagueEl = document.getElementById('ssa-sync-league');
+        const startEl = document.getElementById('ssa-sync-start');
+        const daysEl = document.getElementById('ssa-sync-days');
+        const btn = document.getElementById('ssa-sync-btn');
+
+        function updatePreview() {
+            const league = leagueEl.value;
+            const start = startEl.value || 'YYYY-MM-DD';
+            const days = parseInt(daysEl.value, 10) || 7;
+            preview.textContent = 'flask sports-admin sync --league ' + league + ' --start ' + start + ' --days ' + days;
+        }
+
+        leagueEl.addEventListener('change', updatePreview);
+        startEl.addEventListener('change', updatePreview);
+        daysEl.addEventListener('input', updatePreview);
+        updatePreview();
+
+        if (!startEl.value) {
+            const today = new Date().toISOString().slice(0, 10);
+            startEl.value = today;
+            updatePreview();
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            btn.disabled = true;
+            showOpMessage('', false);
+            try {
+                const res = await fetch("{{ url_for('sports_schedule_admin.api_sync') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        league: leagueEl.value,
+                        start_date: startEl.value,
+                        days: parseInt(daysEl.value, 10) || 7
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showOpMessage(data.message, false);
+                    loadCoverage();
+                    loadPreview();
+                    loadLogs();
+                } else {
+                    showOpMessage(data.error || 'Sync failed', true);
+                }
+            } catch (err) {
+                showOpMessage('Network error: ' + err.message, true);
+            }
+            btn.disabled = false;
+        });
+    }
+
+    function initClearForm() {
+        const form = document.getElementById('ssa-clear-form');
+        const leagueEl = document.getElementById('ssa-clear-league');
+        const confirmEl = document.getElementById('ssa-clear-confirm');
+        const btn = document.getElementById('ssa-clear-btn');
+
+        function checkConfirm() {
+            btn.disabled = confirmEl.value.trim().toUpperCase() !== leagueEl.value;
+        }
+
+        leagueEl.addEventListener('change', checkConfirm);
+        confirmEl.addEventListener('input', checkConfirm);
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            btn.disabled = true;
+            showOpMessage('', false);
+            try {
+                const body = { league: leagueEl.value, confirm: confirmEl.value.trim() };
+                const startVal = document.getElementById('ssa-clear-start').value;
+                if (startVal) body.start_date = startVal;
+
+                const res = await fetch("{{ url_for('sports_schedule_admin.api_clear_league') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showOpMessage(data.message, false);
+                    confirmEl.value = '';
+                    checkConfirm();
+                    loadCoverage();
+                    loadPreview();
+                    loadLogs();
+                } else {
+                    showOpMessage(data.error || 'Clear failed', true);
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                showOpMessage('Network error: ' + err.message, true);
+                btn.disabled = false;
+            }
+        });
+    }
 
     async function loadCoverage() {
         const container = document.getElementById('coverage-table-container');
@@ -184,6 +325,26 @@
             html += '</tbody></table></div>';
             container.innerHTML = html;
 
+        } catch (error) {
+            container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Network error: ' + error.message + '</div>';
+        }
+    }
+
+    async function loadLogs() {
+        const container = document.getElementById('logs-table-container');
+        try {
+            const response = await fetch("{{ url_for('sports_schedule_admin.get_logs') }}");
+            const data = await response.json();
+            let html = '<div class="ssa-table-wrap"><table class="ssa-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Description</th></tr></thead><tbody>';
+            if (data.length === 0) {
+                html += '<tr><td colspan="4" class="ssa-empty">No recent activity found.</td></tr>';
+            } else {
+                data.forEach(log => {
+                    html += '<tr><td class="ssa-cell--muted">' + log.timestamp + '</td><td>' + log.actor + '</td><td><span class="ssa-badge ssa-badge--action">' + log.category + '</span></td><td>' + log.description + '</td></tr>';
+                });
+            }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
         } catch (error) {
             container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Network error: ' + error.message + '</div>';
         }

@@ -33,6 +33,17 @@ class ESPNClient:
         "WNBA": ("basketball", "wnba", "pro"),
     }
 
+    # Human-readable display names for dropdowns (soccer codes spelled out)
+    LEAGUE_DISPLAY_NAMES = {
+        "CL": "Champions League (CL)",
+        "EL": "Europa League (EL)",
+        "FA": "FA Cup (FA)",
+        "LC": "League Cup (LC)",
+        "WC": "World Cup (WC)",
+        "EPL": "English Premier League (EPL)",
+        "MLS": "Major League Soccer (MLS)",
+    }
+
     def fetch_schedule(self, league_code, date_str):
         """
         Fetch schedule for a specific league and date (YYYYMMDD).

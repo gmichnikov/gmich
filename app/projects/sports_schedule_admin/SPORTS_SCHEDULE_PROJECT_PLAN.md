@@ -33,8 +33,8 @@ We need to populate upcoming/active schedules into DoltHub:
 - [x] **ESPN Data Scrapers**: Specialized logic for mapping ESPN JSON to your schema.
 - [x] **Sync Engine**: Logic to handle `INSERT INTO ... ON DUPLICATE KEY UPDATE` to avoid duplicates.
 - [x] **Normalization**: All data converted to **Eastern Time (ET)**.
-- [ ] **Admin Dashboard**: Web interface for manual control and visibility.
-- [ ] **Activity Logging**: Integrate with the app's `LogEntry` system for audit trails.
+- [x] **Admin Dashboard**: Web interface for manual control and visibility.
+- [x] **Activity Logging**: Integrate with the app's `LogEntry` system for audit trails.
 
 ### OUT of Scope (User-Facing Project)
 - **Public Search Interface**: Browsing games by team, date, or city.
@@ -52,27 +52,29 @@ We need to populate upcoming/active schedules into DoltHub:
 2.  [x] **ESPN Client**: Parser for 15+ leagues with ET normalization and slugified PKs.
 3.  [x] **CLI Commands**: `sync` and `clear-league` commands registered in Flask.
 
-### Phase 2: Admin Dashboard & Coverage [pending]
+### Phase 2: Admin Dashboard & Coverage [x]
 **Goal:** Build the "Command Center" to see what's in DoltHub.
 
-1.  **DoltHub Health Check**: Visual indicator of API connectivity.
-2.  **Coverage Table (Auto-loading)**: 
+1.  [x] **DoltHub Health Check**: Visual indicator of API connectivity.
+2.  [x] **Coverage Table (Auto-loading)**: 
     *   Dynamic summary fetched from DoltHub: `SELECT league, MIN(date), MAX(date), COUNT(*) FROM combined-schedule GROUP BY league`.
     *   Shows exactly which leagues are synced and their date ranges.
-3.  **Data Preview (Auto-loading)**: Show the most recent 10-20 games inserted into DoltHub across all leagues.
-4.  **Snappy Performance**: Use **Lazy Loading** (fetch DoltHub data via background AJAX calls) to ensure the initial dashboard page loads instantly without waiting for the remote API.
+3.  [x] **Data Preview (Auto-loading)**: Show the most recent 10-20 games inserted into DoltHub across all leagues.
+4.  [x] **Snappy Performance**: Use **Lazy Loading** (fetch DoltHub data via background AJAX calls) to ensure the initial dashboard page loads instantly without waiting for the remote API.
 
-### Phase 3: Web-Based Actions [pending]
+### Phase 3: Web-Based Actions [x]
 **Goal:** Move the CLI power into the browser.
 
-1.  [ ] **Manual Sync Form**: 
+1.  [x] **Manual Sync Form**: 
     *   Dropdown for League selection.
-    *   Date range pickers (Start/End).
-    *   "Sync" button that triggers the process via AJAX.
-2.  [ ] **Clear League Tool**: 
-    *   Button to delete league data (with a required "Type league name to confirm" modal).
+    *   Start date picker + number of days (max 30).
+    *   Live command preview.
+    *   "Run Sync" button that triggers the process via AJAX.
+2.  [x] **Clear League Tool**: 
+    *   League dropdown + optional start date.
+    *   "Type league code to confirm" input to enable the Clear Data button.
 3.  [ ] **Sync Console**: A live log area on the page showing progress (e.g., "Processing 2026-04-01... Done").
-4.  [ ] **Activity Log**: Display the most recent `LogEntry` records filtered for the "sports_admin" project.
+4.  [x] **Activity Log**: Display the most recent `LogEntry` records filtered for the "sports_admin" project.
 
 ### Phase 4: Expansion & Maintenance [future]
 1.  [ ] **Automation**: Re-evaluate Heroku Scheduler for daily updates once UI is stable.
