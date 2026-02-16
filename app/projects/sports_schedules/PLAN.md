@@ -47,16 +47,35 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 1.2 Create Query Builder Module
+### 1.2 Create Constants Module (Low-Cardinality Fields)
 
 - [ ] Create `app/projects/sports_schedules/core/` directory
 - [ ] Create `app/projects/sports_schedules/core/__init__.py`
+- [ ] Create `app/projects/sports_schedules/core/constants.py`
+  - [ ] **Sport:** `SPORTS = ["basketball", "hockey", "football", "baseball", "soccer"]` (schema values)
+  - [ ] **League:** Build from `sports_schedule_admin.core.espn_client`: `LEAGUES = list(LEAGUE_MAP.keys())`; for labels use `LEAGUE_DISPLAY_NAMES.get(code, code)` so CL→"Champions League (CL)", NBA→"NBA"
+  - [ ] **Level:** `LEVELS = ["pro", "college"]`
+  - [ ] **Day:** `DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]`
+  - [ ] **State:** `STATES` — US state codes (AL, AK, AZ, … WY); use a standard list (e.g., `us.states` or hand-maintained)
+  - [ ] Export `LOW_CARDINALITY_OPTIONS`: dict mapping column → list of `(value, label)` for UI multiselects (e.g. league: `[("NBA", "NBA"), ("CL", "Champions League (CL)"), ...]`; sport/level/day/state: value and label can match or use title case)
+  - [ ] Export `DIMENSION_LABELS` — column → display label mapping (Sport, Level, League, Date, Day, Time (ET), etc.)
+- [ ] **Usage:** Constants are the single source of truth. Query builder validates filter values against these allowlists before building SQL. Frontend gets options by passing `LOW_CARDINALITY_OPTIONS` and `DIMENSION_LABELS` from the index route to the template (no separate API needed for options).
+
+**Manual Testing 1.2:**
+- [ ] Import constants; verify all option lists non-empty
+- [ ] League list includes NBA, NHL, EPL, etc.; display names correct for CL, EL, etc.
+
+---
+
+### 1.3 Create Query Builder Module
+
 - [ ] Create `app/projects/sports_schedules/core/query_builder.py`
-  - [ ] Define `DIMENSIONS` constant: list of (column, display_label) for sport, level, league, date, day, time, home_team, road_team, location, home_city, home_state
-  - [ ] Define `LOW_CARDINALITY_FILTERS`: sport, league, level, day, home_state with static option lists
-  - [ ] Define `HIGH_CARDINALITY_FILTERS`: home_team, road_team, location, home_city (contains search)
+  - [ ] Import `LOW_CARDINALITY_OPTIONS`, `DIMENSION_LABELS` from `constants`
+  - [ ] Define `DIMENSIONS` from constants (column, display_label)
+  - [ ] Define `HIGH_CARDINALITY_FILTERS`: home_team, road_team, location, home_city (contains search — no fixed options)
+  - [ ] **Low-cardinality validation:** When building WHERE, validate each filter value is in the corresponding allowlist from constants; reject unknown values (return error or ignore)
   - [ ] Create `build_sql(params)` function
-    - [ ] Accept dict with: dimensions, filters (low + high), date_mode, date_value(s), count, limit, sort_column, sort_dir
+    - [ ] Accept dict with: dimensions, filters (low + high), date_mode, date_exact, date_start, date_end, date_year, date_n, anchor_date (for relative modes), count, limit, sort_column, sort_dir
     - [ ] Build SELECT clause from dimensions (or `*` if none and no count)
     - [ ] Add COUNT(*) and GROUP BY when count is on
     - [ ] Build WHERE clause from filters (AND logic)
@@ -68,7 +87,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] Validate: row limit 1–5000, date range start ≤ end, relative N > 0
   - [ ] Use allowlist for dimensions; never accept raw user input for column names
 
-**Manual Testing 1.2:**
+**Manual Testing 1.3:**
 - [ ] Unit test or manual call: `build_sql({"dimensions": ["league", "date"], "limit": 10})` → valid SELECT
 - [ ] Test with count on, dimensions selected → GROUP BY present
 - [ ] Test with count on, no dimensions → single COUNT(*)
@@ -77,10 +96,10 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 1.3 Create Query API Endpoint
+### 1.4 Create Query API Endpoint
 
 - [ ] Add `GET /sports-schedules/api/query` route in `routes.py`
-  - [ ] Parse query params: dimensions (comma-separated), filters (JSON or repeated params), date_mode, date_start, date_end, date_exact, date_year, date_n, count, limit, sort_column, sort_dir
+  - [ ] Parse query params per URL schema (5.1): dimensions, filters (sport, league, level, day, home_state, home_team, road_team, location, home_city), date_mode, date_exact, date_start, date_end, date_year, date_n, anchor_date, count, limit, sort_column, sort_dir
   - [ ] Call `build_sql()` with parsed params
   - [ ] If validation error, return `{"error": message}` with 400
   - [ ] Call DoltHub client `execute_sql(sql)`
@@ -88,7 +107,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] Return `{"rows": [...], "sql": sql_string}` (include SQL for "Show SQL" feature)
   - [ ] Handle empty results: return `{"rows": [], "sql": sql_string}` (no error)
 
-**Manual Testing 1.3:**
+**Manual Testing 1.4:**
 - [ ] Call API with `?dimensions=league,date&limit=5`
 - [ ] Verify rows returned
 - [ ] Verify `sql` in response
@@ -101,6 +120,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ### 2.1 Page Layout & Structure
 
+- [ ] Update `routes.py` index route to pass `LOW_CARDINALITY_OPTIONS` and `DIMENSION_LABELS` from constants to template
 - [ ] Update `templates/sports_schedules/index.html`
   - [ ] Replace placeholder with two-column layout: sidebar (left) + main area (right)
   - [ ] Sidebar: fixed or sticky, collapsible on mobile
@@ -142,13 +162,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 - [ ] Add "Filters" collapsible section
   - [ ] Add hint: "All filters combined with AND"
-  - [ ] Sport: multiselect dropdown (basketball, hockey, football, baseball, soccer)
-  - [ ] League: multiselect — create `core/constants.py` with league list from ESPN `LEAGUE_MAP` (or import from `sports_schedule_admin.core.espn_client`); use `LEAGUE_DISPLAY_NAMES` for labels where available
-  - [ ] Level: multiselect (pro, college)
-  - [ ] Day: multiselect (Monday–Sunday)
-  - [ ] State: multiselect (US state codes)
+  - [ ] Populate multiselect options from `core/constants.LOW_CARDINALITY_OPTIONS` (expose via API or embed in template)
+  - [ ] Sport: multiselect from `SPORTS`
+  - [ ] League: multiselect from `LEAGUES` (use display names for labels)
+  - [ ] Level: multiselect from `LEVELS`
+  - [ ] Day: multiselect from `DAYS`
+  - [ ] State: multiselect from `STATES`
   - [ ] All optional; empty = no filter on that dimension
-- [ ] Wire filter values to query params
+- [ ] Wire filter values to query params (values sent must match constants; backend validates)
 
 **Manual Testing 2.3:**
 - [ ] Select Sport = basketball, League = NBA
@@ -199,9 +220,8 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 - [ ] Add relative date options to Date section
   - [ ] Last week (7 days), Last month (30 days), Last N days (N input)
   - [ ] Next week (7 days), Next N days (N input)
-  - [ ] Use "today" as anchor
   - [ ] Validate N > 0 for Last N / Next N
-- [ ] Wire to query builder (compute date range server-side)
+- [ ] **"Today" / anchor date:** See Phase 5.1a below. Client sends `anchor_date` (YYYY-MM-DD) so "today" is user-local without requiring auth.
 
 **Manual Testing 3.2:**
 - [ ] Select "Last week" → past 7 days from today
@@ -272,18 +292,44 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ### 5.1 URL State (Shareable Links)
 
-- [ ] Encode query params in URL
-  - [ ] dimensions, filters, date params, count, limit, sort_column, sort_dir
-  - [ ] Use query string (e.g., `?dimensions=league,date&sport=basketball`)
-  - [ ] Support decoding on page load: if URL has params, populate form and optionally auto-run
+- [ ] **URL param format** (same schema for both URL and API; keep URLs shareable):
+  - [ ] `dimensions` — comma-separated: `league,date,home_team`
+  - [ ] Low-cardinality filters: `sport`, `league`, `level`, `day`, `home_state` — comma-separated for multi: `sport=basketball,hockey`
+  - [ ] High-cardinality (contains): `home_team`, `road_team`, `location`, `home_city` — single value each
+  - [ ] Date: `date_mode` = `exact` | `range` | `year` | `last_week` | `last_month` | `last_n` | `next_week` | `next_n`
+  - [ ] Date values: `date_exact` (YYYY-MM-DD), `date_start`/`date_end` (range), `date_year` (year), `date_n` (for last_n/next_n)
+  - [ ] `anchor_date` — YYYY-MM-DD, "today" for relative modes (see 5.1a)
+  - [ ] `count` — 0 or 1
+  - [ ] `limit` — 1–5000
+  - [ ] `sort_column`, `sort_dir` — asc | desc
+  - [ ] Omit params that are empty/default
+- [ ] Encode query params in URL using above schema
+- [ ] Support decoding on page load: if URL has params, populate form and optionally auto-run
 - [ ] Update URL when user runs query (replaceState or pushState)
-- [ ] Handle long URLs (browser limits); document tradeoff
+- [ ] Handle long URLs (browser limits ~2000 chars); document tradeoff; consider shortening filter keys if needed
 
 **Manual Testing 5.1:**
 - [ ] Set dimensions, filters, run query
 - [ ] Copy URL, open in new tab
 - [ ] Verify form state restored from URL
 - [ ] Optionally: verify auto-run on load with params
+
+---
+
+### 5.1a "Today" / Timezone for Relative Dates
+
+- [ ] **Problem:** Relative dates (last week, next 30 days) need "today" as anchor. Sports Schedules is public (no auth), so no user account or stored timezone.
+- [ ] **Approach:** Client sends `anchor_date` (YYYY-MM-DD) with each query that uses relative date mode.
+  - [ ] Frontend computes "today" in the user's browser: use `new Date().toLocaleDateString('en-CA')` (YYYY-MM-DD in local timezone) or equivalent — `toISOString()` is UTC and wrong for local date.
+  - [ ] Include `anchor_date` in API request when `date_mode` is relative.
+  - [ ] Include `anchor_date` in URL when encoding state, so shared links use the same anchor (or omit and default to server date on load — document behavior).
+- [ ] **Fallback:** If `anchor_date` is omitted for a relative query, server uses its own "today" (e.g., UTC date or app-configured timezone). Document this edge case.
+- [ ] **Future:** If auth/user preferences are added later, use `user.preferred_timezone` or `user.time_zone` to compute anchor server-side; for now, client-sent anchor is sufficient.
+
+**Manual Testing 5.1a:**
+- [ ] Set "Last 7 days", run — verify date range uses correct anchor
+- [ ] Change system date/timezone in browser (or mock), verify anchor reflects it
+- [ ] Share URL with anchor_date, open in new tab — verify same range
 
 ---
 

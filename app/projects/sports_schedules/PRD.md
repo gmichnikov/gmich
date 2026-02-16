@@ -106,7 +106,7 @@ One mode at a time. UI changes based on selected mode (e.g., single date picker 
 | Next week   | Next 7 days                    | —                          |
 | Next N days | User-specified N               | Next 30 days               |
 
-Relative options use "today" as the anchor.
+Relative options use "today" as the anchor. **"Today" is determined by the client:** the frontend sends `anchor_date` (YYYY-MM-DD) computed from the user's browser/local timezone. No auth required; if auth is added later, server can use `user.time_zone` instead.
 
 ### 4. Optional Count Metric
 
@@ -198,7 +198,8 @@ Relative options use "today" as the anchor.
 
 ### URL State
 
-- Encode query params (dimensions, filters, date, count, limit, sort) in the URL so views are shareable and bookmarkable.
+- Encode query params in the URL so views are shareable and bookmarkable.
+- **Param format:** `dimensions` (comma-separated); low-cardinality filters as comma-separated (`sport=basketball,hockey`); contains filters as single values; `date_mode` + mode-specific params (`date_exact`, `date_start`/`date_end`, `date_year`, `date_n`); `anchor_date` for relative modes; `count`, `limit`, `sort_column`, `sort_dir`. Omit empty/defaults.
 - **Downsides:** URLs can get long with many filters; need to handle encoding/decoding; browser history may fill with query variations. Acceptable tradeoff for shareability.
 
 ### Validation
