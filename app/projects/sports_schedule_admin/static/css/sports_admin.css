@@ -1,0 +1,296 @@
+/* Sports Schedule Admin - All styles prefixed with ssa- to avoid collisions */
+
+/* ===== Wrapper & Container ===== */
+.ssa-wrapper {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ssa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.ssa-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.ssa-status-badge {
+  display: inline-block;
+  padding: 0.4em 0.9em;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ssa-status-badge--checking {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+.ssa-status-badge--connected {
+  background: #d4edda;
+  color: #155724;
+}
+
+.ssa-status-badge--error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* ===== Tabs (no Bootstrap, no .nav-link collision) ===== */
+.ssa-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e9ecef;
+  list-style: none;
+  padding: 0;
+  margin-left: 0;
+}
+
+.ssa-tab-item {
+  list-style: none;
+  margin: 0;
+}
+
+.ssa-tab-btn {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.ssa-tab-btn:hover {
+  color: #667eea;
+}
+
+.ssa-tab-btn.ssa-tab-btn--active {
+  color: #667eea;
+  font-weight: 700;
+  border-bottom-color: #667eea;
+}
+
+/* ===== Tab Panels ===== */
+.ssa-panel {
+  display: none;
+}
+
+.ssa-panel.ssa-panel--active {
+  display: block;
+}
+
+/* ===== Cards ===== */
+.ssa-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.ssa-card-header {
+  background: #f1f3f5;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.ssa-card-body {
+  padding: 1.25rem;
+  background: white;
+}
+
+/* ===== Tables ===== */
+.ssa-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ssa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.ssa-table th {
+  background: #f8f9fa;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.ssa-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+  color: #333;
+}
+
+.ssa-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.ssa-table .ssa-cell--muted {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.ssa-table .ssa-cell--end {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ===== Badges (inline pills) ===== */
+.ssa-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ssa-badge--sport {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.ssa-badge--league {
+  background: #6c757d;
+  color: white;
+}
+
+.ssa-badge--action {
+  background: #cce5ff;
+  color: #004085;
+}
+
+/* ===== Spinner / Loading ===== */
+.ssa-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.ssa-spinner-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e9ecef;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: ssa-spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes ssa-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ssa-spinner-text {
+  font-size: 0.95rem;
+}
+
+/* ===== Alerts ===== */
+.ssa-alert {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
+.ssa-alert--danger {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.ssa-alert--info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* ===== Grid for Operations ===== */
+.ssa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.ssa-grid-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.ssa-grid-card--danger {
+  border-color: #ffc107;
+  background: #fffbf0;
+}
+
+.ssa-grid-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #333;
+}
+
+.ssa-grid-card-title--danger {
+  color: #856404;
+}
+
+.ssa-grid-card-desc {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.ssa-code {
+  display: block;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  color: #495057;
+  border: 1px solid #e9ecef;
+}
+
+/* ===== Empty state ===== */
+.ssa-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+  font-size: 0.95rem;
+}

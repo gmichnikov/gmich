@@ -2,69 +2,192 @@
 
 {% block title %}Sports Schedule Admin{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('sports_schedule_admin.static', filename='css/sports_admin.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="project-header">
-        <h1>📅 Sports Schedule Admin</h1>
-        <p class="lead">Manage and update sports schedules.</p>
+<div class="ssa-wrapper">
+    <div class="ssa-header">
+        <h1 class="ssa-title">📅 Sports Schedule Admin</h1>
+        <div id="connection-status">
+            <span class="ssa-status-badge ssa-status-badge--checking">Checking DoltHub...</span>
+        </div>
     </div>
 
-    <div class="admin-dashboard">
-        <div class="card">
-            <div class="card-body">
-                <h3>Welcome to the Sports Schedule Admin</h3>
-                <p>This project is only accessible to administrators.</p>
-                <div class="alert alert-info">
-                    <p>Placeholder content for the Sports Schedule Admin project.</p>
+    <!-- Tabs -->
+    <ul class="ssa-tabs" id="ssa-tabs" role="tablist">
+        <li class="ssa-tab-item">
+            <button type="button" class="ssa-tab-btn ssa-tab-btn--active" data-ssa-panel="overview" role="tab">Overview</button>
+        </li>
+        <li class="ssa-tab-item">
+            <button type="button" class="ssa-tab-btn" data-ssa-panel="operations" role="tab">Operations</button>
+        </li>
+        <li class="ssa-tab-item">
+            <button type="button" class="ssa-tab-btn" data-ssa-panel="logs" role="tab">Activity Logs</button>
+        </li>
+        <li class="ssa-tab-item">
+            <button type="button" class="ssa-tab-btn" data-ssa-panel="preview" role="tab">Data Preview</button>
+        </li>
+    </ul>
+
+    <!-- Overview Panel -->
+    <div id="panel-overview" class="ssa-panel ssa-panel--active" role="tabpanel">
+        <div class="ssa-card">
+            <div class="ssa-card-header">League Coverage</div>
+            <div class="ssa-card-body" style="padding: 0;">
+                <div id="coverage-table-container">
+                    <div class="ssa-spinner">
+                        <div class="ssa-spinner-icon" aria-hidden="true"></div>
+                        <span class="ssa-spinner-text">Fetching stats from DoltHub...</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="mt-4">
-        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+
+    <!-- Operations Panel -->
+    <div id="panel-operations" class="ssa-panel" role="tabpanel">
+        <div class="ssa-grid">
+            <div class="ssa-grid-card">
+                <h3 class="ssa-grid-card-title">Manual Sync</h3>
+                <p class="ssa-grid-card-desc">Trigger a manual data fetch from ESPN and update DoltHub.</p>
+                <div class="ssa-alert ssa-alert--info">Sync UI coming in the next step. For now, use the CLI.</div>
+                <code class="ssa-code">flask sports-admin sync --league NBA --days 7</code>
+            </div>
+            <div class="ssa-grid-card ssa-grid-card--danger">
+                <h3 class="ssa-grid-card-title ssa-grid-card-title--danger">Danger Zone</h3>
+                <p class="ssa-grid-card-desc">Permanently clear data for a specific league and date range.</p>
+                <code class="ssa-code">flask sports-admin clear-league --league NBA</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Panel -->
+    <div id="panel-logs" class="ssa-panel" role="tabpanel">
+        <div class="ssa-card">
+            <div class="ssa-card-header">Recent Activity</div>
+            <div class="ssa-card-body" style="padding: 0;">
+                <div class="ssa-table-wrap">
+                    <table class="ssa-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Actor</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td class="ssa-cell--muted">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ log.actor.email if log.actor else 'System' }}</td>
+                                <td><span class="ssa-badge ssa-badge--action">{{ log.category }}</span></td>
+                                <td>{{ log.description }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="ssa-empty">No recent activity found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div id="panel-preview" class="ssa-panel" role="tabpanel">
+        <div class="ssa-card">
+            <div class="ssa-card-header">Latest 10 Games in DoltHub</div>
+            <div class="ssa-card-body" style="padding: 0;">
+                <div id="preview-table-container">
+                    <div class="ssa-spinner">
+                        <div class="ssa-spinner-icon" aria-hidden="true"></div>
+                        <span class="ssa-spinner-text">Fetching preview from DoltHub...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .project-header {
-        margin-bottom: 2rem;
-        text-align: center;
+<script>
+(function() {
+    // Tab switching (no Bootstrap)
+    const tabBtns = document.querySelectorAll('.ssa-tab-btn');
+    const panels = document.querySelectorAll('.ssa-panel');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = 'panel-' + this.getAttribute('data-ssa-panel');
+            tabBtns.forEach(b => b.classList.remove('ssa-tab-btn--active'));
+            panels.forEach(p => p.classList.remove('ssa-panel--active'));
+            this.classList.add('ssa-tab-btn--active');
+            document.getElementById(targetId).classList.add('ssa-panel--active');
+        });
+    });
+
+    // Load data
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCoverage();
+        loadPreview();
+    });
+
+    async function loadCoverage() {
+        const container = document.getElementById('coverage-table-container');
+        const statusEl = document.getElementById('connection-status');
+
+        try {
+            const response = await fetch("{{ url_for('sports_schedule_admin.get_coverage') }}");
+            const data = await response.json();
+
+            if (data.error) {
+                container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Error: ' + data.error + '</div>';
+                statusEl.innerHTML = '<span class="ssa-status-badge ssa-status-badge--error">DoltHub Error</span>';
+                return;
+            }
+
+            statusEl.innerHTML = '<span class="ssa-status-badge ssa-status-badge--connected">DoltHub Connected</span>';
+
+            let html = '<div class="ssa-table-wrap"><table class="ssa-table"><thead><tr><th>League</th><th>Sport</th><th>Range</th><th class="ssa-cell--end">Total Games</th></tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr><td><strong>' + row.league + '</strong></td><td><span class="ssa-badge ssa-badge--sport">' + row.sport + '</span></td><td class="ssa-cell--muted">' + row.start_date + ' to ' + row.end_date + '</td><td class="ssa-cell--end">' + parseInt(row.count).toLocaleString() + '</td></tr>';
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Network error: ' + error.message + '</div>';
+            statusEl.innerHTML = '<span class="ssa-status-badge ssa-status-badge--error">DoltHub Error</span>';
+        }
     }
-    .admin-dashboard {
-        max-width: 800px;
-        margin: 0 auto;
+
+    async function loadPreview() {
+        const container = document.getElementById('preview-table-container');
+
+        try {
+            const response = await fetch("{{ url_for('sports_schedule_admin.get_preview') }}");
+            const data = await response.json();
+
+            if (data.error) {
+                container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Error: ' + data.error + '</div>';
+                return;
+            }
+
+            let html = '<div class="ssa-table-wrap"><table class="ssa-table"><thead><tr><th>Date</th><th>League</th><th>Matchup</th><th>Time (ET)</th><th>Location</th></tr></thead><tbody>';
+            data.forEach(game => {
+                html += '<tr><td class="ssa-cell--muted">' + game.date + '</td><td><span class="ssa-badge ssa-badge--league">' + game.league + '</span></td><td>' + game.road_team + ' @ ' + game.home_team + '</td><td class="ssa-cell--muted">' + (game.time || 'N/A') + '</td><td class="ssa-cell--muted">' + (game.location || '') + '</td></tr>';
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Network error: ' + error.message + '</div>';
+        }
     }
-    .card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        padding: 2rem;
-    }
-    .mt-4 {
-        margin-top: 2rem;
-        text-align: center;
-    }
-    .btn {
-        display: inline-block;
-        padding: 0.5rem 1.5rem;
-        border-radius: 4px;
-        text-decoration: none;
-        font-weight: bold;
-    }
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-    .alert {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-top: 1rem;
-    }
-    .alert-info {
-        background-color: #d1ecf1;
-        border: 1px solid #bee5eb;
-        color: #0c5460;
-    }
-</style>
+})();
+</script>
 {% endblock %}

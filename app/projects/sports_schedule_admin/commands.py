@@ -64,18 +64,20 @@ def init_app(app):
     @click.option("--start", help="Only clear games on or after this date (YYYY-MM-DD)")
     def clear_league(league, start):
         """Delete games for a specific league from DoltHub"""
-        from app.projects.sports_schedule_admin.core.dolthub_client import DoltHubClient
+        from app.projects.sports_schedule_admin.core.logic import clear_league_data
         
-        dolt = DoltHubClient()
-        sql = f"DELETE FROM `combined-schedule` WHERE `league` = '{league}'"
-        
+        start_dt = None
         if start:
-            sql += f" AND `date` >= '{start}'"
-            
+            try:
+                start_dt = datetime.strptime(start, "%Y-%m-%d")
+            except ValueError:
+                click.echo("Error: Invalid date format. Use YYYY-MM-DD.", err=True)
+                return
+
         click.confirm(f"This will delete {league} games from DoltHub. Continue?", abort=True)
         
         click.echo(f"Clearing {league} data...")
-        result = dolt.execute_sql(sql)
+        result = clear_league_data(league, start_dt)
         
         if result and "error" not in result:
             click.echo("Data cleared successfully.")
