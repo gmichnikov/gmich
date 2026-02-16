@@ -33,6 +33,26 @@ class ESPNClient:
         "WNBA": ("basketball", "wnba", "pro"),
     }
 
+    # Season type for "current season" filtering in coverage.
+    # "calendar" = Jan 1 - Dec 31; "school" = Aug 1 - following July 31
+    LEAGUE_SEASON_TYPE = {
+        "MLB": "calendar",
+        "MLS": "calendar",
+        "NBA": "school",
+        "NFL": "school",
+        "NHL": "school",
+        "WNBA": "school",
+        "NCAAM": "school",
+        "NCAAW": "school",
+        "CFB": "school",
+        "EPL": "school",
+        "CL": "school",
+        "EL": "school",
+        "FA": "school",
+        "LC": "school",
+        "WC": "calendar",  # World Cup is a summer tournament
+    }
+
     # Human-readable display names for dropdowns (soccer codes spelled out)
     LEAGUE_DISPLAY_NAMES = {
         "CL": "Champions League (CL)",

@@ -5,7 +5,7 @@ from app.projects.sports_schedule_admin.core.dolthub_client import DoltHubClient
 from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.models import LogEntry, db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 sports_schedule_admin_bp = Blueprint(
     "sports_schedule_admin",
@@ -25,18 +25,49 @@ def index():
     return render_template("sports_schedule_admin/index.html", leagues=leagues)
 
 
+def _current_season_ranges():
+    """Return (calendar_start, calendar_end, school_start, school_end) for today."""
+    today = date.today()
+    cal_start = today.replace(month=1, day=1)
+    cal_end = today.replace(month=12, day=31)
+    if today.month >= 8:
+        school_start = today.replace(month=8, day=1)
+        school_end = date(today.year + 1, 7, 31)
+    else:
+        school_start = date(today.year - 1, 8, 1)
+        school_end = date(today.year, 7, 31)
+    return cal_start, cal_end, school_start, school_end
+
+
 @sports_schedule_admin_bp.route("/sports-schedule-admin/api/coverage")
 @login_required
 @admin_required
 def get_coverage():
-    """Fetch league coverage stats from DoltHub."""
+    """Fetch league coverage stats from DoltHub. scope=current_season | all_time (default)."""
     dolt = DoltHubClient()
-    sql = "SELECT league, sport, MIN(date) as start_date, MAX(date) as end_date, COUNT(*) as count FROM `combined-schedule` GROUP BY league, sport ORDER BY league"
+    scope = request.args.get("scope", "all_time")
+
+    if scope == "current_season":
+        cal_start, cal_end, school_start, school_end = _current_season_ranges()
+        cal_leagues = [c for c, t in ESPNClient.LEAGUE_SEASON_TYPE.items() if t == "calendar"]
+        school_leagues = [c for c, t in ESPNClient.LEAGUE_SEASON_TYPE.items() if t == "school"]
+        conditions = []
+        if cal_leagues:
+            leagues_str = ", ".join(f"'{c}'" for c in cal_leagues)
+            conditions.append(f"(league IN ({leagues_str}) AND date BETWEEN '{cal_start}' AND '{cal_end}')")
+        if school_leagues:
+            leagues_str = ", ".join(f"'{c}'" for c in school_leagues)
+            conditions.append(f"(league IN ({leagues_str}) AND date BETWEEN '{school_start}' AND '{school_end}')")
+        where = " OR ".join(conditions) if conditions else "1=0"
+        sql = f"SELECT league, sport, MIN(date) as start_date, MAX(date) as end_date, COUNT(*) as count FROM `combined-schedule` WHERE {where} GROUP BY league, sport ORDER BY league"
+    else:
+        sql = "SELECT league, sport, MIN(date) as start_date, MAX(date) as end_date, COUNT(*) as count FROM `combined-schedule` GROUP BY league, sport ORDER BY league"
+
     result = dolt.execute_sql(sql)
-    
+
     if "error" in result:
         return jsonify({"error": result["error"]}), 500
-        
+
     return jsonify(result.get("rows", []))
 
 

@@ -117,6 +117,47 @@
   color: #333;
 }
 
+.ssa-card-header--flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ssa-toggle-group {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ced4da;
+}
+
+.ssa-toggle-btn {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ssa-toggle-btn:not(:last-child) {
+  border-right: 1px solid #ced4da;
+}
+
+.ssa-toggle-btn:hover {
+  background: #f8f9fa;
+}
+
+.ssa-toggle-btn.ssa-toggle-btn--active {
+  background: #667eea;
+  color: white;
+}
+
 .ssa-card-body {
   padding: 1.25rem;
   background: white;

@@ -34,7 +34,13 @@
     <!-- Overview Panel -->
     <div id="panel-overview" class="ssa-panel ssa-panel--active" role="tabpanel">
         <div class="ssa-card">
-            <div class="ssa-card-header">League Coverage</div>
+            <div class="ssa-card-header ssa-card-header--flex">
+                <span>League Coverage</span>
+                <div class="ssa-toggle-group" role="group" aria-label="Coverage scope">
+                    <button type="button" class="ssa-toggle-btn ssa-toggle-btn--active" data-ssa-scope="current_season" aria-pressed="true">Current season</button>
+                    <button type="button" class="ssa-toggle-btn" data-ssa-scope="all_time" aria-pressed="false">All time</button>
+                </div>
+            </div>
             <div class="ssa-card-body" style="padding: 0;">
                 <div id="coverage-table-container">
                     <div class="ssa-spinner">
@@ -151,12 +157,36 @@
 
     // Load data
     document.addEventListener('DOMContentLoaded', function() {
+        initCoverageToggle();
         loadCoverage();
         loadPreview();
         loadLogs();
         initSyncForm();
         initClearForm();
     });
+
+    function getCoverageScope() {
+        const active = document.querySelector('.ssa-toggle-btn.ssa-toggle-btn--active[data-ssa-scope]');
+        return active ? active.getAttribute('data-ssa-scope') : 'current_season';
+    }
+
+    function initCoverageToggle() {
+        const btns = document.querySelectorAll('.ssa-toggle-btn[data-ssa-scope]');
+        btns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('ssa-toggle-btn--active')) return;
+                btns.forEach(b => {
+                    b.classList.remove('ssa-toggle-btn--active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+                this.classList.add('ssa-toggle-btn--active');
+                this.setAttribute('aria-pressed', 'true');
+                const container = document.getElementById('coverage-table-container');
+                container.innerHTML = '<div class="ssa-spinner"><div class="ssa-spinner-icon" aria-hidden="true"></div><span class="ssa-spinner-text">Fetching stats from DoltHub...</span></div>';
+                loadCoverage();
+            });
+        });
+    }
 
     function getCsrfToken() {
         const meta = document.querySelector('meta[name="csrf-token"]');
@@ -280,9 +310,10 @@
     async function loadCoverage() {
         const container = document.getElementById('coverage-table-container');
         const statusEl = document.getElementById('connection-status');
+        const scope = getCoverageScope();
 
         try {
-            const response = await fetch("{{ url_for('sports_schedule_admin.get_coverage') }}");
+            const response = await fetch("{{ url_for('sports_schedule_admin.get_coverage') }}?scope=" + encodeURIComponent(scope));
             const data = await response.json();
 
             if (data.error) {
@@ -293,10 +324,15 @@
 
             statusEl.innerHTML = '<span class="ssa-status-badge ssa-status-badge--connected">DoltHub Connected</span>';
 
+            const rows = Array.isArray(data) ? data : [];
             let html = '<div class="ssa-table-wrap"><table class="ssa-table"><thead><tr><th>League</th><th>Sport</th><th>Range</th><th class="ssa-cell--end">Total Games</th></tr></thead><tbody>';
-            data.forEach(row => {
-                html += '<tr><td><strong>' + row.league + '</strong></td><td><span class="ssa-badge ssa-badge--sport">' + row.sport + '</span></td><td class="ssa-cell--muted">' + row.start_date + ' to ' + row.end_date + '</td><td class="ssa-cell--end">' + parseInt(row.count).toLocaleString() + '</td></tr>';
-            });
+            if (rows.length === 0) {
+                html += '<tr><td colspan="4" class="ssa-empty">No data for this scope.</td></tr>';
+            } else {
+                rows.forEach(row => {
+                    html += '<tr><td><strong>' + row.league + '</strong></td><td><span class="ssa-badge ssa-badge--sport">' + row.sport + '</span></td><td class="ssa-cell--muted">' + row.start_date + ' to ' + row.end_date + '</td><td class="ssa-cell--end">' + parseInt(row.count).toLocaleString() + '</td></tr>';
+                });
+            }
             html += '</tbody></table></div>';
             container.innerHTML = html;
 
