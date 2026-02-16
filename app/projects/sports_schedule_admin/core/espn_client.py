@@ -31,6 +31,8 @@ class ESPNClient:
         "NCAAW": ("basketball", "womens-college-basketball", "college"),
         "CFB": ("football", "college-football", "college"),
         "WNBA": ("basketball", "wnba", "pro"),
+        "NCHM": ("hockey", "mens-college-hockey", "college"),
+        "NCHW": ("hockey", "womens-college-hockey", "college"),
     }
 
     # Season type for "current season" filtering in coverage.
@@ -44,6 +46,8 @@ class ESPNClient:
         "WNBA": "school",
         "NCAAM": "school",
         "NCAAW": "school",
+        "NCHM": "school",
+        "NCHW": "school",
         "CFB": "school",
         "EPL": "school",
         "CL": "school",
@@ -62,6 +66,8 @@ class ESPNClient:
         "WC": "World Cup (WC)",
         "EPL": "English Premier League (EPL)",
         "MLS": "Major League Soccer (MLS)",
+        "NCHM": "Men's College Hockey (NCHM)",
+        "NCHW": "Women's College Hockey (NCHW)",
     }
 
     def fetch_schedule(self, league_code, date_str):
