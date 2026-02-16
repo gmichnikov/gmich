@@ -22,6 +22,15 @@ class ESPNClient:
         "NHL": ("hockey", "nhl", "pro"),
         "MLS": ("soccer", "usa.1", "pro"),
         "EPL": ("soccer", "eng.1", "pro"),
+        "CL": ("soccer", "uefa.champions", "pro"),
+        "EL": ("soccer", "uefa.europa", "pro"),
+        "FA": ("soccer", "eng.fa", "pro"),
+        "LC": ("soccer", "eng.league_cup", "pro"),
+        "WC": ("soccer", "fifa.world", "pro"),
+        "NCAAM": ("basketball", "mens-college-basketball", "college"),
+        "NCAAW": ("basketball", "womens-college-basketball", "college"),
+        "CFB": ("football", "college-football", "college"),
+        "WNBA": ("basketball", "wnba", "pro"),
     }
 
     def fetch_schedule(self, league_code, date_str):
