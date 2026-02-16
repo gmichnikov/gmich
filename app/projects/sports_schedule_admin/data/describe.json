@@ -1,0 +1,132 @@
+{
+  "query_execution_status": "Success",
+  "query_execution_message": "",
+  "repository_owner": "gmichnikov",
+  "repository_name": "sports-schedules",
+  "commit_ref": "main",
+  "sql_query": "DESCRIBE `combined-schedule`;",
+  "schema": [
+    {
+      "columnName": "Field",
+      "columnType": "varchar(25000)"
+    },
+    {
+      "columnName": "Type",
+      "columnType": "varchar(25000)"
+    },
+    {
+      "columnName": "Null",
+      "columnType": "varchar(25000)"
+    },
+    {
+      "columnName": "Key",
+      "columnType": "varchar(25000)"
+    },
+    {
+      "columnName": "Default",
+      "columnType": "varchar(25000)"
+    },
+    {
+      "columnName": "Extra",
+      "columnType": "varchar(25000)"
+    }
+  ],
+  "rows": [
+    {
+      "Field": "primary_key",
+      "Type": "varchar(16383)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "sport",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "level",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "league",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "date",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "day",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "time",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "home_team",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "road_team",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "location",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "home_city",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    },
+    {
+      "Field": "home_state",
+      "Type": "varchar(16383)",
+      "Null": "YES",
+      "Key": "",
+      "Default": null,
+      "Extra": ""
+    }
+  ]
+}

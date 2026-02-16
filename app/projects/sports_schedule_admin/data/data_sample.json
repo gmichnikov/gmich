@@ -1,0 +1,200 @@
+{
+  "query_execution_status": "Success",
+  "query_execution_message": "",
+  "repository_owner": "gmichnikov",
+  "repository_name": "sports-schedules",
+  "commit_ref": "main",
+  "sql_query": "(SELECT * FROM `combined-schedule` WHERE `date` < CURDATE() ORDER BY `date` DESC LIMIT 5)\nUNION ALL\n(SELECT * FROM `combined-schedule` WHERE `date` >= CURDATE() ORDER BY `date` ASC LIMIT 5);",
+  "schema": [
+    {
+      "columnName": "primary_key",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "sport",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "level",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "league",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "date",
+      "columnType": "date"
+    },
+    {
+      "columnName": "day",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "time",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "home_team",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "road_team",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "location",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "home_city",
+      "columnType": "varchar(16383)"
+    },
+    {
+      "columnName": "home_state",
+      "columnType": "varchar(16383)"
+    }
+  ],
+  "rows": [
+    {
+      "primary_key": "NBA_2026-02-12_NA_Los Angeles Lakers_Dallas Mavericks",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-12",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Los Angeles Lakers",
+      "road_team": "Dallas Mavericks",
+      "location": "Crypto.com Arena",
+      "home_city": "Los Angeles",
+      "home_state": "CA"
+    },
+    {
+      "primary_key": "NBA_2026-02-12_NA_Oklahoma City Thunder_Milwaukee Bucks",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-12",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Oklahoma City Thunder",
+      "road_team": "Milwaukee Bucks",
+      "location": "Paycom Center",
+      "home_city": "Oklahoma City",
+      "home_state": "OK"
+    },
+    {
+      "primary_key": "NBA_2026-02-12_NA_Utah Jazz_Portland Trail Blazers",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-12",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Utah Jazz",
+      "road_team": "Portland Trail Blazers",
+      "location": "Delta Center",
+      "home_city": "Salt Lake City",
+      "home_state": "UT"
+    },
+    {
+      "primary_key": "NBA_2026-02-11_NA_Boston Celtics_Chicago Bulls",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-11",
+      "day": "Wednesday",
+      "time": null,
+      "home_team": "Boston Celtics",
+      "road_team": "Chicago Bulls",
+      "location": "TD Garden",
+      "home_city": "Boston",
+      "home_state": "MA"
+    },
+    {
+      "primary_key": "NBA_2026-02-11_NA_Brooklyn Nets_Indiana Pacers",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-11",
+      "day": "Wednesday",
+      "time": null,
+      "home_team": "Brooklyn Nets",
+      "road_team": "Indiana Pacers",
+      "location": "Barclays Center",
+      "home_city": "Brooklyn",
+      "home_state": "NY"
+    },
+    {
+      "primary_key": "NBA_2026-02-19_NA_Charlotte Hornets_Houston Rockets",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-19",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Charlotte Hornets",
+      "road_team": "Houston Rockets",
+      "location": "Spectrum Center",
+      "home_city": "Charlotte",
+      "home_state": "NC"
+    },
+    {
+      "primary_key": "NBA_2026-02-19_NA_Chicago Bulls_Toronto Raptors",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-19",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Chicago Bulls",
+      "road_team": "Toronto Raptors",
+      "location": "United Center",
+      "home_city": "Chicago",
+      "home_state": "IL"
+    },
+    {
+      "primary_key": "NBA_2026-02-19_NA_Cleveland Cavaliers_Brooklyn Nets",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-19",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Cleveland Cavaliers",
+      "road_team": "Brooklyn Nets",
+      "location": "Rocket Arena",
+      "home_city": "Cleveland",
+      "home_state": "OH"
+    },
+    {
+      "primary_key": "NBA_2026-02-19_NA_Golden State Warriors_Boston Celtics",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-19",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Golden State Warriors",
+      "road_team": "Boston Celtics",
+      "location": "Chase Center",
+      "home_city": "San Francisco",
+      "home_state": "CA"
+    },
+    {
+      "primary_key": "NBA_2026-02-19_NA_Los Angeles Clippers_Denver Nuggets",
+      "sport": "basketball",
+      "level": "pro",
+      "league": "NBA",
+      "date": "2026-02-19",
+      "day": "Thursday",
+      "time": null,
+      "home_team": "Los Angeles Clippers",
+      "road_team": "Denver Nuggets",
+      "location": "Intuit Dome",
+      "home_city": "Los Angeles",
+      "home_state": "CA"
+    }
+  ]
+}
