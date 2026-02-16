@@ -1,190 +1,109 @@
-# Sports Schedule Data Collection & Query System - Project Plan
+# Sports Schedule Admin - Project Plan
 
 ## Project Overview
 
-Build a comprehensive sports schedule data collection and query system that:
-1. Collects schedules from multiple sports leagues (pro and college) via ESPN API.
-2. Stores data in **DoltHub** (versioned database) using the DoltHub SQL API.
-3. Provides an admin UI within the main web app for browsing schedules.
-4. Offers a natural language query interface (Text-to-SQL for DoltHub).
-5. Uses **Heroku Scheduler** to run automated updates via Flask CLI commands.
+This project is the **administrative engine** for the Sports Schedule system. Its purpose is to:
+1.  **Collect & Sync Data**: Fetch professional sports schedules from the ESPN API.
+2.  **Manage DoltHub**: Serve as the write-layer for the `combined-schedule` table in DoltHub.
+3.  **Automate**: Provide CLI commands for Heroku Scheduler to keep data fresh.
+4.  **Monitor**: Offer an admin-only dashboard to track sync health and data coverage.
 
-**Key Philosophy:** Use APIs (ESPN) for reliability. Store in DoltHub for versioning and historical tracking. Integrate seamlessly into the existing Flask Hub as an Admin-only project.
-
----
-
-## Architecture Overview (Integrated)
-
-The project lives within the existing Flask application as a blueprint.
-
-```
-app/projects/sports_schedule_admin/
-├── core/                       # Core logic (Data collection & DoltHub)
-│   ├── __init__.py
-│   ├── dolthub_client.py       # DoltHub SQL API wrapper
-│   ├── espn_client.py          # ESPN API client
-│   ├── models.py               # Pydantic models for data validation
-│   └── logic.py                # Business logic for sync and queries
-├── templates/                  # Blueprint-specific templates
-│   └── sports_schedule_admin/
-│       ├── index.html          # Admin dashboard
-│       ├── search.html         # Interactive search
-│       └── nl_query.html       # Natural language interface
-├── static/                     # Blueprint-specific assets
-│   ├── css/
-│   │   └── sports_admin.css
-│   └── js/
-│       └── sports_admin.js
-├── routes.py                   # Blueprint routes (Admin only)
-├── commands.py                 # Flask CLI commands for Heroku Scheduler
-└── README.md
-```
+**Note:** This project handles *data acquisition and storage*. User-facing features (browsing, searching, NL query) will be built in a separate, public-facing project.
 
 ---
 
-## Data Model (DoltHub)
+## 1. Data Population Strategy (Immediate Goals)
 
-The schema exists in DoltHub. The Python app interacts with it via SQL queries.
+We need to populate the following upcoming/active schedules into DoltHub:
 
-### Core Schema (Existing DoltHub)
-
-The system will use your existing table schema:
-
-```sql
-CREATE TABLE games (
-    primary_key VARCHAR(16383) NOT NULL PRIMARY KEY,
-    sport VARCHAR(16383),
-    level VARCHAR(16383),
-    league VARCHAR(16383),
-    date DATE,
-    day VARCHAR(16383),
-    time VARCHAR(16383),
-    home_team VARCHAR(16383),
-    road_team VARCHAR(16383),
-    location VARCHAR(16383),
-    home_city VARCHAR(16383),
-    home_state VARCHAR(16383)
-);
-```
-
-**Primary Key Strategy:** Since the `primary_key` is a required string, we will generate it by concatenating `league`, `date`, `home_team`, and `road_team` (slugified) to ensure uniqueness and prevent duplicates during sync.
+| League | Season | Strategy |
+| :--- | :--- | :--- |
+| **MLB** | 2026 | Deep sync (March - October 2026) via ESPN API |
+| **MLS** | 2026 | Deep sync (February - December 2026) via ESPN API |
+| **Premier League** | 2025-26 | Remainder of season (Now - May 2026) via ESPN API |
+| **NBA / NHL** | 2025-26 | Maintenance sync (Ongoing updates/status changes) |
 
 ---
 
-## Implementation Plan
+## 2. Architecture & Responsibilities
 
-### Phase 1: DoltHub & ESPN Integration (Week 1)
+### In Scope for THIS Project (Admin)
+- **DoltHub Write-Layer**: SQL API client for pushing data to `combined-schedule`.
+- **ESPN Data Scrapers**: Specialized logic for mapping ESPN JSON to your schema.
+- **Sync Engine**: Logic to handle `INSERT INTO ... ON DUPLICATE KEY UPDATE` to avoid duplicates.
+- **Flask CLI Commands**: Automated triggers for daily and deep syncs.
+- **Admin UI**: Web interface to manually trigger syncs for specific leagues/dates and monitor progress.
 
-**Goal:** Establish connectivity to DoltHub and fetch major league schedules.
-
-#### Step 1.1: DoltHub Client Setup
-Create `app/projects/sports_schedule_admin/core/dolthub_client.py`:
-- Implement authentication using `DOLTHUB_API_TOKEN`.
-- Create methods for executing SQL queries via POST to `https://www.dolthub.com/api/v1alpha1/{owner}/{repo}/{branch}`.
-- Handle rate limiting and error response parsing.
-
-#### Step 1.2: ESPN API Client
-Create `app/projects/sports_schedule_admin/core/espn_client.py`:
-- Fetch data from `site.api.espn.com`.
-- Implement `parse_event` to map ESPN JSON to Pydantic models.
-- Support major leagues: MLB, NBA, NFL, NHL, MLS.
-
-#### Step 1.3: Data Synchronization Logic
-Create `app/projects/sports_schedule_admin/core/logic.py`:
-- Function `sync_league(league_code, days_ahead)`:
-    1. Fetch from ESPN.
-    2. Convert to SQL `INSERT ... ON DUPLICATE KEY UPDATE` statements.
-    3. Push to DoltHub.
-    4. Log the result in DoltHub's `data_collection_log`.
-
-#### Step 1.4: Flask CLI Commands
-Create `app/projects/sports_schedule_admin/commands.py`:
-- `@app.cli.command("sports-sync-daily")`: Runs sync for all major leagues (7 days ahead).
-- `@app.cli.command("sports-sync-deep")`: Runs deep sync (30 days ahead) for specific leagues.
-- Register in `app/__init__.py`.
+### OUT of Scope (User-Facing Project)
+- **Public Search Interface**: Browsing games by team, date, or city.
+- **Natural Language Query**: The AI interface for asking "When do the Red Sox play?"
+- **API Endpoints**: JSON endpoints for mobile/frontend consumption.
 
 ---
 
-### Phase 2: Admin Interface (Week 2)
+## 3. Implementation Plan (Admin Project)
 
-**Goal:** Build the UI for managing and viewing schedules.
+### Phase 1: Core Connectivity & CLI (Week 1)
+**Goal:** Establish the bridge between ESPN and DoltHub.
 
-#### Step 2.1: Admin Dashboard
-Update `app/projects/sports_schedule_admin/templates/sports_schedule_admin/index.html`:
-- Show sync status summary (from `data_collection_log`).
-- Buttons to manually trigger sync (via AJAX to internal API).
-- Links to search and query interfaces.
+1.  **DoltHub Client (`core/dolthub_client.py`)**:
+    *   Uses `DOLTHUB_API_TOKEN`, `OWNER`, `REPO`, `BRANCH`.
+    *   Executes raw SQL POST requests to DoltHub SQL API.
+2.  **ESPN Client (`core/espn_client.py`)**:
+    *   Maps ESPN events to your schema: `primary_key`, `road_team`, `home_city`, etc.
+    *   **Primary Key Strategy**: Clean, slugified format: `{league}_{date}_{home_slug}_vs_{road_slug}` (e.g., `nba_2026-02-15_lakers_vs_warriors`).
+3.  **Sync Logic (`core/logic.py`)**:
+    *   `sync_league_range(league, start_date, end_date)`: The engine for both daily and deep syncs.
 
-#### Step 2.2: Schedule Search
-Create `search.html`:
-- Interactive filters (League, Team, Date, Location).
-- Results grid showing data fetched from DoltHub.
+### Phase 2: Historical & Deep Population (Week 2)
+**Goal:** Populate the missing 2026 schedules via CLI.
 
-#### Step 2.3: Blueprint Routes
-Update `app/projects/sports_schedule_admin/routes.py`:
-- Ensure all routes are protected by `@admin_required`.
-- Implement data fetching routes that proxy to DoltHub.
+1.  **CLI Command: `deep-sync`**:
+    *   Usage: `flask sports-admin deep-sync --league MLB --start 2026-03-01 --end 2026-10-31`.
+    *   Task: Run this for MLB 2026, MLS 2026, and the remainder of the Premier League.
+2.  **Validation**:
+    *   Compare DoltHub counts against official league calendars to ensure coverage.
 
----
+### Phase 3: Admin UI & Manual Sync (Week 3)
+**Goal:** Provide a web interface for administrators to trigger and monitor syncs.
 
-### Phase 3: Natural Language Query (Week 3)
-
-**Goal:** Use AI to query DoltHub in plain English.
-
-#### Step 3.1: Text-to-SQL for DoltHub
-- Use the existing `anthropic` client (already in `requirements.txt`).
-- Prompt Engineering: Provide DoltHub schema and rules for PostgreSQL/MySQL syntax compatibility.
-- Execute the generated SQL directly on DoltHub.
-
-#### Step 3.2: Query UI
-Create `nl_query.html`:
-- Simple text area for questions.
-- Result table with "Show SQL" toggle for transparency.
-
----
+1.  **Manual Sync Interface**:
+    *   A form on the Admin Dashboard with:
+        *   **League Selection**: Dropdown (MLB, NBA, NFL, NHL, MLS, EPL).
+        *   **Date Range**: Start and End date pickers.
+        *   **Sync Button**: Triggers the sync process.
+2.  **Sync Progress & Feedback**:
+    *   Visual feedback showing sync status and number of games processed.
+3.  **Sync Health Dashboard**:
+    *   Summary of recent sync logs (Status, Games Found, Duration, Errors).
+    *   "Coverage at a Glance": Total game counts per league for the current/upcoming season.
 
 ### Phase 4: Automation & Deployment (Week 4)
+**Goal:** Configure Heroku Scheduler and finalize.
 
-**Goal:** Configure Heroku Scheduler and monitor.
-
-#### Step 4.1: Heroku Scheduler Integration
-- Add `flask sports-sync-daily` to Heroku Scheduler (daily at 6 AM).
-- Add `flask sports-sync-hourly` (optional) for game status updates.
-
-#### Step 4.2: Monitoring & Logging
-- Ensure collection logs are visible in the Admin Dashboard.
-- Set up email alerts for sync failures (using the app's existing `email_service`).
+1.  **CLI Command: `daily-sync`**:
+    *   Syncs all enabled leagues for the next 7 days.
+    *   To be added to **Heroku Scheduler**.
+2.  **Maintenance**:
+    *   Ensure error logging and notifications are working for scheduled jobs.
 
 ---
 
-## Configuration
+## 4. Configuration (DoltHub)
 
-### Environment Variables (.env)
-```bash
-DOLTHUB_API_TOKEN=your_token_here
-DOLTHUB_OWNER=your_username
-DOLTHUB_REPO=your_repo_name
-DOLTHUB_BRANCH=main
-ANTHROPIC_API_KEY=your_key_here
-```
-
-### Dependencies (Main requirements.txt already has most)
-- `requests` (for DoltHub/ESPN APIs)
-- `pydantic` (for data validation)
-- `anthropic` (for NL query)
+**Table Name**: `` `combined-schedule` ``
+**Schema**: Matches your existing columns (`primary_key`, `road_team`, etc.).
+**Env Vars**:
+*   `DOLTHUB_API_TOKEN`
+*   `DOLTHUB_OWNER`
+*   `DOLTHUB_REPO`
+*   `DOLTHUB_BRANCH`
 
 ---
 
-## Success Metrics
-1. ✅ **Zero-maintenance updates**: Heroku Scheduler keeps DoltHub current.
-2. ✅ **Historical Integrity**: All changes are versioned in DoltHub.
-3. ✅ **Admin Control**: Clear visibility into sync health within the hub.
-4. ✅ **Flexible Access**: Search by team/city or ask natural language questions.
+## 5. Next Steps
 
----
-
-## Questions & Clarifications Needed
-
-1. **DoltHub Repo**: Should I create a new repository or use an existing one? If existing, please provide the name.
-2. **Rate Limits**: DoltHub API has limits. For high-volume NCAA data, we might need to batch or stagger requests.
-3. **Historical Data**: Do we need to migrate the existing DoltHub data to a new schema, or should I adapt the code to your existing schema?
+1.  **Initialize core modules**: Create the directory structure and empty `__init__.py` files.
+2.  **Build DoltHub Client**: Implement the SQL API wrapper.
+3.  **Build ESPN Client**: Implement parsing and PK generation logic.
+4.  **Test one league**: Perform a test sync for a single date to verify the end-to-end flow.
