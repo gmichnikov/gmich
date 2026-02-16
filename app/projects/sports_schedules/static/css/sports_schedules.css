@@ -1,0 +1,7 @@
+/* Sports Schedules - Public viewer. Prefix: ss- to avoid collisions */
+
+.ss-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}

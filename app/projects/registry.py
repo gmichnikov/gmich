@@ -324,6 +324,17 @@ PROJECTS = [
         "icon": "📅",
         "order": 13,
     },
+    {
+        "id": "sports_schedules",
+        "name": "Sports Schedules",
+        "description": "View sports schedules by league, date, and team",
+        "url": "/sports-schedules",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🏟️",
+        "order": 14,
+    },
 ]
 
 
