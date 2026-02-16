@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime, timedelta
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.projects.sports_schedule_admin.core.dolthub_client import DoltHubClient
@@ -34,6 +35,9 @@ def sync_league_range(league_code, start_date, end_date):
                 logger.error(f"Failed to upsert games for {date_str}: {result.get('error')}")
         
         current_date += timedelta(days=1)
+        # Polite delay to avoid rate limits
+        # Note: DoltHub write operations also add natural delay due to polling
+        time.sleep(1.0) 
     
     return {
         "league": league_code,

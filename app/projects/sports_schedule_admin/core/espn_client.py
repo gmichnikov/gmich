@@ -1,6 +1,7 @@
 import requests
 import logging
 import re
+import pytz
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -10,6 +11,9 @@ class ESPNClient:
     Client for fetching sports data from ESPN's unofficial API.
     """
     BASE_URL = "https://site.api.espn.com/apis/site/v2/sports"
+
+    # Eastern Timezone for normalization
+    ET_TZ = pytz.timezone("America/New_York")
 
     LEAGUE_MAP = {
         "MLB": ("baseball", "mlb", "pro"),
@@ -64,12 +68,16 @@ class ESPNClient:
                 # Date and Time
                 # ESPN returns ISO 8601 UTC: 2026-02-12T03:00Z
                 dt_str = event["date"]
-                dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%MZ")
+                # Parse as UTC
+                utc_dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%MZ").replace(tzinfo=pytz.UTC)
                 
-                game_date = dt.strftime("%Y-%m-%d")
-                game_day = dt.strftime("%A")
+                # Convert to Eastern Time
+                et_dt = utc_dt.astimezone(self.ET_TZ)
+                
+                game_date = et_dt.strftime("%Y-%m-%d")
+                game_day = et_dt.strftime("%A")
                 # Format time as "7:30 PM" or similar
-                game_time = dt.strftime("%I:%M %p")
+                game_time = et_dt.strftime("%I:%M %p")
 
                 # Venue / Location
                 venue = competition.get("venue", {})
