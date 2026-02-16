@@ -26,7 +26,7 @@ def init_app(app):
             if end:
                 end_dt = datetime.strptime(end, "%Y-%m-%d")
             elif days:
-                end_dt = start_dt + timedelta(days=days)
+                end_dt = start_dt + timedelta(days=days - 1)  # inclusive: 7 days = start through start+6
             else:
                 end_dt = start_dt
 
@@ -62,23 +62,35 @@ def init_app(app):
     @sports_admin.command("clear-league")
     @click.option("--league", required=True, help="League code to clear")
     @click.option("--start", help="Only clear games on or after this date (YYYY-MM-DD)")
-    def clear_league(league, start):
+    @click.option("--end", help="Only clear games on or before this date (YYYY-MM-DD)")
+    @click.option("--days", type=int, help="Number of days from start date (use with --start)")
+    def clear_league(league, start, end, days):
         """Delete games for a specific league from DoltHub"""
         from app.projects.sports_schedule_admin.core.logic import clear_league_data
-        
+
         start_dt = None
+        end_dt = None
         if start:
             try:
                 start_dt = datetime.strptime(start, "%Y-%m-%d")
             except ValueError:
                 click.echo("Error: Invalid date format. Use YYYY-MM-DD.", err=True)
                 return
+        if end:
+            try:
+                end_dt = datetime.strptime(end, "%Y-%m-%d")
+            except ValueError:
+                click.echo("Error: Invalid date format. Use YYYY-MM-DD.", err=True)
+                return
+        elif days and start_dt:
+            end_dt = start_dt + timedelta(days=days - 1)
 
-        click.confirm(f"This will delete {league} games from DoltHub. Continue?", abort=True)
-        
+        range_desc = "all data" if not start_dt else f"from {start_dt.date()}" + (f" to {end_dt.date()}" if end_dt else " onward")
+        click.confirm(f"This will delete {league} {range_desc} from DoltHub. Continue?", abort=True)
+
         click.echo(f"Clearing {league} data...")
-        result = clear_league_data(league, start_dt)
-        
+        result = clear_league_data(league, start_dt, end_dt)
+
         if result and "error" not in result:
             click.echo("Data cleared successfully.")
         else:

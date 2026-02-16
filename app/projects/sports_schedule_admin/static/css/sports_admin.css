@@ -346,6 +346,23 @@
   gap: 0.35rem;
 }
 
+.ssa-form-group--flex {
+  flex: 1;
+}
+
+.ssa-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ssa-form-or {
+  color: #6c757d;
+  font-size: 0.9rem;
+  padding-bottom: 0.5rem;
+}
+
 .ssa-label {
   font-size: 0.9rem;
   font-weight: 600;

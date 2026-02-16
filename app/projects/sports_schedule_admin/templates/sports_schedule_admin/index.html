@@ -58,7 +58,7 @@
         <div class="ssa-grid">
             <div class="ssa-grid-card">
                 <h3 class="ssa-grid-card-title">Manual Sync</h3>
-                <p class="ssa-grid-card-desc">Fetch schedule data from ESPN and upsert to DoltHub. Max 30 days per run.</p>
+                <p class="ssa-grid-card-desc">Fetch schedule data from ESPN and upsert to DoltHub. Use end date or days to define the range.</p>
                 <form id="ssa-sync-form" class="ssa-form">
                     <div class="ssa-form-group">
                         <label for="ssa-sync-league" class="ssa-label">League</label>
@@ -72,9 +72,16 @@
                         <label for="ssa-sync-start" class="ssa-label">Start Date</label>
                         <input type="date" id="ssa-sync-start" name="start_date" class="ssa-input" required>
                     </div>
-                    <div class="ssa-form-group">
-                        <label for="ssa-sync-days" class="ssa-label">Number of Days</label>
-                        <input type="number" id="ssa-sync-days" name="days" class="ssa-input" min="1" max="30" value="7">
+                    <div class="ssa-form-row">
+                        <div class="ssa-form-group ssa-form-group--flex">
+                            <label for="ssa-sync-end" class="ssa-label">End Date (optional)</label>
+                            <input type="date" id="ssa-sync-end" name="end_date" class="ssa-input">
+                        </div>
+                        <span class="ssa-form-or">or</span>
+                        <div class="ssa-form-group ssa-form-group--flex">
+                            <label for="ssa-sync-days" class="ssa-label">Days</label>
+                            <input type="number" id="ssa-sync-days" name="days" class="ssa-input" min="1" value="7" placeholder="From start">
+                        </div>
                     </div>
                     <div class="ssa-form-group">
                         <code id="ssa-sync-preview" class="ssa-code ssa-code--preview">flask sports-admin sync --league NBA --start 2026-02-19 --days 7</code>
@@ -84,7 +91,7 @@
             </div>
             <div class="ssa-grid-card ssa-grid-card--danger">
                 <h3 class="ssa-grid-card-title ssa-grid-card-title--danger">Clear League Data</h3>
-                <p class="ssa-grid-card-desc">Permanently delete data for a league. Optionally limit to dates on or after a start date.</p>
+                <p class="ssa-grid-card-desc">Permanently delete data for a league. Leave dates empty to clear all, or specify a range.</p>
                 <form id="ssa-clear-form" class="ssa-form">
                     <div class="ssa-form-group">
                         <label for="ssa-clear-league" class="ssa-label">League</label>
@@ -97,6 +104,20 @@
                     <div class="ssa-form-group">
                         <label for="ssa-clear-start" class="ssa-label">Start Date (optional)</label>
                         <input type="date" id="ssa-clear-start" name="start_date" class="ssa-input" placeholder="Leave empty for all dates">
+                    </div>
+                    <div class="ssa-form-row">
+                        <div class="ssa-form-group ssa-form-group--flex">
+                            <label for="ssa-clear-end" class="ssa-label">End Date (optional)</label>
+                            <input type="date" id="ssa-clear-end" name="end_date" class="ssa-input">
+                        </div>
+                        <span class="ssa-form-or">or</span>
+                        <div class="ssa-form-group ssa-form-group--flex">
+                            <label for="ssa-clear-days" class="ssa-label">Days</label>
+                            <input type="number" id="ssa-clear-days" name="days" class="ssa-input" min="1" placeholder="From start">
+                        </div>
+                    </div>
+                    <div class="ssa-form-group">
+                        <code id="ssa-clear-preview" class="ssa-code ssa-code--preview">flask sports-admin clear-league --league NBA</code>
                     </div>
                     <div class="ssa-form-group">
                         <label for="ssa-clear-confirm" class="ssa-label">Type league code to confirm</label>
@@ -204,18 +225,25 @@
         const preview = document.getElementById('ssa-sync-preview');
         const leagueEl = document.getElementById('ssa-sync-league');
         const startEl = document.getElementById('ssa-sync-start');
+        const endEl = document.getElementById('ssa-sync-end');
         const daysEl = document.getElementById('ssa-sync-days');
         const btn = document.getElementById('ssa-sync-btn');
 
         function updatePreview() {
             const league = leagueEl.value;
             const start = startEl.value || 'YYYY-MM-DD';
-            const days = parseInt(daysEl.value, 10) || 7;
-            preview.textContent = 'flask sports-admin sync --league ' + league + ' --start ' + start + ' --days ' + days;
+            const end = endEl.value;
+            const days = parseInt(daysEl.value, 10);
+            let cmd = 'flask sports-admin sync --league ' + league + ' --start ' + start;
+            if (end) cmd += ' --end ' + end;
+            else if (days && !isNaN(days) && days >= 1) cmd += ' --days ' + days;
+            else cmd += ' --days 7';
+            preview.textContent = cmd;
         }
 
         leagueEl.addEventListener('change', updatePreview);
         startEl.addEventListener('change', updatePreview);
+        endEl.addEventListener('change', updatePreview);
         daysEl.addEventListener('input', updatePreview);
         updatePreview();
 
@@ -230,17 +258,20 @@
             btn.disabled = true;
             showOpMessage('', false);
             try {
+                const body = { league: leagueEl.value, start_date: startEl.value };
+                const endVal = endEl.value;
+                const daysNum = parseInt(daysEl.value, 10);
+                if (endVal) body.end_date = endVal;
+                else if (daysNum && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
+                else body.days = 7;
+
                 const res = await fetch("{{ url_for('sports_schedule_admin.api_sync') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCsrfToken()
                     },
-                    body: JSON.stringify({
-                        league: leagueEl.value,
-                        start_date: startEl.value,
-                        days: parseInt(daysEl.value, 10) || 7
-                    })
+                    body: JSON.stringify(body)
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -260,16 +291,40 @@
 
     function initClearForm() {
         const form = document.getElementById('ssa-clear-form');
+        const preview = document.getElementById('ssa-clear-preview');
         const leagueEl = document.getElementById('ssa-clear-league');
+        const startEl = document.getElementById('ssa-clear-start');
+        const endEl = document.getElementById('ssa-clear-end');
+        const daysEl = document.getElementById('ssa-clear-days');
         const confirmEl = document.getElementById('ssa-clear-confirm');
         const btn = document.getElementById('ssa-clear-btn');
+
+        function updatePreview() {
+            const league = leagueEl.value;
+            const start = startEl.value;
+            const end = endEl.value;
+            const days = parseInt(daysEl.value, 10);
+            let cmd = 'flask sports-admin clear-league --league ' + league;
+            if (start) {
+                cmd += ' --start ' + start;
+                if (end) cmd += ' --end ' + end;
+                else if (days && !isNaN(days) && days >= 1) cmd += ' --days ' + days;
+            }
+            preview.textContent = cmd;
+        }
 
         function checkConfirm() {
             btn.disabled = confirmEl.value.trim().toUpperCase() !== leagueEl.value;
         }
 
-        leagueEl.addEventListener('change', checkConfirm);
+        leagueEl.addEventListener('change', function() { updatePreview(); checkConfirm(); });
+        startEl.addEventListener('change', updatePreview);
+        endEl.addEventListener('input', updatePreview);
+        endEl.addEventListener('change', updatePreview);
+        daysEl.addEventListener('input', updatePreview);
         confirmEl.addEventListener('input', checkConfirm);
+
+        updatePreview();
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -278,7 +333,12 @@
             try {
                 const body = { league: leagueEl.value, confirm: confirmEl.value.trim() };
                 const startVal = document.getElementById('ssa-clear-start').value;
+                const endVal = document.getElementById('ssa-clear-end').value;
+                const daysVal = document.getElementById('ssa-clear-days').value;
                 if (startVal) body.start_date = startVal;
+                if (endVal) body.end_date = endVal;
+                const daysNum = parseInt(daysVal, 10);
+                if (daysVal && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
 
                 const res = await fetch("{{ url_for('sports_schedule_admin.api_clear_league') }}", {
                     method: 'POST',

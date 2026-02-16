@@ -105,11 +105,12 @@ def get_preview():
 @login_required
 @admin_required
 def api_sync():
-    """Trigger a manual sync from ESPN to DoltHub."""
+    """Trigger a manual sync from ESPN to DoltHub. Use end_date or days to define the range."""
     data = request.get_json() or {}
     league = data.get("league")
     start_str = data.get("start_date")
-    days = data.get("days", 7)
+    end_str = data.get("end_date")
+    days = data.get("days")
 
     if not league or league not in ESPNClient.LEAGUE_MAP:
         return jsonify({"success": False, "error": "Invalid or missing league"}), 400
@@ -119,11 +120,25 @@ def api_sync():
     except (TypeError, ValueError):
         return jsonify({"success": False, "error": "Invalid start_date (use YYYY-MM-DD)"}), 400
 
-    days = int(days)
-    if days < 1 or days > 30:
-        return jsonify({"success": False, "error": "Days must be between 1 and 30"}), 400
+    end_date = None
+    if end_str:
+        try:
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return jsonify({"success": False, "error": "Invalid end_date (use YYYY-MM-DD)"}), 400
+    elif days is not None:
+        try:
+            days = int(days)
+        except (TypeError, ValueError):
+            days = 0
+        if days < 1:
+            return jsonify({"success": False, "error": "Days must be at least 1"}), 400
+        end_date = start_date + timedelta(days=days - 1)
+    else:
+        end_date = start_date
 
-    end_date = start_date + timedelta(days=days - 1)
+    if end_date < start_date:
+        return jsonify({"success": False, "error": "End date must be on or after start date"}), 400
     actor_id = current_user.id if current_user else None
 
     try:
@@ -142,11 +157,13 @@ def api_sync():
 @login_required
 @admin_required
 def api_clear_league():
-    """Clear data for a league (with optional start date)."""
+    """Clear data for a league (optional start date, optional end date or days)."""
     data = request.get_json() or {}
     league = data.get("league")
     confirm = data.get("confirm")
     start_str = data.get("start_date")
+    end_str = data.get("end_date")
+    days = data.get("days")
 
     if not league or league not in ESPNClient.LEAGUE_MAP:
         return jsonify({"success": False, "error": "Invalid or missing league"}), 400
@@ -155,16 +172,33 @@ def api_clear_league():
         return jsonify({"success": False, "error": "Type the league code to confirm"}), 400
 
     start_date = None
+    end_date = None
     if start_str:
         try:
             start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
         except (TypeError, ValueError):
             return jsonify({"success": False, "error": "Invalid start_date (use YYYY-MM-DD)"}), 400
+    if end_str:
+        try:
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return jsonify({"success": False, "error": "Invalid end_date (use YYYY-MM-DD)"}), 400
+    elif days is not None and start_date:
+        try:
+            days = int(days)
+        except (TypeError, ValueError):
+            days = 0
+        if days < 1:
+            return jsonify({"success": False, "error": "Days must be at least 1"}), 400
+        end_date = start_date + timedelta(days=days - 1)
+
+    if start_date and end_date and end_date < start_date:
+        return jsonify({"success": False, "error": "End date must be on or after start date"}), 400
 
     actor_id = current_user.id if current_user else None
 
     try:
-        result = clear_league_data(league, start_date=start_date, actor_id=actor_id)
+        result = clear_league_data(league, start_date=start_date, end_date=end_date, actor_id=actor_id)
         if result and "error" in result:
             return jsonify({"success": False, "error": result["error"]}), 500
         return jsonify({"success": True, "message": f"Cleared {league} data."})

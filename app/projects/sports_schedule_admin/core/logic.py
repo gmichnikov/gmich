@@ -60,23 +60,33 @@ def sync_league_range(league_code, start_date, end_date, actor_id=None):
         "upserted": total_upserted
     }
 
-def clear_league_data(league_code, start_date=None, actor_id=None):
+def clear_league_data(league_code, start_date=None, end_date=None, actor_id=None):
     """
     Delete games for a specific league from DoltHub.
+    - No dates: delete all
+    - Start only: delete from start onward
+    - Start + end: delete that date range (inclusive)
     """
     dolt = DoltHubClient()
     sql = f"DELETE FROM `combined-schedule` WHERE `league` = '{league_code}'"
-    
+
     if start_date:
         date_str = start_date.strftime("%Y-%m-%d")
         sql += f" AND `date` >= '{date_str}'"
-        
+    if end_date:
+        date_str = end_date.strftime("%Y-%m-%d")
+        sql += f" AND `date` <= '{date_str}'"
+
     result = dolt.execute_sql(sql)
-    
+
     if result and "error" not in result:
-        # Log the activity
         try:
-            date_info = f" from {start_date.strftime('%Y-%m-%d')}" if start_date else ""
+            if start_date and end_date:
+                date_info = f" from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+            elif start_date:
+                date_info = f" from {start_date.strftime('%Y-%m-%d')}"
+            else:
+                date_info = ""
             log_entry = LogEntry(
                 project="sports_admin",
                 category="Clear Data",
@@ -87,5 +97,5 @@ def clear_league_data(league_code, start_date=None, actor_id=None):
             db.session.commit()
         except Exception as e:
             logger.error(f"Failed to log clear activity: {e}")
-            
+
     return result
