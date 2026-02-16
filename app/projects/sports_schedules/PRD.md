@@ -54,7 +54,7 @@ Users select which columns appear in the result table.
 
 ### 2. Filter Picker
 
-Users apply filters to narrow results. **All filtering is optional**—dimension filters, date filter, and contains searches can all be left empty. Filters combine with AND logic.
+Users apply filters to narrow results. **All filtering is optional**—dimension filters, date filter, and contains searches can all be left empty. Filters combine with AND logic. **UI hint:** Include a brief note in the Filters section (e.g. "All filters combined with AND") so this is obvious to users.
 
 #### Low-Cardinality Filters (Multiselect Dropdowns)
 
@@ -136,11 +136,13 @@ Relative options use "today" as the anchor.
 
 - **BI-style sidebar:** Left sidebar with dimension picker, filters, date filter, count toggle, row limit, sort options.
 - **Collapsible sections:** Sidebar sections (Dimensions, Filters, Date, Options) can be collapsed to save space.
-- **Main area:** Results table.
+- **Main area:** Results table. Display-only; no row-level interactions (no sort-by-column-click, row selection, or expand). Sort is controlled via the sidebar Options.
 - **First load:** No dimensions selected, no defaults. Show basic empty-state message (e.g., "Select dimensions and click Run to view schedules").
 - **Run trigger:** Explicit "Run" button only (no auto-run).
 - **Loading state:** Spinner or skeleton while query runs.
 - **Mobile:** Usable on mobile; layout details to be refined once the UI exists.
+- **Show SQL:** Small, low-profile control (e.g. "Show SQL" link) that expands to reveal the generated SQL in a monospace block. Hidden by default; visually secondary (muted text, small). The SQL is included in the API response so the frontend can display it on demand.
+- **Results summary:** Show row count below or above the table (e.g. "Showing 127 rows" or "500 rows (limit reached)"). Subtle row numbers (1, 2, 3…) on each row are optional but helpful for scanning.
 
 ### Column Display Labels
 
@@ -157,6 +159,8 @@ Relative options use "today" as the anchor.
 | location   | Location      |
 | home_city  | City          |
 | home_state | State         |
+
+**Date format:** Always display dates as `YYYY-MM-DD` (e.g., 2026-02-19) in the results table and in date filter inputs.
 
 ---
 
@@ -175,6 +179,7 @@ Relative options use "today" as the anchor.
   - `WHERE` clause from filters (AND logic).
   - `GROUP BY` from dimensions when count is used with grouping.
   - `COUNT(*)` when count metric is on.
+- Include the generated SQL in the API response (e.g. alongside `rows`) so the frontend can display it in the optional "Show SQL" panel.
 
 ### Performance
 
@@ -206,7 +211,7 @@ Relative options use "today" as the anchor.
 
 - **Dimensions:** Column names come from a fixed allowlist only; never from user input.
 - **Multiselect filters:** Values come from static option lists.
-- **Contains filters:** User-entered strings must be escaped/parameterized appropriately for the SQL dialect (e.g., single-quote escaping for LIKE patterns).
+- **Contains filters (Home Team, Road Team, Location, City):** User-entered text must be sanitized to prevent SQL injection. Use parameterized queries or proper escaping (e.g., single-quote doubling for string literals, escape `%` and `_` if used in LIKE) before including in the SQL. Never concatenate raw user input into the query string.
 
 ---
 
