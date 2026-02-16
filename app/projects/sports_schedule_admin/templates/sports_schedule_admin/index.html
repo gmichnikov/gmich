@@ -220,6 +220,12 @@
         el.className = 'ssa-op-message ssa-op-message--' + (isError ? 'error' : 'success');
     }
 
+    function showOpMessageLoading(text) {
+        const el = document.getElementById('ssa-op-message');
+        el.innerHTML = '<span class="ssa-op-spinner" aria-hidden="true"></span><span>' + text + '</span>';
+        el.className = 'ssa-op-message ssa-op-message--loading';
+    }
+
     function initSyncForm() {
         const form = document.getElementById('ssa-sync-form');
         const preview = document.getElementById('ssa-sync-preview');
@@ -256,7 +262,7 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             btn.disabled = true;
-            showOpMessage('', false);
+            showOpMessageLoading('Syncing...');
             try {
                 const body = { league: leagueEl.value, start_date: startEl.value };
                 const endVal = endEl.value;
@@ -329,7 +335,7 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             btn.disabled = true;
-            showOpMessage('', false);
+            showOpMessageLoading('Clearing...');
             try {
                 const body = { league: leagueEl.value, confirm: confirmEl.value.trim() };
                 const startVal = document.getElementById('ssa-clear-start').value;

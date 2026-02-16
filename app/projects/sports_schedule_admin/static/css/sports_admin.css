@@ -441,6 +441,25 @@
   border: 1px solid #f5c6cb;
 }
 
+.ssa-op-message.ssa-op-message--loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.ssa-op-message--loading .ssa-op-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #c3e6cb;
+  border-top-color: #155724;
+  border-radius: 50%;
+  animation: ssa-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
 /* ===== Empty state ===== */
 .ssa-empty {
   text-align: center;
