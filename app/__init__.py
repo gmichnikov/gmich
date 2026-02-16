@@ -172,8 +172,12 @@ def create_app():
     from app.projects.betfake.commands import (
         init_app as init_betfake_commands,
     )
+    from app.projects.sports_schedule_admin.commands import (
+        init_app as init_sports_admin_commands,
+    )
 
     init_better_signups_commands(app)
     init_betfake_commands(app)
+    init_sports_admin_commands(app)
 
     return app
