@@ -1,6 +1,10 @@
 import click
 from datetime import datetime, timedelta
 from app.projects.sports_schedule_admin.core.logic import sync_league_range
+from app.projects.sports_schedule_admin.core.espn_client import (
+    STATE_NAME_TO_CODE,
+    US_STATE_CODES,
+)
 
 def init_app(app):
     """Register CLI commands with the Flask app"""
@@ -95,3 +99,57 @@ def init_app(app):
             click.echo("Data cleared successfully.")
         else:
             click.echo(f"Error: {result.get('error')}", err=True)
+
+    @sports_admin.command("normalize-states")
+    @click.option("--dry-run", is_flag=True, help="Show what would be updated without making changes")
+    def normalize_states(dry_run):
+        """Convert full state names to 2-letter codes in combined-schedule home_state column"""
+        from app.core.dolthub_client import DoltHubClient
+
+        dolt = DoltHubClient()
+        result = dolt.execute_sql(
+            "SELECT DISTINCT `home_state` FROM `combined-schedule` WHERE `home_state` IS NOT NULL AND `home_state` != ''"
+        )
+        if "error" in result:
+            click.echo(f"Error fetching states: {result['error']}", err=True)
+            return
+
+        rows = result.get("rows", [])
+        to_fix = []
+        for row in rows:
+            val = row.get("home_state", "")
+            if not val:
+                continue
+            val_str = str(val).strip()
+            if len(val_str) == 2 and val_str.upper() in US_STATE_CODES:
+                continue
+            key = val_str.lower()
+            if key in STATE_NAME_TO_CODE:
+                to_fix.append((val_str, STATE_NAME_TO_CODE[key]))
+
+        if not to_fix:
+            click.echo("All home_state values are already 2-letter codes. Nothing to fix.")
+            return
+
+        click.echo(f"Found {len(to_fix)} state(s) to normalize:")
+        for full_name, code in to_fix:
+            click.echo(f"  {full_name} -> {code}")
+
+        if dry_run:
+            click.echo("\nDry run - no changes made.")
+            return
+
+        click.confirm("Apply these updates to DoltHub?", abort=True)
+
+        updated = 0
+        for full_name, code in to_fix:
+            escaped = full_name.replace("'", "''")
+            sql = f"UPDATE `combined-schedule` SET `home_state` = '{code}' WHERE `home_state` = '{escaped}'"
+            r = dolt.execute_sql(sql)
+            if "error" in r:
+                click.echo(f"Error updating {full_name}: {r['error']}", err=True)
+            else:
+                updated += 1
+                click.echo(f"  Updated {full_name} -> {code}")
+
+        click.echo(f"\nNormalized {updated} state(s).")

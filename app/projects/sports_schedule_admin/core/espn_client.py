@@ -6,6 +6,24 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# US state full name -> 2-letter code (for normalizing ESPN venue addresses)
+STATE_NAME_TO_CODE = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR",
+    "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE",
+    "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID",
+    "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS",
+    "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD",
+    "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS",
+    "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV",
+    "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+    "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK",
+    "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC",
+    "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT",
+    "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV",
+    "wisconsin": "WI", "wyoming": "WY", "district of columbia": "DC", "washington, d.c.": "DC",
+}
+US_STATE_CODES = set(STATE_NAME_TO_CODE.values())
+
 class ESPNClient:
     """
     Client for fetching sports data from ESPN's unofficial API.
@@ -130,7 +148,7 @@ class ESPNClient:
                 location = venue.get("fullName", "")
                 address = venue.get("address", {})
                 home_city = address.get("city", "")
-                home_state = address.get("state", "")
+                home_state = self._normalize_state(address.get("state", ""))
 
                 # Primary Key Generation: {league}_{date}_{home_slug}_vs_{road_slug}
                 home_slug = self._slugify(home_team)
@@ -158,6 +176,21 @@ class ESPNClient:
                 continue
 
         return parsed_games
+
+    def _normalize_state(self, state_val):
+        """
+        Normalize state to 2-letter US code. ESPN may return "California" or "CA".
+        Returns 2-letter code for US states, or original value for international/unknown.
+        """
+        if not state_val or not isinstance(state_val, str):
+            return state_val or ""
+        s = state_val.strip()
+        if len(s) == 2 and s.upper() in US_STATE_CODES:
+            return s.upper()
+        key = s.lower()
+        if key in STATE_NAME_TO_CODE:
+            return STATE_NAME_TO_CODE[key]
+        return s
 
     def _slugify(self, text):
         """
