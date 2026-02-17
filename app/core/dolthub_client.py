@@ -1,10 +1,14 @@
+"""
+Shared DoltHub SQL API client for read and write operations.
+Used by sports_schedule_admin (sync, preview, coverage) and sports_schedules (query API).
+"""
 import os
 import requests
 import logging
 import time
-from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
+
 
 class DoltHubClient:
     """
@@ -55,7 +59,6 @@ class DoltHubClient:
 
     def _execute_write_query(self, sql_query):
         """Execute a write query using POST to the /write endpoint with polling."""
-        # Endpoint: /write/{from_branch}/{to_branch}?q={sql}
         url = f"{self.BASE_URL}/{self.owner}/{self.repo}/write/{self.branch}/{self.branch}"
         params = {"q": sql_query}
         headers = {
@@ -64,19 +67,17 @@ class DoltHubClient:
         }
 
         try:
-            # Step 1: Initiate the write
-            logger.info(f"Initiating write query on DoltHub...")
+            logger.info("Initiating write query on DoltHub...")
             response = requests.post(url, params=params, headers=headers, timeout=30)
             response.raise_for_status()
             data = response.json()
-            
+
             operation_name = data.get("operationName")
             if not operation_name:
                 return data
 
-            # Step 2: Poll for completion
             return self._poll_operation(operation_name)
-            
+
         except requests.exceptions.RequestException as e:
             logger.error(f"DoltHub Write API error: {e}")
             if hasattr(e, 'response') and e.response is not None:
@@ -88,32 +89,31 @@ class DoltHubClient:
         url = f"{self.BASE_URL}/{self.owner}/{self.repo}/write"
         params = {"operationName": operation_name}
         headers = {"authorization": f"{self.api_token}"}
-        
+
         max_retries = 30
         retry_count = 0
-        
+
         while retry_count < max_retries:
             try:
                 response = requests.get(url, params=params, headers=headers, timeout=20)
                 response.raise_for_status()
                 data = response.json()
-                
+
                 if data.get("done"):
                     logger.info("DoltHub write operation complete.")
                     return data
-                
+
                 logger.info(f"Waiting for DoltHub write operation '{operation_name}'...")
-                time.sleep(2)  # Wait 2 seconds before polling again
+                time.sleep(2)
                 retry_count += 1
-                
+
             except requests.exceptions.RequestException as e:
                 logger.error(f"DoltHub Polling error: {e}")
                 return {"error": str(e)}
-        
+
         return {"error": "Timeout waiting for DoltHub operation to complete"}
 
     # Max rows per INSERT to avoid 431 Request Header Fields Too Large
-    # (DoltHub passes SQL as URL query param; NCAAM can have 50+ games/day)
     BATCH_SIZE = 15
 
     def batch_upsert(self, table_name, rows):

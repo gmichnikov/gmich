@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request
 from flask_login import login_required, current_user
 from app.core.admin import admin_required
-from app.projects.sports_schedule_admin.core.dolthub_client import DoltHubClient
+from app.core.dolthub_client import DoltHubClient
 from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.models import LogEntry, db

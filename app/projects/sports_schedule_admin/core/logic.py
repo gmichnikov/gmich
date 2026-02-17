@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import datetime, timedelta
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
-from app.projects.sports_schedule_admin.core.dolthub_client import DoltHubClient
+from app.core.dolthub_client import DoltHubClient
 from app.models import LogEntry, db
 
 logger = logging.getLogger(__name__)

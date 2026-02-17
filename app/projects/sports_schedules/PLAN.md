@@ -74,6 +74,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] Define `DIMENSIONS` from constants (column, display_label)
   - [ ] Define `HIGH_CARDINALITY_FILTERS`: home_team, road_team, location, home_city (contains search — no fixed options)
   - [ ] **Low-cardinality validation:** When building WHERE, validate each filter value is in the corresponding allowlist from constants; reject unknown values (return error or ignore)
+  - [ ] **Run requirement validation:** Reject if no dimensions selected AND count is off — return error e.g. "Select at least one dimension or turn on count to run a query." (PRD: user must select at least one dimension, OR turn on count)
   - [ ] Create `build_sql(params)` function
     - [ ] Accept dict with: dimensions, filters (low + high), date_mode, date_exact, date_start, date_end, date_year, date_n, anchor_date (for relative modes), count, limit, sort_column, sort_dir
     - [ ] Build SELECT clause from dimensions (or `*` if none and no count)
@@ -88,6 +89,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] Use allowlist for dimensions; never accept raw user input for column names
 
 **Manual Testing 1.3:**
+- [ ] Unit test or manual call: `build_sql({"dimensions": [], "count": 0})` → validation error
 - [ ] Unit test or manual call: `build_sql({"dimensions": ["league", "date"], "limit": 10})` → valid SELECT
 - [ ] Test with count on, dimensions selected → GROUP BY present
 - [ ] Test with count on, no dimensions → single COUNT(*)
@@ -101,13 +103,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 - [ ] Add `GET /sports-schedules/api/query` route in `routes.py`
   - [ ] Parse query params per URL schema (5.1): dimensions, filters (sport, league, level, day, home_state, home_team, road_team, location, home_city), date_mode, date_exact, date_start, date_end, date_year, date_n, anchor_date, count, limit, sort_column, sort_dir
   - [ ] Call `build_sql()` with parsed params
-  - [ ] If validation error, return `{"error": message}` with 400
+  - [ ] If validation error (including no-dimensions-and-no-count), return `{"error": message}` with 400
   - [ ] Call DoltHub client `execute_sql(sql)`
   - [ ] If DoltHub error, return `{"error": "Unable to load data. Please try again."}` with 500
   - [ ] Return `{"rows": [...], "sql": sql_string}` (include SQL for "Show SQL" feature)
   - [ ] Handle empty results: return `{"rows": [], "sql": sql_string}` (no error)
 
 **Manual Testing 1.4:**
+- [ ] Call API with no dimensions and count=0 → 400 with validation error
 - [ ] Call API with `?dimensions=league,date&limit=5`
 - [ ] Verify rows returned
 - [ ] Verify `sql` in response
@@ -120,6 +123,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ### 2.1 Page Layout & Structure
 
+- [ ] **Page container (separate from homepage purple):** Update `ss-wrapper` to act as a contained UI panel so the site’s purple gradient doesn’t bleed through. Follow pattern from sports_schedule_admin (`ssa-wrapper`) or betfake (`bf-page-wrapper`): give `ss-wrapper` its own background (e.g., white or light neutral), padding, optionally border-radius and box-shadow. Content should read as a distinct panel/card, not floating on the homepage background.
 - [ ] Update `routes.py` index route to pass `LOW_CARDINALITY_OPTIONS` and `DIMENSION_LABELS` from constants to template
 - [ ] Update `templates/sports_schedules/index.html`
   - [ ] Replace placeholder with two-column layout: sidebar (left) + main area (right)
@@ -128,12 +132,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] Add "Run" button (prominent, in sidebar or above results)
   - [ ] Use `ss-` prefix for all classes (e.g., `ss-sidebar`, `ss-main`, `ss-run-btn`)
 - [ ] Add base styles in `static/css/sports_schedules.css`
+  - [ ] `ss-wrapper`: background, padding, max-width, margin; optional border-radius, box-shadow
   - [ ] Layout: flex or grid for sidebar + main
   - [ ] Sidebar width ~280px on desktop
   - [ ] Collapsible sections: Dimensions, Filters, Date, Options
 
 **Manual Testing 2.1:**
 - [ ] Page loads at `/sports-schedules/`
+- [ ] Page has its own background panel — purple gradient from homepage does not show through content area
 - [ ] Sidebar and main area visible
 - [ ] Run button visible
 - [ ] No layout shift or overflow on desktop
@@ -150,11 +156,13 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
   - [ ] No dimensions selected by default
 - [ ] Wire dimension state to a JS object or hidden inputs for form submit
 - [ ] Add "Select dimensions and click Run to view schedules" empty-state message when no dimensions and no count
+- [ ] **Run button validation:** When user clicks Run with no dimensions and count off, either disable the button or show inline validation message ("Select at least one dimension or turn on count") — prefer inline message so user understands the requirement
 
 **Manual Testing 2.2:**
 - [ ] Check/uncheck dimensions
 - [ ] Verify selection order is preserved
 - [ ] Empty state shows when nothing selected and count off
+- [ ] Click Run with no dimensions and count off → validation message shown (or API returns 400, show error)
 
 ---
 
