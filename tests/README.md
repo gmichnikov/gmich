@@ -8,7 +8,8 @@ Project tests are organized by app/project. Add a subfolder per project to keep 
 tests/
 ├── README.md           # this file
 ├── sports_schedules/   # tests for app/projects/sports_schedules
-│   └── test_query_builder.py
+│   ├── test_query_builder.py
+│   └── test_routes.py
 ├── betfake/            # future: tests for app/projects/betfake
 └── ...
 ```
