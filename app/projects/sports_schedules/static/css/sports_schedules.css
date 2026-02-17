@@ -293,6 +293,15 @@
   color: #495057;
 }
 
+.ss-results-table th.ss-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ss-results-table th.ss-sortable:hover {
+  background: #dee2e6;
+}
+
 .ss-row-num-header,
 .ss-row-num {
   font-size: 0.8rem;

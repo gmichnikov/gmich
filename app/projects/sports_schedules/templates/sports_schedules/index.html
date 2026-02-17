@@ -477,41 +477,13 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   }
   window.ssRunQuery = ssRunQuery;
 
-  function ssRenderResults(rows, sql, dimensionsStr, limit) {
+  window._ssSortState = { col: null, dir: 'asc' };
+
+  function ssRenderTableBody(rows, headers, labels) {
     const table = document.getElementById('ss-results-table');
-    const summaryEl = document.getElementById('ss-results-summary');
-
-    const headers = rows.length && rows[0] ? Object.keys(rows[0]) : [];
-
-    summaryEl.textContent = rows.length === parseInt(limit) && limit >= 500
-      ? rows.length + ' rows (limit reached)'
-      : 'Showing ' + rows.length + ' rows';
-
-    table.innerHTML = '';
-    if (headers.length === 0) {
-      window._ssLastExportData = { headerLabels: [], headers: [], rows: [] };
-      return;
-    }
-
-    const labels = window.ssDimensionLabels || {};
-    const thead = document.createElement('thead');
-    const tr = document.createElement('tr');
-    const thNum = document.createElement('th');
-    thNum.textContent = '#';
-    thNum.className = 'ss-row-num-header';
-    tr.appendChild(thNum);
-    headers.forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
-      tr.appendChild(th);
-    });
-    const thCal = document.createElement('th');
-    thCal.className = 'ss-cal-header';
-    tr.appendChild(thCal);
-    thead.appendChild(tr);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
     rows.forEach(function(row, idx) {
       const tr = document.createElement('tr');
       const tdNum = document.createElement('td');
@@ -542,7 +514,129 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       tr.appendChild(tdCal);
       tbody.appendChild(tr);
     });
+  }
+
+  function ssUpdateSortIndicators() {
+    var state = window._ssSortState;
+    var allTh = document.querySelectorAll('.ss-results-table thead th[data-sort-col]');
+    allTh.forEach(function(th) {
+      var col = th.getAttribute('data-sort-col');
+      var label = th.getAttribute('data-sort-label');
+      var isActive = state.col === col;
+      th.textContent = label + (isActive ? (state.dir === 'asc' ? ' \u2191' : ' \u2193') : '');
+    });
+  }
+
+  function ssParseTimeToMinutes(str) {
+    if (!str || str === '') return null;
+    str = String(str).trim();
+    var m = str.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var min = parseInt(m[2], 10) || 0;
+    if (m[3]) {
+      if (/pm/i.test(m[3]) && h < 12) h += 12;
+      if (/am/i.test(m[3]) && h === 12) h = 0;
+    }
+    return h * 60 + min;
+  }
+
+  function ssHandleSort(col) {
+    var state = window._ssSortState;
+    var data = window._ssLastSortData;
+    if (!data || !data.rows.length) return;
+    var newDir = state.col === col ? (state.dir === 'asc' ? 'desc' : 'asc') : 'asc';
+    state.col = col;
+    state.dir = newDir;
+    var sorted = data.rows.slice();
+    sorted.sort(function(a, b) {
+      var va, vb;
+      if (col === '__num__') {
+        va = data.rows.indexOf(a);
+        vb = data.rows.indexOf(b);
+        return newDir === 'asc' ? va - vb : vb - va;
+      }
+      va = a[col];
+      vb = b[col];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      var cmp;
+      var ma = ssParseTimeToMinutes(va);
+      var mb = ssParseTimeToMinutes(vb);
+      if (ma != null && mb != null) {
+        cmp = ma - mb;
+      } else if (col === '# Games' || col === '#Games') {
+        cmp = (Number(va) || 0) - (Number(vb) || 0);
+      } else if (col === 'date' || (String(va).match(/^\d{4}-\d{2}-\d{2}$/) && String(vb).match(/^\d{4}-\d{2}-\d{2}$/))) {
+        cmp = String(va).localeCompare(String(vb));
+      } else {
+        cmp = String(va).localeCompare(String(vb), undefined, { numeric: true });
+      }
+      return newDir === 'asc' ? cmp : -cmp;
+    });
+    ssRenderTableBody(sorted, data.headers, data.labels);
+    ssUpdateSortIndicators();
+    window._ssLastSortData = { rows: sorted, headers: data.headers, labels: data.labels };
+    window._ssLastExportData = {
+      headerLabels: data.headers.map(function(h) {
+        return (data.labels[h] || h).includes('Games') ? '# Games' : (data.labels[h] || h.replace(/_/g, ' '));
+      }),
+      headers: data.headers,
+      rows: sorted.map(function(row) {
+        return data.headers.map(function(h) { return row[h] != null ? String(row[h]) : ''; });
+      })
+    };
+  }
+
+  function ssRenderResults(rows, sql, dimensionsStr, limit) {
+    const table = document.getElementById('ss-results-table');
+    const summaryEl = document.getElementById('ss-results-summary');
+
+    const headers = rows.length && rows[0] ? Object.keys(rows[0]) : [];
+
+    summaryEl.textContent = rows.length === parseInt(limit) && limit >= 500
+      ? rows.length + ' rows (limit reached)'
+      : 'Showing ' + rows.length + ' rows';
+
+    table.innerHTML = '';
+    if (headers.length === 0) {
+      window._ssLastExportData = { headerLabels: [], headers: [], rows: [] };
+      return;
+    }
+
+    window._ssSortState = { col: null, dir: 'asc' };
+    const labels = window.ssDimensionLabels || {};
+
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const thNum = document.createElement('th');
+    thNum.textContent = '#';
+    thNum.className = 'ss-row-num-header ss-sortable';
+    thNum.setAttribute('data-sort-col', '__num__');
+    thNum.setAttribute('data-sort-label', '#');
+    thNum.addEventListener('click', function() { ssHandleSort('__num__'); });
+    tr.appendChild(thNum);
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      const label = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
+      th.textContent = label;
+      th.className = 'ss-sortable';
+      th.setAttribute('data-sort-col', h);
+      th.setAttribute('data-sort-label', label);
+      th.addEventListener('click', function() { ssHandleSort(h); });
+      tr.appendChild(th);
+    });
+    const thCal = document.createElement('th');
+    thCal.className = 'ss-cal-header';
+    tr.appendChild(thCal);
+    thead.appendChild(tr);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
     table.appendChild(tbody);
+    window._ssLastSortData = { rows: rows, headers: headers, labels: labels };
+    ssRenderTableBody(rows, headers, labels);
 
     window._ssLastSql = sql;
     window._ssLastExportData = {
