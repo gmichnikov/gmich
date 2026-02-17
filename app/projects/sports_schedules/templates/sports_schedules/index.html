@@ -12,129 +12,32 @@
 
   <div class="ss-layout">
     <aside class="ss-sidebar">
-      <!-- Dimensions -->
-      <div class="ss-section" data-section="dimensions">
-        <div class="ss-section-header" onclick="ssToggleSection('dimensions')">
-          <span>Dimensions</span>
+      <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
+      <!-- Fields: Dimension + Filter per field (Looker-style) -->
+      <div class="ss-section" data-section="fields">
+        <div class="ss-section-header" onclick="ssToggleSection('fields')">
+          <span>Fields</span>
           <span class="ss-section-toggle">▼</span>
         </div>
         <div class="ss-section-content">
-          <ul class="ss-dimensions-list">
-            {% for col, label in dimension_labels.items() %}
-            <li class="ss-dimension-item">
-              <input type="checkbox" id="ss-dim-{{ col }}" value="{{ col }}" class="ss-dimension-cb">
-              <label for="ss-dim-{{ col }}">{{ label }}</label>
+          <ul class="ss-fields-list">
+            <li class="ss-field-row ss-field-header">
+              <span class="ss-field-label">Field</span>
+              <span class="ss-field-check">Dim</span>
+              <span class="ss-field-check">Filter</span>
+            </li>
+            {% for col in field_order %}
+            <li class="ss-field-row" data-field="{{ col }}">
+              <span class="ss-field-label">{{ dimension_labels.get(col, col) }}</span>
+              <label class="ss-field-check">
+                <input type="checkbox" id="ss-dim-{{ col }}" value="{{ col }}" class="ss-dimension-cb">
+              </label>
+              <label class="ss-field-check">
+                <input type="checkbox" id="ss-filter-cb-{{ col }}" value="{{ col }}" class="ss-filter-cb">
+              </label>
             </li>
             {% endfor %}
           </ul>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="ss-section" data-section="filters">
-        <div class="ss-section-header" onclick="ssToggleSection('filters')">
-          <span>Filters</span>
-          <span class="ss-section-toggle">▼</span>
-        </div>
-        <div class="ss-section-content">
-          <p class="ss-filter-hint">All filters combined with AND</p>
-
-          {% for col, opts in low_cardinality_options.items() %}
-          <div class="ss-filter-group">
-            <label class="ss-filter-label" for="ss-filter-{{ col }}">{{ dimension_labels.get(col, col) }}</label>
-            <select multiple id="ss-filter-{{ col }}" class="ss-filter-multiselect" data-filter="{{ col }}">
-              {% for value, label in opts %}
-              <option value="{{ value }}">{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          {% endfor %}
-
-          <div class="ss-filter-group">
-            <label class="ss-filter-label" for="ss-filter-home_team">Home Team (contains)</label>
-            <input type="text" id="ss-filter-home_team" class="ss-filter-text" placeholder="e.g., Celtics" data-filter="home_team">
-          </div>
-          <div class="ss-filter-group">
-            <label class="ss-filter-label" for="ss-filter-road_team">Road Team (contains)</label>
-            <input type="text" id="ss-filter-road_team" class="ss-filter-text" placeholder="e.g., Lakers" data-filter="road_team">
-          </div>
-          <div class="ss-filter-group">
-            <label class="ss-filter-label" for="ss-filter-location">Location (contains)</label>
-            <input type="text" id="ss-filter-location" class="ss-filter-text" placeholder="Venue name" data-filter="location">
-          </div>
-          <div class="ss-filter-group">
-            <label class="ss-filter-label" for="ss-filter-home_city">City (contains)</label>
-            <input type="text" id="ss-filter-home_city" class="ss-filter-text" placeholder="e.g., Boston" data-filter="home_city">
-          </div>
-        </div>
-      </div>
-
-      <!-- Date -->
-      <div class="ss-section" data-section="date">
-        <div class="ss-section-header" onclick="ssToggleSection('date')">
-          <span>Date</span>
-          <span class="ss-section-toggle">▼</span>
-        </div>
-        <div class="ss-section-content">
-          <div class="ss-date-mode-group">
-            <label class="ss-date-mode-label">Mode</label>
-            <div class="ss-date-mode-options">
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="" checked class="ss-date-mode-radio">
-                <span>None</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="exact" class="ss-date-mode-radio">
-                <span>Exact date</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="range" class="ss-date-mode-radio">
-                <span>Date range</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="year" class="ss-date-mode-radio">
-                <span>Year only</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="last_week" class="ss-date-mode-radio">
-                <span>Last week (7 days)</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="last_month" class="ss-date-mode-radio">
-                <span>Last month (30 days)</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="last_n" class="ss-date-mode-radio">
-                <span>Last N days</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="next_week" class="ss-date-mode-radio">
-                <span>Next week (7 days)</span>
-              </label>
-              <label class="ss-radio-label">
-                <input type="radio" name="ss-date-mode" value="next_n" class="ss-date-mode-radio">
-                <span>Next N days</span>
-              </label>
-            </div>
-          </div>
-          <div id="ss-date-exact-group" class="ss-date-input-group" style="display: none;">
-            <label class="ss-filter-label" for="ss-date-exact">Date</label>
-            <input type="date" id="ss-date-exact" class="ss-filter-text">
-          </div>
-          <div id="ss-date-range-group" class="ss-date-input-group" style="display: none;">
-            <label class="ss-filter-label" for="ss-date-start">Start date</label>
-            <input type="date" id="ss-date-start" class="ss-filter-text">
-            <label class="ss-filter-label" for="ss-date-end" style="margin-top: 0.5rem;">End date</label>
-            <input type="date" id="ss-date-end" class="ss-filter-text">
-          </div>
-          <div id="ss-date-year-group" class="ss-date-input-group" style="display: none;">
-            <label class="ss-filter-label" for="ss-date-year">Year</label>
-            <input type="number" id="ss-date-year" class="ss-filter-text" placeholder="e.g., 2026" min="2000" max="2100">
-          </div>
-          <div id="ss-date-n-group" class="ss-date-input-group" style="display: none;">
-            <label class="ss-filter-label" for="ss-date-n">Number of days</label>
-            <input type="number" id="ss-date-n" class="ss-filter-text" placeholder="e.g., 14" min="1" max="365">
-          </div>
         </div>
       </div>
 
@@ -172,10 +75,55 @@
       </div>
 
       <input type="hidden" id="ss-anchor-date">
-      <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
     </aside>
 
     <main class="ss-main">
+      <!-- Filter bar: one row per active filter field (Looker-style), collapsible -->
+      <div id="ss-filter-bar" class="ss-filter-bar" style="display: none;">
+        <div class="ss-filter-bar-header" onclick="ssToggleFilterBar()">
+          <span>Filters</span>
+          <span class="ss-filter-bar-toggle" id="ss-filter-bar-toggle">▼</span>
+        </div>
+        <div class="ss-filter-bar-content" id="ss-filter-bar-content">
+        {% for col in field_order %}
+        <div class="ss-filter-bar-row" id="ss-filter-row-{{ col }}" data-filter-field="{{ col }}" style="display: none;">
+          <label class="ss-filter-bar-label">{{ dimension_labels.get(col, col) }}</label>
+          {% if col in low_cardinality_options %}<span class="ss-filter-selected" id="ss-filter-selected-{{ col }}"></span>{% endif %}
+          <div class="ss-filter-bar-control">
+            {% if col in low_cardinality_options %}
+            <select multiple id="ss-filter-{{ col }}" class="ss-filter-multiselect" data-filter="{{ col }}">
+              {% for value, label in low_cardinality_options[col] %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% elif col == 'date' %}
+            <div class="ss-filter-date-inner">
+              <select id="ss-date-mode-select" class="ss-date-mode-select">
+                <option value="">None</option>
+                <option value="exact">Exact date</option>
+                <option value="range">Date range</option>
+                <option value="year">Year only</option>
+                <option value="last_week">Last 7 days</option>
+                <option value="last_month">Last 30 days</option>
+                <option value="last_n">Last N days</option>
+                <option value="next_week">Next 7 days</option>
+                <option value="next_n">Next N days</option>
+              </select>
+              <div id="ss-date-exact-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-exact" class="ss-filter-text"></div>
+              <div id="ss-date-range-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-start" class="ss-filter-text"> <span class="ss-date-sep">to</span> <input type="date" id="ss-date-end" class="ss-filter-text"></div>
+              <div id="ss-date-year-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-year" class="ss-filter-text" placeholder="e.g. 2026" min="2000" max="2100"></div>
+              <div id="ss-date-n-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-n" class="ss-filter-text" placeholder="Days" min="1" max="365"></div>
+            </div>
+            {% else %}
+            <input type="text" id="ss-filter-{{ col }}" class="ss-filter-text" placeholder="Contains..." data-filter="{{ col }}">
+            {% endif %}
+          </div>
+          <button type="button" class="ss-filter-remove" title="Remove filter" onclick="ssRemoveFilter('{{ col }}')" aria-label="Remove filter">×</button>
+        </div>
+        {% endfor %}
+        </div>
+      </div>
+
       <div id="ss-results-container" class="ss-results">
         <div id="ss-results-empty" class="ss-results-empty">
           Select dimensions and click Run to view schedules
@@ -215,13 +163,76 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   }
   window.ssToggleSection = ssToggleSection;
 
+  function ssRemoveFilter(col) {
+    var cb = document.getElementById('ss-filter-cb-' + col);
+    if (cb) {
+      cb.checked = false;
+      ssUpdateFilterBarVisibility();
+    }
+  }
+  window.ssRemoveFilter = ssRemoveFilter;
+
+  function ssToggleFilterBar() {
+    const content = document.getElementById('ss-filter-bar-content');
+    const toggle = document.getElementById('ss-filter-bar-toggle');
+    if (!content || !toggle) return;
+    const isCollapsed = content.classList.contains('ss-filter-bar-collapsed');
+    if (isCollapsed) {
+      content.classList.remove('ss-filter-bar-collapsed');
+      toggle.textContent = '▼';
+    } else {
+      content.classList.add('ss-filter-bar-collapsed');
+      toggle.textContent = '▶';
+    }
+  }
+  window.ssToggleFilterBar = ssToggleFilterBar;
+
+  function ssUpdateFilterBarVisibility() {
+    const bar = document.getElementById('ss-filter-bar');
+    let anyActive = false;
+    document.querySelectorAll('.ss-filter-cb').forEach(function(cb) {
+      const field = cb.value;
+      const row = document.getElementById('ss-filter-row-' + field);
+      if (row) {
+        if (cb.checked) {
+          row.style.display = 'flex';
+          anyActive = true;
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    });
+    bar.style.display = anyActive ? 'block' : 'none';
+    ssUpdateAllFilterSelected();
+  }
+
   function ssUpdateDateModeVisibility() {
-    const mode = document.querySelector('input[name="ss-date-mode"]:checked');
-    const val = mode ? mode.value : '';
-    document.getElementById('ss-date-exact-group').style.display = val === 'exact' ? 'block' : 'none';
-    document.getElementById('ss-date-range-group').style.display = val === 'range' ? 'block' : 'none';
-    document.getElementById('ss-date-year-group').style.display = val === 'year' ? 'block' : 'none';
-    document.getElementById('ss-date-n-group').style.display = (val === 'last_n' || val === 'next_n') ? 'block' : 'none';
+    const sel = document.getElementById('ss-date-mode-select');
+    const val = sel ? sel.value : '';
+    var showVal = 'inline-flex';
+    var g = document.getElementById('ss-date-exact-group'); if (g) g.style.display = val === 'exact' ? showVal : 'none';
+    g = document.getElementById('ss-date-range-group'); if (g) g.style.display = val === 'range' ? showVal : 'none';
+    g = document.getElementById('ss-date-year-group'); if (g) g.style.display = val === 'year' ? showVal : 'none';
+    g = document.getElementById('ss-date-n-group'); if (g) g.style.display = (val === 'last_n' || val === 'next_n') ? showVal : 'none';
+  }
+
+  document.querySelectorAll('.ss-filter-cb').forEach(function(cb) {
+    cb.addEventListener('change', ssUpdateFilterBarVisibility);
+  });
+
+  function ssUpdateFilterSelected(col) {
+    var el = document.getElementById('ss-filter-selected-' + col);
+    if (!el) return;
+    var sel = document.getElementById('ss-filter-' + col);
+    var txt = '';
+    if (sel && sel.multiple) {
+      txt = Array.from(sel.selectedOptions).map(function(o) { return o.textContent; }).join(', ');
+    }
+    el.textContent = txt ? txt : '';
+  }
+
+  function ssUpdateAllFilterSelected() {
+    ['sport', 'league', 'level', 'day', 'home_state'].forEach(ssUpdateFilterSelected);
   }
 
   function ssGetAnchorDate() {
@@ -230,10 +241,16 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     return new Date().toLocaleDateString('en-CA');
   }
 
-  document.querySelectorAll('input[name="ss-date-mode"]').forEach(function(r) {
-    r.addEventListener('change', ssUpdateDateModeVisibility);
-  });
+  var dateModeSelect = document.getElementById('ss-date-mode-select');
+  if (dateModeSelect) dateModeSelect.addEventListener('change', function() { ssUpdateDateModeVisibility(); ssUpdateFilterSelected('date'); });
   ssUpdateDateModeVisibility();
+  ssUpdateFilterBarVisibility();
+
+  document.querySelectorAll('.ss-filter-multiselect').forEach(function(sel) {
+    sel.addEventListener('change', function() { ssUpdateFilterSelected(sel.dataset.filter); });
+  });
+
+  ssUpdateAllFilterSelected();
 
   function ssUpdateSortColumnOptions() {
     const sel = document.getElementById('ss-sort-column');
@@ -266,7 +283,7 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     var params = new URLSearchParams(window.location.search);
     if (params.toString() === '') return false;
 
-    // Dimensions
+    // Dimensions -> Dimension checkboxes
     var dims = params.get('dimensions');
     if (dims) {
       var arr = dims.split(',');
@@ -274,6 +291,20 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
         cb.checked = arr.indexOf(cb.value) >= 0;
       });
     }
+
+    // Filter fields: check Filter CB for any field that has filter values in URL
+    var filterFields = ['sport', 'league', 'level', 'day', 'home_state', 'home_team', 'road_team', 'location', 'home_city', 'date'];
+    filterFields.forEach(function(col) {
+      var isFilter = false;
+      if (col === 'date') {
+        isFilter = !!params.get('date_mode');
+      } else {
+        isFilter = !!params.get(col);
+      }
+      var cb = document.getElementById('ss-filter-cb-' + col);
+      if (cb) cb.checked = isFilter;
+    });
+    ssUpdateFilterBarVisibility();
 
     // Count
     var countEl = document.getElementById('ss-count');
@@ -290,7 +321,7 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     if (sortCol && params.get('sort_column')) sortCol.value = params.get('sort_column');
     if (sortDir && params.get('sort_dir')) sortDir.value = params.get('sort_dir') || 'asc';
 
-    // Low-cardinality filters (multiselect)
+    // Low-cardinality filters (multiselect in filter bar)
     ['sport', 'league', 'level', 'day', 'home_state'].forEach(function(col) {
       var val = params.get(col);
       if (val) {
@@ -316,9 +347,9 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     // Date
     var dateMode = params.get('date_mode');
     if (dateMode) {
-      var radio = document.querySelector('input[name="ss-date-mode"][value="' + dateMode + '"]');
-      if (radio) {
-        radio.checked = true;
+      var sel = document.getElementById('ss-date-mode-select');
+      if (sel) {
+        sel.value = dateMode;
         ssUpdateDateModeVisibility();
       }
       if (dateMode === 'exact') {
@@ -340,6 +371,7 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       if (el) el.value = '';
     }
 
+    ssUpdateAllFilterSelected();
     return true;
   }
 
@@ -352,7 +384,7 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   function ssCollectParams() {
     const params = new URLSearchParams();
 
-    // Dimensions (checked, in DOM order)
+    // Dimensions (Dimension checkboxes, in DOM order)
     const dimCbs = document.querySelectorAll('.ss-dimension-cb:checked');
     const dimensions = Array.from(dimCbs).map(cb => cb.value);
     if (dimensions.length) params.set('dimensions', dimensions.join(','));
@@ -371,49 +403,49 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     if (sortCol && sortCol.value) params.set('sort_column', sortCol.value);
     if (sortDir) params.set('sort_dir', sortDir.value || 'asc');
 
-    // Low-cardinality filters (multiselect)
-    document.querySelectorAll('.ss-filter-multiselect').forEach(sel => {
-      const col = sel.dataset.filter;
-      const vals = Array.from(sel.selectedOptions).map(o => o.value);
-      if (vals.length) params.set(col, vals.join(','));
-    });
-
-    // High-cardinality filters (text)
-    document.querySelectorAll('.ss-filter-text[data-filter]').forEach(inp => {
-      const col = inp.dataset.filter;
-      const val = inp.value.trim();
-      if (val) params.set(col, val);
-    });
-
-    // Date
-    const dateMode = document.querySelector('input[name="ss-date-mode"]:checked');
-    const mode = dateMode ? dateMode.value : '';
-    if (mode === 'exact') {
-      const v = document.getElementById('ss-date-exact');
-      if (v && v.value) params.set('date_mode', 'exact'), params.set('date_exact', v.value);
-    } else if (mode === 'range') {
-      const start = document.getElementById('ss-date-start');
-      const end = document.getElementById('ss-date-end');
-      if (start && start.value && end && end.value) {
-        params.set('date_mode', 'range');
-        params.set('date_start', start.value);
-        params.set('date_end', end.value);
+    // Filters: only for fields where Filter is checked and has values
+    document.querySelectorAll('.ss-filter-cb:checked').forEach(function(cb) {
+      const col = cb.value;
+      if (col === 'date') {
+        const sel = document.getElementById('ss-date-mode-select');
+        const mode = sel ? sel.value : '';
+        if (mode === 'exact') {
+          const v = document.getElementById('ss-date-exact');
+          if (v && v.value) params.set('date_mode', 'exact'), params.set('date_exact', v.value);
+        } else if (mode === 'range') {
+          const start = document.getElementById('ss-date-start');
+          const end = document.getElementById('ss-date-end');
+          if (start && start.value && end && end.value) {
+            params.set('date_mode', 'range');
+            params.set('date_start', start.value);
+            params.set('date_end', end.value);
+          }
+        } else if (mode === 'year') {
+          const y = document.getElementById('ss-date-year');
+          if (y && y.value) params.set('date_mode', 'year'), params.set('date_year', y.value);
+        } else if (['last_week', 'last_month', 'next_week'].indexOf(mode) >= 0) {
+          params.set('date_mode', mode);
+          params.set('anchor_date', ssGetAnchorDate());
+        } else if (mode === 'last_n' || mode === 'next_n') {
+          const nEl = document.getElementById('ss-date-n');
+          const n = nEl ? parseInt(nEl.value, 10) : 0;
+          if (n > 0) {
+            params.set('date_mode', mode);
+            params.set('date_n', String(n));
+            params.set('anchor_date', ssGetAnchorDate());
+          }
+        }
+      } else {
+        const sel = document.getElementById('ss-filter-' + col);
+        if (sel && sel.multiple) {
+          const vals = Array.from(sel.selectedOptions).map(o => o.value);
+          if (vals.length) params.set(col, vals.join(','));
+        } else {
+          const inp = document.getElementById('ss-filter-' + col);
+          if (inp && inp.value) params.set(col, inp.value.trim());
+        }
       }
-    } else if (mode === 'year') {
-      const y = document.getElementById('ss-date-year');
-      if (y && y.value) params.set('date_mode', 'year'), params.set('date_year', y.value);
-    } else if (['last_week', 'last_month', 'next_week'].indexOf(mode) >= 0) {
-      params.set('date_mode', mode);
-      params.set('anchor_date', ssGetAnchorDate());
-    } else if (mode === 'last_n' || mode === 'next_n') {
-      const nEl = document.getElementById('ss-date-n');
-      const n = nEl ? parseInt(nEl.value, 10) : 0;
-      if (n > 0) {
-        params.set('date_mode', mode);
-        params.set('date_n', String(n));
-        params.set('anchor_date', ssGetAnchorDate());
-      }
-    }
+    });
 
     return params;
   }
@@ -433,8 +465,8 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       return;
     }
 
-    var dateMode = document.querySelector('input[name="ss-date-mode"]:checked');
-    var mode = dateMode ? dateMode.value : '';
+    var dateModeSel = document.getElementById('ss-date-mode-select');
+    var mode = dateModeSel ? dateModeSel.value : '';
     if (mode === 'last_n' || mode === 'next_n') {
       var nEl = document.getElementById('ss-date-n');
       var n = nEl ? parseInt(nEl.value, 10) : 0;
@@ -593,7 +625,17 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     const table = document.getElementById('ss-results-table');
     const summaryEl = document.getElementById('ss-results-summary');
 
-    const headers = rows.length && rows[0] ? Object.keys(rows[0]) : [];
+    var rowKeys = rows.length && rows[0] ? Object.keys(rows[0]) : [];
+    var requestedDims = dimensionsStr ? dimensionsStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    var headers;
+    if (requestedDims.length > 0) {
+      headers = requestedDims.filter(function(h) { return rowKeys.indexOf(h) >= 0; });
+      rowKeys.forEach(function(k) {
+        if (headers.indexOf(k) < 0) headers.push(k);
+      });
+    } else {
+      headers = rowKeys;
+    }
 
     summaryEl.textContent = rows.length === parseInt(limit) && limit >= 500
       ? rows.length + ' rows (limit reached)'
@@ -761,11 +803,37 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   }
   window.ssDownloadCsv = ssDownloadCsv;
 
+  function ssFormatAndHighlightSql(sql) {
+    if (!sql) return '';
+    var s = sql.trim();
+    s = s.replace(/\s+/g, ' ');
+    s = s.replace(/\s*,\s*/g, ', ');
+    s = s.replace(/\s+FROM\s+/gi, '\nFROM ');
+    s = s.replace(/\s+WHERE\s+/gi, '\nWHERE ');
+    s = s.replace(/\s+GROUP BY\s+/gi, '\nGROUP BY ');
+    s = s.replace(/\s+ORDER BY\s+/gi, '\nORDER BY ');
+    s = s.replace(/\s+LIMIT\s+/gi, '\nLIMIT ');
+    s = s.replace(/\s+AND\s+/gi, '\n  AND ');
+    s = s.replace(/\s+OR\s+/gi, '\n  OR ');
+    s = s.split('\n').map(function(line) { return '  ' + line.trim(); }).join('\n').trim();
+    function escapeHtml(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    s = escapeHtml(s);
+    var kw = ['SELECT', 'FROM', 'WHERE', 'GROUP', 'ORDER', 'LIMIT', 'BY', 'AND', 'OR', 'IN', 'LIKE', 'BETWEEN', 'AS', 'LOWER', 'COUNT', 'NULL', 'VALUES'];
+    kw.forEach(function(k) {
+      var re = new RegExp('\\b(' + k + ')\\b', 'gi');
+      s = s.replace(re, '<span class="ss-sql-kw">$1</span>');
+    });
+    s = s.replace(/'([^']*)'/g, '<span class="ss-sql-str">\'$1\'</span>');
+    s = s.replace(/`([^`]*)`/g, '<span class="ss-sql-id">`$1`</span>');
+    s = s.replace(/\b(\d+)\b/g, '<span class="ss-sql-num">$1</span>');
+    return s;
+  }
+
   function ssUpdateSqlSection(sql) {
     const toggle = document.getElementById('ss-sql-toggle');
     const content = document.getElementById('ss-sql-content');
     if (!toggle || !content) return;
-    content.textContent = sql;
+    content.innerHTML = ssFormatAndHighlightSql(sql);
     content.style.display = 'none';
     toggle.textContent = 'Show SQL';
     toggle.classList.remove('ss-sql-expanded');

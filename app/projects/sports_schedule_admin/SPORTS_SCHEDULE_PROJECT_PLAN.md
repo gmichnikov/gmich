@@ -76,6 +76,10 @@ We need to populate upcoming/active schedules into DoltHub:
 3.  [ ] **Sync Console**: A live log area on the page showing progress (e.g., "Processing 2026-04-01... Done").
 4.  [x] **Activity Log**: Display the most recent `LogEntry` records filtered for the "sports_admin" project.
 
+### Phase 3.5: Data Quality – State Normalization [x]
+1.  [x] **ESPN Client**: Normalize `home_state` to 2-letter US codes (California → CA) during sync.
+2.  [x] **CLI Command**: `flask sports-admin normalize-states` to fix existing full-state-name rows in DoltHub.
+
 ### Phase 4: Expansion & Maintenance [future]
 1.  [ ] **Automation**: Re-evaluate Heroku Scheduler for daily updates once UI is stable.
 2.  [ ] **Tournament Support**: Add logic for brackets (March Madness, World Cup Knockouts).

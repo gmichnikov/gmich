@@ -53,6 +53,12 @@ LOW_CARDINALITY_OPTIONS = {
 }
 
 
+# --- Field order for sidebar and filter bar (consistent UI order) ---
+FIELD_ORDER = [
+    "day", "date", "time", "road_team", "home_team", "home_city",
+    "home_state", "location", "league", "sport", "level",
+]
+
 # --- DIMENSION_LABELS: column -> display label (from PRD) ---
 DIMENSION_LABELS = {
     "sport": "Sport",

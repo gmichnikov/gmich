@@ -52,11 +52,13 @@ def index():
     """Main schedule viewer - query builder UI."""
     from app.projects.sports_schedules.core.constants import (
         DIMENSION_LABELS,
+        FIELD_ORDER,
         LOW_CARDINALITY_OPTIONS,
     )
     return render_template(
         "sports_schedules/index.html",
         dimension_labels=DIMENSION_LABELS,
+        field_order=FIELD_ORDER,
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
     )
 

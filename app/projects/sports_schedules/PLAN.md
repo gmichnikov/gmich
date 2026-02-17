@@ -388,6 +388,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
+### 5.5 Export to CSV [COMPLETED]
+
+- [x] Add "Export CSV" control (downloads current results as CSV)
+- [x] CSV reflects selected dimensions and filters (same data as displayed table)
+- [x] Include column headers from display labels
+
+---
+
 ## Phase 6: Integration & Final Checks
 
 ### 6.1 End-to-End Flow
@@ -440,6 +448,7 @@ Before considering V1 complete:
 - [x] Mobile usable
 - [x] All CSS uses `ss-` prefix
 - [x] No auth required (public access)
+- [x] Export to CSV
 
 ---
 
@@ -447,6 +456,5 @@ Before considering V1 complete:
 
 - Natural language query
 - Saved queries / bookmarks
-- Export to CSV/Excel
 - Pagination beyond row limit
 - Authentication or user preferences

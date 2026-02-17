@@ -74,20 +74,219 @@
   padding: 1rem;
 }
 
+.ss-section[data-section="fields"] .ss-section-content {
+  padding: 0.6rem 1rem;
+}
+
 .ss-section.collapsed .ss-section-content {
   display: none;
 }
 
-/* ===== Dimension Checkboxes ===== */
-.ss-dimensions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+/* ===== Fields: Dimension + Filter per field (Looker-style) ===== */
+.ss-fields-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
+.ss-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.ss-field-label {
+  flex: 1;
+  min-width: 80px;
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.ss-field-header .ss-field-label {
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #6c757d;
+}
+
+.ss-field-header .ss-field-check {
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #6c757d;
+}
+
+.ss-field-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #495057;
+  flex: 0 0 2rem;
+  min-width: 2rem;
+}
+
+.ss-field-check input {
+  margin: 0;
+  cursor: pointer;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ===== Filter Bar (above results, one row per active filter), collapsible ===== */
+.ss-filter-bar {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.ss-filter-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: #e9ecef;
+  user-select: none;
+}
+
+.ss-filter-bar-header:hover {
+  background: #dee2e6;
+}
+
+.ss-filter-bar-toggle {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.ss-filter-bar-content {
+  padding: 1rem;
+  transition: none;
+}
+
+.ss-filter-bar-content.ss-filter-bar-collapsed {
+  display: none;
+}
+
+.ss-filter-bar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.ss-filter-bar-row:last-child {
+  margin-bottom: 0;
+}
+
+.ss-filter-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #adb5bd;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ss-filter-bar-row:hover .ss-filter-remove,
+.ss-filter-remove:hover,
+.ss-filter-remove:focus {
+  opacity: 1;
+}
+
+.ss-filter-remove:hover {
+  color: #495057;
+}
+
+.ss-filter-bar-label {
+  flex: 0 0 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+  padding-top: 0.4rem;
+}
+
+.ss-filter-selected {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 240px;
+  font-size: 0.8rem;
+  color: #667eea;
+  padding: 0.25rem 0.5rem;
+  word-break: break-word;
+}
+
+.ss-filter-selected:empty {
+  display: none;
+}
+
+.ss-filter-bar-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.ss-filter-bar-control .ss-filter-multiselect {
+  min-height: 72px;
+  max-height: 140px;
+}
+
+/* Date filter: dropdown + inline inputs on one row */
+.ss-filter-date-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ss-date-mode-select {
+  padding: 0.4rem 0.6rem;
+  font-size: 16px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  min-width: 11rem;
+}
+
+.ss-date-input-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ss-date-input-inline input {
+  padding: 0.4rem 0.6rem;
+  font-size: 16px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+.ss-date-input-inline input[type="number"] {
+  width: 5rem;
+}
+
+.ss-date-sep {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Legacy dimension-item (used in Options) */
 .ss-dimension-item {
   display: flex;
   align-items: center;
@@ -129,11 +328,56 @@
 
 .ss-filter-multiselect {
   width: 100%;
-  min-height: 80px;
-  padding: 0.4rem;
-  font-size: 16px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
+  min-height: 88px;
+  max-height: 160px;
+  padding: 0.5rem 0.6rem;
+  font-size: 15px;
+  line-height: 1.5;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+  color: #212529;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ss-filter-multiselect:hover {
+  border-color: #ced4da;
+}
+
+.ss-filter-multiselect:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.ss-filter-multiselect option {
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+}
+
+.ss-filter-multiselect option:checked {
+  background: linear-gradient(#667eea, #667eea);
+  color: white;
+}
+
+/* Multiselect scrollbar */
+.ss-filter-multiselect::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ss-filter-multiselect::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 4px;
+}
+
+.ss-filter-multiselect::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 4px;
+}
+
+.ss-filter-multiselect::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
 }
 
 .ss-filter-hint {
@@ -221,7 +465,7 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-bottom: 1rem;
   transition: background 0.2s;
 }
 
@@ -389,10 +633,11 @@
   margin-top: 0.5rem;
 }
 
-/* ===== Show SQL (pre block) ===== */
+/* ===== Show SQL (pre block) with syntax highlighting ===== */
 .ss-sql-content {
-  font-family: monospace;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 0.8rem;
+  line-height: 1.5;
   color: #495057;
   background: #f8f9fa;
   padding: 0.75rem 1rem;
@@ -400,6 +645,23 @@
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.ss-sql-content .ss-sql-kw {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.ss-sql-content .ss-sql-str {
+  color: #0d6b58;
+}
+
+.ss-sql-content .ss-sql-id {
+  color: #b45309;
+}
+
+.ss-sql-content .ss-sql-num {
+  color: #6f42c1;
 }
 
 /* ===== Mobile ===== */
