@@ -304,6 +304,34 @@
   width: 2.5rem;
 }
 
+.ss-cal-header {
+  width: 2rem;
+  padding: 0.25rem !important;
+}
+
+.ss-cal-cell {
+  padding: 0.25rem !important;
+  width: 2rem;
+}
+
+.ss-cal-add-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ss-results-table tbody tr:hover .ss-cal-add-btn {
+  opacity: 1;
+}
+
+.ss-cal-add-btn:hover {
+  transform: scale(1.1);
+}
+
 .ss-results-summary {
   font-size: 0.85rem;
   color: #6c757d;

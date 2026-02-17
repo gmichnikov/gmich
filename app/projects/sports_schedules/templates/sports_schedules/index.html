@@ -505,6 +505,9 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       th.textContent = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
       tr.appendChild(th);
     });
+    const thCal = document.createElement('th');
+    thCal.className = 'ss-cal-header';
+    tr.appendChild(thCal);
     thead.appendChild(tr);
     table.appendChild(thead);
 
@@ -520,6 +523,23 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
         td.textContent = row[h] != null ? row[h] : '';
         tr.appendChild(td);
       });
+      const tdCal = document.createElement('td');
+      tdCal.className = 'ss-cal-cell';
+      if (row.date) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ss-cal-add-btn';
+        btn.title = 'Add to Google Calendar';
+        btn.innerHTML = '&#128197;';
+        btn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var url = ssBuildGoogleCalUrl(row);
+          if (url) window.open(url, '_blank');
+        };
+        tdCal.appendChild(btn);
+      }
+      tr.appendChild(tdCal);
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -534,6 +554,55 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
         return headers.map(function(h) { return row[h] != null ? String(row[h]) : ''; });
       })
     };
+  }
+
+  function ssBuildGoogleCalUrl(row) {
+    var dateStr = row.date;
+    if (!dateStr) return null;
+    var d = dateStr.replace(/-/g, '');
+    var title = 'Game';
+    if (row.home_team && row.road_team) {
+      title = row.road_team + ' @ ' + row.home_team;
+    } else if (row.home_team) title = row.home_team;
+    else if (row.road_team) title = row.road_team;
+    var timeStr = (row.time || '').toString().trim();
+    var startDt, endDt;
+    if (timeStr && /\d{1,2}:\d{2}/.test(timeStr)) {
+      var parts = timeStr.split(':');
+      var h = parseInt(parts[0], 10);
+      var m = parseInt((parts[1] || '0').replace(/\D/g, ''), 10) || 0;
+      if (/pm/i.test(timeStr) && h < 12) h += 12;
+      if (/am/i.test(timeStr) && h === 12) h = 0;
+      var start = new Date(dateStr + 'T12:00:00');
+      start.setHours(h, m, 0, 0);
+      var end = new Date(start.getTime() + 2.5 * 60 * 60 * 1000);
+      var fmt = function(d) {
+        return d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + 'T' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + '00';
+      };
+      startDt = fmt(start);
+      endDt = fmt(end);
+    } else {
+      startDt = d;
+      var nextD = new Date(dateStr);
+      nextD.setDate(nextD.getDate() + 1);
+      endDt = nextD.toISOString().slice(0, 10).replace(/-/g, '');
+    }
+    var params = [
+      'action=TEMPLATE',
+      'text=' + encodeURIComponent(title),
+      'dates=' + startDt + '/' + endDt
+    ];
+    var locParts = [];
+    if (row.location) locParts.push(row.location);
+    if (row.home_city || row.home_state) {
+      locParts.push([row.home_city, row.home_state].filter(Boolean).join(', '));
+    }
+    if (locParts.length) params.push('location=' + encodeURIComponent(locParts.join(', ')));
+    var details = [];
+    if (row.league) details.push(row.league);
+    if (row.sport) details.push(row.sport);
+    if (details.length) params.push('details=' + encodeURIComponent(details.join(' · ')));
+    return 'https://calendar.google.com/calendar/render?' + params.join('&');
   }
 
   function ssEscapeCsvField(val) {
