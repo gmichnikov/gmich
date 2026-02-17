@@ -155,9 +155,23 @@
             <label class="ss-filter-label" for="ss-limit">Row limit</label>
             <input type="number" id="ss-limit" class="ss-filter-text" value="500" min="1" max="5000">
           </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-sort-column">Sort by</label>
+            <select id="ss-sort-column" class="ss-filter-select">
+              <option value="">(first dimension)</option>
+            </select>
+          </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-sort-dir">Sort direction</label>
+            <select id="ss-sort-dir" class="ss-filter-select">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
         </div>
       </div>
 
+      <input type="hidden" id="ss-anchor-date">
       <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
     </aside>
 
@@ -174,6 +188,10 @@
           <div id="ss-results-summary" class="ss-results-summary"></div>
           <div class="ss-results-table-wrapper">
             <table class="ss-results-table" id="ss-results-table"></table>
+          </div>
+          <div id="ss-sql-section" class="ss-sql-section" style="display: none;">
+            <button type="button" class="ss-sql-toggle" id="ss-sql-toggle" onclick="ssToggleSql()">Show SQL</button>
+            <pre id="ss-sql-content" class="ss-sql-content" style="display: none;"></pre>
           </div>
         </div>
       </div>
@@ -201,6 +219,8 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   }
 
   function ssGetAnchorDate() {
+    var el = document.getElementById('ss-anchor-date');
+    if (el && el.value) return el.value;
     return new Date().toLocaleDateString('en-CA');
   }
 
@@ -208,6 +228,120 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     r.addEventListener('change', ssUpdateDateModeVisibility);
   });
   ssUpdateDateModeVisibility();
+
+  function ssUpdateSortColumnOptions() {
+    const sel = document.getElementById('ss-sort-column');
+    if (!sel) return;
+    const dimCbs = document.querySelectorAll('.ss-dimension-cb:checked');
+    const dimensions = Array.from(dimCbs).map(cb => cb.value);
+    const countOn = document.getElementById('ss-count') && document.getElementById('ss-count').checked;
+    const labels = window.ssDimensionLabels || {};
+    sel.innerHTML = '<option value="">(first dimension)</option>';
+    dimensions.forEach(col => {
+      const opt = document.createElement('option');
+      opt.value = col;
+      opt.textContent = labels[col] || col;
+      sel.appendChild(opt);
+    });
+    if (countOn) {
+      const opt = document.createElement('option');
+      opt.value = '# Games';
+      opt.textContent = '# Games';
+      sel.appendChild(opt);
+    }
+  }
+  document.querySelectorAll('.ss-dimension-cb').forEach(function(cb) {
+    cb.addEventListener('change', ssUpdateSortColumnOptions);
+  });
+  document.getElementById('ss-count').addEventListener('change', ssUpdateSortColumnOptions);
+  ssUpdateSortColumnOptions();
+
+  function ssApplyParamsFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.toString() === '') return false;
+
+    // Dimensions
+    var dims = params.get('dimensions');
+    if (dims) {
+      var arr = dims.split(',');
+      document.querySelectorAll('.ss-dimension-cb').forEach(function(cb) {
+        cb.checked = arr.indexOf(cb.value) >= 0;
+      });
+    }
+
+    // Count
+    var countEl = document.getElementById('ss-count');
+    if (countEl) countEl.checked = params.get('count') === '1';
+
+    // Limit
+    var limitEl = document.getElementById('ss-limit');
+    if (limitEl && params.get('limit')) limitEl.value = params.get('limit');
+
+    // Sort (after dimensions/count so options exist)
+    ssUpdateSortColumnOptions();
+    var sortCol = document.getElementById('ss-sort-column');
+    var sortDir = document.getElementById('ss-sort-dir');
+    if (sortCol && params.get('sort_column')) sortCol.value = params.get('sort_column');
+    if (sortDir && params.get('sort_dir')) sortDir.value = params.get('sort_dir') || 'asc';
+
+    // Low-cardinality filters (multiselect)
+    ['sport', 'league', 'level', 'day', 'home_state'].forEach(function(col) {
+      var val = params.get(col);
+      if (val) {
+        var sel = document.getElementById('ss-filter-' + col);
+        if (sel) {
+          var vals = val.split(',');
+          Array.from(sel.options).forEach(function(opt) {
+            opt.selected = vals.indexOf(opt.value) >= 0;
+          });
+        }
+      }
+    });
+
+    // High-cardinality filters
+    ['home_team', 'road_team', 'location', 'home_city'].forEach(function(col) {
+      var val = params.get(col);
+      if (val) {
+        var inp = document.getElementById('ss-filter-' + col);
+        if (inp) inp.value = val;
+      }
+    });
+
+    // Date
+    var dateMode = params.get('date_mode');
+    if (dateMode) {
+      var radio = document.querySelector('input[name="ss-date-mode"][value="' + dateMode + '"]');
+      if (radio) {
+        radio.checked = true;
+        ssUpdateDateModeVisibility();
+      }
+      if (dateMode === 'exact') {
+        var v = params.get('date_exact');
+        if (v) { var el = document.getElementById('ss-date-exact'); if (el) el.value = v; }
+      } else if (dateMode === 'range') {
+        var s = params.get('date_start'); if (s) { var el = document.getElementById('ss-date-start'); if (el) el.value = s; }
+        var e = params.get('date_end'); if (e) { var el = document.getElementById('ss-date-end'); if (el) el.value = e; }
+      } else if (dateMode === 'year') {
+        var y = params.get('date_year'); if (y) { var el = document.getElementById('ss-date-year'); if (el) el.value = y; }
+      } else if (dateMode === 'last_n' || dateMode === 'next_n') {
+        var n = params.get('date_n'); if (n) { var el = document.getElementById('ss-date-n'); if (el) el.value = n; }
+      }
+      var anchor = params.get('anchor_date');
+      if (anchor) { var el = document.getElementById('ss-anchor-date'); if (el) el.value = anchor; }
+    }
+    if (!dateMode || ['exact', 'range', 'year'].indexOf(dateMode) >= 0) {
+      var el = document.getElementById('ss-anchor-date');
+      if (el) el.value = '';
+    }
+
+    return true;
+  }
+
+  function ssUpdateUrlFromParams(params) {
+    var qs = params.toString();
+    var url = qs ? (window.location.pathname + '?' + qs) : window.location.pathname;
+    if (url.length <= 2000) window.history.replaceState({}, '', url);
+  }
 
   function ssCollectParams() {
     const params = new URLSearchParams();
@@ -224,6 +358,12 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     // Limit
     const limitEl = document.getElementById('ss-limit');
     if (limitEl) params.set('limit', limitEl.value || '500');
+
+    // Sort
+    const sortCol = document.getElementById('ss-sort-column');
+    const sortDir = document.getElementById('ss-sort-dir');
+    if (sortCol && sortCol.value) params.set('sort_column', sortCol.value);
+    if (sortDir) params.set('sort_dir', sortDir.value || 'asc');
 
     // Low-cardinality filters (multiselect)
     document.querySelectorAll('.ss-filter-multiselect').forEach(sel => {
@@ -320,6 +460,8 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
         }
         ssRenderResults(data.rows || [], data.sql || '', params.get('dimensions') || '', params.get('limit') || '500');
         document.getElementById('ss-results-content').style.display = 'block';
+        ssUpdateSqlSection(data.sql || '');
+        ssUpdateUrlFromParams(params);
       })
       .catch(function() {
         document.getElementById('ss-results-loading').style.display = 'none';
@@ -366,6 +508,44 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     table.appendChild(tbody);
 
     window._ssLastSql = sql;
+  }
+
+  function ssUpdateSqlSection(sql) {
+    const section = document.getElementById('ss-sql-section');
+    const toggle = document.getElementById('ss-sql-toggle');
+    const content = document.getElementById('ss-sql-content');
+    if (!section || !toggle || !content) return;
+    section.style.display = 'block';
+    content.textContent = sql;
+    content.style.display = 'none';
+    toggle.textContent = 'Show SQL';
+    toggle.classList.remove('ss-sql-expanded');
+  }
+
+  function ssToggleSql() {
+    const content = document.getElementById('ss-sql-content');
+    const toggle = document.getElementById('ss-sql-toggle');
+    if (!content || !toggle) return;
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      toggle.textContent = 'Hide SQL';
+      toggle.classList.add('ss-sql-expanded');
+    } else {
+      content.style.display = 'none';
+      toggle.textContent = 'Show SQL';
+      toggle.classList.remove('ss-sql-expanded');
+    }
+  }
+  window.ssToggleSql = ssToggleSql;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ssInitFromUrl);
+  } else {
+    ssInitFromUrl();
+  }
+
+  function ssInitFromUrl() {
+    if (ssApplyParamsFromUrl()) ssRunQuery();
   }
 })();
 </script>

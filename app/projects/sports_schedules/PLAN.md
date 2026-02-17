@@ -2,7 +2,7 @@
 
 This plan follows the Sports Schedules PRD and breaks implementation into smaller, testable chunks. The project is public (no login), read-only, and uses DoltHub as the data source.
 
-**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ (sort UI remaining) Phase 4 ✅ Phase 5 🔲 Phase 6 🔲
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ Phase 4 ✅ Phase 5 ✅ Phase 6 🔲
 
 ---
 
@@ -240,21 +240,21 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 3.3 Options: Count, Row Limit, Sort
+### 3.3 Options: Count, Row Limit, Sort [COMPLETED]
 
 - [x] Add "Options" collapsible section
   - [x] "Include count" toggle (default: off)
   - [x] Row limit: numeric input, default 500, max 5000, min 1
-  - [ ] Sort column: dropdown (options = selected dimensions + "# Games" when count on)
-  - [ ] Sort direction: Ascending / Descending
+  - [x] Sort column: dropdown (options = selected dimensions + "# Games" when count on)
+  - [x] Sort direction: Ascending / Descending
   - [x] When count on, default sort: "# Games" descending (backend default)
-- [x] Wire count and limit to API
+- [x] Wire count, limit, sort_column, sort_dir to API
 
 **Manual Testing 3.3:**
 - [x] Turn count on, no dimensions → single total count
 - [x] Turn count on, dimensions = league, date → GROUP BY league, date, count per group
 - [x] Change row limit to 10 → max 10 rows
-- [ ] Sort by date ascending → results ordered correctly (needs sort UI)
+- [ ] Sort by date ascending → results ordered correctly
 
 ---
 
@@ -300,29 +300,25 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ## Phase 5: URL State, Show SQL, Polish
 
-### 5.1 URL State (Shareable Links)
+### 5.1 URL State (Shareable Links) [COMPLETED]
 
-- [ ] **URL param format** (same schema for both URL and API; keep URLs shareable):
-  - [ ] `dimensions` — comma-separated: `league,date,home_team`
-  - [ ] Low-cardinality filters: `sport`, `league`, `level`, `day`, `home_state` — comma-separated for multi: `sport=basketball,hockey`
-  - [ ] High-cardinality (contains): `home_team`, `road_team`, `location`, `home_city` — single value each
-  - [ ] Date: `date_mode` = `exact` | `range` | `year` | `last_week` | `last_month` | `last_n` | `next_week` | `next_n`
-  - [ ] Date values: `date_exact` (YYYY-MM-DD), `date_start`/`date_end` (range), `date_year` (year), `date_n` (for last_n/next_n)
-  - [ ] `anchor_date` — YYYY-MM-DD, "today" for relative modes (see 5.1a)
-  - [ ] `count` — 0 or 1
-  - [ ] `limit` — 1–5000
-  - [ ] `sort_column`, `sort_dir` — asc | desc
-  - [ ] Omit params that are empty/default
-- [ ] Encode query params in URL using above schema
-- [ ] Support decoding on page load: if URL has params, populate form and optionally auto-run
-- [ ] Update URL when user runs query (replaceState or pushState)
-- [ ] Handle long URLs (browser limits ~2000 chars); document tradeoff; consider shortening filter keys if needed
+- [x] **URL param format** (same schema for both URL and API; keep URLs shareable):
+  - [x] `dimensions` — comma-separated: `league,date,home_team`
+  - [x] Low-cardinality filters: `sport`, `league`, `level`, `day`, `home_state` — comma-separated for multi
+  - [x] High-cardinality (contains): `home_team`, `road_team`, `location`, `home_city` — single value each
+  - [x] Date: `date_mode`, `date_exact`, `date_start`/`date_end`, `date_year`, `date_n`, `anchor_date`
+  - [x] `count`, `limit`, `sort_column`, `sort_dir`
+  - [x] Omit params that are empty/default
+- [x] Encode query params in URL using above schema
+- [x] Support decoding on page load: if URL has params, populate form and auto-run
+- [x] Update URL when user runs query (replaceState)
+- [x] Handle long URLs: skip URL update if > 2000 chars
 
 **Manual Testing 5.1:**
 - [ ] Set dimensions, filters, run query
 - [ ] Copy URL, open in new tab
 - [ ] Verify form state restored from URL
-- [ ] Optionally: verify auto-run on load with params
+- [ ] Verify auto-run on load with params
 
 ---
 
@@ -343,14 +339,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 5.2 Show SQL
+### 5.2 Show SQL [COMPLETED]
 
-- [ ] Add "Show SQL" link/control (small, muted)
-  - [ ] Hidden by default or collapsed
-  - [ ] Click expands to show SQL in monospace block
-  - [ ] SQL comes from API response (`sql` field)
-  - [ ] Visually secondary (small text, muted color)
-- [ ] Only show after a successful query
+- [x] Add "Show SQL" link/control (small, muted)
+  - [x] Hidden by default or collapsed
+  - [x] Click expands to show SQL in monospace block
+  - [x] SQL comes from API response (`sql` field)
+  - [x] Visually secondary (small text, muted color)
+- [x] Only show after a successful query
 
 **Manual Testing 5.2:**
 - [ ] Run query
@@ -437,8 +433,8 @@ Before considering V1 complete:
 - [x] All sidebar sections functional (Dimensions, Filters, Date, Options)
 - [x] Results table displays correctly
 - [x] Results summary and optional row numbers
-- [ ] Show SQL works
-- [ ] URL state works (shareable links)
+- [x] Show SQL works
+- [x] URL state works (shareable links)
 - [x] AND logic hint visible in Filters
 - [x] Error handling in place
 - [x] Mobile usable
