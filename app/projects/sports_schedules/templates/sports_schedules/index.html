@@ -69,7 +69,76 @@
         </div>
       </div>
 
-      <!-- Options (placeholder for Phase 3 - count, limit, sort) -->
+      <!-- Date -->
+      <div class="ss-section" data-section="date">
+        <div class="ss-section-header" onclick="ssToggleSection('date')">
+          <span>Date</span>
+          <span class="ss-section-toggle">▼</span>
+        </div>
+        <div class="ss-section-content">
+          <div class="ss-date-mode-group">
+            <label class="ss-date-mode-label">Mode</label>
+            <div class="ss-date-mode-options">
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="" checked class="ss-date-mode-radio">
+                <span>None</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="exact" class="ss-date-mode-radio">
+                <span>Exact date</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="range" class="ss-date-mode-radio">
+                <span>Date range</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="year" class="ss-date-mode-radio">
+                <span>Year only</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="last_week" class="ss-date-mode-radio">
+                <span>Last week (7 days)</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="last_month" class="ss-date-mode-radio">
+                <span>Last month (30 days)</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="last_n" class="ss-date-mode-radio">
+                <span>Last N days</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="next_week" class="ss-date-mode-radio">
+                <span>Next week (7 days)</span>
+              </label>
+              <label class="ss-radio-label">
+                <input type="radio" name="ss-date-mode" value="next_n" class="ss-date-mode-radio">
+                <span>Next N days</span>
+              </label>
+            </div>
+          </div>
+          <div id="ss-date-exact-group" class="ss-date-input-group" style="display: none;">
+            <label class="ss-filter-label" for="ss-date-exact">Date</label>
+            <input type="date" id="ss-date-exact" class="ss-filter-text">
+          </div>
+          <div id="ss-date-range-group" class="ss-date-input-group" style="display: none;">
+            <label class="ss-filter-label" for="ss-date-start">Start date</label>
+            <input type="date" id="ss-date-start" class="ss-filter-text">
+            <label class="ss-filter-label" for="ss-date-end" style="margin-top: 0.5rem;">End date</label>
+            <input type="date" id="ss-date-end" class="ss-filter-text">
+          </div>
+          <div id="ss-date-year-group" class="ss-date-input-group" style="display: none;">
+            <label class="ss-filter-label" for="ss-date-year">Year</label>
+            <input type="number" id="ss-date-year" class="ss-filter-text" placeholder="e.g., 2026" min="2000" max="2100">
+          </div>
+          <div id="ss-date-n-group" class="ss-date-input-group" style="display: none;">
+            <label class="ss-filter-label" for="ss-date-n">Number of days</label>
+            <input type="number" id="ss-date-n" class="ss-filter-text" placeholder="e.g., 14" min="1" max="365">
+          </div>
+        </div>
+      </div>
+
+      <!-- Options (count, limit, sort) -->
       <div class="ss-section" data-section="options">
         <div class="ss-section-header" onclick="ssToggleSection('options')">
           <span>Options</span>
@@ -122,6 +191,24 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
   }
   window.ssToggleSection = ssToggleSection;
 
+  function ssUpdateDateModeVisibility() {
+    const mode = document.querySelector('input[name="ss-date-mode"]:checked');
+    const val = mode ? mode.value : '';
+    document.getElementById('ss-date-exact-group').style.display = val === 'exact' ? 'block' : 'none';
+    document.getElementById('ss-date-range-group').style.display = val === 'range' ? 'block' : 'none';
+    document.getElementById('ss-date-year-group').style.display = val === 'year' ? 'block' : 'none';
+    document.getElementById('ss-date-n-group').style.display = (val === 'last_n' || val === 'next_n') ? 'block' : 'none';
+  }
+
+  function ssGetAnchorDate() {
+    return new Date().toLocaleDateString('en-CA');
+  }
+
+  document.querySelectorAll('input[name="ss-date-mode"]').forEach(function(r) {
+    r.addEventListener('change', ssUpdateDateModeVisibility);
+  });
+  ssUpdateDateModeVisibility();
+
   function ssCollectParams() {
     const params = new URLSearchParams();
 
@@ -152,6 +239,36 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       if (val) params.set(col, val);
     });
 
+    // Date
+    const dateMode = document.querySelector('input[name="ss-date-mode"]:checked');
+    const mode = dateMode ? dateMode.value : '';
+    if (mode === 'exact') {
+      const v = document.getElementById('ss-date-exact');
+      if (v && v.value) params.set('date_mode', 'exact'), params.set('date_exact', v.value);
+    } else if (mode === 'range') {
+      const start = document.getElementById('ss-date-start');
+      const end = document.getElementById('ss-date-end');
+      if (start && start.value && end && end.value) {
+        params.set('date_mode', 'range');
+        params.set('date_start', start.value);
+        params.set('date_end', end.value);
+      }
+    } else if (mode === 'year') {
+      const y = document.getElementById('ss-date-year');
+      if (y && y.value) params.set('date_mode', 'year'), params.set('date_year', y.value);
+    } else if (['last_week', 'last_month', 'next_week'].indexOf(mode) >= 0) {
+      params.set('date_mode', mode);
+      params.set('anchor_date', ssGetAnchorDate());
+    } else if (mode === 'last_n' || mode === 'next_n') {
+      const nEl = document.getElementById('ss-date-n');
+      const n = nEl ? parseInt(nEl.value, 10) : 0;
+      if (n > 0) {
+        params.set('date_mode', mode);
+        params.set('date_n', String(n));
+        params.set('anchor_date', ssGetAnchorDate());
+      }
+    }
+
     return params;
   }
 
@@ -168,6 +285,22 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       document.getElementById('ss-results-loading').style.display = 'none';
       document.getElementById('ss-results-content').style.display = 'none';
       return;
+    }
+
+    var dateMode = document.querySelector('input[name="ss-date-mode"]:checked');
+    var mode = dateMode ? dateMode.value : '';
+    if (mode === 'last_n' || mode === 'next_n') {
+      var nEl = document.getElementById('ss-date-n');
+      var n = nEl ? parseInt(nEl.value, 10) : 0;
+      if (!n || n < 1) {
+        var errEl = document.getElementById('ss-results-error');
+        errEl.textContent = 'Number of days must be greater than 0.';
+        errEl.style.display = 'block';
+        document.getElementById('ss-results-empty').style.display = 'none';
+        document.getElementById('ss-results-loading').style.display = 'none';
+        document.getElementById('ss-results-content').style.display = 'none';
+        return;
+      }
     }
 
     document.getElementById('ss-results-error').style.display = 'none';

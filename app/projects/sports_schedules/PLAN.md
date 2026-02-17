@@ -2,6 +2,8 @@
 
 This plan follows the Sports Schedules PRD and breaks implementation into smaller, testable chunks. The project is public (no login), read-only, and uses DoltHub as the data source.
 
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ (sort UI remaining) Phase 4 ✅ Phase 5 🔲 Phase 6 🔲
+
 ---
 
 ## Relevant Files
@@ -119,30 +121,30 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-## Phase 2: Sidebar UI – Layout & Dimension Picker
+## Phase 2: Sidebar UI – Layout & Dimension Picker [COMPLETED]
 
-### 2.1 Page Layout & Structure
+### 2.1 Page Layout & Structure [COMPLETED]
 
-- [ ] **Page container (separate from homepage purple):** Update `ss-wrapper` to act as a contained UI panel so the site’s purple gradient doesn’t bleed through. Follow pattern from sports_schedule_admin (`ssa-wrapper`) or betfake (`bf-page-wrapper`): give `ss-wrapper` its own background (e.g., white or light neutral), padding, optionally border-radius and box-shadow. Content should read as a distinct panel/card, not floating on the homepage background.
-- [ ] Update `routes.py` index route to pass `LOW_CARDINALITY_OPTIONS` and `DIMENSION_LABELS` from constants to template
-- [ ] Update `templates/sports_schedules/index.html`
-  - [ ] Replace placeholder with two-column layout: sidebar (left) + main area (right)
-  - [ ] Sidebar: fixed or sticky, collapsible on mobile
-  - [ ] Main area: results table container (initially empty state)
-  - [ ] Add "Run" button (prominent, in sidebar or above results)
-  - [ ] Use `ss-` prefix for all classes (e.g., `ss-sidebar`, `ss-main`, `ss-run-btn`)
-- [ ] Add base styles in `static/css/sports_schedules.css`
-  - [ ] `ss-wrapper`: background, padding, max-width, margin; optional border-radius, box-shadow
-  - [ ] Layout: flex or grid for sidebar + main
-  - [ ] Sidebar width ~280px on desktop
-  - [ ] Collapsible sections: Dimensions, Filters, Date, Options
+- [x] **Page container (separate from homepage purple):** Update `ss-wrapper` to act as a contained UI panel so the site’s purple gradient doesn’t bleed through. Follow pattern from sports_schedule_admin (`ssa-wrapper`) or betfake (`bf-page-wrapper`): give `ss-wrapper` its own background (e.g., white or light neutral), padding, optionally border-radius and box-shadow. Content should read as a distinct panel/card, not floating on the homepage background.
+- [x] Update `routes.py` index route to pass `LOW_CARDINALITY_OPTIONS` and `DIMENSION_LABELS` from constants to template
+- [x] Update `templates/sports_schedules/index.html`
+  - [x] Replace placeholder with two-column layout: sidebar (left) + main area (right)
+  - [x] Sidebar: fixed or sticky, collapsible on mobile
+  - [x] Main area: results table container (initially empty state)
+  - [x] Add "Run" button (prominent, in sidebar or above results)
+  - [x] Use `ss-` prefix for all classes (e.g., `ss-sidebar`, `ss-main`, `ss-run-btn`)
+- [x] Add base styles in `static/css/sports_schedules.css`
+  - [x] `ss-wrapper`: background, padding, max-width, margin; optional border-radius, box-shadow
+  - [x] Layout: flex or grid for sidebar + main
+  - [x] Sidebar width ~280px on desktop
+  - [x] Collapsible sections: Dimensions, Filters, Date, Options
 
 **Manual Testing 2.1:**
-- [ ] Page loads at `/sports-schedules/`
-- [ ] Page has its own background panel — purple gradient from homepage does not show through content area
-- [ ] Sidebar and main area visible
-- [ ] Run button visible
-- [ ] No layout shift or overflow on desktop
+- [x] Page loads at `/sports-schedules/`
+- [x] Page has its own background panel — purple gradient from homepage does not show through content area
+- [x] Sidebar and main area visible
+- [x] Run button visible
+- [x] No layout shift or overflow on desktop
 
 ---
 
@@ -203,17 +205,17 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-## Phase 3: Date Filter & Options
+## Phase 3: Date Filter & Options [mostly COMPLETED]
 
-### 3.1 Date Filter – Absolute Modes
+### 3.1 Date Filter – Absolute Modes [COMPLETED]
 
-- [ ] Add "Date" collapsible section
-  - [ ] Mode selector: Exact date | Date range | Year only
-  - [ ] Exact date: single date input (YYYY-MM-DD)
-  - [ ] Date range: start date + end date (inclusive)
-  - [ ] Year only: year input (e.g., 2026)
-  - [ ] Validate: start ≤ end for range
-- [ ] Wire date params to API
+- [x] Add "Date" collapsible section
+  - [x] Mode selector: Exact date | Date range | Year only
+  - [x] Exact date: single date input (YYYY-MM-DD)
+  - [x] Date range: start date + end date (inclusive)
+  - [x] Year only: year input (e.g., 2026)
+  - [x] Validate: start ≤ end for range (backend)
+- [x] Wire date params to API
 
 **Manual Testing 3.1:**
 - [ ] Select exact date 2026-02-19, run → only that date
@@ -223,13 +225,13 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 3.2 Date Filter – Relative Modes
+### 3.2 Date Filter – Relative Modes [COMPLETED]
 
-- [ ] Add relative date options to Date section
-  - [ ] Last week (7 days), Last month (30 days), Last N days (N input)
-  - [ ] Next week (7 days), Next N days (N input)
-  - [ ] Validate N > 0 for Last N / Next N
-- [ ] **"Today" / anchor date:** See Phase 5.1a below. Client sends `anchor_date` (YYYY-MM-DD) so "today" is user-local without requiring auth.
+- [x] Add relative date options to Date section
+  - [x] Last week (7 days), Last month (30 days), Last N days (N input)
+  - [x] Next week (7 days), Next N days (N input)
+  - [x] Validate N > 0 for Last N / Next N
+- [x] **"Today" / anchor date:** Client sends `anchor_date` (YYYY-MM-DD) via `toLocaleDateString('en-CA')` so "today" is user-local without requiring auth.
 
 **Manual Testing 3.2:**
 - [ ] Select "Last week" → past 7 days from today
@@ -324,15 +326,15 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 5.1a "Today" / Timezone for Relative Dates
+### 5.1a "Today" / Timezone for Relative Dates [COMPLETED]
 
-- [ ] **Problem:** Relative dates (last week, next 30 days) need "today" as anchor. Sports Schedules is public (no auth), so no user account or stored timezone.
-- [ ] **Approach:** Client sends `anchor_date` (YYYY-MM-DD) with each query that uses relative date mode.
-  - [ ] Frontend computes "today" in the user's browser: use `new Date().toLocaleDateString('en-CA')` (YYYY-MM-DD in local timezone) or equivalent — `toISOString()` is UTC and wrong for local date.
-  - [ ] Include `anchor_date` in API request when `date_mode` is relative.
-  - [ ] Include `anchor_date` in URL when encoding state, so shared links use the same anchor (or omit and default to server date on load — document behavior).
-- [ ] **Fallback:** If `anchor_date` is omitted for a relative query, server uses its own "today" (e.g., UTC date or app-configured timezone). Document this edge case.
-- [ ] **Future:** If auth/user preferences are added later, use `user.preferred_timezone` or `user.time_zone` to compute anchor server-side; for now, client-sent anchor is sufficient.
+- [x] **Problem:** Relative dates (last week, next 30 days) need "today" as anchor. Sports Schedules is public (no auth), so no user account or stored timezone.
+- [x] **Approach:** Client sends `anchor_date` (YYYY-MM-DD) with each query that uses relative date mode.
+  - [x] Frontend computes "today" in the user's browser: use `new Date().toLocaleDateString('en-CA')` (YYYY-MM-DD in local timezone) or equivalent — `toISOString()` is UTC and wrong for local date.
+  - [x] Include `anchor_date` in API request when `date_mode` is relative.
+  - [ ] Include `anchor_date` in URL when encoding state (Phase 5.1 not done yet)
+- [x] **Fallback:** If `anchor_date` is omitted for a relative query, server uses its own "today" (e.g., UTC date or app-configured timezone).
+- [x] **Future:** If auth/user preferences are added later, use `user.preferred_timezone` or `user.time_zone` to compute anchor server-side; for now, client-sent anchor is sufficient.
 
 **Manual Testing 5.1a:**
 - [ ] Set "Last 7 days", run — verify date range uses correct anchor
@@ -358,13 +360,14 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 5.3 Error Handling & Validation
+### 5.3 Error Handling & Validation [COMPLETED]
 
-- [ ] Query validation errors: show inline in sidebar or above results
-- [ ] DoltHub timeout / API error: "Unable to load data. Please try again."
-- [ ] Invalid date range: "Start date must be before or equal to end date."
-- [ ] Invalid row limit: "Row limit must be between 1 and 5000."
-- [ ] Log detailed errors server-side; never expose raw SQL errors to user
+- [x] Query validation errors: show inline in sidebar or above results
+- [x] DoltHub timeout / API error: "Unable to load data. Please try again."
+- [x] Invalid date range: "Start date must be before or equal to end date." (backend)
+- [x] Invalid row limit: "Row limit must be between 1 and 5000." (backend)
+- [x] Invalid N days: "Number of days must be greater than 0." (client + backend)
+- [x] Log detailed errors server-side; never expose raw SQL errors to user
 
 **Manual Testing 5.3:**
 - [ ] Trigger validation error → user sees message
@@ -373,13 +376,13 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 5.4 Mobile Responsiveness
+### 5.4 Mobile Responsiveness [partial]
 
-- [ ] Sidebar collapsible on mobile (hamburger or accordion)
-- [ ] Results table: horizontal scroll or card layout on small screens
-- [ ] Touch targets ≥ 44px
-- [ ] Run button accessible
-- [ ] Text readable (min 16px for inputs)
+- [x] Sidebar collapsible on mobile (sections collapse; column layout on narrow)
+- [x] Results table: horizontal scroll (`overflow-x: auto` on wrapper)
+- [ ] Touch targets ≥ 44px (not explicitly sized)
+- [x] Run button accessible
+- [ ] Text readable (min 16px for inputs) — uses 0.9rem, may need bump
 
 **Manual Testing 5.4:**
 - [ ] Test at 375px width
@@ -431,7 +434,7 @@ Before considering V1 complete:
 - [x] DoltHub client shared or correctly imported
 - [x] Query builder produces valid SQL for all combinations
 - [x] API returns rows and SQL
-- [x] All sidebar sections functional (Dimensions, Filters, Options; Date partial)
+- [x] All sidebar sections functional (Dimensions, Filters, Date, Options)
 - [x] Results table displays correctly
 - [x] Results summary and optional row numbers
 - [ ] Show SQL works
