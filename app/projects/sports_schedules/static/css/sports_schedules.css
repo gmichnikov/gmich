@@ -311,27 +311,48 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-/* ===== Show SQL ===== */
-.ss-sql-section {
-  padding: 0.5rem 1rem 1rem;
+/* ===== Results actions (Copy, Download CSV, Show SQL) ===== */
+.ss-results-actions {
+  padding: 0.5rem 1rem;
   border-top: 1px solid #e9ecef;
 }
 
-.ss-sql-toggle {
+.ss-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.ss-action-btn {
   background: none;
   border: none;
   font-size: 0.8rem;
   color: #6c757d;
   cursor: pointer;
-  padding: 0.5rem 0.5rem;
+  padding: 0.4rem 0.5rem;
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
 }
 
-.ss-sql-toggle:hover {
+.ss-action-btn:hover:not(:disabled) {
   color: #495057;
 }
 
+.ss-action-btn:disabled {
+  cursor: default;
+}
+
+.ss-copy-icon {
+  font-size: 0.9em;
+}
+
+.ss-sql-content {
+  margin-top: 0.5rem;
+}
+
+/* ===== Show SQL (pre block) ===== */
 .ss-sql-content {
   font-family: monospace;
   font-size: 0.8rem;
@@ -339,7 +360,6 @@
   background: #f8f9fa;
   padding: 0.75rem 1rem;
   border-radius: 6px;
-  margin-top: 0.5rem;
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-all;

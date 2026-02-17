@@ -189,8 +189,14 @@
           <div class="ss-results-table-wrapper">
             <table class="ss-results-table" id="ss-results-table"></table>
           </div>
-          <div id="ss-sql-section" class="ss-sql-section" style="display: none;">
-            <button type="button" class="ss-sql-toggle" id="ss-sql-toggle" onclick="ssToggleSql()">Show SQL</button>
+          <div id="ss-results-actions" class="ss-results-actions">
+            <div class="ss-action-buttons">
+              <button type="button" class="ss-action-btn" id="ss-sql-toggle" onclick="ssToggleSql()">Show SQL</button>
+              <button type="button" class="ss-action-btn" id="ss-copy-btn" onclick="ssCopyToClipboard()" title="Copy to clipboard (works in Excel, Google Sheets)">
+                <span class="ss-copy-icon" aria-hidden="true">📋</span> Copy
+              </button>
+              <button type="button" class="ss-action-btn" id="ss-download-csv-btn" onclick="ssDownloadCsv()" title="Download as CSV file">Download CSV</button>
+            </div>
             <pre id="ss-sql-content" class="ss-sql-content" style="display: none;"></pre>
           </div>
         </div>
@@ -482,7 +488,10 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
       : 'Showing ' + rows.length + ' rows';
 
     table.innerHTML = '';
-    if (headers.length === 0) return;
+    if (headers.length === 0) {
+      window._ssLastExportData = { headerLabels: [], headers: [], rows: [] };
+      return;
+    }
 
     const labels = window.ssDimensionLabels || {};
     const thead = document.createElement('thead');
@@ -516,14 +525,83 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     table.appendChild(tbody);
 
     window._ssLastSql = sql;
+    window._ssLastExportData = {
+      headerLabels: headers.map(function(h) {
+        return (labels[h] || h).includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
+      }),
+      headers: headers,
+      rows: rows.map(function(row) {
+        return headers.map(function(h) { return row[h] != null ? String(row[h]) : ''; });
+      })
+    };
   }
 
+  function ssEscapeCsvField(val) {
+    if (val == null) return '';
+    var s = String(val);
+    if (/[,\r\n"]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function ssEscapeTsvField(val) {
+    if (val == null) return '';
+    var s = String(val);
+    if (/[\t\r\n"]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function ssCopyToClipboard() {
+    var data = window._ssLastExportData;
+    if (!data || !data.rows.length) return;
+    var lines = [data.headerLabels.map(ssEscapeTsvField).join('\t')];
+    data.rows.forEach(function(row) {
+      lines.push(row.map(ssEscapeTsvField).join('\t'));
+    });
+    var tsv = lines.join('\r\n');
+    navigator.clipboard.writeText(tsv).then(function() {
+      var btn = document.getElementById('ss-copy-btn');
+      if (btn) {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<span class="ss-copy-icon" aria-hidden="true">✓</span> Copied!';
+        btn.disabled = true;
+        setTimeout(function() {
+          btn.innerHTML = '<span class="ss-copy-icon" aria-hidden="true">📋</span> Copy';
+          btn.disabled = false;
+        }, 1500);
+      }
+    }).catch(function() {
+      var btn = document.getElementById('ss-copy-btn');
+      if (btn) btn.textContent = 'Copy failed';
+    });
+  }
+  window.ssCopyToClipboard = ssCopyToClipboard;
+
+  function ssDownloadCsv() {
+    var data = window._ssLastExportData;
+    if (!data || !data.rows.length) return;
+    var lines = [data.headerLabels.map(ssEscapeCsvField).join(',')];
+    data.rows.forEach(function(row) {
+      lines.push(row.map(ssEscapeCsvField).join(','));
+    });
+    var csv = lines.join('\r\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'sports-schedules-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  window.ssDownloadCsv = ssDownloadCsv;
+
   function ssUpdateSqlSection(sql) {
-    const section = document.getElementById('ss-sql-section');
     const toggle = document.getElementById('ss-sql-toggle');
     const content = document.getElementById('ss-sql-content');
-    if (!section || !toggle || !content) return;
-    section.style.display = 'block';
+    if (!toggle || !content) return;
     content.textContent = sql;
     content.style.display = 'none';
     toggle.textContent = 'Show SQL';
