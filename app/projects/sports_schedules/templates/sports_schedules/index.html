@@ -8,7 +8,232 @@
 
 {% block content %}
 <div class="ss-wrapper">
-    <h1>Sports Schedules</h1>
-    <p>Schedule viewer coming soon.</p>
+  <h1 class="ss-title">Sports Schedules</h1>
+
+  <div class="ss-layout">
+    <aside class="ss-sidebar">
+      <!-- Dimensions -->
+      <div class="ss-section" data-section="dimensions">
+        <div class="ss-section-header" onclick="ssToggleSection('dimensions')">
+          <span>Dimensions</span>
+          <span class="ss-section-toggle">▼</span>
+        </div>
+        <div class="ss-section-content">
+          <ul class="ss-dimensions-list">
+            {% for col, label in dimension_labels.items() %}
+            <li class="ss-dimension-item">
+              <input type="checkbox" id="ss-dim-{{ col }}" value="{{ col }}" class="ss-dimension-cb">
+              <label for="ss-dim-{{ col }}">{{ label }}</label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="ss-section" data-section="filters">
+        <div class="ss-section-header" onclick="ssToggleSection('filters')">
+          <span>Filters</span>
+          <span class="ss-section-toggle">▼</span>
+        </div>
+        <div class="ss-section-content">
+          <p class="ss-filter-hint">All filters combined with AND</p>
+
+          {% for col, opts in low_cardinality_options.items() %}
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-filter-{{ col }}">{{ dimension_labels.get(col, col) }}</label>
+            <select multiple id="ss-filter-{{ col }}" class="ss-filter-multiselect" data-filter="{{ col }}">
+              {% for value, label in opts %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endfor %}
+
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-filter-home_team">Home Team (contains)</label>
+            <input type="text" id="ss-filter-home_team" class="ss-filter-text" placeholder="e.g., Celtics" data-filter="home_team">
+          </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-filter-road_team">Road Team (contains)</label>
+            <input type="text" id="ss-filter-road_team" class="ss-filter-text" placeholder="e.g., Lakers" data-filter="road_team">
+          </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-filter-location">Location (contains)</label>
+            <input type="text" id="ss-filter-location" class="ss-filter-text" placeholder="Venue name" data-filter="location">
+          </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-filter-home_city">City (contains)</label>
+            <input type="text" id="ss-filter-home_city" class="ss-filter-text" placeholder="e.g., Boston" data-filter="home_city">
+          </div>
+        </div>
+      </div>
+
+      <!-- Options (placeholder for Phase 3 - count, limit, sort) -->
+      <div class="ss-section" data-section="options">
+        <div class="ss-section-header" onclick="ssToggleSection('options')">
+          <span>Options</span>
+          <span class="ss-section-toggle">▼</span>
+        </div>
+        <div class="ss-section-content">
+          <div class="ss-filter-group">
+            <label class="ss-dimension-item">
+              <input type="checkbox" id="ss-count" class="ss-option-count">
+              <span>Include count</span>
+            </label>
+          </div>
+          <div class="ss-filter-group">
+            <label class="ss-filter-label" for="ss-limit">Row limit</label>
+            <input type="number" id="ss-limit" class="ss-filter-text" value="500" min="1" max="5000">
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
+    </aside>
+
+    <main class="ss-main">
+      <div id="ss-results-container" class="ss-results">
+        <div id="ss-results-empty" class="ss-results-empty">
+          Select dimensions and click Run to view schedules
+        </div>
+        <div id="ss-results-loading" class="ss-results-loading" style="display: none;">
+          Loading...
+        </div>
+        <div id="ss-results-error" class="ss-results-error" style="display: none;"></div>
+        <div id="ss-results-content" style="display: none;">
+          <div id="ss-results-summary" class="ss-results-summary"></div>
+          <div class="ss-results-table-wrapper">
+            <table class="ss-results-table" id="ss-results-table"></table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </div>
+
+<script>
+window.ssDimensionLabels = {{ dimension_labels | tojson }};
+
+(function() {
+  function ssToggleSection(name) {
+    const section = document.querySelector('[data-section="' + name + '"]');
+    if (section) section.classList.toggle('collapsed');
+  }
+  window.ssToggleSection = ssToggleSection;
+
+  function ssCollectParams() {
+    const params = new URLSearchParams();
+
+    // Dimensions (checked, in DOM order)
+    const dimCbs = document.querySelectorAll('.ss-dimension-cb:checked');
+    const dimensions = Array.from(dimCbs).map(cb => cb.value);
+    if (dimensions.length) params.set('dimensions', dimensions.join(','));
+
+    // Count
+    const countEl = document.getElementById('ss-count');
+    if (countEl && countEl.checked) params.set('count', '1');
+
+    // Limit
+    const limitEl = document.getElementById('ss-limit');
+    if (limitEl) params.set('limit', limitEl.value || '500');
+
+    // Low-cardinality filters (multiselect)
+    document.querySelectorAll('.ss-filter-multiselect').forEach(sel => {
+      const col = sel.dataset.filter;
+      const vals = Array.from(sel.selectedOptions).map(o => o.value);
+      if (vals.length) params.set(col, vals.join(','));
+    });
+
+    // High-cardinality filters (text)
+    document.querySelectorAll('.ss-filter-text[data-filter]').forEach(inp => {
+      const col = inp.dataset.filter;
+      const val = inp.value.trim();
+      if (val) params.set(col, val);
+    });
+
+    return params;
+  }
+
+  function ssRunQuery() {
+    const dimensions = document.querySelectorAll('.ss-dimension-cb:checked');
+    const countEl = document.getElementById('ss-count');
+    const countOn = countEl && countEl.checked;
+
+    if (dimensions.length === 0 && !countOn) {
+      const errEl = document.getElementById('ss-results-error');
+      errEl.textContent = 'Select at least one dimension or turn on count to run a query.';
+      errEl.style.display = 'block';
+      document.getElementById('ss-results-empty').style.display = 'none';
+      document.getElementById('ss-results-loading').style.display = 'none';
+      document.getElementById('ss-results-content').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('ss-results-error').style.display = 'none';
+    document.getElementById('ss-results-empty').style.display = 'none';
+    document.getElementById('ss-results-content').style.display = 'none';
+    document.getElementById('ss-results-loading').style.display = 'flex';
+
+    const params = ssCollectParams();
+    fetch('/sports-schedules/api/query?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        document.getElementById('ss-results-loading').style.display = 'none';
+        if (data.error) {
+          document.getElementById('ss-results-error').textContent = data.error;
+          document.getElementById('ss-results-error').style.display = 'block';
+          return;
+        }
+        ssRenderResults(data.rows || [], data.sql || '', params.get('dimensions') || '', params.get('limit') || '500');
+        document.getElementById('ss-results-content').style.display = 'block';
+      })
+      .catch(function() {
+        document.getElementById('ss-results-loading').style.display = 'none';
+        document.getElementById('ss-results-error').textContent = 'Unable to load data. Please try again.';
+        document.getElementById('ss-results-error').style.display = 'block';
+      });
+  }
+  window.ssRunQuery = ssRunQuery;
+
+  function ssRenderResults(rows, sql, dimensionsStr, limit) {
+    const table = document.getElementById('ss-results-table');
+    const summaryEl = document.getElementById('ss-results-summary');
+
+    const headers = rows.length && rows[0] ? Object.keys(rows[0]) : [];
+
+    summaryEl.textContent = rows.length === parseInt(limit) && limit >= 500
+      ? rows.length + ' rows (limit reached)'
+      : 'Showing ' + rows.length + ' rows';
+
+    table.innerHTML = '';
+    if (headers.length === 0) return;
+
+    const labels = window.ssDimensionLabels || {};
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
+      tr.appendChild(th);
+    });
+    thead.appendChild(tr);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      headers.forEach(h => {
+        const td = document.createElement('td');
+        td.textContent = row[h] != null ? row[h] : '';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    window._ssLastSql = sql;
+  }
+})();
+</script>
 {% endblock %}

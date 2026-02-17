@@ -97,6 +97,27 @@ class TestApiQuerySuccess(unittest.TestCase):
         self.assertIn("NBA", call_args)
         self.assertIn("basketball", call_args)
 
+    @patch("app.projects.sports_schedules.routes.DoltHubClient")
+    def test_contains_filter_passed_to_query(self, mock_dolt_cls):
+        mock_dolt_cls.return_value.execute_sql.return_value = {"rows": []}
+        r = self.client.get(
+            "/sports-schedules/api/query"
+            "?dimensions=home_team&home_team=Celtics&limit=5"
+        )
+        self.assertEqual(r.status_code, 200)
+        call_args = mock_dolt_cls.return_value.execute_sql.call_args[0][0]
+        self.assertIn("LIKE", call_args)
+        self.assertIn("LOWER", call_args)
+        self.assertIn("Celtics", call_args)
+
+    @patch("app.projects.sports_schedules.routes.DoltHubClient")
+    def test_count_yes_parsed_as_true(self, mock_dolt_cls):
+        mock_dolt_cls.return_value.execute_sql.return_value = {"rows": [{"# Games": 10}]}
+        r = self.client.get("/sports-schedules/api/query?count=yes")
+        self.assertEqual(r.status_code, 200)
+        call_args = mock_dolt_cls.return_value.execute_sql.call_args[0][0]
+        self.assertIn("COUNT(*)", call_args)
+
 
 class TestApiQueryDoltHubError(unittest.TestCase):
     """API returns 500 when DoltHub fails."""

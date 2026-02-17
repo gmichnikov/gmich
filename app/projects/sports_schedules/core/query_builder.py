@@ -167,7 +167,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         placeholders = ", ".join(f"'{v.replace(chr(39), chr(39)+chr(39))}'" for v in vals)
         conditions.append(f"`{col}` IN ({placeholders})")
     for col, val in high_filters.items():
-        conditions.append(f"`{col}` LIKE '%{val}%'")
+        conditions.append(f"LOWER(`{col}`) LIKE LOWER('%{val}%')")
     if date_start_dt and date_end_dt:
         conditions.append(f"`date` BETWEEN '{date_start_dt}' AND '{date_end_dt}'")
     where = " AND ".join(conditions) if conditions else "1=1"

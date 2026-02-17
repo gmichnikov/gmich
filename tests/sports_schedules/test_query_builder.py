@@ -174,6 +174,25 @@ class TestBuildSqlFilters(unittest.TestCase):
         self.assertIsNone(err)
         self.assertIn("\\%", sql)
 
+    def test_contains_filter_case_insensitive(self):
+        sql, err = build_sql({
+            "dimensions": ["home_team"],
+            "filters": {"home_team": "Celtics"},
+        })
+        self.assertIsNone(err)
+        self.assertIn("LOWER", sql)
+        self.assertIn("LIKE", sql)
+
+    def test_multiple_contains_filters_combined_with_and(self):
+        sql, err = build_sql({
+            "dimensions": ["home_team", "road_team"],
+            "filters": {"home_team": "Celtics", "home_city": "Boston"},
+        })
+        self.assertIsNone(err)
+        self.assertIn("Celtics", sql)
+        self.assertIn("Boston", sql)
+        self.assertIn("AND", sql)  # both conditions combined with AND
+
 
 class TestBuildSqlSort(unittest.TestCase):
     """Sort order tests."""
@@ -192,4 +211,16 @@ class TestBuildSqlSort(unittest.TestCase):
         })
         self.assertIsNone(err)
         self.assertIn("ORDER BY", sql)
+        self.assertIn("DESC", sql)
+
+    def test_sort_by_count_when_count_on(self):
+        sql, err = build_sql({
+            "dimensions": ["league"],
+            "count": 1,
+            "sort_column": "# Games",
+            "sort_dir": "desc",
+        })
+        self.assertIsNone(err)
+        self.assertIn("ORDER BY", sql)
+        self.assertIn("# Games", sql)
         self.assertIn("DESC", sql)

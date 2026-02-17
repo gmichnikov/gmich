@@ -49,8 +49,16 @@ def _parse_query_params():
 
 @sports_schedules_bp.route("/")
 def index():
-    """Placeholder - will be the main schedule viewer."""
-    return render_template("sports_schedules/index.html")
+    """Main schedule viewer - query builder UI."""
+    from app.projects.sports_schedules.core.constants import (
+        DIMENSION_LABELS,
+        LOW_CARDINALITY_OPTIONS,
+    )
+    return render_template(
+        "sports_schedules/index.html",
+        dimension_labels=DIMENSION_LABELS,
+        low_cardinality_options=LOW_CARDINALITY_OPTIONS,
+    )
 
 
 @sports_schedules_bp.route("/api/query")

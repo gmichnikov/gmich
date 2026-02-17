@@ -1,7 +1,259 @@
-/* Sports Schedules - Public viewer. Prefix: ss- to avoid collisions */
+/* Sports Schedules - Public viewer. All classes use ss- prefix */
 
+.ss-title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* ===== Wrapper & Page Container ===== */
 .ss-wrapper {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* ===== Layout: Sidebar + Main ===== */
+.ss-layout {
+  display: flex;
+  gap: 2rem;
+  min-height: 400px;
+}
+
+.ss-sidebar {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ss-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== Section (Collapsible) ===== */
+.ss-section {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ss-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  background: #f8f9fa;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.ss-section-header:hover {
+  background: #f1f3f5;
+}
+
+.ss-section-toggle {
+  font-size: 0.75rem;
+  color: #6c757d;
+  transition: transform 0.2s;
+}
+
+.ss-section.collapsed .ss-section-toggle {
+  transform: rotate(-90deg);
+}
+
+.ss-section-content {
+  padding: 1rem;
+}
+
+.ss-section.collapsed .ss-section-content {
+  display: none;
+}
+
+/* ===== Dimension Checkboxes ===== */
+.ss-dimensions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ss-dimension-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.ss-dimension-item input {
+  margin: 0;
+  cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+}
+
+.ss-dimension-item label {
+  cursor: pointer;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ===== Filter Multiselect ===== */
+.ss-filter-group {
+  margin-bottom: 1rem;
+}
+
+.ss-filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.ss-filter-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.3rem;
+}
+
+.ss-filter-multiselect {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.4rem;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+.ss-filter-hint {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+/* ===== Contains Search Inputs ===== */
+.ss-filter-text {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+.ss-filter-text::placeholder {
+  color: #adb5bd;
+}
+
+/* ===== Run Button ===== */
+.ss-run-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #667eea;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.ss-run-btn:hover {
+  background: #5a67d8;
+}
+
+.ss-run-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* ===== Results Area ===== */
+.ss-results {
+  min-height: 200px;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: #f8f9fa;
+}
+
+.ss-results-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6c757d;
+  font-size: 0.95rem;
   padding: 2rem;
+  text-align: center;
+}
+
+.ss-results-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6c757d;
+}
+
+.ss-results-error {
+  padding: 1rem 1.5rem;
+  color: #721c24;
+  background: #f8d7da;
+  border-radius: 8px;
+  margin: 1rem;
+}
+
+.ss-results-table-wrapper {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.ss-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ss-results-table th,
+.ss-results-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.ss-results-table th {
+  background: #e9ecef;
+  font-weight: 600;
+  color: #495057;
+}
+
+.ss-results-summary {
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  .ss-layout {
+    flex-direction: column;
+  }
+
+  .ss-sidebar {
+    flex: none;
+  }
+
+  .ss-wrapper {
+    padding: 1rem;
+  }
 }
