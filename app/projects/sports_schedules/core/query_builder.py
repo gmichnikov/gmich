@@ -184,6 +184,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
     else:
         sel_cols = [f"`{c}`" for c in valid_dims]
         select = ", ".join(sel_cols)
+        group_by = ""
 
     # --- ORDER BY ---
     if sort_column:
