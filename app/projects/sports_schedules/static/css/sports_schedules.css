@@ -47,7 +47,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
+  min-height: 44px;
   background: #f8f9fa;
   cursor: pointer;
   font-weight: 600;
@@ -97,8 +98,10 @@
 .ss-dimension-item input {
   margin: 0;
   cursor: pointer;
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 22px;
+  min-height: 22px;
 }
 
 .ss-dimension-item label {
@@ -128,7 +131,7 @@
   width: 100%;
   min-height: 80px;
   padding: 0.4rem;
-  font-size: 0.9rem;
+  font-size: 16px;
   border: 1px solid #ced4da;
   border-radius: 6px;
 }
@@ -143,7 +146,7 @@
 .ss-filter-text {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  font-size: 0.9rem;
+  font-size: 16px; /* prevents iOS zoom on focus */
   border: 1px solid #ced4da;
   border-radius: 6px;
 }
@@ -155,7 +158,7 @@
 .ss-filter-select {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  font-size: 0.9rem;
+  font-size: 16px;
   border: 1px solid #ced4da;
   border-radius: 6px;
 }
@@ -191,6 +194,10 @@
 .ss-radio-label input {
   margin: 0;
   cursor: pointer;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 22px;
+  min-height: 22px;
 }
 
 .ss-date-input-group {
@@ -206,6 +213,7 @@
   display: block;
   width: 100%;
   padding: 0.75rem 1.5rem;
+  min-height: 44px;
   font-size: 1rem;
   font-weight: 600;
   color: white;
@@ -285,6 +293,17 @@
   color: #495057;
 }
 
+.ss-row-num-header,
+.ss-row-num {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  font-weight: 400;
+}
+
+.ss-row-num-header {
+  width: 2.5rem;
+}
+
 .ss-results-summary {
   font-size: 0.85rem;
   color: #6c757d;
@@ -304,7 +323,9 @@
   font-size: 0.8rem;
   color: #6c757d;
   cursor: pointer;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
 }
 
 .ss-sql-toggle:hover {

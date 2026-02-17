@@ -283,13 +283,13 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 4.2 Results Summary & Row Numbers
+### 4.2 Results Summary & Row Numbers [COMPLETED]
 
 - [x] Add results summary above or below table
   - [x] "Showing N rows" when N < limit
   - [x] "N rows (limit reached)" when N equals limit (user may want to increase limit)
-- [ ] Optional: subtle row numbers (1, 2, 3…) in first column
-  - [ ] Muted styling, small font
+- [x] Optional: subtle row numbers (1, 2, 3…) in first column
+  - [x] Muted styling, small font
 
 **Manual Testing 4.2:**
 - [x] Run query returning 50 rows → "Showing 50 rows"
@@ -328,7 +328,7 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 - [x] **Approach:** Client sends `anchor_date` (YYYY-MM-DD) with each query that uses relative date mode.
   - [x] Frontend computes "today" in the user's browser: use `new Date().toLocaleDateString('en-CA')` (YYYY-MM-DD in local timezone) or equivalent — `toISOString()` is UTC and wrong for local date.
   - [x] Include `anchor_date` in API request when `date_mode` is relative.
-  - [ ] Include `anchor_date` in URL when encoding state (Phase 5.1 not done yet)
+  - [x] Include `anchor_date` in URL when encoding state
 - [x] **Fallback:** If `anchor_date` is omitted for a relative query, server uses its own "today" (e.g., UTC date or app-configured timezone).
 - [x] **Future:** If auth/user preferences are added later, use `user.preferred_timezone` or `user.time_zone` to compute anchor server-side; for now, client-sent anchor is sufficient.
 
@@ -372,13 +372,13 @@ This plan follows the Sports Schedules PRD and breaks implementation into smalle
 
 ---
 
-### 5.4 Mobile Responsiveness [partial]
+### 5.4 Mobile Responsiveness [COMPLETED]
 
 - [x] Sidebar collapsible on mobile (sections collapse; column layout on narrow)
 - [x] Results table: horizontal scroll (`overflow-x: auto` on wrapper)
-- [ ] Touch targets ≥ 44px (not explicitly sized)
+- [x] Touch targets ≥ 44px (section headers, Run button, checkboxes, Show SQL)
 - [x] Run button accessible
-- [ ] Text readable (min 16px for inputs) — uses 0.9rem, may need bump
+- [x] Text readable (16px for inputs — prevents iOS zoom)
 
 **Manual Testing 5.4:**
 - [ ] Test at 375px width

@@ -487,6 +487,10 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     const labels = window.ssDimensionLabels || {};
     const thead = document.createElement('thead');
     const tr = document.createElement('tr');
+    const thNum = document.createElement('th');
+    thNum.textContent = '#';
+    thNum.className = 'ss-row-num-header';
+    tr.appendChild(thNum);
     headers.forEach(h => {
       const th = document.createElement('th');
       th.textContent = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
@@ -496,8 +500,12 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    rows.forEach(row => {
+    rows.forEach(function(row, idx) {
       const tr = document.createElement('tr');
+      const tdNum = document.createElement('td');
+      tdNum.textContent = idx + 1;
+      tdNum.className = 'ss-row-num';
+      tr.appendChild(tdNum);
       headers.forEach(h => {
         const td = document.createElement('td');
         td.textContent = row[h] != null ? row[h] : '';
