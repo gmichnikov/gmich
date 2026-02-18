@@ -127,11 +127,11 @@
               <select id="ss-date-mode-select" class="ss-date-mode-select">
                 <option value="">None</option>
                 <option value="exact">Exact date</option>
-                <option value="today">Today</option>
-                <option value="on_or_after">On or after</option>
-                <option value="this_weekend">This weekend</option>
                 <option value="range">Date range</option>
-                <option value="year">Year only</option>
+                <option value="on_or_after">On or after</option>
+                <option value="today">Today</option>
+                <option value="this_weekend">This weekend</option>
+                <option value="future">Future</option>
                 <option value="last_n">Last N days</option>
                 <option value="next_week" {% if default_filters.get('date') == 'next_week' %}selected{% endif %}>Next 7 days</option>
                 <option value="next_n">Next N days</option>
@@ -139,7 +139,6 @@
               <div id="ss-date-exact-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-exact" class="ss-filter-text"></div>
               <div id="ss-date-on-or-after-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-on-or-after" class="ss-filter-text"></div>
               <div id="ss-date-range-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-start" class="ss-filter-text"> <span class="ss-date-sep">to</span> <input type="date" id="ss-date-end" class="ss-filter-text"></div>
-              <div id="ss-date-year-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-year" class="ss-filter-text" placeholder="e.g. 2026" min="2000" max="2100"></div>
               <div id="ss-date-n-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-n" class="ss-filter-text" placeholder="Days" min="1" max="365"></div>
             </div>
             {% else %}
@@ -338,7 +337,6 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       }
     }
     g = document.getElementById('ss-date-range-group'); if (g) g.style.display = val === 'range' ? showVal : 'none';
-    g = document.getElementById('ss-date-year-group'); if (g) g.style.display = val === 'year' ? showVal : 'none';
     g = document.getElementById('ss-date-n-group'); if (g) g.style.display = (val === 'last_n' || val === 'next_n') ? showVal : 'none';
   }
 
@@ -517,15 +515,13 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       } else if (dateMode === 'range') {
         var s = params.get('date_start'); if (s) { var el = document.getElementById('ss-date-start'); if (el) el.value = s; }
         var e = params.get('date_end'); if (e) { var el = document.getElementById('ss-date-end'); if (el) el.value = e; }
-      } else if (dateMode === 'year') {
-        var y = params.get('date_year'); if (y) { var el = document.getElementById('ss-date-year'); if (el) el.value = y; }
       } else if (dateMode === 'last_n' || dateMode === 'next_n') {
         var n = params.get('date_n'); if (n) { var el = document.getElementById('ss-date-n'); if (el) el.value = n; }
       }
       var anchor = params.get('anchor_date');
       if (anchor) { var el = document.getElementById('ss-anchor-date'); if (el) el.value = anchor; }
     }
-    if (!dateMode || ['exact', 'today', 'on_or_after', 'this_weekend', 'range', 'year'].indexOf(dateMode) >= 0) {
+    if (!dateMode || ['exact', 'today', 'on_or_after', 'this_weekend', 'range', 'future'].indexOf(dateMode) >= 0) {
       var el = document.getElementById('ss-anchor-date');
       if (el) el.value = '';
     }
@@ -593,9 +589,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
             params.set('date_start', start.value);
             params.set('date_end', end.value);
           }
-        } else if (mode === 'year') {
-          const y = document.getElementById('ss-date-year');
-          if (y && y.value) params.set('date_mode', 'year'), params.set('date_year', y.value);
+        } else if (mode === 'future') {
+          params.set('date_mode', 'future');
+          params.set('anchor_date', ssGetAnchorDate());
         } else if (mode === 'next_week') {
           params.set('date_mode', mode);
           params.set('anchor_date', ssGetAnchorDate());
@@ -1116,8 +1112,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       else if (config.date_mode === 'range' && config.date_start && config.date_end) {
         params.set('date_start', config.date_start);
         params.set('date_end', config.date_end);
-      } else if (config.date_mode === 'year' && config.date_year) params.set('date_year', String(config.date_year));
-      else if ((config.date_mode === 'last_n' || config.date_mode === 'next_n') && config.date_n) {
+      }       else if (config.date_mode === 'future') {
+        params.set('anchor_date', anchor);
+      } else if ((config.date_mode === 'last_n' || config.date_mode === 'next_n') && config.date_n) {
         params.set('date_n', String(config.date_n));
         params.set('anchor_date', anchor);
       } else if (config.date_mode === 'next_week') {

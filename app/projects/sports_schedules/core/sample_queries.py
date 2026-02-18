@@ -75,6 +75,6 @@ def config_to_params(config: dict, anchor_date: str | None = None) -> dict:
     mode = params["date_mode"]
     if mode == "this_weekend" and not params["date_start"]:
         params["date_start"], params["date_end"] = _compute_this_weekend(anchor)
-    elif mode in ("next_week", "last_n", "next_n") and not params["anchor_date"]:
+    elif mode in ("next_week", "last_n", "next_n", "future") and not params["anchor_date"]:
         params["anchor_date"] = anchor
     return params

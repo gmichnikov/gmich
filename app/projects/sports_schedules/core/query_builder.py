@@ -157,7 +157,14 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
                 return None, "Start date must be before or equal to end date."
             date_start_dt = ds
             date_end_dt = de
+    elif date_mode == "future":
+        anchor = _parse_date(anchor_date)
+        if not anchor:
+            anchor = datetime.utcnow().date()
+        date_start_dt = anchor + timedelta(days=1)
+        date_end_dt = datetime(2099, 12, 31).date()
     elif date_mode == "year":
+        # Kept for backward compatibility with saved URLs
         try:
             y = int(date_year)
             date_start_dt = datetime(y, 1, 1).date()
