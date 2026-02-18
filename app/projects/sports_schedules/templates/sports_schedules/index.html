@@ -223,6 +223,23 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
   window.ssToggleSection = ssToggleSection;
 
+  function ssClearResultsAndUrl() {
+    window.history.replaceState({}, '', window.location.pathname);
+    document.getElementById('ss-results-empty').style.display = 'flex';
+    document.getElementById('ss-results-loading').style.display = 'none';
+    document.getElementById('ss-results-error').style.display = 'none';
+    document.getElementById('ss-results-content').style.display = 'none';
+    var table = document.getElementById('ss-results-table');
+    if (table) table.innerHTML = '';
+    var sqlContent = document.getElementById('ss-sql-content');
+    if (sqlContent) sqlContent.style.display = 'none';
+    var sqlToggle = document.getElementById('ss-sql-toggle');
+    if (sqlToggle) sqlToggle.textContent = 'Show SQL';
+    var staleEl = document.getElementById('ss-results-stale-warning');
+    if (staleEl) staleEl.style.display = 'none';
+    window._ssLastRunParams = null;
+  }
+
   function ssResetFields() {
     var dims = window.ssDefaultDimensions || [];
     var filters = window.ssDefaultFilters || {};
@@ -248,6 +265,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     ssUpdateDateModeVisibility();
     ssUpdateFilterBarVisibility();
     ssUpdateSortColumnOptions();
+    ssClearResultsAndUrl();
   }
   window.ssResetFields = ssResetFields;
 
@@ -267,6 +285,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     ssUpdateDateModeVisibility();
     ssUpdateFilterBarVisibility();
     ssUpdateSortColumnOptions();
+    ssClearResultsAndUrl();
   }
   window.ssClearFields = ssClearFields;
 
