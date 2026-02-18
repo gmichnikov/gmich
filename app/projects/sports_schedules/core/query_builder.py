@@ -6,12 +6,12 @@ from datetime import datetime, timedelta
 
 from app.projects.sports_schedules.core.constants import (
     DIMENSION_LABELS,
+    HIGH_CARDINALITY_FILTERS,
     LOW_CARDINALITY_OPTIONS,
 )
 
 TABLE = "`combined-schedule`"
 VALID_DIMENSIONS = set(DIMENSION_LABELS.keys())
-HIGH_CARDINALITY_FILTERS = ["home_team", "road_team", "location", "home_city"]
 
 # Allowlist for low-cardinality: column -> set of valid values
 _LOW_CARD_ALLOWLIST = {
@@ -107,8 +107,14 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
     high_filters = {}
     for col in HIGH_CARDINALITY_FILTERS:
         val = filters.get(col)
-        if val and isinstance(val, str) and val.strip():
-            high_filters[col] = _escape_like_value(val.strip())
+        if not val:
+            continue
+        if isinstance(val, str):
+            vals = [v.strip() for v in val.split(",") if v.strip()]
+        else:
+            vals = [str(v).strip() for v in val if v]
+        if vals:
+            high_filters[col] = [_escape_like_value(v) for v in vals]
 
     # --- Filters: either_team (OR across home/road; 2 values = matchup) ---
     either_team_conditions = []
@@ -198,8 +204,9 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
     for col, vals in low_filters.items():
         placeholders = ", ".join(f"'{v.replace(chr(39), chr(39)+chr(39))}'" for v in vals)
         conditions.append(f"`{col}` IN ({placeholders})")
-    for col, val in high_filters.items():
-        conditions.append(f"LOWER(`{col}`) LIKE LOWER('%{val}%')")
+    for col, vals in high_filters.items():
+        or_parts = [f"LOWER(`{col}`) LIKE LOWER('%{v}%')" for v in vals]
+        conditions.append("(" + " OR ".join(or_parts) + ")")
     conditions.extend(either_team_conditions)
     if date_start_dt and date_end_dt:
         conditions.append(f"`date` BETWEEN '{date_start_dt}' AND '{date_end_dt}'")

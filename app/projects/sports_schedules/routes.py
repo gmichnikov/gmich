@@ -39,7 +39,7 @@ def _parse_query_params():
     for col in ("home_team", "road_team", "location", "home_city"):
         val = args.get(col)
         if val and val.strip():
-            filters[col] = val.strip()
+            filters[col] = [v.strip() for v in val.split(",") if v.strip()]
     et1 = args.get("either_team_1", "").strip()
     et2 = args.get("either_team_2", "").strip()
     if et1 or et2:
@@ -70,6 +70,7 @@ def index():
         DIMENSION_LABELS,
         FIELD_ORDER,
         FILTER_ONLY_FIELDS,
+        HIGH_CARDINALITY_FILTERS,
         LOW_CARDINALITY_OPTIONS,
     )
     return render_template(
@@ -79,6 +80,7 @@ def index():
         dimension_labels=DIMENSION_LABELS,
         field_order=FIELD_ORDER,
         filter_only_fields=FILTER_ONLY_FIELDS,
+        high_cardinality_filters=HIGH_CARDINALITY_FILTERS,
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
         is_authenticated=current_user.is_authenticated,
         login_url=url_for("auth.login"),

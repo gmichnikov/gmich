@@ -487,6 +487,72 @@
   max-height: 140px;
 }
 
+/* Multi-input contains filters (home_team, road_team, location, home_city) */
+.ss-filter-multi-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ss-filter-multi-input-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ss-filter-multi-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ss-filter-multi-input {
+  width: 6rem;
+  min-width: 5rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.8rem;
+}
+
+.ss-filter-multi-input-remove {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #adb5bd;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.ss-filter-multi-input-remove:hover {
+  color: #495057;
+  background: #e9ecef;
+}
+
+.ss-filter-multi-input-add {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px dashed #adb5bd;
+  background: none;
+  color: #6c757d;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.ss-filter-multi-input-add:hover {
+  border-color: #6c757d;
+  color: #495057;
+}
+
 .ss-filter-either-team {
   display: flex;
   align-items: center;

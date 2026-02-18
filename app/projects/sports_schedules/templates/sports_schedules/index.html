@@ -122,6 +122,16 @@
               <span class="ss-date-sep">vs</span>
               <input type="text" id="ss-filter-either-team-2" class="ss-filter-text" placeholder="Team 2 (optional)" data-filter="either_team">
             </div>
+            {% elif col in high_cardinality_filters %}
+            <div class="ss-filter-multi-inputs" id="ss-filter-{{ col }}-container" data-filter="{{ col }}">
+              <div class="ss-filter-multi-input-list">
+                <div class="ss-filter-multi-input-row">
+                  <input type="text" class="ss-filter-text ss-filter-multi-input" placeholder="Contains..." data-filter="{{ col }}">
+                  <button type="button" class="ss-filter-multi-input-remove" title="Remove" aria-label="Remove">×</button>
+                </div>
+              </div>
+              <button type="button" class="ss-filter-multi-input-add" title="Add another" aria-label="Add another value">+</button>
+            </div>
             {% elif col == 'date' %}
             <div class="ss-filter-date-inner">
               <select id="ss-date-mode-select" class="ss-date-mode-select">
@@ -395,6 +405,46 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     sel.addEventListener('change', function() { ssUpdateFilterSelected(sel.dataset.filter); });
   });
 
+  function ssUpdateMultiInputRemoveVisibility(container) {
+    var rows = container.querySelectorAll('.ss-filter-multi-input-row');
+    var showX = rows.length > 1;
+    rows.forEach(function(row) {
+      var btn = row.querySelector('.ss-filter-multi-input-remove');
+      if (btn) btn.style.display = showX ? '' : 'none';
+    });
+  }
+
+  function ssInitMultiInputFilters() {
+    document.querySelectorAll('.ss-filter-multi-inputs').forEach(function(container) {
+      var list = container.querySelector('.ss-filter-multi-input-list');
+      var addBtn = container.querySelector('.ss-filter-multi-input-add');
+      var col = container.dataset.filter;
+      if (!list || !addBtn) return;
+
+      addBtn.addEventListener('click', function() {
+        var row = document.createElement('div');
+        row.className = 'ss-filter-multi-input-row';
+        row.innerHTML = '<input type="text" class="ss-filter-text ss-filter-multi-input" placeholder="Contains..." data-filter="' + col + '">' +
+          '<button type="button" class="ss-filter-multi-input-remove" title="Remove" aria-label="Remove">×</button>';
+        list.appendChild(row);
+        row.querySelector('.ss-filter-multi-input-remove').addEventListener('click', function() {
+          row.remove();
+          ssUpdateMultiInputRemoveVisibility(container);
+        });
+        ssUpdateMultiInputRemoveVisibility(container);
+      });
+
+      container.querySelectorAll('.ss-filter-multi-input-remove').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          btn.closest('.ss-filter-multi-input-row').remove();
+          ssUpdateMultiInputRemoveVisibility(container);
+        });
+      });
+      ssUpdateMultiInputRemoveVisibility(container);
+    });
+  }
+  ssInitMultiInputFilters();
+
   ssUpdateAllFilterSelected();
 
   function ssUpdateSortColumnOptions() {
@@ -482,13 +532,30 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       }
     });
 
-    // High-cardinality filters
+    // High-cardinality filters (multi-input)
     ['home_team', 'road_team', 'location', 'home_city'].forEach(function(col) {
       var val = params.get(col);
-      if (val) {
-        var inp = document.getElementById('ss-filter-' + col);
-        if (inp) inp.value = val;
-      }
+      var container = document.getElementById('ss-filter-' + col + '-container');
+      if (!container || !val) return;
+      var vals = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      if (vals.length === 0) return;
+      var list = container.querySelector('.ss-filter-multi-input-list');
+      var addBtn = container.querySelector('.ss-filter-multi-input-add');
+      if (!list || !addBtn) return;
+      list.innerHTML = '';
+      vals.forEach(function(v) {
+        var row = document.createElement('div');
+        row.className = 'ss-filter-multi-input-row';
+        row.innerHTML = '<input type="text" class="ss-filter-text ss-filter-multi-input" placeholder="Contains..." data-filter="' + col + '">' +
+          '<button type="button" class="ss-filter-multi-input-remove" title="Remove" aria-label="Remove">×</button>';
+        row.querySelector('input').value = v;
+        list.appendChild(row);
+        row.querySelector('.ss-filter-multi-input-remove').addEventListener('click', function() {
+          row.remove();
+          ssUpdateMultiInputRemoveVisibility(container);
+        });
+      });
+      ssUpdateMultiInputRemoveVisibility(container);
     });
 
     // either_team
@@ -612,13 +679,21 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         if (v1) params.set('either_team_1', v1);
         if (v2) params.set('either_team_2', v2);
       } else {
-        const sel = document.getElementById('ss-filter-' + col);
-        if (sel && sel.multiple) {
-          const vals = Array.from(sel.selectedOptions).map(o => o.value);
+        const container = document.getElementById('ss-filter-' + col + '-container');
+        if (container) {
+          const vals = Array.from(container.querySelectorAll('.ss-filter-multi-input'))
+            .map(function(inp) { return inp.value.trim(); })
+            .filter(Boolean);
           if (vals.length) params.set(col, vals.join(','));
         } else {
-          const inp = document.getElementById('ss-filter-' + col);
-          if (inp && inp.value) params.set(col, inp.value.trim());
+          const sel = document.getElementById('ss-filter-' + col);
+          if (sel && sel.multiple) {
+            const vals = Array.from(sel.selectedOptions).map(o => o.value);
+            if (vals.length) params.set(col, vals.join(','));
+          } else {
+            const inp = document.getElementById('ss-filter-' + col);
+            if (inp && inp.value) params.set(col, inp.value.trim());
+          }
         }
       }
     });

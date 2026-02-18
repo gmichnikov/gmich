@@ -64,6 +64,9 @@ FIELD_ORDER = [
 # Fields that can only be used as filters (no dimension)
 FILTER_ONLY_FIELDS = ["either_team"]
 
+# High-cardinality contains filters: multi-input (OR across values)
+HIGH_CARDINALITY_FILTERS = ["home_team", "road_team", "location", "home_city"]
+
 # Default dimensions when page loads with no URL state
 DEFAULT_DIMENSIONS = ["date", "time", "home_team", "road_team"]
 
