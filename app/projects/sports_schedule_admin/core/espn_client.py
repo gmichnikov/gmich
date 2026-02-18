@@ -35,11 +35,14 @@ class ESPNClient:
 
     LEAGUE_MAP = {
         "MLB": ("baseball", "mlb", "pro"),
+        "NCB": ("baseball", "college-baseball", "college"),
         "NBA": ("basketball", "nba", "pro"),
         "NFL": ("football", "nfl", "pro"),
         "NHL": ("hockey", "nhl", "pro"),
         "MLS": ("soccer", "usa.1", "pro"),
         "NWSL": ("soccer", "usa.nwsl", "pro"),
+        "NCSM": ("soccer", "usa.ncaa.m.1", "college"),
+        "NCSW": ("soccer", "usa.ncaa.w.1", "college"),
         "EPL": ("soccer", "eng.1", "pro"),
         "CL": ("soccer", "uefa.champions", "pro"),
         "EL": ("soccer", "uefa.europa", "pro"),
@@ -58,8 +61,11 @@ class ESPNClient:
     # "calendar" = Jan 1 - Dec 31; "school" = Aug 1 - following July 31
     LEAGUE_SEASON_TYPE = {
         "MLB": "calendar",
+        "NCB": "school",
         "MLS": "calendar",
         "NWSL": "calendar",
+        "NCSM": "school",
+        "NCSW": "school",
         "NBA": "school",
         "NFL": "school",
         "NHL": "school",
@@ -87,6 +93,9 @@ class ESPNClient:
         "EPL": "English Premier League (EPL)",
         "MLS": "Major League Soccer (MLS)",
         "NWSL": "National Women's Soccer League (NWSL)",
+        "NCSM": "Men's College Soccer (NCSM)",
+        "NCSW": "Women's College Soccer (NCSW)",
+        "NCB": "College Baseball (NCB)",
         "NCHM": "Men's College Hockey (NCHM)",
         "NCHW": "Women's College Hockey (NCHW)",
     }
