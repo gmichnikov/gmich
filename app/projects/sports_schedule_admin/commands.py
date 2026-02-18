@@ -15,7 +15,7 @@ def init_app(app):
         pass
 
     @sports_admin.command("sync")
-    @click.option("--league", required=True, help="League code (MLB, NBA, NFL, NHL, MLS, EPL)")
+    @click.option("--league", required=True, help="League code (MLB, NBA, NFL, NHL, MLS, EPL, AAA, AA, A+, A)")
     @click.option("--start", help="Start date (YYYY-MM-DD), defaults to today")
     @click.option("--end", help="End date (YYYY-MM-DD), defaults to today")
     @click.option("--days", type=int, help="Number of days to sync from start date")
@@ -64,7 +64,7 @@ def init_app(app):
         click.echo("Daily sync complete.")
 
     @sports_admin.command("clear-league")
-    @click.option("--league", required=True, help="League code to clear")
+    @click.option("--league", required=True, help="League code to clear (e.g. MLB, AAA)")
     @click.option("--start", help="Only clear games on or after this date (YYYY-MM-DD)")
     @click.option("--end", help="Only clear games on or before this date (YYYY-MM-DD)")
     @click.option("--days", type=int, help="Number of days from start date (use with --start)")

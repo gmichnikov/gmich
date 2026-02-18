@@ -2,14 +2,15 @@
 Constants for Sports Schedules: dimensions, filter options, display labels.
 Single source of truth for query builder validation and UI multiselects.
 """
-from app.projects.sports_schedule_admin.core.espn_client import (
-    ESPNClient,
+from app.projects.sports_schedule_admin.core.leagues import (
+    ALL_LEAGUE_CODES,
+    LEAGUE_DISPLAY_NAMES,
 )
 
 # --- Low-cardinality filter options (schema values) ---
 SPORTS = ["basketball", "hockey", "football", "baseball", "soccer"]
 
-LEVELS = ["pro", "college"]
+LEVELS = ["pro", "college", "minor"]
 
 DAYS = [
     "Monday",
@@ -21,7 +22,7 @@ DAYS = [
     "Sunday",
 ]
 
-# US state codes (DC included for sports venues)
+# US state codes + Canadian provinces (Toronto, Montreal, Vancouver, etc.)
 US_STATE_CODES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
     "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
@@ -29,11 +30,12 @@ US_STATE_CODES = [
     "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
     "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
     "DC",
+    # Canadian provinces (NHL, NBA, MiLB venues)
+    "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
 ]
 
-# League: build from ESPN config, sorted for consistent UI order
-LEAGUE_CODES = sorted(ESPNClient.LEAGUE_MAP.keys())
-LEAGUE_DISPLAY_NAMES = ESPNClient.LEAGUE_DISPLAY_NAMES
+# League: ESPN + MiLB, sorted for consistent UI order
+LEAGUE_CODES = ALL_LEAGUE_CODES
 
 def _league_options():
     """List of (value, label) for league multiselect."""

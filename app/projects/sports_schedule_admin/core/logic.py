@@ -2,40 +2,58 @@ import logging
 import time
 from datetime import datetime, timedelta
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
+from app.projects.sports_schedule_admin.core.mlb_client import MLBClient
+from app.projects.sports_schedule_admin.core.leagues import ALL_LEAGUE_CODES, is_milb_league
 from app.core.dolthub_client import DoltHubClient
 from app.models import LogEntry, db
 
 logger = logging.getLogger(__name__)
 
+
 def sync_league_range(league_code, start_date, end_date, actor_id=None):
     """
     Sync a range of dates for a given league.
+    Uses ESPN for major leagues, MLB Stats API for MiLB (AAA, AA, A+, A).
     """
-    espn = ESPNClient()
+    if league_code not in ALL_LEAGUE_CODES:
+        raise ValueError(f"Unsupported league: {league_code}")
+
     dolt = DoltHubClient()
-    
-    current_date = start_date
     total_games_found = 0
     total_upserted = 0
-    
-    while current_date <= end_date:
-        date_str = current_date.strftime("%Y%m%d")
-        logger.info(f"Syncing {league_code} for {date_str}...")
-        
-        games = espn.fetch_schedule(league_code, date_str)
+
+    if is_milb_league(league_code):
+        # MiLB: one API call per league for full date range (chunked if >90 days)
+        mlb = MLBClient()
+        logger.info(f"Syncing {league_code} from {start_date} to {end_date}...")
+        games = mlb.fetch_schedule(league_code, start_date, end_date)
+        total_games_found = len(games)
         if games:
-            total_games_found += len(games)
             result = dolt.batch_upsert("combined-schedule", games)
             if result:
-                upserted = result.get("upserted", 0)
-                total_upserted += upserted
+                total_upserted = result.get("upserted", 0)
                 if "error" in result:
-                    logger.error(f"Partial upsert for {date_str}: {result.get('error')} ({upserted}/{len(games)} succeeded)")
-        
-        current_date += timedelta(days=1)
-        # Polite delay to avoid rate limits
-        # Note: DoltHub write operations also add natural delay due to polling
-        time.sleep(1.0) 
+                    logger.error(f"Partial upsert: {result.get('error')} ({total_upserted}/{len(games)} succeeded)")
+    else:
+        # ESPN: day-by-day
+        espn = ESPNClient()
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.strftime("%Y%m%d")
+            logger.info(f"Syncing {league_code} for {date_str}...")
+
+            games = espn.fetch_schedule(league_code, date_str)
+            if games:
+                total_games_found += len(games)
+                result = dolt.batch_upsert("combined-schedule", games)
+                if result:
+                    upserted = result.get("upserted", 0)
+                    total_upserted += upserted
+                    if "error" in result:
+                        logger.error(f"Partial upsert for {date_str}: {result.get('error')} ({upserted}/{len(games)} succeeded)")
+
+            current_date += timedelta(days=1)
+            time.sleep(1.0)  # Polite delay for ESPN rate limits
     
     # Log the activity
     try:

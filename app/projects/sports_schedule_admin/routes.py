@@ -3,7 +3,11 @@ from flask_login import login_required, current_user
 from app.core.admin import admin_required
 from app.core.dolthub_client import DoltHubClient
 from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data
-from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
+from app.projects.sports_schedule_admin.core.leagues import (
+    ALL_LEAGUE_CODES,
+    LEAGUE_DISPLAY_NAMES,
+    LEAGUE_SEASON_TYPE,
+)
 from app.models import LogEntry, db
 from datetime import datetime, timedelta, date
 
@@ -20,8 +24,7 @@ sports_schedule_admin_bp = Blueprint(
 @login_required
 @admin_required
 def index():
-    display = ESPNClient.LEAGUE_DISPLAY_NAMES
-    leagues = [(code, display.get(code, code)) for code in ESPNClient.LEAGUE_MAP.keys()]
+    leagues = [(code, LEAGUE_DISPLAY_NAMES.get(code, code)) for code in ALL_LEAGUE_CODES]
     return render_template("sports_schedule_admin/index.html", leagues=leagues)
 
 
@@ -49,8 +52,8 @@ def get_coverage():
 
     if scope == "current_season":
         cal_start, cal_end, school_start, school_end = _current_season_ranges()
-        cal_leagues = [c for c, t in ESPNClient.LEAGUE_SEASON_TYPE.items() if t == "calendar"]
-        school_leagues = [c for c, t in ESPNClient.LEAGUE_SEASON_TYPE.items() if t == "school"]
+        cal_leagues = [c for c, t in LEAGUE_SEASON_TYPE.items() if t == "calendar"]
+        school_leagues = [c for c, t in LEAGUE_SEASON_TYPE.items() if t == "school"]
         conditions = []
         if cal_leagues:
             leagues_str = ", ".join(f"'{c}'" for c in cal_leagues)
@@ -112,7 +115,7 @@ def api_sync():
     end_str = data.get("end_date")
     days = data.get("days")
 
-    if not league or league not in ESPNClient.LEAGUE_MAP:
+    if not league or league not in ALL_LEAGUE_CODES:
         return jsonify({"success": False, "error": "Invalid or missing league"}), 400
 
     try:
@@ -165,10 +168,10 @@ def api_clear_league():
     end_str = data.get("end_date")
     days = data.get("days")
 
-    if not league or league not in ESPNClient.LEAGUE_MAP:
+    if not league or league not in ALL_LEAGUE_CODES:
         return jsonify({"success": False, "error": "Invalid or missing league"}), 400
 
-    if (confirm or "").strip().upper() != league:
+    if (confirm or "").strip().upper() != league.upper():
         return jsonify({"success": False, "error": "Type the league code to confirm"}), 400
 
     start_date = None
