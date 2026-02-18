@@ -15,7 +15,7 @@ def init_app(app):
         pass
 
     @sports_admin.command("sync")
-    @click.option("--league", required=True, help="League code (MLB, NBA, NFL, NHL, MLS, EPL, AAA, AA, A+, A)")
+    @click.option("--league", required=True, help="League code (MLB, NBA, NFL, NHL, MLS, NWSL, EPL, AAA, AA, A+, A)")
     @click.option("--start", help="Start date (YYYY-MM-DD), defaults to today")
     @click.option("--end", help="End date (YYYY-MM-DD), defaults to today")
     @click.option("--days", type=int, help="Number of days to sync from start date")
@@ -50,7 +50,7 @@ def init_app(app):
     @sports_admin.command("daily-sync")
     def daily_sync():
         """Daily sync for all major leagues (Next 7 days)"""
-        leagues = ["MLB", "NBA", "NFL", "NHL", "MLS", "EPL"]
+        leagues = ["MLB", "NBA", "NFL", "NHL", "MLS", "NWSL", "EPL"]
         start_dt = datetime.now()
         end_dt = start_dt + timedelta(days=7)
         

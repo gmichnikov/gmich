@@ -161,8 +161,11 @@
         </div>
         <div id="ss-results-error" class="ss-results-error" style="display: none;"></div>
         <div id="ss-results-content" style="display: none;">
-          <div id="ss-results-summary" class="ss-results-summary"></div>
-          <div class="ss-results-table-wrapper">
+          <div class="ss-results-header" onclick="ssToggleResultsData()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ssToggleResultsData();}" role="button" tabindex="0" aria-expanded="true" aria-controls="ss-results-table-wrapper" title="Click to collapse/expand data table">
+            <span id="ss-results-summary" class="ss-results-summary"></span>
+            <span class="ss-results-toggle" id="ss-results-toggle" aria-hidden="true">▼</span>
+          </div>
+          <div id="ss-results-table-wrapper" class="ss-results-table-wrapper" role="region" aria-label="Results data">
             <table class="ss-results-table" id="ss-results-table"></table>
           </div>
           <div id="ss-results-actions" class="ss-results-actions">
@@ -280,6 +283,24 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
   }
   window.ssToggleFilterBar = ssToggleFilterBar;
+
+  function ssToggleResultsData() {
+    const wrapper = document.getElementById('ss-results-table-wrapper');
+    const toggle = document.getElementById('ss-results-toggle');
+    const header = document.querySelector('.ss-results-header');
+    if (!wrapper || !toggle || !header) return;
+    const isCollapsed = wrapper.classList.contains('ss-results-table-collapsed');
+    if (isCollapsed) {
+      wrapper.classList.remove('ss-results-table-collapsed');
+      toggle.textContent = '▼';
+      header.setAttribute('aria-expanded', 'true');
+    } else {
+      wrapper.classList.add('ss-results-table-collapsed');
+      toggle.textContent = '▶';
+      header.setAttribute('aria-expanded', 'false');
+    }
+  }
+  window.ssToggleResultsData = ssToggleResultsData;
 
   function ssUpdateFilterBarVisibility() {
     const bar = document.getElementById('ss-filter-bar');

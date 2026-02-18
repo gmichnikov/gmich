@@ -39,6 +39,7 @@ class ESPNClient:
         "NFL": ("football", "nfl", "pro"),
         "NHL": ("hockey", "nhl", "pro"),
         "MLS": ("soccer", "usa.1", "pro"),
+        "NWSL": ("soccer", "usa.nwsl", "pro"),
         "EPL": ("soccer", "eng.1", "pro"),
         "CL": ("soccer", "uefa.champions", "pro"),
         "EL": ("soccer", "uefa.europa", "pro"),
@@ -58,6 +59,7 @@ class ESPNClient:
     LEAGUE_SEASON_TYPE = {
         "MLB": "calendar",
         "MLS": "calendar",
+        "NWSL": "calendar",
         "NBA": "school",
         "NFL": "school",
         "NHL": "school",
@@ -84,6 +86,7 @@ class ESPNClient:
         "WC": "World Cup (WC)",
         "EPL": "English Premier League (EPL)",
         "MLS": "Major League Soccer (MLS)",
+        "NWSL": "National Women's Soccer League (NWSL)",
         "NCHM": "Men's College Hockey (NCHM)",
         "NCHW": "Women's College Hockey (NCHW)",
     }

@@ -735,7 +735,6 @@
 
 /* ===== Results Area ===== */
 .ss-results {
-  min-height: 200px;
   border: 1px solid #e9ecef;
   border-radius: 10px;
   background: #f8f9fa;
@@ -840,11 +839,34 @@
   transform: scale(1.1);
 }
 
+/* Results header: summary + collapse toggle (always visible) */
+.ss-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  user-select: none;
+  background: #f8f9fa;
+}
+
+.ss-results-header:hover {
+  background: #f1f3f5;
+}
+
 .ss-results-summary {
   font-size: 0.85rem;
   color: #6c757d;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #e9ecef;
+}
+
+.ss-results-toggle {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.ss-results-table-wrapper.ss-results-table-collapsed {
+  display: none;
 }
 
 /* ===== Results actions (Copy, Download CSV, Show SQL) ===== */
