@@ -20,6 +20,10 @@
           <span class="ss-section-toggle">▼</span>
         </div>
         <div class="ss-section-content">
+          <div class="ss-field-actions">
+            <button type="button" class="ss-field-action-btn" onclick="ssResetFields()">Reset</button>
+            <button type="button" class="ss-field-action-btn" onclick="ssClearFields()">Clear</button>
+          </div>
           <ul class="ss-fields-list">
             <li class="ss-field-row ss-field-header">
               <span class="ss-field-label">Field</span>
@@ -29,11 +33,15 @@
             {% for col in field_order %}
             <li class="ss-field-row" data-field="{{ col }}">
               <span class="ss-field-label">{{ dimension_labels.get(col, col) }}</span>
+              {% if col not in filter_only_fields %}
               <label class="ss-field-check">
-                <input type="checkbox" id="ss-dim-{{ col }}" value="{{ col }}" class="ss-dimension-cb">
+                <input type="checkbox" id="ss-dim-{{ col }}" value="{{ col }}" class="ss-dimension-cb" {% if col in default_dimensions %}checked{% endif %}>
               </label>
+              {% else %}
+              <span class="ss-field-check ss-field-check-placeholder"></span>
+              {% endif %}
               <label class="ss-field-check">
-                <input type="checkbox" id="ss-filter-cb-{{ col }}" value="{{ col }}" class="ss-filter-cb">
+                <input type="checkbox" id="ss-filter-cb-{{ col }}" value="{{ col }}" class="ss-filter-cb" {% if col in default_filters %}checked{% endif %}>
               </label>
             </li>
             {% endfor %}
@@ -96,6 +104,12 @@
               <option value="{{ value }}">{{ label }}</option>
               {% endfor %}
             </select>
+            {% elif col == 'either_team' %}
+            <div class="ss-filter-either-team">
+              <input type="text" id="ss-filter-either-team-1" class="ss-filter-text" placeholder="Team 1" data-filter="either_team">
+              <span class="ss-date-sep">vs</span>
+              <input type="text" id="ss-filter-either-team-2" class="ss-filter-text" placeholder="Team 2 (optional)" data-filter="either_team">
+            </div>
             {% elif col == 'date' %}
             <div class="ss-filter-date-inner">
               <select id="ss-date-mode-select" class="ss-date-mode-select">
@@ -106,7 +120,7 @@
                 <option value="last_week">Last 7 days</option>
                 <option value="last_month">Last 30 days</option>
                 <option value="last_n">Last N days</option>
-                <option value="next_week">Next 7 days</option>
+                <option value="next_week" {% if default_filters.get('date') == 'next_week' %}selected{% endif %}>Next 7 days</option>
                 <option value="next_n">Next N days</option>
               </select>
               <div id="ss-date-exact-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-exact" class="ss-filter-text"></div>
@@ -155,6 +169,8 @@
 
 <script>
 window.ssDimensionLabels = {{ dimension_labels | tojson }};
+window.ssDefaultDimensions = {{ default_dimensions | tojson }};
+window.ssDefaultFilters = {{ default_filters | tojson }};
 
 (function() {
   function ssToggleSection(name) {
@@ -162,6 +178,53 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     if (section) section.classList.toggle('collapsed');
   }
   window.ssToggleSection = ssToggleSection;
+
+  function ssResetFields() {
+    var dims = window.ssDefaultDimensions || [];
+    var filters = window.ssDefaultFilters || {};
+    document.querySelectorAll('.ss-dimension-cb').forEach(function(cb) {
+      cb.checked = dims.indexOf(cb.value) >= 0;
+    });
+    document.querySelectorAll('.ss-filter-cb').forEach(function(cb) {
+      var col = cb.value;
+      cb.checked = col in filters;
+    });
+    if (filters.date === 'next_week') {
+      var sel = document.getElementById('ss-date-mode-select');
+      if (sel) sel.value = 'next_week';
+    }
+    document.querySelectorAll('.ss-filter-multiselect').forEach(function(s) {
+      Array.from(s.options).forEach(function(o) { o.selected = false; });
+    });
+    document.querySelectorAll('.ss-filter-text[data-filter]').forEach(function(inp) { inp.value = ''; });
+    var e1 = document.getElementById('ss-filter-either-team-1');
+    var e2 = document.getElementById('ss-filter-either-team-2');
+    if (e1) e1.value = '';
+    if (e2) e2.value = '';
+    ssUpdateDateModeVisibility();
+    ssUpdateFilterBarVisibility();
+    ssUpdateSortColumnOptions();
+  }
+  window.ssResetFields = ssResetFields;
+
+  function ssClearFields() {
+    document.querySelectorAll('.ss-dimension-cb').forEach(function(cb) { cb.checked = false; });
+    document.querySelectorAll('.ss-filter-cb').forEach(function(cb) { cb.checked = false; });
+    document.querySelectorAll('.ss-filter-multiselect').forEach(function(s) {
+      Array.from(s.options).forEach(function(o) { o.selected = false; });
+    });
+    document.querySelectorAll('.ss-filter-text[data-filter]').forEach(function(inp) { inp.value = ''; });
+    var e1 = document.getElementById('ss-filter-either-team-1');
+    var e2 = document.getElementById('ss-filter-either-team-2');
+    if (e1) e1.value = '';
+    if (e2) e2.value = '';
+    var sel = document.getElementById('ss-date-mode-select');
+    if (sel) sel.value = '';
+    ssUpdateDateModeVisibility();
+    ssUpdateFilterBarVisibility();
+    ssUpdateSortColumnOptions();
+  }
+  window.ssClearFields = ssClearFields;
 
   function ssRemoveFilter(col) {
     var cb = document.getElementById('ss-filter-cb-' + col);
@@ -293,11 +356,13 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
     }
 
     // Filter fields: check Filter CB for any field that has filter values in URL
-    var filterFields = ['sport', 'league', 'level', 'day', 'home_state', 'home_team', 'road_team', 'location', 'home_city', 'date'];
+    var filterFields = ['sport', 'league', 'level', 'day', 'home_state', 'home_team', 'road_team', 'location', 'home_city', 'date', 'either_team'];
     filterFields.forEach(function(col) {
       var isFilter = false;
       if (col === 'date') {
         isFilter = !!params.get('date_mode');
+      } else if (col === 'either_team') {
+        isFilter = !!(params.get('either_team_1') || params.get('either_team_2'));
       } else {
         isFilter = !!params.get(col);
       }
@@ -343,6 +408,12 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
         if (inp) inp.value = val;
       }
     });
+
+    // either_team
+    var et1 = params.get('either_team_1');
+    var et2 = params.get('either_team_2');
+    if (et1) { var el = document.getElementById('ss-filter-either-team-1'); if (el) el.value = et1; }
+    if (et2) { var el = document.getElementById('ss-filter-either-team-2'); if (el) el.value = et2; }
 
     // Date
     var dateMode = params.get('date_mode');
@@ -435,6 +506,13 @@ window.ssDimensionLabels = {{ dimension_labels | tojson }};
             params.set('anchor_date', ssGetAnchorDate());
           }
         }
+      } else if (col === 'either_team') {
+        const e1 = document.getElementById('ss-filter-either-team-1');
+        const e2 = document.getElementById('ss-filter-either-team-2');
+        const v1 = e1 ? e1.value.trim() : '';
+        const v2 = e2 ? e2.value.trim() : '';
+        if (v1) params.set('either_team_1', v1);
+        if (v2) params.set('either_team_2', v2);
       } else {
         const sel = document.getElementById('ss-filter-' + col);
         if (sel && sel.multiple) {

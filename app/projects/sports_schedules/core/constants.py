@@ -55,12 +55,22 @@ LOW_CARDINALITY_OPTIONS = {
 
 # --- Field order for sidebar and filter bar (consistent UI order) ---
 FIELD_ORDER = [
-    "day", "date", "time", "road_team", "home_team", "home_city",
-    "home_state", "location", "league", "sport", "level",
+    "day", "date", "time", "road_team", "home_team", "either_team",
+    "home_city", "home_state", "location", "league", "sport", "level",
 ]
+
+# Fields that can only be used as filters (no dimension)
+FILTER_ONLY_FIELDS = ["either_team"]
+
+# Default dimensions when page loads with no URL state
+DEFAULT_DIMENSIONS = ["date", "time", "home_team", "road_team"]
+
+# Default filters when page loads with no URL state (field -> value dict for date, or field name for simple)
+DEFAULT_FILTERS = {"date": "next_week"}
 
 # --- DIMENSION_LABELS: column -> display label (from PRD) ---
 DIMENSION_LABELS = {
+    "either_team": "Either Team",
     "sport": "Sport",
     "level": "Level",
     "league": "League",

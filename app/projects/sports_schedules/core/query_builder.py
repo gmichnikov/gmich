@@ -78,12 +78,14 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         return None, "Row limit must be between 1 and 5000."
     limit = max(1, min(5000, limit))
 
-    # --- Dimensions allowlist ---
+    # --- Dimensions allowlist (exclude filter-only fields) ---
+    from app.projects.sports_schedules.core.constants import FILTER_ONLY_FIELDS
+
     valid_dims = []
     for d in dimensions:
-        if d in VALID_DIMENSIONS:
+        if d in VALID_DIMENSIONS and d not in FILTER_ONLY_FIELDS:
             valid_dims.append(d)
-        # else: ignore invalid dimension
+        # else: ignore invalid or filter-only dimension
     if not valid_dims and not count:
         return None, "Select at least one dimension or turn on count to run a query."
 
@@ -107,6 +109,21 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         val = filters.get(col)
         if val and isinstance(val, str) and val.strip():
             high_filters[col] = _escape_like_value(val.strip())
+
+    # --- Filters: either_team (OR across home/road; 2 values = matchup) ---
+    either_team_conditions = []
+    either_team_vals = filters.get("either_team")
+    if either_team_vals:
+        if isinstance(either_team_vals, str):
+            either_team_vals = [v.strip() for v in either_team_vals.split(",") if v.strip()]
+        else:
+            either_team_vals = [str(v).strip() for v in either_team_vals if v]
+        for val in either_team_vals:
+            if val:
+                escaped = _escape_like_value(val)
+                either_team_conditions.append(
+                    f"(LOWER(`home_team`) LIKE LOWER('%{escaped}%') OR LOWER(`road_team`) LIKE LOWER('%{escaped}%'))"
+                )
 
     # --- Date conditions ---
     date_start_dt = None
@@ -168,6 +185,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         conditions.append(f"`{col}` IN ({placeholders})")
     for col, val in high_filters.items():
         conditions.append(f"LOWER(`{col}`) LIKE LOWER('%{val}%')")
+    conditions.extend(either_team_conditions)
     if date_start_dt and date_end_dt:
         conditions.append(f"`date` BETWEEN '{date_start_dt}' AND '{date_end_dt}'")
     where = " AND ".join(conditions) if conditions else "1=1"

@@ -30,6 +30,10 @@ def _parse_query_params():
         val = args.get(col)
         if val and val.strip():
             filters[col] = val.strip()
+    et1 = args.get("either_team_1", "").strip()
+    et2 = args.get("either_team_2", "").strip()
+    if et1 or et2:
+        filters["either_team"] = [v for v in [et1, et2] if v]
     return {
         "dimensions": args.get("dimensions", ""),
         "filters": filters,
@@ -51,14 +55,20 @@ def _parse_query_params():
 def index():
     """Main schedule viewer - query builder UI."""
     from app.projects.sports_schedules.core.constants import (
+        DEFAULT_DIMENSIONS,
+        DEFAULT_FILTERS,
         DIMENSION_LABELS,
         FIELD_ORDER,
+        FILTER_ONLY_FIELDS,
         LOW_CARDINALITY_OPTIONS,
     )
     return render_template(
         "sports_schedules/index.html",
+        default_dimensions=DEFAULT_DIMENSIONS,
+        default_filters=DEFAULT_FILTERS,
         dimension_labels=DIMENSION_LABELS,
         field_order=FIELD_ORDER,
+        filter_only_fields=FILTER_ONLY_FIELDS,
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
     )
 

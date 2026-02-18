@@ -78,6 +78,25 @@
   padding: 0.6rem 1rem;
 }
 
+.ss-field-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ss-field-action-btn {
+  background: none;
+  border: none;
+  font-size: 0.72rem;
+  color: #adb5bd;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.ss-field-action-btn:hover {
+  color: #6c757d;
+}
+
 .ss-section.collapsed .ss-section-content {
   display: none;
 }
@@ -245,6 +264,21 @@
 .ss-filter-bar-control .ss-filter-multiselect {
   min-height: 72px;
   max-height: 140px;
+}
+
+.ss-filter-either-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ss-filter-either-team .ss-filter-text {
+  min-width: 8rem;
+}
+
+.ss-field-check-placeholder {
+  cursor: default;
+  opacity: 0;
 }
 
 /* Date filter: dropdown + inline inputs on one row */
