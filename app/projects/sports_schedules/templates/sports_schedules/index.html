@@ -488,6 +488,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       opt.textContent = '# Games';
       sel.appendChild(opt);
     }
+    if (sel.value === '' && dimensions.indexOf('date') >= 0 && !countOn) {
+      sel.value = 'date';
+    }
   }
   document.querySelectorAll('.ss-dimension-cb').forEach(function(cb) {
     cb.addEventListener('change', ssUpdateSortColumnOptions);

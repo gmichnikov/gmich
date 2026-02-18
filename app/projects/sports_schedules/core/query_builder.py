@@ -238,14 +238,20 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             if count and valid_dims:
                 order_by = "ORDER BY `# Games` DESC"
             elif valid_dims:
-                order_by = f"ORDER BY `{valid_dims[0]}` ASC"
+                if "date" in valid_dims:
+                    order_by = "ORDER BY `date` ASC"
+                else:
+                    order_by = f"ORDER BY `{valid_dims[0]}` ASC"
             else:
                 order_by = ""
     else:
         if count and valid_dims:
             order_by = "ORDER BY `# Games` DESC"
         elif valid_dims:
-            order_by = f"ORDER BY `{valid_dims[0]}` ASC"
+            if "date" in valid_dims:
+                order_by = "ORDER BY `date` ASC"
+            else:
+                order_by = f"ORDER BY `{valid_dims[0]}` ASC"
         else:
             order_by = ""
 
