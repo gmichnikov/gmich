@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3329,
+      "name": "Arvest Ballpark",
+      "link": "/api/v1/venues/3329",
+      "location": {
+        "address1": "3000 S. 56th Street",
+        "city": "Springdale",
+        "state": "Arkansas",
+        "stateAbbrev": "AR",
+        "postalCode": "72762",
+        "defaultCoordinates": {
+          "latitude": 36.15968,
+          "longitude": -94.194624
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

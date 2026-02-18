@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2511,
+      "name": "Publix Field at Joker Marchant Stadium",
+      "link": "/api/v1/venues/2511",
+      "location": {
+        "address1": "2301 Lakeland Hills Blvd.",
+        "city": "Lakeland",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "33805",
+        "defaultCoordinates": {
+          "latitude": 28.074822,
+          "longitude": -81.9508415
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

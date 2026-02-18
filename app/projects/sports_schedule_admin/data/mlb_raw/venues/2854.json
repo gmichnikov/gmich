@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2854,
+      "name": "LoanMart Field",
+      "link": "/api/v1/venues/2854",
+      "location": {
+        "address1": "8408 Rochester Avenue",
+        "city": "Rancho Cucamonga",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "91730",
+        "defaultCoordinates": {
+          "latitude": 34.102721,
+          "longitude": -117.54792
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

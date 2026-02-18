@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2526,
+      "name": "LECOM Park",
+      "link": "/api/v1/venues/2526",
+      "location": {
+        "address1": "1611 9th Street W.",
+        "city": "Bradenton",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "34205",
+        "defaultCoordinates": {
+          "latitude": 27.48553,
+          "longitude": -82.57038
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

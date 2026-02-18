@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2757,
+      "name": "Heritage Financial Park",
+      "link": "/api/v1/venues/2757",
+      "location": {
+        "address1": "1500 Route 9D",
+        "city": "Wappingers Falls",
+        "state": "New York",
+        "stateAbbrev": "NY",
+        "postalCode": "12590",
+        "defaultCoordinates": {
+          "latitude": 41.52638,
+          "longitude": -73.96109
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2747,
+      "name": "Pelicans Ballpark",
+      "link": "/api/v1/venues/2747",
+      "location": {
+        "address1": "1251 21st Avenue N.",
+        "city": "Myrtle Beach",
+        "state": "South Carolina",
+        "stateAbbrev": "SC",
+        "postalCode": "29577",
+        "defaultCoordinates": {
+          "latitude": 33.711404,
+          "longitude": -78.88444
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

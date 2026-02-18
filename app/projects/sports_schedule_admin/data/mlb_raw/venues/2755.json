@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2755,
+      "name": "Riders Field",
+      "link": "/api/v1/venues/2755",
+      "location": {
+        "address1": "7300 RoughRiders Trail",
+        "city": "Frisco",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "75034",
+        "defaultCoordinates": {
+          "latitude": 33.0984,
+          "longitude": -96.8197
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

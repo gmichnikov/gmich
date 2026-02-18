@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2852,
+      "name": "Vystar Ballpark",
+      "link": "/api/v1/venues/2852",
+      "location": {
+        "address1": "301 A. Philip Randolph Blvd.",
+        "city": "Jacksonville",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "32202",
+        "defaultCoordinates": {
+          "latitude": 30.32533,
+          "longitude": -81.64256
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

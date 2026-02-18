@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4271,
+      "name": "Werner Park",
+      "link": "/api/v1/venues/4271",
+      "location": {
+        "address1": "12356 Ballpark Way",
+        "city": "Papillion",
+        "state": "Nebraska",
+        "stateAbbrev": "NE",
+        "postalCode": "68046",
+        "defaultCoordinates": {
+          "latitude": 41.1510945,
+          "longitude": -96.1057988
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

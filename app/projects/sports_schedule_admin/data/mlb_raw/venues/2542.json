@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2542,
+      "name": "AutoZone Park",
+      "link": "/api/v1/venues/2542",
+      "location": {
+        "address1": "200 Union Avenue",
+        "city": "Memphis",
+        "state": "Tennessee",
+        "stateAbbrev": "TN",
+        "postalCode": "38103",
+        "defaultCoordinates": {
+          "latitude": 35.14297,
+          "longitude": -90.04924
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

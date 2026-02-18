@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2791,
+      "name": "John Thurman Field",
+      "link": "/api/v1/venues/2791",
+      "location": {
+        "address1": "601 Neece Drive",
+        "city": "Modesto",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "95351",
+        "defaultCoordinates": {
+          "latitude": 37.622321,
+          "longitude": -121.000956
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

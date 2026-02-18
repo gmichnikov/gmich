@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2683,
+      "name": "Isotopes Park",
+      "link": "/api/v1/venues/2683",
+      "location": {
+        "address1": "1601 Avenida Cesar Chavez SE",
+        "city": "Albuquerque",
+        "state": "New Mexico",
+        "stateAbbrev": "NM",
+        "postalCode": "87106",
+        "defaultCoordinates": {
+          "latitude": 35.06985,
+          "longitude": -106.62802
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

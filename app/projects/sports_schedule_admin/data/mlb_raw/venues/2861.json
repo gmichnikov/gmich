@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2861,
+      "name": "Whataburger Field",
+      "link": "/api/v1/venues/2861",
+      "location": {
+        "address1": "734 East Port Avenue",
+        "city": "Corpus Christi",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "78401",
+        "defaultCoordinates": {
+          "latitude": 27.80995,
+          "longitude": -97.39941
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

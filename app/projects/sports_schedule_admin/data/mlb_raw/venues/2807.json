@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2807,
+      "name": "McCormick Field",
+      "link": "/api/v1/venues/2807",
+      "location": {
+        "address1": "30 Buchanan Place",
+        "city": "Asheville",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "28801",
+        "defaultCoordinates": {
+          "latitude": 35.58668,
+          "longitude": -82.5501
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

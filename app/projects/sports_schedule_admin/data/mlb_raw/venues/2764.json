@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2764,
+      "name": "Atrium Health Ballpark",
+      "link": "/api/v1/venues/2764",
+      "location": {
+        "address1": "1 Cannon Baller Way",
+        "city": "Kannapolis",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "28081",
+        "defaultCoordinates": {
+          "latitude": 35.4968555,
+          "longitude": -80.6282677
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

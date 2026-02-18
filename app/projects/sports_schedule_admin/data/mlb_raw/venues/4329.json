@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4329,
+      "name": "Blue Wahoos Stadium",
+      "link": "/api/v1/venues/4329",
+      "location": {
+        "address1": "351 W. Cedar Street",
+        "city": "Pensacola",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "32502",
+        "defaultCoordinates": {
+          "latitude": 30.4048409,
+          "longitude": -87.2188349
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

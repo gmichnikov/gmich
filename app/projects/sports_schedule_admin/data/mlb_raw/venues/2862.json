@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2862,
+      "name": "Lee Health Sports Complex",
+      "link": "/api/v1/venues/2862",
+      "location": {
+        "address1": "14400 Six Mile Cypress Pkwy.",
+        "city": "Fort Myers",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "33912",
+        "defaultCoordinates": {
+          "latitude": 26.537803,
+          "longitude": -81.841973
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

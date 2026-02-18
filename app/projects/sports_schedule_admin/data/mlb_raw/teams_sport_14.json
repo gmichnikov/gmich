@@ -1,0 +1,1175 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "teams": [
+    {
+      "allStarStatus": "N",
+      "id": 3712,
+      "name": "Fayetteville Woodpeckers",
+      "link": "/api/v1/teams/3712",
+      "season": 2025,
+      "venue": {
+        "id": 5400,
+        "name": "SEGRA Stadium",
+        "link": "/api/v1/venues/5400"
+      },
+      "teamCode": "fay",
+      "fileCode": "t3712",
+      "abbreviation": "FAY",
+      "teamName": "Woodpeckers",
+      "locationName": "Fayetteville",
+      "firstYearOfPlay": "1987",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Fayetteville",
+      "parentOrgName": "Houston Astros",
+      "parentOrgId": 117,
+      "franchiseName": "Fayetteville",
+      "clubName": "Woodpeckers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 448,
+      "name": "Hickory Crawdads",
+      "link": "/api/v1/teams/448",
+      "season": 2025,
+      "venue": {
+        "id": 2796,
+        "name": "L.P. Frans Stadium",
+        "link": "/api/v1/venues/2796"
+      },
+      "teamCode": "hic",
+      "fileCode": "t448",
+      "abbreviation": "HIC",
+      "teamName": "Crawdads",
+      "locationName": "Hickory",
+      "firstYearOfPlay": "1993",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Hickory",
+      "parentOrgName": "Texas Rangers",
+      "parentOrgId": 140,
+      "franchiseName": "Hickory",
+      "clubName": "Crawdads",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 450,
+      "name": "Daytona Tortugas",
+      "link": "/api/v1/teams/450",
+      "season": 2025,
+      "venue": {
+        "id": 2787,
+        "name": "Jackie Robinson Ballpark",
+        "link": "/api/v1/venues/2787"
+      },
+      "teamCode": "dta",
+      "fileCode": "t450",
+      "abbreviation": "DBT",
+      "teamName": "Tortugas",
+      "locationName": "Daytona Beach",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 214,
+        "name": "Florida State League East",
+        "link": "/api/v1/divisions/214"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Daytona",
+      "parentOrgName": "Cincinnati Reds",
+      "parentOrgId": 113,
+      "franchiseName": "Daytona",
+      "clubName": "Tortugas",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 515,
+      "name": "Modesto Nuts",
+      "link": "/api/v1/teams/515",
+      "season": 2025,
+      "venue": {
+        "id": 2791,
+        "name": "John Thurman Field",
+        "link": "/api/v1/venues/2791"
+      },
+      "teamCode": "mod",
+      "fileCode": "t515",
+      "abbreviation": "MOD",
+      "teamName": "Nuts",
+      "locationName": "Modesto",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 208,
+        "name": "California League North",
+        "link": "/api/v1/divisions/208"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Modesto",
+      "parentOrgName": "Seattle Mariners",
+      "parentOrgId": 136,
+      "franchiseName": "Modesto",
+      "clubName": "Nuts",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 259,
+      "name": "Fresno Grizzlies",
+      "link": "/api/v1/teams/259",
+      "season": 2025,
+      "venue": {
+        "id": 2640,
+        "name": "Chukchansi Park",
+        "link": "/api/v1/venues/2640"
+      },
+      "teamCode": "fre",
+      "fileCode": "t259",
+      "abbreviation": "FRE",
+      "teamName": "Grizzlies",
+      "locationName": "Fresno",
+      "firstYearOfPlay": "1998",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 208,
+        "name": "California League North",
+        "link": "/api/v1/divisions/208"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Fresno",
+      "parentOrgName": "Colorado Rockies",
+      "parentOrgId": 115,
+      "franchiseName": "Fresno",
+      "clubName": "Grizzlies",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 516,
+      "name": "Visalia Rawhide",
+      "link": "/api/v1/teams/516",
+      "season": 2025,
+      "venue": {
+        "id": 2835,
+        "name": "Valley Strong Ballpark",
+        "link": "/api/v1/venues/2835"
+      },
+      "teamCode": "vis",
+      "fileCode": "t516",
+      "abbreviation": "VIS",
+      "teamName": "Rawhide",
+      "locationName": "Visalia",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 209,
+        "name": "California League South",
+        "link": "/api/v1/divisions/209"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Visalia",
+      "parentOrgName": "Arizona Diamondbacks",
+      "parentOrgId": 109,
+      "franchiseName": "Visalia",
+      "clubName": "Rawhide",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 521,
+      "name": "Myrtle Beach Pelicans",
+      "link": "/api/v1/teams/521",
+      "season": 2025,
+      "venue": {
+        "id": 2747,
+        "name": "Pelicans Ballpark",
+        "link": "/api/v1/venues/2747"
+      },
+      "teamCode": "myr",
+      "fileCode": "t521",
+      "abbreviation": "MB",
+      "teamName": "Pelicans",
+      "locationName": "Myrtle Beach",
+      "firstYearOfPlay": "1999",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Myrtle Beach",
+      "parentOrgName": "Chicago Cubs",
+      "parentOrgId": 112,
+      "franchiseName": "Myrtle Beach",
+      "clubName": "Pelicans",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 587,
+      "name": "Tampa Tarpons",
+      "link": "/api/v1/teams/587",
+      "season": 2025,
+      "venue": {
+        "id": 7250,
+        "name": "Yankee Complex Field 2",
+        "link": "/api/v1/venues/7250"
+      },
+      "teamCode": "tpa",
+      "fileCode": "t587",
+      "abbreviation": "TAM",
+      "teamName": "Tarpons",
+      "locationName": "Tampa",
+      "firstYearOfPlay": "1994",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Tampa",
+      "parentOrgName": "New York Yankees",
+      "parentOrgId": 147,
+      "franchiseName": "Tampa",
+      "clubName": "Tarpons",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 524,
+      "name": "Stockton Ports",
+      "link": "/api/v1/teams/524",
+      "season": 2025,
+      "venue": {
+        "id": 2731,
+        "name": "Banner Island Ballpark",
+        "link": "/api/v1/venues/2731"
+      },
+      "teamCode": "sto",
+      "fileCode": "t524",
+      "abbreviation": "STK",
+      "teamName": "Ports",
+      "locationName": "Stockton",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 208,
+        "name": "California League North",
+        "link": "/api/v1/divisions/208"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Stockton",
+      "parentOrgName": "Athletics",
+      "parentOrgId": 133,
+      "franchiseName": "Stockton",
+      "clubName": "Ports",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 526,
+      "name": "Rancho Cucamonga Quakes",
+      "link": "/api/v1/teams/526",
+      "season": 2025,
+      "venue": {
+        "id": 2854,
+        "name": "LoanMart Field",
+        "link": "/api/v1/venues/2854"
+      },
+      "teamCode": "rnc",
+      "fileCode": "t526",
+      "abbreviation": "RC",
+      "teamName": "Quakes",
+      "locationName": "Rancho Cucamonga",
+      "firstYearOfPlay": "1966",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 209,
+        "name": "California League South",
+        "link": "/api/v1/divisions/209"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Rancho Cuca.",
+      "parentOrgName": "Los Angeles Dodgers",
+      "parentOrgId": 119,
+      "franchiseName": "Rancho Cucamonga",
+      "clubName": "Quakes",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 401,
+      "name": "Inland Empire 66ers",
+      "link": "/api/v1/teams/401",
+      "season": 2025,
+      "venue": {
+        "id": 2728,
+        "name": "San Manuel Stadium",
+        "link": "/api/v1/venues/2728"
+      },
+      "teamCode": "inl",
+      "fileCode": "t401",
+      "abbreviation": "IE",
+      "teamName": "66ers",
+      "locationName": "San Bernardino",
+      "firstYearOfPlay": "1993",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 209,
+        "name": "California League South",
+        "link": "/api/v1/divisions/209"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Inland Empire",
+      "parentOrgName": "Los Angeles Angels",
+      "parentOrgId": 108,
+      "franchiseName": "Inland Empire",
+      "clubName": "66ers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 279,
+      "name": "Palm Beach Cardinals",
+      "link": "/api/v1/teams/279",
+      "season": 2025,
+      "venue": {
+        "id": 2520,
+        "name": "Roger Dean Chevrolet Stadium",
+        "link": "/api/v1/venues/2520"
+      },
+      "teamCode": "pbc",
+      "fileCode": "t279",
+      "abbreviation": "PMB",
+      "teamName": "Cardinals",
+      "locationName": "Jupiter",
+      "firstYearOfPlay": "2003",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 214,
+        "name": "Florida State League East",
+        "link": "/api/v1/divisions/214"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Palm Beach",
+      "parentOrgName": "St. Louis Cardinals",
+      "parentOrgId": 138,
+      "franchiseName": "Palm Beach",
+      "clubName": "Cardinals",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 476,
+      "name": "San Jose Giants",
+      "link": "/api/v1/teams/476",
+      "season": 2025,
+      "venue": {
+        "id": 2815,
+        "name": "Excite Ballpark",
+        "link": "/api/v1/venues/2815"
+      },
+      "teamCode": "snj",
+      "fileCode": "t476",
+      "abbreviation": "SJ",
+      "teamName": "Giants",
+      "locationName": "San Jose",
+      "firstYearOfPlay": "1947",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 208,
+        "name": "California League North",
+        "link": "/api/v1/divisions/208"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "San Jose",
+      "parentOrgName": "San Francisco Giants",
+      "parentOrgId": 137,
+      "franchiseName": "San Jose",
+      "clubName": "Giants",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 478,
+      "name": "Augusta GreenJackets",
+      "link": "/api/v1/teams/478",
+      "season": 2025,
+      "venue": {
+        "id": 5345,
+        "name": "SRP Park",
+        "link": "/api/v1/venues/5345"
+      },
+      "teamCode": "aug",
+      "fileCode": "t478",
+      "abbreviation": "AUG",
+      "teamName": "GreenJackets",
+      "locationName": "North Augusta",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Augusta",
+      "parentOrgName": "Atlanta Braves",
+      "parentOrgId": 144,
+      "franchiseName": "Augusta",
+      "clubName": "GreenJackets",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 414,
+      "name": "Salem Red Sox",
+      "link": "/api/v1/teams/414",
+      "season": 2025,
+      "venue": {
+        "id": 2840,
+        "name": "Carilion Clinic Field",
+        "link": "/api/v1/venues/2840"
+      },
+      "teamCode": "slm",
+      "fileCode": "t414",
+      "abbreviation": "SAL",
+      "teamName": "Red Sox",
+      "locationName": "Salem",
+      "firstYearOfPlay": "1957",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Salem",
+      "parentOrgName": "Boston Red Sox",
+      "parentOrgId": 111,
+      "franchiseName": "Salem",
+      "clubName": "Red Sox",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 479,
+      "name": "Jupiter Hammerheads",
+      "link": "/api/v1/teams/479",
+      "season": 2025,
+      "venue": {
+        "id": 2520,
+        "name": "Roger Dean Chevrolet Stadium",
+        "link": "/api/v1/venues/2520"
+      },
+      "teamCode": "jup",
+      "fileCode": "t479",
+      "abbreviation": "JUP",
+      "teamName": "Hammerheads",
+      "locationName": "Jupiter",
+      "firstYearOfPlay": "1998",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 214,
+        "name": "Florida State League East",
+        "link": "/api/v1/divisions/214"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Jupiter",
+      "parentOrgName": "Miami Marlins",
+      "parentOrgId": 146,
+      "franchiseName": "Jupiter",
+      "clubName": "Hammerheads",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 481,
+      "name": "Hill City Howlers",
+      "link": "/api/v1/teams/481",
+      "season": 2025,
+      "venue": {
+        "id": 2803,
+        "name": "Bank of the James Stadium",
+        "link": "/api/v1/venues/2803"
+      },
+      "teamCode": "lyn",
+      "fileCode": "t481",
+      "abbreviation": "HC",
+      "teamName": "Howlers",
+      "locationName": "Lynchburg",
+      "firstYearOfPlay": "1970",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Hill City",
+      "parentOrgName": "Cleveland Guardians",
+      "parentOrgId": 114,
+      "franchiseName": "Hill City",
+      "clubName": "Howlers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 548,
+      "name": "Delmarva Shorebirds",
+      "link": "/api/v1/teams/548",
+      "season": 2025,
+      "venue": {
+        "id": 2729,
+        "name": "Arthur W. Perdue Stadium",
+        "link": "/api/v1/venues/2729"
+      },
+      "teamCode": "del",
+      "fileCode": "t548",
+      "abbreviation": "DEL",
+      "teamName": "Shorebirds",
+      "locationName": "Salisbury",
+      "firstYearOfPlay": "1996",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Delmarva",
+      "parentOrgName": "Baltimore Orioles",
+      "parentOrgId": 110,
+      "franchiseName": "Delmarva",
+      "clubName": "Shorebirds",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 487,
+      "name": "Kannapolis Cannon Ballers",
+      "link": "/api/v1/teams/487",
+      "season": 2025,
+      "venue": {
+        "id": 2764,
+        "name": "Atrium Health Ballpark",
+        "link": "/api/v1/venues/2764"
+      },
+      "teamCode": "kan",
+      "fileCode": "t487",
+      "abbreviation": "KAN",
+      "teamName": "Cannon Ballers",
+      "locationName": "Kannapolis",
+      "firstYearOfPlay": "1995",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Kannapolis",
+      "parentOrgName": "Chicago White Sox",
+      "parentOrgId": 145,
+      "franchiseName": "Kannapolis",
+      "clubName": "Cannon Ballers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 103,
+      "name": "Lake Elsinore Storm",
+      "link": "/api/v1/teams/103",
+      "season": 2025,
+      "venue": {
+        "id": 2516,
+        "name": "The Diamond",
+        "link": "/api/v1/venues/2516"
+      },
+      "teamCode": "lke",
+      "fileCode": "t103",
+      "abbreviation": "LE",
+      "teamName": "Storm",
+      "locationName": "Lake Elsinore",
+      "firstYearOfPlay": "1980",
+      "league": {
+        "id": 110,
+        "name": "California League",
+        "link": "/api/v1/league/110"
+      },
+      "division": {
+        "id": 209,
+        "name": "California League South",
+        "link": "/api/v1/divisions/209"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Lake Elsinore",
+      "parentOrgName": "San Diego Padres",
+      "parentOrgId": 135,
+      "franchiseName": "Lake Elsinore",
+      "clubName": "Storm",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 424,
+      "name": "Dunedin Blue Jays",
+      "link": "/api/v1/teams/424",
+      "season": 2025,
+      "venue": {
+        "id": 2536,
+        "name": "TD Ballpark",
+        "link": "/api/v1/venues/2536"
+      },
+      "teamCode": "dun",
+      "fileCode": "t424",
+      "abbreviation": "DUN",
+      "teamName": "Blue Jays",
+      "locationName": "Dunedin",
+      "firstYearOfPlay": "1987",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Dunedin",
+      "parentOrgName": "Toronto Blue Jays",
+      "parentOrgId": 141,
+      "franchiseName": "Dunedin",
+      "clubName": "Blue Jays",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 233,
+      "name": "Charleston RiverDogs",
+      "link": "/api/v1/teams/233",
+      "season": 2025,
+      "venue": {
+        "id": 2540,
+        "name": "Joseph P. Riley, Jr. Ballpark",
+        "link": "/api/v1/venues/2540"
+      },
+      "teamCode": "csc",
+      "fileCode": "t233",
+      "abbreviation": "CHS",
+      "teamName": "RiverDogs",
+      "locationName": "Charleston",
+      "firstYearOfPlay": "1973",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Charleston",
+      "parentOrgName": "Tampa Bay Rays",
+      "parentOrgId": 139,
+      "franchiseName": "Charleston",
+      "clubName": "RiverDogs",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 436,
+      "name": "Fredericksburg Nationals",
+      "link": "/api/v1/teams/436",
+      "season": 2025,
+      "venue": {
+        "id": 5520,
+        "name": "Virginia Credit Union Stadium",
+        "link": "/api/v1/venues/5520"
+      },
+      "teamCode": "fbg",
+      "fileCode": "t436",
+      "abbreviation": "FBG",
+      "teamName": "Nationals",
+      "locationName": "Fredericksburg",
+      "firstYearOfPlay": "1978",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Fredericksburg",
+      "parentOrgName": "Washington Nationals",
+      "parentOrgId": 120,
+      "franchiseName": "Fredericksburg",
+      "clubName": "Nationals",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 566,
+      "name": "Clearwater Threshers",
+      "link": "/api/v1/teams/566",
+      "season": 2025,
+      "venue": {
+        "id": 2700,
+        "name": "BayCare Ballpark",
+        "link": "/api/v1/venues/2700"
+      },
+      "teamCode": "clr",
+      "fileCode": "t566",
+      "abbreviation": "CLR",
+      "teamName": "Threshers",
+      "locationName": "Clearwater",
+      "firstYearOfPlay": "1985",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Clearwater",
+      "parentOrgName": "Philadelphia Phillies",
+      "parentOrgId": 143,
+      "franchiseName": "Clearwater",
+      "clubName": "Threshers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 3705,
+      "name": "Columbia Fireflies",
+      "link": "/api/v1/teams/3705",
+      "season": 2025,
+      "venue": {
+        "id": 4980,
+        "name": "Segra Park",
+        "link": "/api/v1/venues/4980"
+      },
+      "teamCode": "cba",
+      "fileCode": "t3705",
+      "abbreviation": "COL",
+      "teamName": "Fireflies",
+      "locationName": "Columbia",
+      "firstYearOfPlay": "1977",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 211,
+        "name": "Carolina League South",
+        "link": "/api/v1/divisions/211"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Columbia",
+      "parentOrgName": "Kansas City Royals",
+      "parentOrgId": 118,
+      "franchiseName": "Columbia",
+      "clubName": "Fireflies",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 249,
+      "name": "Carolina Mudcats",
+      "link": "/api/v1/teams/249",
+      "season": 2025,
+      "venue": {
+        "id": 2625,
+        "name": "Five County Stadium",
+        "link": "/api/v1/venues/2625"
+      },
+      "teamCode": "cmc",
+      "fileCode": "t249",
+      "abbreviation": "CAR",
+      "teamName": "Mudcats",
+      "locationName": "Zebulon",
+      "firstYearOfPlay": "1969",
+      "league": {
+        "id": 122,
+        "name": "Carolina League",
+        "link": "/api/v1/league/122"
+      },
+      "division": {
+        "id": 210,
+        "name": "Carolina League North",
+        "link": "/api/v1/divisions/210"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Carolina",
+      "parentOrgName": "Milwaukee Brewers",
+      "parentOrgId": 158,
+      "franchiseName": "Carolina",
+      "clubName": "Mudcats",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 570,
+      "name": "Lakeland Flying Tigers",
+      "link": "/api/v1/teams/570",
+      "season": 2025,
+      "venue": {
+        "id": 2511,
+        "name": "Publix Field at Joker Marchant Stadium",
+        "link": "/api/v1/venues/2511"
+      },
+      "teamCode": "lak",
+      "fileCode": "t570",
+      "abbreviation": "LAK",
+      "teamName": "Flying Tigers",
+      "locationName": "Lakeland",
+      "firstYearOfPlay": "1960",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Lakeland",
+      "parentOrgName": "Detroit Tigers",
+      "parentOrgId": 116,
+      "franchiseName": "Lakeland",
+      "clubName": "Flying Tigers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 507,
+      "name": "St. Lucie Mets",
+      "link": "/api/v1/teams/507",
+      "season": 2025,
+      "venue": {
+        "id": 2856,
+        "name": "Clover Park",
+        "link": "/api/v1/venues/2856"
+      },
+      "teamCode": "slu",
+      "fileCode": "t507",
+      "abbreviation": "SLU",
+      "teamName": "Mets",
+      "locationName": "Port St. Lucie",
+      "firstYearOfPlay": "1988",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 214,
+        "name": "Florida State League East",
+        "link": "/api/v1/divisions/214"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "St. Lucie",
+      "parentOrgName": "New York Mets",
+      "parentOrgId": 121,
+      "franchiseName": "St. Lucie",
+      "clubName": "Mets",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 509,
+      "name": "Fort Myers Mighty Mussels",
+      "link": "/api/v1/teams/509",
+      "season": 2025,
+      "venue": {
+        "id": 2862,
+        "name": "Lee Health Sports Complex",
+        "link": "/api/v1/venues/2862"
+      },
+      "teamCode": "ftm",
+      "fileCode": "t509",
+      "abbreviation": "FTM",
+      "teamName": "Mighty Mussels",
+      "locationName": "Fort Myers",
+      "firstYearOfPlay": "1992",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Fort Myers",
+      "parentOrgName": "Minnesota Twins",
+      "parentOrgId": 142,
+      "franchiseName": "Fort Myers",
+      "clubName": "Mighty Mussels",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 3390,
+      "name": "Bradenton Marauders",
+      "link": "/api/v1/teams/3390",
+      "season": 2025,
+      "venue": {
+        "id": 2526,
+        "name": "LECOM Park",
+        "link": "/api/v1/venues/2526"
+      },
+      "teamCode": "bra",
+      "fileCode": "t3390",
+      "abbreviation": "BRD",
+      "teamName": "Marauders",
+      "locationName": "Bradenton",
+      "firstYearOfPlay": "2010",
+      "league": {
+        "id": 123,
+        "name": "Florida State League",
+        "link": "/api/v1/league/123"
+      },
+      "division": {
+        "id": 215,
+        "name": "Florida State League West",
+        "link": "/api/v1/divisions/215"
+      },
+      "sport": {
+        "id": 14,
+        "link": "/api/v1/sports/14",
+        "name": "Single-A"
+      },
+      "shortName": "Bradenton",
+      "parentOrgName": "Pittsburgh Pirates",
+      "parentOrgId": 134,
+      "franchiseName": "Bradenton",
+      "clubName": "Marauders",
+      "active": true
+    }
+  ]
+}

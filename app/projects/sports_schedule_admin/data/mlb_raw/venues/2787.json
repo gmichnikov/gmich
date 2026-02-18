@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2787,
+      "name": "Jackie Robinson Ballpark",
+      "link": "/api/v1/venues/2787",
+      "location": {
+        "address1": "105 East Orange Avenue",
+        "city": "Daytona Beach",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "32114",
+        "defaultCoordinates": {
+          "latitude": 29.20922,
+          "longitude": -81.01596
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

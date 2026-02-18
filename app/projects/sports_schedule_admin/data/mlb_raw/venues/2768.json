@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2768,
+      "name": "Momentum Bank Ballpark",
+      "link": "/api/v1/venues/2768",
+      "location": {
+        "address1": "5514 Champions Drive",
+        "city": "Midland",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "79706",
+        "defaultCoordinates": {
+          "latitude": 31.98835,
+          "longitude": -102.15482
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

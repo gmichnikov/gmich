@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5472,
+      "name": "CHS Field",
+      "link": "/api/v1/venues/5472",
+      "location": {
+        "address1": "360 N. Broadway Street",
+        "city": "St. Paul",
+        "state": "Minnesota",
+        "stateAbbrev": "MN",
+        "postalCode": "55101",
+        "defaultCoordinates": {
+          "latitude": 44.95089651,
+          "longitude": -93.08457526
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

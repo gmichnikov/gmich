@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 6134,
+      "name": "Fifth Third Park",
+      "link": "/api/v1/venues/6134",
+      "location": {
+        "address1": "300 W Henry Street",
+        "city": "Spartanburg",
+        "state": "South Carolina",
+        "stateAbbrev": "SC",
+        "postalCode": "29306",
+        "defaultCoordinates": {
+          "latitude": 34.9449402,
+          "longitude": -81.9359415
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

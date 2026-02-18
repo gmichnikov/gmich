@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2771,
+      "name": "Neuroscience Group Field",
+      "link": "/api/v1/venues/2771",
+      "location": {
+        "address1": "2400 N. Casaloma Drive",
+        "city": "Appleton",
+        "state": "Wisconsin",
+        "stateAbbrev": "WI",
+        "postalCode": "54913",
+        "defaultCoordinates": {
+          "latitude": 44.282871,
+          "longitude": -88.469427
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

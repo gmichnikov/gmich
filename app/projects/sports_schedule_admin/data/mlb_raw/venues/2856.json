@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2856,
+      "name": "Clover Park",
+      "link": "/api/v1/venues/2856",
+      "location": {
+        "address1": "31 Piazza Drive",
+        "city": "Port St. Lucie",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "34986",
+        "defaultCoordinates": {
+          "latitude": 27.3249268,
+          "longitude": -80.4068854
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

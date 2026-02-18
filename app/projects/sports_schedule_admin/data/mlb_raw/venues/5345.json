@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5345,
+      "name": "SRP Park",
+      "link": "/api/v1/venues/5345",
+      "location": {
+        "address1": "187 Railroad Ave.",
+        "city": "North Augusta",
+        "state": "South Carolina",
+        "stateAbbrev": "SC",
+        "postalCode": "29841",
+        "defaultCoordinates": {
+          "latitude": 33.4844619,
+          "longitude": -81.9764372
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

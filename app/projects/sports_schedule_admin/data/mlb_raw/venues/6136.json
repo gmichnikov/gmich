@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 6136,
+      "name": "Covenant Health Park",
+      "link": "/api/v1/venues/6136",
+      "location": {
+        "address1": "500 East Jackson Avenue",
+        "city": "Knoxville",
+        "state": "Tennessee",
+        "stateAbbrev": "TN",
+        "postalCode": "37915",
+        "defaultCoordinates": {
+          "latitude": 35.97248459516771,
+          "longitude": -83.91495041686319
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

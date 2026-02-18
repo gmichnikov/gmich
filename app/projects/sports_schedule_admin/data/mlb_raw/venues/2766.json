@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2766,
+      "name": "Day Air Ballpark",
+      "link": "/api/v1/venues/2766",
+      "location": {
+        "address1": "220 N. Patterson Blvd.",
+        "city": "Dayton",
+        "state": "Ohio",
+        "stateAbbrev": "OH",
+        "postalCode": "45402",
+        "defaultCoordinates": {
+          "latitude": 39.764172,
+          "longitude": -84.185896
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

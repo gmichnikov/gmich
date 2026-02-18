@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2851,
+      "name": "AdventHealth Stadium",
+      "link": "/api/v1/venues/2851",
+      "location": {
+        "address1": "755 Braves Blvd.",
+        "city": "Rome",
+        "state": "Georgia",
+        "stateAbbrev": "GA",
+        "postalCode": "30161",
+        "defaultCoordinates": {
+          "latitude": 34.285832,
+          "longitude": -85.167211
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

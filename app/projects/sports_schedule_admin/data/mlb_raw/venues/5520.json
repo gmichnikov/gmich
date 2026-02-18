@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5520,
+      "name": "Virginia Credit Union Stadium",
+      "link": "/api/v1/venues/5520",
+      "location": {
+        "address1": "42 Jackie Robinson Way",
+        "city": "Fredericksburg",
+        "state": "Virginia",
+        "stateAbbrev": "VA",
+        "postalCode": "22401",
+        "defaultCoordinates": {
+          "latitude": 38.3181302,
+          "longitude": -77.5124029
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

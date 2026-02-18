@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2724,
+      "name": "Louisville Slugger Field",
+      "link": "/api/v1/venues/2724",
+      "location": {
+        "address1": "401 East Main Street",
+        "city": "Louisville",
+        "state": "Kentucky",
+        "stateAbbrev": "KY",
+        "postalCode": "40202",
+        "defaultCoordinates": {
+          "latitude": 38.2557199,
+          "longitude": -85.74479
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

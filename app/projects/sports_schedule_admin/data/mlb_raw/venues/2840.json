@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2840,
+      "name": "Carilion Clinic Field",
+      "link": "/api/v1/venues/2840",
+      "location": {
+        "address1": "1004 Texas Street",
+        "city": "Salem",
+        "state": "Virginia",
+        "stateAbbrev": "VA",
+        "postalCode": "24153",
+        "defaultCoordinates": {
+          "latitude": 37.2861162,
+          "longitude": -80.037161
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

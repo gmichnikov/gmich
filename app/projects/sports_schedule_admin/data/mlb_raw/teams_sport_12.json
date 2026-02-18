@@ -1,0 +1,1175 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "teams": [
+    {
+      "allStarStatus": "N",
+      "id": 452,
+      "name": "Altoona Curve",
+      "link": "/api/v1/teams/452",
+      "season": 2025,
+      "venue": {
+        "id": 2733,
+        "name": "Peoples Natural Gas Field",
+        "link": "/api/v1/venues/2733"
+      },
+      "teamCode": "alt",
+      "fileCode": "t452",
+      "abbreviation": "ALT",
+      "teamName": "Curve",
+      "locationName": "Altoona",
+      "firstYearOfPlay": "1999",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Altoona",
+      "parentOrgName": "Pittsburgh Pirates",
+      "parentOrgId": 134,
+      "franchiseName": "Altoona",
+      "clubName": "Curve",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 260,
+      "name": "Tulsa Drillers",
+      "link": "/api/v1/teams/260",
+      "season": 2025,
+      "venue": {
+        "id": 4149,
+        "name": "ONEOK Field",
+        "link": "/api/v1/venues/4149"
+      },
+      "teamCode": "tul",
+      "fileCode": "t260",
+      "abbreviation": "TUL",
+      "teamName": "Drillers",
+      "locationName": "Tulsa",
+      "firstYearOfPlay": "1977",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 241,
+        "name": "Texas League North",
+        "link": "/api/v1/divisions/241"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Tulsa",
+      "parentOrgName": "Los Angeles Dodgers",
+      "parentOrgId": 119,
+      "franchiseName": "Tulsa",
+      "clubName": "Drillers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 1350,
+      "name": "Northwest Arkansas Naturals",
+      "link": "/api/v1/teams/1350",
+      "season": 2025,
+      "venue": {
+        "id": 3329,
+        "name": "Arvest Ballpark",
+        "link": "/api/v1/venues/3329"
+      },
+      "teamCode": "nwa",
+      "fileCode": "t1350",
+      "abbreviation": "NWA",
+      "teamName": "Naturals",
+      "locationName": "Springdale",
+      "firstYearOfPlay": "2008",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 241,
+        "name": "Texas League North",
+        "link": "/api/v1/divisions/241"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "NW Arkansas",
+      "parentOrgName": "Kansas City Royals",
+      "parentOrgId": 118,
+      "franchiseName": "NW Arkansas",
+      "clubName": "Naturals",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 522,
+      "name": "Reading Fightin Phils",
+      "link": "/api/v1/teams/522",
+      "season": 2025,
+      "venue": {
+        "id": 2769,
+        "name": "FirstEnergy Stadium",
+        "link": "/api/v1/venues/2769"
+      },
+      "teamCode": "rea",
+      "fileCode": "t522",
+      "abbreviation": "REA",
+      "teamName": "Fightin Phils",
+      "locationName": "Reading",
+      "firstYearOfPlay": "1952",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Reading",
+      "parentOrgName": "Philadelphia Phillies",
+      "parentOrgId": 143,
+      "franchiseName": "Reading",
+      "clubName": "Fightin Phils",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 463,
+      "name": "New Hampshire Fisher Cats",
+      "link": "/api/v1/teams/463",
+      "season": 2025,
+      "venue": {
+        "id": 2868,
+        "name": "Delta Dental Stadium",
+        "link": "/api/v1/venues/2868"
+      },
+      "teamCode": "nhm",
+      "fileCode": "t463",
+      "abbreviation": "NH",
+      "teamName": "Fisher Cats",
+      "locationName": "Manchester",
+      "firstYearOfPlay": "2004",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "New Hampshire",
+      "parentOrgName": "Toronto Blue Jays",
+      "parentOrgId": 141,
+      "franchiseName": "New Hampshire",
+      "clubName": "Fisher Cats",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 3410,
+      "name": "Richmond Flying Squirrels",
+      "link": "/api/v1/teams/3410",
+      "season": 2025,
+      "venue": {
+        "id": 2853,
+        "name": "The Diamond",
+        "link": "/api/v1/venues/2853"
+      },
+      "teamCode": "ric",
+      "fileCode": "t3410",
+      "abbreviation": "RIC",
+      "teamName": "Flying Squirrels",
+      "locationName": "Richmond",
+      "firstYearOfPlay": "2010",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Richmond",
+      "parentOrgName": "San Francisco Giants",
+      "parentOrgId": 137,
+      "franchiseName": "Richmond",
+      "clubName": "Flying Squirrels",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 402,
+      "name": "Akron RubberDucks",
+      "link": "/api/v1/teams/402",
+      "season": 2025,
+      "venue": {
+        "id": 2740,
+        "name": "Canal Park",
+        "link": "/api/v1/venues/2740"
+      },
+      "teamCode": "akr",
+      "fileCode": "t402",
+      "abbreviation": "AKR",
+      "teamName": "RubberDucks",
+      "locationName": "Akron",
+      "firstYearOfPlay": "1989",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Akron",
+      "parentOrgName": "Cleveland Guardians",
+      "parentOrgId": 114,
+      "franchiseName": "Akron",
+      "clubName": "RubberDucks",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 5015,
+      "name": "Biloxi Shuckers",
+      "link": "/api/v1/teams/5015",
+      "season": 2025,
+      "venue": {
+        "id": 4960,
+        "name": "Keesler Federal Park",
+        "link": "/api/v1/venues/4960"
+      },
+      "teamCode": "blx",
+      "fileCode": "t5015",
+      "abbreviation": "BLX",
+      "teamName": "Shuckers",
+      "locationName": "Biloxi",
+      "firstYearOfPlay": "2015",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 240,
+        "name": "Southern League South",
+        "link": "/api/v1/divisions/240"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Biloxi",
+      "parentOrgName": "Milwaukee Brewers",
+      "parentOrgId": 158,
+      "franchiseName": "Biloxi",
+      "clubName": "Shuckers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 538,
+      "name": "Hartford Yard Goats",
+      "link": "/api/v1/teams/538",
+      "season": 2025,
+      "venue": {
+        "id": 4985,
+        "name": "Dunkin' Park",
+        "link": "/api/v1/venues/4985"
+      },
+      "teamCode": "hfd",
+      "fileCode": "t538",
+      "abbreviation": "HFD",
+      "teamName": "Yard Goats",
+      "locationName": "Hartford",
+      "firstYearOfPlay": "1983",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Hartford",
+      "parentOrgName": "Colorado Rockies",
+      "parentOrgId": 115,
+      "franchiseName": "Hartford",
+      "clubName": "Yard Goats",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 4124,
+      "name": "Pensacola Blue Wahoos",
+      "link": "/api/v1/teams/4124",
+      "season": 2025,
+      "venue": {
+        "id": 4329,
+        "name": "Blue Wahoos Stadium",
+        "link": "/api/v1/venues/4329"
+      },
+      "teamCode": "pen",
+      "fileCode": "t4124",
+      "abbreviation": "PNS",
+      "teamName": "Blue Wahoos",
+      "locationName": "Pensacola",
+      "firstYearOfPlay": "2012",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 240,
+        "name": "Southern League South",
+        "link": "/api/v1/divisions/240"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Pensacola",
+      "parentOrgName": "Miami Marlins",
+      "parentOrgId": 146,
+      "franchiseName": "Pensacola",
+      "clubName": "Blue Wahoos",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 540,
+      "name": "Frisco RoughRiders",
+      "link": "/api/v1/teams/540",
+      "season": 2025,
+      "venue": {
+        "id": 2755,
+        "name": "Riders Field",
+        "link": "/api/v1/venues/2755"
+      },
+      "teamCode": "fri",
+      "fileCode": "t540",
+      "abbreviation": "FRI",
+      "teamName": "RoughRiders",
+      "locationName": "Frisco",
+      "firstYearOfPlay": "2003",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 242,
+        "name": "Texas League South",
+        "link": "/api/v1/divisions/242"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Frisco",
+      "parentOrgName": "Texas Rangers",
+      "parentOrgId": 140,
+      "franchiseName": "Frisco",
+      "clubName": "RoughRiders",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 546,
+      "name": "Portland Sea Dogs",
+      "link": "/api/v1/teams/546",
+      "season": 2025,
+      "venue": {
+        "id": 2779,
+        "name": "Delta Dental Park",
+        "link": "/api/v1/venues/2779"
+      },
+      "teamCode": "prt",
+      "fileCode": "t546",
+      "abbreviation": "POR",
+      "teamName": "Sea Dogs",
+      "locationName": "Portland",
+      "firstYearOfPlay": "1994",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Portland",
+      "parentOrgName": "Boston Red Sox",
+      "parentOrgId": 111,
+      "franchiseName": "Portland",
+      "clubName": "Sea Dogs",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 482,
+      "name": "Corpus Christi Hooks",
+      "link": "/api/v1/teams/482",
+      "season": 2025,
+      "venue": {
+        "id": 2861,
+        "name": "Whataburger Field",
+        "link": "/api/v1/venues/2861"
+      },
+      "teamCode": "cor",
+      "fileCode": "t482",
+      "abbreviation": "CC",
+      "teamName": "Hooks",
+      "locationName": "Corpus Christi",
+      "firstYearOfPlay": "1974",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 242,
+        "name": "Texas League South",
+        "link": "/api/v1/divisions/242"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Corpus Christi",
+      "parentOrgName": "Houston Astros",
+      "parentOrgId": 117,
+      "franchiseName": "Corpus Christi",
+      "clubName": "Hooks",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 418,
+      "name": "Chesapeake Baysox",
+      "link": "/api/v1/teams/418",
+      "season": 2025,
+      "venue": {
+        "id": 2832,
+        "name": "Prince George's Stadium",
+        "link": "/api/v1/venues/2832"
+      },
+      "teamCode": "che",
+      "fileCode": "t418",
+      "abbreviation": "CHE",
+      "teamName": "Baysox",
+      "locationName": "Bowie",
+      "firstYearOfPlay": "1993",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Chesapeake",
+      "parentOrgName": "Baltimore Orioles",
+      "parentOrgId": 110,
+      "franchiseName": "Chesapeake",
+      "clubName": "Baysox",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 547,
+      "name": "Harrisburg Senators",
+      "link": "/api/v1/teams/547",
+      "season": 2025,
+      "venue": {
+        "id": 2749,
+        "name": "FNB Field",
+        "link": "/api/v1/venues/2749"
+      },
+      "teamCode": "hbg",
+      "fileCode": "t547",
+      "abbreviation": "HBG",
+      "teamName": "Senators",
+      "locationName": "Harrisburg",
+      "firstYearOfPlay": "1932",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Harrisburg",
+      "parentOrgName": "Washington Nationals",
+      "parentOrgId": 120,
+      "franchiseName": "Harrisburg",
+      "clubName": "Senators",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 1956,
+      "name": "Somerset Patriots",
+      "link": "/api/v1/teams/1956",
+      "season": 2025,
+      "venue": {
+        "id": 5418,
+        "name": "TD Bank Ballpark",
+        "link": "/api/v1/venues/5418"
+      },
+      "teamCode": "som",
+      "fileCode": "t1956",
+      "abbreviation": "SOM",
+      "teamName": "Patriots",
+      "locationName": "Bridgewater",
+      "firstYearOfPlay": "1998",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Somerset",
+      "parentOrgName": "New York Yankees",
+      "parentOrgId": 147,
+      "franchiseName": "Somerset",
+      "clubName": "Patriots",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 421,
+      "name": "Montgomery Biscuits",
+      "link": "/api/v1/teams/421",
+      "season": 2025,
+      "venue": {
+        "id": 2814,
+        "name": "Montgomery Riverwalk Stadium",
+        "link": "/api/v1/venues/2814"
+      },
+      "teamCode": "mon",
+      "fileCode": "t421",
+      "abbreviation": "MTG",
+      "teamName": "Biscuits",
+      "locationName": "Montgomery",
+      "firstYearOfPlay": "1951",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 240,
+        "name": "Southern League South",
+        "link": "/api/v1/divisions/240"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Montgomery",
+      "parentOrgName": "Tampa Bay Rays",
+      "parentOrgId": 139,
+      "franchiseName": "Montgomery",
+      "clubName": "Biscuits",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 553,
+      "name": "Knoxville Smokies",
+      "link": "/api/v1/teams/553",
+      "season": 2025,
+      "venue": {
+        "id": 6136,
+        "name": "Covenant Health Park",
+        "link": "/api/v1/venues/6136"
+      },
+      "teamCode": "knx",
+      "fileCode": "t553",
+      "abbreviation": "KNX",
+      "teamName": "Smokies",
+      "locationName": "Knoxville",
+      "firstYearOfPlay": "1932",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 239,
+        "name": "Southern League North",
+        "link": "/api/v1/divisions/239"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Knoxville",
+      "parentOrgName": "Chicago Cubs",
+      "parentOrgId": 112,
+      "franchiseName": "Knoxville",
+      "clubName": "Smokies",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 106,
+      "name": "Erie SeaWolves",
+      "link": "/api/v1/teams/106",
+      "season": 2025,
+      "venue": {
+        "id": 2512,
+        "name": "UPMC Park",
+        "link": "/api/v1/venues/2512"
+      },
+      "teamCode": "eri",
+      "fileCode": "t106",
+      "abbreviation": "ERI",
+      "teamName": "SeaWolves",
+      "locationName": "Erie",
+      "firstYearOfPlay": "1995",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 213,
+        "name": "Eastern League Southwest",
+        "link": "/api/v1/divisions/213"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Erie",
+      "parentOrgName": "Detroit Tigers",
+      "parentOrgId": 116,
+      "franchiseName": "Erie",
+      "clubName": "SeaWolves",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 237,
+      "name": "Midland RockHounds",
+      "link": "/api/v1/teams/237",
+      "season": 2025,
+      "venue": {
+        "id": 2768,
+        "name": "Momentum Bank Ballpark",
+        "link": "/api/v1/venues/2768"
+      },
+      "teamCode": "mdl",
+      "fileCode": "t237",
+      "abbreviation": "MID",
+      "teamName": "RockHounds",
+      "locationName": "Midland",
+      "firstYearOfPlay": "1972",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 242,
+        "name": "Texas League South",
+        "link": "/api/v1/divisions/242"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Midland",
+      "parentOrgName": "Athletics",
+      "parentOrgId": 133,
+      "franchiseName": "Midland",
+      "clubName": "RockHounds",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 559,
+      "name": "Rocket City Trash Pandas",
+      "link": "/api/v1/teams/559",
+      "season": 2025,
+      "venue": {
+        "id": 5455,
+        "name": "Toyota Field",
+        "link": "/api/v1/venues/5455"
+      },
+      "teamCode": "rcy",
+      "fileCode": "t559",
+      "abbreviation": "RCT",
+      "teamName": "Trash Pandas",
+      "locationName": "Madison",
+      "firstYearOfPlay": "1985",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 239,
+        "name": "Southern League North",
+        "link": "/api/v1/divisions/239"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Rocket City",
+      "parentOrgName": "Los Angeles Angels",
+      "parentOrgId": 108,
+      "franchiseName": "Rocket City",
+      "clubName": "Trash Pandas",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 498,
+      "name": "Chattanooga Lookouts",
+      "link": "/api/v1/teams/498",
+      "season": 2025,
+      "venue": {
+        "id": 2682,
+        "name": "AT&T Field",
+        "link": "/api/v1/venues/2682"
+      },
+      "teamCode": "chg",
+      "fileCode": "t498",
+      "abbreviation": "CHA",
+      "teamName": "Lookouts",
+      "locationName": "Chattanooga",
+      "firstYearOfPlay": "1932",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 239,
+        "name": "Southern League North",
+        "link": "/api/v1/divisions/239"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Chattanooga",
+      "parentOrgName": "Cincinnati Reds",
+      "parentOrgId": 113,
+      "franchiseName": "Chattanooga",
+      "clubName": "Lookouts",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 6325,
+      "name": "Columbus Clingstones",
+      "link": "/api/v1/teams/6325",
+      "season": 2025,
+      "venue": {
+        "id": 2776,
+        "name": "Synovus Park",
+        "link": "/api/v1/venues/2776"
+      },
+      "teamCode": "cga",
+      "fileCode": "t6325",
+      "abbreviation": "COL",
+      "teamName": "Clingstones",
+      "locationName": "Columbus",
+      "firstYearOfPlay": "2024",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 240,
+        "name": "Southern League South",
+        "link": "/api/v1/divisions/240"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Columbus",
+      "parentOrgName": "Atlanta Braves",
+      "parentOrgId": 144,
+      "franchiseName": "Columbus",
+      "clubName": "Clingstones",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 247,
+      "name": "Birmingham Barons",
+      "link": "/api/v1/teams/247",
+      "season": 2025,
+      "venue": {
+        "id": 4529,
+        "name": "Regions Field",
+        "link": "/api/v1/venues/4529"
+      },
+      "teamCode": "bir",
+      "fileCode": "t247",
+      "abbreviation": "BIR",
+      "teamName": "Barons",
+      "locationName": "Birmingham",
+      "firstYearOfPlay": "1932",
+      "league": {
+        "id": 111,
+        "name": "Southern League",
+        "link": "/api/v1/league/111"
+      },
+      "division": {
+        "id": 239,
+        "name": "Southern League North",
+        "link": "/api/v1/divisions/239"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Birmingham",
+      "parentOrgName": "Chicago White Sox",
+      "parentOrgId": 145,
+      "franchiseName": "Birmingham",
+      "clubName": "Barons",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 5368,
+      "name": "Amarillo Sod Poodles",
+      "link": "/api/v1/teams/5368",
+      "season": 2025,
+      "venue": {
+        "id": 5415,
+        "name": "Hodgetown",
+        "link": "/api/v1/venues/5415"
+      },
+      "teamCode": "ama",
+      "fileCode": "t5368",
+      "abbreviation": "AMA",
+      "teamName": "Sod Poodles",
+      "locationName": "Amarillo",
+      "firstYearOfPlay": "2018",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 242,
+        "name": "Texas League South",
+        "link": "/api/v1/divisions/242"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Amarillo",
+      "parentOrgName": "Arizona Diamondbacks",
+      "parentOrgId": 109,
+      "franchiseName": "Amarillo",
+      "clubName": "Sod Poodles",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 440,
+      "name": "Springfield Cardinals",
+      "link": "/api/v1/teams/440",
+      "season": 2025,
+      "venue": {
+        "id": 2722,
+        "name": "Hammons Field",
+        "link": "/api/v1/venues/2722"
+      },
+      "teamCode": "spr",
+      "fileCode": "t440",
+      "abbreviation": "SPR",
+      "teamName": "Cardinals",
+      "locationName": "Springfield",
+      "firstYearOfPlay": "2005",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 241,
+        "name": "Texas League North",
+        "link": "/api/v1/divisions/241"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Springfield",
+      "parentOrgName": "St. Louis Cardinals",
+      "parentOrgId": 138,
+      "franchiseName": "Springfield",
+      "clubName": "Cardinals",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 505,
+      "name": "Binghamton Rumble Ponies",
+      "link": "/api/v1/teams/505",
+      "season": 2025,
+      "venue": {
+        "id": 2820,
+        "name": "Mirabito Stadium",
+        "link": "/api/v1/venues/2820"
+      },
+      "teamCode": "bin",
+      "fileCode": "t505",
+      "abbreviation": "BNG",
+      "teamName": "Rumble Ponies",
+      "locationName": "Binghamton",
+      "firstYearOfPlay": "1992",
+      "league": {
+        "id": 113,
+        "name": "Eastern League",
+        "link": "/api/v1/league/113"
+      },
+      "division": {
+        "id": 212,
+        "name": "Eastern League Northeast",
+        "link": "/api/v1/divisions/212"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Binghamton",
+      "parentOrgName": "New York Mets",
+      "parentOrgId": 121,
+      "franchiseName": "Binghamton",
+      "clubName": "Rumble Ponies",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 3898,
+      "name": "Wichita Wind Surge",
+      "link": "/api/v1/teams/3898",
+      "season": 2025,
+      "venue": {
+        "id": 5450,
+        "name": "Equity Bank Park",
+        "link": "/api/v1/venues/5450"
+      },
+      "teamCode": "wch",
+      "fileCode": "t3898",
+      "abbreviation": "WCH",
+      "teamName": "Wind Surge",
+      "locationName": "Wichita",
+      "firstYearOfPlay": "1970",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 241,
+        "name": "Texas League North",
+        "link": "/api/v1/divisions/241"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Wichita",
+      "parentOrgName": "Minnesota Twins",
+      "parentOrgId": 142,
+      "franchiseName": "Wichita",
+      "clubName": "Wind Surge",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 574,
+      "name": "Arkansas Travelers",
+      "link": "/api/v1/teams/574",
+      "season": 2025,
+      "venue": {
+        "id": 3389,
+        "name": "Dickey-Stephens Park",
+        "link": "/api/v1/venues/3389"
+      },
+      "teamCode": "ark",
+      "fileCode": "t574",
+      "abbreviation": "ARK",
+      "teamName": "Travelers",
+      "locationName": "North Little Rock",
+      "firstYearOfPlay": "1932",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 241,
+        "name": "Texas League North",
+        "link": "/api/v1/divisions/241"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "Arkansas",
+      "parentOrgName": "Seattle Mariners",
+      "parentOrgId": 136,
+      "franchiseName": "Arkansas",
+      "clubName": "Travelers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 510,
+      "name": "San Antonio Missions",
+      "link": "/api/v1/teams/510",
+      "season": 2025,
+      "venue": {
+        "id": 2818,
+        "name": "Nelson Wolff Stadium",
+        "link": "/api/v1/venues/2818"
+      },
+      "teamCode": "san",
+      "fileCode": "t510",
+      "abbreviation": "SA",
+      "teamName": "Missions",
+      "locationName": "San Antonio",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 109,
+        "name": "Texas League",
+        "link": "/api/v1/league/109"
+      },
+      "division": {
+        "id": 242,
+        "name": "Texas League South",
+        "link": "/api/v1/divisions/242"
+      },
+      "sport": {
+        "id": 12,
+        "link": "/api/v1/sports/12",
+        "name": "Double-A"
+      },
+      "shortName": "San Antonio",
+      "parentOrgName": "San Diego Padres",
+      "parentOrgId": 135,
+      "franchiseName": "San Antonio",
+      "clubName": "Missions",
+      "active": true
+    }
+  ]
+}

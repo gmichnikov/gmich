@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5410,
+      "name": "Polar Park",
+      "link": "/api/v1/venues/5410",
+      "location": {
+        "address1": "100 Madison Street",
+        "city": "Worcester",
+        "state": "Massachusetts",
+        "stateAbbrev": "MA",
+        "postalCode": "01608",
+        "defaultCoordinates": {
+          "latitude": 42.25606,
+          "longitude": -71.80028
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

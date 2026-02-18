@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2765,
+      "name": "LMCU Ballpark",
+      "link": "/api/v1/venues/2765",
+      "location": {
+        "address1": "4500 West River Drive",
+        "city": "Comstock Park",
+        "state": "Michigan",
+        "stateAbbrev": "MI",
+        "postalCode": "49321",
+        "defaultCoordinates": {
+          "latitude": 43.040797,
+          "longitude": -85.65933
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

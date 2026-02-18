@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5455,
+      "name": "Toyota Field",
+      "link": "/api/v1/venues/5455",
+      "location": {
+        "address1": "500 Trash Panda Way",
+        "city": "Madison",
+        "state": "Alabama",
+        "stateAbbrev": "AL",
+        "postalCode": "35758",
+        "defaultCoordinates": {
+          "latitude": 34.6837403,
+          "longitude": -86.7274237
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

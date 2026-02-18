@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2776,
+      "name": "Synovus Park",
+      "link": "/api/v1/venues/2776",
+      "location": {
+        "address1": "100 4th Street",
+        "city": "Columbus",
+        "state": "Georgia",
+        "stateAbbrev": "GA",
+        "postalCode": "31901",
+        "defaultCoordinates": {
+          "latitude": 32.4523727,
+          "longitude": -84.9939591
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

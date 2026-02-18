@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4715,
+      "name": "First Horizon Park",
+      "link": "/api/v1/venues/4715",
+      "location": {
+        "address1": "19 Junior Gilliam Way",
+        "city": "Nashville",
+        "state": "Tennessee",
+        "stateAbbrev": "TN",
+        "postalCode": "37219",
+        "defaultCoordinates": {
+          "latitude": 36.173218,
+          "longitude": -86.785171
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2749,
+      "name": "FNB Field",
+      "link": "/api/v1/venues/2749",
+      "location": {
+        "address1": "245 Championship Way",
+        "city": "Harrisburg",
+        "state": "Pennsylvania",
+        "stateAbbrev": "PA",
+        "postalCode": "17101",
+        "defaultCoordinates": {
+          "latitude": 40.2568294,
+          "longitude": -76.8896522
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

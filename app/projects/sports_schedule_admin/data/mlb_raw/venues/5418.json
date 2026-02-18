@@ -1,0 +1,25 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5418,
+      "name": "TD Bank Ballpark",
+      "link": "/api/v1/venues/5418",
+      "location": {
+        "address1": "860 East Main Street ",
+        "city": "Bridgewater",
+        "state": "New Jersey",
+        "stateAbbrev": "NJ",
+        "postalCode": "08807",
+        "defaultCoordinates": {
+          "latitude": 40.56081907,
+          "longitude": -74.55328462
+        },
+        "country": "USA",
+        "phone": "(908) 252-0700"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

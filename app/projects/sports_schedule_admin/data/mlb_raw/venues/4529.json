@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4529,
+      "name": "Regions Field",
+      "link": "/api/v1/venues/4529",
+      "location": {
+        "address1": "1401 1st Avenue South",
+        "city": "Birmingham",
+        "state": "Alabama",
+        "stateAbbrev": "AL",
+        "postalCode": "35233",
+        "defaultCoordinates": {
+          "latitude": 33.5077928,
+          "longitude": -86.8120366
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

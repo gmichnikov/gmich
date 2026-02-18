@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4985,
+      "name": "Dunkin' Park",
+      "link": "/api/v1/venues/4985",
+      "location": {
+        "address1": "1214 Main Street",
+        "city": "Hartford",
+        "state": "Connecticut",
+        "stateAbbrev": "CT",
+        "postalCode": "06103",
+        "defaultCoordinates": {
+          "latitude": 41.77079,
+          "longitude": -72.6743078
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

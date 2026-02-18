@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2817,
+      "name": "Rogers Field at Nat Bailey Stadium",
+      "link": "/api/v1/venues/2817",
+      "location": {
+        "address1": "4601 Ontario Street",
+        "city": "Vancouver",
+        "state": "British Columbia",
+        "stateAbbrev": "BC",
+        "postalCode": "V5V 3H4",
+        "defaultCoordinates": {
+          "latitude": 49.2431966,
+          "longitude": -123.1054384
+        },
+        "country": "Canada"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

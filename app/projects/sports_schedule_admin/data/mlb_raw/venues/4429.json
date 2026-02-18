@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4429,
+      "name": "Hillsboro Ballpark",
+      "link": "/api/v1/venues/4429",
+      "location": {
+        "address1": "4460 NW 229th Ave.",
+        "city": "Hillsboro",
+        "state": "Oregon",
+        "stateAbbrev": "OR",
+        "postalCode": "97124",
+        "defaultCoordinates": {
+          "latitude": 45.5536,
+          "longitude": -122.908511
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

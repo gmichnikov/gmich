@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2625,
+      "name": "Five County Stadium",
+      "link": "/api/v1/venues/2625",
+      "location": {
+        "address1": "1501 N.C. Highway 39",
+        "city": "Zebulon",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "27597",
+        "defaultCoordinates": {
+          "latitude": 35.81726,
+          "longitude": -78.27122
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

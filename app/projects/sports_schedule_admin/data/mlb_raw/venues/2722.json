@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2722,
+      "name": "Hammons Field",
+      "link": "/api/v1/venues/2722",
+      "location": {
+        "address1": "955 East Trafficway",
+        "city": "Springfield",
+        "state": "Missouri",
+        "stateAbbrev": "MO",
+        "postalCode": "65802",
+        "defaultCoordinates": {
+          "latitude": 37.21078,
+          "longitude": -93.2797
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

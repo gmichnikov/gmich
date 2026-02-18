@@ -1,0 +1,1145 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "teams": [
+    {
+      "allStarStatus": "N",
+      "id": 2498,
+      "name": "Bowling Green Hot Rods",
+      "link": "/api/v1/teams/2498",
+      "season": 2025,
+      "venue": {
+        "id": 3569,
+        "name": "Bowling Green Ballpark",
+        "link": "/api/v1/venues/3569"
+      },
+      "teamCode": "bgr",
+      "fileCode": "t2498",
+      "abbreviation": "BG",
+      "teamName": "Hot Rods",
+      "locationName": "Bowling Green",
+      "firstYearOfPlay": "2009",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Bowling Green",
+      "parentOrgName": "Tampa Bay Rays",
+      "parentOrgId": 139,
+      "franchiseName": "Bowling Green",
+      "clubName": "Hot Rods",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 580,
+      "name": "Winston-Salem Dash",
+      "link": "/api/v1/teams/580",
+      "season": 2025,
+      "venue": {
+        "id": 4089,
+        "name": "Truist Stadium",
+        "link": "/api/v1/venues/4089"
+      },
+      "teamCode": "wsm",
+      "fileCode": "t580",
+      "abbreviation": "WS",
+      "teamName": "Dash",
+      "locationName": "Winston-Salem",
+      "firstYearOfPlay": "1945",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Winston-Salem",
+      "parentOrgName": "Chicago White Sox",
+      "parentOrgId": 145,
+      "franchiseName": "Winston-Salem",
+      "clubName": "Dash",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 453,
+      "name": "Brooklyn Cyclones",
+      "link": "/api/v1/teams/453",
+      "season": 2025,
+      "venue": {
+        "id": 2795,
+        "name": "Maimonides Park",
+        "link": "/api/v1/venues/2795"
+      },
+      "teamCode": "bro",
+      "fileCode": "t453",
+      "abbreviation": "BRK",
+      "teamName": "Cyclones",
+      "locationName": "Brooklyn",
+      "firstYearOfPlay": "2001",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Brooklyn",
+      "parentOrgName": "New York Mets",
+      "parentOrgId": 121,
+      "franchiseName": "Brooklyn",
+      "clubName": "Cyclones",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 582,
+      "name": "West Michigan Whitecaps",
+      "link": "/api/v1/teams/582",
+      "season": 2025,
+      "venue": {
+        "id": 2765,
+        "name": "LMCU Ballpark",
+        "link": "/api/v1/venues/2765"
+      },
+      "teamCode": "wmi",
+      "fileCode": "t582",
+      "abbreviation": "WM",
+      "teamName": "Whitecaps",
+      "locationName": "Comstock Park",
+      "firstYearOfPlay": "1982",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "West Michigan",
+      "parentOrgName": "Detroit Tigers",
+      "parentOrgId": 116,
+      "franchiseName": "West Michigan",
+      "clubName": "Whitecaps",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 584,
+      "name": "Fort Wayne TinCaps",
+      "link": "/api/v1/teams/584",
+      "season": 2025,
+      "venue": {
+        "id": 3790,
+        "name": "Parkview Field",
+        "link": "/api/v1/venues/3790"
+      },
+      "teamCode": "ftw",
+      "fileCode": "t584",
+      "abbreviation": "FW",
+      "teamName": "TinCaps",
+      "locationName": "Fort Wayne",
+      "firstYearOfPlay": "1993",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Fort Wayne",
+      "parentOrgName": "San Diego Padres",
+      "parentOrgId": 135,
+      "franchiseName": "Fort Wayne",
+      "clubName": "TinCaps",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 456,
+      "name": "Great Lakes Loons",
+      "link": "/api/v1/teams/456",
+      "season": 2025,
+      "venue": {
+        "id": 3189,
+        "name": "Dow Diamond",
+        "link": "/api/v1/venues/3189"
+      },
+      "teamCode": "gla",
+      "fileCode": "t456",
+      "abbreviation": "GL",
+      "teamName": "Loons",
+      "locationName": "Midland",
+      "firstYearOfPlay": "1995",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Great Lakes",
+      "parentOrgName": "Los Angeles Dodgers",
+      "parentOrgId": 119,
+      "franchiseName": "Great Lakes",
+      "clubName": "Loons",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 459,
+      "name": "Dayton Dragons",
+      "link": "/api/v1/teams/459",
+      "season": 2025,
+      "venue": {
+        "id": 2766,
+        "name": "Day Air Ballpark",
+        "link": "/api/v1/venues/2766"
+      },
+      "teamCode": "dtn",
+      "fileCode": "t459",
+      "abbreviation": "DAY",
+      "teamName": "Dragons",
+      "locationName": "Dayton",
+      "firstYearOfPlay": "2000",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Dayton",
+      "parentOrgName": "Cincinnati Reds",
+      "parentOrgId": 113,
+      "franchiseName": "Dayton",
+      "clubName": "Dragons",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 460,
+      "name": "Tri-City Dust Devils",
+      "link": "/api/v1/teams/460",
+      "season": 2025,
+      "venue": {
+        "id": 2826,
+        "name": "Gesa Stadium",
+        "link": "/api/v1/venues/2826"
+      },
+      "teamCode": "tri",
+      "fileCode": "t460",
+      "abbreviation": "TRI",
+      "teamName": "Dust Devils",
+      "locationName": "Pasco",
+      "firstYearOfPlay": "2001",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Tri-City",
+      "parentOrgName": "Los Angeles Angels",
+      "parentOrgId": 108,
+      "franchiseName": "Tri-City",
+      "clubName": "Dust Devils",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 461,
+      "name": "Eugene Emeralds",
+      "link": "/api/v1/teams/461",
+      "season": 2025,
+      "venue": {
+        "id": 4109,
+        "name": "PK Park",
+        "link": "/api/v1/venues/4109"
+      },
+      "teamCode": "eug",
+      "fileCode": "t461",
+      "abbreviation": "EUG",
+      "teamName": "Emeralds",
+      "locationName": "Eugene",
+      "firstYearOfPlay": "1955",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Eugene",
+      "parentOrgName": "San Francisco Giants",
+      "parentOrgId": 137,
+      "franchiseName": "Eugene",
+      "clubName": "Emeralds",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 403,
+      "name": "Everett AquaSox",
+      "link": "/api/v1/teams/403",
+      "season": 2025,
+      "venue": {
+        "id": 2762,
+        "name": "Funko Field",
+        "link": "/api/v1/venues/2762"
+      },
+      "teamCode": "eve",
+      "fileCode": "t403",
+      "abbreviation": "EVE",
+      "teamName": "AquaSox",
+      "locationName": "Everett",
+      "firstYearOfPlay": "1984",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Everett",
+      "parentOrgName": "Seattle Mariners",
+      "parentOrgId": 136,
+      "franchiseName": "Everett",
+      "clubName": "AquaSox",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 537,
+      "name": "Hudson Valley Renegades",
+      "link": "/api/v1/teams/537",
+      "season": 2025,
+      "venue": {
+        "id": 2757,
+        "name": "Heritage Financial Park",
+        "link": "/api/v1/venues/2757"
+      },
+      "teamCode": "hdv",
+      "fileCode": "t537",
+      "abbreviation": "HV",
+      "teamName": "Renegades",
+      "locationName": "Wappingers Falls",
+      "firstYearOfPlay": "1994",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Hudson Valley",
+      "parentOrgName": "New York Yankees",
+      "parentOrgId": 147,
+      "franchiseName": "Hudson Valley",
+      "clubName": "Renegades",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 477,
+      "name": "Greensboro Grasshoppers",
+      "link": "/api/v1/teams/477",
+      "season": 2025,
+      "venue": {
+        "id": 2723,
+        "name": "First National Bank Field",
+        "link": "/api/v1/venues/2723"
+      },
+      "teamCode": "gbo",
+      "fileCode": "t477",
+      "abbreviation": "GBO",
+      "teamName": "Grasshoppers",
+      "locationName": "Greensboro",
+      "firstYearOfPlay": "1945",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Greensboro",
+      "parentOrgName": "Pittsburgh Pirates",
+      "parentOrgId": 134,
+      "franchiseName": "Greensboro",
+      "clubName": "Grasshoppers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 419,
+      "name": "Hillsboro Hops",
+      "link": "/api/v1/teams/419",
+      "season": 2025,
+      "venue": {
+        "id": 4429,
+        "name": "Hillsboro Ballpark",
+        "link": "/api/v1/venues/4429"
+      },
+      "teamCode": "hil",
+      "fileCode": "t419",
+      "abbreviation": "HIL",
+      "teamName": "Hops",
+      "locationName": "Hillsboro",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Hillsboro",
+      "parentOrgName": "Arizona Diamondbacks",
+      "parentOrgId": 109,
+      "franchiseName": "Hillsboro",
+      "clubName": "Hops",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 550,
+      "name": "South Bend Cubs",
+      "link": "/api/v1/teams/550",
+      "season": 2025,
+      "venue": {
+        "id": 2850,
+        "name": "Four Winds Field",
+        "link": "/api/v1/venues/2850"
+      },
+      "teamCode": "sbd",
+      "fileCode": "t550",
+      "abbreviation": "SB",
+      "teamName": "Cubs",
+      "locationName": "South Bend",
+      "firstYearOfPlay": "1988",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "South Bend",
+      "parentOrgName": "Chicago Cubs",
+      "parentOrgId": 112,
+      "franchiseName": "South Bend",
+      "clubName": "Cubs",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 486,
+      "name": "Spokane Indians",
+      "link": "/api/v1/teams/486",
+      "season": 2025,
+      "venue": {
+        "id": 2730,
+        "name": "Avista Stadium",
+        "link": "/api/v1/venues/2730"
+      },
+      "teamCode": "spo",
+      "fileCode": "t486",
+      "abbreviation": "SPO",
+      "teamName": "Indians",
+      "locationName": "Spokane",
+      "firstYearOfPlay": "1946",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Spokane",
+      "parentOrgName": "Colorado Rockies",
+      "parentOrgId": 115,
+      "franchiseName": "Spokane",
+      "clubName": "Indians",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 488,
+      "name": "Aberdeen IronBirds",
+      "link": "/api/v1/teams/488",
+      "season": 2025,
+      "venue": {
+        "id": 2837,
+        "name": "Ripken Stadium",
+        "link": "/api/v1/venues/2837"
+      },
+      "teamCode": "abe",
+      "fileCode": "t488",
+      "abbreviation": "ABD",
+      "teamName": "IronBirds",
+      "locationName": "Aberdeen",
+      "firstYearOfPlay": "2002",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Aberdeen",
+      "parentOrgName": "Baltimore Orioles",
+      "parentOrgId": 110,
+      "franchiseName": "Aberdeen",
+      "clubName": "IronBirds",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 554,
+      "name": "Beloit Sky Carp",
+      "link": "/api/v1/teams/554",
+      "season": 2025,
+      "venue": {
+        "id": 5525,
+        "name": "ABC Supply Stadium",
+        "link": "/api/v1/venues/5525"
+      },
+      "teamCode": "bel",
+      "fileCode": "t554",
+      "abbreviation": "BEL",
+      "teamName": "Sky Carp",
+      "locationName": "Beloit",
+      "firstYearOfPlay": "1982",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Beloit",
+      "parentOrgName": "Miami Marlins",
+      "parentOrgId": 146,
+      "franchiseName": "Beloit",
+      "clubName": "Sky Carp",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 426,
+      "name": "Wilmington Blue Rocks",
+      "link": "/api/v1/teams/426",
+      "season": 2025,
+      "venue": {
+        "id": 2793,
+        "name": "Frawley Stadium",
+        "link": "/api/v1/venues/2793"
+      },
+      "teamCode": "wil",
+      "fileCode": "t426",
+      "abbreviation": "WIL",
+      "teamName": "Blue Rocks",
+      "locationName": "Wilmington",
+      "firstYearOfPlay": "1993",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Wilmington",
+      "parentOrgName": "Washington Nationals",
+      "parentOrgId": 120,
+      "franchiseName": "Wilmington",
+      "clubName": "Blue Rocks",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 427,
+      "name": "Jersey Shore BlueClaws",
+      "link": "/api/v1/teams/427",
+      "season": 2025,
+      "venue": {
+        "id": 2866,
+        "name": "ShoreTown Ballpark",
+        "link": "/api/v1/venues/2866"
+      },
+      "teamCode": "jer",
+      "fileCode": "t427",
+      "abbreviation": "JS",
+      "teamName": "BlueClaws",
+      "locationName": "Lakewood",
+      "firstYearOfPlay": "2001",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 237,
+        "name": "South Atlantic League North",
+        "link": "/api/v1/divisions/237"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Jersey Shore",
+      "parentOrgName": "Philadelphia Phillies",
+      "parentOrgId": 143,
+      "franchiseName": "Jersey Shore",
+      "clubName": "BlueClaws",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 492,
+      "name": "Cedar Rapids Kernels",
+      "link": "/api/v1/teams/492",
+      "season": 2025,
+      "venue": {
+        "id": 2857,
+        "name": "Veterans Memorial Stadium",
+        "link": "/api/v1/venues/2857"
+      },
+      "teamCode": "ced",
+      "fileCode": "t492",
+      "abbreviation": "CR",
+      "teamName": "Kernels",
+      "locationName": "Cedar Rapids",
+      "firstYearOfPlay": "1962",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Cedar Rapids",
+      "parentOrgName": "Minnesota Twins",
+      "parentOrgId": 142,
+      "franchiseName": "Cedar Rapids",
+      "clubName": "Kernels",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 428,
+      "name": "Greenville Drive",
+      "link": "/api/v1/teams/428",
+      "season": 2025,
+      "venue": {
+        "id": 3429,
+        "name": "Fluor Field at the West End",
+        "link": "/api/v1/venues/3429"
+      },
+      "teamCode": "grn",
+      "fileCode": "t428",
+      "abbreviation": "GVL",
+      "teamName": "Drive",
+      "locationName": "Greenville",
+      "firstYearOfPlay": "2005",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Greenville",
+      "parentOrgName": "Boston Red Sox",
+      "parentOrgId": 111,
+      "franchiseName": "Greenville",
+      "clubName": "Drive",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 432,
+      "name": "Rome Emperors",
+      "link": "/api/v1/teams/432",
+      "season": 2025,
+      "venue": {
+        "id": 2851,
+        "name": "AdventHealth Stadium",
+        "link": "/api/v1/venues/2851"
+      },
+      "teamCode": "rom",
+      "fileCode": "t432",
+      "abbreviation": "ROM",
+      "teamName": "Emperors",
+      "locationName": "Rome",
+      "firstYearOfPlay": "2003",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Rome",
+      "parentOrgName": "Atlanta Braves",
+      "parentOrgId": 144,
+      "franchiseName": "Rome",
+      "clubName": "Emperors",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 499,
+      "name": "Lansing Lugnuts",
+      "link": "/api/v1/teams/499",
+      "season": 2025,
+      "venue": {
+        "id": 2822,
+        "name": "Jackson Field",
+        "link": "/api/v1/venues/2822"
+      },
+      "teamCode": "lns",
+      "fileCode": "t499",
+      "abbreviation": "LAN",
+      "teamName": "Lugnuts",
+      "locationName": "Lansing",
+      "firstYearOfPlay": "1996",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Lansing",
+      "parentOrgName": "Athletics",
+      "parentOrgId": 133,
+      "franchiseName": "Lansing",
+      "clubName": "Lugnuts",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 435,
+      "name": "Vancouver Canadians",
+      "link": "/api/v1/teams/435",
+      "season": 2025,
+      "venue": {
+        "id": 2817,
+        "name": "Rogers Field at Nat Bailey Stadium",
+        "link": "/api/v1/venues/2817"
+      },
+      "teamCode": "van",
+      "fileCode": "t435",
+      "abbreviation": "VAN",
+      "teamName": "Canadians",
+      "locationName": "Vancouver",
+      "firstYearOfPlay": "1967",
+      "league": {
+        "id": 126,
+        "name": "Northwest League",
+        "link": "/api/v1/league/126"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Vancouver",
+      "parentOrgName": "Toronto Blue Jays",
+      "parentOrgId": 141,
+      "franchiseName": "Vancouver",
+      "clubName": "Canadians",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 6324,
+      "name": "Hub City Spartanburgers",
+      "link": "/api/v1/teams/6324",
+      "season": 2025,
+      "venue": {
+        "id": 6134,
+        "name": "Fifth Third Park",
+        "link": "/api/v1/venues/6134"
+      },
+      "teamCode": "hcs",
+      "fileCode": "t6324",
+      "abbreviation": "HCS",
+      "teamName": "Spartanburgers",
+      "locationName": "Spartanburg",
+      "firstYearOfPlay": "2024",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Hub City",
+      "parentOrgName": "Texas Rangers",
+      "parentOrgId": 140,
+      "franchiseName": "Hub City",
+      "clubName": "Spartanburgers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 565,
+      "name": "Quad Cities River Bandits",
+      "link": "/api/v1/teams/565",
+      "season": 2025,
+      "venue": {
+        "id": 2790,
+        "name": "Modern Woodmen Park",
+        "link": "/api/v1/venues/2790"
+      },
+      "teamCode": "qcs",
+      "fileCode": "t565",
+      "abbreviation": "QC",
+      "teamName": "River Bandits",
+      "locationName": "Davenport",
+      "firstYearOfPlay": "1960",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Quad Cities",
+      "parentOrgName": "Kansas City Royals",
+      "parentOrgId": 118,
+      "franchiseName": "Quad Cities",
+      "clubName": "River Bandits",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 437,
+      "name": "Lake County Captains",
+      "link": "/api/v1/teams/437",
+      "season": 2025,
+      "venue": {
+        "id": 2759,
+        "name": "Classic Auto Group Park",
+        "link": "/api/v1/venues/2759"
+      },
+      "teamCode": "lco",
+      "fileCode": "t437",
+      "abbreviation": "LC",
+      "teamName": "Captains",
+      "locationName": "Eastlake",
+      "firstYearOfPlay": "2003",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 224,
+        "name": "Midwest League East",
+        "link": "/api/v1/divisions/224"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Lake County",
+      "parentOrgName": "Cleveland Guardians",
+      "parentOrgId": 114,
+      "franchiseName": "Lake County",
+      "clubName": "Captains",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 443,
+      "name": "Peoria Chiefs",
+      "link": "/api/v1/teams/443",
+      "season": 2025,
+      "venue": {
+        "id": 2821,
+        "name": "Dozer Park",
+        "link": "/api/v1/venues/2821"
+      },
+      "teamCode": "peo",
+      "fileCode": "t443",
+      "abbreviation": "PEO",
+      "teamName": "Chiefs",
+      "locationName": "Peoria",
+      "firstYearOfPlay": "1983",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Peoria",
+      "parentOrgName": "St. Louis Cardinals",
+      "parentOrgId": 138,
+      "franchiseName": "Peoria",
+      "clubName": "Chiefs",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 572,
+      "name": "Wisconsin Timber Rattlers",
+      "link": "/api/v1/teams/572",
+      "season": 2025,
+      "venue": {
+        "id": 2771,
+        "name": "Neuroscience Group Field",
+        "link": "/api/v1/venues/2771"
+      },
+      "teamCode": "wis",
+      "fileCode": "t572",
+      "abbreviation": "WIS",
+      "teamName": "Timber Rattlers",
+      "locationName": "Appleton",
+      "firstYearOfPlay": "1962",
+      "league": {
+        "id": 118,
+        "name": "Midwest League",
+        "link": "/api/v1/league/118"
+      },
+      "division": {
+        "id": 225,
+        "name": "Midwest League West",
+        "link": "/api/v1/divisions/225"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Wisconsin",
+      "parentOrgName": "Milwaukee Brewers",
+      "parentOrgId": 158,
+      "franchiseName": "Wisconsin",
+      "clubName": "Timber Rattlers",
+      "active": true
+    },
+    {
+      "allStarStatus": "N",
+      "id": 573,
+      "name": "Asheville Tourists",
+      "link": "/api/v1/teams/573",
+      "season": 2025,
+      "venue": {
+        "id": 2807,
+        "name": "McCormick Field",
+        "link": "/api/v1/venues/2807"
+      },
+      "teamCode": "ash",
+      "fileCode": "t573",
+      "abbreviation": "ASH",
+      "teamName": "Tourists",
+      "locationName": "Asheville",
+      "firstYearOfPlay": "1959",
+      "league": {
+        "id": 116,
+        "name": "South Atlantic League",
+        "link": "/api/v1/league/116"
+      },
+      "division": {
+        "id": 238,
+        "name": "South Atlantic League South",
+        "link": "/api/v1/divisions/238"
+      },
+      "sport": {
+        "id": 13,
+        "link": "/api/v1/sports/13",
+        "name": "High-A"
+      },
+      "shortName": "Asheville",
+      "parentOrgName": "Houston Astros",
+      "parentOrgId": 117,
+      "franchiseName": "Asheville",
+      "clubName": "Tourists",
+      "active": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2815,
+      "name": "Excite Ballpark",
+      "link": "/api/v1/venues/2815",
+      "location": {
+        "address1": "588 E. Alma Avenue",
+        "city": "San Jose",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "95112",
+        "defaultCoordinates": {
+          "latitude": 37.32128,
+          "longitude": -121.862286
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

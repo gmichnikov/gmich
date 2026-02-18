@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3810,
+      "name": "Gwinnett Field",
+      "link": "/api/v1/venues/3810",
+      "location": {
+        "address1": "One Braves Ave.",
+        "city": "Lawrenceville",
+        "state": "Georgia",
+        "stateAbbrev": "GA",
+        "postalCode": "30043",
+        "defaultCoordinates": {
+          "latitude": 34.0409586,
+          "longitude": -83.9937909
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2797,
+      "name": "PNC Field",
+      "link": "/api/v1/venues/2797",
+      "location": {
+        "address1": "235 Montage Mountain Road",
+        "city": "Moosic",
+        "state": "Pennsylvania",
+        "stateAbbrev": "PA",
+        "postalCode": "18507",
+        "defaultCoordinates": {
+          "latitude": 41.360672,
+          "longitude": -75.683676
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

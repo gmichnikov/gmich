@@ -1,0 +1,25 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5421,
+      "name": "Constellation Field",
+      "link": "/api/v1/venues/5421",
+      "location": {
+        "address1": "1 Stadium Drive",
+        "city": "Sugar Land",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "77498",
+        "defaultCoordinates": {
+          "latitude": 29.62275645,
+          "longitude": -95.64718344
+        },
+        "country": "USA",
+        "phone": "(281) 207-9132"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

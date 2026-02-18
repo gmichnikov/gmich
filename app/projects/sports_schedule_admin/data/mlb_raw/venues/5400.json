@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5400,
+      "name": "SEGRA Stadium",
+      "link": "/api/v1/venues/5400",
+      "location": {
+        "address1": "460 Hay Street",
+        "city": "Fayetteville",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "28301",
+        "defaultCoordinates": {
+          "latitude": 35.054357,
+          "longitude": -78.8851444
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4980,
+      "name": "Segra Park",
+      "link": "/api/v1/venues/4980",
+      "location": {
+        "address1": "1640 Freed Street",
+        "city": "Columbia",
+        "state": "South Carolina",
+        "stateAbbrev": "SC",
+        "postalCode": "29201",
+        "defaultCoordinates": {
+          "latitude": 34.018317,
+          "longitude": -81.030958
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

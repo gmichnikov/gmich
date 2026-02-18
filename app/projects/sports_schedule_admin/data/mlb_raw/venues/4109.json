@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4109,
+      "name": "PK Park",
+      "link": "/api/v1/venues/4109",
+      "location": {
+        "address1": "2760 MLK Jr. Blvd.",
+        "city": "Eugene",
+        "state": "Oregon",
+        "stateAbbrev": "OR",
+        "postalCode": "97401",
+        "defaultCoordinates": {
+          "latitude": 44.059012,
+          "longitude": -123.065482
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

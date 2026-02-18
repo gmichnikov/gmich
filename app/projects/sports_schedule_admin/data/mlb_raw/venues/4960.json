@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4960,
+      "name": "Keesler Federal Park",
+      "link": "/api/v1/venues/4960",
+      "location": {
+        "address1": "105 Caillavet Street",
+        "city": "Biloxi",
+        "state": "Mississippi",
+        "stateAbbrev": "MS",
+        "postalCode": "39530",
+        "defaultCoordinates": {
+          "latitude": 30.395421,
+          "longitude": -88.893217
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3790,
+      "name": "Parkview Field",
+      "link": "/api/v1/venues/3790",
+      "location": {
+        "address1": "1301 Ewing Street",
+        "city": "Fort Wayne",
+        "state": "Indiana",
+        "stateAbbrev": "IN",
+        "postalCode": "46802",
+        "defaultCoordinates": {
+          "latitude": 41.07345,
+          "longitude": -85.14366
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

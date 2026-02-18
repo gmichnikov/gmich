@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3789,
+      "name": "Greater Nevada Field",
+      "link": "/api/v1/venues/3789",
+      "location": {
+        "address1": "250 Evans Ave.",
+        "city": "Reno",
+        "state": "Nevada",
+        "stateAbbrev": "NV",
+        "postalCode": "89501",
+        "defaultCoordinates": {
+          "latitude": 39.52812,
+          "longitude": -119.80901
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

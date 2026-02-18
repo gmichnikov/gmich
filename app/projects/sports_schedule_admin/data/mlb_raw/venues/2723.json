@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2723,
+      "name": "First National Bank Field",
+      "link": "/api/v1/venues/2723",
+      "location": {
+        "address1": "408 Bellemeade Street",
+        "city": "Greensboro",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "27401",
+        "defaultCoordinates": {
+          "latitude": 36.07667,
+          "longitude": -79.79487
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

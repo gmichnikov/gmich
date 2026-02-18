@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2796,
+      "name": "L.P. Frans Stadium",
+      "link": "/api/v1/venues/2796",
+      "location": {
+        "address1": "2500 Clement Blvd. N.W.",
+        "city": "Hickory",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "28601",
+        "defaultCoordinates": {
+          "latitude": 35.747289,
+          "longitude": -81.3778848
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

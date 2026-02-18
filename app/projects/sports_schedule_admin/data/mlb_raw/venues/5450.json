@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 5450,
+      "name": "Equity Bank Park",
+      "link": "/api/v1/venues/5450",
+      "location": {
+        "address1": "275 S. McLean Blvd",
+        "city": "Wichita",
+        "state": "Kansas",
+        "stateAbbrev": "KS",
+        "postalCode": "67213",
+        "defaultCoordinates": {
+          "latitude": 37.6813367,
+          "longitude": -97.3475531
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

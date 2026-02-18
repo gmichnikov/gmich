@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2682,
+      "name": "AT&T Field",
+      "link": "/api/v1/venues/2682",
+      "location": {
+        "address1": "201 Power Alley",
+        "city": "Chattanooga",
+        "state": "Tennessee",
+        "stateAbbrev": "TN",
+        "postalCode": "37402",
+        "defaultCoordinates": {
+          "latitude": 35.05449,
+          "longitude": -85.31384
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

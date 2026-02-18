@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4149,
+      "name": "ONEOK Field",
+      "link": "/api/v1/venues/4149",
+      "location": {
+        "address1": "201 N. Elgin",
+        "city": "Tulsa",
+        "state": "Oklahoma",
+        "stateAbbrev": "OK",
+        "postalCode": "74120",
+        "defaultCoordinates": {
+          "latitude": 36.1601215,
+          "longitude": -95.9888782
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

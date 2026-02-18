@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4089,
+      "name": "Truist Stadium",
+      "link": "/api/v1/venues/4089",
+      "location": {
+        "address1": "951 Ballpark Way",
+        "city": "Winston-Salem",
+        "state": "North Carolina",
+        "stateAbbrev": "NC",
+        "postalCode": "27101",
+        "defaultCoordinates": {
+          "latitude": 36.09182,
+          "longitude": -80.25527
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

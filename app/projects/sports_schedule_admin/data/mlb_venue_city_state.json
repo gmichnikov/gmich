@@ -1,0 +1,478 @@
+{
+  "2511": {
+    "city": "Lakeland",
+    "state": "FL"
+  },
+  "2512": {
+    "city": "Erie",
+    "state": "PA"
+  },
+  "2516": {
+    "city": "Lake Elsinore",
+    "state": "CA"
+  },
+  "2520": {
+    "city": "Jupiter",
+    "state": "FL"
+  },
+  "2526": {
+    "city": "Bradenton",
+    "state": "FL"
+  },
+  "2528": {
+    "city": "Round Rock",
+    "state": "TX"
+  },
+  "2529": {
+    "city": "Sacramento",
+    "state": "CA"
+  },
+  "2536": {
+    "city": "Dunedin",
+    "state": "FL"
+  },
+  "2540": {
+    "city": "Charleston",
+    "state": "SC"
+  },
+  "2541": {
+    "city": "Durham",
+    "state": "NC"
+  },
+  "2542": {
+    "city": "Memphis",
+    "state": "TN"
+  },
+  "2625": {
+    "city": "Zebulon",
+    "state": "NC"
+  },
+  "2640": {
+    "city": "Fresno",
+    "state": "CA"
+  },
+  "2682": {
+    "city": "Chattanooga",
+    "state": "TN"
+  },
+  "2683": {
+    "city": "Albuquerque",
+    "state": "NM"
+  },
+  "2700": {
+    "city": "Clearwater",
+    "state": "FL"
+  },
+  "2722": {
+    "city": "Springfield",
+    "state": "MO"
+  },
+  "2723": {
+    "city": "Greensboro",
+    "state": "NC"
+  },
+  "2724": {
+    "city": "Louisville",
+    "state": "KY"
+  },
+  "2728": {
+    "city": "San Bernardino",
+    "state": "CA"
+  },
+  "2729": {
+    "city": "Salisbury",
+    "state": "MD"
+  },
+  "2730": {
+    "city": "Spokane",
+    "state": "WA"
+  },
+  "2731": {
+    "city": "Stockton",
+    "state": "CA"
+  },
+  "2733": {
+    "city": "Altoona",
+    "state": "PA"
+  },
+  "2740": {
+    "city": "Akron",
+    "state": "OH"
+  },
+  "2745": {
+    "city": "Tacoma",
+    "state": "WA"
+  },
+  "2747": {
+    "city": "Myrtle Beach",
+    "state": "SC"
+  },
+  "2749": {
+    "city": "Harrisburg",
+    "state": "PA"
+  },
+  "2755": {
+    "city": "Frisco",
+    "state": "TX"
+  },
+  "2756": {
+    "city": "Buffalo",
+    "state": "NY"
+  },
+  "2757": {
+    "city": "Wappingers Falls",
+    "state": "NY"
+  },
+  "2759": {
+    "city": "Eastlake",
+    "state": "OH"
+  },
+  "2762": {
+    "city": "Everett",
+    "state": "WA"
+  },
+  "2764": {
+    "city": "Kannapolis",
+    "state": "NC"
+  },
+  "2765": {
+    "city": "Comstock Park",
+    "state": "MI"
+  },
+  "2766": {
+    "city": "Dayton",
+    "state": "OH"
+  },
+  "2767": {
+    "city": "Toledo",
+    "state": "OH"
+  },
+  "2768": {
+    "city": "Midland",
+    "state": "TX"
+  },
+  "2769": {
+    "city": "Reading",
+    "state": "PA"
+  },
+  "2771": {
+    "city": "Appleton",
+    "state": "WI"
+  },
+  "2773": {
+    "city": "Rochester",
+    "state": "NY"
+  },
+  "2776": {
+    "city": "Columbus",
+    "state": "GA"
+  },
+  "2779": {
+    "city": "Portland",
+    "state": "ME"
+  },
+  "2781": {
+    "city": "Norfolk",
+    "state": "VA"
+  },
+  "2787": {
+    "city": "Daytona Beach",
+    "state": "FL"
+  },
+  "2790": {
+    "city": "Davenport",
+    "state": "IA"
+  },
+  "2791": {
+    "city": "Modesto",
+    "state": "CA"
+  },
+  "2793": {
+    "city": "Wilmington",
+    "state": "DE"
+  },
+  "2795": {
+    "city": "Brooklyn",
+    "state": "NY"
+  },
+  "2796": {
+    "city": "Hickory",
+    "state": "NC"
+  },
+  "2797": {
+    "city": "Moosic",
+    "state": "PA"
+  },
+  "2803": {
+    "city": "Lynchburg",
+    "state": "VA"
+  },
+  "2807": {
+    "city": "Asheville",
+    "state": "NC"
+  },
+  "2814": {
+    "city": "Montgomery",
+    "state": "AL"
+  },
+  "2815": {
+    "city": "San Jose",
+    "state": "CA"
+  },
+  "2817": {
+    "city": "Vancouver",
+    "state": "BC"
+  },
+  "2818": {
+    "city": "San Antonio",
+    "state": "TX"
+  },
+  "2820": {
+    "city": "Binghamton",
+    "state": "NY"
+  },
+  "2821": {
+    "city": "Peoria",
+    "state": "IL"
+  },
+  "2822": {
+    "city": "Lansing",
+    "state": "MI"
+  },
+  "2823": {
+    "city": "Syracuse",
+    "state": "NY"
+  },
+  "2826": {
+    "city": "Pasco",
+    "state": "WA"
+  },
+  "2832": {
+    "city": "Bowie",
+    "state": "MD"
+  },
+  "2835": {
+    "city": "Visalia",
+    "state": "CA"
+  },
+  "2837": {
+    "city": "Aberdeen",
+    "state": "MD"
+  },
+  "2840": {
+    "city": "Salem",
+    "state": "VA"
+  },
+  "2843": {
+    "city": "Oklahoma City",
+    "state": "OK"
+  },
+  "2844": {
+    "city": "Des Moines",
+    "state": "IA"
+  },
+  "2850": {
+    "city": "South Bend",
+    "state": "IN"
+  },
+  "2851": {
+    "city": "Rome",
+    "state": "GA"
+  },
+  "2852": {
+    "city": "Jacksonville",
+    "state": "FL"
+  },
+  "2853": {
+    "city": "Richmond",
+    "state": "VA"
+  },
+  "2854": {
+    "city": "Rancho Cucamonga",
+    "state": "CA"
+  },
+  "2856": {
+    "city": "Port St. Lucie",
+    "state": "FL"
+  },
+  "2857": {
+    "city": "Cedar Rapids",
+    "state": "IA"
+  },
+  "2858": {
+    "city": "Indianapolis",
+    "state": "IN"
+  },
+  "2861": {
+    "city": "Corpus Christi",
+    "state": "TX"
+  },
+  "2862": {
+    "city": "Fort Myers",
+    "state": "FL"
+  },
+  "2866": {
+    "city": "Lakewood",
+    "state": "NJ"
+  },
+  "2868": {
+    "city": "Manchester",
+    "state": "NH"
+  },
+  "3189": {
+    "city": "Midland",
+    "state": "MI"
+  },
+  "3230": {
+    "city": "Allentown",
+    "state": "PA"
+  },
+  "3329": {
+    "city": "Springdale",
+    "state": "AR"
+  },
+  "3389": {
+    "city": "North Little Rock",
+    "state": "AR"
+  },
+  "3429": {
+    "city": "Greenville",
+    "state": "SC"
+  },
+  "3569": {
+    "city": "Bowling Green",
+    "state": "KY"
+  },
+  "3789": {
+    "city": "Reno",
+    "state": "NV"
+  },
+  "3790": {
+    "city": "Fort Wayne",
+    "state": "IN"
+  },
+  "3810": {
+    "city": "Lawrenceville",
+    "state": "GA"
+  },
+  "3970": {
+    "city": "Columbus",
+    "state": "OH"
+  },
+  "4089": {
+    "city": "Winston-Salem",
+    "state": "NC"
+  },
+  "4109": {
+    "city": "Eugene",
+    "state": "OR"
+  },
+  "4149": {
+    "city": "Tulsa",
+    "state": "OK"
+  },
+  "4271": {
+    "city": "Papillion",
+    "state": "NE"
+  },
+  "4329": {
+    "city": "Pensacola",
+    "state": "FL"
+  },
+  "4429": {
+    "city": "Hillsboro",
+    "state": "OR"
+  },
+  "4529": {
+    "city": "Birmingham",
+    "state": "AL"
+  },
+  "4669": {
+    "city": "El Paso",
+    "state": "TX"
+  },
+  "4670": {
+    "city": "Charlotte",
+    "state": "NC"
+  },
+  "4715": {
+    "city": "Nashville",
+    "state": "TN"
+  },
+  "4960": {
+    "city": "Biloxi",
+    "state": "MS"
+  },
+  "4980": {
+    "city": "Columbia",
+    "state": "SC"
+  },
+  "4985": {
+    "city": "Hartford",
+    "state": "CT"
+  },
+  "5345": {
+    "city": "North Augusta",
+    "state": "SC"
+  },
+  "5355": {
+    "city": "Las Vegas",
+    "state": "NV"
+  },
+  "5400": {
+    "city": "Fayetteville",
+    "state": "NC"
+  },
+  "5410": {
+    "city": "Worcester",
+    "state": "MA"
+  },
+  "5415": {
+    "city": "Amarillo",
+    "state": "TX"
+  },
+  "5418": {
+    "city": "Bridgewater",
+    "state": "NJ"
+  },
+  "5421": {
+    "city": "Sugar Land",
+    "state": "TX"
+  },
+  "5450": {
+    "city": "Wichita",
+    "state": "KS"
+  },
+  "5455": {
+    "city": "Madison",
+    "state": "AL"
+  },
+  "5472": {
+    "city": "St. Paul",
+    "state": "MN"
+  },
+  "5520": {
+    "city": "Fredericksburg",
+    "state": "VA"
+  },
+  "5525": {
+    "city": "Beloit",
+    "state": "WI"
+  },
+  "6134": {
+    "city": "Spartanburg",
+    "state": "SC"
+  },
+  "6135": {
+    "city": "South Jordan",
+    "state": "UT"
+  },
+  "6136": {
+    "city": "Knoxville",
+    "state": "TN"
+  },
+  "7250": {
+    "city": "Tampa",
+    "state": "FL"
+  }
+}

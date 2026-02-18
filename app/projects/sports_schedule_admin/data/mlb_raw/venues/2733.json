@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2733,
+      "name": "Peoples Natural Gas Field",
+      "link": "/api/v1/venues/2733",
+      "location": {
+        "address1": "1000 Park Avenue",
+        "city": "Altoona",
+        "state": "Pennsylvania",
+        "stateAbbrev": "PA",
+        "postalCode": "16602",
+        "defaultCoordinates": {
+          "latitude": 40.473826,
+          "longitude": -78.394753
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

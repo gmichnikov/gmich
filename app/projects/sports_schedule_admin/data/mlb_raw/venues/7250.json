@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 7250,
+      "name": "Yankee Complex Field 2",
+      "link": "/api/v1/venues/7250",
+      "location": {
+        "address1": "1 Steinbrenner Drive",
+        "city": "Tampa",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "33614",
+        "defaultCoordinates": {
+          "latitude": 27.978979741428514,
+          "longitude": -82.50706715487692
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

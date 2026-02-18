@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2759,
+      "name": "Classic Auto Group Park",
+      "link": "/api/v1/venues/2759",
+      "location": {
+        "address1": "35300 Vine Street",
+        "city": "Eastlake",
+        "state": "Ohio",
+        "stateAbbrev": "OH",
+        "postalCode": "44095",
+        "defaultCoordinates": {
+          "latitude": 41.6424351,
+          "longitude": -81.4367781
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

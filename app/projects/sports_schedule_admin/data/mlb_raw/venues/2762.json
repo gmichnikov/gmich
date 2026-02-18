@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2762,
+      "name": "Funko Field",
+      "link": "/api/v1/venues/2762",
+      "location": {
+        "address1": "3900 Broadway",
+        "city": "Everett",
+        "state": "Washington",
+        "stateAbbrev": "WA",
+        "postalCode": "98201",
+        "defaultCoordinates": {
+          "latitude": 47.966664,
+          "longitude": -122.202786
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2803,
+      "name": "Bank of the James Stadium",
+      "link": "/api/v1/venues/2803",
+      "location": {
+        "address1": "3180 Fort Avenue",
+        "city": "Lynchburg",
+        "state": "Virginia",
+        "stateAbbrev": "VA",
+        "postalCode": "24501",
+        "defaultCoordinates": {
+          "latitude": 37.3930099,
+          "longitude": -79.1661
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3189,
+      "name": "Dow Diamond",
+      "link": "/api/v1/venues/3189",
+      "location": {
+        "address1": "825 East Main Street",
+        "city": "Midland",
+        "state": "Michigan",
+        "stateAbbrev": "MI",
+        "postalCode": "48640",
+        "defaultCoordinates": {
+          "latitude": 43.6089355,
+          "longitude": -84.2397878
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

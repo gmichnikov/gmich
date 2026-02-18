@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2728,
+      "name": "San Manuel Stadium",
+      "link": "/api/v1/venues/2728",
+      "location": {
+        "address1": "280 South E Street",
+        "city": "San Bernardino",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "92401",
+        "defaultCoordinates": {
+          "latitude": 34.097266,
+          "longitude": -117.296268
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

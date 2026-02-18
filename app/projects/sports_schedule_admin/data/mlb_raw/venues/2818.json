@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2818,
+      "name": "Nelson Wolff Stadium",
+      "link": "/api/v1/venues/2818",
+      "location": {
+        "address1": "5757 US Hwy 90 West",
+        "city": "San Antonio",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "78227",
+        "defaultCoordinates": {
+          "latitude": 29.40978,
+          "longitude": -98.60189
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

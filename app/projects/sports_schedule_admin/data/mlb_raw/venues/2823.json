@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2823,
+      "name": "NBT Bank Stadium",
+      "link": "/api/v1/venues/2823",
+      "location": {
+        "address1": "One Tex Simone Drive",
+        "city": "Syracuse",
+        "state": "New York",
+        "stateAbbrev": "NY",
+        "postalCode": "13208",
+        "defaultCoordinates": {
+          "latitude": 43.079531,
+          "longitude": -76.165419
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

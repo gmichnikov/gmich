@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 4669,
+      "name": "Southwest University Park",
+      "link": "/api/v1/venues/4669",
+      "location": {
+        "address1": "1 Ballpark Plaza",
+        "city": "El Paso",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "79901",
+        "defaultCoordinates": {
+          "latitude": 31.759277,
+          "longitude": -106.492526
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

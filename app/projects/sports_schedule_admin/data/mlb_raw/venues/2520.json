@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2520,
+      "name": "Roger Dean Chevrolet Stadium",
+      "link": "/api/v1/venues/2520",
+      "location": {
+        "address1": "4751 Main Street",
+        "city": "Jupiter",
+        "state": "Florida",
+        "stateAbbrev": "FL",
+        "postalCode": "33458",
+        "defaultCoordinates": {
+          "latitude": 26.890957,
+          "longitude": -80.116365
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

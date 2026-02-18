@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2853,
+      "name": "The Diamond",
+      "link": "/api/v1/venues/2853",
+      "location": {
+        "address1": "3001 N. Boulevard",
+        "city": "Richmond",
+        "state": "Virginia",
+        "stateAbbrev": "VA",
+        "postalCode": "23230",
+        "defaultCoordinates": {
+          "latitude": 37.571749,
+          "longitude": -77.463391
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 3230,
+      "name": "Coca-Cola Park",
+      "link": "/api/v1/venues/3230",
+      "location": {
+        "address1": "1050 IronPigs Way",
+        "city": "Allentown",
+        "state": "Pennsylvania",
+        "stateAbbrev": "PA",
+        "postalCode": "18109",
+        "defaultCoordinates": {
+          "latitude": 40.6253183,
+          "longitude": -75.4516154
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

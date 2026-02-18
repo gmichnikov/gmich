@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2850,
+      "name": "Four Winds Field",
+      "link": "/api/v1/venues/2850",
+      "location": {
+        "address1": "501 W. South Street",
+        "city": "South Bend",
+        "state": "Indiana",
+        "stateAbbrev": "IN",
+        "postalCode": "46601",
+        "defaultCoordinates": {
+          "latitude": 41.6704099,
+          "longitude": -86.25547
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2844,
+      "name": "Principal Park",
+      "link": "/api/v1/venues/2844",
+      "location": {
+        "address1": "One Line Drive",
+        "city": "Des Moines",
+        "state": "Iowa",
+        "stateAbbrev": "IA",
+        "postalCode": "50309",
+        "defaultCoordinates": {
+          "latitude": 41.57998,
+          "longitude": -93.61619
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

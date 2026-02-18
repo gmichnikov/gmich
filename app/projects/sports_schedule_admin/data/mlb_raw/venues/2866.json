@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2866,
+      "name": "ShoreTown Ballpark",
+      "link": "/api/v1/venues/2866",
+      "location": {
+        "address1": "2 Stadium Way",
+        "city": "Lakewood",
+        "state": "New Jersey",
+        "stateAbbrev": "NJ",
+        "postalCode": "08701",
+        "defaultCoordinates": {
+          "latitude": 40.07495,
+          "longitude": -74.18846
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

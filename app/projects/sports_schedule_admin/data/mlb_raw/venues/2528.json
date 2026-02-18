@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2528,
+      "name": "Dell Diamond",
+      "link": "/api/v1/venues/2528",
+      "location": {
+        "address1": "3400 East Palm Valley Blvd.",
+        "city": "Round Rock",
+        "state": "Texas",
+        "stateAbbrev": "TX",
+        "postalCode": "78665",
+        "defaultCoordinates": {
+          "latitude": 30.527463,
+          "longitude": -97.630397
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

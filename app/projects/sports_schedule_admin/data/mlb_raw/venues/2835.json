@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2835,
+      "name": "Valley Strong Ballpark",
+      "link": "/api/v1/venues/2835",
+      "location": {
+        "address1": "300 North Giddings Street",
+        "city": "Visalia",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "93291",
+        "defaultCoordinates": {
+          "latitude": 36.3320197,
+          "longitude": -119.3053325
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

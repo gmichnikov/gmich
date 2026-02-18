@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2731,
+      "name": "Banner Island Ballpark",
+      "link": "/api/v1/venues/2731",
+      "location": {
+        "address1": "404 West Fremont Street",
+        "city": "Stockton",
+        "state": "California",
+        "stateAbbrev": "CA",
+        "postalCode": "95203",
+        "defaultCoordinates": {
+          "latitude": 37.954863,
+          "longitude": -121.297357
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

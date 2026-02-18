@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2820,
+      "name": "Mirabito Stadium",
+      "link": "/api/v1/venues/2820",
+      "location": {
+        "address1": "211 Henry Street",
+        "city": "Binghamton",
+        "state": "New York",
+        "stateAbbrev": "NY",
+        "postalCode": "13901",
+        "defaultCoordinates": {
+          "latitude": 42.1031199,
+          "longitude": -75.90379
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

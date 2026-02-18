@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2730,
+      "name": "Avista Stadium",
+      "link": "/api/v1/venues/2730",
+      "location": {
+        "address1": "602 North Havana Street",
+        "city": "Spokane",
+        "state": "Washington",
+        "stateAbbrev": "WA",
+        "postalCode": "99202",
+        "defaultCoordinates": {
+          "latitude": 47.661351,
+          "longitude": -117.344426
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}

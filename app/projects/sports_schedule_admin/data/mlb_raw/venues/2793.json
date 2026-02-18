@@ -1,0 +1,24 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "venues": [
+    {
+      "id": 2793,
+      "name": "Frawley Stadium",
+      "link": "/api/v1/venues/2793",
+      "location": {
+        "address1": "801 Shipyard Drive",
+        "city": "Wilmington",
+        "state": "Delaware",
+        "stateAbbrev": "DE",
+        "postalCode": "19801",
+        "defaultCoordinates": {
+          "latitude": 39.731809,
+          "longitude": -75.564174
+        },
+        "country": "USA"
+      },
+      "active": true,
+      "season": "2026"
+    }
+  ]
+}
