@@ -172,6 +172,7 @@
         <div id="ss-results-content" style="display: none;">
           <div class="ss-results-header" onclick="ssToggleResultsData()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ssToggleResultsData();}" role="button" tabindex="0" aria-expanded="true" aria-controls="ss-results-table-wrapper" title="Click to collapse/expand data table">
             <span id="ss-results-summary" class="ss-results-summary"></span>
+            <span id="ss-results-stale-warning" class="ss-results-stale-warning" style="display: none;">— Results may be stale. <button type="button" class="ss-results-stale-run" onclick="event.stopPropagation();ssRunQuery();">Run</button> to refresh</span>
             <span class="ss-results-toggle" id="ss-results-toggle" aria-hidden="true">▼</span>
           </div>
           <div id="ss-results-table-wrapper" class="ss-results-table-wrapper" role="region" aria-label="Results data">
@@ -444,6 +445,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     });
   }
   ssInitMultiInputFilters();
+  ssSetupStaleCheckListeners();
 
   ssUpdateAllFilterSelected();
 
@@ -603,6 +605,45 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     if (url.length <= 2000) window.history.replaceState({}, '', url);
   }
 
+  function ssParamsToCanonical(params) {
+    var keys = [];
+    params.forEach(function(v, k) { keys.push(k); });
+    keys.sort();
+    return keys.map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params.get(k) || ''); }).join('&');
+  }
+
+  function ssCheckStaleResults() {
+    var content = document.getElementById('ss-results-content');
+    var warning = document.getElementById('ss-results-stale-warning');
+    if (!content || !warning || content.style.display === 'none') return;
+    if (!window._ssLastRunParams) return;
+    var current = ssParamsToCanonical(ssCollectParams());
+    warning.style.display = current !== window._ssLastRunParams ? 'inline' : 'none';
+  }
+
+  function ssSetupStaleCheckListeners() {
+    var debounceTimer;
+    function scheduleCheck() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(ssCheckStaleResults, 150);
+    }
+    function immediateCheck() { ssCheckStaleResults(); }
+    var wrapper = document.querySelector('.ss-wrapper');
+    if (!wrapper) return;
+    wrapper.addEventListener('change', function(e) {
+      var t = e.target;
+      if (t && (t.matches('.ss-dimension-cb, .ss-filter-cb, .ss-filter-multiselect, .ss-date-mode-select, #ss-count, #ss-limit, #ss-sort-column, #ss-sort-dir') || t.closest('.ss-filter-multi-inputs, .ss-filter-date-inner'))) {
+        immediateCheck();
+      }
+    });
+    wrapper.addEventListener('input', function(e) {
+      var t = e.target;
+      if (t && (t.matches('.ss-filter-text, .ss-filter-multi-input') || t.closest('.ss-filter-either-team') || t.closest('.ss-filter-date-inner'))) {
+        scheduleCheck();
+      }
+    });
+  }
+
   function ssCollectParams() {
     const params = new URLSearchParams();
 
@@ -736,6 +777,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     document.getElementById('ss-results-empty').style.display = 'none';
     document.getElementById('ss-results-content').style.display = 'none';
     document.getElementById('ss-results-loading').style.display = 'flex';
+    var staleEl = document.getElementById('ss-results-stale-warning');
+    if (staleEl) staleEl.style.display = 'none';
 
     const params = ssCollectParams();
     fetch('/sports-schedules/api/query?' + params.toString())
@@ -752,6 +795,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         ssUpdateSqlSection(data.sql || '');
         ssUpdateUrlFromParams(params);
         if (typeof ssShowSaveButton === 'function') ssShowSaveButton();
+        window._ssLastRunParams = ssParamsToCanonical(params);
+        ssCheckStaleResults();
       })
       .catch(function() {
         document.getElementById('ss-results-loading').style.display = 'none';

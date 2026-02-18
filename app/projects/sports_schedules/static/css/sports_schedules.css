@@ -926,6 +926,26 @@
   color: #6c757d;
 }
 
+.ss-results-stale-warning {
+  font-size: 0.8rem;
+  color: #856404;
+  margin-left: 0.5rem;
+}
+
+.ss-results-stale-run {
+  background: none;
+  border: none;
+  color: #856404;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  text-decoration: underline;
+}
+
+.ss-results-stale-run:hover {
+  color: #533f03;
+}
+
 .ss-results-toggle {
   font-size: 0.75rem;
   color: #6c757d;
