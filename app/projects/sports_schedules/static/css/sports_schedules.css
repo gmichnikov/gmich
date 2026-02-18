@@ -866,6 +866,41 @@
   background: #dee2e6;
 }
 
+.ss-results-table th.ss-sortable {
+  position: relative;
+}
+
+.ss-col-filter-btn {
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ss-results-table th:hover .ss-col-filter-btn {
+  opacity: 1;
+}
+
+.ss-results-table th.ss-col-filtered .ss-col-filter-btn {
+  display: none;
+}
+
+.ss-col-filter-btn:hover {
+  color: #495057;
+}
+
+.ss-results-table th.ss-col-filterable {
+  padding-right: 1.5rem;
+}
+
 .ss-row-num-header,
 .ss-row-num {
   font-size: 0.8rem;

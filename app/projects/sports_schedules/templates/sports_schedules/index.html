@@ -874,7 +874,13 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var col = th.getAttribute('data-sort-col');
       var label = th.getAttribute('data-sort-label');
       var isActive = state.col === col;
-      th.textContent = label + (isActive ? (state.dir === 'asc' ? ' \u2191' : ' \u2193') : '');
+      var newText = label + (isActive ? (state.dir === 'asc' ? ' \u2191' : ' \u2193') : '');
+      var labelSpan = th.querySelector('.ss-col-label');
+      if (labelSpan) {
+        labelSpan.textContent = newText;
+      } else {
+        th.textContent = newText;
+      }
     });
   }
 
@@ -981,11 +987,37 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     headers.forEach(h => {
       const th = document.createElement('th');
       const label = h.includes('Games') ? '# Games' : (labels[h] || h.replace(/_/g, ' '));
-      th.textContent = label;
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 'ss-col-label';
+      labelSpan.textContent = label;
+      th.appendChild(labelSpan);
       th.className = 'ss-sortable';
       th.setAttribute('data-sort-col', h);
       th.setAttribute('data-sort-label', label);
       th.addEventListener('click', function() { ssHandleSort(h); });
+      var filterCb = document.getElementById('ss-filter-cb-' + h);
+      var isFilterable = filterCb && (h !== '__num__' && h !== '# Games' && h !== '#Games');
+      if (isFilterable) {
+        th.classList.add('ss-col-filterable');
+        var isFiltered = filterCb.checked;
+        if (isFiltered) th.classList.add('ss-col-filtered');
+        var filterBtn = document.createElement('button');
+        filterBtn.type = 'button';
+        filterBtn.className = 'ss-col-filter-btn';
+        filterBtn.title = 'Add as filter';
+        filterBtn.setAttribute('aria-label', 'Add ' + label + ' as filter');
+        filterBtn.innerHTML = '&#8853;';
+        filterBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (filterCb && !filterCb.checked) {
+            filterCb.checked = true;
+            ssUpdateFilterBarVisibility();
+            ssUpdateFilterSelected(h);
+            th.classList.add('ss-col-filtered');
+          }
+        });
+        th.appendChild(filterBtn);
+      }
       tr.appendChild(th);
     });
     const thCal = document.createElement('th');
