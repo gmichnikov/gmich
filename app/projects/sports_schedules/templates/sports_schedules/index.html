@@ -89,7 +89,7 @@
       <!-- Filter bar: one row per active filter field (Looker-style), collapsible -->
       <div id="ss-filter-bar" class="ss-filter-bar" style="display: none;">
         <div class="ss-filter-bar-header" onclick="ssToggleFilterBar()">
-          <span>Filters</span>
+          <span id="ss-filter-bar-title">Filters</span>
           <span class="ss-filter-bar-toggle" id="ss-filter-bar-toggle">▼</span>
         </div>
         <div class="ss-filter-bar-content" id="ss-filter-bar-content">
@@ -115,15 +115,17 @@
               <select id="ss-date-mode-select" class="ss-date-mode-select">
                 <option value="">None</option>
                 <option value="exact">Exact date</option>
+                <option value="today">Today</option>
+                <option value="on_or_after">On or after</option>
+                <option value="this_weekend">This weekend</option>
                 <option value="range">Date range</option>
                 <option value="year">Year only</option>
-                <option value="last_week">Last 7 days</option>
-                <option value="last_month">Last 30 days</option>
                 <option value="last_n">Last N days</option>
                 <option value="next_week" {% if default_filters.get('date') == 'next_week' %}selected{% endif %}>Next 7 days</option>
                 <option value="next_n">Next N days</option>
               </select>
               <div id="ss-date-exact-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-exact" class="ss-filter-text"></div>
+              <div id="ss-date-on-or-after-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-on-or-after" class="ss-filter-text"></div>
               <div id="ss-date-range-group" class="ss-date-input-inline" style="display: none;"><input type="date" id="ss-date-start" class="ss-filter-text"> <span class="ss-date-sep">to</span> <input type="date" id="ss-date-end" class="ss-filter-text"></div>
               <div id="ss-date-year-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-year" class="ss-filter-text" placeholder="e.g. 2026" min="2000" max="2100"></div>
               <div id="ss-date-n-group" class="ss-date-input-inline" style="display: none;"><input type="number" id="ss-date-n" class="ss-filter-text" placeholder="Days" min="1" max="365"></div>
@@ -158,6 +160,7 @@
                 <span class="ss-copy-icon" aria-hidden="true">📋</span> Copy
               </button>
               <button type="button" class="ss-action-btn" id="ss-download-csv-btn" onclick="ssDownloadCsv()" title="Download as CSV file">Download CSV</button>
+              <button type="button" class="ss-action-btn" id="ss-copy-url-btn" onclick="ssCopyUrl()" title="Copy shareable URL">Copy URL</button>
             </div>
             <pre id="ss-sql-content" class="ss-sql-content" style="display: none;"></pre>
           </div>
@@ -266,6 +269,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       }
     });
     bar.style.display = anyActive ? 'block' : 'none';
+    var title = document.getElementById('ss-filter-bar-title');
+    var count = document.querySelectorAll('.ss-filter-cb:checked').length;
+    if (title) title.textContent = count > 0 ? 'Filters (' + count + ')' : 'Filters';
     ssUpdateAllFilterSelected();
   }
 
@@ -274,9 +280,38 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     const val = sel ? sel.value : '';
     var showVal = 'inline-flex';
     var g = document.getElementById('ss-date-exact-group'); if (g) g.style.display = val === 'exact' ? showVal : 'none';
+    g = document.getElementById('ss-date-on-or-after-group');
+    if (g) {
+      g.style.display = val === 'on_or_after' ? showVal : 'none';
+      if (val === 'on_or_after') {
+        var inp = document.getElementById('ss-date-on-or-after');
+        if (inp && !inp.value) inp.value = ssGetAnchorDate();
+      }
+    }
     g = document.getElementById('ss-date-range-group'); if (g) g.style.display = val === 'range' ? showVal : 'none';
     g = document.getElementById('ss-date-year-group'); if (g) g.style.display = val === 'year' ? showVal : 'none';
     g = document.getElementById('ss-date-n-group'); if (g) g.style.display = (val === 'last_n' || val === 'next_n') ? showVal : 'none';
+  }
+
+  function ssComputeThisWeekend(anchorYMD) {
+    var d = new Date(anchorYMD + 'T12:00:00');
+    var day = d.getDay();
+    var friday, sunday;
+    if (day >= 5 || day === 0) {
+      friday = new Date(d);
+      friday.setDate(d.getDate() - (day === 0 ? 2 : day - 5));
+      sunday = new Date(friday);
+      sunday.setDate(friday.getDate() + 2);
+    } else {
+      friday = new Date(d);
+      friday.setDate(d.getDate() + (5 - day));
+      sunday = new Date(friday);
+      sunday.setDate(friday.getDate() + 2);
+    }
+    var fmt = function(x) {
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    };
+    return { start: fmt(friday), end: fmt(sunday) };
   }
 
   document.querySelectorAll('.ss-filter-cb').forEach(function(cb) {
@@ -426,6 +461,10 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       if (dateMode === 'exact') {
         var v = params.get('date_exact');
         if (v) { var el = document.getElementById('ss-date-exact'); if (el) el.value = v; }
+      } else if (dateMode === 'on_or_after') {
+        var v = params.get('date_exact');
+        if (v) { var el = document.getElementById('ss-date-on-or-after'); if (el) el.value = v; }
+        else { var el = document.getElementById('ss-date-on-or-after'); if (el) el.value = ssGetAnchorDate(); }
       } else if (dateMode === 'range') {
         var s = params.get('date_start'); if (s) { var el = document.getElementById('ss-date-start'); if (el) el.value = s; }
         var e = params.get('date_end'); if (e) { var el = document.getElementById('ss-date-end'); if (el) el.value = e; }
@@ -437,7 +476,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var anchor = params.get('anchor_date');
       if (anchor) { var el = document.getElementById('ss-anchor-date'); if (el) el.value = anchor; }
     }
-    if (!dateMode || ['exact', 'range', 'year'].indexOf(dateMode) >= 0) {
+    if (!dateMode || ['exact', 'today', 'on_or_after', 'this_weekend', 'range', 'year'].indexOf(dateMode) >= 0) {
       var el = document.getElementById('ss-anchor-date');
       if (el) el.value = '';
     }
@@ -483,6 +522,20 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         if (mode === 'exact') {
           const v = document.getElementById('ss-date-exact');
           if (v && v.value) params.set('date_mode', 'exact'), params.set('date_exact', v.value);
+        } else if (mode === 'today') {
+          params.set('date_mode', 'today');
+          params.set('date_exact', ssGetAnchorDate());
+          params.set('anchor_date', ssGetAnchorDate());
+        } else if (mode === 'on_or_after') {
+          const v = document.getElementById('ss-date-on-or-after');
+          var d = v && v.value ? v.value : ssGetAnchorDate();
+          params.set('date_mode', 'on_or_after');
+          params.set('date_exact', d);
+        } else if (mode === 'this_weekend') {
+          var w = ssComputeThisWeekend(ssGetAnchorDate());
+          params.set('date_mode', 'this_weekend');
+          params.set('date_start', w.start);
+          params.set('date_end', w.end);
         } else if (mode === 'range') {
           const start = document.getElementById('ss-date-start');
           const end = document.getElementById('ss-date-end');
@@ -494,7 +547,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         } else if (mode === 'year') {
           const y = document.getElementById('ss-date-year');
           if (y && y.value) params.set('date_mode', 'year'), params.set('date_year', y.value);
-        } else if (['last_week', 'last_month', 'next_week'].indexOf(mode) >= 0) {
+        } else if (mode === 'next_week') {
           params.set('date_mode', mode);
           params.set('anchor_date', ssGetAnchorDate());
         } else if (mode === 'last_n' || mode === 'next_n') {
@@ -932,6 +985,31 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
   }
   window.ssToggleSql = ssToggleSql;
+
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      ssRunQuery();
+    }
+  });
+
+  function ssCopyUrl() {
+    var params = ssCollectParams();
+    var qs = params.toString();
+    var url = qs ? (window.location.origin + window.location.pathname + '?' + qs) : (window.location.origin + window.location.pathname);
+    navigator.clipboard.writeText(url).then(function() {
+      var btn = document.getElementById('ss-copy-url-btn');
+      if (btn) {
+        var orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = orig; }, 1200);
+      }
+    }).catch(function() {
+      var btn = document.getElementById('ss-copy-url-btn');
+      if (btn) btn.textContent = 'Copy failed';
+    });
+  }
+  window.ssCopyUrl = ssCopyUrl;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', ssInitFromUrl);

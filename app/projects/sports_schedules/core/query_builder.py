@@ -134,6 +134,21 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         if d:
             date_start_dt = date_end_dt = d
         # else: no date filter
+    elif date_mode == "today":
+        d = _parse_date(date_exact) or _parse_date(anchor_date)
+        if d:
+            date_start_dt = date_end_dt = d
+    elif date_mode == "on_or_after":
+        d = _parse_date(date_exact) or _parse_date(anchor_date)
+        if d:
+            date_start_dt = d
+            date_end_dt = datetime(2099, 12, 31).date()
+    elif date_mode == "this_weekend":
+        ds = _parse_date(date_start)
+        de = _parse_date(date_end)
+        if ds and de:
+            date_start_dt = ds
+            date_end_dt = de
     elif date_mode == "range":
         ds = _parse_date(date_start)
         de = _parse_date(date_end)
@@ -149,22 +164,15 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             date_end_dt = datetime(y, 12, 31).date()
         except (TypeError, ValueError):
             pass
-    elif date_mode in ("last_week", "last_month", "last_n", "next_week", "next_n"):
+    elif date_mode in ("last_n", "next_week", "next_n"):
         anchor = _parse_date(anchor_date)
         if not anchor:
-            # Fallback: use today (server date)
             anchor = datetime.utcnow().date()
         try:
             n = int(date_n) if date_n is not None else 0
         except (TypeError, ValueError):
             n = 0
-        if date_mode == "last_week":
-            date_end_dt = anchor
-            date_start_dt = anchor - timedelta(days=6)
-        elif date_mode == "last_month":
-            date_end_dt = anchor
-            date_start_dt = anchor - timedelta(days=29)
-        elif date_mode == "last_n":
+        if date_mode == "last_n":
             if n <= 0:
                 return None, "Number of days must be greater than 0."
             date_end_dt = anchor
