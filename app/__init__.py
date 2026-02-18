@@ -156,6 +156,7 @@ def create_app():
         MealsFamilyMember,
         MealsEntry,
     )
+    from app.projects.sports_schedules.models import SportsScheduleSavedQuery
 
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")

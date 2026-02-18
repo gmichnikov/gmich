@@ -251,140 +251,139 @@ SAMPLE_QUERIES = [
 
 ## Implementation Plan
 
-**Status:** Phase 1 🔲 Phase 2 🔲 Phase 3 🔲 Phase 4 🔲 Phase 5 🔲
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ Phase 4 ✅ Phase 5 ✅
 
 ---
 
 ### Phase 1: Data Model & Migration
 
-- [ ] Create `SportsScheduleSavedQuery` model
-  - [ ] Add to `app/projects/sports_schedules/models.py` (project-specific, matching other projects)
-  - [ ] Columns: `id`, `user_id` (FK to user), `name` (String 100), `config` (Text/JSON), `created_at`
-  - [ ] Table name: `sports_schedule_saved_queries`
-  - [ ] Relationship: `user_id` → `user.id`
-- [ ] Add index on `user_id` for listing queries by user
-- [ ] Use `ondelete="CASCADE"` on `user_id` FK
-- [ ] Ensure models module is imported (e.g. when registering blueprint) so Flask-Migrate discovers it
-- [ ] Request user to run `flask db migrate -m "Add SportsScheduleSavedQuery"` and `flask db upgrade`
+- [x] Create `SportsScheduleSavedQuery` model
+  - [x] Add to `app/projects/sports_schedules/models.py` (project-specific, matching other projects)
+  - [x] Columns: `id`, `user_id` (FK to user), `name` (String 100), `config` (Text/JSON), `created_at`
+  - [x] Table name: `sports_schedule_saved_queries`
+  - [x] Relationship: `user_id` → `user.id`
+- [x] Add index on `user_id` for listing queries by user
+- [x] Use `ondelete="CASCADE"` on `user_id` FK
+- [x] Ensure models module is imported (e.g. when registering blueprint) so Flask-Migrate discovers it
+- [x] Request user to run `flask db migrate -m "Add SportsScheduleSavedQuery"` and `flask db upgrade`
 
 **Manual Testing Phase 1:**
-- [ ] Migration applies cleanly
-- [ ] Can create/query records in Flask shell
+- [x] Migration applies cleanly
+- [x] Can create/query records in Flask shell
 
 ---
 
 ### Phase 2: Sample Queries & Config Serialization
 
-- [ ] Create sample queries config
-  - [ ] Add `app/projects/sports_schedules/core/sample_queries.py`
-  - [ ] Define 2–3 `SAMPLE_QUERIES` as list of dicts: `id`, `name`, `config`
-  - [ ] Sample 1: "NBA next 7 days" — dimensions `date,time,home_team,road_team`, filter `league: ["NBA"]`, date_mode=next_week
-  - [ ] Sample 2: "College basketball this weekend in Michigan" — dimensions, filters `league: ["NCAAM","NCAAW"]`, `home_state: ["MI"]`, date_mode=this_weekend
-  - [ ] Sample 3: "Pro hockey in Michigan" — filters `league: ["NHL"]`, `home_state: ["MI"]`, date_mode=next_week
-- [ ] Implement config → params conversion in frontend (JavaScript)
-  - [ ] Helper to convert config dict to `URLSearchParams` for `ssApplyParamsFromUrl` (see Config ↔ URL mapping in §4)
-  - [ ] For relative date modes: fill `anchor_date` with today; compute `date_start`/`date_end` for this_weekend, `date_exact` for today, etc. — match existing frontend logic
-- [ ] Implement URL params → config conversion in frontend (JavaScript)
-  - [ ] Map `ssCollectParams` output to `_parse_query_params()` shape (e.g. `either_team_1`+`either_team_2` → `filters.either_team`)
-  - [ ] Serialize to JSON for storage
+- [x] Create sample queries config
+  - [x] Add `app/projects/sports_schedules/core/sample_queries.py`
+  - [x] Define 2 `SAMPLE_QUERIES` as list of dicts: `id`, `name`, `config`
+  - [x] Sample 1: "Games in New Jersey this weekend" — filters `home_state: ["NJ"]`, date_mode=this_weekend
+  - [x] Sample 2: "Celtics games in the next month" — filters `either_team: ["Celtics"]`, date_mode=next_n, date_n=30
+- [x] Implement config → params conversion in frontend (JavaScript)
+  - [x] Helper to convert config dict to `URLSearchParams` for `ssApplyParamsFromUrl` (see Config ↔ URL mapping in §4)
+  - [x] For relative date modes: fill `anchor_date` with today; compute `date_start`/`date_end` for this_weekend, `date_exact` for today, etc. — match existing frontend logic
+- [x] Implement URL params → config conversion in frontend (JavaScript)
+  - [x] Map `ssCollectParams` output to `_parse_query_params()` shape (e.g. `either_team_1`+`either_team_2` → `filters.either_team`)
+  - [x] Serialize to JSON for storage
 
 **Manual Testing Phase 2:**
-- [ ] Sample configs load correctly
-- [ ] Config → params produces valid query when passed to `build_sql`
+- [x] Sample configs load correctly
+- [x] Config → params produces valid query when passed to `build_sql`
 
 ---
 
 ### Phase 3: API Endpoints
 
-- [ ] GET `/sports-schedules/api/saved-queries`
-  - [ ] No auth required
-  - [ ] Return `{ samples: [...], user_queries: [...] }`
-  - [ ] `samples`: always include all from `SAMPLE_QUERIES`; each `{ id, name, config }` (id is string)
-  - [ ] `user_queries`: if `current_user.is_authenticated`, fetch `SportsScheduleSavedQuery.query.filter_by(user_id=current_user.id).order_by(SportsScheduleSavedQuery.created_at.desc())`; else `[]`
-  - [ ] Each user query: `{ id, name, config, created_at }` (id is integer)
-  - [ ] Apply per-user limit check (`SAVED_QUERY_LIMIT`) when returning count or for client use
-- [ ] POST `/sports-schedules/api/saved-queries`
-  - [ ] `@login_required` or equivalent check; return 401 if not authenticated
-  - [ ] Accept JSON body: `{ name: string, config: object }`
-  - [ ] Validate: name non-empty, len ≤ 100; config required; config JSON ≤ 2KB
-  - [ ] Check user's saved query count; return 400 if at limit
-  - [ ] Create `SportsScheduleSavedQuery(user_id=current_user.id, name=..., config=json.dumps(config))`
-  - [ ] Return `{ id, name, config, created_at }` with 201
-- [ ] DELETE `/sports-schedules/api/saved-queries/<int:id>`
-  - [ ] `@login_required`; 401 if not authenticated
-  - [ ] Fetch by id; 404 if not found
-  - [ ] Verify `query.user_id == current_user.id`; 403 if not
-  - [ ] Delete and return 204
+- [x] GET `/sports-schedules/api/saved-queries`
+  - [x] No auth required
+  - [x] Return `{ samples: [...], user_queries: [...] }`
+  - [x] `samples`: always include all from `SAMPLE_QUERIES`; each `{ id, name, config }` (id is string)
+  - [x] `user_queries`: if `current_user.is_authenticated`, fetch `SportsScheduleSavedQuery.query.filter_by(user_id=current_user.id).order_by(SportsScheduleSavedQuery.created_at.desc())`; else `[]`
+  - [x] Each user query: `{ id, name, config, created_at }` (id is integer)
+  - [x] Apply per-user limit check (`SAVED_QUERY_LIMIT`) when returning count or for client use
+- [x] POST `/sports-schedules/api/saved-queries`
+  - [x] `@login_required` or equivalent check; return 401 if not authenticated
+  - [x] Accept JSON body: `{ name: string, config: object }`
+  - [x] Validate: name non-empty, len ≤ 100; config required; config JSON ≤ 2KB
+  - [x] Check user's saved query count; return 400 if at limit
+  - [x] Create `SportsScheduleSavedQuery(user_id=current_user.id, name=..., config=json.dumps(config))`
+  - [x] Return `{ id, name, config, created_at }` with 201
+- [x] DELETE `/sports-schedules/api/saved-queries/<int:id>`
+  - [x] `@login_required`; 401 if not authenticated
+  - [x] Fetch by id; 404 if not found
+  - [x] Verify `query.user_id == current_user.id`; 403 if not
+  - [x] Delete and return 204
 
 **Manual Testing Phase 3:**
-- [ ] GET returns samples for anonymous user; samples + user_queries for logged-in
-- [ ] POST creates saved query; 401 when anonymous
-- [ ] POST returns 400 when at limit
-- [ ] DELETE removes only own queries; 403 for others
+- [x] GET returns samples for anonymous user; samples + user_queries for logged-in
+- [x] POST creates saved query; 401 when anonymous
+- [x] POST returns 400 when at limit
+- [x] DELETE removes only own queries; 403 for others
 
 ---
 
 ### Phase 4: UI — Saved Queries Section & Save Button
 
-- [ ] Add collapsible "Saved Queries" section above filter bar (in `ss-main`)
-  - [ ] Structure similar to `ss-section` / `ss-filter-bar`: header with toggle, content area
-  - [ ] Use `ss-` prefixed classes (e.g. `ss-saved-queries`, `ss-saved-queries-header`, `ss-saved-queries-list`)
-  - [ ] Default: collapsed when only samples; expanded when user has saved queries
-- [ ] Render sample queries as clickable items
-  - [ ] Each sample: button or link with name and "Sample" badge
-  - [ ] Click handler: load config into form (via `ssLoadQueryAndRun` → `ssApplyParamsFromUrl`), update URL, call `ssRunQuery()`
-- [ ] Render user saved queries (when logged in)
-  - [ ] Same click behavior as samples
-  - [ ] Each item: name + delete button (trash icon or "×")
-  - [ ] Delete: call DELETE API, remove from DOM, show "Removed" toast if desired
-- [ ] Add Save button
-  - [ ] Placement: in `ss-results-actions` alongside Copy, Copy URL, Download CSV
-  - [ ] Visible only after a query has been run; enabled when query is runnable (≥1 dimension or count)
-  - [ ] Click handler: if not logged in → redirect to login URL with `next` = current full URL + `&prompt_save=1`
-  - [ ] If logged in → open Save modal
-- [ ] Save modal
-  - [ ] Overlay + modal with input for query name, Cancel and Save buttons
-  - [ ] Save: collect current params via `ssCollectParams`; convert to config dict; POST to API with name + config
-  - [ ] On success: close modal, refresh list or append to DOM, show "Saved as 'X'" toast
-  - [ ] On error: show message in modal (limit reached, network error, validation error)
-- [ ] Handle `prompt_save=1` on page load
-  - [ ] After `ssApplyParamsFromUrl` runs, if `prompt_save=1` in URL and user is logged in, open Save modal; use `history.replaceState()` to strip `prompt_save` from URL
-  - [ ] Template passes auth state (e.g. `data-is-authenticated`) so JS can check
+- [x] Add collapsible "Saved Queries" section above filter bar (in `ss-main`)
+  - [x] Structure similar to `ss-section` / `ss-filter-bar`: header with toggle, content area
+  - [x] Use `ss-` prefixed classes (e.g. `ss-saved-queries`, `ss-saved-queries-header`, `ss-saved-queries-list`)
+  - [x] Default: collapsed when only samples; expanded when user has saved queries
+- [x] Render sample queries as clickable items
+  - [x] Each sample: button or link with name and "Sample" badge
+  - [x] Click handler: load config into form (via `ssLoadQueryAndRun` → `ssApplyParamsFromUrl`), update URL, call `ssRunQuery()`
+- [x] Render user saved queries (when logged in)
+  - [x] Same click behavior as samples
+  - [x] Each item: name + delete button (trash icon or "×")
+  - [x] Delete: call DELETE API, remove from DOM, show "Removed" toast if desired
+- [x] Add Save button
+  - [x] Placement: in `ss-results-actions` alongside Copy, Copy URL, Download CSV
+  - [x] Visible only after a query has been run; enabled when query is runnable (≥1 dimension or count)
+  - [x] Click handler: if not logged in → redirect to login URL with `next` = current full URL + `&prompt_save=1`
+  - [x] If logged in → open Save modal
+- [x] Save modal
+  - [x] Overlay + modal with input for query name, Cancel and Save buttons
+  - [x] Save: collect current params via `ssCollectParams`; convert to config dict; POST to API with name + config
+  - [x] On success: close modal, refresh list or append to DOM, show "Saved as 'X'" toast
+  - [x] On error: show message in modal (limit reached, network error, validation error)
+- [x] Handle `prompt_save=1` on page load
+  - [x] After `ssApplyParamsFromUrl` runs, if `prompt_save=1` in URL and user is logged in, open Save modal; use `history.replaceState()` to strip `prompt_save` from URL
+  - [x] Template passes auth state (e.g. `data-is-authenticated`) so JS can check
 
 **Manual Testing Phase 4:**
-- [ ] Anonymous: sees samples; click loads and runs
-- [ ] Anonymous: run query, then click Save → redirects to login with correct `next` URL
-- [ ] Logged in: after login with `next` containing query params + `prompt_save=1` → lands on page, form populated, Save modal opens
-- [ ] Logged in: Save modal works; new query appears in list
-- [ ] Delete removes query from list
+- [x] Anonymous: sees samples; click loads and runs
+- [x] Anonymous: run query, then click Save → redirects to login with correct `next` URL
+- [x] Logged in: after login with `next` containing query params + `prompt_save=1` → lands on page, form populated, Save modal opens
+- [x] Logged in: Save modal works; new query appears in list
+- [x] Delete removes query from list
 
 ---
 
 ### Phase 5: JavaScript Integration & Polish
 
-- [ ] Fetch saved queries on load
-  - [ ] Call GET `/sports-schedules/api/saved-queries` on page init
-  - [ ] Show loading state until fetch completes, then populate `ss-saved-queries-list` with samples + user_queries
-  - [ ] Wire click handlers for load+run and delete
-- [ ] Implement `ssLoadQueryAndRun(config)` (or equivalent)
-  - [ ] Accept config object; convert to URLSearchParams (see Config ↔ URL mapping)
-  - [ ] Update URL via `history.replaceState` or `ssUpdateUrlFromParams` so `ssApplyParamsFromUrl` can read it
-  - [ ] Call `ssApplyParamsFromUrl()` to populate form from URL
-  - [ ] Call `ssRunQuery()`
-- [ ] Ensure config format matches API
-  - [ ] `ssCollectParams` returns structure compatible with `_parse_query_params` / `build_sql`
-  - [ ] When saving, serialize filters correctly (e.g. `league: ["NBA"]` not `league: "NBA"`)
-- [ ] UX polish
+- [x] Fetch saved queries on load
+  - [x] Call GET `/sports-schedules/api/saved-queries` on page init
+  - [x] Show loading state until fetch completes, then populate `ss-saved-queries-list` with samples + user_queries
+  - [x] Wire click handlers for load+run and delete
+- [x] Implement `ssLoadQueryAndRun(config)` (or equivalent)
+  - [x] Accept config object; convert to URLSearchParams (see Config ↔ URL mapping)
+  - [x] Update URL via `history.replaceState` or `ssUpdateUrlFromParams` so `ssApplyParamsFromUrl` can read it
+  - [x] Call `ssApplyParamsFromUrl()` to populate form from URL
+  - [x] Call `ssRunQuery()`
+- [x] Ensure config format matches API
+  - [x] `ssCollectParams` returns structure compatible with `_parse_query_params` / `build_sql`
+  - [x] When saving, serialize filters correctly (e.g. `league: ["NBA"]` not `league: "NBA"`)
+- [x] UX polish
   - [ ] Loading indicator when clicking saved query (optional)
   - [ ] Toast for save success / delete (optional)
   - [ ] Truncate long names with ellipsis (optional)
-  - [ ] Empty state message when no user queries: "Save your current query to quickly access it later" (optional)
+  - [x] Empty state message when no user queries: "Save your current query to quickly access it later" (optional)
 
 **Manual Testing Phase 5:**
-- [ ] Full flow: run query → Save → see in list → click → loads and runs
-- [ ] Full flow: anonymous Save → login → return → modal opens → save
-- [ ] Delete works; list updates
-- [ ] Sample queries work for all users
+- [x] Full flow: run query → Save → see in list → click → loads and runs
+- [x] Full flow: anonymous Save → login → return → modal opens → save
+- [x] Delete works; list updates
+- [x] Sample queries work for all users
 
 ---
 

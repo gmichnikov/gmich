@@ -68,6 +68,10 @@ DEFAULT_DIMENSIONS = ["date", "time", "home_team", "road_team"]
 # Default filters when page loads with no URL state (field -> value dict for date, or field name for simple)
 DEFAULT_FILTERS = {"date": "next_week"}
 
+# Saved queries
+SAVED_QUERY_LIMIT = 20
+SAVED_QUERY_CONFIG_MAX_BYTES = 2048
+
 # --- DIMENSION_LABELS: column -> display label (from PRD) ---
 DIMENSION_LABELS = {
     "either_team": "Either Team",

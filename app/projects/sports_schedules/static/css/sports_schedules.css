@@ -158,6 +158,227 @@
   height: 0.9rem;
 }
 
+/* ===== Saved Queries (above filter bar) ===== */
+.ss-saved-queries {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.ss-saved-queries-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: #e9ecef;
+  user-select: none;
+}
+
+.ss-saved-queries-header:hover {
+  background: #dee2e6;
+}
+
+.ss-saved-queries-toggle {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.ss-saved-queries-content {
+  padding: 0.75rem 1rem;
+}
+
+.ss-saved-queries-content.ss-saved-queries-collapsed {
+  display: none;
+}
+
+.ss-saved-queries-loading {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.ss-saved-queries-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.ss-saved-query-btn {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ss-saved-query-btn:hover {
+  background: #f1f3f5;
+  border-color: #adb5bd;
+}
+
+.ss-saved-query-sample {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.ss-saved-query-sample:hover {
+  background: #eef0ff;
+}
+
+.ss-saved-query-badge {
+  font-size: 0.7rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* User query: name + delete grouped in a chip so X is clearly associated */
+.ss-saved-query-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  overflow: hidden;
+}
+
+.ss-saved-query-item .ss-saved-query-btn {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.ss-saved-query-item .ss-saved-query-btn:hover {
+  background: #f8f9fa;
+}
+
+.ss-saved-query-item:hover {
+  border-color: #ced4da;
+}
+
+.ss-saved-query-delete {
+  width: 1.75rem;
+  height: 100%;
+  min-height: 2rem;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #e9ecef;
+  background: transparent;
+  color: #adb5bd;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ss-saved-query-item:hover .ss-saved-query-delete,
+.ss-saved-query-delete:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.ss-saved-queries-empty {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* ===== Save modal ===== */
+.ss-save-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ss-save-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.ss-save-modal-box {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.ss-save-modal-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.ss-save-modal-desc {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0 0 1rem 0;
+}
+
+.ss-save-modal-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.ss-save-modal-error {
+  color: #721c24;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-save-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ss-save-modal-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ss-save-modal-cancel {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.ss-save-modal-cancel:hover {
+  background: #e9ecef;
+}
+
+.ss-save-modal-submit {
+  background: #667eea;
+  border: none;
+  color: white;
+}
+
+.ss-save-modal-submit:hover {
+  background: #5a67d8;
+}
+
 /* ===== Filter Bar (above results, one row per active filter), collapsible ===== */
 .ss-filter-bar {
   background: #f8f9fa;

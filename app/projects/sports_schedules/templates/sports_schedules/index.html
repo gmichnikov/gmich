@@ -86,6 +86,18 @@
     </aside>
 
     <main class="ss-main">
+      <!-- Saved Queries: above filter bar -->
+      <div id="ss-saved-queries" class="ss-saved-queries" data-is-authenticated="{{ 'true' if is_authenticated else 'false' }}" data-login-url="{{ login_url }}">
+        <div class="ss-saved-queries-header" onclick="ssToggleSavedQueries()" aria-expanded="true" aria-controls="ss-saved-queries-content">
+          <span>Saved Queries</span>
+          <span class="ss-saved-queries-toggle" id="ss-saved-queries-toggle">▼</span>
+        </div>
+        <div id="ss-saved-queries-content" class="ss-saved-queries-content" role="group">
+          <div id="ss-saved-queries-loading" class="ss-saved-queries-loading">Loading...</div>
+          <div id="ss-saved-queries-list" class="ss-saved-queries-list" style="display: none;"></div>
+        </div>
+      </div>
+
       <!-- Filter bar: one row per active filter field (Looker-style), collapsible -->
       <div id="ss-filter-bar" class="ss-filter-bar" style="display: none;">
         <div class="ss-filter-bar-header" onclick="ssToggleFilterBar()">
@@ -161,12 +173,28 @@
               </button>
               <button type="button" class="ss-action-btn" id="ss-download-csv-btn" onclick="ssDownloadCsv()" title="Download as CSV file">Download CSV</button>
               <button type="button" class="ss-action-btn" id="ss-copy-url-btn" onclick="ssCopyUrl()" title="Copy shareable URL">Copy URL</button>
+              <button type="button" class="ss-action-btn" id="ss-save-btn" onclick="ssSaveQuery()" title="Save this query" style="display: none;">Save</button>
             </div>
             <pre id="ss-sql-content" class="ss-sql-content" style="display: none;"></pre>
           </div>
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- Save modal -->
+<div id="ss-save-modal" class="ss-save-modal" style="display: none;" role="dialog" aria-labelledby="ss-save-modal-title">
+  <div class="ss-save-modal-backdrop" onclick="ssCloseSaveModal()"></div>
+  <div class="ss-save-modal-box">
+    <h3 id="ss-save-modal-title" class="ss-save-modal-title">Save query</h3>
+    <p class="ss-save-modal-desc">Give this query a name to quickly access it later.</p>
+    <input type="text" id="ss-save-modal-name" class="ss-save-modal-input" placeholder="e.g. NBA this weekend" maxlength="100" aria-label="Query name" onkeydown="if(event.key==='Enter'){event.preventDefault();ssSubmitSave();}">
+    <div id="ss-save-modal-error" class="ss-save-modal-error" style="display: none;"></div>
+    <div class="ss-save-modal-actions">
+      <button type="button" class="ss-save-modal-btn ss-save-modal-cancel" onclick="ssCloseSaveModal()">Cancel</button>
+      <button type="button" class="ss-save-modal-btn ss-save-modal-submit" onclick="ssSubmitSave()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -631,6 +659,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         document.getElementById('ss-results-content').style.display = 'block';
         ssUpdateSqlSection(data.sql || '');
         ssUpdateUrlFromParams(params);
+        if (typeof ssShowSaveButton === 'function') ssShowSaveButton();
       })
       .catch(function() {
         document.getElementById('ss-results-loading').style.display = 'none';
@@ -1011,14 +1040,274 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
   window.ssCopyUrl = ssCopyUrl;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ssInitFromUrl);
-  } else {
-    ssInitFromUrl();
-  }
-
   function ssInitFromUrl() {
     if (ssApplyParamsFromUrl()) ssRunQuery();
+  }
+
+  function ssToggleSavedQueries() {
+    var content = document.getElementById('ss-saved-queries-content');
+    var toggle = document.getElementById('ss-saved-queries-toggle');
+    var header = document.querySelector('.ss-saved-queries-header');
+    if (!content || !toggle || !header) return;
+    var isCollapsed = content.classList.contains('ss-saved-queries-collapsed');
+    if (isCollapsed) {
+      content.classList.remove('ss-saved-queries-collapsed');
+      toggle.textContent = '▼';
+      header.setAttribute('aria-expanded', 'true');
+    } else {
+      content.classList.add('ss-saved-queries-collapsed');
+      toggle.textContent = '▶';
+      header.setAttribute('aria-expanded', 'false');
+    }
+  }
+  window.ssToggleSavedQueries = ssToggleSavedQueries;
+
+  function ssConfigToUrlParams(config) {
+    var params = new URLSearchParams();
+    if (config.dimensions) params.set('dimensions', config.dimensions);
+    if (config.count) params.set('count', '1');
+    if (config.limit) params.set('limit', String(config.limit));
+    if (config.sort_column) params.set('sort_column', config.sort_column);
+    if (config.sort_dir) params.set('sort_dir', config.sort_dir || 'asc');
+    var filters = config.filters || {};
+    for (var col in filters) {
+      if (col === 'either_team') {
+        var arr = Array.isArray(filters[col]) ? filters[col] : [];
+        if (arr[0]) params.set('either_team_1', arr[0]);
+        if (arr[1]) params.set('either_team_2', arr[1]);
+      } else if (Array.isArray(filters[col])) {
+        params.set(col, filters[col].join(','));
+      } else if (filters[col]) {
+        params.set(col, String(filters[col]));
+      }
+    }
+    var anchor = config.anchor_date || ssGetAnchorDate();
+    if (config.date_mode === 'this_weekend') {
+      var w = ssComputeThisWeekend(anchor);
+      params.set('date_mode', 'this_weekend');
+      params.set('date_start', w.start);
+      params.set('date_end', w.end);
+    } else if (config.date_mode) {
+      params.set('date_mode', config.date_mode);
+      if (config.date_mode === 'exact' && config.date_exact) params.set('date_exact', config.date_exact);
+      else if (config.date_mode === 'today') { params.set('date_exact', anchor); params.set('anchor_date', anchor); }
+      else if (config.date_mode === 'on_or_after' && config.date_exact) params.set('date_exact', config.date_exact);
+      else if (config.date_mode === 'range' && config.date_start && config.date_end) {
+        params.set('date_start', config.date_start);
+        params.set('date_end', config.date_end);
+      } else if (config.date_mode === 'year' && config.date_year) params.set('date_year', String(config.date_year));
+      else if ((config.date_mode === 'last_n' || config.date_mode === 'next_n') && config.date_n) {
+        params.set('date_n', String(config.date_n));
+        params.set('anchor_date', anchor);
+      } else if (config.date_mode === 'next_week') {
+        params.set('anchor_date', anchor);
+      }
+    }
+    return params;
+  }
+
+  function ssLoadQueryAndRun(config) {
+    var params = ssConfigToUrlParams(config);
+    var url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    window.history.replaceState({}, '', url);
+    ssApplyParamsFromUrl();
+    ssRunQuery();
+  }
+
+  function ssUrlParamsToConfig(params) {
+    var config = {
+      dimensions: params.get('dimensions') || '',
+      filters: {},
+      date_mode: params.get('date_mode') || '',
+      date_exact: params.get('date_exact') || '',
+      date_start: params.get('date_start') || '',
+      date_end: params.get('date_end') || '',
+      date_year: params.get('date_year') || '',
+      date_n: params.get('date_n') ? parseInt(params.get('date_n'), 10) : null,
+      anchor_date: params.get('anchor_date') || null,
+      count: params.get('count') === '1',
+      limit: parseInt(params.get('limit') || '500', 10),
+      sort_column: params.get('sort_column') || '',
+      sort_dir: params.get('sort_dir') || 'asc'
+    };
+    var et1 = params.get('either_team_1');
+    var et2 = params.get('either_team_2');
+    if (et1 || et2) config.filters.either_team = [et1, et2].filter(Boolean);
+    ['sport','league','level','day','home_state'].forEach(function(col) {
+      var v = params.get(col);
+      if (v) config.filters[col] = v.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    });
+    ['home_team','road_team','location','home_city'].forEach(function(col) {
+      var v = params.get(col);
+      if (v) config.filters[col] = v.trim();
+    });
+    return config;
+  }
+
+  function ssRenderSavedQueriesList(samples, userQueries) {
+    var list = document.getElementById('ss-saved-queries-list');
+    var loading = document.getElementById('ss-saved-queries-loading');
+    if (!list || !loading) return;
+    loading.style.display = 'none';
+    list.style.display = 'block';
+    list.innerHTML = '';
+    var isAuth = document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
+    var hasUserQueries = userQueries && userQueries.length > 0;
+    var content = document.getElementById('ss-saved-queries-content');
+    if (hasUserQueries && content) content.classList.remove('ss-saved-queries-collapsed');
+    else if (content) content.classList.add('ss-saved-queries-collapsed');
+    samples.forEach(function(s) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ss-saved-query-btn ss-saved-query-sample';
+      btn.innerHTML = '<span class="ss-saved-query-name">' + (s.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span> <span class="ss-saved-query-badge">Sample</span>';
+      btn.onclick = function() { ssLoadQueryAndRun(s.config); };
+      list.appendChild(btn);
+    });
+    if (isAuth && userQueries) {
+      userQueries.forEach(function(q) {
+        var wrap = document.createElement('div');
+        wrap.className = 'ss-saved-query-item';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ss-saved-query-btn';
+        btn.innerHTML = '<span class="ss-saved-query-name">' + (q.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+        btn.onclick = function() { ssLoadQueryAndRun(q.config); };
+        wrap.appendChild(btn);
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'ss-saved-query-delete';
+        delBtn.innerHTML = '×';
+        delBtn.title = 'Delete';
+        delBtn.setAttribute('aria-label', 'Delete');
+        delBtn.onclick = function(e) { e.stopPropagation(); ssDeleteSavedQuery(q.id, wrap); };
+        wrap.appendChild(delBtn);
+        list.appendChild(wrap);
+      });
+    }
+    if (!isAuth && samples.length > 0) {
+      var empty = document.createElement('p');
+      empty.className = 'ss-saved-queries-empty';
+      empty.textContent = 'Sign in to save your queries.';
+      list.appendChild(empty);
+    } else if (isAuth && (!userQueries || userQueries.length === 0)) {
+      var empty2 = document.createElement('p');
+      empty2.className = 'ss-saved-queries-empty';
+      empty2.textContent = 'Save your current query to quickly access it later.';
+      list.appendChild(empty2);
+    }
+  }
+
+  function ssFetchAndRenderSavedQueries() {
+    fetch('/sports-schedules/api/saved-queries')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        ssRenderSavedQueriesList(data.samples || [], data.user_queries || []);
+      })
+      .catch(function() {
+        var loading = document.getElementById('ss-saved-queries-loading');
+        if (loading) loading.textContent = 'Failed to load';
+      });
+  }
+
+  function ssDeleteSavedQuery(id, el) {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var headers = { 'Content-Type': 'application/json' };
+    if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
+    fetch('/sports-schedules/api/saved-queries/' + id, { method: 'DELETE', headers: headers, credentials: 'same-origin' })
+      .then(function(r) {
+        if (r.status === 204 && el) el.remove();
+      });
+  }
+
+  function ssShowSaveButton() {
+    var btn = document.getElementById('ss-save-btn');
+    if (btn) btn.style.display = 'inline-flex';
+  }
+
+  window.ssSaveQuery = function() {
+    var container = document.getElementById('ss-saved-queries');
+    var isAuth = container && container.getAttribute('data-is-authenticated') === 'true';
+    var loginUrl = container && container.getAttribute('data-login-url');
+    if (!isAuth && loginUrl) {
+      var nextUrl = window.location.href + (window.location.search ? '&' : '?') + 'prompt_save=1';
+      window.location.href = loginUrl + (loginUrl.indexOf('?') >= 0 ? '&' : '?') + 'next=' + encodeURIComponent(nextUrl);
+      return;
+    }
+    ssOpenSaveModal();
+  };
+
+  function ssOpenSaveModal() {
+    var modal = document.getElementById('ss-save-modal');
+    var inp = document.getElementById('ss-save-modal-name');
+    var err = document.getElementById('ss-save-modal-error');
+    if (modal) modal.style.display = 'flex';
+    if (inp) { inp.value = ''; inp.focus(); }
+    if (err) { err.style.display = 'none'; err.textContent = ''; }
+  }
+
+  window.ssCloseSaveModal = function() {
+    var modal = document.getElementById('ss-save-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  function ssSubmitSave() {
+    var inp = document.getElementById('ss-save-modal-name');
+    var errEl = document.getElementById('ss-save-modal-error');
+    var name = (inp && inp.value || '').trim();
+    if (!name) {
+      if (errEl) { errEl.textContent = 'Name is required'; errEl.style.display = 'block'; }
+      return;
+    }
+    if (name.length > 100) {
+      if (errEl) { errEl.textContent = 'Name must be 100 characters or less'; errEl.style.display = 'block'; }
+      return;
+    }
+    var params = ssCollectParams();
+    var config = ssUrlParamsToConfig(params);
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var headers = { 'Content-Type': 'application/json' };
+    if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
+    fetch('/sports-schedules/api/saved-queries', {
+      method: 'POST',
+      headers: headers,
+      credentials: 'same-origin',
+      body: JSON.stringify({ name: name, config: config })
+    })
+      .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+      .then(function(res) {
+        if (res.status === 201) {
+          ssCloseSaveModal();
+          ssFetchAndRenderSavedQueries();
+        } else if (res.data && res.data.error) {
+          if (errEl) { errEl.textContent = res.data.error; errEl.style.display = 'block'; }
+        }
+      })
+      .catch(function() {
+        if (errEl) { errEl.textContent = 'Network error. Please try again.'; errEl.style.display = 'block'; }
+      });
+  }
+  window.ssSubmitSave = ssSubmitSave;
+
+  function ssInitWithPromptSaveCheck() {
+    ssInitFromUrl();
+    var params = new URLSearchParams(window.location.search);
+    var promptSave = params.get('prompt_save') === '1';
+    var isAuth = document.getElementById('ss-saved-queries') && document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
+    if (promptSave && isAuth) {
+      params.delete('prompt_save');
+      var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState({}, '', newUrl);
+      setTimeout(function() { ssOpenSaveModal(); }, 300);
+    }
+  }
+
+  ssFetchAndRenderSavedQueries();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ssInitWithPromptSaveCheck);
+  } else {
+    ssInitWithPromptSaveCheck();
   }
 })();
 </script>

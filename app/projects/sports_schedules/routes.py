@@ -1,12 +1,22 @@
 """
 Sports Schedules - Public UI for viewing sports schedules.
-No login required. No database usage.
+No login required for browsing/running queries. Login required for saving.
 """
 
-from flask import Blueprint, jsonify, render_template, request
+import json
 
+from flask import Blueprint, jsonify, render_template, request, url_for
+from flask_login import current_user
+
+from app import db
 from app.core.dolthub_client import DoltHubClient
+from app.projects.sports_schedules.core.constants import (
+    SAVED_QUERY_CONFIG_MAX_BYTES,
+    SAVED_QUERY_LIMIT,
+)
 from app.projects.sports_schedules.core.query_builder import build_sql
+from app.projects.sports_schedules.core.sample_queries import SAMPLE_QUERIES
+from app.projects.sports_schedules.models import SportsScheduleSavedQuery
 
 sports_schedules_bp = Blueprint(
     "sports_schedules",
@@ -70,6 +80,8 @@ def index():
         field_order=FIELD_ORDER,
         filter_only_fields=FILTER_ONLY_FIELDS,
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
+        is_authenticated=current_user.is_authenticated,
+        login_url=url_for("auth.login"),
     )
 
 
@@ -89,3 +101,98 @@ def api_query():
 
     rows = result.get("rows", [])
     return jsonify({"rows": rows, "sql": sql})
+
+
+@sports_schedules_bp.route("/api/saved-queries", methods=["GET"])
+def api_saved_queries_list():
+    """List sample queries (everyone) and user's saved queries (if logged in)."""
+    samples = [
+        {"id": s["id"], "name": s["name"], "config": s["config"]}
+        for s in SAMPLE_QUERIES
+    ]
+    user_queries = []
+    if current_user.is_authenticated:
+        rows = (
+            SportsScheduleSavedQuery.query.filter_by(user_id=current_user.id)
+            .order_by(SportsScheduleSavedQuery.created_at.desc())
+            .limit(SAVED_QUERY_LIMIT + 1)
+            .all()
+        )
+        for q in rows[: SAVED_QUERY_LIMIT]:
+            config = json.loads(q.config) if isinstance(q.config, str) else q.config
+            user_queries.append(
+                {
+                    "id": q.id,
+                    "name": q.name,
+                    "config": config,
+                    "created_at": q.created_at.isoformat() if q.created_at else None,
+                }
+            )
+    return jsonify({"samples": samples, "user_queries": user_queries})
+
+
+@sports_schedules_bp.route("/api/saved-queries", methods=["POST"])
+def api_saved_queries_create():
+    """Create a saved query. Requires login."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid query config"}), 400
+
+    name = (data.get("name") or "").strip()
+    config = data.get("config")
+
+    if not name:
+        return jsonify({"error": "Name is required"}), 400
+    if len(name) > 100:
+        return jsonify({"error": "Name must be 100 characters or less"}), 400
+    if config is None:
+        return jsonify({"error": "Invalid query config"}), 400
+
+    config_str = json.dumps(config) if isinstance(config, dict) else str(config)
+    if len(config_str.encode("utf-8")) > SAVED_QUERY_CONFIG_MAX_BYTES:
+        return jsonify({"error": "Invalid query config"}), 400
+
+    count = SportsScheduleSavedQuery.query.filter_by(user_id=current_user.id).count()
+    if count >= SAVED_QUERY_LIMIT:
+        return jsonify(
+            {
+                "error": "Saved query limit (20) reached. Delete one to save a new query."
+            }
+        ), 400
+
+    saved = SportsScheduleSavedQuery(
+        user_id=current_user.id,
+        name=name,
+        config=config_str,
+    )
+    db.session.add(saved)
+    db.session.commit()
+
+    return (
+        jsonify(
+            {
+                "id": saved.id,
+                "name": saved.name,
+                "config": json.loads(saved.config),
+                "created_at": saved.created_at.isoformat() if saved.created_at else None,
+            }
+        ),
+        201,
+    )
+
+
+@sports_schedules_bp.route("/api/saved-queries/<int:query_id>", methods=["DELETE"])
+def api_saved_queries_delete(query_id):
+    """Delete a saved query. Must own it."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    q = SportsScheduleSavedQuery.query.get(query_id)
+    if not q:
+        return "", 404
+    if q.user_id != current_user.id:
+        return "", 403
+    db.session.delete(q)
+    db.session.commit()
+    return "", 204
