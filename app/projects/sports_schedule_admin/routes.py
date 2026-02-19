@@ -2,13 +2,14 @@ from flask import Blueprint, render_template, redirect, url_for, flash, jsonify,
 from flask_login import login_required, current_user
 from app.core.admin import admin_required
 from app.core.dolthub_client import DoltHubClient
-from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data
+from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data, sync_league_teams
+from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.projects.sports_schedule_admin.core.leagues import (
     ALL_LEAGUE_CODES,
     LEAGUE_DISPLAY_NAMES,
     LEAGUE_SEASON_TYPE,
 )
-from app.models import LogEntry, db
+from app.models import LogEntry, db, ESPNCollegeTeam
 from datetime import datetime, timedelta, date
 
 sports_schedule_admin_bp = Blueprint(
@@ -25,7 +26,55 @@ sports_schedule_admin_bp = Blueprint(
 @admin_required
 def index():
     leagues = [(code, LEAGUE_DISPLAY_NAMES.get(code, code)) for code in ALL_LEAGUE_CODES]
-    return render_template("sports_schedule_admin/index.html", leagues=leagues)
+    
+    # Identify college leagues for "By Team" sync and "Discovery"
+    college_leagues = [c for c, (sport, path, level) in ESPNClient.LEAGUE_MAP.items() if level == "college"]
+    
+    return render_template(
+        "sports_schedule_admin/index.html", 
+        leagues=leagues, 
+        college_leagues=college_leagues
+    )
+
+
+@sports_schedule_admin_bp.route("/sports-schedule-admin/api/teams")
+@login_required
+@admin_required
+def get_teams():
+    """Fetch teams from the registry for a specific league."""
+    league = request.args.get("league")
+    if not league:
+        return jsonify({"error": "Missing league"}), 400
+    
+    teams = ESPNCollegeTeam.query.filter_by(league_code=league).order_by(ESPNCollegeTeam.name).all()
+    return jsonify([{
+        "id": t.id,
+        "espn_team_id": t.espn_team_id,
+        "name": t.name,
+        "abbreviation": t.abbreviation
+    } for t in teams])
+
+
+@sports_schedule_admin_bp.route("/sports-schedule-admin/api/sync-teams", methods=["POST"])
+@login_required
+@admin_required
+def api_sync_teams():
+    """Trigger a team discovery sync."""
+    data = request.get_json() or {}
+    league = data.get("league")
+
+    if not league or league not in ALL_LEAGUE_CODES:
+        return jsonify({"success": False, "error": "Invalid or missing league"}), 400
+
+    actor_id = current_user.id if current_user else None
+    try:
+        result = sync_league_teams(league, actor_id=actor_id)
+        return jsonify({
+            "success": True,
+            "message": f"Discovered {result['found']} teams for {result['league']} (Created {result['created']}, Updated {result['updated']})."
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def _current_season_ranges():

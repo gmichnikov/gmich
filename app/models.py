@@ -170,3 +170,19 @@ class LogEntry(db.Model):
 
     def __repr__(self):
         return f'<LogEntry {self.timestamp} - {self.project}/{self.category}>'
+
+class ESPNCollegeTeam(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    espn_team_id = db.Column(db.String(20), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    abbreviation = db.Column(db.String(20), nullable=True)
+    sport = db.Column(db.String(50), nullable=False)
+    league_code = db.Column(db.String(20), nullable=False)
+    last_synced_at = db.Column(db.DateTime, nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('espn_team_id', 'league_code', name='_team_league_uc'),
+    )
+
+    def __repr__(self):
+        return f'<ESPNCollegeTeam {self.name} ({self.league_code})>'

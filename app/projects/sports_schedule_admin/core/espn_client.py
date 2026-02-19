@@ -121,6 +121,44 @@ class ESPNClient:
             logger.error(f"ESPN API error for {league_code} on {date_str}: {e}")
             return []
 
+    def fetch_teams(self, league_code):
+        """
+        Fetch all teams for a given league (e.g., NCAAM).
+        Returns a list of team dictionaries: {espn_team_id, name, abbreviation, sport, league_code}
+        """
+        if league_code not in self.LEAGUE_MAP:
+            logger.error(f"Unsupported league for team discovery: {league_code}")
+            return []
+
+        sport_name, league_path, level = self.LEAGUE_MAP[league_code]
+        url = f"{self.BASE_URL}/{sport_name}/{league_path}/teams"
+        params = {"limit": 1000} # Get all teams in one go
+
+        try:
+            response = requests.get(url, params=params, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+            
+            teams_data = []
+            sports = data.get("sports", [])
+            for s in sports:
+                leagues = s.get("leagues", [])
+                for l in leagues:
+                    teams = l.get("teams", [])
+                    for t_entry in teams:
+                        t = t_entry.get("team", {})
+                        teams_data.append({
+                            "espn_team_id": t.get("id"),
+                            "name": t.get("displayName"),
+                            "abbreviation": t.get("abbreviation"),
+                            "sport": sport_name,
+                            "league_code": league_code
+                        })
+            return teams_data
+        except requests.exceptions.RequestException as e:
+            logger.error(f"ESPN Teams API error for {league_code}: {e}")
+            return []
+
     def _parse_events(self, data, league_code, level, sport_name):
         """
         Parse ESPN events into the DoltHub schema format.

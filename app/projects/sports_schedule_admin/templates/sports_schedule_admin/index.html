@@ -58,7 +58,8 @@
         <div class="ssa-grid">
             <div class="ssa-grid-card">
                 <h3 class="ssa-grid-card-title">Manual Sync</h3>
-                <p class="ssa-grid-card-desc">Fetch schedule data from ESPN (major leagues) or MLB Stats API (MiLB) and upsert to DoltHub. Use end date or days to define the range.</p>
+                <p class="ssa-grid-card-desc">Fetch schedule data from ESPN or MLB Stats API and upsert to DoltHub.</p>
+                
                 <form id="ssa-sync-form" class="ssa-form">
                     <div class="ssa-form-group">
                         <label for="ssa-sync-league" class="ssa-label">League</label>
@@ -68,21 +69,46 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="ssa-form-group">
-                        <label for="ssa-sync-start" class="ssa-label">Start Date</label>
-                        <input type="date" id="ssa-sync-start" name="start_date" class="ssa-input" required>
-                    </div>
-                    <div class="ssa-form-row">
-                        <div class="ssa-form-group ssa-form-group--flex">
-                            <label for="ssa-sync-end" class="ssa-label">End Date (optional)</label>
-                            <input type="date" id="ssa-sync-end" name="end_date" class="ssa-input">
-                        </div>
-                        <span class="ssa-form-or">or</span>
-                        <div class="ssa-form-group ssa-form-group--flex">
-                            <label for="ssa-sync-days" class="ssa-label">Days</label>
-                            <input type="number" id="ssa-sync-days" name="days" class="ssa-input" min="1" value="7" placeholder="From start">
+
+                    <!-- Sync Mode (only for college) -->
+                    <div id="ssa-sync-mode-group" class="ssa-form-group" style="display: none;">
+                        <label class="ssa-label">Sync Mode</label>
+                        <div class="ssa-toggle-group ssa-toggle-group--small">
+                            <button type="button" class="ssa-toggle-btn ssa-toggle-btn--active" data-ssa-mode="range">Date Range</button>
+                            <button type="button" class="ssa-toggle-btn" data-ssa-mode="team">By Team</button>
                         </div>
                     </div>
+
+                    <!-- Date Range Inputs -->
+                    <div id="ssa-sync-range-inputs">
+                        <div class="ssa-form-group">
+                            <label for="ssa-sync-start" class="ssa-label">Start Date</label>
+                            <input type="date" id="ssa-sync-start" name="start_date" class="ssa-input">
+                        </div>
+                        <div class="ssa-form-row">
+                            <div class="ssa-form-group ssa-form-group--flex">
+                                <label for="ssa-sync-end" class="ssa-label">End Date (optional)</label>
+                                <input type="date" id="ssa-sync-end" name="end_date" class="ssa-input">
+                            </div>
+                            <span class="ssa-form-or">or</span>
+                            <div class="ssa-form-group ssa-form-group--flex">
+                                <label for="ssa-sync-days" class="ssa-label">Days</label>
+                                <input type="number" id="ssa-sync-days" name="days" class="ssa-input" min="1" value="7" placeholder="From start">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Selection Input (hidden by default) -->
+                    <div id="ssa-sync-team-inputs" style="display: none;">
+                        <div class="ssa-form-group">
+                            <label for="ssa-sync-team" class="ssa-label">Team</label>
+                            <select id="ssa-sync-team" name="team_id" class="ssa-select">
+                                <option value="">Select a team...</option>
+                            </select>
+                            <p class="ssa-form-help">Don't see your team? <button type="button" id="ssa-discover-btn" class="ssa-link-btn">Discover Teams</button></p>
+                        </div>
+                    </div>
+
                     <div class="ssa-form-group">
                         <code id="ssa-sync-preview" class="ssa-code ssa-code--preview">flask sports-admin sync --league NBA --start 2026-02-19 --days 7</code>
                     </div>
@@ -234,49 +260,153 @@
         const endEl = document.getElementById('ssa-sync-end');
         const daysEl = document.getElementById('ssa-sync-days');
         const btn = document.getElementById('ssa-sync-btn');
+        
+        const modeGroup = document.getElementById('ssa-sync-mode-group');
+        const rangeInputs = document.getElementById('ssa-sync-range-inputs');
+        const teamInputs = document.getElementById('ssa-sync-team-inputs');
+        const teamEl = document.getElementById('ssa-sync-team');
+        const discoverBtn = document.getElementById('ssa-discover-btn');
+        const collegeLeagues = {{ college_leagues | tojson }};
+
+        function getActiveMode() {
+            const active = modeGroup.querySelector('.ssa-toggle-btn--active');
+            return active ? active.getAttribute('data-ssa-mode') : 'range';
+        }
+
+        async function updateTeams(league) {
+            teamEl.innerHTML = '<option value="">Loading teams...</option>';
+            try {
+                const res = await fetch("{{ url_for('sports_schedule_admin.get_teams') }}?league=" + encodeURIComponent(league));
+                const teams = await res.json();
+                if (Array.isArray(teams) && teams.length > 0) {
+                    teamEl.innerHTML = '<option value="">Select a team (' + teams.length + ')...</option>' + 
+                        teams.map(t => `<option value="${t.espn_team_id}">${t.name} (${t.abbreviation})</option>`).join('');
+                } else {
+                    teamEl.innerHTML = '<option value="">No teams found. Click "Discover Teams" below.</option>';
+                }
+            } catch (err) {
+                teamEl.innerHTML = '<option value="">Error loading teams</option>';
+            }
+        }
 
         function updatePreview() {
             const league = leagueEl.value;
-            const start = startEl.value || 'YYYY-MM-DD';
-            const end = endEl.value;
-            const days = parseInt(daysEl.value, 10);
-            let cmd = 'flask sports-admin sync --league ' + league + ' --start ' + start;
-            if (end) cmd += ' --end ' + end;
-            else if (days && !isNaN(days) && days >= 1) cmd += ' --days ' + days;
-            else cmd += ' --days 7';
-            preview.textContent = cmd;
+            const mode = getActiveMode();
+
+            if (mode === 'team') {
+                const teamId = teamEl.value || '<TEAM_ID>';
+                preview.textContent = 'flask sports-admin sync-team --league ' + league + ' --team-id ' + teamId;
+            } else {
+                const start = startEl.value || 'YYYY-MM-DD';
+                const end = endEl.value;
+                const days = parseInt(daysEl.value, 10);
+                let cmd = 'flask sports-admin sync --league ' + league + ' --start ' + start;
+                if (end) cmd += ' --end ' + end;
+                else if (days && !isNaN(days) && days >= 1) cmd += ' --days ' + days;
+                else cmd += ' --days 7';
+                preview.textContent = cmd;
+            }
         }
 
-        leagueEl.addEventListener('change', updatePreview);
+        leagueEl.addEventListener('change', function() {
+            const isCollege = collegeLeagues.includes(this.value);
+            modeGroup.style.display = isCollege ? 'block' : 'none';
+            if (!isCollege) {
+                // Reset to range mode if not college
+                modeGroup.querySelectorAll('.ssa-toggle-btn').forEach(b => {
+                    if (b.getAttribute('data-ssa-mode') === 'range') b.classList.add('ssa-toggle-btn--active');
+                    else b.classList.remove('ssa-toggle-btn--active');
+                });
+                rangeInputs.style.display = 'block';
+                teamInputs.style.display = 'none';
+                startEl.required = true;
+            } else if (getActiveMode() === 'team') {
+                updateTeams(this.value);
+            }
+            updatePreview();
+        });
+
+        modeGroup.querySelectorAll('.ssa-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                modeGroup.querySelectorAll('.ssa-toggle-btn').forEach(b => b.classList.remove('ssa-toggle-btn--active'));
+                this.classList.add('ssa-toggle-btn--active');
+                const mode = this.getAttribute('data-ssa-mode');
+                rangeInputs.style.display = mode === 'range' ? 'block' : 'none';
+                teamInputs.style.display = mode === 'team' ? 'block' : 'none';
+                startEl.required = mode === 'range';
+                if (mode === 'team') updateTeams(leagueEl.value);
+                updatePreview();
+            });
+        });
+
+        discoverBtn.addEventListener('click', async function() {
+            this.disabled = true;
+            const originalText = this.textContent;
+            this.textContent = 'Discovering...';
+            showOpMessageLoading('Discovering teams for ' + leagueEl.value + '...');
+            try {
+                const res = await fetch("{{ url_for('sports_schedule_admin.api_sync_teams') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ league: leagueEl.value })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showOpMessage(data.message, false);
+                    updateTeams(leagueEl.value);
+                } else {
+                    showOpMessage(data.error || 'Discovery failed', true);
+                }
+            } catch (err) {
+                showOpMessage('Network error: ' + err.message, true);
+            }
+            this.disabled = false;
+            this.textContent = originalText;
+        });
+
         startEl.addEventListener('change', updatePreview);
         endEl.addEventListener('change', updatePreview);
         daysEl.addEventListener('input', updatePreview);
-        updatePreview();
+        teamEl.addEventListener('change', updatePreview);
 
         if (!startEl.value) {
-            const today = new Date().toISOString().slice(0, 10);
-            startEl.value = today;
-            updatePreview();
+            startEl.value = new Date().toISOString().slice(0, 10);
         }
+        
+        // Initial state check
+        if (collegeLeagues.includes(leagueEl.value)) {
+            modeGroup.style.display = 'block';
+        }
+        updatePreview();
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            const mode = getActiveMode();
+            if (mode === 'team' && !teamEl.value) {
+                showOpMessage('Please select a team', true);
+                return;
+            }
+
             btn.disabled = true;
             showOpMessageLoading('Syncing...');
             try {
-                const body = { league: leagueEl.value, start_date: startEl.value };
-                const endVal = endEl.value;
-                const daysNum = parseInt(daysEl.value, 10);
-                if (endVal) body.end_date = endVal;
-                else if (daysNum && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
-                else body.days = 7;
+                let body, url;
+                if (mode === 'team') {
+                    url = "{{ url_for('sports_schedule_admin.api_sync') }}"; // We will update api_sync or add api_sync_team
+                    body = { league: leagueEl.value, team_id: teamEl.value, mode: 'team' };
+                } else {
+                    url = "{{ url_for('sports_schedule_admin.api_sync') }}";
+                    body = { league: leagueEl.value, start_date: startEl.value };
+                    const endVal = endEl.value;
+                    const daysNum = parseInt(daysEl.value, 10);
+                    if (endVal) body.end_date = endVal;
+                    else if (daysNum && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
+                    else body.days = 7;
+                }
 
-                const res = await fetch("{{ url_for('sports_schedule_admin.api_sync') }}", {
+                const res = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrfToken()
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
                     body: JSON.stringify(body)
                 });
                 const data = await res.json();

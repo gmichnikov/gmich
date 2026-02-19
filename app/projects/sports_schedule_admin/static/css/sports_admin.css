@@ -158,6 +158,11 @@
   color: white;
 }
 
+.ssa-toggle-group--small .ssa-toggle-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .ssa-card-body {
   padding: 1.25rem;
   background: white;
@@ -367,6 +372,28 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #495057;
+}
+
+.ssa-form-help {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.ssa-link-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.ssa-link-btn:hover {
+  color: #5a67d8;
 }
 
 .ssa-input,

@@ -1,6 +1,6 @@
 import click
 from datetime import datetime, timedelta
-from app.projects.sports_schedule_admin.core.logic import sync_league_range
+from app.projects.sports_schedule_admin.core.logic import sync_league_range, sync_league_teams
 from app.projects.sports_schedule_admin.core.espn_client import (
     STATE_NAME_TO_CODE,
     US_STATE_CODES,
@@ -13,6 +13,20 @@ def init_app(app):
     def sports_admin():
         """Sports Schedule Admin commands"""
         pass
+
+    @sports_admin.command("sync-teams")
+    @click.option("--league", required=True, help="League code for team discovery (e.g., NCAAM, NCB, NCHM, NCSM)")
+    def sync_teams(league):
+        """Discover and sync the team registry for a college league from ESPN"""
+        try:
+            click.echo(f"Discovering teams for {league}...")
+            result = sync_league_teams(league)
+            click.echo(f"Discovery complete for {result['league']}:")
+            click.echo(f"  - Teams found: {result['found']}")
+            click.echo(f"  - Teams created: {result['created']}")
+            click.echo(f"  - Teams updated: {result['updated']}")
+        except Exception as e:
+            click.echo(f"An error occurred: {e}", err=True)
 
     @sports_admin.command("sync")
     @click.option("--league", required=True, help="League code (MLB, NCB, NBA, NFL, NHL, MLS, NWSL, NCSM, NCSW, EPL, AAA, AA, A+, A)")

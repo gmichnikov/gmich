@@ -24,19 +24,19 @@ Instead of asking "What is playing today?", we will ask "What is the full schedu
 
 ## 4. Implementation Phases
 
-### Phase 1: Team Discovery & Storage
-- Create the `espn_college_teams` table to store metadata (`espn_team_id`, `name`, `abbreviation`, `sport`, `league_code`, `last_synced_at`).
+### Phase 1: Team Discovery & Cleanup
+- **Clean Slate Policy**: Before the first team-based sync for a college league (NCAAM, NCB, NCHM, etc.), it is recommended to clear existing data for that league to ensure 100% consistency with the new comprehensive naming and metadata.
+- Create the `ESPNCollegeTeam` database model in `app/models.py` to store metadata (`espn_team_id`, `name`, `abbreviation`, `sport`, `league_code`, `last_synced_at`).
 - Add a CLI command: `flask sports-admin sync-teams --league <LEAGUE_CODE>` to populate the registry from ESPN.
 - Integrate into the **Operations** tab:
     - Add a "Discover Teams" button for supported college leagues.
-    - Add a "Sync by Team" mode that appears when a college league is selected.
+    - Add a "Sync Mode" toggle: "Date Range" (Scoreboard) or "By Team" (Full Season).
+    - When "By Team" is selected, replace date inputs with a searchable "Team" dropdown.
 
 ### Phase 2: Team Schedule Sync
 - Implement `ESPNClient.fetch_team_schedule(team_id, league_code)`.
-- Reuse/adapt the `_parse_events` logic to handle the schedule payload.
+- Reuse/adapt the `_parse_events` logic to handle the team-specific schedule payload.
 - Update the **Operations** UI:
-    - Add a **Sync Mode** toggle: "Date Range" (Scoreboard) or "By Team" (Full Season).
-    - When "By Team" is selected, replace date inputs with a searchable "Team" dropdown.
     - Provide a "Sync Full Season" button for the selected team.
 - Add a CLI command: `flask sports-admin sync-team --team-id <ID> --league <LEAGUE>`.
 

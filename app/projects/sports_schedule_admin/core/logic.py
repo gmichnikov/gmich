@@ -5,9 +5,74 @@ from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.projects.sports_schedule_admin.core.mlb_client import MLBClient
 from app.projects.sports_schedule_admin.core.leagues import ALL_LEAGUE_CODES, is_milb_league
 from app.core.dolthub_client import DoltHubClient
-from app.models import LogEntry, db
+from app.models import LogEntry, db, ESPNCollegeTeam
 
 logger = logging.getLogger(__name__)
+
+
+def sync_league_teams(league_code, actor_id=None):
+    """
+    Fetch and sync the team registry for a college league from ESPN.
+    """
+    if league_code not in ALL_LEAGUE_CODES:
+        raise ValueError(f"Unsupported league: {league_code}")
+
+    espn = ESPNClient()
+    teams = espn.fetch_teams(league_code)
+    
+    if not teams:
+        return {"league": league_code, "created": 0, "updated": 0}
+
+    created = 0
+    updated = 0
+    
+    for t_data in teams:
+        # Check if team exists for this league
+        team = ESPNCollegeTeam.query.filter_by(
+            espn_team_id=t_data["espn_team_id"],
+            league_code=league_code
+        ).first()
+        
+        if team:
+            # Update existing
+            team.name = t_data["name"]
+            team.abbreviation = t_data["abbreviation"]
+            team.sport = t_data["sport"]
+            updated += 1
+        else:
+            # Create new
+            team = ESPNCollegeTeam(
+                espn_team_id=t_data["espn_team_id"],
+                name=t_data["name"],
+                abbreviation=t_data["abbreviation"],
+                sport=t_data["sport"],
+                league_code=league_code
+            )
+            db.session.add(team)
+            created += 1
+            
+    db.session.commit()
+    
+    # Log the activity
+    try:
+        log_desc = f"Discovered teams for {league_code}. Found {len(teams)} teams (Created {created}, Updated {updated})."
+        log_entry = LogEntry(
+            project="sports_admin",
+            category="Discovery",
+            actor_id=actor_id,
+            description=log_desc
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Failed to log discovery activity: {e}")
+
+    return {
+        "league": league_code,
+        "found": len(teams),
+        "created": created,
+        "updated": updated
+    }
 
 
 def sync_league_range(league_code, start_date, end_date, actor_id=None):
