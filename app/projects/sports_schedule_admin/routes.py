@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, jsonify,
 from flask_login import login_required, current_user
 from app.core.admin import admin_required
 from app.core.dolthub_client import DoltHubClient
-from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data, sync_league_teams, sync_team_schedule
+from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data, sync_league_teams, sync_team_schedule, sync_bulk_teams
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.projects.sports_schedule_admin.core.leagues import (
     ALL_LEAGUE_CODES,
@@ -51,7 +51,8 @@ def get_teams():
         "id": t.id,
         "espn_team_id": t.espn_team_id,
         "name": t.name,
-        "abbreviation": t.abbreviation
+        "abbreviation": t.abbreviation,
+        "last_synced_at": t.last_synced_at.isoformat() if t.last_synced_at else None
     } for t in teams])
 
 
@@ -217,6 +218,35 @@ def api_sync():
         return jsonify({
             "success": True,
             "message": f"Synced {result['league']}: {result['upserted']} games upserted.",
+            "games_found": result["games_found"],
+            "upserted": result["upserted"],
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sports_schedule_admin_bp.route("/sports-schedule-admin/api/sync-bulk", methods=["POST"])
+@login_required
+@admin_required
+def api_sync_bulk():
+    """Bulk sync: multiple teams or all teams in a league."""
+    data = request.get_json() or {}
+    league = data.get("league")
+    team_ids = data.get("team_ids", [])
+
+    if not league or league not in ALL_LEAGUE_CODES:
+        return jsonify({"success": False, "error": "Invalid or missing league"}), 400
+
+    if not team_ids:
+        return jsonify({"success": False, "error": "No teams selected. Select at least one team or use Sync All."}), 400
+
+    actor_id = current_user.id if current_user else None
+    try:
+        result = sync_bulk_teams(league, team_ids, actor_id=actor_id)
+        return jsonify({
+            "success": True,
+            "message": f"Bulk synced {result['teams_synced']} teams: {result['upserted']} games upserted.",
+            "teams_synced": result["teams_synced"],
             "games_found": result["games_found"],
             "upserted": result["upserted"],
         })

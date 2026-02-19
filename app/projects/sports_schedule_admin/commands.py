@@ -43,6 +43,31 @@ def init_app(app):
         except Exception as e:
             click.echo(f"An error occurred: {e}", err=True)
 
+    @sports_admin.command("sync-bulk")
+    @click.option("--league", required=True, help="League code (e.g., NCAAM, NCB)")
+    @click.option("--team-ids", help="Comma-separated ESPN Team IDs (omit to sync all discovered teams)")
+    def sync_bulk(league, team_ids):
+        """Sync full season schedules for multiple teams. Omit --team-ids to sync all."""
+        from app.projects.sports_schedule_admin.core.logic import sync_bulk_teams
+        from app.models import ESPNCollegeTeam
+        try:
+            if team_ids:
+                ids = [t.strip() for t in team_ids.split(",") if t.strip()]
+            else:
+                teams = ESPNCollegeTeam.query.filter_by(league_code=league).all()
+                ids = [t.espn_team_id for t in teams]
+            if not ids:
+                click.echo("No teams to sync. Run sync-teams first to discover teams.", err=True)
+                return
+            click.echo(f"Starting bulk sync for {league} ({len(ids)} teams)...")
+            result = sync_bulk_teams(league, ids)
+            click.echo(f"Bulk sync complete:")
+            click.echo(f"  - Teams synced: {result['teams_synced']}")
+            click.echo(f"  - Games found: {result['games_found']}")
+            click.echo(f"  - Games upserted: {result['upserted']}")
+        except Exception as e:
+            click.echo(f"An error occurred: {e}", err=True)
+
     @sports_admin.command("sync")
     @click.option("--league", required=True, help="League code (MLB, NCB, NBA, NFL, NHL, MLS, NWSL, NCSM, NCSW, EPL, AAA, AA, A+, A)")
     @click.option("--start", help="Start date (YYYY-MM-DD), defaults to today")

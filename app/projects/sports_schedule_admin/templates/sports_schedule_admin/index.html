@@ -101,18 +101,30 @@
                     <!-- Team Selection Input (hidden by default) -->
                     <div id="ssa-sync-team-inputs" style="display: none;">
                         <div class="ssa-form-group">
-                            <label for="ssa-sync-team" class="ssa-label">Team</label>
-                            <select id="ssa-sync-team" name="team_id" class="ssa-select">
-                                <option value="">Select a team...</option>
-                            </select>
-                            <p class="ssa-form-help">Don't see your team? <button type="button" id="ssa-discover-btn" class="ssa-link-btn">Discover Teams</button></p>
+                            <div class="ssa-form-row" style="justify-content: space-between; align-items: center;">
+                                <label class="ssa-label">Teams</label>
+                                <span>
+                                    <button type="button" id="ssa-select-all-btn" class="ssa-link-btn ssa-link-btn--small">Select all</button>
+                                    <span class="ssa-form-or">|</span>
+                                    <button type="button" id="ssa-select-none-btn" class="ssa-link-btn ssa-link-btn--small">Clear</button>
+                                </span>
+                            </div>
+                            <input type="text" id="ssa-team-filter" class="ssa-input ssa-team-filter" placeholder="Filter teams by name or abbreviation...">
+                            <div id="ssa-team-list" class="ssa-team-list">
+                                <div class="ssa-team-list-empty">Load teams by selecting a league and clicking "Discover Teams" if needed.</div>
+                            </div>
+                            <p class="ssa-form-help">Don't see teams? <button type="button" id="ssa-discover-btn" class="ssa-link-btn">Discover Teams</button></p>
+                        </div>
+                        <div class="ssa-form-row ssa-form-row--team-actions">
+                            <button type="button" id="ssa-sync-selected-btn" class="ssa-btn ssa-btn--primary ssa-btn--small" disabled>Sync Selected</button>
+                            <button type="button" id="ssa-sync-all-btn" class="ssa-btn ssa-btn--secondary ssa-btn--small" disabled>Sync All</button>
                         </div>
                     </div>
 
-                    <div class="ssa-form-group">
+                    <div id="ssa-sync-submit-group" class="ssa-form-group">
                         <code id="ssa-sync-preview" class="ssa-code ssa-code--preview">flask sports-admin sync --league NBA --start 2026-02-19 --days 7</code>
+                        <button type="submit" id="ssa-sync-btn" class="ssa-btn ssa-btn--primary">Run Sync</button>
                     </div>
-                    <button type="submit" id="ssa-sync-btn" class="ssa-btn ssa-btn--primary">Run Sync</button>
                 </form>
             </div>
             <div class="ssa-grid-card ssa-grid-card--danger">
@@ -264,29 +276,87 @@
         const modeGroup = document.getElementById('ssa-sync-mode-group');
         const rangeInputs = document.getElementById('ssa-sync-range-inputs');
         const teamInputs = document.getElementById('ssa-sync-team-inputs');
-        const teamEl = document.getElementById('ssa-sync-team');
+        const teamListEl = document.getElementById('ssa-team-list');
         const discoverBtn = document.getElementById('ssa-discover-btn');
+        const submitGroup = document.getElementById('ssa-sync-submit-group');
+        const syncSelectedBtn = document.getElementById('ssa-sync-selected-btn');
+        const syncAllBtn = document.getElementById('ssa-sync-all-btn');
+        const selectAllBtn = document.getElementById('ssa-select-all-btn');
+        const selectNoneBtn = document.getElementById('ssa-select-none-btn');
+        const teamFilterEl = document.getElementById('ssa-team-filter');
         const collegeLeagues = {{ college_leagues | tojson }};
+
+        let teamsCache = [];
 
         function getActiveMode() {
             const active = modeGroup.querySelector('.ssa-toggle-btn--active');
             return active ? active.getAttribute('data-ssa-mode') : 'range';
         }
 
+        function formatLastSynced(iso) {
+            if (!iso) return '';
+            try {
+                const d = new Date(iso);
+                const now = new Date();
+                const diffDays = Math.floor((now - d) / (1000*60*60*24));
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return diffDays + 'd ago';
+                return d.toLocaleDateString();
+            } catch (e) { return ''; }
+        }
+
+        function getVisibleTeamRows() {
+            return Array.from(teamListEl.querySelectorAll('.ssa-team-row:not(.ssa-team-row--hidden)'));
+        }
+
+        function getSelectedTeamIds() {
+            return Array.from(teamListEl.querySelectorAll('.ssa-team-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function applyTeamFilter() {
+            const q = (teamFilterEl.value || '').trim().toLowerCase();
+            teamListEl.querySelectorAll('.ssa-team-row').forEach(row => {
+                const searchText = (row.getAttribute('data-search') || '').toLowerCase();
+                const matches = !q || searchText.includes(q);
+                row.classList.toggle('ssa-team-row--hidden', !matches);
+            });
+            updateSyncButtonsState();
+        }
+
+        function updateSyncButtonsState() {
+            const selected = getSelectedTeamIds().length;
+            syncSelectedBtn.disabled = selected === 0;
+            syncAllBtn.disabled = teamsCache.length === 0;
+        }
+
         async function updateTeams(league) {
-            teamEl.innerHTML = '<option value="">Loading teams...</option>';
+            teamListEl.innerHTML = '<div class="ssa-team-list-loading">Loading teams...</div>';
             try {
                 const res = await fetch("{{ url_for('sports_schedule_admin.get_teams') }}?league=" + encodeURIComponent(league));
                 const teams = await res.json();
-                if (Array.isArray(teams) && teams.length > 0) {
-                    teamEl.innerHTML = '<option value="">Select a team (' + teams.length + ')...</option>' + 
-                        teams.map(t => `<option value="${t.espn_team_id}">${t.name} (${t.abbreviation})</option>`).join('');
+                teamsCache = Array.isArray(teams) ? teams : [];
+                if (teamsCache.length > 0) {
+                    teamListEl.innerHTML = teamsCache.map(t => {
+                        const lastSync = formatLastSynced(t.last_synced_at);
+                        const syncLabel = lastSync ? ' <span class="ssa-team-last-sync">(' + lastSync + ')</span>' : '';
+                        const searchText = [t.name, t.abbreviation].filter(Boolean).join(' ')
+                            .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').toLowerCase();
+                        return '<label class="ssa-team-row" data-search="' + searchText + '"><input type="checkbox" class="ssa-team-checkbox" value="' + t.espn_team_id + '">' +
+                            t.name + (t.abbreviation ? ' (' + t.abbreviation + ')' : '') + syncLabel + '</label>';
+                    }).join('');
+                    teamListEl.querySelectorAll('.ssa-team-checkbox').forEach(cb => {
+                        cb.addEventListener('change', function() { updateSyncButtonsState(); updatePreview(); });
+                    });
+                    teamFilterEl.value = '';
+                    applyTeamFilter();
                 } else {
-                    teamEl.innerHTML = '<option value="">No teams found. Click "Discover Teams" below.</option>';
+                    teamListEl.innerHTML = '<div class="ssa-team-list-empty">No teams found. Click "Discover Teams" below.</div>';
                 }
             } catch (err) {
-                teamEl.innerHTML = '<option value="">Error loading teams</option>';
+                teamListEl.innerHTML = '<div class="ssa-team-list-empty">Error loading teams</div>';
             }
+            updateSyncButtonsState();
         }
 
         function updatePreview() {
@@ -294,8 +364,10 @@
             const mode = getActiveMode();
 
             if (mode === 'team') {
-                const teamId = teamEl.value || '<TEAM_ID>';
-                preview.textContent = 'flask sports-admin sync-team --league ' + league + ' --team-id ' + teamId;
+                const sel = getSelectedTeamIds();
+                if (sel.length === 0) preview.textContent = 'flask sports-admin sync-bulk --league ' + league + ' --team-ids <id1>,<id2>,...';
+                else if (sel.length === 1) preview.textContent = 'flask sports-admin sync-team --league ' + league + ' --team-id ' + sel[0];
+                else preview.textContent = 'flask sports-admin sync-bulk --league ' + league + ' --team-ids ' + sel.join(',');
             } else {
                 const start = startEl.value || 'YYYY-MM-DD';
                 const end = endEl.value;
@@ -308,20 +380,25 @@
             }
         }
 
+        function setModeVisibility(mode) {
+            rangeInputs.style.display = mode === 'range' ? 'block' : 'none';
+            teamInputs.style.display = mode === 'team' ? 'block' : 'none';
+            submitGroup.style.display = mode === 'range' ? 'block' : 'none';
+            startEl.required = mode === 'range';
+        }
+
         leagueEl.addEventListener('change', function() {
             const isCollege = collegeLeagues.includes(this.value);
             modeGroup.style.display = isCollege ? 'block' : 'none';
             if (!isCollege) {
-                // Reset to range mode if not college
                 modeGroup.querySelectorAll('.ssa-toggle-btn').forEach(b => {
                     if (b.getAttribute('data-ssa-mode') === 'range') b.classList.add('ssa-toggle-btn--active');
                     else b.classList.remove('ssa-toggle-btn--active');
                 });
-                rangeInputs.style.display = 'block';
-                teamInputs.style.display = 'none';
-                startEl.required = true;
+                setModeVisibility('range');
             } else if (getActiveMode() === 'team') {
                 updateTeams(this.value);
+                setModeVisibility('team');
             }
             updatePreview();
         });
@@ -331,12 +408,62 @@
                 modeGroup.querySelectorAll('.ssa-toggle-btn').forEach(b => b.classList.remove('ssa-toggle-btn--active'));
                 this.classList.add('ssa-toggle-btn--active');
                 const mode = this.getAttribute('data-ssa-mode');
-                rangeInputs.style.display = mode === 'range' ? 'block' : 'none';
-                teamInputs.style.display = mode === 'team' ? 'block' : 'none';
-                startEl.required = mode === 'range';
+                setModeVisibility(mode);
                 if (mode === 'team') updateTeams(leagueEl.value);
                 updatePreview();
             });
+        });
+
+        teamFilterEl.addEventListener('input', applyTeamFilter);
+
+        selectAllBtn.addEventListener('click', function() {
+            getVisibleTeamRows().forEach(row => {
+                const cb = row.querySelector('.ssa-team-checkbox');
+                if (cb) cb.checked = true;
+            });
+            updateSyncButtonsState();
+            updatePreview();
+        });
+        selectNoneBtn.addEventListener('click', function() {
+            teamListEl.querySelectorAll('.ssa-team-checkbox').forEach(cb => cb.checked = false);
+            updateSyncButtonsState();
+            updatePreview();
+        });
+
+        async function doBulkSync(teamIds) {
+            if (!teamIds.length) { showOpMessage('Select at least one team', true); return; }
+            btn.disabled = true;
+            syncSelectedBtn.disabled = true;
+            syncAllBtn.disabled = true;
+            showOpMessageLoading('Syncing ' + teamIds.length + ' team(s)...');
+            try {
+                const res = await fetch("{{ url_for('sports_schedule_admin.api_sync_bulk') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ league: leagueEl.value, team_ids: teamIds })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showOpMessage(data.message, false);
+                    updateTeams(leagueEl.value);
+                    loadCoverage();
+                    loadPreview();
+                    loadLogs();
+                } else {
+                    showOpMessage(data.error || 'Bulk sync failed', true);
+                }
+            } catch (err) {
+                showOpMessage('Network error: ' + err.message, true);
+            }
+            btn.disabled = false;
+            updateSyncButtonsState();
+        }
+
+        syncSelectedBtn.addEventListener('click', function() {
+            doBulkSync(getSelectedTeamIds());
+        });
+        syncAllBtn.addEventListener('click', function() {
+            doBulkSync(teamsCache.map(t => t.espn_team_id));
         });
 
         discoverBtn.addEventListener('click', async function() {
@@ -367,7 +494,6 @@
         startEl.addEventListener('change', updatePreview);
         endEl.addEventListener('change', updatePreview);
         daysEl.addEventListener('input', updatePreview);
-        teamEl.addEventListener('change', updatePreview);
 
         if (!startEl.value) {
             startEl.value = new Date().toISOString().slice(0, 10);
@@ -376,33 +502,28 @@
         // Initial state check
         if (collegeLeagues.includes(leagueEl.value)) {
             modeGroup.style.display = 'block';
+            setModeVisibility(getActiveMode());
+            if (getActiveMode() === 'team') updateTeams(leagueEl.value);
+        } else {
+            setModeVisibility('range');
         }
         updatePreview();
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             const mode = getActiveMode();
-            if (mode === 'team' && !teamEl.value) {
-                showOpMessage('Please select a team', true);
-                return;
-            }
+            if (mode === 'team') return;
 
             btn.disabled = true;
             showOpMessageLoading('Syncing...');
             try {
-                let body, url;
-                if (mode === 'team') {
-                    url = "{{ url_for('sports_schedule_admin.api_sync') }}"; // We will update api_sync or add api_sync_team
-                    body = { league: leagueEl.value, team_id: teamEl.value, mode: 'team' };
-                } else {
-                    url = "{{ url_for('sports_schedule_admin.api_sync') }}";
-                    body = { league: leagueEl.value, start_date: startEl.value };
-                    const endVal = endEl.value;
-                    const daysNum = parseInt(daysEl.value, 10);
-                    if (endVal) body.end_date = endVal;
-                    else if (daysNum && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
-                    else body.days = 7;
-                }
+                const url = "{{ url_for('sports_schedule_admin.api_sync') }}";
+                const body = { league: leagueEl.value, start_date: startEl.value };
+                const endVal = endEl.value;
+                const daysNum = parseInt(daysEl.value, 10);
+                if (endVal) body.end_date = endVal;
+                else if (daysNum && !isNaN(daysNum) && daysNum >= 1) body.days = daysNum;
+                else body.days = 7;
 
                 const res = await fetch(url, {
                     method: 'POST',

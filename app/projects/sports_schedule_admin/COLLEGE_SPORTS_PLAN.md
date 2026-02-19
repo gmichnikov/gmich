@@ -40,10 +40,12 @@ Instead of asking "What is playing today?", we will ask "What is the full schedu
     - Provide a "Sync Full Season" button for the selected team.
 - Add a CLI command: `flask sports-admin sync-team --team-id <ID> --league <LEAGUE>`.
 
-### Phase 3: Bulk/Automatic Sync
-- Capability to select multiple teams or an entire conference for bulk syncing in the UI.
-- Background tasks to refresh "featured" or "active" teams periodically.
-- Add "Last Synced" status to the team selection UI to identify stale data.
+### Phase 3: Bulk/Automatic Sync ✅
+- Multi-select team list with checkboxes in the Operations UI; "Select all" / "Clear" shortcuts.
+- "Sync Selected" and "Sync All" buttons for bulk syncing.
+- "Last Synced" status shown next to each team (e.g., "Today", "3d ago", date).
+- CLI: `flask sports-admin sync-bulk --league NCAAM` (syncs all discovered teams) or `--team-ids 108,150,...` for specific teams.
+- Suitable for cron: `flask sports-admin sync-bulk --league NCAAM` to refresh the full league.
 
 ## 5. Known Compatible Sports
 The following sports have been verified to work with the `.../teams` and `.../schedule` patterns:

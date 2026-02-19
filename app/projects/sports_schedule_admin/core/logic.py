@@ -140,9 +140,10 @@ def sync_league_range(league_code, start_date, end_date, actor_id=None):
         "upserted": total_upserted
     }
 
-def sync_team_schedule(league_code, team_id, actor_id=None):
+def sync_team_schedule(league_code, team_id, actor_id=None, log_activity=True):
     """
     Fetch and sync the full season schedule for a specific team.
+    Set log_activity=False when called from bulk sync to avoid per-team log spam.
     """
     if league_code not in ALL_LEAGUE_CODES:
         raise ValueError(f"Unsupported league: {league_code}")
@@ -163,20 +164,20 @@ def sync_team_schedule(league_code, team_id, actor_id=None):
         team.last_synced_at = datetime.utcnow()
         db.session.commit()
     
-    # Log the activity
-    try:
-        team_name = team.name if team else team_id
-        log_desc = f"Synced full schedule for {team_name} ({league_code}). Found {len(games)} games, Upserted {upserted}."
-        log_entry = LogEntry(
-            project="sports_admin",
-            category="Team Sync",
-            actor_id=actor_id,
-            description=log_desc
-        )
-        db.session.add(log_entry)
-        db.session.commit()
-    except Exception as e:
-        logger.error(f"Failed to log team sync activity: {e}")
+    if log_activity:
+        try:
+            team_name = team.name if team else team_id
+            log_desc = f"Synced full schedule for {team_name} ({league_code}). Found {len(games)} games, Upserted {upserted}."
+            log_entry = LogEntry(
+                project="sports_admin",
+                category="Team Sync",
+                actor_id=actor_id,
+                description=log_desc
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Failed to log team sync activity: {e}")
 
     return {
         "league": league_code,
@@ -184,6 +185,45 @@ def sync_team_schedule(league_code, team_id, actor_id=None):
         "games_found": len(games),
         "upserted": upserted
     }
+
+
+def sync_bulk_teams(league_code, team_ids, actor_id=None):
+    """
+    Sync full season schedules for multiple teams.
+    Returns aggregate stats.
+    """
+    if league_code not in ALL_LEAGUE_CODES:
+        raise ValueError(f"Unsupported league: {league_code}")
+    if not team_ids:
+        return {"league": league_code, "teams_synced": 0, "games_found": 0, "upserted": 0}
+
+    total_games = 0
+    total_upserted = 0
+    for team_id in team_ids:
+        result = sync_team_schedule(league_code, team_id, actor_id=actor_id, log_activity=False)
+        total_games += result.get("games_found", 0)
+        total_upserted += result.get("upserted", 0)
+        time.sleep(0.5)  # Polite delay between teams
+
+    try:
+        log_entry = LogEntry(
+            project="sports_admin",
+            category="Bulk Sync",
+            actor_id=actor_id,
+            description=f"Bulk synced {len(team_ids)} teams for {league_code}. {total_upserted} games upserted."
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Failed to log bulk sync activity: {e}")
+
+    return {
+        "league": league_code,
+        "teams_synced": len(team_ids),
+        "games_found": total_games,
+        "upserted": total_upserted
+    }
+
 
 def clear_league_data(league_code, start_date=None, end_date=None, actor_id=None):
     """

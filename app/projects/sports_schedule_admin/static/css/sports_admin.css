@@ -396,6 +396,78 @@
   color: #5a67d8;
 }
 
+.ssa-link-btn--small {
+  font-size: 0.8rem;
+}
+
+.ssa-team-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  margin-bottom: 0.5rem;
+}
+
+.ssa-team-list-loading,
+.ssa-team-list-empty {
+  color: #6c757d;
+  font-size: 0.9rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.ssa-team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ssa-team-row:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.ssa-team-row--hidden {
+  display: none;
+}
+
+.ssa-team-filter {
+  margin-bottom: 0.5rem;
+}
+
+.ssa-team-checkbox {
+  flex-shrink: 0;
+}
+
+.ssa-team-last-sync {
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+.ssa-form-row--team-actions {
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ssa-btn--small {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.ssa-btn--secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.ssa-btn--secondary:hover:not(:disabled) {
+  background: #5a6268;
+}
+
 .ssa-input,
 .ssa-select {
   padding: 0.5rem 0.75rem;
