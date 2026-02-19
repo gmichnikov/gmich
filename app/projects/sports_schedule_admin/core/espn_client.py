@@ -159,6 +159,26 @@ class ESPNClient:
             logger.error(f"ESPN Teams API error for {league_code}: {e}")
             return []
 
+    def fetch_team_schedule(self, league_code, team_id):
+        """
+        Fetch full season schedule for a specific team.
+        """
+        if league_code not in self.LEAGUE_MAP:
+            logger.error(f"Unsupported league for team schedule: {league_code}")
+            return []
+
+        sport, league, level = self.LEAGUE_MAP[league_code]
+        url = f"{self.BASE_URL}/{sport}/{league}/teams/{team_id}/schedule"
+
+        try:
+            response = requests.get(url, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+            return self._parse_events(data, league_code, level, sport)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"ESPN Team Schedule API error for {league_code} team {team_id}: {e}")
+            return []
+
     def _parse_events(self, data, league_code, level, sport_name):
         """
         Parse ESPN events into the DoltHub schema format.

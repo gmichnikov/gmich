@@ -28,6 +28,21 @@ def init_app(app):
         except Exception as e:
             click.echo(f"An error occurred: {e}", err=True)
 
+    @sports_admin.command("sync-team")
+    @click.option("--league", required=True, help="League code (e.g., NCAAM, NCB)")
+    @click.option("--team-id", required=True, help="ESPN Team ID")
+    def sync_team(league, team_id):
+        """Sync full season schedule for a specific team"""
+        from app.projects.sports_schedule_admin.core.logic import sync_team_schedule
+        try:
+            click.echo(f"Starting season sync for {league} team {team_id}...")
+            result = sync_team_schedule(league, team_id)
+            click.echo(f"Sync complete:")
+            click.echo(f"  - Games found: {result['games_found']}")
+            click.echo(f"  - Games upserted: {result['upserted']}")
+        except Exception as e:
+            click.echo(f"An error occurred: {e}", err=True)
+
     @sports_admin.command("sync")
     @click.option("--league", required=True, help="League code (MLB, NCB, NBA, NFL, NHL, MLS, NWSL, NCSM, NCSW, EPL, AAA, AA, A+, A)")
     @click.option("--start", help="Start date (YYYY-MM-DD), defaults to today")

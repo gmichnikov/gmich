@@ -173,9 +173,9 @@ class LogEntry(db.Model):
 
 class ESPNCollegeTeam(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    espn_team_id = db.Column(db.String(20), nullable=False)
+    espn_team_id = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    abbreviation = db.Column(db.String(20), nullable=True)
+    abbreviation = db.Column(db.String(100), nullable=True)
     sport = db.Column(db.String(50), nullable=False)
     league_code = db.Column(db.String(20), nullable=False)
     last_synced_at = db.Column(db.DateTime, nullable=True)

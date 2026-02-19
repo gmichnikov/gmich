@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, jsonify,
 from flask_login import login_required, current_user
 from app.core.admin import admin_required
 from app.core.dolthub_client import DoltHubClient
-from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data, sync_league_teams
+from app.projects.sports_schedule_admin.core.logic import sync_league_range, clear_league_data, sync_league_teams, sync_team_schedule
 from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
 from app.projects.sports_schedule_admin.core.leagues import (
     ALL_LEAGUE_CODES,
@@ -157,15 +157,34 @@ def get_preview():
 @login_required
 @admin_required
 def api_sync():
-    """Trigger a manual sync from ESPN to DoltHub. Use end_date or days to define the range."""
+    """Trigger a manual sync from ESPN to DoltHub. Handles both range and team modes."""
     data = request.get_json() or {}
     league = data.get("league")
-    start_str = data.get("start_date")
-    end_str = data.get("end_date")
-    days = data.get("days")
+    mode = data.get("mode", "range")
 
     if not league or league not in ALL_LEAGUE_CODES:
         return jsonify({"success": False, "error": "Invalid or missing league"}), 400
+
+    actor_id = current_user.id if current_user else None
+
+    if mode == "team":
+        team_id = data.get("team_id")
+        if not team_id:
+            return jsonify({"success": False, "error": "Missing team_id for team sync"}), 400
+        try:
+            result = sync_team_schedule(league, team_id, actor_id=actor_id)
+            return jsonify({
+                "success": True,
+                "message": f"Synced full schedule for team {team_id}: {result['upserted']} games upserted.",
+                "games_found": result["games_found"],
+                "upserted": result["upserted"],
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    start_str = data.get("start_date")
+    end_str = data.get("end_date")
+    days = data.get("days")
 
     try:
         start_date = datetime.strptime(start_str, "%Y-%m-%d").date()

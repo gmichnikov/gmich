@@ -140,6 +140,51 @@ def sync_league_range(league_code, start_date, end_date, actor_id=None):
         "upserted": total_upserted
     }
 
+def sync_team_schedule(league_code, team_id, actor_id=None):
+    """
+    Fetch and sync the full season schedule for a specific team.
+    """
+    if league_code not in ALL_LEAGUE_CODES:
+        raise ValueError(f"Unsupported league: {league_code}")
+
+    espn = ESPNClient()
+    games = espn.fetch_team_schedule(league_code, team_id)
+    
+    if not games:
+        return {"league": league_code, "team_id": team_id, "upserted": 0, "games_found": 0}
+
+    dolt = DoltHubClient()
+    result = dolt.batch_upsert("combined-schedule", games)
+    upserted = result.get("upserted", 0) if result else 0
+
+    # Update team sync timestamp
+    team = ESPNCollegeTeam.query.filter_by(espn_team_id=team_id, league_code=league_code).first()
+    if team:
+        team.last_synced_at = datetime.utcnow()
+        db.session.commit()
+    
+    # Log the activity
+    try:
+        team_name = team.name if team else team_id
+        log_desc = f"Synced full schedule for {team_name} ({league_code}). Found {len(games)} games, Upserted {upserted}."
+        log_entry = LogEntry(
+            project="sports_admin",
+            category="Team Sync",
+            actor_id=actor_id,
+            description=log_desc
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Failed to log team sync activity: {e}")
+
+    return {
+        "league": league_code,
+        "team_id": team_id,
+        "games_found": len(games),
+        "upserted": upserted
+    }
+
 def clear_league_data(league_code, start_date=None, end_date=None, actor_id=None):
     """
     Delete games for a specific league from DoltHub.
