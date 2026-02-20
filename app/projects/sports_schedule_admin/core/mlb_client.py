@@ -1,9 +1,13 @@
 """
 Client for fetching Minor League Baseball schedules from the MLB Stats API.
+
+See MILB_SYNC_NOTES.md for known issues (API truncation on large ranges, date handling)
+and why MAX_DAYS_PER_REQUEST is kept small.
 """
 import json
 import logging
 import re
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -16,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 MLB_BASE = "https://statsapi.mlb.com/api/v1"
 ET_TZ = pytz.timezone("America/New_York")
-MAX_DAYS_PER_REQUEST = 90
+# Use 7-day chunks - matches the small syncs that work; larger ranges return incomplete data
+MAX_DAYS_PER_REQUEST = 7
 
 # Path to venue mapping
 VENUE_MAPPING_PATH = Path(__file__).resolve().parent.parent / "data" / "mlb_venue_city_state.json"
@@ -68,14 +73,16 @@ class MLBClient:
 
         delta = (end_date - start_date).days + 1
         if delta > MAX_DAYS_PER_REQUEST:
-            # Fetch in chunks
+            # Fetch in chunks (smaller = more reliable; large ranges can return incomplete data)
             all_games = []
             current = start_date
             while current <= end_date:
                 chunk_end = min(current + timedelta(days=MAX_DAYS_PER_REQUEST - 1), end_date)
                 games = self._fetch_range(sport_id, league_code, current, chunk_end)
+                logger.info(f"{league_code} chunk {current} to {chunk_end}: {len(games)} games")
                 all_games.extend(games)
                 current = chunk_end + timedelta(days=1)
+            logger.info(f"{league_code} total from all chunks: {len(all_games)} games")
             return all_games
 
         return self._fetch_range(sport_id, league_code, start_date, end_date)
@@ -94,6 +101,7 @@ class MLBClient:
             "startDate": start_date.strftime("%Y-%m-%d"),
             "endDate": end_date.strftime("%Y-%m-%d"),
         }
+        logger.info(f"MLB API request {league_code}: {params['startDate']} to {params['endDate']}")
 
         try:
             response = requests.get(url, params=params, timeout=30)
@@ -108,33 +116,55 @@ class MLBClient:
         """Parse MLB schedule response into DoltHub schema format."""
         games = []
         for date_block in data.get("dates", []):
-            for game in date_block.get("games", []):
+            block_date = date_block.get("date", "?")
+            block_games = date_block.get("games", [])
+            parsed_count = 0
+            for game in block_games:
                 try:
-                    record = self._parse_game(game, league_code)
+                    record = self._parse_game(game, league_code, block_date)
                     if record:
                         games.append(record)
+                        parsed_count += 1
                 except (KeyError, IndexError, ValueError) as e:
-                    logger.error(f"Error parsing game {game.get('gamePk')}: {e}")
+                    logger.error(f"Error parsing game {game.get('gamePk')} (date {block_date}): {e}")
                     continue
+            if block_games and league_code == "AA":
+                logger.info(f"AA block {block_date}: API had {len(block_games)}, parsed {parsed_count}")
+
+        if league_code == "AA" and games:
+            by_date = Counter(r["date"] for r in games)
+            logger.info(f"AA total parsed: {len(games)} games across {len(by_date)} dates; sample: {dict(by_date.most_common(5))}")
 
         return games
 
-    def _parse_game(self, game: dict, league_code: str) -> dict | None:
-        """Parse a single game into DoltHub record."""
+    def _parse_game(self, game: dict, league_code: str, official_date: str | None = None) -> dict | None:
+        """Parse a single game into DoltHub record.
+
+        Uses official_date (from API date block) when provided to avoid timezone-derived
+        mismatches. Falls back to gameDate converted to ET for backwards compatibility.
+        """
         home = game["teams"]["home"]["team"]
         away = game["teams"]["away"]["team"]
         home_team = home["name"]
         road_team = away["name"]
 
-        # Date/time - MLB returns UTC (e.g. 2025-04-15T15:05:00Z)
+        # Date: use officialDate (block date from API) to match API organization and avoid
+        # timezone edge cases where gameDate crosses midnight.
         dt_str = game.get("gameDate")
         if not dt_str:
             return None
 
+        if official_date:
+            game_date = official_date
+        else:
+            game_date = game.get("officialDate")
+        if not game_date:
+            utc_dt = datetime.strptime(dt_str[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=pytz.UTC)
+            et_dt = utc_dt.astimezone(ET_TZ)
+            game_date = et_dt.strftime("%Y-%m-%d")
+
         utc_dt = datetime.strptime(dt_str[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=pytz.UTC)
         et_dt = utc_dt.astimezone(ET_TZ)
-
-        game_date = et_dt.strftime("%Y-%m-%d")
         game_day = et_dt.strftime("%A")
         game_time = et_dt.strftime("%I:%M %p")
 

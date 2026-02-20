@@ -87,7 +87,13 @@ We need to populate upcoming/active schedules into DoltHub:
 
 ---
 
-## 4. Configuration (DoltHub)
+## 4. MiLB Sync Notes
+
+Minor league sync (AAA, AA, A+, A) uses the MLB Stats API. See **MILB_SYNC_NOTES.md** for known issues (API truncation on large date ranges, date handling) and troubleshooting.
+
+---
+
+## 5. Configuration (DoltHub)
 
 **Table Name**: `` `combined-schedule` ``
 **Env Vars**:
@@ -98,7 +104,7 @@ We need to populate upcoming/active schedules into DoltHub:
 
 ---
 
-## 5. Summary of UI Requirements
+## 6. Summary of UI Requirements
 
 ### Dashboard Tabs/Sections:
 *   **Overview**: Coverage stats (Date ranges per league) and Connectivity status.

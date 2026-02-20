@@ -88,7 +88,7 @@ def sync_league_range(league_code, start_date, end_date, actor_id=None):
     total_upserted = 0
 
     if is_milb_league(league_code):
-        # MiLB: one API call per league for full date range (chunked if >90 days)
+        # MiLB: chunked API calls (7-day chunks; see MILB_SYNC_NOTES.md for rationale)
         mlb = MLBClient()
         logger.info(f"Syncing {league_code} from {start_date} to {end_date}...")
         games = mlb.fetch_schedule(league_code, start_date, end_date)

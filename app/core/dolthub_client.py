@@ -160,8 +160,22 @@ class DoltHubClient:
             if result and "error" not in result:
                 total_upserted += len(chunk)
             else:
+                # Retry once on failure (transient DoltHub issues)
                 last_error = result.get("error") if result else "Unknown error"
-                logger.error(f"Batch upsert failed (chunk {i // self.BATCH_SIZE + 1}): {last_error}")
+                time.sleep(2)
+                result = self.execute_sql(sql)
+                if result and "error" not in result:
+                    total_upserted += len(chunk)
+                else:
+                    last_error = result.get("error") if result else "Unknown error"
+                    pks = [r.get("primary_key", "?") for r in chunk[:3]]
+                    pk_preview = ", ".join(pks) + ("..." if len(chunk) > 3 else "")
+                    logger.error(
+                        f"Batch upsert failed (chunk {i // self.BATCH_SIZE + 1}): {last_error}. "
+                        f"Sample keys: {pk_preview}"
+                    )
+
+            time.sleep(0.3)  # Brief delay to avoid rate limiting on large syncs
 
         if last_error and total_upserted < len(rows):
             return {"error": last_error, "upserted": total_upserted}

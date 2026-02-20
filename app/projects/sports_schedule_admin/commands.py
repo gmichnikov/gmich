@@ -117,6 +117,47 @@ def init_app(app):
         
         click.echo("Daily sync complete.")
 
+    @sports_admin.command("check-coverage")
+    @click.option("--league", required=True, help="League code (e.g. AA, AAA)")
+    @click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
+    @click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+    def check_coverage(league, start, end):
+        """Query DoltHub for game counts per date. Use to verify sync results."""
+        from app.core.dolthub_client import DoltHubClient
+
+        try:
+            start_dt = datetime.strptime(start, "%Y-%m-%d")
+            end_dt = datetime.strptime(end, "%Y-%m-%d")
+        except ValueError:
+            click.echo("Error: Invalid date format. Use YYYY-MM-DD.", err=True)
+            return
+
+        dolt = DoltHubClient()
+        sql = f"""
+            SELECT `date`, COUNT(*) AS games
+            FROM `combined-schedule`
+            WHERE `league` = '{league}'
+              AND `date` >= '{start_dt.date()}'
+              AND `date` <= '{end_dt.date()}'
+            GROUP BY `date`
+            ORDER BY `date`
+        """
+        result = dolt.execute_sql(sql)
+        if result and "error" in result:
+            click.echo(f"Error: {result['error']}", err=True)
+            return
+
+        rows = result.get("rows", [])
+        if not rows:
+            click.echo(f"No {league} games in DoltHub for {start} to {end}.")
+            return
+
+        click.echo(f"{league} coverage {start} to {end}:")
+        for r in rows:
+            click.echo(f"  {r.get('date')}: {r.get('games', 0)} games")
+        total = sum(int(r.get("games", 0)) for r in rows)
+        click.echo(f"  TOTAL: {total} games across {len(rows)} dates")
+
     @sports_admin.command("clear-league")
     @click.option("--league", required=True, help="League code to clear (e.g. MLB, AAA)")
     @click.option("--start", help="Only clear games on or after this date (YYYY-MM-DD)")
