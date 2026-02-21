@@ -2,7 +2,7 @@
 
 This plan implements the Natural Language to Query feature as specified in `NL2QueryPRD.md`. The feature allows logged-in users to ask questions in plain English; an LLM translates them into the query config format; the config loads into the form and runs the query.
 
-**Status:** Phase 1 ✅ Phase 2 🔲 Phase 3 🔲 Phase 4 🔲
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 🔲 Phase 4 🔲
 
 ---
 
@@ -77,33 +77,33 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 2.1 POST /api/nl-query Route
 
-- [ ] Add `POST /sports-schedules/api/nl-query` route in `routes.py`
-- [ ] Apply `@login_required`; return 401 `{ "error": "Login required" }` if not authenticated.
-- [ ] Parse JSON body: `data = request.get_json()`; `question = (data.get("question") or "").strip()` (handle `data is None` → 400).
-- [ ] Validate input:
-  - [ ] If empty or whitespace-only → 400 `{ "error": "Question is required" }`
-  - [ ] If `len(question) > 500` → 400 `{ "error": "Question must be 500 characters or less" }`
-- [ ] Check credits: if `current_user.credits < 1` → 400 `{ "error": "Insufficient credits" }`
-- [ ] Compute today's date: `datetime.utcnow().strftime("%Y-%m-%d")` (or use user timezone if available; PRD allows server time for V1).
-- [ ] Build prompt: `prompt = build_nl_prompt(question, today_ymd)`
-- [ ] Call LLM: wrap `call_nl_llm(prompt)` in try/except. On exception → return 500 `{ "error": "Natural language search is temporarily unavailable." }`; do not deduct credits; log exception. Otherwise `content, metadata = ...`.
-- [ ] Extract JSON from `content`:
-  - [ ] Strip markdown code fences if present.
-  - [ ] Extract first JSON object: find first `{`, then scan with brace-counting until matching `}`; parse that substring. (Handles nested objects.)
-  - [ ] If parse fails → return 200 `{ "error": "Could not parse response", "raw": content[:2000] }`. Do not retry.
-- [ ] Check for `config` or `error` key:
-  - [ ] If `"error" in parsed`: return 200 `{ "error": parsed["error"] }`. Do not deduct credits. Log with tokens.
-  - [ ] If `"config" in parsed`: proceed to validation.
-- [ ] Merge config: `params = config_to_params(parsed["config"], today_ymd)` (from `sample_queries`). This fills `anchor_date` and computes `date_start`/`date_end` for `this_weekend`; other date fields come from the config.
-- [ ] Validate: `sql, err = build_sql(params)`
-  - [ ] If `err`: return 400 `{ "error": "Could not run that query" }`. Do not deduct credits. Log with tokens.
-- [ ] On success:
-  - [ ] Deduct 1 credit: `current_user.credits -= 1`
-  - [ ] Create `LogEntry` (actor_id=`current_user.id`, project=`sports_schedules`, category=`NL Query`, description=`"NL query: '{q}' → config. input_tokens={i}, output_tokens={o}. 1 credit used."`). Truncate question if long.
-  - [ ] `db.session.commit()`
-  - [ ] Return 200 `{ "config": parsed["config"], "remaining_credits": current_user.credits }`
-- [ ] Log all outcomes (refusal, parse error, build_sql error, LLM exception): same format with outcome type; no credit line when not deducted. Always include `actor_id=current_user.id` on `LogEntry`.
-- [ ] **CSRF:** Match saved-queries pattern — client sends `X-CSRFToken` header from `meta[name="csrf-token"]`; route does not use `@csrf.exempt`.
+- [x] Add `POST /sports-schedules/api/nl-query` route in `routes.py`
+- [x] Apply auth check; return 401 `{ "error": "Login required" }` if not authenticated.
+- [x] Parse JSON body: `data = request.get_json()`; `question = (data.get("question") or "").strip()` (handle `data is None` → 400).
+- [x] Validate input:
+  - [x] If empty or whitespace-only → 400 `{ "error": "Question is required" }`
+  - [x] If `len(question) > 500` → 400 `{ "error": "Question must be 500 characters or less" }`
+- [x] Check credits: if `current_user.credits < 1` → 400 `{ "error": "Insufficient credits" }`
+- [x] Compute today's date: `datetime.utcnow().strftime("%Y-%m-%d")` (or use user timezone if available; PRD allows server time for V1).
+- [x] Build prompt: `prompt = build_nl_prompt(question, today_ymd)`
+- [x] Call LLM: wrap `call_nl_llm(prompt)` in try/except. On exception → return 500 `{ "error": "Natural language search is temporarily unavailable." }`; do not deduct credits; log exception. Otherwise `content, metadata = ...`.
+- [x] Extract JSON from `content`:
+  - [x] Strip markdown code fences if present.
+  - [x] Extract first JSON object: find first `{`, then scan with brace-counting until matching `}`; parse that substring. (Handles nested objects.)
+  - [x] If parse fails → return 200 `{ "error": "Could not parse response", "raw": content[:2000] }`. Do not retry.
+- [x] Check for `config` or `error` key:
+  - [x] If `"error" in parsed`: return 200 `{ "error": parsed["error"] }`. Do not deduct credits. Log with tokens.
+  - [x] If `"config" in parsed`: proceed to validation.
+- [x] Merge config: `params = config_to_params(parsed["config"], today_ymd)` (from `sample_queries`). This fills `anchor_date` and computes `date_start`/`date_end` for `this_weekend`; other date fields come from the config.
+- [x] Validate: `sql, err = build_sql(params)`
+  - [x] If `err`: return 400 `{ "error": "Could not run that query" }`. Do not deduct credits. Log with tokens.
+- [x] On success:
+  - [x] Deduct 1 credit: `current_user.credits -= 1`
+  - [x] Create `LogEntry` (actor_id=`current_user.id`, project=`sports_schedules`, category=`NL Query`, description=`"NL query: '{q}' → config. input_tokens={i}, output_tokens={o}. 1 credit used."`). Truncate question if long.
+  - [x] `db.session.commit()`
+  - [x] Return 200 `{ "config": parsed["config"], "remaining_credits": current_user.credits }`
+- [x] Log all outcomes (refusal, parse error, build_sql error, LLM exception): same format with outcome type; no credit line when not deducted. Always include `actor_id=current_user.id` on `LogEntry`.
+- [x] **CSRF:** Match saved-queries pattern — client sends `X-CSRFToken` header from `meta[name="csrf-token"]`; route does not use `@csrf.exempt`.
 
 **Manual Testing 2.1:**
 - [ ] Log in, ensure user has ≥1 credit. POST with valid question; verify 200 with `config` and `remaining_credits`.
@@ -241,6 +241,6 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 ## Summary Checklist
 
 - [x] Phase 1: Prompt builder + LLM service
-- [ ] Phase 2: API route with auth, credits, validation, logging
+- [x] Phase 2: API route with auth, credits, validation, logging
 - [ ] Phase 3: Modal UI + JS integration + styles
 - [ ] Phase 4: Edge cases, logging audit, final test

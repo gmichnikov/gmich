@@ -4,19 +4,26 @@ No login required for browsing/running queries. Login required for saving.
 """
 
 import json
+import logging
+from datetime import datetime
 
 from flask import Blueprint, jsonify, render_template, request, url_for
 from flask_login import current_user
 
 from app import db
 from app.core.dolthub_client import DoltHubClient
+from app.models import LogEntry
 from app.projects.sports_schedules.core.constants import (
     SAVED_QUERY_CONFIG_MAX_BYTES,
     SAVED_QUERY_LIMIT,
 )
+from app.projects.sports_schedules.core.nl_prompt import build_nl_prompt
+from app.projects.sports_schedules.core.nl_service import call_nl_llm
 from app.projects.sports_schedules.core.query_builder import build_sql
-from app.projects.sports_schedules.core.sample_queries import SAMPLE_QUERIES
+from app.projects.sports_schedules.core.sample_queries import SAMPLE_QUERIES, config_to_params
 from app.projects.sports_schedules.models import SportsScheduleSavedQuery
+
+logger = logging.getLogger(__name__)
 
 sports_schedules_bp = Blueprint(
     "sports_schedules",
@@ -84,6 +91,7 @@ def index():
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
         is_authenticated=current_user.is_authenticated,
         login_url=url_for("auth.login"),
+        credits=current_user.credits if current_user.is_authenticated else 0,
     )
 
 
@@ -131,6 +139,143 @@ def api_saved_queries_list():
                 }
             )
     return jsonify({"samples": samples, "user_queries": user_queries})
+
+
+def _extract_json_from_content(content: str):
+    """Extract first JSON object from LLM response. Strips markdown fences. Returns (parsed_dict, None) or (None, error_msg)."""
+    if not content or not content.strip():
+        return None, "Empty response"
+    s = content.strip()
+    # Strip markdown code fences
+    if s.startswith("```"):
+        lines = s.split("\n")
+        # Remove first line (```json or ```)
+        lines = lines[1:]
+        if lines and lines[0].strip().startswith("{"):
+            s = "\n".join(lines)
+        elif lines:
+            s = "\n".join(lines)
+        if s.endswith("```"):
+            s = s[:-3].rstrip()
+    # Find first { and extract matching object by brace counting
+    start = s.find("{")
+    if start < 0:
+        return None, "No JSON object found"
+    depth = 0
+    in_string = False
+    escape = False
+    quote_char = None
+    end = start
+    for i, c in enumerate(s[start:], start):
+        if escape:
+            escape = False
+            continue
+        if c == "\\" and in_string:
+            escape = True
+            continue
+        if in_string:
+            if c == quote_char:
+                in_string = False
+            continue
+        if c in ('"', "'"):
+            in_string = True
+            quote_char = c
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                end = i
+                break
+    if depth != 0:
+        return None, "Unbalanced braces"
+    try:
+        return json.loads(s[start : end + 1]), None
+    except json.JSONDecodeError as e:
+        return None, str(e)
+
+
+@sports_schedules_bp.route("/api/nl-query", methods=["POST"])
+def api_nl_query():
+    """Natural language to query config. Requires login, 1 credit per successful query."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+
+    data = request.get_json()
+    if data is None:
+        return jsonify({"error": "Invalid request body"}), 400
+
+    question = (data.get("question") or "").strip()
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+    if len(question) > 500:
+        return jsonify({"error": "Question must be 500 characters or less"}), 400
+
+    if (current_user.credits or 0) < 1:
+        return jsonify({"error": "Insufficient credits"}), 400
+
+    today_ymd = datetime.utcnow().strftime("%Y-%m-%d")
+    input_tokens = 0
+    output_tokens = 0
+
+    def _log(outcome: str, credit_used: bool = False):
+        q_trunc = question[:200] + "..." if len(question) > 200 else question
+        desc = f"NL query: '{q_trunc}' → {outcome}"
+        if input_tokens or output_tokens:
+            desc += f". input_tokens={input_tokens}, output_tokens={output_tokens}"
+        if credit_used:
+            desc += ". 1 credit used."
+        db.session.add(LogEntry(
+            actor_id=current_user.id,
+            project="sports_schedules",
+            category="NL Query",
+            description=desc,
+        ))
+
+    try:
+        prompt = build_nl_prompt(question, today_ymd)
+        content, metadata = call_nl_llm(prompt)
+        input_tokens = metadata.get("input_tokens", 0)
+        output_tokens = metadata.get("output_tokens", 0)
+    except Exception:
+        logger.exception("NL query LLM call failed")
+        _log("LLM exception")
+        db.session.commit()
+        return jsonify({"error": "Natural language search is temporarily unavailable."}), 500
+
+    parsed, parse_err = _extract_json_from_content(content)
+    if parsed is None:
+        _log("parse error")
+        db.session.commit()
+        return jsonify({"error": "Could not parse response", "raw": content[:2000]}), 200
+
+    if "error" in parsed:
+        _log("refusal")
+        db.session.commit()
+        return jsonify({"error": parsed["error"]}), 200
+
+    if "config" not in parsed:
+        _log("parse error")
+        db.session.commit()
+        return jsonify({"error": "Could not parse response", "raw": content[:2000]}), 200
+
+    config = parsed["config"]
+    params = config_to_params(config, today_ymd)
+    sql, err = build_sql(params)
+    if err:
+        _log("build_sql error")
+        db.session.commit()
+        return jsonify({"error": "Could not run that query"}), 400
+
+    current_user.credits = (current_user.credits or 0) - 1
+    _log("config", credit_used=True)
+    db.session.commit()
+
+    return jsonify({
+        "config": config,
+        "remaining_credits": current_user.credits,
+    }), 200
 
 
 @sports_schedules_bp.route("/api/saved-queries", methods=["POST"])
