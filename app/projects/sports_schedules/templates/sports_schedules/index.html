@@ -97,6 +97,13 @@
     </aside>
 
     <main class="ss-main">
+      {% if is_authenticated %}
+      <!-- Ask a Question: above Saved Queries -->
+      <div id="ss-nl-section" class="ss-nl-section" data-credits="{{ credits }}">
+        <button type="button" class="ss-nl-ask-btn" id="ss-nl-ask-btn" {{ 'disabled' if credits < 1 else '' }}>Ask a Question</button>
+        <span class="ss-nl-credits-msg" id="ss-nl-credits-msg" style="{{ 'display:inline' if credits < 1 else 'display:none' }}">Insufficient credits</span>
+      </div>
+      {% endif %}
       <!-- Saved Queries: above filter bar -->
       <div id="ss-saved-queries" class="ss-saved-queries" data-is-authenticated="{{ 'true' if is_authenticated else 'false' }}" data-login-url="{{ login_url }}">
         <div class="ss-saved-queries-header" onclick="ssToggleSavedQueries()" aria-expanded="true" aria-controls="ss-saved-queries-content">
@@ -224,6 +231,23 @@
     <div class="ss-save-modal-actions">
       <button type="button" class="ss-save-modal-btn ss-save-modal-cancel" onclick="ssCloseSaveModal()">Cancel</button>
       <button type="button" class="ss-save-modal-btn ss-save-modal-submit" onclick="ssSubmitSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- NL Query modal (logged-in only) -->
+<div id="ss-nl-modal-overlay" class="ss-nl-modal-overlay" style="display: none;" role="dialog" aria-labelledby="ss-nl-modal-title" aria-modal="true">
+  <div class="ss-nl-modal-backdrop" id="ss-nl-modal-backdrop"></div>
+  <div class="ss-nl-modal">
+    <h3 id="ss-nl-modal-title" class="ss-nl-modal-title">Ask a question about the schedule</h3>
+    <p class="ss-nl-modal-credits" id="ss-nl-modal-credits">1 credit per question • You have <span id="ss-nl-credits-count">{{ credits }}</span> credits</p>
+    <textarea id="ss-nl-input" class="ss-nl-input" placeholder="e.g., Celtics games this week" maxlength="500" rows="3" aria-label="Your question"></textarea>
+    <div class="ss-nl-char-count" id="ss-nl-char-count">0 / 500</div>
+    <div id="ss-nl-error" class="ss-nl-error" style="display: none;"></div>
+    <div id="ss-nl-loading" class="ss-nl-loading" style="display: none;">Loading...</div>
+    <div class="ss-nl-actions">
+      <button type="button" class="ss-nl-btn ss-nl-cancel" id="ss-nl-cancel">Cancel</button>
+      <button type="button" class="ss-nl-btn ss-nl-submit" id="ss-nl-submit">Submit</button>
     </div>
   </div>
 </div>
@@ -1694,13 +1718,121 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
   window.ssSubmitSave = ssSubmitSave;
 
+  function ssInitNlModal() {
+    var overlay = document.getElementById('ss-nl-modal-overlay');
+    var askBtn = document.getElementById('ss-nl-ask-btn');
+    var backdrop = document.getElementById('ss-nl-modal-backdrop');
+    var cancelBtn = document.getElementById('ss-nl-cancel');
+    var submitBtn = document.getElementById('ss-nl-submit');
+    var input = document.getElementById('ss-nl-input');
+    var charCount = document.getElementById('ss-nl-char-count');
+    var errorEl = document.getElementById('ss-nl-error');
+    var loadingEl = document.getElementById('ss-nl-loading');
+    var creditsCount = document.getElementById('ss-nl-credits-count');
+    var nlSection = document.getElementById('ss-nl-section');
+    var creditsMsg = document.getElementById('ss-nl-credits-msg');
+    if (!overlay || !askBtn || !input) return;
+
+    function ssUpdateNlCreditsDisplay(n) {
+      var num = parseInt(n, 10) || 0;
+      if (creditsCount) creditsCount.textContent = String(num);
+      if (nlSection) nlSection.setAttribute('data-credits', String(num));
+      if (askBtn) {
+        askBtn.disabled = num < 1;
+        if (num < 1) askBtn.classList.add('ss-nl-ask-btn-disabled');
+        else askBtn.classList.remove('ss-nl-ask-btn-disabled');
+      }
+      if (creditsMsg) creditsMsg.style.display = num < 1 ? 'inline' : 'none';
+    }
+
+    function ssOpenNlModal() {
+      if (overlay) overlay.style.display = 'flex';
+      if (input) { input.value = ''; input.focus(); }
+      if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+      if (charCount) charCount.textContent = '0 / 500';
+      var cred = (nlSection && nlSection.getAttribute('data-credits')) || '0';
+      if (creditsCount) creditsCount.textContent = cred;
+    }
+
+    function ssCloseNlModal() {
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    function ssUpdateCharCount() {
+      var len = (input.value || '').length;
+      if (charCount) charCount.textContent = len + ' / 500';
+      if (submitBtn) submitBtn.disabled = !(input.value || '').trim();
+    }
+
+    askBtn.addEventListener('click', function() {
+      if (askBtn.disabled) return;
+      ssOpenNlModal();
+    });
+    if (backdrop) backdrop.addEventListener('click', ssCloseNlModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', ssCloseNlModal);
+    input.addEventListener('input', ssUpdateCharCount);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (submitBtn && !submitBtn.disabled) ssSubmitNl(); }
+    });
+
+    function ssSubmitNl() {
+      var q = (input.value || '').trim();
+      if (!q) {
+        if (errorEl) { errorEl.textContent = 'Please enter a question'; errorEl.style.display = 'block'; }
+        return;
+      }
+      if (q.length > 500) return;
+      if (submitBtn) submitBtn.disabled = true;
+      if (loadingEl) loadingEl.style.display = 'block';
+      if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      var headers = { 'Content-Type': 'application/json' };
+      if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
+
+      fetch('{{ url_for("sports_schedules.api_nl_query") }}', {
+        method: 'POST',
+        headers: headers,
+        credentials: 'same-origin',
+        body: JSON.stringify({ question: q })
+      })
+        .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+        .then(function(res) {
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (res.data.config) {
+            ssCloseNlModal();
+            ssLoadQueryAndRun(res.data.config);
+            if (res.data.remaining_credits !== undefined) ssUpdateNlCreditsDisplay(res.data.remaining_credits);
+          } else {
+            if (errorEl) {
+              errorEl.textContent = res.data.error || 'Something went wrong';
+              errorEl.style.display = 'block';
+              if (res.data.raw) console.warn('NL parse raw:', res.data.raw);
+            }
+            if (submitBtn) submitBtn.disabled = false;
+          }
+        })
+        .catch(function() {
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (errorEl) {
+            errorEl.textContent = 'Natural language search is temporarily unavailable. Try the filters below.';
+            errorEl.style.display = 'block';
+          }
+          if (submitBtn) submitBtn.disabled = false;
+        });
+    }
+    if (submitBtn) submitBtn.addEventListener('click', ssSubmitNl);
+    submitBtn.disabled = true;
+  }
+
   function ssInitWithPromptSaveCheck() {
     ssInitSidebarState();
     ssInitAutoRunToggle();
     ssInitFromUrl();
+    var isAuth = document.getElementById('ss-saved-queries') && document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
+    if (isAuth) ssInitNlModal();
     var params = new URLSearchParams(window.location.search);
     var promptSave = params.get('prompt_save') === '1';
-    var isAuth = document.getElementById('ss-saved-queries') && document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
     if (promptSave && isAuth) {
       params.delete('prompt_save');
       var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');

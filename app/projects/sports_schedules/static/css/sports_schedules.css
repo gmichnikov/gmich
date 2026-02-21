@@ -496,6 +496,153 @@
   background: #5a67d8;
 }
 
+/* ===== NL Query (Ask a Question) ===== */
+.ss-nl-section {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ss-nl-ask-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  background: #667eea;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.ss-nl-ask-btn:hover:not(:disabled) {
+  background: #5a67d8;
+}
+
+.ss-nl-ask-btn-disabled,
+.ss-nl-ask-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+.ss-nl-credits-msg {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.ss-nl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.ss-nl-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.ss-nl-modal {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.ss-nl-modal-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.ss-nl-modal-credits {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0 0 1rem 0;
+}
+
+.ss-nl-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.ss-nl-char-count {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+.ss-nl-error {
+  color: #721c24;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-nl-loading {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+.ss-nl-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ss-nl-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ss-nl-cancel {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.ss-nl-cancel:hover {
+  background: #e9ecef;
+}
+
+.ss-nl-submit {
+  background: #667eea;
+  border: none;
+  color: white;
+}
+
+.ss-nl-submit:hover:not(:disabled) {
+  background: #5a67d8;
+}
+
+.ss-nl-submit:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .ss-nl-modal {
+    width: calc(100% - 2rem);
+    margin: 1rem;
+  }
+}
+
 /* ===== Filter Bar (above results, one row per active filter), collapsible ===== */
 .ss-filter-bar {
   background: #f8f9fa;

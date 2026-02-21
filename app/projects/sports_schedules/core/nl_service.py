@@ -14,6 +14,7 @@ MAX_OUTPUT_TOKENS = 2048
 TIMEOUT_SECONDS = 60
 
 
+@contextmanager
 def _timeout_context(seconds: int):
     """Context manager for timing out long-running operations (Unix-like systems)."""
     def _handler(signum, frame):

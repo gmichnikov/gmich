@@ -2,7 +2,7 @@
 
 This plan implements the Natural Language to Query feature as specified in `NL2QueryPRD.md`. The feature allows logged-in users to ask questions in plain English; an LLM translates them into the query config format; the config loads into the form and runs the query.
 
-**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 🔲 Phase 4 🔲
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ Phase 4 🔲
 
 ---
 
@@ -123,22 +123,22 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 3.1 Add "Ask a Question" Button & Modal Markup
 
-- [ ] In `index.html`, inside `ss-main`, add "Ask a Question" section **above** `ss-saved-queries` (so it appears first for logged-in users).
-- [ ] Only render when `is_authenticated` (use `{% if is_authenticated %}`).
-- [ ] If `current_user.credits < 1`, show disabled state or message: "Insufficient credits" (match chatbot pattern).
-- [ ] Add button: e.g. `<button type="button" class="ss-nl-ask-btn" id="ss-nl-ask-btn">Ask a Question</button>`
-- [ ] Add modal structure (use `ss-` prefix for all classes):
-  - [ ] Overlay: `ss-nl-modal-overlay` (hidden by default)
-  - [ ] Modal: `ss-nl-modal` with:
-    - [ ] Title: "Ask a question about the schedule"
-    - [ ] Credits display: "1 credit per question • You have X credits" (pass `current_user.credits` from route).
-    - [ ] Textarea or input: `ss-nl-input` (maxlength=500, placeholder="e.g., Celtics games this week")
-    - [ ] Character count: "0 / 500"
-    - [ ] Submit button: `ss-nl-submit`
-    - [ ] Cancel/Close button
-    - [ ] Error message area: `ss-nl-error` (hidden by default)
-    - [ ] Loading spinner/state: `ss-nl-loading` (hidden by default)
-- [ ] Update index route to pass `credits=current_user.credits if current_user.is_authenticated else 0`.
+- [x] In `index.html`, inside `ss-main`, add "Ask a Question" section **above** `ss-saved-queries` (so it appears first for logged-in users).
+- [x] Only render when `is_authenticated` (use `{% if is_authenticated %}`).
+- [x] If `current_user.credits < 1`, show disabled state or message: "Insufficient credits" (match chatbot pattern).
+- [x] Add button: e.g. `<button type="button" class="ss-nl-ask-btn" id="ss-nl-ask-btn">Ask a Question</button>`
+- [x] Add modal structure (use `ss-` prefix for all classes):
+  - [x] Overlay: `ss-nl-modal-overlay` (hidden by default)
+  - [x] Modal: `ss-nl-modal` with:
+    - [x] Title: "Ask a question about the schedule"
+    - [x] Credits display: "1 credit per question • You have X credits" (pass `current_user.credits` from route).
+    - [x] Textarea or input: `ss-nl-input` (maxlength=500, placeholder="e.g., Celtics games this week")
+    - [x] Character count: "0 / 500"
+    - [x] Submit button: `ss-nl-submit`
+    - [x] Cancel/Close button
+    - [x] Error message area: `ss-nl-error` (hidden by default)
+    - [x] Loading spinner/state: `ss-nl-loading` (hidden by default)
+- [x] Update index route to pass `credits=current_user.credits if current_user.is_authenticated else 0`.
 
 **Manual Testing 3.1:**
 - [ ] Logged-in: "Ask a Question" button visible above Saved Queries.
@@ -150,27 +150,27 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 3.2 Modal JavaScript
 
-- [ ] Add `ssInitNlModal()` and call it from the existing DOMContentLoaded / page-init logic when `is_authenticated`.
-- [ ] Open modal: click `ss-nl-ask-btn` → show overlay and modal.
-- [ ] Close modal: click overlay or Cancel → hide modal.
-- [ ] Prevent submit when:
-  - [ ] Input is empty or whitespace-only → show "Please enter a question" or disable submit.
-  - [ ] Input length > 500 → enforce maxlength; disable submit if over.
-- [ ] On submit:
-  - [ ] Disable submit, show loading spinner.
-  - [ ] POST to `{{ url_for('sports_schedules.api_nl_query') }}` with `{ "question": question }`.
-  - [ ] Include `X-CSRFToken` header from `meta[name="csrf-token"]` (same pattern as saved-queries fetch).
-  - [ ] Content-Type: application/json.
-- [ ] On success (200 with `config`):
-  - [ ] Close modal.
-  - [ ] Call `ssLoadQueryAndRun(config)` — this function lives in the same template's script (loads config into form, updates URL, runs query).
-  - [ ] Store `remaining_credits` from response; when modal is reopened, show updated count.
-- [ ] On error (200 with `error`, or 4xx):
-  - [ ] Keep modal open.
-  - [ ] Show error message in `ss-nl-error` (from `response.error`).
-  - [ ] If `raw` present (malformed JSON), show in UI or log to console for debugging.
-  - [ ] Re-enable submit, hide loading.
-- [ ] On network/500 error: show "Natural language search is temporarily unavailable. Try the filters below." or similar.
+- [x] Add `ssInitNlModal()` and call it from the existing DOMContentLoaded / page-init logic when `is_authenticated`.
+- [x] Open modal: click `ss-nl-ask-btn` → show overlay and modal.
+- [x] Close modal: click overlay or Cancel → hide modal.
+- [x] Prevent submit when:
+  - [x] Input is empty or whitespace-only → show "Please enter a question" or disable submit.
+  - [x] Input length > 500 → enforce maxlength; disable submit if over.
+- [x] On submit:
+  - [x] Disable submit, show loading spinner.
+  - [x] POST to `{{ url_for('sports_schedules.api_nl_query') }}` with `{ "question": question }`.
+  - [x] Include `X-CSRFToken` header from `meta[name="csrf-token"]` (same pattern as saved-queries fetch).
+  - [x] Content-Type: application/json.
+- [x] On success (200 with `config`):
+  - [x] Close modal.
+  - [x] Call `ssLoadQueryAndRun(config)` — this function lives in the same template's script (loads config into form, updates URL, runs query).
+  - [x] Store `remaining_credits` from response; when modal is reopened, show updated count.
+- [x] On error (200 with `error`, or 4xx):
+  - [x] Keep modal open.
+  - [x] Show error message in `ss-nl-error` (from `response.error`).
+  - [x] If `raw` present (malformed JSON), show in UI or log to console for debugging.
+  - [x] Re-enable submit, hide loading.
+- [x] On network/500 error: show "Natural language search is temporarily unavailable. Try the filters below." or similar.
 
 **Manual Testing 3.2:**
 - [ ] Submit "Celtics games this week" → modal closes, form populates with config, query runs, results appear.
@@ -184,14 +184,14 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 3.3 Styles
 
-- [ ] Add styles in `sports_schedules.css` for:
-  - [ ] `ss-nl-ask-btn` — button above Saved Queries.
-  - [ ] `ss-nl-modal-overlay` — full-screen overlay, semi-transparent.
-  - [ ] `ss-nl-modal` — centered modal, white background, shadow, max-width.
-  - [ ] `ss-nl-input` — textarea/input styling.
-  - [ ] `ss-nl-error` — error text styling (e.g., red).
-  - [ ] `ss-nl-loading` — spinner or "Loading..." styling.
-- [ ] Ensure mobile-friendly (modal usable on small screens).
+- [x] Add styles in `sports_schedules.css` for:
+  - [x] `ss-nl-ask-btn` — button above Saved Queries.
+  - [x] `ss-nl-modal-overlay` — full-screen overlay, semi-transparent.
+  - [x] `ss-nl-modal` — centered modal, white background, shadow, max-width.
+  - [x] `ss-nl-input` — textarea/input styling.
+  - [x] `ss-nl-error` — error text styling (e.g., red).
+  - [x] `ss-nl-loading` — spinner or "Loading..." styling.
+- [x] Ensure mobile-friendly (modal usable on small screens).
 
 **Manual Testing 3.3:**
 - [ ] Modal looks correct on desktop and mobile.
@@ -242,5 +242,5 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 - [x] Phase 1: Prompt builder + LLM service
 - [x] Phase 2: API route with auth, credits, validation, logging
-- [ ] Phase 3: Modal UI + JS integration + styles
+- [x] Phase 3: Modal UI + JS integration + styles
 - [ ] Phase 4: Edge cases, logging audit, final test
