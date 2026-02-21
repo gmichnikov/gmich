@@ -1186,6 +1186,21 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       end.setDate(d.getDate() + 6);
       return { start: fmt(d), end: fmt(end) };
     }
+    if (dateMode === 'next_n') {
+      var n = parseInt(get('date_n'), 10);
+      if (!n || n < 1 || n > 31) return null;
+      var d = new Date(anchor + 'T12:00:00');
+      var end = new Date(d);
+      end.setDate(d.getDate() + n - 1);
+      return { start: fmt(d), end: fmt(end) };
+    }
+    if (dateMode === 'last_n') {
+      var n = parseInt(get('date_n'), 10);
+      if (!n || n < 1 || n > 31) return null;
+      var d = new Date(anchor + 'T12:00:00');
+      d.setDate(d.getDate() - (n - 1));
+      return { start: fmt(d), end: anchor };
+    }
     if (dateMode === 'range') {
       var start = get('date_start');
       var end = get('date_end');
@@ -1193,7 +1208,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var dStart = new Date(start + 'T12:00:00');
       var dEnd = new Date(end + 'T12:00:00');
       var days = Math.round((dEnd - dStart) / (24 * 60 * 60 * 1000)) + 1;
-      if (days < 1 || days > 10) return null;
+      if (days < 1 || days > 31) return null;
       return { start: start, end: end };
     }
     return null;
