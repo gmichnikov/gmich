@@ -94,7 +94,7 @@
       <!-- Saved Queries: above filter bar -->
       <div id="ss-saved-queries" class="ss-saved-queries" data-is-authenticated="{{ 'true' if is_authenticated else 'false' }}" data-login-url="{{ login_url }}">
         <div class="ss-saved-queries-header" onclick="ssToggleSavedQueries()" aria-expanded="true" aria-controls="ss-saved-queries-content">
-          <span>Saved Queries</span>
+          <span>Saved Queries <span class="ss-saved-queries-help" data-ss-tooltip="To add a Saved Query, click Save at the bottom of any data result" onclick="event.stopPropagation()">?</span></span>
           <span class="ss-saved-queries-toggle" id="ss-saved-queries-toggle">▼</span>
         </div>
         <div id="ss-saved-queries-content" class="ss-saved-queries-content" role="group">

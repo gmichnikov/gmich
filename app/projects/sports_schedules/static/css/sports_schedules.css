@@ -57,7 +57,9 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .ss-sidebar-toggle:hover {
@@ -230,7 +232,7 @@
   border: 1px solid #e9ecef;
   border-radius: 10px;
   margin-bottom: 1rem;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ss-saved-queries-header {
@@ -249,6 +251,53 @@
   background: #dee2e6;
 }
 
+.ss-saved-queries-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  background: #dee2e6;
+  border-radius: 50%;
+  cursor: help;
+  position: relative;
+}
+
+.ss-saved-queries-help:hover {
+  color: #495057;
+  background: #ced4da;
+}
+
+.ss-saved-queries-help::after {
+  content: attr(data-ss-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.5rem);
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #fff;
+  background: #343a40;
+  border-radius: 6px;
+  white-space: normal;
+  width: 220px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 1000;
+}
+
+.ss-saved-queries-help:hover::after {
+  opacity: 1;
+}
+
 .ss-saved-queries-toggle {
   font-size: 0.75rem;
   color: #6c757d;
@@ -256,6 +305,8 @@
 
 .ss-saved-queries-content {
   padding: 0.75rem 1rem;
+  overflow: hidden;
+  border-radius: 0 0 10px 10px;
 }
 
 .ss-saved-queries-content.ss-saved-queries-collapsed {
@@ -725,7 +776,9 @@
   background: white;
   color: #212529;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .ss-filter-multiselect:hover {
@@ -901,18 +954,19 @@
 
 .ss-results-table-wrapper {
   overflow-x: auto;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
 }
 
 .ss-results-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
 }
 
 .ss-results-table th,
 .ss-results-table td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.3rem 0.55rem;
   text-align: left;
   border-bottom: 1px solid #e9ecef;
 }
@@ -943,8 +997,8 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  padding: 0.15rem;
-  font-size: 0.85rem;
+  padding: 0.1rem;
+  font-size: 0.75rem;
   color: #6c757d;
   cursor: pointer;
   opacity: 0;
@@ -969,7 +1023,7 @@
 
 .ss-row-num-header,
 .ss-row-num {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: #adb5bd;
   font-weight: 400;
 }
@@ -992,8 +1046,8 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  padding: 0.2rem;
+  font-size: 0.9rem;
+  padding: 0.15rem;
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -1011,7 +1065,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 1rem;
   border-bottom: 1px solid #e9ecef;
   cursor: pointer;
   user-select: none;
@@ -1023,12 +1077,12 @@
 }
 
 .ss-results-summary {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: #6c757d;
 }
 
 .ss-results-stale-warning {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #856404;
   margin-left: 0.5rem;
 }
@@ -1048,7 +1102,7 @@
 }
 
 .ss-results-toggle {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #6c757d;
 }
 
@@ -1058,7 +1112,7 @@
 
 /* ===== Results actions (Copy, Download CSV, Show SQL) ===== */
 .ss-results-actions {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 1rem;
   border-top: 1px solid #e9ecef;
 }
 
@@ -1072,10 +1126,10 @@
 .ss-action-btn {
   background: none;
   border: none;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: #6c757d;
   cursor: pointer;
-  padding: 0.4rem 0.5rem;
+  padding: 0.3rem 0.45rem;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -1099,7 +1153,7 @@
 
 /* ===== Show SQL (pre block) with syntax highlighting ===== */
 .ss-sql-content {
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-family: "SF Mono", "Monaco", "Consolas", monospace;
   font-size: 0.8rem;
   line-height: 1.5;
   color: #495057;
