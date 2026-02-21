@@ -181,13 +181,19 @@
         </div>
         <div id="ss-results-error" class="ss-results-error" style="display: none;"></div>
         <div id="ss-results-content" style="display: none;">
-          <div class="ss-results-header" onclick="ssToggleResultsData()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ssToggleResultsData();}" role="button" tabindex="0" aria-expanded="true" aria-controls="ss-results-table-wrapper" title="Click to collapse/expand data table">
+          <div class="ss-results-header" onclick="ssToggleResultsData()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ssToggleResultsData();}" role="button" tabindex="0" aria-expanded="true" aria-controls="ss-results-data-container" title="Click to collapse/expand data table">
             <span id="ss-results-summary" class="ss-results-summary"></span>
+            <span id="ss-results-viz-toggle-wrap" class="ss-results-viz-toggle-wrap" style="display: none;">
+              <button type="button" class="ss-results-viz-btn" id="ss-results-viz-btn" onclick="event.stopPropagation();ssToggleViz();">Show Calendar</button>
+            </span>
             <span id="ss-results-stale-warning" class="ss-results-stale-warning" style="display: none;">— Results may be stale. <button type="button" class="ss-results-stale-run" onclick="event.stopPropagation();ssRunQuery();">Run</button> to refresh</span>
             <span class="ss-results-toggle" id="ss-results-toggle" aria-hidden="true">▼</span>
           </div>
-          <div id="ss-results-table-wrapper" class="ss-results-table-wrapper" role="region" aria-label="Results data">
-            <table class="ss-results-table" id="ss-results-table"></table>
+          <div id="ss-results-data-container" class="ss-results-data-container">
+            <div id="ss-results-viz" class="ss-results-viz" style="display: none;"></div>
+            <div id="ss-results-table-wrapper" class="ss-results-table-wrapper" role="region" aria-label="Results data">
+              <table class="ss-results-table" id="ss-results-table"></table>
+            </div>
           </div>
           <div id="ss-results-actions" class="ss-results-actions">
             <div class="ss-action-buttons">
@@ -355,17 +361,17 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   window.ssToggleFilterBar = ssToggleFilterBar;
 
   function ssToggleResultsData() {
-    const wrapper = document.getElementById('ss-results-table-wrapper');
+    const container = document.getElementById('ss-results-data-container');
     const toggle = document.getElementById('ss-results-toggle');
     const header = document.querySelector('.ss-results-header');
-    if (!wrapper || !toggle || !header) return;
-    const isCollapsed = wrapper.classList.contains('ss-results-table-collapsed');
+    if (!container || !toggle || !header) return;
+    const isCollapsed = container.classList.contains('ss-results-data-collapsed');
     if (isCollapsed) {
-      wrapper.classList.remove('ss-results-table-collapsed');
+      container.classList.remove('ss-results-data-collapsed');
       toggle.textContent = '▼';
       header.setAttribute('aria-expanded', 'true');
     } else {
-      wrapper.classList.add('ss-results-table-collapsed');
+      container.classList.add('ss-results-data-collapsed');
       toggle.textContent = '▶';
       header.setAttribute('aria-expanded', 'false');
     }
@@ -881,7 +887,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
           document.getElementById('ss-results-error').style.display = 'block';
           return;
         }
-        ssRenderResults(data.rows || [], data.sql || '', params.get('dimensions') || '', params.get('limit') || '500');
+        ssRenderResults(data.rows || [], data.sql || '', params.get('dimensions') || '', params.get('limit') || '500', params);
         document.getElementById('ss-results-content').style.display = 'block';
         ssUpdateSqlSection(data.sql || '');
         ssUpdateUrlFromParams(params);
@@ -1015,9 +1021,12 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     };
   }
 
-  function ssRenderResults(rows, sql, dimensionsStr, limit) {
+  function ssRenderResults(rows, sql, dimensionsStr, limit, params) {
     const table = document.getElementById('ss-results-table');
     const summaryEl = document.getElementById('ss-results-summary');
+    const vizToggleWrap = document.getElementById('ss-results-viz-toggle-wrap');
+    const vizContainer = document.getElementById('ss-results-viz');
+    params = params || {};
 
     var rowKeys = rows.length && rows[0] ? Object.keys(rows[0]) : [];
     var requestedDims = dimensionsStr ? dimensionsStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
@@ -1030,6 +1039,25 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     } else {
       headers = rowKeys;
     }
+
+    var dateMode = params.get ? params.get('date_mode') : (params.date_mode || '');
+    var hasVizCols = headers.indexOf('date') >= 0 && headers.indexOf('time') >= 0 &&
+      headers.indexOf('road_team') >= 0 && headers.indexOf('home_team') >= 0;
+    var hasVizDateMode = dateMode === 'this_weekend' || dateMode === 'next_week';
+    var showVizToggle = hasVizCols && hasVizDateMode;
+
+    if (vizToggleWrap) {
+      vizToggleWrap.style.display = showVizToggle ? 'inline' : 'none';
+    }
+    if (vizContainer) {
+      vizContainer.style.display = 'none';
+      vizContainer.innerHTML = '';
+      window._ssVizData = showVizToggle ? { rows: rows, params: params } : null;
+    }
+    var tableWrapper = document.getElementById('ss-results-table-wrapper');
+    if (tableWrapper) tableWrapper.style.display = '';
+    var vizBtn = document.getElementById('ss-results-viz-btn');
+    if (vizBtn) vizBtn.textContent = 'Show Calendar';
 
     summaryEl.textContent = rows.length === parseInt(limit) && limit >= 500
       ? rows.length + ' rows (limit reached)'
@@ -1111,6 +1139,114 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       })
     };
   }
+
+  function ssGetVizDateRange(params) {
+    var dateMode = params.get ? params.get('date_mode') : (params.date_mode || '');
+    var anchor = (params.get ? params.get('anchor_date') : params.anchor_date) || ssGetAnchorDate();
+    if (dateMode === 'this_weekend') {
+      var range = ssComputeThisWeekend(anchor);
+      return { start: range.start, end: range.end };
+    }
+    if (dateMode === 'next_week') {
+      var d = new Date(anchor + 'T12:00:00');
+      var end = new Date(d);
+      end.setDate(d.getDate() + 6);
+      var fmt = function(x) {
+        return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+      };
+      return { start: fmt(d), end: fmt(end) };
+    }
+    return null;
+  }
+
+  function ssRenderViz(rows, params) {
+    var range = ssGetVizDateRange(params);
+    if (!range) return;
+    var byDate = {};
+    var d = new Date(range.start + 'T12:00:00');
+    var end = new Date(range.end + 'T12:00:00');
+    while (d <= end) {
+      var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      byDate[k] = [];
+      d.setDate(d.getDate() + 1);
+    }
+    rows.forEach(function(row) {
+      var k = row.date;
+      if (k && byDate[k]) {
+        byDate[k].push(row);
+      }
+    });
+    var sortByTime = function(a, b) {
+      var ma = ssParseTimeToMinutes(a.time);
+      var mb = ssParseTimeToMinutes(b.time);
+      if (ma != null && mb != null) return ma - mb;
+      if (ma != null) return -1;
+      if (mb != null) return 1;
+      return 0;
+    };
+    var fmtDate = function(ymd) {
+      var d = new Date(ymd + 'T12:00:00');
+      var dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      return dayName + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    var container = document.getElementById('ss-results-viz');
+    if (!container) return;
+    container.innerHTML = '';
+    var sortedDates = Object.keys(byDate).sort();
+    sortedDates.forEach(function(ymd) {
+      var dayEl = document.createElement('div');
+      dayEl.className = 'ss-viz-day';
+      var headerEl = document.createElement('div');
+      headerEl.className = 'ss-viz-day-header';
+      headerEl.textContent = fmtDate(ymd);
+      dayEl.appendChild(headerEl);
+      var cardsEl = document.createElement('div');
+      cardsEl.className = 'ss-viz-day-cards';
+      var events = byDate[ymd].slice().sort(sortByTime);
+      events.forEach(function(row) {
+        var card = document.createElement('div');
+        card.className = 'ss-viz-card';
+        var matchup = (row.road_team || '') + ' @ ' + (row.home_team || '');
+        if (!row.road_team && !row.home_team) matchup = 'Game';
+        var timeStr = (row.time || '').toString().trim();
+        var meta = [];
+        if (row.league) meta.push(row.league);
+        if (row.sport) meta.push(row.sport);
+        var metaStr = meta.length ? meta.join(' · ') : '';
+        var locStr = (row.location || '').toString().trim();
+        if (!locStr && (row.home_city || row.home_state)) {
+          locStr = [row.home_city, row.home_state].filter(Boolean).join(', ');
+        }
+        card.innerHTML = '<div class="ss-viz-card-main">' + (matchup.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '</div>' +
+          (timeStr ? '<div class="ss-viz-card-time">' + timeStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' : '') +
+          (metaStr ? '<div class="ss-viz-card-meta">' + metaStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' : '') +
+          (locStr ? '<div class="ss-viz-card-loc">' + locStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' : '');
+        cardsEl.appendChild(card);
+      });
+      dayEl.appendChild(cardsEl);
+      container.appendChild(dayEl);
+    });
+  }
+
+  function ssToggleViz() {
+    var vizContainer = document.getElementById('ss-results-viz');
+    var tableWrapper = document.getElementById('ss-results-table-wrapper');
+    var btn = document.getElementById('ss-results-viz-btn');
+    if (!vizContainer || !tableWrapper || !btn) return;
+    var isViz = vizContainer.style.display !== 'none';
+    if (isViz) {
+      vizContainer.style.display = 'none';
+      tableWrapper.style.display = '';
+      btn.textContent = 'Show Calendar';
+    } else {
+      var data = window._ssVizData;
+      if (data) ssRenderViz(data.rows, data.params);
+      vizContainer.style.display = '';
+      tableWrapper.style.display = 'none';
+      btn.textContent = 'Show table';
+    }
+  }
+  window.ssToggleViz = ssToggleViz;
 
   function ssBuildGoogleCalUrl(row) {
     var dateStr = row.date;

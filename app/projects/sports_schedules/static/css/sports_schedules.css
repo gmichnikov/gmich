@@ -1090,16 +1090,37 @@
   transform: scale(1.1);
 }
 
-/* Results header: summary + collapse toggle (always visible) */
+/* Results header: summary + viz toggle + collapse toggle (always visible) */
 .ss-results-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
   padding: 0.35rem 1rem;
   border-bottom: 1px solid #e9ecef;
   cursor: pointer;
   user-select: none;
   background: #f8f9fa;
+}
+
+.ss-results-viz-toggle-wrap {
+  margin-left: 0.5rem;
+}
+
+.ss-results-viz-btn {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #495057;
+}
+
+.ss-results-viz-btn:hover {
+  background: #dee2e6;
+  color: #212529;
 }
 
 .ss-results-header:hover {
@@ -1136,8 +1157,75 @@
   color: #6c757d;
 }
 
-.ss-results-table-wrapper.ss-results-table-collapsed {
+.ss-results-data-container.ss-results-data-collapsed {
   display: none;
+}
+
+/* ===== Calendar viz ===== */
+.ss-results-viz {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.ss-viz-day {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ss-viz-day-header {
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.ss-viz-day-cards {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ss-viz-card {
+  padding: 0.5rem 0.65rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.ss-viz-card-main {
+  font-weight: 600;
+  color: #212529;
+}
+
+.ss-viz-card-time {
+  font-size: 0.78rem;
+  color: #6c757d;
+  margin-top: 0.2rem;
+}
+
+.ss-viz-card-meta {
+  font-size: 0.72rem;
+  color: #6c757d;
+  margin-top: 0.15rem;
+}
+
+.ss-viz-card-loc {
+  font-size: 0.72rem;
+  color: #adb5bd;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 768px) {
+  .ss-results-viz {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== Results actions (Copy, Download CSV, Show SQL) ===== */
