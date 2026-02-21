@@ -10,7 +10,9 @@
             <button type="button" class="meals-filter-toggle-btn" onclick="toggleFilters()">
                 <span class="meals-filter-icon">🔍</span> Filters
             </button>
-            <button type="button" class="meals-delete-toggle" onclick="toggleDeleteMode(this)">Delete</button>
+            {% if recent_entries %}
+            <button type="button" class="meals-delete-toggle" onclick="toggleEditDeleteMode(this)">Edit/Delete</button>
+            {% endif %}
         </div>
     </div>
 
@@ -76,7 +78,10 @@
                     </div>
                 <div class="meals-history-meta">
                     <span class="meals-history-member">{{ entry.member.name }}</span>
-                    <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})">&times;</button>
+                    <div class="meals-entry-actions">
+                        <a href="{{ url_for('meals.edit_entry_view', group_id=group.id, entry_id=entry.id) }}" class="meals-entry-edit-btn" title="Edit">&#9998;</a>
+                        <button type="button" class="meals-entry-delete-btn" onclick="deleteEntry({{ entry.id }}, {{ group.id }})" title="Delete">&times;</button>
+                    </div>
                 </div>
                 </div>
             {% endfor %}
@@ -158,11 +163,12 @@ function applyFilters() {
     document.getElementById('no-results-msg').style.display = visibleCount === 0 ? 'block' : 'none';
 }
 
-function toggleDeleteMode(btn) {
+function toggleEditDeleteMode(btn) {
     const list = document.getElementById('meals-history-list');
-    const isDeleting = list.classList.toggle('meals-delete-mode');
-    btn.textContent = isDeleting ? 'Done' : 'Delete';
-    btn.classList.toggle('meals-delete-active', isDeleting);
+    if (!list) return;
+    const isActive = list.classList.toggle('meals-edit-delete-mode');
+    btn.textContent = isActive ? 'Done' : 'Edit/Delete';
+    btn.classList.toggle('meals-delete-active', isActive);
 }
 
 async function deleteEntry(entryId, groupId) {

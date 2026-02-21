@@ -7,7 +7,7 @@ from datetime import date, timedelta, datetime
 from app import db
 from app.models import User
 from app.projects.meals.models import MealsFamilyGroup, MealsFamilyMember, MealsEntry
-from app.projects.meals.forms import CreateFamilyGroupForm, InviteMemberForm, AddGuestMemberForm, LogMealForm
+from app.projects.meals.forms import CreateFamilyGroupForm, InviteMemberForm, AddGuestMemberForm, LogMealForm, EditEntryForm
 from app.projects.meals.utils import get_user_family_groups, is_user_in_group
 
 meals_bp = Blueprint('meals', __name__, 
@@ -305,6 +305,57 @@ def calendar_view(group_id):
                            today=user_today,
                            member_filter=member_filter,
                            active_tab='calendar')
+
+@meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/edit', methods=['GET'])
+@login_required
+def edit_entry_view(group_id, entry_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    group = MealsFamilyGroup.query.get_or_404(group_id)
+    entry = MealsEntry.query.get_or_404(entry_id)
+    if entry.family_group_id != group_id:
+        abort(404)
+    edit_form = EditEntryForm()
+    edit_form.member_ids.choices = [(m.id, m.name) for m in group.members]
+    edit_form.date.data = entry.date
+    edit_form.meal_type.data = entry.meal_type
+    edit_form.food_name.data = entry.food_name
+    edit_form.location.data = entry.location or ''
+    edit_form.member_ids.data = [entry.member_id]
+    return render_template('meals/edit_entry.html', group=group, entry=entry, edit_form=edit_form, active_tab='history')
+
+@meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/edit', methods=['POST'])
+@login_required
+def edit_entry(group_id, entry_id):
+    if not is_user_in_group(current_user, group_id):
+        abort(404)
+    group = MealsFamilyGroup.query.get_or_404(group_id)
+    entry = MealsEntry.query.get_or_404(entry_id)
+    if entry.family_group_id != group_id:
+        abort(404)
+    form = EditEntryForm()
+    form.member_ids.choices = [(m.id, m.name) for m in group.members]
+    if form.validate_on_submit():
+        # Delete original and create new entries for each selected member (like log)
+        db.session.delete(entry)
+        for member_id in form.member_ids.data:
+            new_entry = MealsEntry(
+                family_group_id=group_id,
+                member_id=member_id,
+                food_name=form.food_name.data,
+                location=form.location.data,
+                meal_type=form.meal_type.data,
+                date=form.date.data,
+                created_by_id=current_user.id
+            )
+            db.session.add(new_entry)
+        db.session.commit()
+        flash('Entry updated.', 'success')
+        return redirect(url_for('meals.history_view', group_id=group_id))
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'Error in {field}: {error}', 'danger')
+    return render_template('meals/edit_entry.html', group=group, entry=entry, edit_form=form, active_tab='history')
 
 @meals_bp.route('/groups/<int:group_id>/entries/<int:entry_id>/delete', methods=['POST'])
 @login_required

@@ -30,3 +30,15 @@ class LogMealForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired(), Length(max=200)])
     member_ids = MultiCheckboxField('Members', coerce=int, validators=[InputRequired(message="Please select at least one member.")])
     submit = SubmitField('Log Meal')
+
+class EditEntryForm(FlaskForm):
+    date = DateField('Date', validators=[DataRequired()])
+    meal_type = SelectField('Meal', choices=[
+        ('Breakfast', 'Breakfast'),
+        ('Lunch', 'Lunch'),
+        ('Dinner', 'Dinner')
+    ], validators=[DataRequired()])
+    food_name = StringField('Food Name', validators=[DataRequired(), Length(max=200)])
+    location = StringField('Location', validators=[DataRequired(), Length(max=200)])
+    member_ids = MultiCheckboxField('Members', coerce=int, validators=[InputRequired(message="Please select at least one member.")])
+    submit = SubmitField('Save Changes')
