@@ -29,11 +29,77 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  transition: flex-basis 0.2s ease;
+  position: relative;
+}
+
+.ss-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* Collapse toggle - desktop only */
+.ss-sidebar-toggle {
+  display: none;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #495057;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ss-sidebar-toggle:hover {
+  background: #dee2e6;
+  color: #212529;
 }
 
 .ss-main {
   flex: 1;
   min-width: 0;
+}
+
+/* Collapsible sidebar - desktop only (min-width: 769px) */
+@media (min-width: 769px) {
+  .ss-sidebar-toggle {
+    display: flex;
+  }
+
+  .ss-layout.ss-sidebar-collapsed .ss-sidebar {
+    flex: 0 0 36px;
+    min-width: 36px;
+    align-items: center;
+  }
+
+  .ss-layout.ss-sidebar-collapsed .ss-sidebar-content {
+    display: none;
+  }
+
+  .ss-layout.ss-sidebar-collapsed .ss-sidebar-toggle {
+    position: static;
+    margin: 0.5rem 0 0;
+    right: auto;
+  }
+
+  .ss-layout.ss-sidebar-collapsed .ss-sidebar-toggle {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ss-layout.ss-sidebar-collapsed .ss-sidebar-toggle .ss-sidebar-toggle-icon {
+    transform: rotate(180deg);
+  }
 }
 
 /* ===== Section (Collapsible) ===== */

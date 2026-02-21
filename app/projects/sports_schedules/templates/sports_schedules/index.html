@@ -10,8 +10,12 @@
 <div class="ss-wrapper">
   <h1 class="ss-title">Sports Schedules</h1>
 
-  <div class="ss-layout">
-    <aside class="ss-sidebar">
+  <div class="ss-layout" id="ss-layout">
+    <aside class="ss-sidebar" id="ss-sidebar">
+      <button type="button" class="ss-sidebar-toggle" id="ss-sidebar-toggle" onclick="ssToggleSidebar()" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <svg class="ss-sidebar-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="ss-sidebar-content">
       <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
       <!-- Fields: Dimension + Filter per field (Looker-style) -->
       <div class="ss-section" data-section="fields">
@@ -83,6 +87,7 @@
       </div>
 
       <input type="hidden" id="ss-anchor-date">
+      </div>
     </aside>
 
     <main class="ss-main">
@@ -222,6 +227,36 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     if (section) section.classList.toggle('collapsed');
   }
   window.ssToggleSection = ssToggleSection;
+
+  var SS_SIDEBAR_STORAGE_KEY = 'ss-sidebar-collapsed';
+  function ssToggleSidebar() {
+    var layout = document.getElementById('ss-layout');
+    var toggle = document.getElementById('ss-sidebar-toggle');
+    if (!layout) return;
+    var isCollapsed = layout.classList.toggle('ss-sidebar-collapsed');
+    try { localStorage.setItem(SS_SIDEBAR_STORAGE_KEY, isCollapsed ? '1' : '0'); } catch (e) {}
+    if (toggle) {
+      toggle.setAttribute('aria-label', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+      toggle.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    }
+  }
+  window.ssToggleSidebar = ssToggleSidebar;
+
+  function ssInitSidebarState() {
+    if (window.innerWidth < 769) return;
+    try {
+      var stored = localStorage.getItem(SS_SIDEBAR_STORAGE_KEY);
+      if (stored === '1') {
+        var layout = document.getElementById('ss-layout');
+        var toggle = document.getElementById('ss-sidebar-toggle');
+        if (layout) layout.classList.add('ss-sidebar-collapsed');
+        if (toggle) {
+          toggle.setAttribute('aria-label', 'Expand sidebar');
+          toggle.setAttribute('title', 'Expand sidebar');
+        }
+      }
+    } catch (e) {}
+  }
 
   function ssClearResultsAndUrl() {
     window.history.replaceState({}, '', window.location.pathname);
@@ -1482,6 +1517,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   window.ssSubmitSave = ssSubmitSave;
 
   function ssInitWithPromptSaveCheck() {
+    ssInitSidebarState();
     ssInitFromUrl();
     var params = new URLSearchParams(window.location.search);
     var promptSave = params.get('prompt_save') === '1';
