@@ -17,6 +17,9 @@
       </button>
       <div class="ss-sidebar-content">
       <div class="ss-run-row">
+        {% if is_authenticated %}
+        <button type="button" class="ss-nl-ask-btn" id="ss-nl-ask-btn" {{ 'disabled' if credits < 1 else '' }} title="{{ 'Insufficient credits' if credits < 1 else 'Ask a question in natural language' }}">Ask</button>
+        {% endif %}
         <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
         <label class="ss-auto-run-toggle">
           <input type="checkbox" id="ss-auto-run">
@@ -98,11 +101,7 @@
 
     <main class="ss-main">
       {% if is_authenticated %}
-      <!-- Ask a Question: above Saved Queries -->
-      <div id="ss-nl-section" class="ss-nl-section" data-credits="{{ credits }}">
-        <button type="button" class="ss-nl-ask-btn" id="ss-nl-ask-btn" {{ 'disabled' if credits < 1 else '' }}>Ask a Question</button>
-        <span class="ss-nl-credits-msg" id="ss-nl-credits-msg" style="{{ 'display:inline' if credits < 1 else 'display:none' }}">Insufficient credits</span>
-      </div>
+      <div id="ss-nl-section" data-credits="{{ credits }}" style="display:none" aria-hidden="true"></div>
       {% endif %}
       <!-- Saved Queries: above filter bar -->
       <div id="ss-saved-queries" class="ss-saved-queries" data-is-authenticated="{{ 'true' if is_authenticated else 'false' }}" data-login-url="{{ login_url }}">
@@ -340,6 +339,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     ssUpdateFilterBarVisibility();
     ssUpdateSortColumnOptions();
     ssClearResultsAndUrl();
+    ssClearSavedQuerySelection();
   }
   window.ssResetFields = ssResetFields;
 
@@ -360,6 +360,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     ssUpdateFilterBarVisibility();
     ssUpdateSortColumnOptions();
     ssClearResultsAndUrl();
+    ssClearSavedQuerySelection();
   }
   window.ssClearFields = ssClearFields;
 
@@ -742,12 +743,14 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var t = e.target;
       if (t && t.id === 'ss-auto-run') return;
       if (t && (t.matches('.ss-dimension-cb, .ss-filter-cb, .ss-filter-multiselect, .ss-date-mode-select, #ss-count, #ss-limit, #ss-sort-column, #ss-sort-dir') || t.closest('.ss-filter-multi-inputs, .ss-filter-date-inner'))) {
+        ssClearSavedQuerySelection();
         immediateRun();
       }
     });
     wrapper.addEventListener('input', function(e) {
       var t = e.target;
       if (t && (t.matches('.ss-filter-text, .ss-filter-multi-input') || t.closest('.ss-filter-either-team') || t.closest('.ss-filter-date-inner'))) {
+        ssClearSavedQuerySelection();
         scheduleRun();
       }
     });
@@ -865,7 +868,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     return params;
   }
 
-  function ssRunQuery() {
+  function ssRunQuery(fromSavedQuery) {
+    if (!fromSavedQuery) ssCollapseSavedQueries();
     const dimensions = document.querySelectorAll('.ss-dimension-cb:checked');
     const countEl = document.getElementById('ss-count');
     const countOn = countEl && countEl.checked;
@@ -1537,12 +1541,32 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     return params;
   }
 
-  function ssLoadQueryAndRun(config) {
+  function ssLoadQueryAndRun(config, clickedEl) {
+    ssClearSavedQuerySelection();
+    if (clickedEl) {
+      var chip = clickedEl.closest('.ss-saved-query-item') || clickedEl;
+      if (chip && chip.classList) chip.classList.add('ss-saved-query-selected');
+    }
     var params = ssConfigToUrlParams(config);
     var url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
     window.history.replaceState({}, '', url);
     ssApplyParamsFromUrl();
-    ssRunQuery();
+    ssRunQuery(!!clickedEl);
+  }
+
+  function ssClearSavedQuerySelection() {
+    document.querySelectorAll('.ss-saved-query-selected').forEach(function(el) {
+      el.classList.remove('ss-saved-query-selected');
+    });
+  }
+
+  function ssCollapseSavedQueries() {
+    var content = document.getElementById('ss-saved-queries-content');
+    var toggle = document.getElementById('ss-saved-queries-toggle');
+    if (content) content.classList.add('ss-saved-queries-collapsed');
+    if (toggle) toggle.textContent = '▶';
+    var header = document.querySelector('.ss-saved-queries-header');
+    if (header) header.setAttribute('aria-expanded', 'false');
   }
 
   function ssUrlParamsToConfig(params) {
@@ -1580,21 +1604,24 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     var loading = document.getElementById('ss-saved-queries-loading');
     if (!list || !loading) return;
     loading.style.display = 'none';
-    list.style.display = 'block';
+    list.style.display = 'flex';
     list.innerHTML = '';
     var isAuth = document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
     var hasUserQueries = userQueries && userQueries.length > 0;
     var content = document.getElementById('ss-saved-queries-content');
     if (hasUserQueries && content) content.classList.remove('ss-saved-queries-collapsed');
     else if (content) content.classList.add('ss-saved-queries-collapsed');
-    samples.forEach(function(s) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'ss-saved-query-btn ss-saved-query-sample';
-      btn.innerHTML = '<span class="ss-saved-query-name">' + (s.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span> <span class="ss-saved-query-badge">Sample</span>';
-      btn.onclick = function() { ssLoadQueryAndRun(s.config); };
-      list.appendChild(btn);
-    });
+    /* Only show samples when user has no saved queries of their own */
+    if (!hasUserQueries) {
+      samples.forEach(function(s) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ss-saved-query-btn ss-saved-query-sample';
+        btn.innerHTML = '<span class="ss-saved-query-name">' + (s.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span> <span class="ss-saved-query-badge">Sample</span>';
+        btn.onclick = function() { ssLoadQueryAndRun(s.config, this); };
+        list.appendChild(btn);
+      });
+    }
     if (isAuth && userQueries) {
       userQueries.forEach(function(q) {
         var wrap = document.createElement('div');
@@ -1603,7 +1630,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         btn.type = 'button';
         btn.className = 'ss-saved-query-btn';
         btn.innerHTML = '<span class="ss-saved-query-name">' + (q.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
-        btn.onclick = function() { ssLoadQueryAndRun(q.config); };
+        btn.onclick = function() { ssLoadQueryAndRun(q.config, this); };
         wrap.appendChild(btn);
         var delBtn = document.createElement('button');
         delBtn.type = 'button';
