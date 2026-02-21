@@ -1525,7 +1525,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         params.set(col, String(filters[col]));
       }
     }
-    var anchor = config.anchor_date || ssGetAnchorDate();
+    /* For relative date modes, always use today—not the anchor from when the query was saved */
+    var relativeModes = ['this_weekend', 'today', 'next_week', 'last_n', 'next_n', 'future'];
+    var anchor = (relativeModes.indexOf(config.date_mode) >= 0) ? ssGetAnchorDate() : (config.anchor_date || ssGetAnchorDate());
     if (config.date_mode === 'this_weekend') {
       var w = ssComputeThisWeekend(anchor);
       params.set('date_mode', 'this_weekend');
