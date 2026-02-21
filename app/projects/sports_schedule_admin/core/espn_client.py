@@ -24,6 +24,30 @@ STATE_NAME_TO_CODE = {
 }
 US_STATE_CODES = set(STATE_NAME_TO_CODE.values())
 
+
+def parse_city_state_combined(city_val):
+    """
+    Parse "City, State" from a combined string. Returns (city, state_code) if valid,
+    else None. Used to fix data where ESPN put "San Jose, California" in city with empty state.
+    """
+    if not city_val or ", " not in city_val:
+        return None
+    parts = city_val.strip().rsplit(", ", 1)
+    if len(parts) != 2:
+        return None
+    city_part, state_part = parts[0].strip(), parts[1].strip()
+    if not city_part or not state_part:
+        return None
+    # Normalize state
+    s = state_part
+    if len(s) == 2 and s.upper() in US_STATE_CODES:
+        return (city_part, s.upper())
+    key = s.lower()
+    if key in STATE_NAME_TO_CODE:
+        return (city_part, STATE_NAME_TO_CODE[key])
+    return None
+
+
 class ESPNClient:
     """
     Client for fetching sports data from ESPN's unofficial API.
@@ -217,8 +241,10 @@ class ESPNClient:
                 venue = competition.get("venue", {})
                 location = venue.get("fullName", "")
                 address = venue.get("address", {})
-                home_city = address.get("city", "")
+                home_city = address.get("city", "") or ""
                 home_state = self._normalize_state(address.get("state", ""))
+                # ESPN sometimes puts "City, State" in city with empty state (e.g. MLS/NWSL)
+                home_city, home_state = self._parse_city_state(home_city, home_state)
 
                 # Primary Key Generation: {league}_{date}_{home_slug}_vs_{road_slug}
                 home_slug = self._slugify(home_team)
@@ -246,6 +272,24 @@ class ESPNClient:
                 continue
 
         return parsed_games
+
+    def _parse_city_state(self, city_val, state_val):
+        """
+        If city is "City, State" and state is empty, split into city and state.
+        ESPN (e.g. MLS/NWSL) sometimes returns combined values in city.
+        """
+        if not city_val or not isinstance(city_val, str):
+            return (city_val or "", state_val or "")
+        city_val = city_val.strip()
+        if not state_val and ", " in city_val:
+            parts = city_val.rsplit(", ", 1)
+            if len(parts) == 2:
+                city_part, state_part = parts[0].strip(), parts[1].strip()
+                if city_part and state_part:
+                    norm = self._normalize_state(state_part)
+                    if norm and norm in US_STATE_CODES:
+                        return (city_part, norm)
+        return (city_val, state_val or "")
 
     def _normalize_state(self, state_val):
         """

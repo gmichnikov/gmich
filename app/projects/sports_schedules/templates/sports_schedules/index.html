@@ -1070,10 +1070,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       headers = rowKeys;
     }
 
-    var dateMode = params.get ? params.get('date_mode') : (params.date_mode || '');
     var hasVizCols = headers.indexOf('date') >= 0 && headers.indexOf('time') >= 0 &&
       headers.indexOf('road_team') >= 0 && headers.indexOf('home_team') >= 0;
-    var hasVizDateMode = dateMode === 'this_weekend' || dateMode === 'next_week';
+    var hasVizDateMode = ssGetVizDateRange(params) !== null;
     var showVizToggle = hasVizCols && hasVizDateMode;
 
     if (vizToggleWrap) {
@@ -1171,8 +1170,12 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
 
   function ssGetVizDateRange(params) {
-    var dateMode = params.get ? params.get('date_mode') : (params.date_mode || '');
-    var anchor = (params.get ? params.get('anchor_date') : params.anchor_date) || ssGetAnchorDate();
+    var get = function(k) { return params.get ? params.get(k) : params[k]; };
+    var dateMode = get('date_mode') || '';
+    var anchor = get('anchor_date') || ssGetAnchorDate();
+    var fmt = function(x) {
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    };
     if (dateMode === 'this_weekend') {
       var range = ssComputeThisWeekend(anchor);
       return { start: range.start, end: range.end };
@@ -1181,10 +1184,17 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var d = new Date(anchor + 'T12:00:00');
       var end = new Date(d);
       end.setDate(d.getDate() + 6);
-      var fmt = function(x) {
-        return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
-      };
       return { start: fmt(d), end: fmt(end) };
+    }
+    if (dateMode === 'range') {
+      var start = get('date_start');
+      var end = get('date_end');
+      if (!start || !end) return null;
+      var dStart = new Date(start + 'T12:00:00');
+      var dEnd = new Date(end + 'T12:00:00');
+      var days = Math.round((dEnd - dStart) / (24 * 60 * 60 * 1000)) + 1;
+      if (days < 1 || days > 10) return null;
+      return { start: start, end: end };
     }
     return null;
   }

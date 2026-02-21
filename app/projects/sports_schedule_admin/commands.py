@@ -4,6 +4,7 @@ from app.projects.sports_schedule_admin.core.logic import sync_league_range, syn
 from app.projects.sports_schedule_admin.core.espn_client import (
     STATE_NAME_TO_CODE,
     US_STATE_CODES,
+    parse_city_state_combined,
 )
 
 def init_app(app):
@@ -248,3 +249,61 @@ def init_app(app):
                 click.echo(f"  Updated {full_name} -> {code}")
 
         click.echo(f"\nNormalized {updated} state(s).")
+
+    @sports_admin.command("normalize-city-state")
+    @click.option("--dry-run", is_flag=True, help="Show what would be updated without making changes")
+    def normalize_city_state(dry_run):
+        """Split home_city when it contains 'City, State' and home_state is empty (e.g. MLS/NWSL)"""
+        from app.core.dolthub_client import DoltHubClient
+
+        dolt = DoltHubClient()
+        result = dolt.execute_sql(
+            "SELECT DISTINCT `home_city` FROM `combined-schedule` "
+            "WHERE `home_city` LIKE '%, %' AND (`home_state` IS NULL OR `home_state` = '')"
+        )
+        if "error" in result:
+            click.echo(f"Error fetching: {result['error']}", err=True)
+            return
+
+        rows = result.get("rows", [])
+        to_fix = []
+        for row in rows:
+            city_val = row.get("home_city", "")
+            if not city_val:
+                continue
+            parsed = parse_city_state_combined(city_val)
+            if parsed:
+                new_city, new_state = parsed
+                to_fix.append((city_val, new_city, new_state))
+
+        if not to_fix:
+            click.echo("No 'City, State' values found with empty state. Nothing to fix.")
+            return
+
+        click.echo(f"Found {len(to_fix)} city/state combination(s) to split:")
+        for old_city, new_city, new_state in to_fix:
+            click.echo(f"  '{old_city}' -> city='{new_city}', state='{new_state}'")
+
+        if dry_run:
+            click.echo("\nDry run - no changes made.")
+            return
+
+        click.confirm("Apply these updates to DoltHub?", abort=True)
+
+        updated = 0
+        for old_city, new_city, new_state in to_fix:
+            old_escaped = old_city.replace("'", "''")
+            new_city_escaped = new_city.replace("'", "''")
+            sql = (
+                f"UPDATE `combined-schedule` SET `home_city` = '{new_city_escaped}', "
+                f"`home_state` = '{new_state}' WHERE `home_city` = '{old_escaped}' "
+                f"AND (`home_state` IS NULL OR `home_state` = '')"
+            )
+            r = dolt.execute_sql(sql)
+            if "error" in r:
+                click.echo(f"Error updating '{old_city}': {r['error']}", err=True)
+            else:
+                updated += 1
+                click.echo(f"  Updated '{old_city}' -> city='{new_city}', state='{new_state}'")
+
+        click.echo(f"\nNormalized {updated} city/state combination(s).")
