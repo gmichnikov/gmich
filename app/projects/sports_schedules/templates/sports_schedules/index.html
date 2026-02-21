@@ -16,7 +16,13 @@
         <svg class="ss-sidebar-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="ss-sidebar-content">
-      <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
+      <div class="ss-run-row">
+        <button type="button" class="ss-run-btn" id="ss-run-btn" onclick="ssRunQuery()">Run</button>
+        <label class="ss-auto-run-toggle">
+          <input type="checkbox" id="ss-auto-run">
+          <span class="ss-auto-run-label">Auto-run</span>
+        </label>
+      </div>
       <!-- Fields: Dimension + Filter per field (Looker-style) -->
       <div class="ss-section" data-section="fields">
         <div class="ss-section-header" onclick="ssToggleSection('fields')">
@@ -678,26 +684,54 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     warning.style.display = current !== window._ssLastRunParams ? 'inline' : 'none';
   }
 
+  var SS_AUTO_RUN_KEY = 'ss-auto-run';
+  function ssGetAutoRun() {
+    var cb = document.getElementById('ss-auto-run');
+    return cb ? cb.checked : true;
+  }
+
   function ssSetupStaleCheckListeners() {
     var debounceTimer;
-    function scheduleCheck() {
+    var debounceMs = 300;
+    function scheduleRun() {
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(ssCheckStaleResults, 150);
+      debounceTimer = setTimeout(function() {
+        if (ssGetAutoRun()) ssRunQuery();
+        else ssCheckStaleResults();
+      }, debounceMs);
     }
-    function immediateCheck() { ssCheckStaleResults(); }
+    function immediateRun() {
+      if (ssGetAutoRun()) ssRunQuery();
+      else ssCheckStaleResults();
+    }
     var wrapper = document.querySelector('.ss-wrapper');
     if (!wrapper) return;
     wrapper.addEventListener('change', function(e) {
       var t = e.target;
+      if (t && t.id === 'ss-auto-run') return;
       if (t && (t.matches('.ss-dimension-cb, .ss-filter-cb, .ss-filter-multiselect, .ss-date-mode-select, #ss-count, #ss-limit, #ss-sort-column, #ss-sort-dir') || t.closest('.ss-filter-multi-inputs, .ss-filter-date-inner'))) {
-        immediateCheck();
+        immediateRun();
       }
     });
     wrapper.addEventListener('input', function(e) {
       var t = e.target;
       if (t && (t.matches('.ss-filter-text, .ss-filter-multi-input') || t.closest('.ss-filter-either-team') || t.closest('.ss-filter-date-inner'))) {
-        scheduleCheck();
+        scheduleRun();
       }
+    });
+  }
+
+  function ssInitAutoRunToggle() {
+    var cb = document.getElementById('ss-auto-run');
+    if (!cb) return;
+    try {
+      var stored = localStorage.getItem(SS_AUTO_RUN_KEY);
+      cb.checked = stored !== '0';
+    } catch (e) {
+      cb.checked = true;
+    }
+    cb.addEventListener('change', function() {
+      try { localStorage.setItem(SS_AUTO_RUN_KEY, cb.checked ? '1' : '0'); } catch (e) {}
     });
   }
 
@@ -1267,7 +1301,15 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   window.ssCopyUrl = ssCopyUrl;
 
   function ssInitFromUrl() {
-    if (ssApplyParamsFromUrl()) ssRunQuery();
+    if (ssApplyParamsFromUrl()) {
+      ssRunQuery();
+      return;
+    }
+    if (ssGetAutoRun()) {
+      var dims = document.querySelectorAll('.ss-dimension-cb:checked');
+      var countOn = document.getElementById('ss-count') && document.getElementById('ss-count').checked;
+      if (dims.length > 0 || countOn) ssRunQuery();
+    }
   }
 
   function ssToggleSavedQueries() {
@@ -1518,6 +1560,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
 
   function ssInitWithPromptSaveCheck() {
     ssInitSidebarState();
+    ssInitAutoRunToggle();
     ssInitFromUrl();
     var params = new URLSearchParams(window.location.search);
     var promptSave = params.get('prompt_save') === '1';
