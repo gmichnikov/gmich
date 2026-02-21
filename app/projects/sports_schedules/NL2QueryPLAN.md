@@ -2,7 +2,7 @@
 
 This plan implements the Natural Language to Query feature as specified in `NL2QueryPRD.md`. The feature allows logged-in users to ask questions in plain English; an LLM translates them into the query config format; the config loads into the form and runs the query.
 
-**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ Phase 4 🔲
+**Status:** Phase 1 ✅ Phase 2 ✅ Phase 3 ✅ Phase 4 ✅
 
 ---
 
@@ -203,8 +203,8 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 4.1 Insufficient Credits & Validation
 
-- [ ] Verify insufficient-credits handling (built in 3.1): when `credits < 1`, button disabled or message shown; modal submit disabled.
-- [ ] Verify server validation from 2.1: empty body, whitespace-only question, or length > 500 → 400 before any LLM call.
+- [x] Verify insufficient-credits handling (built in 3.1): when `credits < 1`, button disabled or message shown; modal submit disabled.
+- [x] Verify server validation from 2.1: empty body, whitespace-only question, or length > 500 → 400 before any LLM call.
 
 **Manual Testing 4.1:**
 - [ ] Set user credits to 0; verify button disabled or message shown; API returns 400.
@@ -214,9 +214,9 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 4.2 Logging Audit
 
-- [ ] Verify every NL query attempt is logged (success, refusal, parse error, build_sql error).
-- [ ] Verify `input_tokens` and `output_tokens` included in log description when LLM returns them.
-- [ ] On success, log includes "1 credit used" in description.
+- [x] Verify every NL query attempt is logged (success, refusal, parse error, build_sql error).
+- [x] Verify `input_tokens` and `output_tokens` included in log description when LLM returns them.
+- [x] On success, log includes "1 credit used" in description.
 
 **Manual Testing 4.2:**
 - [ ] Run a few queries (success, refusal); check LogEntry in admin or DB for project `sports_schedules`.
@@ -226,11 +226,11 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 4.3 Final Integration Test
 
-- [ ] Anonymous user: no "Ask a Question" visible; can use rest of app normally.
-- [ ] Logged-in user with credits: full flow works.
-- [ ] Try sample questions from PRD: "Celtics games this week", "Red Sox vs Yankees", "College basketball in NJ next week", "What games are in New Jersey this weekend?"
-- [ ] Try refusal: "Tell me a joke" → error shown, no credit deducted.
-- [ ] Verify URL updates and query runs same as when loading a saved query.
+- [x] Anonymous user: no "Ask a Question" visible; can use rest of app normally.
+- [x] Logged-in user with credits: full flow works.
+- [x] Try sample questions from PRD: "Celtics games this week", "Red Sox vs Yankees", "College basketball in NJ next week", "What games are in New Jersey this weekend?"
+- [x] Try refusal: "Tell me a joke" → error shown, no credit deducted.
+- [x] Verify URL updates and query runs same as when loading a saved query.
 
 **Manual Testing 4.3:**
 - [ ] End-to-end: ask question → see results; ask off-topic → see error.
@@ -243,4 +243,4 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 - [x] Phase 1: Prompt builder + LLM service
 - [x] Phase 2: API route with auth, credits, validation, logging
 - [x] Phase 3: Modal UI + JS integration + styles
-- [ ] Phase 4: Edge cases, logging audit, final test
+- [x] Phase 4: Edge cases, logging audit, final test

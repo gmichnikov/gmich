@@ -244,7 +244,10 @@
     <textarea id="ss-nl-input" class="ss-nl-input" placeholder="e.g., Celtics games this week" maxlength="500" rows="3" aria-label="Your question"></textarea>
     <div class="ss-nl-char-count" id="ss-nl-char-count">0 / 500</div>
     <div id="ss-nl-error" class="ss-nl-error" style="display: none;"></div>
-    <div id="ss-nl-loading" class="ss-nl-loading" style="display: none;">Loading...</div>
+    <div id="ss-nl-loading" class="ss-nl-loading" style="display: none;">
+      <div class="ss-nl-loading-spinner"></div>
+      <div class="ss-nl-loading-msg">Translating your question and fetching schedule data…</div>
+    </div>
     <div class="ss-nl-actions">
       <button type="button" class="ss-nl-btn ss-nl-cancel" id="ss-nl-cancel">Cancel</button>
       <button type="button" class="ss-nl-btn ss-nl-submit" id="ss-nl-submit">Submit</button>
@@ -613,32 +616,29 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     if (sortCol && params.get('sort_column')) sortCol.value = params.get('sort_column');
     if (sortDir && params.get('sort_dir')) sortDir.value = params.get('sort_dir') || 'asc';
 
-    // Low-cardinality filters (multiselect in filter bar)
+    // Low-cardinality filters (multiselect in filter bar) — clear when param absent
     ['sport', 'league', 'level', 'day', 'home_state'].forEach(function(col) {
-      var val = params.get(col);
-      if (val) {
-        var sel = document.getElementById('ss-filter-' + col);
-        if (sel) {
-          var vals = val.split(',');
-          Array.from(sel.options).forEach(function(opt) {
-            opt.selected = vals.indexOf(opt.value) >= 0;
-          });
-        }
+      var val = params.get(col) || '';
+      var sel = document.getElementById('ss-filter-' + col);
+      if (sel) {
+        var vals = val ? val.split(',') : [];
+        Array.from(sel.options).forEach(function(opt) {
+          opt.selected = vals.indexOf(opt.value) >= 0;
+        });
       }
     });
 
-    // High-cardinality filters (multi-input)
+    // High-cardinality filters (multi-input) — clear and repopulate from params
     ['home_team', 'road_team', 'location', 'home_city'].forEach(function(col) {
-      var val = params.get(col);
+      var val = params.get(col) || '';
       var container = document.getElementById('ss-filter-' + col + '-container');
-      if (!container || !val) return;
+      if (!container) return;
       var vals = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-      if (vals.length === 0) return;
       var list = container.querySelector('.ss-filter-multi-input-list');
       var addBtn = container.querySelector('.ss-filter-multi-input-add');
       if (!list || !addBtn) return;
       list.innerHTML = '';
-      vals.forEach(function(v) {
+      (vals.length > 0 ? vals : ['']).forEach(function(v) {
         var row = document.createElement('div');
         row.className = 'ss-filter-multi-input-row';
         row.innerHTML = '<input type="text" class="ss-filter-text ss-filter-multi-input" placeholder="Contains..." data-filter="' + col + '">' +
@@ -653,11 +653,13 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       ssUpdateMultiInputRemoveVisibility(container);
     });
 
-    // either_team
-    var et1 = params.get('either_team_1');
-    var et2 = params.get('either_team_2');
-    if (et1) { var el = document.getElementById('ss-filter-either-team-1'); if (el) el.value = et1; }
-    if (et2) { var el = document.getElementById('ss-filter-either-team-2'); if (el) el.value = et2; }
+    // either_team — always set both inputs (clear when param absent)
+    var et1 = params.get('either_team_1') || '';
+    var et2 = params.get('either_team_2') || '';
+    var el1 = document.getElementById('ss-filter-either-team-1');
+    var el2 = document.getElementById('ss-filter-either-team-2');
+    if (el1) el1.value = et1;
+    if (el2) el2.value = et2;
 
     // Date
     var dateMode = params.get('date_mode');
@@ -1752,6 +1754,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       if (charCount) charCount.textContent = '0 / 500';
       var cred = (nlSection && nlSection.getAttribute('data-credits')) || '0';
       if (creditsCount) creditsCount.textContent = cred;
+      if (submitBtn) submitBtn.disabled = true;
     }
 
     function ssCloseNlModal() {
@@ -1761,7 +1764,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     function ssUpdateCharCount() {
       var len = (input.value || '').length;
       if (charCount) charCount.textContent = len + ' / 500';
-      if (submitBtn) submitBtn.disabled = !(input.value || '').trim();
+      var cred = parseInt((nlSection && nlSection.getAttribute('data-credits')) || '0', 10) || 0;
+      if (submitBtn) submitBtn.disabled = !(input.value || '').trim() || cred < 1;
     }
 
     askBtn.addEventListener('click', function() {
@@ -1782,8 +1786,15 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         return;
       }
       if (q.length > 500) return;
+      var cred = parseInt((nlSection && nlSection.getAttribute('data-credits')) || '0', 10) || 0;
+      if (cred < 1) {
+        if (errorEl) { errorEl.textContent = 'Insufficient credits'; errorEl.style.display = 'block'; }
+        return;
+      }
       if (submitBtn) submitBtn.disabled = true;
-      if (loadingEl) loadingEl.style.display = 'block';
+      if (cancelBtn) cancelBtn.disabled = true;
+      if (input) { input.readOnly = true; input.setAttribute('aria-busy', 'true'); }
+      if (loadingEl) loadingEl.style.display = 'flex';
       if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
 
       var meta = document.querySelector('meta[name="csrf-token"]');
@@ -1799,6 +1810,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
         .then(function(res) {
           if (loadingEl) loadingEl.style.display = 'none';
+          if (input) { input.readOnly = false; input.removeAttribute('aria-busy'); }
+          if (cancelBtn) cancelBtn.disabled = false;
           if (res.data.config) {
             ssCloseNlModal();
             ssLoadQueryAndRun(res.data.config);
@@ -1814,6 +1827,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         })
         .catch(function() {
           if (loadingEl) loadingEl.style.display = 'none';
+          if (input) { input.readOnly = false; input.removeAttribute('aria-busy'); }
+          if (cancelBtn) cancelBtn.disabled = false;
           if (errorEl) {
             errorEl.textContent = 'Natural language search is temporarily unavailable. Try the filters below.';
             errorEl.style.display = 'block';

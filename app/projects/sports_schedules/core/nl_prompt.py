@@ -368,6 +368,7 @@ Rules:
 - If the question can be answered as a schedule data query, return exactly: {"config": {...}} with the full config object.
 - If the question is off-topic, subjective, ambiguous, or not representable (e.g. "Tell me a joke", "What's the best game to watch?"), return exactly: {"error": "human-readable reason"}.
 - Never return both "config" and "error". Output ONLY valid JSON—no markdown, no code fences, no extra text.
+- Team/city filters (home_team, road_team, home_city, either_team, location): Always use full names, never abbreviations. The database uses "contains" search; abbreviations will not match. Examples: OKC→Oklahoma City or Thunder; NYC→New York; DC→Washington; KC→Kansas City; LA→Los Angeles; SF→San Francisco; PHX→Phoenix.
 """
 
     # --- Schema ---
@@ -375,7 +376,7 @@ Rules:
 ## Config Schema
 
 - dimensions: Comma-separated list of column names (exclude either_team—filter-only). Valid: date, time, home_team, road_team, day, league, sport, level, home_city, home_state, location.
-- filters: Object with filter keys. Low-cardinality: sport, league, level, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city. either_team: array of team name substrings (matches home OR road).
+- filters: Object with filter keys. Low-cardinality: sport, league, level, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city — use full names, not abbreviations (OKC→Thunder or Oklahoma City; NYC→New York; KC→Kansas City; DC→Washington). either_team: array of team name substrings (matches home OR road); spell out team names.
 - date_mode: exact | today | on_or_after | this_weekend | range | future | next_week | last_n | next_n | year
 - date_exact, date_start, date_end: YYYY-MM-DD when required
 - date_n: integer for last_n, next_n
