@@ -2,7 +2,7 @@
 
 This plan implements the Natural Language to Query feature as specified in `NL2QueryPRD.md`. The feature allows logged-in users to ask questions in plain English; an LLM translates them into the query config format; the config loads into the form and runs the query.
 
-**Status:** Phase 1 🔲 Phase 2 🔲 Phase 3 🔲 Phase 4 🔲
+**Status:** Phase 1 ✅ Phase 2 🔲 Phase 3 🔲 Phase 4 🔲
 
 ---
 
@@ -23,6 +23,8 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 - All new CSS classes use the `ss-` prefix.
 - No database migrations; feature uses existing `User.credits` and `LogEntry`.
 - `GOOGLE_API_KEY` must be set in `.env`.
+- **Model:** Use `gemini-3-flash-preview` only; no fallback to other models.
+- **Few-shot examples:** Use examples 1–15 from PRD §Full JSON Examples as-is, including Example 4 with `league: ["CL"]` (Champions League)—we have this code in our league set.
 
 ---
 
@@ -30,23 +32,23 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 1.1 Create Prompt Builder Module
 
-- [ ] Create `app/projects/sports_schedules/core/nl_prompt.py`
-- [ ] Define `build_nl_prompt(question: str, today_ymd: str) -> str` — returns a single string (no separate system/user blocks; Gemini accepts concatenated prompt).
-  - [ ] **Order:** Instructions → schema → date spec → allowed values → few-shot examples → user question.
-  - [ ] Include system instructions: translate NL to JSON config or return `{ "error": "..." }` if not answerable.
-  - [ ] Include today's date: "Today's date is {today_ymd}" so LLM can resolve "tomorrow", "this weekend", etc. (Few-shot examples can use fixed 2026-02-20.)
-  - [ ] Include full schema: dimensions, filters (low + high), date modes, date params per mode.
-  - [ ] Include date filter spec table (from PRD §5): what LLM must provide vs may omit for each `date_mode`.
-  - [ ] Include allowed values for low-cardinality:
-    - [ ] **sport:** from `constants.SPORTS`
-    - [ ] **level:** from `constants.LEVELS`
-    - [ ] **day:** from `constants.DAYS`
-    - [ ] **home_state:** from `constants.US_STATE_CODES`; add brief state-name→code mapping (e.g., "New Jersey" → NJ) if not obvious.
-    - [ ] **league:** from `constants.LEAGUE_CODES` with `LEAGUE_DISPLAY_NAMES` for mapping.
-  - [ ] Include few-shot examples: NL question → full JSON config. Use examples 1–15 from PRD §Full JSON Examples (with today=2026-02-20 for relative dates in examples).
-  - [ ] Keep prompt reasonably sized; trim examples if needed.
-  - [ ] Append user question at end.
-- [ ] Document output format: exactly `{ "config": {...} }` or `{ "error": "..." }`; no markdown, no extra text.
+- [x] Create `app/projects/sports_schedules/core/nl_prompt.py`
+- [x] Define `build_nl_prompt(question: str, today_ymd: str) -> str` — returns a single string (no separate system/user blocks; Gemini accepts concatenated prompt).
+  - [x] **Order:** Instructions → schema → date spec → allowed values → few-shot examples → user question.
+  - [x] Include system instructions: translate NL to JSON config or return `{ "error": "..." }` if not answerable.
+  - [x] Include today's date: "Today's date is {today_ymd}" so LLM can resolve "tomorrow", "this weekend", etc. (Few-shot examples can use fixed 2026-02-20.)
+  - [x] Include full schema: dimensions, filters (low + high), date modes, date params per mode.
+  - [x] Include date filter spec table (from PRD §5): what LLM must provide vs may omit for each `date_mode`.
+  - [x] Include allowed values for low-cardinality:
+    - [x] **sport:** from `constants.SPORTS`
+    - [x] **level:** from `constants.LEVELS`
+    - [x] **day:** from `constants.DAYS`
+    - [x] **home_state:** from `constants.US_STATE_CODES`; add brief state-name→code mapping (e.g., "New Jersey" → NJ) if not obvious.
+    - [x] **league:** from `constants.LEAGUE_CODES` with `LEAGUE_DISPLAY_NAMES` for mapping.
+  - [x] Include few-shot examples: NL question → full JSON config. Use examples 1–15 from PRD §Full JSON Examples (with today=2026-02-20 for relative dates in examples).
+  - [x] Keep prompt reasonably sized; trim examples if needed.
+  - [x] Append user question at end.
+- [x] Document output format: exactly `{ "config": {...} }` or `{ "error": "..." }`; no markdown, no extra text.
 
 **Manual Testing 1.1:**
 - [ ] Call `build_nl_prompt("Celtics games this week", "2026-02-20")` and verify prompt contains today, schema, examples, and question.
@@ -56,13 +58,13 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ### 1.2 Create NL LLM Service
 
-- [ ] Create `app/projects/sports_schedules/core/nl_service.py`
-  - [ ] Use `google.genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))`.
-  - [ ] Define `call_nl_llm(prompt: str) -> tuple[str, dict]`
-    - [ ] Call `gemini_client.models.generate_content(model="gemini-3-flash-preview", contents=prompt, config={"max_output_tokens": 2048})`.
-    - [ ] Return `(response.text, metadata_dict)` where `metadata_dict` has `input_tokens`, `output_tokens` (from `usage_metadata` if available).
-    - [ ] Handle timeout (e.g., 60s); handle API errors; propagate exceptions.
-  - [ ] Do not add pricing/cost logic; tokens are for logging only.
+- [x] Create `app/projects/sports_schedules/core/nl_service.py`
+  - [x] Use `google.genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))`.
+  - [x] Define `call_nl_llm(prompt: str) -> tuple[str, dict]`
+    - [x] Call `gemini_client.models.generate_content(model="gemini-3-flash-preview", contents=prompt, config={"max_output_tokens": 2048})`. Use this model only; no fallback.
+    - [x] Return `(response.text, metadata_dict)` where `metadata_dict` has `input_tokens`, `output_tokens` (from `usage_metadata` if available).
+    - [x] Handle timeout (e.g., 60s); handle API errors; propagate exceptions.
+  - [x] Do not add pricing/cost logic; tokens are for logging only.
 
 **Manual Testing 1.2:**
 - [ ] In Flask shell or test script: build prompt for "Celtics games this week", call `call_nl_llm(prompt)`.
@@ -97,10 +99,10 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
   - [ ] If `err`: return 400 `{ "error": "Could not run that query" }`. Do not deduct credits. Log with tokens.
 - [ ] On success:
   - [ ] Deduct 1 credit: `current_user.credits -= 1`
-  - [ ] Create `LogEntry` (project=`sports_schedules`, category=`NL Query`, description=`"NL query: '{q}' → config. input_tokens={i}, output_tokens={o}. 1 credit used."`). Truncate question if long.
+  - [ ] Create `LogEntry` (actor_id=`current_user.id`, project=`sports_schedules`, category=`NL Query`, description=`"NL query: '{q}' → config. input_tokens={i}, output_tokens={o}. 1 credit used."`). Truncate question if long.
   - [ ] `db.session.commit()`
   - [ ] Return 200 `{ "config": parsed["config"], "remaining_credits": current_user.credits }`
-- [ ] Log all outcomes (refusal, parse error, build_sql error, LLM exception): same format with outcome type; no credit line when not deducted.
+- [ ] Log all outcomes (refusal, parse error, build_sql error, LLM exception): same format with outcome type; no credit line when not deducted. Always include `actor_id=current_user.id` on `LogEntry`.
 - [ ] **CSRF:** Match saved-queries pattern — client sends `X-CSRFToken` header from `meta[name="csrf-token"]`; route does not use `@csrf.exempt`.
 
 **Manual Testing 2.1:**
@@ -238,7 +240,7 @@ This plan implements the Natural Language to Query feature as specified in `NL2Q
 
 ## Summary Checklist
 
-- [ ] Phase 1: Prompt builder + LLM service
+- [x] Phase 1: Prompt builder + LLM service
 - [ ] Phase 2: API route with auth, credits, validation, logging
 - [ ] Phase 3: Modal UI + JS integration + styles
 - [ ] Phase 4: Edge cases, logging audit, final test
