@@ -13,6 +13,10 @@
   <div id="kwSetup" class="kw-setup">
     <div class="kw-loading kw-hidden" id="kwLoading">Loading word lists…</div>
     <div class="kw-setup-content kw-hidden" id="kwSetupContent">
+      <div class="kw-resume-section kw-hidden" id="kwResumeSection">
+        <p class="kw-resume-msg">Game in progress</p>
+        <button type="button" class="kw-resume-btn" id="kwResumeBtn">Resume Game</button>
+      </div>
       <div class="kw-difficulty-section">
         <p class="kw-setup-label">Difficulty</p>
         <div class="kw-difficulty-btns">
@@ -35,6 +39,10 @@
         </div>
       </div>
       <button type="button" class="kw-start-btn" id="kwStartBtn" disabled>Start Game</button>
+      <div class="kw-stats-section">
+        <p class="kw-setup-label">Stats (per difficulty)</p>
+        <div class="kw-stats" id="kwStats"></div>
+      </div>
     </div>
   </div>
 
@@ -51,7 +59,7 @@
       </div>
       <div class="kw-board" id="kwBoard"></div>
     </div>
-    <div class="kw-toast kw-hidden" id="kwToast"></div>
+    <div class="kw-toast kw-hidden" id="kwToast" aria-live="polite" role="status"></div>
     <div class="kw-keyboard" id="kwKeyboard"></div>
     <div class="kw-win kw-hidden" id="kwWin">
       <h2 class="kw-win-title">You won!</h2>

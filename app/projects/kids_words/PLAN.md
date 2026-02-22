@@ -148,15 +148,15 @@ This plan follows the PRD and breaks the work into smaller, testable chunks. **V
 ## Phase 5: localStorage Persistence
 
 ### 5.1 Save Game State
-- [ ] On each guess: save `{ difficulty, wordCount, answers, guesses, solved }` to localStorage
-- [ ] Use a stable key, e.g. `kids_words_game`
-- [ ] On page load: if saved game exists, restore game view directly (as if mid-game refresh)
+- [x] On each guess: save `{ difficulty, wordCount, answers, guesses, solved }` to localStorage
+- [x] Use a stable key, e.g. `kids_words_game`
+- [x] On page load: if saved game exists, restore game view directly (as if mid-game refresh)
 
 **Manual Testing 5.1:**
 - [ ] Start game, make a guess, refresh → game restores with correct state
 
 ### 5.2 Clear on New Game
-- [ ] When user starts new game from setup: clear `kids_words_game` from localStorage
+- [x] When user starts new game from setup: clear `kids_words_game` from localStorage
 
 **Manual Testing 5.2:**
 - [ ] New Game clears saved state; no resume option on next load
@@ -166,17 +166,17 @@ This plan follows the PRD and breaks the work into smaller, testable chunks. **V
 ## Phase 6: Stats
 
 ### 6.1 Stats Storage
-- [ ] Track: games played, games won
-- [ ] Store in localStorage under `kids_words_stats`: `{ played, won }`
-- [ ] Update on game end (win or lose)
+- [x] Track: games played, games won
+- [x] Store in localStorage under `kids_words_stats`: `{ played, won }`
+- [x] Update on game end (win or lose)
 
 **Manual Testing 6.1:**
 - [ ] Win/lose a few games; check localStorage for stats
 
 ### 6.2 Stats Display
-- [ ] Add `kw-stats` section (e.g. on setup screen or small footer)
-- [ ] Show "X / Y" (wins / played) and win rate %
-- [ ] Style with kw- prefix
+- [x] Add `kw-stats` section (e.g. on setup screen or small footer)
+- [x] Show "X / Y" (wins / played) and win rate %
+- [x] Style with kw- prefix
 
 **Manual Testing 6.2:**
 - [ ] Stats visible and accurate after multiple games
@@ -186,25 +186,25 @@ This plan follows the PRD and breaks the work into smaller, testable chunks. **V
 ## Phase 7: Polish & Audit
 
 ### 7.1 CSS Audit
-- [ ] Confirm every class in `kids_words.css` uses `kw-` prefix
-- [ ] No global selectors (e.g. `button`, `input`) without kw- scope
-- [ ] Responsive: 375px mobile, 768px+ desktop
+- [x] Confirm every class in `kids_words.css` uses `kw-` prefix
+- [x] No global selectors (e.g. `button`, `input`) without kw- scope
+- [x] Responsive: 375px mobile, 768px+ desktop
 
 **Manual Testing 7.1:**
 - [ ] Resize to mobile; layout stacks, 2 words per row max
 - [ ] No style bleed from other projects
 
 ### 7.2 Accessibility & UX
-- [ ] Input row / cells focusable; tab order sane
-- [ ] "Not in word list" visible and dismissible
-- [ ] Win/lose messages readable
+- [x] Input row / cells focusable; tab order sane
+- [x] "Not in word list" visible and dismissible
+- [x] Win/lose messages readable
 
 **Manual Testing 7.2:**
 - [ ] Tab through game; screen reader or keyboard-only usage works
 
 ### 7.3 Data Path Audit
-- [ ] Verify all data paths resolve correctly in dev and production
-- [ ] API routes 404 gracefully if files missing
+- [x] Verify all data paths resolve correctly in dev and production
+- [x] API routes 404 gracefully if files missing
 
 ---
 

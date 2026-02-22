@@ -7,6 +7,8 @@
   "use strict";
 
   const API = window.KIDS_WORDS_API || {};
+  const STORAGE_KEY = "kids_words_game";
+  const STATS_KEY = "kids_words_stats";
   let validGuesses = new Set();
   let answerSets = { grade2: [], grade4: [], adult: [] };
   let dataReady = false;
@@ -29,9 +31,18 @@
     setupContentEl.classList.add("kw-hidden");
 
     Promise.all([
-      fetch(API.grade2).then((r) => r.json()),
-      fetch(API.grade4).then((r) => r.json()),
-      fetch(API.guesses).then((r) => r.json()),
+      fetch(API.grade2).then(function (r) {
+        if (!r.ok) throw new Error("Grade 2 words not found");
+        return r.json();
+      }),
+      fetch(API.grade4).then(function (r) {
+        if (!r.ok) throw new Error("Grade 4 words not found");
+        return r.json();
+      }),
+      fetch(API.guesses).then(function (r) {
+        if (!r.ok) return [];
+        return r.json();
+      }),
     ])
       .then(function ([grade2Data, grade4Data, guessesArr]) {
         validGuesses = new Set(
@@ -53,6 +64,7 @@
         loadingEl.classList.add("kw-hidden");
         setupContentEl.classList.remove("kw-hidden");
         updateStartButton();
+        checkForSavedGame();
       })
       .catch(function (err) {
         console.error("Kids Words: failed to load data", err);
@@ -64,6 +76,162 @@
     const btn = byId("kwStartBtn");
     if (!btn) return;
     btn.disabled = !dataReady || !selectedDifficulty || !selectedWordCount;
+  }
+
+  function saveGameState() {
+    try {
+      const data = {
+        difficulty: selectedDifficulty,
+        wordCount: selectedWordCount,
+        answers: gameState.answers,
+        maxGuesses: gameState.maxGuesses,
+        guesses: gameState.guesses,
+        gridResults: gameState.gridResults,
+        solved: gameState.solved,
+        guessIndex: gameState.guessIndex,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Kids Words: could not save game state", e);
+    }
+  }
+
+  function hasSavedGame() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      return data.answers && data.answers.length > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function checkForSavedGame() {
+    const section = byId("kwResumeSection");
+    if (!section) return;
+    if (hasSavedGame()) {
+      section.classList.remove("kw-hidden");
+    } else {
+      section.classList.add("kw-hidden");
+    }
+  }
+
+  function resumeGame() {
+    if (!dataReady) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (!data.answers || !data.answers.length) return;
+      selectedDifficulty = data.difficulty;
+      selectedWordCount = data.wordCount;
+      selectDifficulty(selectedDifficulty);
+      selectWordCount(selectedWordCount);
+      gameState = {
+        answers: data.answers,
+        maxGuesses: data.maxGuesses,
+        guessIndex: data.guessIndex,
+        currentGuess: "",
+        guesses: data.guesses || [],
+        gridResults: data.gridResults || data.answers.map(function () { return []; }),
+        solved: data.solved || data.answers.map(function () { return false; }),
+        gameOver: false,
+      };
+      byId("kwSetup").classList.add("kw-hidden");
+      byId("kwGame").classList.remove("kw-hidden");
+      const inputArea = byId("kwInputArea");
+      if (inputArea) inputArea.classList.remove("kw-hidden");
+      byId("kwWin").classList.add("kw-hidden");
+      byId("kwLose").classList.add("kw-hidden");
+      byId("kwToast").classList.add("kw-hidden");
+      buildBoard(gameState.answers, gameState.maxGuesses);
+      buildKeyboard();
+      resumeGame._restoring = true;
+      restoreBoardFromState();
+      resumeGame._restoring = false;
+      updateKeyboardFeedback();
+      clearInputRow();
+      byId("kwInputRow") && byId("kwInputRow").focus();
+    } catch (e) {
+      console.warn("Kids Words: could not restore game", e);
+      localStorage.removeItem(STORAGE_KEY);
+      checkForSavedGame();
+    }
+  }
+
+  function restoreBoardFromState() {
+    const grids = all(".kw-word-grid");
+    const guesses = gameState.guesses;
+    for (let g = 0; g < guesses.length; g++) {
+      const guess = guesses[g];
+      for (let w = 0; w < gameState.answers.length; w++) {
+        const feedback = gameState.gridResults[w][g];
+        if (!feedback) continue;
+        const rowEl = grids[w].querySelectorAll(".kw-word-row")[g];
+        const cells = rowEl.querySelectorAll(".kw-cell");
+        for (let i = 0; i < 5; i++) {
+          cells[i].textContent = guess[i].toUpperCase();
+          cells[i].classList.remove("kw-cell-correct", "kw-cell-present", "kw-cell-absent");
+          cells[i].classList.add("kw-cell-" + feedback[i]);
+        }
+      }
+    }
+    if (gameState.solved.every(Boolean)) {
+      gameState.gameOver = true;
+      showWin();
+      return;
+    }
+    if (gameState.guessIndex >= gameState.maxGuesses) {
+      gameState.gameOver = true;
+      showLose();
+    }
+  }
+
+  function getStats() {
+    try {
+      const raw = localStorage.getItem(STATS_KEY);
+      if (!raw) return { grade2: { played: 0, won: 0 }, grade4: { played: 0, won: 0 }, adult: { played: 0, won: 0 } };
+      const data = JSON.parse(raw);
+      return {
+        grade2: { played: data.grade2?.played || 0, won: data.grade2?.won || 0 },
+        grade4: { played: data.grade4?.played || 0, won: data.grade4?.won || 0 },
+        adult: { played: data.adult?.played || 0, won: data.adult?.won || 0 },
+      };
+    } catch (e) {
+      return { grade2: { played: 0, won: 0 }, grade4: { played: 0, won: 0 }, adult: { played: 0, won: 0 } };
+    }
+  }
+
+  function updateStats(won) {
+    if (!selectedDifficulty) return;
+    try {
+      const stats = getStats();
+      let d = stats[selectedDifficulty];
+      if (!d) d = { played: 0, won: 0 };
+      d.played = (d.played || 0) + 1;
+      if (won) d.won = (d.won || 0) + 1;
+      stats[selectedDifficulty] = d;
+      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+      renderStats();
+    } catch (e) {
+      console.warn("Kids Words: could not save stats", e);
+    }
+  }
+
+  function renderStats() {
+    const el = byId("kwStats");
+    if (!el) return;
+    const stats = getStats();
+    const labels = { grade2: "Grade 2", grade4: "Grade 4", adult: "Adult" };
+    const rows = [];
+    for (const k in labels) {
+      const d = stats[k];
+      const p = d.played || 0;
+      const w = d.won || 0;
+      rows.push(labels[k] + ": " + (p === 0 ? "—" : w + " / " + p + " (" + (p > 0 ? Math.round(100 * w / p) : 0) + "%)"));
+    }
+    el.innerHTML = rows.map(function (r) { return "<div class=\"kw-stats-row\">" + r + "</div>"; }).join("");
   }
 
   function selectDifficulty(difficulty) {
@@ -172,6 +340,7 @@
     byId("kwWin").classList.remove("kw-hidden");
     byId("kwLose").classList.add("kw-hidden");
     gameState.gameOver = true;
+    if (!resumeGame._restoring) updateStats(true);
   }
 
   function showLose() {
@@ -188,6 +357,7 @@
       answersEl.appendChild(span);
     });
     gameState.gameOver = true;
+    if (!resumeGame._restoring) updateStats(false);
   }
 
   function submitGuess() {
@@ -221,6 +391,7 @@
     gameState.guessIndex += 1;
     clearInputRow();
     updateKeyboardFeedback();
+    saveGameState();
 
     if (gameState.solved.every(Boolean)) {
       showWin();
@@ -365,6 +536,9 @@
 
   function startGame() {
     if (!selectedDifficulty || !selectedWordCount) return;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
     const answers = pickRandomAnswers(selectedWordCount);
     if (answers.length !== selectedWordCount) return;
 
@@ -400,13 +574,19 @@
     selectedWordCount = null;
     selectDifficulty(null);
     selectWordCount(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
     byId("kwGame").classList.add("kw-hidden");
     byId("kwSetup").classList.remove("kw-hidden");
     updateStartButton();
+    checkForSavedGame();
+    renderStats();
   }
 
   function init() {
     loadData();
+    renderStats();
 
     all(".kw-difficulty-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -425,6 +605,9 @@
 
     const newGameBtn = byId("kwNewGameBtn");
     if (newGameBtn) newGameBtn.addEventListener("click", newGame);
+
+    const resumeBtn = byId("kwResumeBtn");
+    if (resumeBtn) resumeBtn.addEventListener("click", resumeGame);
 
     document.addEventListener("keydown", handleKeydown);
   }
