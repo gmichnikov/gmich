@@ -104,14 +104,140 @@
   margin-top: 1rem;
 }
 
-.kw-board {
-  min-height: 100px;
+.kw-board-container {
   margin-bottom: 1rem;
 }
 
-.kw-board-placeholder {
-  color: #666;
-  font-style: italic;
+.kw-input-area {
+  margin-bottom: 1rem;
+}
+
+.kw-input-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  outline: none;
+}
+
+.kw-input-row:focus {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}
+
+.kw-input-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.kw-grids {
+  display: grid;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.kw-grids.kw-layout-1 { grid-template-columns: 1fr; }
+.kw-grids.kw-layout-2 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-3 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-4 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-5 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-6 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-7 { grid-template-columns: repeat(2, 1fr); }
+.kw-grids.kw-layout-8 { grid-template-columns: repeat(4, 1fr); }
+
+@media (min-width: 768px) {
+  .kw-grids.kw-layout-4 { grid-template-columns: repeat(2, 1fr); }
+  .kw-grids.kw-layout-6 { grid-template-columns: repeat(3, 1fr); }
+  .kw-grids.kw-layout-8 { grid-template-columns: repeat(4, 1fr); }
+}
+
+.kw-word-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 auto;
+  max-width: 220px;
+}
+
+.kw-word-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.kw-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #fff;
+}
+
+.kw-cell.kw-cell-correct {
+  background: #6aaa64;
+  border-color: #6aaa64;
+  color: #fff;
+}
+
+.kw-cell.kw-cell-present {
+  background: #c9b458;
+  border-color: #c9b458;
+  color: #fff;
+}
+
+.kw-cell.kw-cell-absent {
+  background: #787c7e;
+  border-color: #787c7e;
+  color: #fff;
+}
+
+.kw-cell.kw-cell-reveal {
+  background: #787c7e;
+  border-color: #787c7e;
+  color: #fff;
+}
+
+.kw-toast {
+  padding: 0.5rem 1rem;
+  background: #333;
+  color: #fff;
+  border-radius: 6px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.kw-win-title,
+.kw-lose-title {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.kw-lose-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.kw-lose-answers .kw-answer-word {
+  padding: 0.25rem 0.5rem;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: 1rem;
+  text-transform: uppercase;
 }
 
 .kw-new-game-btn {
