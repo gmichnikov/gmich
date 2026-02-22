@@ -335,6 +335,16 @@ PROJECTS = [
         "icon": "🏟️",
         "order": 14,
     },
+    {
+        "id": "kids_words",
+        "name": "Kids Words",
+        "description": "Kids Words",
+        "url": "/kids-words",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "order": 15,
+    },
 ]
 
 
