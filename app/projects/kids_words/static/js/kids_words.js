@@ -570,6 +570,9 @@
   }
 
   function newGame() {
+    if (!confirm("Leave this game and return to setup? Your progress will be lost.")) {
+      return;
+    }
     selectedDifficulty = null;
     selectedWordCount = null;
     selectDifficulty(null);
