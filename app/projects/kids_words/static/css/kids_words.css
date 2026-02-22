@@ -11,6 +11,12 @@
   min-height: calc(100vh - 70px - 60px);
 }
 
+@media (min-width: 900px) {
+  .kw-wrapper {
+    max-width: 1100px;
+  }
+}
+
 .kw-title {
   text-align: center;
   margin: 0 0 1.5rem 0;
@@ -102,10 +108,15 @@
 /* Game area */
 .kw-game {
   margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: min(500px, 75vh);
 }
 
 .kw-board-container {
-  margin-bottom: 1rem;
+  flex: 1 1 0;
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
 }
 
 .kw-input-area {
@@ -117,6 +128,10 @@
   gap: 4px;
   justify-content: center;
   outline: none;
+}
+
+@media (min-width: 900px) {
+  .kw-input-row { gap: 3px; }
 }
 
 .kw-input-row:focus {
@@ -135,6 +150,14 @@
   font-size: 1.5rem;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+@media (min-width: 900px) {
+  .kw-input-cell {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
 }
 
 .kw-grids {
@@ -158,6 +181,15 @@
   .kw-grids.kw-layout-8 { grid-template-columns: repeat(4, 1fr); }
 }
 
+@media (min-width: 900px) {
+  .kw-grids { gap: 0.75rem; }
+  .kw-grids.kw-layout-4 { grid-template-columns: repeat(4, 1fr); }
+  .kw-grids.kw-layout-5 { grid-template-columns: repeat(5, 1fr); }
+  .kw-grids.kw-layout-6 { grid-template-columns: repeat(6, 1fr); }
+  .kw-grids.kw-layout-7 { grid-template-columns: repeat(4, 1fr); }
+  .kw-grids.kw-layout-8 { grid-template-columns: repeat(4, 1fr); }
+}
+
 .kw-word-grid {
   display: flex;
   flex-direction: column;
@@ -166,10 +198,21 @@
   max-width: 220px;
 }
 
+@media (min-width: 900px) {
+  .kw-word-grid {
+    max-width: 176px;
+    gap: 3px;
+  }
+}
+
 .kw-word-row {
   display: flex;
   gap: 4px;
   justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .kw-word-row { gap: 3px; }
 }
 
 .kw-cell {
@@ -184,6 +227,15 @@
   font-weight: 600;
   text-transform: uppercase;
   background: #fff;
+}
+
+@media (min-width: 900px) {
+  .kw-cell {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    border-width: 1.5px;
+  }
 }
 
 .kw-cell.kw-cell-correct {
@@ -208,6 +260,82 @@
   background: #787c7e;
   border-color: #787c7e;
   color: #fff;
+}
+
+/* Virtual keyboard - always visible at bottom of game area */
+.kw-keyboard {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0.75rem 0;
+  background: white;
+}
+
+.kw-keyboard-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.kw-key {
+  min-width: 28px;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  background: #d3d6da;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.kw-key:hover {
+  background: #b8bcc4;
+}
+
+.kw-key.kw-key-wide {
+  min-width: 48px;
+  font-size: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .kw-key {
+    min-width: 24px;
+    height: 36px;
+    padding: 0 6px;
+    font-size: 0.8rem;
+  }
+  .kw-key.kw-key-wide {
+    min-width: 42px;
+    font-size: 0.7rem;
+  }
+}
+
+.kw-key.kw-key-correct {
+  background: #6aaa64;
+  color: #fff;
+}
+
+.kw-key.kw-key-present {
+  background: #c9b458;
+  color: #fff;
+}
+
+.kw-key.kw-key-absent {
+  background: #787c7e;
+  color: #fff;
+}
+
+.kw-key.kw-key-correct:hover,
+.kw-key.kw-key-present:hover,
+.kw-key.kw-key-absent:hover {
+  filter: brightness(1.05);
 }
 
 .kw-toast {

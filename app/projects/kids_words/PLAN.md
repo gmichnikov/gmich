@@ -126,18 +126,18 @@ This plan follows the PRD and breaks the work into smaller, testable chunks. **V
 ## Phase 4: Virtual Keyboard
 
 ### 4.1 Keyboard UI
-- [ ] Add `kw-keyboard` below game board
-- [ ] Rows: QWERTY... , ASDF... , ZXCV... + Enter/Backspace
-- [ ] Each key: `kw-key`; layout with flexbox/grid
-- [ ] Mobile-friendly sizing
+- [x] Add `kw-keyboard` below game board
+- [x] Rows: QWERTY... , ASDF... , ZXCV... + Enter/Backspace
+- [x] Each key: `kw-key`; layout with flexbox/grid
+- [x] Mobile-friendly sizing
 
 **Manual Testing 4.1:**
 - [ ] Keyboard visible; keys clickable
 
 ### 4.2 Keyboard Input & Feedback
-- [ ] Click key: type letter or Backspace/Enter (same as physical keyboard)
-- [ ] After each guess: update key colors (best status across all words)
-- [ ] Green > yellow > gray; disabled keys stay gray
+- [x] Click key: type letter or Backspace/Enter (same as physical keyboard)
+- [x] After each guess: update key colors (best status across all words)
+- [x] Green > yellow > gray; disabled keys stay gray
 
 **Manual Testing 4.2:**
 - [ ] Use virtual keyboard to type and submit

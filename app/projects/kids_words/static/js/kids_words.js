@@ -131,10 +131,17 @@
     maxGuesses: 0,
     guessIndex: 0,
     currentGuess: "",
+    guesses: [],
     gridResults: [],
     solved: [],
     gameOver: false,
   };
+
+  const KEYBOARD_ROWS = [
+    ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+    ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+    ["Enter", "z", "x", "c", "v", "b", "n", "m", "Backspace"],
+  ];
 
   function clearInputRow() {
     all(".kw-input-cell").forEach(function (cell) {
@@ -209,9 +216,11 @@
       if (allCorrect) gameState.solved[w] = true;
     }
 
+    gameState.guesses.push(guess);
     gameState.currentGuess = "";
     gameState.guessIndex += 1;
     clearInputRow();
+    updateKeyboardFeedback();
 
     if (gameState.solved.every(Boolean)) {
       showWin();
@@ -221,6 +230,81 @@
       showLose();
       return;
     }
+  }
+
+  function buildKeyboard() {
+    const container = byId("kwKeyboard");
+    if (!container) return;
+    container.innerHTML = "";
+    KEYBOARD_ROWS.forEach(function (row) {
+      const rowEl = document.createElement("div");
+      rowEl.className = "kw-keyboard-row";
+      row.forEach(function (key) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "kw-key";
+        btn.dataset.key = key;
+        btn.textContent = key === "Enter" ? "Enter" : key === "Backspace" ? "⌫" : key.toUpperCase();
+        if (key === "Enter" || key === "Backspace") btn.classList.add("kw-key-wide");
+        btn.addEventListener("click", function () {
+          if (gameState.gameOver) return;
+          if (key === "Enter") {
+            submitGuess();
+            return;
+          }
+          if (key === "Backspace") {
+            if (gameState.currentGuess.length > 0) {
+              gameState.currentGuess = gameState.currentGuess.slice(0, -1);
+              updateInputRow(gameState.currentGuess);
+            }
+            byId("kwInputRow") && byId("kwInputRow").focus();
+            return;
+          }
+          if (gameState.currentGuess.length < 5) {
+            gameState.currentGuess += key;
+            updateInputRow(gameState.currentGuess);
+            byId("kwInputRow") && byId("kwInputRow").focus();
+          }
+        });
+        rowEl.appendChild(btn);
+      });
+      container.appendChild(rowEl);
+    });
+  }
+
+  /** Best status per letter across all words and guesses: correct > present > absent */
+  function updateKeyboardFeedback() {
+    const container = byId("kwKeyboard");
+    if (!container) return;
+    const letterStatus = {};
+    const order = { correct: 3, present: 2, absent: 1 };
+    const answers = gameState.answers;
+    const gridResults = gameState.gridResults;
+    const guesses = gameState.guesses;
+
+    for (let g = 0; g < guesses.length; g++) {
+      const guess = guesses[g];
+      for (let w = 0; w < answers.length; w++) {
+        const feedback = gridResults[w][g];
+        if (!feedback) continue;
+        for (let i = 0; i < 5; i++) {
+          const letter = guess[i];
+          const status = feedback[i];
+          const current = letterStatus[letter];
+          if (!current || order[status] > order[current]) {
+            letterStatus[letter] = status;
+          }
+        }
+      }
+    }
+
+    all(".kw-key[data-key]", container).forEach(function (btn) {
+      const key = btn.dataset.key;
+      if (key === "Enter" || key === "Backspace") return;
+      const status = letterStatus[key];
+      btn.classList.remove("kw-key-correct", "kw-key-present", "kw-key-absent");
+      if (status) btn.classList.add("kw-key-" + status);
+    });
   }
 
   function buildBoard(answers, maxGuesses) {
@@ -290,6 +374,7 @@
       maxGuesses: maxGuesses,
       guessIndex: 0,
       currentGuess: "",
+      guesses: [],
       gridResults: answers.map(function () { return []; }),
       solved: answers.map(function () { return false; }),
       gameOver: false,
@@ -304,6 +389,7 @@
     byId("kwToast").classList.add("kw-hidden");
 
     buildBoard(answers, maxGuesses);
+    buildKeyboard();
     clearInputRow();
     const inputRow = byId("kwInputRow");
     if (inputRow) inputRow.focus();
