@@ -19,60 +19,60 @@ This plan follows the PRD and breaks the work into smaller, testable chunks. **V
 ## Phase 1: Foundations & Data Loading
 
 ### 1.1 Blueprint & Static Setup
-- [ ] Add `static_folder="static"` to the kids_words blueprint in `routes.py`
-- [ ] Create `app/projects/kids_words/static/` directory
-- [ ] Create `app/projects/kids_words/static/css/kids_words.css` with base `kw-wrapper` styles
-- [ ] Create `app/projects/kids_words/static/js/kids_words.js` (empty placeholder)
-- [ ] Link CSS and JS in `templates/kids_words/index.html` via `url_for('kids_words.static', ...)`
+- [x] Add `static_folder="static"` to the kids_words blueprint in `routes.py`
+- [x] Create `app/projects/kids_words/static/` directory
+- [x] Create `app/projects/kids_words/static/css/kids_words.css` with base `kw-wrapper` styles
+- [x] Create `app/projects/kids_words/static/js/kids_words.js` (empty placeholder)
+- [x] Link CSS and JS in `templates/kids_words/index.html` via `url_for('kids_words.static', ...)`
 
 **Manual Testing 1.1:**
-- [ ] Visit `/kids-words` and verify no 404s for CSS/JS; `kw-wrapper` is visible
+- [x] Visit `/kids-words` and verify no 404s for CSS/JS; `kw-wrapper` is visible
 
 ### 1.2 Data API Routes
-- [ ] Add `GET /kids-words/api/words/grade2` – returns `data/grade2_words.json`
-- [ ] Add `GET /kids-words/api/words/grade4` – returns `data/grade4_words.json`
-- [ ] Add `GET /kids-words/api/words/guesses` – returns `data/wordle_guesses.txt` as JSON array (one word per line)
-- [ ] Use `send_from_directory` or read files from `data/` relative to project root
+- [x] Add `GET /kids-words/api/words/grade2` – returns `data/grade2_words.json`
+- [x] Add `GET /kids-words/api/words/grade4` – returns `data/grade4_words.json`
+- [x] Add `GET /kids-words/api/words/guesses` – returns `data/wordle_guesses.txt` as JSON array (one word per line)
+- [x] Use `send_from_directory` or read files from `data/` relative to project root
 
 **Manual Testing 1.2:**
-- [ ] Fetch each API URL and verify valid JSON / array format
-- [ ] Confirm grade2/grade4 return objects with `"yes"`/`"no"` values
-- [ ] Confirm guesses returns an array of 5-letter strings
+- [x] Fetch each API URL and verify valid JSON / array format
+- [x] Confirm grade2/grade4 return objects with `"yes"`/`"no"` values
+- [x] Confirm guesses returns an array of 5-letter strings
 
 ### 1.3 Client-Side Data Loading (Vanilla JS)
-- [ ] On page load, fetch all three data sources via `fetch()`
-- [ ] Build `validGuesses` = union of JSON keys + guesses array
-- [ ] Build `answerSets`: `{ grade2: [...], grade4: [...], adult: [...] }` from JSON files
-- [ ] Store in module-level variables for use by game logic
-- [ ] Disable Start button (or show loading state) until all three fetches succeed
+- [x] On page load, fetch all three data sources via `fetch()`
+- [x] Build `validGuesses` = union of JSON keys + guesses array
+- [x] Build `answerSets`: `{ grade2: [...], grade4: [...], adult: [...] }` from JSON files
+- [x] Store in module-level variables for use by game logic
+- [x] Disable Start button (or show loading state) until all three fetches succeed
 
 **Manual Testing 1.3:**
-- [ ] Open console, verify no fetch errors; log `validGuesses.length` and `answerSets` keys
+- [x] Open console, verify no fetch errors; log `validGuesses.length` and `answerSets` keys
 
 ---
 
 ## Phase 2: Setup Screen
 
 ### 2.1 Setup UI (Difficulty & Word Count)
-- [ ] Add `kw-setup` section to template (visible by default)
-- [ ] Add three difficulty buttons: Grade 2, Grade 4, Adult (kw-difficulty-btn, kw-selected)
-- [ ] Add word-count selector: 1–8 (buttons or slider) with `kw-word-count` classes
-- [ ] Add "Start Game" button (`kw-start-btn`)
-- [ ] Style with kw- prefix; layout for mobile (stacked) and desktop
+- [x] Add `kw-setup` section to template (visible by default)
+- [x] Add three difficulty buttons: Grade 2, Grade 4, Adult (kw-difficulty-btn, kw-selected)
+- [x] Add word-count selector: 1–8 (buttons or slider) with `kw-word-count` classes
+- [x] Add "Start Game" button (`kw-start-btn`)
+- [x] Style with kw- prefix; layout for mobile (stacked) and desktop
 
 **Manual Testing 2.1:**
-- [ ] See setup screen on load; select difficulty and word count; Start disabled until both chosen
+- [x] See setup screen on load; select difficulty and word count; Start disabled until both chosen
 
 ### 2.2 Start Game Logic
-- [ ] On Start click: validate difficulty + word count are selected
-- [ ] Select N random answers from the correct answer set (no duplicates)
-- [ ] Compute max guesses = N + 5
-- [ ] Hide `kw-setup`, show `kw-game` section
-- [ ] Initialize game state (answers, guesses used, solved words)
+- [x] On Start click: validate difficulty + word count are selected
+- [x] Select N random answers from the correct answer set (no duplicates)
+- [x] Compute max guesses = N + 5
+- [x] Hide `kw-setup`, show `kw-game` section
+- [x] Initialize game state (answers, guesses used, solved words)
 
 **Manual Testing 2.2:**
-- [ ] Start game; setup hides, game area appears
-- [ ] Verify N word slots shown and max guesses = N + 5
+- [x] Start game; setup hides, game area appears
+- [x] Verify N word slots shown and max guesses = N + 5
 
 ---
 

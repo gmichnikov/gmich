@@ -2,8 +2,56 @@
 
 {% block title %}Kids Words{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_words.static', filename='css/kids_words.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="kw-wrapper">
-  <!-- Kids Words content goes here -->
+  <h1 class="kw-title">Kids Words</h1>
+
+  <div id="kwSetup" class="kw-setup">
+    <div class="kw-loading kw-hidden" id="kwLoading">Loading word lists…</div>
+    <div class="kw-setup-content kw-hidden" id="kwSetupContent">
+      <div class="kw-difficulty-section">
+        <p class="kw-setup-label">Difficulty</p>
+        <div class="kw-difficulty-btns">
+          <button type="button" class="kw-difficulty-btn" data-difficulty="grade2">Grade 2</button>
+          <button type="button" class="kw-difficulty-btn" data-difficulty="grade4">Grade 4</button>
+          <button type="button" class="kw-difficulty-btn" data-difficulty="adult">Adult</button>
+        </div>
+      </div>
+      <div class="kw-word-count-section">
+        <p class="kw-setup-label">Number of words (1–8)</p>
+        <div class="kw-word-count-btns">
+          <button type="button" class="kw-word-count-btn" data-count="1">1</button>
+          <button type="button" class="kw-word-count-btn" data-count="2">2</button>
+          <button type="button" class="kw-word-count-btn" data-count="3">3</button>
+          <button type="button" class="kw-word-count-btn" data-count="4">4</button>
+          <button type="button" class="kw-word-count-btn" data-count="5">5</button>
+          <button type="button" class="kw-word-count-btn" data-count="6">6</button>
+          <button type="button" class="kw-word-count-btn" data-count="7">7</button>
+          <button type="button" class="kw-word-count-btn" data-count="8">8</button>
+        </div>
+      </div>
+      <button type="button" class="kw-start-btn" id="kwStartBtn" disabled>Start Game</button>
+    </div>
+  </div>
+
+  <div id="kwGame" class="kw-game kw-hidden">
+    <div class="kw-board" id="kwBoard"></div>
+    <button type="button" class="kw-new-game-btn" id="kwNewGameBtn">New Game</button>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.KIDS_WORDS_API = {
+    grade2: "{{ url_for('kids_words.api_grade2') }}",
+    grade4: "{{ url_for('kids_words.api_grade4') }}",
+    guesses: "{{ url_for('kids_words.api_guesses') }}"
+  };
+</script>
+<script src="{{ url_for('kids_words.static', filename='js/kids_words.js') }}"></script>
 {% endblock %}
