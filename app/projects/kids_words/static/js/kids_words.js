@@ -140,8 +140,6 @@
       };
       byId("kwSetup").classList.add("kw-hidden");
       byId("kwGame").classList.remove("kw-hidden");
-      const inputArea = byId("kwInputArea");
-      if (inputArea) inputArea.classList.remove("kw-hidden");
       byId("kwWin").classList.add("kw-hidden");
       byId("kwLose").classList.add("kw-hidden");
       byId("kwToast").classList.add("kw-hidden");
@@ -152,7 +150,7 @@
       resumeGame._restoring = false;
       updateKeyboardFeedback();
       clearInputRow();
-      byId("kwInputRow") && byId("kwInputRow").focus();
+      byId("kwBoard") && byId("kwBoard").focus();
     } catch (e) {
       console.warn("Kids Words: could not restore game", e);
       localStorage.removeItem(STORAGE_KEY);
@@ -168,6 +166,16 @@
       for (let w = 0; w < gameState.answers.length; w++) {
         const feedback = gameState.gridResults[w][g];
         if (!feedback) continue;
+        /* skip if word was already solved at an earlier guess */
+        let alreadySolved = false;
+        for (let g0 = 0; g0 < g; g0++) {
+          const fb = gameState.gridResults[w][g0];
+          if (fb && fb.every(function (x) { return x === "correct"; })) {
+            alreadySolved = true;
+            break;
+          }
+        }
+        if (alreadySolved) continue;
         const rowEl = grids[w].querySelectorAll(".kw-word-row")[g];
         const cells = rowEl.querySelectorAll(".kw-cell");
         for (let i = 0; i < 5; i++) {
@@ -312,15 +320,32 @@
   ];
 
   function clearInputRow() {
-    all(".kw-input-cell").forEach(function (cell) {
-      cell.textContent = "";
-    });
+    const grids = all(".kw-word-grid");
+    const guessIdx = gameState.guessIndex;
+    for (let w = 0; w < gameState.answers.length; w++) {
+      if (gameState.solved[w]) continue;
+      const rowEl = grids[w].querySelectorAll(".kw-word-row")[guessIdx];
+      if (!rowEl) continue;
+      const cells = rowEl.querySelectorAll(".kw-cell");
+      for (let i = 0; i < 5; i++) {
+        cells[i].textContent = "";
+        cells[i].classList.remove("kw-cell-correct", "kw-cell-present", "kw-cell-absent");
+      }
+    }
   }
 
   function updateInputRow(text) {
-    const cells = all(".kw-input-cell");
-    for (let i = 0; i < 5; i++) {
-      cells[i].textContent = text[i] || "";
+    const grids = all(".kw-word-grid");
+    const guessIdx = gameState.guessIndex;
+    for (let w = 0; w < gameState.answers.length; w++) {
+      if (gameState.solved[w]) continue;
+      const rowEl = grids[w].querySelectorAll(".kw-word-row")[guessIdx];
+      if (!rowEl) continue;
+      const cells = rowEl.querySelectorAll(".kw-cell");
+      for (let i = 0; i < 5; i++) {
+        cells[i].textContent = (text[i] || "").toUpperCase();
+        cells[i].classList.remove("kw-cell-correct", "kw-cell-present", "kw-cell-absent");
+      }
     }
   }
 
@@ -336,7 +361,6 @@
   }
 
   function showWin() {
-    byId("kwInputArea").classList.add("kw-hidden");
     byId("kwWin").classList.remove("kw-hidden");
     byId("kwLose").classList.add("kw-hidden");
     gameState.gameOver = true;
@@ -344,7 +368,6 @@
   }
 
   function showLose() {
-    byId("kwInputArea").classList.add("kw-hidden");
     byId("kwWin").classList.add("kw-hidden");
     const loseEl = byId("kwLose");
     loseEl.classList.remove("kw-hidden");
@@ -373,6 +396,7 @@
     const grids = all(".kw-word-grid");
 
     for (let w = 0; w < answers.length; w++) {
+      if (gameState.solved[w]) continue; /* skip already-solved words */
       const feedback = evaluateGuess(guess, answers[w]);
       gameState.gridResults[w][guessIdx] = feedback;
       const rowEl = grids[w].querySelectorAll(".kw-word-row")[guessIdx];
@@ -428,13 +452,13 @@
               gameState.currentGuess = gameState.currentGuess.slice(0, -1);
               updateInputRow(gameState.currentGuess);
             }
-            byId("kwInputRow") && byId("kwInputRow").focus();
+            byId("kwBoard") && byId("kwBoard").focus();
             return;
           }
           if (gameState.currentGuess.length < 5) {
             gameState.currentGuess += key;
             updateInputRow(gameState.currentGuess);
-            byId("kwInputRow") && byId("kwInputRow").focus();
+            byId("kwBoard") && byId("kwBoard").focus();
           }
         });
         rowEl.appendChild(btn);
@@ -478,37 +502,60 @@
     });
   }
 
+  function getColumnsForWordCount(n) {
+    const w = window.innerWidth;
+    if (w >= 900) {
+      if (n <= 4) return 4;
+      if (n <= 6) return 6;
+      return 4;
+    }
+    if (w >= 768) {
+      if (n === 6) return 3;
+      return 2;
+    }
+    if (n === 8) return 4;
+    return n <= 2 ? n : 2;
+  }
+
   function buildBoard(answers, maxGuesses) {
     const board = byId("kwBoard");
     board.innerHTML = "";
     const n = answers.length;
+    const cols = getColumnsForWordCount(n);
     const layoutClass = "kw-layout-" + n;
     const container = document.createElement("div");
     container.className = "kw-grids " + layoutClass;
+    container.dataset.columns = cols;
 
-    for (let w = 0; w < n; w++) {
-      const grid = document.createElement("div");
-      grid.className = "kw-word-grid";
-      grid.dataset.wordIndex = w;
-      for (let row = 0; row < maxGuesses; row++) {
-        const rowEl = document.createElement("div");
-        rowEl.className = "kw-word-row";
-        for (let col = 0; col < 5; col++) {
-          const cell = document.createElement("div");
-          cell.className = "kw-cell";
-          rowEl.appendChild(cell);
+    for (let rowStart = 0; rowStart < n; rowStart += cols) {
+      const rowWrapper = document.createElement("div");
+      rowWrapper.className = "kw-grid-row";
+      const rowEnd = Math.min(rowStart + cols, n);
+      for (let w = rowStart; w < rowEnd; w++) {
+        const grid = document.createElement("div");
+        grid.className = "kw-word-grid";
+        grid.dataset.wordIndex = w;
+        for (let row = 0; row < maxGuesses; row++) {
+          const rowEl = document.createElement("div");
+          rowEl.className = "kw-word-row";
+          for (let col = 0; col < 5; col++) {
+            const cell = document.createElement("div");
+            cell.className = "kw-cell";
+            rowEl.appendChild(cell);
+          }
+          grid.appendChild(rowEl);
         }
-        grid.appendChild(rowEl);
+        rowWrapper.appendChild(grid);
       }
-      container.appendChild(grid);
+      container.appendChild(rowWrapper);
     }
     board.appendChild(container);
   }
 
   function handleKeydown(e) {
-    if (gameState.gameOver) return;
-    const inputRow = byId("kwInputRow");
-    if (!inputRow || !document.activeElement || document.activeElement.id !== "kwInputRow") {
+    if (gameState.gameOver || !gameState.answers.length) return;
+    var active = document.activeElement;
+    if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
       return;
     }
 
@@ -556,8 +603,6 @@
 
     byId("kwSetup").classList.add("kw-hidden");
     byId("kwGame").classList.remove("kw-hidden");
-    const inputArea = byId("kwInputArea");
-    if (inputArea) inputArea.classList.remove("kw-hidden");
     byId("kwWin").classList.add("kw-hidden");
     byId("kwLose").classList.add("kw-hidden");
     byId("kwToast").classList.add("kw-hidden");
@@ -565,12 +610,12 @@
     buildBoard(answers, maxGuesses);
     buildKeyboard();
     clearInputRow();
-    const inputRow = byId("kwInputRow");
-    if (inputRow) inputRow.focus();
+    const board = byId("kwBoard");
+    if (board) board.focus();
   }
 
-  function newGame() {
-    if (!confirm("Leave this game and return to setup? Your progress will be lost.")) {
+  function newGame(skipConfirm) {
+    if (!skipConfirm && !confirm("Leave this game and return to setup? Your progress will be lost.")) {
       return;
     }
     selectedDifficulty = null;
@@ -606,13 +651,33 @@
     const startBtn = byId("kwStartBtn");
     if (startBtn) startBtn.addEventListener("click", startGame);
 
-    const newGameBtn = byId("kwNewGameBtn");
-    if (newGameBtn) newGameBtn.addEventListener("click", newGame);
-
     const resumeBtn = byId("kwResumeBtn");
     if (resumeBtn) resumeBtn.addEventListener("click", resumeGame);
 
+    const winNewGameBtn = byId("kwWinNewGameBtn");
+    if (winNewGameBtn) winNewGameBtn.addEventListener("click", function () { newGame(true); });
+    const loseNewGameBtn = byId("kwLoseNewGameBtn");
+    if (loseNewGameBtn) loseNewGameBtn.addEventListener("click", function () { newGame(true); });
+
     document.addEventListener("keydown", handleKeydown);
+
+    const board = byId("kwBoard");
+    if (board) {
+      board.addEventListener("click", function () {
+        board.focus();
+      });
+    }
+
+    let resizeTimer;
+    window.addEventListener("resize", function () {
+      if (!gameState.answers.length || gameState.gameOver) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        buildBoard(gameState.answers, gameState.maxGuesses);
+        restoreBoardFromState();
+        updateInputRow(gameState.currentGuess);
+      }, 150);
+    });
   }
 
   if (document.readyState === "loading") {

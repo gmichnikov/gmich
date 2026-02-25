@@ -48,27 +48,19 @@
 
   <div id="kwGame" class="kw-game kw-hidden">
     <div class="kw-board-container">
-      <div class="kw-input-area" id="kwInputArea">
-        <div class="kw-input-row" id="kwInputRow" tabindex="0">
-          <span class="kw-input-cell" data-idx="0"></span>
-          <span class="kw-input-cell" data-idx="1"></span>
-          <span class="kw-input-cell" data-idx="2"></span>
-          <span class="kw-input-cell" data-idx="3"></span>
-          <span class="kw-input-cell" data-idx="4"></span>
-        </div>
-      </div>
-      <div class="kw-board" id="kwBoard"></div>
+      <div class="kw-board" id="kwBoard" tabindex="0"></div>
     </div>
     <div class="kw-toast kw-hidden" id="kwToast" aria-live="polite" role="status"></div>
     <div class="kw-keyboard" id="kwKeyboard"></div>
     <div class="kw-win kw-hidden" id="kwWin">
       <h2 class="kw-win-title">You won!</h2>
+      <button type="button" class="kw-new-game-btn" id="kwWinNewGameBtn">New Game</button>
     </div>
     <div class="kw-lose kw-hidden" id="kwLose">
       <h2 class="kw-lose-title">Out of guesses</h2>
       <div class="kw-lose-answers" id="kwLoseAnswers"></div>
+      <button type="button" class="kw-new-game-btn" id="kwLoseNewGameBtn">New Game</button>
     </div>
-    <button type="button" class="kw-new-game-btn" id="kwNewGameBtn">New Game</button>
   </div>
 </div>
 {% endblock %}
