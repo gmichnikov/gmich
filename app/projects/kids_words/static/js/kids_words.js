@@ -593,6 +593,13 @@
     if (answers.length !== selectedWordCount) return;
 
     const maxGuesses = selectedWordCount + 5;
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('kids_words_game_started', {
+        difficulty: selectedDifficulty,
+        word_count: selectedWordCount,
+        max_guesses: maxGuesses,
+      });
+    }
     gameState = {
       answers: answers,
       maxGuesses: maxGuesses,

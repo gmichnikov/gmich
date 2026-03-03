@@ -2,7 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from datetime import datetime
 import logging
+import os
 import re
+
+import posthog as posthog_client
+posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
+posthog_client.host = "https://us.i.posthog.com"
 
 from app.projects.betfake.models import (
     BetfakeAccount,
@@ -214,6 +219,7 @@ def create_account():
 
     try:
         db.session.commit()
+        posthog_client.capture(str(current_user.id), "betfake_account_created")
         flash(
             f'Account "{account_name}" created successfully with $100.00 balance!',
             "success",
@@ -301,6 +307,12 @@ def browse_sport(sport_key):
             recent_games.append(game)
 
     recent_games.sort(key=lambda x: x.commence_time, reverse=True)
+
+    posthog_client.capture(str(current_user.id), "betfake_sport_browsed", {
+        "sport_key": sport_key,
+        "sport_label": sport.display_title,
+        "upcoming_game_count": len(upcoming_games),
+    })
 
     return render_template(
         "betfake/sports.html",
@@ -434,6 +446,13 @@ def place_bet(outcome_id):
         # Link transaction to bet after commit to get bet.id
         transaction.bet_id = bet.id
         db.session.commit()
+        posthog_client.capture(str(current_user.id), "betfake_bet_placed", {
+            "sport_key": game.sport_key,
+            "market_type": outcome.market.type.value,
+            "wager_amount": wager_amount,
+            "odds": outcome.odds,
+            "potential_payout": potential_payout,
+        })
         flash("Bet placed successfully!", "success")
     except Exception as e:
         db.session.rollback()

@@ -518,6 +518,9 @@ block content %}
       id: `p${i}`,
       name: input.value.trim() || `Player ${i+1}`
     }));
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('yahtzee_game_started', { player_count: players.length });
+    }
 
     scores = {};
     players.forEach(p => {
@@ -769,6 +772,13 @@ block content %}
       } else {
         winnerSection.textContent = `🤝 It's a tie between ${winners.join(' and ')} with ${maxScore} points! 🤝`;
       }
+      if (typeof posthog !== 'undefined') {
+        posthog.capture('yahtzee_game_completed', {
+          player_count: players.length,
+          winning_score: maxScore,
+          was_tie: winners.length > 1
+        });
+      }
     } else {
       winnerSection.classList.add('ys-hidden');
     }
@@ -787,7 +797,14 @@ block content %}
       
       const upperBonus = upperSubtotal >= 63 ? 35 : 0;
       const upperTotal = upperSubtotal + upperBonus;
-      
+
+      const bonusEl = document.getElementById(`calc-upper_bonus-${p.id}`);
+      if (upperBonus === 35 && bonusEl && bonusEl.textContent === '0') {
+        if (typeof posthog !== 'undefined') {
+          posthog.capture('yahtzee_upper_bonus_earned', { player_count: players.length });
+        }
+      }
+
       let lowerTotal = 0;
       categories.filter(c => c.section === 'lower' && c.type !== 'calc').forEach(c => {
         lowerTotal += (scores[p.id][c.id] || 0);

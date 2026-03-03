@@ -5,7 +5,12 @@ No login required for browsing/running queries. Login required for saving.
 
 import json
 import logging
+import os
 from datetime import datetime
+
+import posthog as posthog_client
+posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
+posthog_client.host = "https://us.i.posthog.com"
 
 from flask import Blueprint, jsonify, render_template, request, url_for
 from flask_login import current_user
@@ -118,6 +123,12 @@ def api_query():
         description=f"Ran query: returned {len(rows)} row(s)",
     ))
     db.session.commit()
+
+    distinct_id = str(current_user.id) if current_user.is_authenticated else "anonymous"
+    posthog_client.capture(distinct_id, "sports_query_run", {
+        "row_count": len(rows),
+        "authenticated": current_user.is_authenticated,
+    })
 
     return jsonify({"rows": rows, "sql": sql})
 
@@ -281,6 +292,13 @@ def api_nl_query():
     _log("config", credit_used=True)
     db.session.commit()
 
+    posthog_client.capture(str(current_user.id), "sports_nl_query_used", {
+        "question_length": len(question),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "remaining_credits": current_user.credits,
+    })
+
     return jsonify({
         "config": config,
         "remaining_credits": current_user.credits,
@@ -331,6 +349,8 @@ def api_saved_queries_create():
         description=f'Saved query "{name}"',
     ))
     db.session.commit()
+
+    posthog_client.capture(str(current_user.id), "sports_query_saved", {"name": name})
 
     return (
         jsonify(

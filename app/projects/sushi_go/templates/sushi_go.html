@@ -524,6 +524,9 @@ block content %}
 
   function startGame() {
     fetch("{{ url_for('sushi_go.log_new_game') }}", { method: 'POST' });
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('sushi_go_game_started', { player_count: playerCount });
+    }
     // Collect player names
     playerNames = [];
     for (let i = 1; i <= playerCount; i++) {
@@ -680,6 +683,10 @@ block content %}
 
     // Save the completed round for display
     addPreviousRoundDisplay(currentRound);
+
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('sushi_go_round_completed', { round: currentRound });
+    }
 
     // Move to next round or finish
     if (currentRound < 3) {
@@ -856,6 +863,14 @@ block content %}
     }
 
     winnerSection.classList.remove("sgs-hidden");
+
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('sushi_go_game_completed', {
+        player_count: playerCount,
+        winning_score: finalScores[0].total,
+        was_tie: finalScores.length > 1 && finalScores[0].total === finalScores[1].total
+      });
+    }
   }
 
   function resetGame() {

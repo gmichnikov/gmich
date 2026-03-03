@@ -1,6 +1,11 @@
 import logging
+import os
 from datetime import datetime
 from app import db
+
+import posthog as posthog_client
+posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
+posthog_client.host = "https://us.i.posthog.com"
 from app.projects.betfake.models import (
     BetfakeBet,
     BetfakeGame,
@@ -235,6 +240,21 @@ class BetGraderService:
                 db.session.commit()
                 settled_count += 1
                 logger.info(f"Settled bet {bet.id} as {new_status.value}")
+
+                if new_status == BetStatus.Won:
+                    pnl = bet.potential_payout - bet.wager_amount
+                elif new_status == BetStatus.Lost:
+                    pnl = -bet.wager_amount
+                else:
+                    pnl = 0
+
+                posthog_client.capture(str(bet.user_id), "betfake_bet_settled", {
+                    "sport_key": game.sport_key,
+                    "market_type": bet.outcome.market.type.value,
+                    "wager_amount": bet.wager_amount,
+                    "outcome": new_status.value.lower(),
+                    "pnl": round(pnl, 2),
+                })
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error settling bet {bet.id}: {str(e)}")

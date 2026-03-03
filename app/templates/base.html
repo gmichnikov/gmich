@@ -32,9 +32,7 @@
                 person_profiles: 'identified_only',
             });
             {% if current_user.is_authenticated %}
-            posthog.identify('{{ current_user.id }}', {
-                email: '{{ current_user.email }}'
-            });
+            posthog.identify('{{ current_user.id }}');
             {% endif %}
         </script>
         {% endif %}
