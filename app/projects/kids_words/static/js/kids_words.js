@@ -364,7 +364,18 @@
     byId("kwWin").classList.remove("kw-hidden");
     byId("kwLose").classList.add("kw-hidden");
     gameState.gameOver = true;
-    if (!resumeGame._restoring) updateStats(true);
+    if (!resumeGame._restoring) {
+      updateStats(true);
+      if (typeof posthog !== 'undefined') {
+        posthog.capture('kids_words_game_completed', {
+          difficulty: selectedDifficulty,
+          word_count: gameState.answers.length,
+          won: true,
+          guesses_used: gameState.guessIndex,
+          max_guesses: gameState.maxGuesses,
+        });
+      }
+    }
   }
 
   function showLose() {
@@ -380,7 +391,18 @@
       answersEl.appendChild(span);
     });
     gameState.gameOver = true;
-    if (!resumeGame._restoring) updateStats(false);
+    if (!resumeGame._restoring) {
+      updateStats(false);
+      if (typeof posthog !== 'undefined') {
+        posthog.capture('kids_words_game_completed', {
+          difficulty: selectedDifficulty,
+          word_count: gameState.answers.length,
+          won: false,
+          guesses_used: gameState.guessIndex,
+          max_guesses: gameState.maxGuesses,
+        });
+      }
+    }
   }
 
   function submitGuess() {
