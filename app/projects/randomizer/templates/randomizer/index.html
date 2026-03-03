@@ -7,74 +7,236 @@
 {% endblock %}
 
 {% block content %}
-<div class="rz-container">
-    <h1 class="rz-title">Randomizer</h1>
-    <p class="rz-subtitle">A collection of handy random-generation tools.</p>
-
-    <!-- Random Number -->
-    <div class="rz-card">
-        <div class="rz-card-title">Random Number</div>
-        <div class="rz-range-row">
-            <span class="rz-range-label">From</span>
-            <input class="rz-input" id="rz-num-min" type="number" value="1" style="width:90px;">
-            <span class="rz-range-label">to</span>
-            <input class="rz-input" id="rz-num-max" type="number" value="100" style="width:90px;">
-        </div>
-        <div class="rz-result" id="rz-num-result">—</div>
-        <div class="rz-actions">
-            <button class="rz-btn rz-btn-primary" onclick="randomNumber()">Roll</button>
-        </div>
+<div class="rz-shell">
+<div class="rz-page">
+    <div class="rz-header">
+        <h1 class="rz-title">Randomizer</h1>
     </div>
 
-    <!-- Coin Flip -->
-    <div class="rz-card">
-        <div class="rz-card-title">Coin Flip</div>
-        <div class="rz-coins-row">
-            <span class="rz-range-label">Flip</span>
-            <input class="rz-coins-input" id="rz-coin-count" type="number" value="1" min="1" max="20">
-            <span class="rz-range-label">coin(s)</span>
+    <div class="rz-body">
+
+        <!-- ===== LEFT PANEL ===== -->
+        <div class="rz-left">
+
+            <!-- Actions (top) -->
+            <div class="rz-action-bar">
+                <button class="rz-btn rz-btn-primary" id="rz-randomize-btn" style="flex:1; font-size:1rem;">
+                    &#x1F500; Randomize
+                </button>
+                <button class="rz-btn rz-btn-danger" id="rz-clear-btn">
+                    Clear / Reset
+                </button>
+            </div>
+
+            <!-- Item Input -->
+            <div class="rz-panel">
+                <button class="rz-panel-toggle" id="rz-items-toggle" aria-expanded="true">
+                    <span class="rz-panel-title" style="margin:0;">Items</span>
+                    <svg class="rz-panel-toggle-arrow" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                    </svg>
+                </button>
+                <div class="rz-panel-body" id="rz-items-body">
+
+                <!-- Single text input -->
+                <div class="rz-field">
+                    <div class="rz-input-row">
+                        <input class="rz-input" type="text" id="rz-text-input"
+                               placeholder="Add an item…" autocomplete="off">
+                        <button class="rz-btn rz-btn-secondary" id="rz-add-btn">Add</button>
+                    </div>
+                </div>
+
+                <!-- Secondary actions row -->
+                <div class="rz-secondary-actions">
+                    <button class="rz-paste-toggle" id="rz-paste-toggle">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+                        </svg>
+                        Paste a list
+                    </button>
+                    <span class="rz-secondary-divider">·</span>
+                    <button class="rz-paste-toggle" id="rz-save-list-btn">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                        </svg>
+                        Save list
+                    </button>
+                    <span class="rz-secondary-divider">·</span>
+                    <button class="rz-paste-toggle" id="rz-load-list-btn">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/>
+                        </svg>
+                        Load list
+                    </button>
+                </div>
+
+                <!-- Paste area -->
+                <div class="rz-paste-section" id="rz-paste-section">
+                    <div class="rz-field">
+                        <label for="rz-paste-input">Paste items separated by commas or newlines</label>
+                        <textarea class="rz-input rz-textarea" id="rz-paste-input"
+                                  placeholder="Alice, Bob, Carol&#10;or one per line"></textarea>
+                    </div>
+                    <div class="rz-input-row" style="justify-content: flex-end;">
+                        <button class="rz-btn rz-btn-sm rz-btn-secondary" id="rz-paste-cancel">Cancel</button>
+                        <button class="rz-btn rz-btn-sm rz-btn-primary" id="rz-paste-add">Add from paste</button>
+                    </div>
+                </div>
+
+                <!-- Duplicate warning -->
+                <div class="rz-notice rz-notice-warn rz-hidden" id="rz-dupe-notice">
+                    <span class="rz-notice-icon">⚠</span>
+                    <span id="rz-dupe-text" style="flex:1;"></span>
+                    <button class="rz-dupe-dismiss" id="rz-dupe-dismiss" title="Dismiss">×</button>
+                </div>
+
+                <!-- Item list -->
+                <div class="rz-item-list-header">
+                    <span class="rz-item-count" id="rz-item-count">0 items</span>
+                </div>
+                <div class="rz-item-list-wrap" id="rz-item-list-wrap">
+                    <ul class="rz-item-list" id="rz-item-list"></ul>
+                </div>
+
+                </div><!-- end #rz-items-body -->
+            </div>
+
+            <!-- Grouping Config -->
+            <div class="rz-panel">
+                <button class="rz-panel-toggle" id="rz-grouping-toggle" aria-expanded="true">
+                    <span class="rz-panel-title" style="margin:0;">Grouping</span>
+                    <svg class="rz-panel-toggle-arrow" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                    </svg>
+                </button>
+                <div class="rz-panel-body" id="rz-grouping-body">
+
+                <!-- Mode toggle -->
+                <div class="rz-radio-group" id="rz-mode-group">
+                    <label class="rz-radio-option rz-selected" id="rz-mode-label-groups">
+                        <input type="radio" name="rz-mode" value="groups" checked>
+                        Number of groups
+                    </label>
+                    <label class="rz-radio-option" id="rz-mode-label-size">
+                        <input type="radio" name="rz-mode" value="size">
+                        Items per group
+                    </label>
+                </div>
+
+                <!-- Number input + derived -->
+                <div class="rz-grouping-input-row">
+                    <input class="rz-input" type="number" id="rz-group-num"
+                           min="1" value="2" style="width:90px; text-align:center;">
+                    <span id="rz-group-num-label" style="font-size:0.9rem; color:#555; font-weight:600;">groups</span>
+                </div>
+                <div class="rz-derived-text" id="rz-derived-text"></div>
+
+                </div><!-- end #rz-grouping-body -->
+            </div>
+
+        </div><!-- end .rz-left -->
+
+        <!-- ===== RIGHT PANEL (Results) ===== -->
+        <div class="rz-panel rz-results-panel" id="rz-results-panel">
+
+            <!-- Empty state -->
+            <div id="rz-results-empty" class="rz-results-empty">
+                <div class="rz-results-empty-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 3 21 3 21 8"></polyline>
+                        <line x1="4" y1="20" x2="21" y2="3"></line>
+                        <polyline points="21 16 21 21 16 21"></polyline>
+                        <line x1="15" y1="15" x2="21" y2="21"></line>
+                        <line x1="4" y1="4" x2="9" y2="9"></line>
+                    </svg>
+                </div>
+                <p class="rz-results-empty-heading">Results will appear here</p>
+                <p class="rz-results-empty-sub">Add your items on the left,<br>set up your groups, then click Randomize.</p>
+            </div>
+
+            <!-- Results (hidden until first run) -->
+            <div id="rz-results-content" class="rz-hidden">
+                <div class="rz-results-header">
+                    <p class="rz-results-title">Results</p>
+                    <div class="rz-results-actions">
+                        <!-- View toggle -->
+                        <div class="rz-view-toggle" title="Switch view">
+                            <button class="rz-view-btn rz-active" id="rz-view-card" title="Card view">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <rect x="1" y="1" width="6" height="6" rx="1"/>
+                                    <rect x="9" y="1" width="6" height="6" rx="1"/>
+                                    <rect x="1" y="9" width="6" height="6" rx="1"/>
+                                    <rect x="9" y="9" width="6" height="6" rx="1"/>
+                                </svg>
+                            </button>
+                            <button class="rz-view-btn" id="rz-view-list" title="List view">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <rect x="1" y="2" width="14" height="2" rx="1"/>
+                                    <rect x="1" y="7" width="14" height="2" rx="1"/>
+                                    <rect x="1" y="12" width="14" height="2" rx="1"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="rz-btn rz-btn-sm rz-btn-ghost" id="rz-reshuffle-btn">↺ Re-shuffle</button>
+                        <button class="rz-btn rz-btn-sm rz-btn-secondary" id="rz-copy-btn">Copy</button>
+                        <button class="rz-btn rz-btn-sm rz-btn-secondary" id="rz-download-btn">↓ .txt</button>
+                    </div>
+                </div>
+
+                <!-- Split note -->
+                <div class="rz-split-note rz-hidden" id="rz-split-note"></div>
+
+                <!-- Error notice (in results area) -->
+                <div class="rz-notice rz-notice-error rz-hidden" id="rz-error-notice">
+                    <span class="rz-notice-icon">✕</span>
+                    <span id="rz-error-text"></span>
+                </div>
+
+                <!-- Card view -->
+                <div class="rz-results-cards" id="rz-results-cards"></div>
+
+                <!-- List view -->
+                <div class="rz-results-list rz-hidden" id="rz-results-list"></div>
+            </div>
+
+        </div><!-- end .rz-results-panel -->
+
+    </div><!-- end .rz-body -->
+</div><!-- end .rz-page -->
+</div><!-- end .rz-shell -->
+
+<!-- ===== SAVE MODAL ===== -->
+<div class="rz-modal-backdrop rz-hidden" id="rz-save-modal">
+    <div class="rz-modal" role="dialog" aria-modal="true" aria-labelledby="rz-save-modal-title">
+        <div class="rz-modal-header">
+            <h2 class="rz-modal-title" id="rz-save-modal-title">Save list</h2>
+            <button class="rz-modal-close" id="rz-save-modal-close" title="Close">×</button>
         </div>
-        <div class="rz-result" id="rz-coin-result">—</div>
-        <div class="rz-actions">
-            <button class="rz-btn rz-btn-primary" onclick="flipCoins()">Flip</button>
+        <div class="rz-modal-body">
+            <p class="rz-modal-desc" id="rz-save-modal-desc"></p>
+            <div class="rz-field">
+                <label for="rz-save-name-input">List name</label>
+                <input class="rz-input" type="text" id="rz-save-name-input"
+                       placeholder="e.g. Book Club, My Team…" autocomplete="off">
+            </div>
+        </div>
+        <div class="rz-modal-footer">
+            <button class="rz-btn rz-btn-secondary" id="rz-save-cancel-btn">Cancel</button>
+            <button class="rz-btn rz-btn-primary" id="rz-save-confirm-btn">Save</button>
         </div>
     </div>
+</div>
 
-    <!-- Pick from List -->
-    <div class="rz-card">
-        <div class="rz-card-title">Pick from a List</div>
-        <div class="rz-input-group">
-            <input class="rz-input" id="rz-list-input" type="text" placeholder="Add an item and press Enter">
-            <button class="rz-btn rz-btn-secondary" onclick="addListItem()">Add</button>
+<!-- ===== LOAD MODAL ===== -->
+<div class="rz-modal-backdrop rz-hidden" id="rz-load-modal">
+    <div class="rz-modal" role="dialog" aria-modal="true" aria-labelledby="rz-load-modal-title">
+        <div class="rz-modal-header">
+            <h2 class="rz-modal-title" id="rz-load-modal-title">Load list</h2>
+            <button class="rz-modal-close" id="rz-load-modal-close" title="Close">×</button>
         </div>
-        <ul class="rz-list-items" id="rz-list-items"></ul>
-        <div class="rz-result" id="rz-list-result">—</div>
-        <div class="rz-actions">
-            <button class="rz-btn rz-btn-primary" onclick="pickFromList()">Pick One</button>
-            <button class="rz-btn rz-btn-secondary" onclick="clearList()">Clear List</button>
-        </div>
-    </div>
-
-    <!-- Dice Roller -->
-    <div class="rz-card">
-        <div class="rz-card-title">Dice Roller</div>
-        <div class="rz-range-row">
-            <span class="rz-range-label">Roll</span>
-            <input class="rz-input" id="rz-dice-count" type="number" value="2" min="1" max="20" style="width:70px;">
-            <span class="rz-range-label">×</span>
-            <select class="rz-input" id="rz-dice-sides" style="width:80px;">
-                <option value="4">d4</option>
-                <option value="6" selected>d6</option>
-                <option value="8">d8</option>
-                <option value="10">d10</option>
-                <option value="12">d12</option>
-                <option value="20">d20</option>
-                <option value="100">d100</option>
-            </select>
-        </div>
-        <div class="rz-result" id="rz-dice-result">—</div>
-        <div class="rz-actions">
-            <button class="rz-btn rz-btn-primary" onclick="rollDice()">Roll Dice</button>
+        <div class="rz-modal-body">
+            <div id="rz-saved-lists-container"></div>
         </div>
     </div>
 </div>
@@ -82,100 +244,796 @@
 
 {% block scripts %}
 <script>
-    // Random Number
-    function randomNumber() {
-        const min = parseInt(document.getElementById('rz-num-min').value);
-        const max = parseInt(document.getElementById('rz-num-max').value);
-        if (isNaN(min) || isNaN(max) || min > max) {
-            document.getElementById('rz-num-result').textContent = 'Invalid range';
+(function () {
+    'use strict';
+
+    /* =========================================================
+       STATE
+    ========================================================= */
+    const LS_KEY = 'rz_state_v2';
+
+    let state = {
+        items: [],       // array of strings, index 0 = most recently added
+        mode: 'groups',  // 'groups' | 'size'
+        groupNum: 2,     // number of groups OR items per group
+    };
+
+    // Group names live only in the results, not in pre-entry state
+    let resultGroupNames = [];  // indexed by group position, persists across re-shuffles
+    let lastResults = null;     // array of arrays (groups of item strings)
+    let currentView = 'card';   // 'card' | 'list'
+
+    // Dupe tracking: set of item values (lowercase) that are duplicated
+    let dupeValues = new Set();
+
+    /* =========================================================
+       DOM REFERENCES
+    ========================================================= */
+    const textInput      = document.getElementById('rz-text-input');
+    const addBtn         = document.getElementById('rz-add-btn');
+    const pasteToggle    = document.getElementById('rz-paste-toggle');
+    const pasteSection   = document.getElementById('rz-paste-section');
+    const pasteInput     = document.getElementById('rz-paste-input');
+    const pasteCancelBtn = document.getElementById('rz-paste-cancel');
+    const pasteAddBtn    = document.getElementById('rz-paste-add');
+    const dupeNotice     = document.getElementById('rz-dupe-notice');
+    const dupeText       = document.getElementById('rz-dupe-text');
+    const dupeDismiss    = document.getElementById('rz-dupe-dismiss');
+    const itemCountEl    = document.getElementById('rz-item-count');
+    const itemListEl     = document.getElementById('rz-item-list');
+    const itemListWrap   = document.getElementById('rz-item-list-wrap');
+
+    const modeRadios      = document.querySelectorAll('input[name="rz-mode"]');
+    const modeLabelGroups = document.getElementById('rz-mode-label-groups');
+    const modeLabelSize   = document.getElementById('rz-mode-label-size');
+    const groupNumInput   = document.getElementById('rz-group-num');
+    const groupNumLabel   = document.getElementById('rz-group-num-label');
+    const derivedText     = document.getElementById('rz-derived-text');
+
+    const randomizeBtn   = document.getElementById('rz-randomize-btn');
+    const clearBtn       = document.getElementById('rz-clear-btn');
+
+    const resultsEmpty   = document.getElementById('rz-results-empty');
+    const resultsContent = document.getElementById('rz-results-content');
+    const splitNote      = document.getElementById('rz-split-note');
+    const errorNotice    = document.getElementById('rz-error-notice');
+    const errorText      = document.getElementById('rz-error-text');
+    const resultsCards   = document.getElementById('rz-results-cards');
+    const resultsList    = document.getElementById('rz-results-list');
+
+    const viewCardBtn  = document.getElementById('rz-view-card');
+    const viewListBtn  = document.getElementById('rz-view-list');
+    const reshuffleBtn = document.getElementById('rz-reshuffle-btn');
+    const copyBtn      = document.getElementById('rz-copy-btn');
+    const downloadBtn  = document.getElementById('rz-download-btn');
+
+    /* =========================================================
+       HELPERS
+    ========================================================= */
+    function esc(str) {
+        return String(str).replace(/[&<>"']/g, c =>
+            ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
+        );
+    }
+
+    function plural(n, word) {
+        return n + ' ' + word + (n === 1 ? '' : 's');
+    }
+
+    function groupLabel(i) {
+        return (resultGroupNames[i] && resultGroupNames[i].trim())
+            ? resultGroupNames[i].trim()
+            : 'Group ' + (i + 1);
+    }
+
+    function resultsToText(groups) {
+        return groups.map((items, i) =>
+            groupLabel(i) + ':\n' + items.map(it => '- ' + it).join('\n')
+        ).join('\n\n');
+    }
+
+    /* =========================================================
+       PERSISTENCE
+    ========================================================= */
+    function saveState() {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify({
+                items: state.items,
+                mode: state.mode,
+                groupNum: state.groupNum,
+            }));
+        } catch (e) { /* quota exceeded or private mode */ }
+    }
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(LS_KEY);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (Array.isArray(saved.items)) state.items = saved.items;
+            if (saved.mode === 'groups' || saved.mode === 'size') state.mode = saved.mode;
+            if (typeof saved.groupNum === 'number') state.groupNum = saved.groupNum;
+        } catch (e) { /* ignore */ }
+    }
+
+    function clearStorage() {
+        try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
+    }
+
+    /* =========================================================
+       ITEM LIST RENDER
+       Items displayed newest-first (index 0 = top).
+       List shows 3 rows visible; scroll indicator if more.
+    ========================================================= */
+    const ITEM_ROW_HEIGHT = 46; // px — min-height 44px + 2px border
+    const VISIBLE_ROWS    = 3;
+
+    function renderItemList() {
+        const count = state.items.length;
+        itemCountEl.textContent = plural(count, 'item');
+        randomizeBtn.disabled = count === 0;
+        itemListWrap.classList.toggle('rz-hidden', count === 0);
+
+        // Cap scroll height to VISIBLE_ROWS; fade bottom when overflowing
+        const maxH = ITEM_ROW_HEIGHT * VISIBLE_ROWS;
+        itemListWrap.style.maxHeight = maxH + 'px';
+        itemListWrap.classList.toggle('rz-list-overflows', count > VISIBLE_ROWS);
+
+        itemListEl.innerHTML = state.items.map((item, i) => `
+            <li class="rz-item-row" id="rz-item-row-${i}">
+                <span class="rz-item-text">${esc(item)}</span>
+                <div class="rz-item-actions">
+                    <button class="rz-btn-icon" onclick="startEdit(${i})" title="Edit">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+                        </svg>
+                    </button>
+                    <button class="rz-btn-icon rz-btn-icon-danger" onclick="deleteItem(${i})" title="Delete">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </button>
+                </div>
+            </li>
+        `).join('');
+
+        // Scroll list to top so newest item (index 0) is visible
+        itemListWrap.scrollTop = 0;
+
+        recheckDupes();
+        updateDerivedText();
+        saveState();
+    }
+
+    /* =========================================================
+       DUPE WARNING — persists until manually dismissed
+       or until no duplicates remain in the list
+    ========================================================= */
+    function recheckDupes() {
+        // Rebuild set of lowercase values that appear more than once
+        const seen = new Map();
+        state.items.forEach(item => {
+            const key = item.toLowerCase();
+            seen.set(key, (seen.get(key) || 0) + 1);
+        });
+        dupeValues = new Set([...seen.entries()].filter(([, c]) => c > 1).map(([k]) => k));
+
+        if (dupeValues.size === 0) {
+            hideDupeWarning();
+        } else {
+            // Rebuild warning text with current dupe values
+            const names = [...dupeValues].slice(0, 3).map(d => `"${d}"`).join(', ');
+            const extra = dupeValues.size > 3 ? ` and ${dupeValues.size - 3} more` : '';
+            dupeText.textContent = `${names}${extra} appear more than once.`;
+            dupeNotice.classList.remove('rz-hidden');
+        }
+    }
+
+    function showDupeWarning(newDupes) {
+        newDupes.forEach(d => dupeValues.add(d.toLowerCase()));
+        const names = [...dupeValues].slice(0, 3).map(d => `"${d}"`).join(', ');
+        const extra = dupeValues.size > 3 ? ` and ${dupeValues.size - 3} more` : '';
+        dupeText.textContent = `${names}${extra} appear more than once.`;
+        dupeNotice.classList.remove('rz-hidden');
+    }
+
+    function hideDupeWarning() {
+        dupeValues.clear();
+        dupeNotice.classList.add('rz-hidden');
+    }
+
+    /* =========================================================
+       ADD ITEMS
+    ========================================================= */
+    function addItems(rawValues) {
+        const newDupes = [];
+        const toAdd = [];
+        rawValues.forEach(raw => {
+            const val = raw.trim();
+            if (!val) return;
+            const key = val.toLowerCase();
+            const alreadyExists = state.items.some(ex => ex.toLowerCase() === key);
+            if (alreadyExists) newDupes.push(val);
+            toAdd.push(val);
+        });
+
+        if (toAdd.length === 0) return;
+
+        // Prepend so newest appears first
+        state.items.unshift(...toAdd.reverse());
+        renderItemList();
+
+        if (newDupes.length > 0) {
+            showDupeWarning(newDupes);
+        }
+    }
+
+    function parsePaste(raw) {
+        return raw.includes('\n') ? raw.split('\n') : raw.split(',');
+    }
+
+    /* =========================================================
+       EDIT / DELETE ITEMS
+    ========================================================= */
+    window.deleteItem = function (index) {
+        state.items.splice(index, 1);
+        renderItemList();
+    };
+
+    window.startEdit = function (index) {
+        const row = document.getElementById('rz-item-row-' + index);
+        if (!row) return;
+        const currentVal = state.items[index];
+        row.innerHTML = `
+            <div class="rz-item-edit-row">
+                <input class="rz-item-edit-input" id="rz-edit-input-${index}"
+                       type="text" value="${esc(currentVal)}" autocomplete="off">
+                <button class="rz-btn-icon" onclick="confirmEdit(${index})" title="Save (Enter)">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button class="rz-btn-icon rz-btn-icon-danger" onclick="cancelEdit(${index})" title="Cancel (Esc)">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+        const editInput = document.getElementById('rz-edit-input-' + index);
+        editInput.focus();
+        editInput.select();
+        editInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') confirmEdit(index);
+            if (e.key === 'Escape') cancelEdit(index);
+        });
+    };
+
+    window.confirmEdit = function (index) {
+        const editInput = document.getElementById('rz-edit-input-' + index);
+        if (!editInput) return;
+        const newVal = editInput.value.trim();
+        if (newVal) state.items[index] = newVal;
+        renderItemList();
+    };
+
+    window.cancelEdit = function (index) {
+        renderItemList();
+    };
+
+    /* =========================================================
+       GROUPING CONFIG
+    ========================================================= */
+    function updateDerivedText() {
+        const n = state.items.length;
+        const num = Math.max(1, state.groupNum);
+        if (n === 0) { derivedText.textContent = ''; return; }
+        if (state.mode === 'groups') {
+            const perGroup = Math.floor(n / num);
+            const rem = n % num;
+            derivedText.textContent = rem === 0
+                ? `→ ${plural(perGroup, 'item')} per group`
+                : `→ ~${perGroup}–${perGroup + 1} items per group (uneven)`;
+        } else {
+            derivedText.textContent = `→ ${plural(Math.ceil(n / num), 'group')}`;
+        }
+    }
+
+    /* =========================================================
+       RANDOMIZE
+    ========================================================= */
+    function fisherYates(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function doRandomize() {
+        hideError();
+        const n = state.items.length;
+        if (n === 0) { showError('Add some items first.'); return; }
+
+        const num = Math.max(1, state.groupNum);
+        const numGroups = state.mode === 'groups' ? num : Math.ceil(n / num);
+
+        if (numGroups > n) {
+            showError(`You have ${plural(n, 'item')} but ${numGroups} groups — not enough items.`);
             return;
         }
-        const result = Math.floor(Math.random() * (max - min + 1)) + min;
-        document.getElementById('rz-num-result').textContent = result;
+        if (numGroups < 1) {
+            showError('Enter a valid number of groups (at least 1).');
+            return;
+        }
+
+        const shuffled = fisherYates(state.items);
+        const groups = Array.from({ length: numGroups }, () => []);
+        shuffled.forEach((item, i) => groups[i % numGroups].push(item));
+
+        // Preserve existing custom names; extend/trim as needed
+        while (resultGroupNames.length < numGroups) resultGroupNames.push('');
+        resultGroupNames.length = numGroups;
+
+        lastResults = groups;
+        renderResults(groups);
     }
 
-    // Coin Flip
-    function flipCoins() {
-        const count = parseInt(document.getElementById('rz-coin-count').value) || 1;
-        const flips = [];
-        for (let i = 0; i < Math.min(count, 20); i++) {
-            flips.push(Math.random() < 0.5 ? 'H' : 'T');
-        }
-        const resultEl = document.getElementById('rz-coin-result');
-        if (count === 1) {
-            resultEl.textContent = flips[0] === 'H' ? 'Heads' : 'Tails';
+    /* =========================================================
+       RENDER RESULTS
+    ========================================================= */
+    function renderResults(groups) {
+        resultsEmpty.classList.add('rz-hidden');
+        resultsContent.classList.remove('rz-hidden');
+
+        // Uneven split note
+        const sizes = groups.map(g => g.length);
+        const minSize = Math.min(...sizes);
+        const maxSize = Math.max(...sizes);
+        if (minSize !== maxSize) {
+            const big   = groups.map((g, i) => g.length === maxSize ? groupLabel(i) : null).filter(Boolean);
+            const small = groups.map((g, i) => g.length === minSize ? groupLabel(i) : null).filter(Boolean);
+            splitNote.textContent =
+                `${big.join(', ')} ${big.length === 1 ? 'has' : 'have'} ${maxSize} items; ` +
+                `${small.join(', ')} ${small.length === 1 ? 'has' : 'have'} ${minSize}.`;
+            splitNote.classList.remove('rz-hidden');
         } else {
-            const heads = flips.filter(f => f === 'H').length;
-            const tails = flips.length - heads;
-            resultEl.innerHTML = `<span class="rz-coins-result">${flips.join(' ')}</span><br><small style="font-size:1rem;color:#555;">${heads} heads, ${tails} tails</small>`;
+            splitNote.classList.add('rz-hidden');
+        }
+
+        renderCardView(groups);
+        renderListView(groups);
+        applyView(currentView);
+    }
+
+    // Inline rename pencil SVG
+    const PENCIL_SVG = `<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+    </svg>`;
+
+    function groupNameHeaderCard(i) {
+        const label = esc(groupLabel(i));
+        const count = lastResults[i].length;
+        return `
+            <div class="rz-group-card-name">
+                <span class="rz-group-name-display" id="rz-card-name-${i}">${label}</span>
+                <button class="rz-btn-icon rz-rename-btn" onclick="startRenameCard(${i})" title="Rename group">${PENCIL_SVG}</button>
+                <span class="rz-group-card-count">${count}</span>
+            </div>`;
+    }
+
+    function groupNameHeaderList(i) {
+        const label = esc(groupLabel(i));
+        const count = lastResults[i].length;
+        return `
+            <div class="rz-group-list-name">
+                <span class="rz-group-name-display" id="rz-list-name-${i}">${label}</span>
+                <button class="rz-btn-icon rz-rename-btn" onclick="startRenameList(${i})" title="Rename group">${PENCIL_SVG}</button>
+                <span class="rz-group-card-count">${count}</span>
+            </div>`;
+    }
+
+    function renderCardView(groups) {
+        resultsCards.innerHTML = groups.map((items, i) => `
+            <div class="rz-group-card" id="rz-card-${i}">
+                ${groupNameHeaderCard(i)}
+                <ul class="rz-group-card-items">
+                    ${items.map(it => `<li class="rz-group-card-item">${esc(it)}</li>`).join('')}
+                </ul>
+            </div>
+        `).join('');
+    }
+
+    function renderListView(groups) {
+        resultsList.innerHTML = groups.map((items, i) => `
+            <div class="rz-group-list-section" id="rz-list-section-${i}">
+                ${groupNameHeaderList(i)}
+                <ul class="rz-group-list-items">
+                    ${items.map(it => `<li class="rz-group-list-item">${esc(it)}</li>`).join('')}
+                </ul>
+            </div>
+        `).join('');
+    }
+
+    /* --- Inline rename for card view --- */
+    window.startRenameCard = function (i) {
+        const nameEl = document.getElementById('rz-card-name-' + i);
+        if (!nameEl) return;
+        const current = resultGroupNames[i] || '';
+        const placeholder = 'Group ' + (i + 1);
+        nameEl.outerHTML = `
+            <input class="rz-group-rename-input" id="rz-card-rename-${i}"
+                   type="text" value="${esc(current)}" placeholder="${esc(placeholder)}"
+                   autocomplete="off" style="flex:1;">
+        `;
+        const inp = document.getElementById('rz-card-rename-' + i);
+        inp.focus(); inp.select();
+        inp.addEventListener('blur',    () => confirmRename(i));
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); confirmRename(i); }
+            if (e.key === 'Escape') cancelRename(i);
+        });
+    };
+
+    /* --- Inline rename for list view --- */
+    window.startRenameList = function (i) {
+        const nameEl = document.getElementById('rz-list-name-' + i);
+        if (!nameEl) return;
+        const current = resultGroupNames[i] || '';
+        const placeholder = 'Group ' + (i + 1);
+        nameEl.outerHTML = `
+            <input class="rz-group-rename-input" id="rz-list-rename-${i}"
+                   type="text" value="${esc(current)}" placeholder="${esc(placeholder)}"
+                   autocomplete="off" style="flex:1;">
+        `;
+        const inp = document.getElementById('rz-list-rename-' + i);
+        inp.focus(); inp.select();
+        inp.addEventListener('blur',    () => confirmRename(i));
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); confirmRename(i); }
+            if (e.key === 'Escape') cancelRename(i);
+        });
+    };
+
+    function confirmRename(i) {
+        // Try card input first, then list input
+        const inp = document.getElementById('rz-card-rename-' + i)
+                 || document.getElementById('rz-list-rename-' + i);
+        if (!inp) return;
+        resultGroupNames[i] = inp.value.trim();
+        // Re-render both views to keep them in sync
+        renderCardView(lastResults);
+        renderListView(lastResults);
+        // Re-apply current view so hidden one stays hidden
+        applyView(currentView);
+        // Update split note labels if visible
+        if (!splitNote.classList.contains('rz-hidden')) renderResults(lastResults);
+    }
+
+    function cancelRename(i) {
+        renderCardView(lastResults);
+        renderListView(lastResults);
+        applyView(currentView);
+    }
+
+    function applyView(view) {
+        currentView = view;
+        if (view === 'card') {
+            resultsCards.classList.remove('rz-hidden');
+            resultsList.classList.add('rz-hidden');
+            viewCardBtn.classList.add('rz-active');
+            viewListBtn.classList.remove('rz-active');
+        } else {
+            resultsCards.classList.add('rz-hidden');
+            resultsList.classList.remove('rz-hidden');
+            viewCardBtn.classList.remove('rz-active');
+            viewListBtn.classList.add('rz-active');
         }
     }
 
-    // Pick from List
-    const listItems = [];
-
-    function addListItem() {
-        const input = document.getElementById('rz-list-input');
-        const value = input.value.trim();
-        if (!value) return;
-        listItems.push(value);
-        input.value = '';
-        renderListItems();
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorNotice.classList.remove('rz-hidden');
+        resultsEmpty.classList.add('rz-hidden');
+        resultsContent.classList.remove('rz-hidden');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('rz-list-input').addEventListener('keydown', e => {
-            if (e.key === 'Enter') addListItem();
+    function hideError() {
+        errorNotice.classList.add('rz-hidden');
+    }
+
+    /* =========================================================
+       COPY & DOWNLOAD
+    ========================================================= */
+    function doCopy() {
+        if (!lastResults) return;
+        const text = resultsToText(lastResults);
+        navigator.clipboard.writeText(text).then(() => {
+            const orig = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = orig; }, 2000);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0;';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            const orig = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = orig; }, 2000);
+        });
+    }
+
+    function doDownload() {
+        if (!lastResults) return;
+        const text = resultsToText(lastResults);
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'randomizer-results.txt'; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /* =========================================================
+       CLEAR / RESET
+    ========================================================= */
+    function doClear() {
+        state.items = [];
+        state.mode = 'groups';
+        state.groupNum = 2;
+        resultGroupNames = [];
+        lastResults = null;
+
+        clearStorage();
+        syncUIToState();
+
+        resultsEmpty.classList.remove('rz-hidden');
+        resultsContent.classList.add('rz-hidden');
+        hideDupeWarning();
+        hideError();
+    }
+
+    /* =========================================================
+       SYNC UI ← STATE
+    ========================================================= */
+    function syncUIToState() {
+        modeRadios.forEach(r => { r.checked = r.value === state.mode; });
+        modeLabelGroups.classList.toggle('rz-selected', state.mode === 'groups');
+        modeLabelSize.classList.toggle('rz-selected', state.mode === 'size');
+        groupNumLabel.textContent = state.mode === 'groups' ? 'groups' : 'items per group';
+        groupNumInput.value = state.groupNum;
+
+        pasteSection.classList.remove('rz-open');
+        pasteInput.value = '';
+
+        renderItemList();
+    }
+
+    /* =========================================================
+       EVENT LISTENERS
+    ========================================================= */
+    addBtn.addEventListener('click', () => {
+        const val = textInput.value;
+        addItems([val]);
+        textInput.value = '';
+        textInput.focus();
+    });
+
+    textInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addItems([textInput.value]);
+            textInput.value = '';
+        }
+    });
+
+    pasteToggle.addEventListener('click', () => {
+        const isOpen = pasteSection.classList.toggle('rz-open');
+        pasteToggle.querySelector('svg').style.transform = isOpen ? 'rotate(45deg)' : '';
+        if (isOpen) pasteInput.focus();
+    });
+
+    pasteCancelBtn.addEventListener('click', () => {
+        pasteSection.classList.remove('rz-open');
+        pasteInput.value = '';
+    });
+
+    pasteAddBtn.addEventListener('click', () => {
+        const raw = pasteInput.value;
+        if (!raw.trim()) return;
+        addItems(parsePaste(raw));
+        pasteInput.value = '';
+        pasteSection.classList.remove('rz-open');
+    });
+
+    dupeDismiss.addEventListener('click', hideDupeWarning);
+
+    modeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            state.mode = radio.value;
+            modeLabelGroups.classList.toggle('rz-selected', state.mode === 'groups');
+            modeLabelSize.classList.toggle('rz-selected', state.mode === 'size');
+            groupNumLabel.textContent = state.mode === 'groups' ? 'groups' : 'items per group';
+            updateDerivedText();
+            saveState();
         });
     });
 
-    function removeListItem(index) {
-        listItems.splice(index, 1);
-        renderListItems();
+    groupNumInput.addEventListener('input', () => {
+        const v = parseInt(groupNumInput.value);
+        state.groupNum = isNaN(v) ? 1 : Math.max(1, v);
+        updateDerivedText();
+        saveState();
+    });
+
+    // Items panel collapse toggle
+    const itemsToggle = document.getElementById('rz-items-toggle');
+    const itemsBody   = document.getElementById('rz-items-body');
+    itemsToggle.addEventListener('click', () => {
+        const isOpen = itemsBody.classList.toggle('rz-collapsed');
+        itemsToggle.setAttribute('aria-expanded', String(!isOpen));
+        itemsToggle.classList.toggle('rz-panel-toggle-closed', isOpen);
+    });
+
+    // Grouping panel collapse toggle
+    const groupingToggle = document.getElementById('rz-grouping-toggle');
+    const groupingBody   = document.getElementById('rz-grouping-body');
+    groupingToggle.addEventListener('click', () => {
+        const isOpen = groupingBody.classList.toggle('rz-collapsed');
+        groupingToggle.setAttribute('aria-expanded', String(!isOpen));
+        groupingToggle.classList.toggle('rz-panel-toggle-closed', isOpen);
+    });
+
+    function scrollToResults() {
+        // Only scroll on mobile (single-column layout)
+        if (window.innerWidth <= 720) {
+            const panel = document.getElementById('rz-results-panel');
+            if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
-    function renderListItems() {
-        const ul = document.getElementById('rz-list-items');
-        ul.innerHTML = listItems.map((item, i) =>
-            `<li class="rz-list-item">${escapeHtml(item)}<button class="rz-list-item-remove" onclick="removeListItem(${i})" title="Remove">×</button></li>`
-        ).join('');
+    randomizeBtn.addEventListener('click', () => { doRandomize(); scrollToResults(); });
+    reshuffleBtn.addEventListener('click', () => { doRandomize(); scrollToResults(); });
+
+    clearBtn.addEventListener('click', () => {
+        if (state.items.length === 0 && !lastResults) { doClear(); return; }
+        if (confirm('Clear everything and start over?')) doClear();
+    });
+
+    viewCardBtn.addEventListener('click', () => applyView('card'));
+    viewListBtn.addEventListener('click', () => applyView('list'));
+    copyBtn.addEventListener('click', doCopy);
+    downloadBtn.addEventListener('click', doDownload);
+
+    /* =========================================================
+       SAVED LISTS
+    ========================================================= */
+    const LS_SAVED_KEY = 'rz_saved_lists_v1';
+
+    function getSavedLists() {
+        try { return JSON.parse(localStorage.getItem(LS_SAVED_KEY)) || []; }
+        catch (e) { return []; }
     }
 
-    function pickFromList() {
-        const resultEl = document.getElementById('rz-list-result');
-        if (listItems.length === 0) {
-            resultEl.textContent = 'Add some items first!';
+    function putSavedLists(lists) {
+        try { localStorage.setItem(LS_SAVED_KEY, JSON.stringify(lists)); }
+        catch (e) { /* ignore */ }
+    }
+
+    // --- Save modal ---
+    const saveModal       = document.getElementById('rz-save-modal');
+    const saveNameInput   = document.getElementById('rz-save-name-input');
+    const saveModalDesc   = document.getElementById('rz-save-modal-desc');
+    const saveConfirmBtn  = document.getElementById('rz-save-confirm-btn');
+    const saveCancelBtn   = document.getElementById('rz-save-cancel-btn');
+    const saveModalClose  = document.getElementById('rz-save-modal-close');
+
+    function openSaveModal() {
+        if (state.items.length === 0) return;
+        saveModalDesc.textContent = `${plural(state.items.length, 'item')} will be saved.`;
+        saveNameInput.value = '';
+        saveModal.classList.remove('rz-hidden');
+        saveNameInput.focus();
+    }
+
+    function closeSaveModal() {
+        saveModal.classList.add('rz-hidden');
+    }
+
+    function doSaveList() {
+        const name = saveNameInput.value.trim();
+        if (!name) { saveNameInput.focus(); return; }
+        const lists = getSavedLists();
+        const existing = lists.findIndex(l => l.name.toLowerCase() === name.toLowerCase());
+        const entry = { name, items: [...state.items], savedAt: Date.now() };
+        if (existing >= 0) {
+            lists[existing] = entry; // overwrite
+        } else {
+            lists.unshift(entry);
+        }
+        putSavedLists(lists);
+        closeSaveModal();
+    }
+
+    document.getElementById('rz-save-list-btn').addEventListener('click', openSaveModal);
+    saveConfirmBtn.addEventListener('click', doSaveList);
+    saveCancelBtn.addEventListener('click', closeSaveModal);
+    saveModalClose.addEventListener('click', closeSaveModal);
+    saveModal.addEventListener('click', e => { if (e.target === saveModal) closeSaveModal(); });
+    saveNameInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') doSaveList();
+        if (e.key === 'Escape') closeSaveModal();
+    });
+
+    // --- Load modal ---
+    const loadModal      = document.getElementById('rz-load-modal');
+    const loadModalClose = document.getElementById('rz-load-modal-close');
+    const savedListsCont = document.getElementById('rz-saved-lists-container');
+
+    function openLoadModal() {
+        renderSavedLists();
+        loadModal.classList.remove('rz-hidden');
+    }
+
+    function closeLoadModal() {
+        loadModal.classList.add('rz-hidden');
+    }
+
+    function renderSavedLists() {
+        const lists = getSavedLists();
+        if (lists.length === 0) {
+            savedListsCont.innerHTML = '<p class="rz-modal-empty">No saved lists yet.</p>';
             return;
         }
-        const pick = listItems[Math.floor(Math.random() * listItems.length)];
-        resultEl.textContent = pick;
+        savedListsCont.innerHTML = lists.map((l, i) => `
+            <div class="rz-saved-row">
+                <div class="rz-saved-info">
+                    <span class="rz-saved-name">${esc(l.name)}</span>
+                    <span class="rz-saved-meta">${plural(l.items.length, 'item')}</span>
+                </div>
+                <div class="rz-saved-actions">
+                    <button class="rz-btn rz-btn-sm rz-btn-primary" onclick="loadSavedList(${i})">Load</button>
+                    <button class="rz-btn-icon rz-btn-icon-danger" onclick="deleteSavedList(${i})" title="Delete">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function clearList() {
-        listItems.length = 0;
-        renderListItems();
-        document.getElementById('rz-list-result').textContent = '—';
-    }
+    window.loadSavedList = function (i) {
+        const lists = getSavedLists();
+        const entry = lists[i];
+        if (!entry) return;
+        state.items = [...entry.items];
+        renderItemList();
+        closeLoadModal();
+    };
 
-    function escapeHtml(str) {
-        return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
+    window.deleteSavedList = function (i) {
+        const lists = getSavedLists();
+        lists.splice(i, 1);
+        putSavedLists(lists);
+        renderSavedLists();
+    };
 
-    // Dice Roller
-    function rollDice() {
-        const count = parseInt(document.getElementById('rz-dice-count').value) || 1;
-        const sides = parseInt(document.getElementById('rz-dice-sides').value);
-        const rolls = [];
-        for (let i = 0; i < Math.min(count, 20); i++) {
-            rolls.push(Math.floor(Math.random() * sides) + 1);
-        }
-        const total = rolls.reduce((a, b) => a + b, 0);
-        const resultEl = document.getElementById('rz-dice-result');
-        if (count === 1) {
-            resultEl.textContent = rolls[0];
-        } else {
-            resultEl.innerHTML = `${total}<br><small style="font-size:1rem;color:#555;">${rolls.join(' + ')}</small>`;
-        }
-    }
+    document.getElementById('rz-load-list-btn').addEventListener('click', openLoadModal);
+    loadModalClose.addEventListener('click', closeLoadModal);
+    loadModal.addEventListener('click', e => { if (e.target === loadModal) closeLoadModal(); });
+
+    /* =========================================================
+       INIT
+    ========================================================= */
+    loadState();
+    syncUIToState();
+
+})();
 </script>
 {% endblock %}
