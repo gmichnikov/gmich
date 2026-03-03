@@ -5,9 +5,8 @@ import logging
 import os
 import re
 
-import posthog as posthog_client
-posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
-posthog_client.host = "https://us.i.posthog.com"
+from posthog import Posthog
+posthog_client = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", enable_exception_autocapture=True, sync_mode=True)
 
 from app.projects.betfake.models import (
     BetfakeAccount,
@@ -219,7 +218,7 @@ def create_account():
 
     try:
         db.session.commit()
-        posthog_client.capture(str(current_user.id), "betfake_account_created")
+        posthog_client.capture("betfake_account_created", distinct_id=str(current_user.id))
         flash(
             f'Account "{account_name}" created successfully with $100.00 balance!',
             "success",
@@ -308,7 +307,7 @@ def browse_sport(sport_key):
 
     recent_games.sort(key=lambda x: x.commence_time, reverse=True)
 
-    posthog_client.capture(str(current_user.id), "betfake_sport_browsed", {
+    posthog_client.capture("betfake_sport_browsed", distinct_id=str(current_user.id), properties={
         "sport_key": sport_key,
         "sport_label": sport.display_title,
         "upcoming_game_count": len(upcoming_games),
@@ -446,7 +445,7 @@ def place_bet(outcome_id):
         # Link transaction to bet after commit to get bet.id
         transaction.bet_id = bet.id
         db.session.commit()
-        posthog_client.capture(str(current_user.id), "betfake_bet_placed", {
+        posthog_client.capture("betfake_bet_placed", distinct_id=str(current_user.id), properties={
             "sport_key": game.sport_key,
             "market_type": outcome.market.type.value,
             "wager_amount": wager_amount,

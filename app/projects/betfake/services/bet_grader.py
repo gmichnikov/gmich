@@ -3,9 +3,8 @@ import os
 from datetime import datetime
 from app import db
 
-import posthog as posthog_client
-posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
-posthog_client.host = "https://us.i.posthog.com"
+from posthog import Posthog
+posthog_client = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", enable_exception_autocapture=True, sync_mode=True)
 from app.projects.betfake.models import (
     BetfakeBet,
     BetfakeGame,
@@ -248,7 +247,7 @@ class BetGraderService:
                 else:
                     pnl = 0
 
-                posthog_client.capture(str(bet.user_id), "betfake_bet_settled", {
+                posthog_client.capture("betfake_bet_settled", distinct_id=str(bet.user_id), properties={
                     "sport_key": game.sport_key,
                     "market_type": bet.outcome.market.type.value,
                     "wager_amount": bet.wager_amount,

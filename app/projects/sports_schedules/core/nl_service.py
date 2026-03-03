@@ -7,7 +7,10 @@ import os
 import signal
 from contextlib import contextmanager
 
-from google import genai
+from posthog import Posthog
+from posthog.ai.gemini import Client as PostHogGeminiClient
+
+_posthog = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", sync_mode=True)
 
 MODEL = "gemini-3-flash-preview"
 MAX_OUTPUT_TOKENS = 2048
@@ -33,7 +36,7 @@ def _timeout_context(seconds: int):
         yield
 
 
-def call_nl_llm(prompt: str) -> tuple[str, dict]:
+def call_nl_llm(prompt: str, distinct_id: str = "anonymous") -> tuple[str, dict]:
     """
     Call Gemini to translate natural language to query config.
     Returns (response_text, metadata_dict).
@@ -44,13 +47,15 @@ def call_nl_llm(prompt: str) -> tuple[str, dict]:
     if not api_key:
         raise ValueError("GOOGLE_API_KEY environment variable is not set")
 
-    client = genai.Client(api_key=api_key)
+    client = PostHogGeminiClient(api_key=api_key, posthog_client=_posthog)
 
     with _timeout_context(TIMEOUT_SECONDS):
         response = client.models.generate_content(
             model=MODEL,
             contents=prompt,
             config={"max_output_tokens": MAX_OUTPUT_TOKENS},
+            posthog_distinct_id=distinct_id,
+            posthog_properties={"project": "sports_schedules"},
         )
 
     text = response.text or ""

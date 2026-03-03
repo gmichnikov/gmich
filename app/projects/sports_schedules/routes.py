@@ -8,9 +8,8 @@ import logging
 import os
 from datetime import datetime
 
-import posthog as posthog_client
-posthog_client.api_key = os.environ.get("POSTHOG_API_KEY", "")
-posthog_client.host = "https://us.i.posthog.com"
+from posthog import Posthog
+posthog_client = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", enable_exception_autocapture=True, sync_mode=True)
 
 from flask import Blueprint, jsonify, render_template, request, url_for
 from flask_login import current_user
@@ -125,7 +124,7 @@ def api_query():
     db.session.commit()
 
     distinct_id = str(current_user.id) if current_user.is_authenticated else "anonymous"
-    posthog_client.capture(distinct_id, "sports_query_run", {
+    posthog_client.capture("sports_query_run", distinct_id=distinct_id, properties={
         "row_count": len(rows),
         "authenticated": current_user.is_authenticated,
     })
@@ -255,7 +254,7 @@ def api_nl_query():
 
     try:
         prompt = build_nl_prompt(question, today_ymd)
-        content, metadata = call_nl_llm(prompt)
+        content, metadata = call_nl_llm(prompt, distinct_id=str(current_user.id))
         input_tokens = metadata.get("input_tokens", 0)
         output_tokens = metadata.get("output_tokens", 0)
     except Exception:
@@ -292,7 +291,7 @@ def api_nl_query():
     _log("config", credit_used=True)
     db.session.commit()
 
-    posthog_client.capture(str(current_user.id), "sports_nl_query_used", {
+    posthog_client.capture("sports_nl_query_used", distinct_id=str(current_user.id), properties={
         "question_length": len(question),
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
@@ -350,7 +349,7 @@ def api_saved_queries_create():
     ))
     db.session.commit()
 
-    posthog_client.capture(str(current_user.id), "sports_query_saved", {"name": name})
+    posthog_client.capture("sports_query_saved", distinct_id=str(current_user.id), properties={"name": name})
 
     return (
         jsonify(
