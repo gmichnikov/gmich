@@ -338,7 +338,7 @@ PROJECTS = [
     {
         "id": "kids_words",
         "name": "Kids Words",
-        "description": "Kids Words",
+        "description": "Like Wordle, but with word lists for younger kids",
         "url": "/kids-words",
         "auth_required": False,
         "status": "active",

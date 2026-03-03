@@ -154,24 +154,75 @@ def verify_user_email(user_id):
     return redirect(url_for("admin.manage_users"))
 
 
+def _query_log_entries(user_tz):
+    """Run the log entry query from request args and return formatted entries."""
+    project_filter = request.args.get("project", "")
+    user_filter = request.args.get("user", "")
+    search_filter = request.args.get("search", "")
+    last_n_str = request.args.get("last_n", "50")
+    last_n = None if last_n_str == "all" else int(last_n_str)
+
+    query = LogEntry.query.outerjoin(User, LogEntry.actor_id == User.id)
+
+    if project_filter:
+        query = query.filter(LogEntry.project == project_filter)
+    if user_filter:
+        query = query.filter(User.email == user_filter)
+    if search_filter:
+        like_term = f"%{search_filter}%"
+        query = query.filter(
+            db.or_(LogEntry.category.ilike(like_term), LogEntry.description.ilike(like_term))
+        )
+
+    query = query.order_by(LogEntry.timestamp.desc())
+    if last_n is not None:
+        query = query.limit(last_n)
+
+    log_entries = query.all()
+
+    for log in log_entries:
+        localized_timestamp = log.timestamp.replace(tzinfo=pytz.utc).astimezone(user_tz)
+        tz_abbr = localized_timestamp.tzname()
+        log.formatted_timestamp = (
+            localized_timestamp.strftime("%Y-%m-%d, %I:%M:%S %p ") + tz_abbr
+        )
+
+    return log_entries
+
+
 @admin_bp.route("/view_logs")
 @login_required
 @admin_required
 def view_logs():
     user_tz = pytz.timezone(current_user.time_zone)
+    log_entries = _query_log_entries(user_tz)
 
-    # Use outerjoin (LEFT JOIN) to include anonymous visits where actor_id is None
-    log_entries = LogEntry.query.outerjoin(User, LogEntry.actor_id == User.id)
-    log_entries = log_entries.order_by(LogEntry.timestamp.desc()).all()
+    all_users = (
+        User.query.join(LogEntry, LogEntry.actor_id == User.id)
+        .distinct()
+        .order_by(User.email)
+        .all()
+    )
 
-    for log in log_entries:
-        localized_timestamp = log.timestamp.replace(tzinfo=pytz.utc).astimezone(user_tz)
-        tz_abbr = localized_timestamp.tzname()  # Gets the time zone abbreviation
-        log.formatted_timestamp = (
-            localized_timestamp.strftime("%Y-%m-%d, %I:%M:%S %p ") + tz_abbr
-        )
+    return render_template(
+        "admin/view_logs.html",
+        log_entries=log_entries,
+        all_users=all_users,
+        selected_project=request.args.get("project", ""),
+        selected_user=request.args.get("user", ""),
+        search_value=request.args.get("search", ""),
+        selected_last_n=request.args.get("last_n", "50"),
+    )
 
-    return render_template("admin/view_logs.html", log_entries=log_entries)
+
+@admin_bp.route("/view_logs/rows")
+@login_required
+@admin_required
+def view_logs_rows():
+    """Returns only the table row fragment for AJAX updates."""
+    user_tz = pytz.timezone(current_user.time_zone)
+    log_entries = _query_log_entries(user_tz)
+    return render_template("admin/view_logs_rows.html", log_entries=log_entries)
 
 
 @admin_bp.route("/view_all_signup_lists")

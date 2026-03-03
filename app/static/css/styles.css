@@ -705,7 +705,8 @@ body {
   cursor: pointer;
 }
 
-.filter-reset-btn {
+.filter-reset-btn,
+.filter-submit-btn {
   padding: 10px 20px;
   background: #f0f0f0;
   color: #555;
@@ -715,11 +716,18 @@ body {
   cursor: pointer;
   transition: all 0.3s;
   font-family: inherit;
+  font-size: inherit;
   height: fit-content;
+  text-decoration: none;
+  display: inline-block;
+  line-height: normal;
+  box-sizing: border-box;
 }
 
-.filter-reset-btn:hover {
+.filter-reset-btn:hover,
+.filter-submit-btn:hover {
   background: #e0e0e0;
+  color: #555;
 }
 
 .admin-logs-table-wrapper {
@@ -1253,8 +1261,10 @@ textarea.auth-input {
     min-width: 100%;
   }
 
-  .filter-reset-btn {
+  .filter-reset-btn,
+  .filter-submit-btn {
     width: 100%;
+    text-align: center;
   }
 
   .admin-logs-table-wrapper {

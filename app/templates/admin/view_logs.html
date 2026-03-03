@@ -8,36 +8,35 @@ content %}
   </div>
 
   <!-- Filters -->
-  <div class="logs-filters">
+  <form class="logs-filters" id="logsFilterForm">
     <div class="filter-group">
       <label for="projectFilter" class="filter-label">Project:</label>
-      <select id="projectFilter" class="filter-select">
+      <select id="projectFilter" name="project" class="filter-select">
         <option value="">All Projects</option>
-        <option value="auth">Auth</option>
-        <option value="admin">Admin</option>
-        <option value="ask_many_llms">Ask Many LLMs</option>
-        <option value="chatbot">Chatbot</option>
-        <option value="better_signups">Better Signups</option>
-        <option value="mastermind">Mastermind</option>
-        <option value="simon_says">Simon Says</option>
-        <option value="tic_tac_toe">Tic-Tac-Toe</option>
-        <option value="connect4">Connect 4</option>
-        <option value="algebra_snake">Algebra Snake</option>
-        <option value="spanish_vocab_invaders">Spanish Vocab Invaders</option>
-        <option value="sorry_cards">Sorry Cards</option>
-        <option value="sushi_go">Sushi Go</option>
-        <option value="betfake">BetFake</option>
+        <option value="auth" {% if selected_project == 'auth' %}selected{% endif %}>Auth</option>
+        <option value="admin" {% if selected_project == 'admin' %}selected{% endif %}>Admin</option>
+        <option value="ask_many_llms" {% if selected_project == 'ask_many_llms' %}selected{% endif %}>Ask Many LLMs</option>
+        <option value="chatbot" {% if selected_project == 'chatbot' %}selected{% endif %}>Chatbot</option>
+        <option value="better_signups" {% if selected_project == 'better_signups' %}selected{% endif %}>Better Signups</option>
+        <option value="mastermind" {% if selected_project == 'mastermind' %}selected{% endif %}>Mastermind</option>
+        <option value="simon_says" {% if selected_project == 'simon_says' %}selected{% endif %}>Simon Says</option>
+        <option value="tic_tac_toe" {% if selected_project == 'tic_tac_toe' %}selected{% endif %}>Tic-Tac-Toe</option>
+        <option value="connect4" {% if selected_project == 'connect4' %}selected{% endif %}>Connect 4</option>
+        <option value="algebra_snake" {% if selected_project == 'algebra_snake' %}selected{% endif %}>Algebra Snake</option>
+        <option value="spanish_vocab_invaders" {% if selected_project == 'spanish_vocab_invaders' %}selected{% endif %}>Spanish Vocab Invaders</option>
+        <option value="sorry_cards" {% if selected_project == 'sorry_cards' %}selected{% endif %}>Sorry Cards</option>
+        <option value="sushi_go" {% if selected_project == 'sushi_go' %}selected{% endif %}>Sushi Go</option>
+        <option value="betfake" {% if selected_project == 'betfake' %}selected{% endif %}>BetFake</option>
       </select>
     </div>
 
     <div class="filter-group">
       <label for="userFilter" class="filter-label">User:</label>
-      <select id="userFilter" class="filter-select">
+      <select id="userFilter" name="user" class="filter-select">
         <option value="">All Users</option>
-        {% set users = log_entries | selectattr('actor') | map(attribute='actor.email') | unique |
-        list %} {% for user_email in users | sort %} {% if user_email %}
-        <option value="{{ user_email }}">{{ user_email }}</option>
-        {% endif %} {% endfor %}
+        {% for u in all_users %}
+        <option value="{{ u.email }}" {% if selected_user == u.email %}selected{% endif %}>{{ u.email }}</option>
+        {% endfor %}
       </select>
     </div>
 
@@ -46,13 +45,26 @@ content %}
       <input
         type="text"
         id="searchFilter"
+        name="search"
         class="filter-input"
         placeholder="Category or description..."
+        value="{{ search_value }}"
       />
     </div>
 
-    <button id="resetFilters" class="filter-reset-btn">Reset</button>
-  </div>
+    <div class="filter-group">
+      <label for="lastNFilter" class="filter-label">Last N:</label>
+      <select id="lastNFilter" name="last_n" class="filter-select">
+        <option value="20" {% if selected_last_n == '20' %}selected{% endif %}>20</option>
+        <option value="50" {% if selected_last_n == '50' %}selected{% endif %}>50</option>
+        <option value="100" {% if selected_last_n == '100' %}selected{% endif %}>100</option>
+        <option value="all" {% if selected_last_n == 'all' %}selected{% endif %}>All</option>
+      </select>
+    </div>
+
+    <button type="button" class="filter-submit-btn" id="applyBtn">Apply</button>
+    <button type="button" class="filter-reset-btn" id="resetBtn">Reset</button>
+  </form>
 
   <div class="admin-logs-table-wrapper">
     <table class="table-logs">
@@ -76,6 +88,10 @@ content %}
           <td class="log-category">{{ log.category }}</td>
           <td class="log-description">{{ log.description }}</td>
         </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="logs-empty-row">No log entries match your filters.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -83,78 +99,50 @@ content %}
 
   <div class="admin-logs-footer">
     <p class="admin-footer-text">
-      <a href="{{ url_for('main.index') }}" class="admin-link"
-        >← Back to Home</a
-      >
+      <a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a>
     </p>
   </div>
 </div>
 
 <script>
-  // Get filter elements
+  const rowsUrl = "{{ url_for('admin.view_logs_rows') }}";
+  const tbody = document.querySelector(".table-logs tbody");
+  const searchInput = document.getElementById("searchFilter");
   const projectFilter = document.getElementById("projectFilter");
   const userFilter = document.getElementById("userFilter");
-  const searchFilter = document.getElementById("searchFilter");
-  const resetBtn = document.getElementById("resetFilters");
-  const tableRows = document.querySelectorAll(".table-logs tbody tr");
+  const lastNFilter = document.getElementById("lastNFilter");
+  let debounceTimer;
 
-  // Filter function (AND logic)
-  function applyFilters() {
-    const projectValue = projectFilter.value.toLowerCase();
-    const userValue = userFilter.value.toLowerCase();
-    const searchValue = searchFilter.value.toLowerCase();
-
-    let visibleCount = 0;
-
-    tableRows.forEach((row) => {
-      const project = row
-        .querySelector(".log-project")
-        .textContent.toLowerCase();
-      const user = row.querySelector(".log-user").textContent.toLowerCase();
-      const category = row
-        .querySelector(".log-category")
-        .textContent.toLowerCase();
-      const description = row
-        .querySelector(".log-description")
-        .textContent.toLowerCase();
-
-      // AND logic: all filters must pass
-      const projectMatch = !projectValue || project === projectValue;
-      const userMatch = !userValue || user === userValue;
-      const searchMatch =
-        !searchValue ||
-        category.includes(searchValue) ||
-        description.includes(searchValue);
-
-      if (projectMatch && userMatch && searchMatch) {
-        row.style.display = "";
-        visibleCount++;
-      } else {
-        row.style.display = "none";
-      }
+  function fetchRows() {
+    const params = new URLSearchParams({
+      project: projectFilter.value,
+      user: userFilter.value,
+      search: searchInput.value,
+      last_n: lastNFilter.value,
     });
-
-    // Update filter button text with count
-    if (visibleCount < tableRows.length) {
-      resetBtn.textContent = `Reset (${visibleCount} / ${tableRows.length})`;
-    } else {
-      resetBtn.textContent = "Reset";
-    }
+    fetch(`${rowsUrl}?${params}`)
+      .then((r) => r.text())
+      .then((html) => { tbody.innerHTML = html; });
   }
 
-  // Reset function
   function resetFilters() {
     projectFilter.value = "";
     userFilter.value = "";
-    searchFilter.value = "";
-    applyFilters();
+    searchInput.value = "";
+    lastNFilter.value = "50";
+    fetchRows();
   }
 
-  // Add event listeners
-  projectFilter.addEventListener("change", applyFilters);
-  userFilter.addEventListener("change", applyFilters);
-  searchFilter.addEventListener("input", applyFilters);
-  resetBtn.addEventListener("click", resetFilters);
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fetchRows, 500);
+  });
+
+  projectFilter.addEventListener("change", fetchRows);
+  userFilter.addEventListener("change", fetchRows);
+  lastNFilter.addEventListener("change", fetchRows);
+  document.getElementById("applyBtn").addEventListener("click", fetchRows);
+  document.getElementById("resetBtn").addEventListener("click", resetFilters);
 </script>
 
 {% endblock %}
