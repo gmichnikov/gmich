@@ -345,6 +345,16 @@ PROJECTS = [
         "type": "project",
         "order": 15,
     },
+    {
+        "id": "randomizer",
+        "name": "Randomizer",
+        "description": "Random number generator, coin flipper, list picker, and dice roller",
+        "url": "/randomizer",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "order": 16,
+    },
 ]
 
 

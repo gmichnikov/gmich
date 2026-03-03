@@ -1,0 +1,189 @@
+/* Randomizer - all classes prefixed with rz- */
+
+.rz-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.rz-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #1a1a2e;
+}
+
+.rz-subtitle {
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.rz-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.rz-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1a1a2e;
+}
+
+.rz-result {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 1rem;
+    background: #f0f4ff;
+    border-radius: 8px;
+    color: #3b5bdb;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    word-break: break-word;
+}
+
+.rz-btn {
+    display: inline-block;
+    padding: 0.6rem 1.4rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.rz-btn:active {
+    transform: scale(0.97);
+}
+
+.rz-btn-primary {
+    background: #3b5bdb;
+    color: #fff;
+}
+
+.rz-btn-primary:hover {
+    background: #2f4ac2;
+}
+
+.rz-btn-secondary {
+    background: #e9ecef;
+    color: #333;
+}
+
+.rz-btn-secondary:hover {
+    background: #d8dce1;
+}
+
+.rz-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.rz-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    min-width: 120px;
+}
+
+.rz-input:focus {
+    outline: none;
+    border-color: #3b5bdb;
+    box-shadow: 0 0 0 2px rgba(59, 91, 219, 0.2);
+}
+
+.rz-range-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.rz-range-label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.rz-list-items {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.rz-list-item {
+    background: #e9ecef;
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.rz-list-item-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.rz-list-item-remove:hover {
+    color: #c00;
+}
+
+.rz-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.rz-coins-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.rz-coins-input {
+    width: 80px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.rz-coins-result {
+    font-size: 1.4rem;
+    letter-spacing: 0.2em;
+}
+
+@media (max-width: 480px) {
+    .rz-title {
+        font-size: 1.5rem;
+    }
+
+    .rz-result {
+        font-size: 1.5rem;
+    }
+}

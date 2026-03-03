@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Randomizer{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('randomizer.static', filename='randomizer/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="rz-container">
+    <h1 class="rz-title">Randomizer</h1>
+    <p class="rz-subtitle">A collection of handy random-generation tools.</p>
+
+    <!-- Random Number -->
+    <div class="rz-card">
+        <div class="rz-card-title">Random Number</div>
+        <div class="rz-range-row">
+            <span class="rz-range-label">From</span>
+            <input class="rz-input" id="rz-num-min" type="number" value="1" style="width:90px;">
+            <span class="rz-range-label">to</span>
+            <input class="rz-input" id="rz-num-max" type="number" value="100" style="width:90px;">
+        </div>
+        <div class="rz-result" id="rz-num-result">—</div>
+        <div class="rz-actions">
+            <button class="rz-btn rz-btn-primary" onclick="randomNumber()">Roll</button>
+        </div>
+    </div>
+
+    <!-- Coin Flip -->
+    <div class="rz-card">
+        <div class="rz-card-title">Coin Flip</div>
+        <div class="rz-coins-row">
+            <span class="rz-range-label">Flip</span>
+            <input class="rz-coins-input" id="rz-coin-count" type="number" value="1" min="1" max="20">
+            <span class="rz-range-label">coin(s)</span>
+        </div>
+        <div class="rz-result" id="rz-coin-result">—</div>
+        <div class="rz-actions">
+            <button class="rz-btn rz-btn-primary" onclick="flipCoins()">Flip</button>
+        </div>
+    </div>
+
+    <!-- Pick from List -->
+    <div class="rz-card">
+        <div class="rz-card-title">Pick from a List</div>
+        <div class="rz-input-group">
+            <input class="rz-input" id="rz-list-input" type="text" placeholder="Add an item and press Enter">
+            <button class="rz-btn rz-btn-secondary" onclick="addListItem()">Add</button>
+        </div>
+        <ul class="rz-list-items" id="rz-list-items"></ul>
+        <div class="rz-result" id="rz-list-result">—</div>
+        <div class="rz-actions">
+            <button class="rz-btn rz-btn-primary" onclick="pickFromList()">Pick One</button>
+            <button class="rz-btn rz-btn-secondary" onclick="clearList()">Clear List</button>
+        </div>
+    </div>
+
+    <!-- Dice Roller -->
+    <div class="rz-card">
+        <div class="rz-card-title">Dice Roller</div>
+        <div class="rz-range-row">
+            <span class="rz-range-label">Roll</span>
+            <input class="rz-input" id="rz-dice-count" type="number" value="2" min="1" max="20" style="width:70px;">
+            <span class="rz-range-label">×</span>
+            <select class="rz-input" id="rz-dice-sides" style="width:80px;">
+                <option value="4">d4</option>
+                <option value="6" selected>d6</option>
+                <option value="8">d8</option>
+                <option value="10">d10</option>
+                <option value="12">d12</option>
+                <option value="20">d20</option>
+                <option value="100">d100</option>
+            </select>
+        </div>
+        <div class="rz-result" id="rz-dice-result">—</div>
+        <div class="rz-actions">
+            <button class="rz-btn rz-btn-primary" onclick="rollDice()">Roll Dice</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Random Number
+    function randomNumber() {
+        const min = parseInt(document.getElementById('rz-num-min').value);
+        const max = parseInt(document.getElementById('rz-num-max').value);
+        if (isNaN(min) || isNaN(max) || min > max) {
+            document.getElementById('rz-num-result').textContent = 'Invalid range';
+            return;
+        }
+        const result = Math.floor(Math.random() * (max - min + 1)) + min;
+        document.getElementById('rz-num-result').textContent = result;
+    }
+
+    // Coin Flip
+    function flipCoins() {
+        const count = parseInt(document.getElementById('rz-coin-count').value) || 1;
+        const flips = [];
+        for (let i = 0; i < Math.min(count, 20); i++) {
+            flips.push(Math.random() < 0.5 ? 'H' : 'T');
+        }
+        const resultEl = document.getElementById('rz-coin-result');
+        if (count === 1) {
+            resultEl.textContent = flips[0] === 'H' ? 'Heads' : 'Tails';
+        } else {
+            const heads = flips.filter(f => f === 'H').length;
+            const tails = flips.length - heads;
+            resultEl.innerHTML = `<span class="rz-coins-result">${flips.join(' ')}</span><br><small style="font-size:1rem;color:#555;">${heads} heads, ${tails} tails</small>`;
+        }
+    }
+
+    // Pick from List
+    const listItems = [];
+
+    function addListItem() {
+        const input = document.getElementById('rz-list-input');
+        const value = input.value.trim();
+        if (!value) return;
+        listItems.push(value);
+        input.value = '';
+        renderListItems();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('rz-list-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') addListItem();
+        });
+    });
+
+    function removeListItem(index) {
+        listItems.splice(index, 1);
+        renderListItems();
+    }
+
+    function renderListItems() {
+        const ul = document.getElementById('rz-list-items');
+        ul.innerHTML = listItems.map((item, i) =>
+            `<li class="rz-list-item">${escapeHtml(item)}<button class="rz-list-item-remove" onclick="removeListItem(${i})" title="Remove">×</button></li>`
+        ).join('');
+    }
+
+    function pickFromList() {
+        const resultEl = document.getElementById('rz-list-result');
+        if (listItems.length === 0) {
+            resultEl.textContent = 'Add some items first!';
+            return;
+        }
+        const pick = listItems[Math.floor(Math.random() * listItems.length)];
+        resultEl.textContent = pick;
+    }
+
+    function clearList() {
+        listItems.length = 0;
+        renderListItems();
+        document.getElementById('rz-list-result').textContent = '—';
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // Dice Roller
+    function rollDice() {
+        const count = parseInt(document.getElementById('rz-dice-count').value) || 1;
+        const sides = parseInt(document.getElementById('rz-dice-sides').value);
+        const rolls = [];
+        for (let i = 0; i < Math.min(count, 20); i++) {
+            rolls.push(Math.floor(Math.random() * sides) + 1);
+        }
+        const total = rolls.reduce((a, b) => a + b, 0);
+        const resultEl = document.getElementById('rz-dice-result');
+        if (count === 1) {
+            resultEl.textContent = rolls[0];
+        } else {
+            resultEl.innerHTML = `${total}<br><small style="font-size:1rem;color:#555;">${rolls.join(' + ')}</small>`;
+        }
+    }
+</script>
+{% endblock %}

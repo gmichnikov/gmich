@@ -87,6 +87,7 @@ def create_app():
     from app.projects.sports_schedule_admin.routes import sports_schedule_admin_bp
     from app.projects.sports_schedules.routes import sports_schedules_bp
     from app.projects.kids_words.routes import kids_words_bp
+    from app.projects.randomizer.routes import randomizer_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -118,6 +119,7 @@ def create_app():
     app.register_blueprint(sports_schedule_admin_bp)
     app.register_blueprint(sports_schedules_bp)
     app.register_blueprint(kids_words_bp, url_prefix="/kids-words")
+    app.register_blueprint(randomizer_bp, url_prefix="/randomizer")
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
