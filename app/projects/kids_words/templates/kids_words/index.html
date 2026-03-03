@@ -70,7 +70,8 @@
   window.KIDS_WORDS_API = {
     grade2: "{{ url_for('kids_words.api_grade2') }}",
     grade4: "{{ url_for('kids_words.api_grade4') }}",
-    guesses: "{{ url_for('kids_words.api_guesses') }}"
+    guesses: "{{ url_for('kids_words.api_guesses') }}",
+    logNewGame: "{{ url_for('kids_words.log_new_game') }}"
   };
 </script>
 <script src="{{ url_for('kids_words.static', filename='js/kids_words.js') }}"></script>

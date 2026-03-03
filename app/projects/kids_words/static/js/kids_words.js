@@ -583,6 +583,9 @@
 
   function startGame() {
     if (!selectedDifficulty || !selectedWordCount) return;
+    if (window.KIDS_WORDS_API && window.KIDS_WORDS_API.logNewGame) {
+      fetch(window.KIDS_WORDS_API.logNewGame, { method: "POST" });
+    }
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}

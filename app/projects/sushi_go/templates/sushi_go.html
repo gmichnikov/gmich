@@ -523,6 +523,7 @@ block content %}
   }
 
   function startGame() {
+    fetch("{{ url_for('sushi_go.log_new_game') }}", { method: 'POST' });
     // Collect player names
     playerNames = [];
     for (let i = 1; i <= playerCount; i++) {

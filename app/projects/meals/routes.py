@@ -5,7 +5,7 @@ import calendar
 import pytz
 from datetime import date, timedelta, datetime
 from app import db
-from app.models import User
+from app.models import User, LogEntry
 from app.projects.meals.models import MealsFamilyGroup, MealsFamilyMember, MealsEntry
 from app.projects.meals.forms import CreateFamilyGroupForm, InviteMemberForm, AddGuestMemberForm, LogMealForm, EditEntryForm
 from app.projects.meals.utils import get_user_family_groups, is_user_in_group
@@ -38,6 +38,12 @@ def create_group():
             display_name=current_user.short_name
         )
         db.session.add(member)
+        db.session.add(LogEntry(
+            actor_id=current_user.id,
+            project='meals',
+            category='New Group',
+            description=f'Created family group "{group.name}"',
+        ))
         db.session.commit()
         
         flash(f'Family group "{group.name}" created!', 'success')

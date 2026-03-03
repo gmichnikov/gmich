@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from flask_login import login_required, current_user
 from app import db
 from app.projects.basketball_tracker.models import BasketballTeam, BasketballGame, BasketballEvent
+from app.utils.logging import log_project_visit
 
 basketball_tracker = Blueprint('basketball_tracker', __name__,
                                template_folder='templates',
@@ -17,6 +18,7 @@ basketball_tracker = Blueprint('basketball_tracker', __name__,
 def index():
     """Home page showing games list and teams navigation"""
     from datetime import date
+    log_project_visit('basketball_tracker', 'Basketball Tracker')
     user_teams = BasketballTeam.query.filter_by(user_id=current_user.id).order_by(BasketballTeam.name).all()
     user_games = BasketballGame.query.filter_by(user_id=current_user.id).order_by(BasketballGame.game_date.desc(), BasketballGame.created_at.desc()).all()
     return render_template('basketball_tracker/index.html', 

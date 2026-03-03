@@ -2,6 +2,9 @@ import json
 import os
 
 from flask import Blueprint, jsonify, render_template
+from flask_login import current_user
+from app import db
+from app.models import LogEntry
 from app.utils.logging import log_project_visit
 
 kids_words_bp = Blueprint(
@@ -63,3 +66,16 @@ def api_guesses():
     """Return valid guess words as JSON array (one per line from wordle_guesses.txt)."""
     words = _load_guesses()
     return jsonify(words)
+
+
+@kids_words_bp.route("/api/log/new-game", methods=["POST"])
+def log_new_game():
+    """Called by the client when a new game starts."""
+    db.session.add(LogEntry(
+        actor_id=current_user.id if current_user.is_authenticated else None,
+        project="kids_words",
+        category="New Game",
+        description="Started a new Kids Words game",
+    ))
+    db.session.commit()
+    return jsonify({"ok": True})

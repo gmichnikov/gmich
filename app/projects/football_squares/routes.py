@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, abort, jso
 from flask_login import login_required, current_user
 from app import db
 from app.projects.football_squares import football_squares_bp
+from app.utils.logging import log_project_visit
 from app.projects.football_squares.models import FootballSquaresGrid, FootballSquaresParticipant, FootballSquaresSquare, FootballSquaresQuarter, AxisType
 import uuid
 import random
@@ -9,6 +10,7 @@ import random
 @football_squares_bp.route("/")
 @login_required
 def index():
+    log_project_visit('football_squares', 'Football Squares')
     grids = FootballSquaresGrid.query.filter_by(user_id=current_user.id).order_by(FootballSquaresGrid.created_at.desc()).all()
     return render_template("football_squares/list.html", grids=grids)
 

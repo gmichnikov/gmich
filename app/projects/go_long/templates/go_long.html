@@ -722,6 +722,8 @@
         document.getElementById('glSetup').classList.add('gl-hidden');
         document.getElementById('glGame').classList.remove('gl-hidden');
         
+        fetch("{{ url_for('go_long.log_new_game') }}", { method: 'POST' });
+        
         glUpdateUI();
     }
 

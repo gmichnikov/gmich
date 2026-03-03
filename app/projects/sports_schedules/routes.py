@@ -110,6 +110,15 @@ def api_query():
         return jsonify({"error": "Unable to load data. Please try again."}), 500
 
     rows = result.get("rows", [])
+
+    db.session.add(LogEntry(
+        actor_id=current_user.id if current_user.is_authenticated else None,
+        project="sports_schedules",
+        category="Query",
+        description=f"Ran query: returned {len(rows)} row(s)",
+    ))
+    db.session.commit()
+
     return jsonify({"rows": rows, "sql": sql})
 
 
@@ -315,6 +324,12 @@ def api_saved_queries_create():
         config=config_str,
     )
     db.session.add(saved)
+    db.session.add(LogEntry(
+        actor_id=current_user.id,
+        project="sports_schedules",
+        category="Saved Query",
+        description=f'Saved query "{name}"',
+    ))
     db.session.commit()
 
     return (

@@ -631,6 +631,7 @@
 
   // Start a new game
   function startNewGame() {
+    fetch("{{ url_for('mastermind.log_new_game') }}", { method: 'POST' });
     const allCodes = generateAllCodes();
     secret = allCodes[Math.floor(Math.random() * allCodes.length)];
     currentGuess = [];
