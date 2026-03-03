@@ -162,6 +162,11 @@ def create_app():
     )
     from app.projects.sports_schedules.models import SportsScheduleSavedQuery
 
+    # Inject PostHog API key into all templates
+    @app.context_processor
+    def inject_posthog():
+        return dict(posthog_api_key=os.environ.get("POSTHOG_API_KEY", ""))
+
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")
     def markdown_filter(text):
