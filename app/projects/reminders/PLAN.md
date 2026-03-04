@@ -146,12 +146,12 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 3.1 Send Reminder Email Function
 
-- [ ] Create `app/projects/reminders/email.py`
-  - [ ] Function `send_reminder_email(reminder)`:
-    - [ ] Build subject from `reminder.title`
-    - [ ] Build body from `reminder.body` (if present) + link to `/reminders/`
-    - [ ] Call `send_email()` from `app/utils/email_service.py`
-    - [ ] Return True on success, raise on failure
+- [x] Create `app/projects/reminders/email.py`
+  - [x] Function `send_reminder_email(reminder)`:
+    - [x] Build subject from `reminder.title`
+    - [x] Build body from `reminder.body` (if present) + link to `/reminders/`
+    - [x] Call `send_email()` from `app/utils/email_service.py`
+    - [x] Return True on success, raise on failure
 
 **Manual Testing 3.1:**
 - [ ] Call `send_reminder_email` directly in a Flask shell with a test reminder
@@ -162,15 +162,15 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 3.2 Test Now Button
 
-- [ ] Add "Test Now" button to each upcoming reminder on the index page
-- [ ] Implement `POST /reminders/<int:id>/test` route
-  - [ ] Verify ownership
-  - [ ] Check `current_user.credits >= 1` — if not, flash error and redirect
-  - [ ] Call `send_reminder_email(reminder)`
-  - [ ] Deduct 1 credit (`current_user.credits -= 1`, commit)
-  - [ ] Flash success with "Test email sent (1 credit used, X remaining)"
-  - [ ] Redirect to index
-  - [ ] Do NOT set `sent_at` — this is a test, not the real send
+- [x] Add "Test Now" button to each upcoming reminder on the index page
+- [x] Implement `POST /reminders/<int:id>/test` route
+  - [x] Verify ownership
+  - [x] Check `current_user.credits >= 1` — if not, flash error and redirect
+  - [x] Call `send_reminder_email(reminder)`
+  - [x] Deduct 1 credit (`current_user.credits -= 1`, commit)
+  - [x] Flash success with "Test email sent (1 credit used, X remaining)"
+  - [x] Redirect to index
+  - [x] Do NOT set `sent_at` — this is a test, not the real send
 
 **Manual Testing 3.2:**
 - [ ] Click "Test Now" on a reminder — verify email arrives

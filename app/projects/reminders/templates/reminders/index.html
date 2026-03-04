@@ -39,11 +39,15 @@
                     </div>
                     <div class="reminders-item-actions">
                         <a href="{{ url_for('reminders.edit', reminder_id=r.id) }}" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Edit</a>
-                        <form method="post" action="{{ url_for('reminders.duplicate', reminder_id=r.id) }}" style="display:inline;">
+                        <form method="post" action="{{ url_for('reminders.test_send', reminder_id=r.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Test Now</button>
+                        </form>
+                        <form method="post" action="{{ url_for('reminders.duplicate', reminder_id=r.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Duplicate</button>
                         </form>
-                        <form method="post" action="{{ url_for('reminders.delete', reminder_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Delete this reminder?');">
+                        <form method="post" action="{{ url_for('reminders.delete', reminder_id=r.id) }}" onsubmit="return confirm('Delete this reminder?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-danger">Delete</button>
                         </form>

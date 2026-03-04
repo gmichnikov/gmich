@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.utils.logging import log_project_visit
 from app.projects.reminders.models import Reminder
+from app.projects.reminders.email import send_reminder_email
 
 reminders_bp = Blueprint(
     "reminders",
@@ -253,3 +254,27 @@ def duplicate(reminder_id):
         title=reminder.title,
         body=reminder.body or "",
     ))
+
+
+@reminders_bp.route("/<int:reminder_id>/test", methods=["POST"])
+@login_required
+def test_send(reminder_id):
+    reminder = get_reminder_or_404(reminder_id)
+
+    if (current_user.credits or 0) < 1:
+        flash("Not enough credits to send a test email.", "error")
+        return redirect(url_for("reminders.index"))
+
+    try:
+        send_reminder_email(reminder)
+        current_user.credits = (current_user.credits or 0) - 1
+        db.session.commit()
+        flash(
+            f"Test email sent to {current_user.email}. "
+            f"1 credit used ({current_user.credits} remaining).",
+            "success",
+        )
+    except Exception as e:
+        flash("Failed to send test email. Please try again.", "error")
+
+    return redirect(url_for("reminders.index"))
