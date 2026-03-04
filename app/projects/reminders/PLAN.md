@@ -184,18 +184,18 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 4.1 Cron Command
 
-- [ ] Create `app/projects/reminders/commands.py`
-  - [ ] Flask CLI command `flask reminders send`
-  - [ ] Define window: `now - 10 minutes` to `now + 5 minutes`
-  - [ ] Query: `remind_at` within window, `sent_at IS NULL`, `user.credits >= 1`
-    - [ ] Join `Reminder` with `User` to filter on credits
-  - [ ] For each matching reminder:
-    - [ ] Call `send_reminder_email(reminder)`
-    - [ ] On success: set `sent_at = utcnow()`, deduct 1 credit, commit
-    - [ ] On failure: log error, leave `sent_at` NULL, continue to next
-  - [ ] Print summary: N sent, N failed, N skipped (no credits)
-- [ ] Register CLI command in `app/__init__.py`
-  - [ ] Import and call `init_app` from `commands.py`
+- [x] Create `app/projects/reminders/commands.py`
+  - [x] Flask CLI command `flask reminders send`
+  - [x] Define window: `now - 7 minutes` to `now + 7 minutes`
+  - [x] Query: `remind_at` within window, `sent_at IS NULL`, `user.credits >= 1`
+    - [x] Join `Reminder` with `User` to filter on credits
+  - [x] For each matching reminder:
+    - [x] Call `send_reminder_email(reminder)`
+    - [x] On success: set `sent_at = utcnow()`, deduct 1 credit, commit
+    - [x] On failure: log error, leave `sent_at` NULL, continue to next
+  - [x] Print summary: N sent, N failed, N skipped (no credits)
+- [x] Register CLI command in `app/__init__.py`
+  - [x] Import and call `init_app` from `commands.py`
 
 **Manual Testing 4.1:**
 - [ ] Create a reminder with `remind_at` set to ~1 minute from now
@@ -211,7 +211,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 4.2 Render Cron Job Setup
 
-- [ ] Document the Render Cron Job configuration needed:
+- [x] Document the Render Cron Job configuration needed:
   - [ ] Command: `flask reminders send` (or the equivalent `python -m flask reminders send`)
   - [ ] Schedule: `*/5 * * * *` (every 5 minutes)
   - [ ] Environment: same env vars as the web service

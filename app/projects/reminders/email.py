@@ -1,8 +1,8 @@
 """Email sending for the Reminders project."""
 
 import logging
+import os
 from zoneinfo import ZoneInfo
-from flask import url_for
 from app.utils.email_service import send_email
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,8 @@ def send_reminder_email(reminder):
         Exception if the email send fails
     """
     user = reminder.user
-    manage_url = url_for("reminders.index", _external=True)
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    manage_url = f"{base_url}/reminders/"
     scheduled_at_str = _format_remind_at(reminder)
 
     subject = f"Reminder: {reminder.title}"
