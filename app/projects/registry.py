@@ -348,12 +348,23 @@ PROJECTS = [
     {
         "id": "randomizer",
         "name": "Randomizer",
-        "description": "Random number generator, coin flipper, list picker, and dice roller",
+        "description": "Randomly distribute a list of items into groups",
         "url": "/randomizer",
         "auth_required": False,
         "status": "active",
         "type": "project",
         "order": 16,
+    },
+    {
+        "id": "reminders",
+        "name": "Reminders",
+        "description": "Create and manage reminders",
+        "url": "/reminders",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "⏰",
+        "order": 17,
     },
 ]
 

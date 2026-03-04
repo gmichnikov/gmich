@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Reminders{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('reminders.static', filename='reminders.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="reminders-page">
+    <div class="reminders-container">
+        <div class="reminders-header">
+            <h1 class="reminders-title">Reminders</h1>
+        </div>
+
+        {% if reminders %}
+        <ul class="reminders-list">
+            {% for reminder in reminders %}
+            <li class="reminders-item reminders-item-{{ 'completed' if reminder.is_completed else 'pending' }}">
+                <span class="reminders-item-title">{{ reminder.title }}</span>
+                {% if reminder.due_at %}
+                <span class="reminders-item-due">Due: {{ reminder.due_at.strftime('%b %d, %Y') }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="reminders-empty">
+            <p class="reminders-empty-text">No reminders yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
