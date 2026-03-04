@@ -23,18 +23,18 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 1.1 Database Model
 
-- [ ] Create `models.py` with `Reminder` model
-  - [ ] `id` — Integer primary key
-  - [ ] `user_id` — ForeignKey to `user.id`, not nullable
-  - [ ] `title` — String(255), not nullable
-  - [ ] `body` — Text, nullable
-  - [ ] `remind_at` — DateTime (UTC), not nullable
-  - [ ] `sent_at` — DateTime (UTC), nullable; set when email is successfully sent
-  - [ ] `created_at` — DateTime, not nullable, default utcnow
-  - [ ] Add relationship: `user = db.relationship('User', backref=...)`
-  - [ ] Add index on `(user_id, remind_at)`
-  - [ ] Add `__repr__` method
-- [ ] Import `Reminder` model in `app/__init__.py`
+- [x] Create `models.py` with `Reminder` model
+  - [x] `id` — Integer primary key
+  - [x] `user_id` — ForeignKey to `user.id`, not nullable
+  - [x] `title` — String(255), not nullable
+  - [x] `body` — Text, nullable
+  - [x] `remind_at` — DateTime (UTC), not nullable
+  - [x] `sent_at` — DateTime (UTC), nullable; set when email is successfully sent
+  - [x] `created_at` — DateTime, not nullable, default utcnow
+  - [x] Add relationship: `user = db.relationship('User', backref=...)`
+  - [x] Add index on `(user_id, remind_at)`
+  - [x] Add `__repr__` method
+- [x] Import `Reminder` model in `app/__init__.py`
 
 **Manual Testing 1.1:**
 - [ ] Ask to run `flask db migrate -m "Add reminder table"`

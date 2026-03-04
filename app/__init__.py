@@ -163,6 +163,7 @@ def create_app():
         MealsEntry,
     )
     from app.projects.sports_schedules.models import SportsScheduleSavedQuery
+    from app.projects.reminders.models import Reminder
 
     # Inject PostHog API key into all templates
     @app.context_processor
