@@ -34,7 +34,8 @@ def format_remind_at_for_user(dt, user):
         return ""
     user_tz = ZoneInfo(user.time_zone or "UTC")
     local_dt = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(user_tz)
-    return local_dt.strftime("%b %-d, %Y %-I:%M %p")
+    tz_abbr = local_dt.strftime("%Z")
+    return local_dt.strftime(f"%a, %b %-d, %Y %-I:%M %p {tz_abbr}")
 
 
 def parse_remind_at_from_user(dt_string, user):

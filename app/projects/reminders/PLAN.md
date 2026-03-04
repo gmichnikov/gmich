@@ -198,32 +198,28 @@ This plan follows the PRD and breaks implementation into small, testable phases.
   - [x] Import and call `init_app` from `commands.py`
 
 **Manual Testing 4.1:**
-- [ ] Create a reminder with `remind_at` set to ~1 minute from now
-- [ ] Wait for the time to pass, then run `flask reminders send` manually
-- [ ] Verify email arrives
-- [ ] Verify `sent_at` is set on the reminder in the DB
-- [ ] Verify reminder moves from Upcoming to Past in the UI
-- [ ] Verify 1 credit was deducted
+- [x] Create a reminder with `remind_at` set to ~1 minute from now
+- [x] Wait for the time to pass, then run `flask reminders send` manually
+- [x] Verify email arrives
+- [x] Verify `sent_at` is set on the reminder in the DB
+- [x] Verify reminder moves from Upcoming to Past in the UI
+- [x] Verify 1 credit was deducted
 - [ ] Create a reminder in the window, set user credits to 0, run command — verify it is skipped
 - [ ] Create a reminder outside the window (2 hours ago) — verify it is NOT sent
 
 ---
 
-### 4.2 Render Cron Job Setup
+### 4.2 Heroku Scheduler Setup
 
-- [x] Document the Render Cron Job configuration needed:
-  - [ ] Command: `flask reminders send` (or the equivalent `python -m flask reminders send`)
-  - [ ] Schedule: `*/5 * * * *` (every 5 minutes)
-  - [ ] Environment: same env vars as the web service
-- [ ] Add a note in this PLAN about how to set it up in the Render dashboard
-
-**Render Setup Note:**
-In the Render dashboard, add a new **Cron Job** service pointing to the same repo. Set the command to `flask reminders send` and the schedule to `*/5 * * * *`. It needs the same environment variables as the web service (DATABASE_URL, MAILGUN_API_KEY, etc.).
+- [x] Heroku Scheduler add-on configured
+  - [x] Command: `flask reminders send`
+  - [x] Schedule: Every 10 minutes
+  - [x] Uses same environment variables as the web dyno
 
 **Manual Testing 4.2:**
 - [ ] After deploying, create a reminder ~10 minutes out on production
-- [ ] Wait for the cron to fire
-- [ ] Verify email arrives within ~5 minutes of the scheduled time
+- [ ] Wait for the scheduler to fire
+- [ ] Verify email arrives within ~10 minutes of the scheduled time
 - [ ] Verify `sent_at` is set and reminder appears in Past section
 
 ---
@@ -259,17 +255,18 @@ In the Render dashboard, add a new **Cron Job** service pointing to the same rep
 
 ## Completion Checklist
 
-- [ ] All database models created and migrated
-- [ ] All routes return appropriate responses
-- [ ] All templates render correctly with `reminders-` CSS prefix
-- [ ] Login required on all routes
-- [ ] Ownership checks (404 for other users' reminders)
-- [ ] Credits checked before every email send
-- [ ] Cron command tested locally and on Render
-- [ ] Timezone conversion correct (input in user tz, stored in UTC, displayed in user tz)
-- [ ] Duplicate works from both Upcoming and Past sections
-- [ ] Test Now does not set `sent_at`
-- [ ] Sent reminders appear in Past section, not Upcoming
+- [x] All database models created and migrated
+- [x] All routes return appropriate responses
+- [x] All templates render correctly with `reminders-` CSS prefix
+- [x] Login required on all routes
+- [x] Ownership checks (404 for other users' reminders)
+- [x] Credits checked before every email send
+- [x] Cron command tested locally
+- [ ] Cron command verified working on Heroku Scheduler
+- [x] Timezone conversion correct (input in user tz, stored in UTC, displayed in user tz)
+- [x] Duplicate works from both Upcoming and Past sections
+- [x] Test Now does not set `sent_at`
+- [x] Sent reminders appear in Past section, not Upcoming
 
 ---
 
