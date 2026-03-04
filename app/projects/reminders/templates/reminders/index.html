@@ -9,26 +9,80 @@
 {% block content %}
 <div class="reminders-page">
     <div class="reminders-container">
+
         <div class="reminders-header">
             <h1 class="reminders-title">Reminders</h1>
+            <a href="{{ url_for('reminders.new') }}" class="reminders-btn reminders-btn-primary">+ New Reminder</a>
         </div>
 
-        {% if reminders %}
-        <ul class="reminders-list">
-            {% for reminder in reminders %}
-            <li class="reminders-item reminders-item-{{ 'completed' if reminder.is_completed else 'pending' }}">
-                <span class="reminders-item-title">{{ reminder.title }}</span>
-                {% if reminder.due_at %}
-                <span class="reminders-item-due">Due: {{ reminder.due_at.strftime('%b %d, %Y') }}</span>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <div class="reminders-empty">
-            <p class="reminders-empty-text">No reminders yet.</p>
+        <div class="reminders-credits-bar">
+            <span class="reminders-credits-label">Credits: <strong>{{ credits }}</strong></span>
+            {% if low_credits %}
+            <span class="reminders-credits-warning">
+                ⚠ You have {{ upcoming|length }} upcoming reminder{{ 's' if upcoming|length != 1 else '' }} but only {{ credits }} credit{{ 's' if credits != 1 else '' }}. Some reminders may not send.
+            </span>
+            {% endif %}
         </div>
+
+        <section class="reminders-section">
+            <h2 class="reminders-section-title">Upcoming</h2>
+            {% if upcoming %}
+            <ul class="reminders-list">
+                {% for r in upcoming %}
+                <li class="reminders-item">
+                    <div class="reminders-item-main">
+                        <span class="reminders-item-title">{{ r.title }}</span>
+                        <span class="reminders-item-time">{{ format_dt(r.remind_at) }}</span>
+                        {% if r.body %}
+                        <span class="reminders-item-body">{{ r.body }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="reminders-item-actions">
+                        <a href="{{ url_for('reminders.edit', reminder_id=r.id) }}" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Edit</a>
+                        <form method="post" action="{{ url_for('reminders.duplicate', reminder_id=r.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Duplicate</button>
+                        </form>
+                        <form method="post" action="{{ url_for('reminders.delete', reminder_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Delete this reminder?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="reminders-empty">
+                <p class="reminders-empty-text">No upcoming reminders. <a href="{{ url_for('reminders.new') }}">Create one</a>.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        {% if past %}
+        <section class="reminders-section reminders-section-past">
+            <h2 class="reminders-section-title reminders-section-title-past">Past</h2>
+            <ul class="reminders-list">
+                {% for r in past %}
+                <li class="reminders-item reminders-item-past">
+                    <div class="reminders-item-main">
+                        <span class="reminders-item-title">{{ r.title }}</span>
+                        <span class="reminders-item-time">Sent {{ format_dt(r.sent_at) }}</span>
+                        {% if r.body %}
+                        <span class="reminders-item-body">{{ r.body }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="reminders-item-actions">
+                        <form method="post" action="{{ url_for('reminders.duplicate', reminder_id=r.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminders-btn reminders-btn-sm reminders-btn-secondary">Duplicate</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
         {% endif %}
+
     </div>
 </div>
 {% endblock %}

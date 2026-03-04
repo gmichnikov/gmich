@@ -48,24 +48,24 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 2.1 Index Page (List View)
 
-- [ ] Implement `GET /reminders/` route
-  - [ ] Query upcoming reminders: `sent_at IS NULL`, `remind_at > now`, ordered by `remind_at ASC`
-  - [ ] Query past reminders: `sent_at IS NOT NULL`, ordered by `sent_at DESC`
-  - [ ] Pass both lists and `current_user.credits` to template
-  - [ ] Log project visit
-- [ ] Create `templates/reminders/index.html`
-  - [ ] **Credits display**: show current credit balance prominently
-  - [ ] **Credits warning**: if `upcoming_count > credits`, show a warning banner
-  - [ ] **Upcoming section**: list of pending reminders
-    - [ ] Show title, scheduled time (in user's timezone), body preview if present
-    - [ ] Actions: Edit, Delete, Duplicate
-    - [ ] Empty state: "No upcoming reminders"
-  - [ ] **Past section**: visually separated, collapsed or muted
-    - [ ] Show title, sent time (in user's timezone)
-    - [ ] Action: Duplicate
-    - [ ] Empty state: "No past reminders yet"
-  - [ ] "New Reminder" button linking to create form
-  - [ ] All CSS classes use `reminders-` prefix
+- [x] Implement `GET /reminders/` route
+  - [x] Query upcoming reminders: `sent_at IS NULL`, `remind_at > now`, ordered by `remind_at ASC`
+  - [x] Query past reminders: `sent_at IS NOT NULL`, ordered by `sent_at DESC`
+  - [x] Pass both lists and `current_user.credits` to template
+  - [x] Log project visit
+- [x] Create `templates/reminders/index.html`
+  - [x] **Credits display**: show current credit balance prominently
+  - [x] **Credits warning**: if `upcoming_count > credits`, show a warning banner
+  - [x] **Upcoming section**: list of pending reminders
+    - [x] Show title, scheduled time (in user's timezone), body preview if present
+    - [x] Actions: Edit, Delete, Duplicate
+    - [x] Empty state: "No upcoming reminders"
+  - [x] **Past section**: visually separated, collapsed or muted
+    - [x] Show title, sent time (in user's timezone)
+    - [x] Action: Duplicate
+    - [x] Empty state: "No past reminders yet"
+  - [x] "New Reminder" button linking to create form
+  - [x] All CSS classes use `reminders-` prefix
 
 **Manual Testing 2.1:**
 - [ ] Navigate to `/reminders/` — page loads, empty states show
@@ -77,20 +77,20 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 2.2 Create Reminder
 
-- [ ] Implement `GET /reminders/new` route — render create form
-- [ ] Implement `POST /reminders/create` route
-  - [ ] Validate title is not empty
-  - [ ] Validate `remind_at` is in the future (server-side, UTC)
-  - [ ] Parse submitted datetime from user's timezone, convert to UTC before saving
-  - [ ] Create `Reminder` record and commit
-  - [ ] Flash success message
-  - [ ] Redirect to index
-- [ ] Create `templates/reminders/new.html`
-  - [ ] Title input (required)
-  - [ ] Body textarea (optional)
-  - [ ] Datetime picker: date + time, 15-minute increments, labeled with user's timezone
-  - [ ] Submit button, Cancel link back to index
-  - [ ] Show validation errors inline
+- [x] Implement `GET /reminders/new` route — render create form
+- [x] Implement `POST /reminders/create` route
+  - [x] Validate title is not empty
+  - [x] Validate `remind_at` is in the future (server-side, UTC)
+  - [x] Parse submitted datetime from user's timezone, convert to UTC before saving
+  - [x] Create `Reminder` record and commit
+  - [x] Flash success message
+  - [x] Redirect to index
+- [x] Create `templates/reminders/new.html`
+  - [x] Title input (required)
+  - [x] Body textarea (optional)
+  - [x] Datetime picker: date + time, 15-minute increments, labeled with user's timezone
+  - [x] Submit button, Cancel link back to index
+  - [x] Show validation errors inline
 
 **Manual Testing 2.2:**
 - [ ] Create a reminder with title only — verify it saves and appears in Upcoming
@@ -103,21 +103,21 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 2.3 Edit & Delete
 
-- [ ] Implement `GET /reminders/<int:id>/edit` route
-  - [ ] Fetch reminder, verify it belongs to current user (404 otherwise)
-  - [ ] Render edit form pre-filled with existing values
-- [ ] Implement `POST /reminders/<int:id>/update` route
-  - [ ] Same validations as create
-  - [ ] Only allow editing if `sent_at IS NULL` (can't edit a sent reminder)
-  - [ ] Update fields and commit
-  - [ ] Flash success, redirect to index
-- [ ] Implement `POST /reminders/<int:id>/delete` route
-  - [ ] Verify ownership (404 otherwise)
-  - [ ] Hard delete the record
-  - [ ] Flash success, redirect to index
-- [ ] Create `templates/reminders/edit.html`
-  - [ ] Same form as new, pre-filled
-  - [ ] Delete button (with confirmation prompt)
+- [x] Implement `GET /reminders/<int:id>/edit` route
+  - [x] Fetch reminder, verify it belongs to current user (404 otherwise)
+  - [x] Render edit form pre-filled with existing values
+- [x] Implement `POST /reminders/<int:id>/update` route
+  - [x] Same validations as create
+  - [x] Only allow editing if `sent_at IS NULL` (can't edit a sent reminder)
+  - [x] Update fields and commit
+  - [x] Flash success, redirect to index
+- [x] Implement `POST /reminders/<int:id>/delete` route
+  - [x] Verify ownership (404 otherwise)
+  - [x] Hard delete the record
+  - [x] Flash success, redirect to index
+- [x] Create `templates/reminders/edit.html`
+  - [x] Same form as new, pre-filled
+  - [x] Delete button (with confirmation prompt)
 
 **Manual Testing 2.3:**
 - [ ] Edit a reminder — verify changes saved and displayed correctly
@@ -129,11 +129,11 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 2.4 Duplicate
 
-- [ ] Implement `POST /reminders/<int:id>/duplicate` route
-  - [ ] Fetch reminder, verify ownership
-  - [ ] Redirect to `GET /reminders/new` with title and body pre-filled (via query params or session)
-  - [ ] Do NOT copy `remind_at` — user must pick a new time
-- [ ] Update new reminder form to accept optional pre-fill from query params
+- [x] Implement `POST /reminders/<int:id>/duplicate` route
+  - [x] Fetch reminder, verify ownership
+  - [x] Redirect to `GET /reminders/new` with title and body pre-filled (via query params or session)
+  - [x] Do NOT copy `remind_at` — user must pick a new time
+- [x] Update new reminder form to accept optional pre-fill from query params
 
 **Manual Testing 2.4:**
 - [ ] Click Duplicate on an upcoming reminder — form opens pre-filled with title/body, no time set

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}New Reminder{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('reminders.static', filename='reminders.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="reminders-page">
+    <div class="reminders-container">
+
+        <div class="reminders-header">
+            <h1 class="reminders-title">New Reminder</h1>
+        </div>
+
+        <div class="reminders-card">
+            <form method="post" action="{{ url_for('reminders.create') }}" class="reminders-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="reminders-form-group">
+                    <label for="title" class="reminders-label">Title <span class="reminders-required">*</span></label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="reminders-input"
+                        value="{{ prefill_title }}"
+                        placeholder="What do you want to be reminded about?"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="reminders-form-group">
+                    <label for="body" class="reminders-label">Details <span class="reminders-optional">(optional)</span></label>
+                    <textarea
+                        id="body"
+                        name="body"
+                        class="reminders-textarea"
+                        rows="3"
+                        placeholder="Any additional details..."
+                    >{{ prefill_body }}</textarea>
+                </div>
+
+                <div class="reminders-form-group">
+                    <label for="remind_at" class="reminders-label">
+                        When <span class="reminders-required">*</span>
+                        <span class="reminders-tz-hint">({{ tz_name }})</span>
+                    </label>
+                    <input
+                        type="datetime-local"
+                        id="remind_at"
+                        name="remind_at"
+                        class="reminders-input"
+                        required
+                    >
+                    <p class="reminders-field-hint">Reminders fire within ~5 minutes of the selected time.</p>
+                </div>
+
+                <div class="reminders-form-actions">
+                    <button type="submit" class="reminders-btn reminders-btn-primary">Create Reminder</button>
+                    <a href="{{ url_for('reminders.index') }}" class="reminders-btn reminders-btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Set the min value to now (in user's local time) to prevent past selection
+const dtInput = document.getElementById('remind_at');
+const now = new Date();
+// Round up to next 15-minute mark
+const ms = 15 * 60 * 1000;
+const rounded = new Date(Math.ceil(now.getTime() / ms) * ms);
+const pad = n => String(n).padStart(2, '0');
+const localMin = `${rounded.getFullYear()}-${pad(rounded.getMonth()+1)}-${pad(rounded.getDate())}T${pad(rounded.getHours())}:${pad(rounded.getMinutes())}`;
+dtInput.min = localMin;
+dtInput.value = localMin;
+</script>
+{% endblock %}
