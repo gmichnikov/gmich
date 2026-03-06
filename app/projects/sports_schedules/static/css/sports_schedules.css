@@ -579,10 +579,50 @@
   min-height: 4rem;
 }
 
+.ss-nl-input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
 .ss-nl-char-count {
   font-size: 0.8rem;
   color: #6c757d;
-  margin-bottom: 0.75rem;
+}
+
+.ss-nl-mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #6c757d;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  padding: 0;
+}
+
+.ss-nl-mic-btn:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.ss-nl-mic-btn--recording {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #ef4444;
+  animation: ss-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ss-mic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .ss-nl-error {

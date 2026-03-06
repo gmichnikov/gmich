@@ -241,7 +241,17 @@
     <h3 id="ss-nl-modal-title" class="ss-nl-modal-title">Ask a question about the schedule</h3>
     <p class="ss-nl-modal-credits" id="ss-nl-modal-credits">1 credit per question • You have <span id="ss-nl-credits-count">{{ credits }}</span> credits</p>
     <textarea id="ss-nl-input" class="ss-nl-input" placeholder="e.g., Celtics games this week" maxlength="500" rows="3" aria-label="Your question"></textarea>
-    <div class="ss-nl-char-count" id="ss-nl-char-count">0 / 500</div>
+    <div class="ss-nl-input-footer">
+      <span class="ss-nl-char-count" id="ss-nl-char-count">0 / 500</span>
+      <button type="button" id="ss-nl-mic-btn" class="ss-nl-mic-btn" title="Dictate your question">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+          <rect x="9" y="2" width="6" height="12" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="17" x2="12" y2="22"/>
+          <line x1="8" y1="22" x2="16" y2="22"/>
+        </svg>
+      </button>
+    </div>
     <div id="ss-nl-error" class="ss-nl-error" style="display: none;"></div>
     <div id="ss-nl-loading" class="ss-nl-loading" style="display: none;">
       <div class="ss-nl-loading-spinner"></div>
@@ -1892,6 +1902,61 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
     if (submitBtn) submitBtn.addEventListener('click', ssSubmitNl);
     submitBtn.disabled = true;
+
+    // Mic / dictation
+    var micBtn = document.getElementById('ss-nl-mic-btn');
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (micBtn && SpeechRecognition) {
+      var recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      var isMicRecording = false;
+
+      function ssStartMic() {
+        isMicRecording = true;
+        micBtn.classList.add('ss-nl-mic-btn--recording');
+        micBtn.title = 'Stop dictation';
+        recognition.start();
+      }
+
+      function ssStopMic() {
+        isMicRecording = false;
+        recognition.stop();
+        micBtn.classList.remove('ss-nl-mic-btn--recording');
+        micBtn.title = 'Dictate your question';
+      }
+
+      micBtn.addEventListener('click', function() {
+        if (isMicRecording) { ssStopMic(); } else { ssStartMic(); }
+      });
+
+      recognition.addEventListener('result', function(e) {
+        var interim = '', final = '';
+        for (var i = 0; i < e.results.length; i++) {
+          var t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) { final += t; } else { interim += t; }
+        }
+        input.value = final || interim;
+        ssUpdateCharCount();
+      });
+
+      recognition.addEventListener('error', function(e) {
+        ssStopMic();
+      });
+
+      recognition.addEventListener('end', function() {
+        if (isMicRecording) ssStopMic();
+      });
+
+      // Reset mic state when modal closes
+      var origClose = ssCloseNlModal;
+      ssCloseNlModal = function() { if (isMicRecording) ssStopMic(); origClose(); };
+    } else if (micBtn) {
+      micBtn.disabled = true;
+      micBtn.title = 'Speech recognition not supported in this browser';
+      micBtn.style.opacity = '0.35';
+    }
   }
 
   function ssInitWithPromptSaveCheck() {
