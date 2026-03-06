@@ -333,6 +333,65 @@
     border-top: 1px solid var(--reminders-border);
 }
 
+/* Dictate / mic button */
+.reminders-label-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reminders-mic-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--reminders-border);
+    background: var(--reminders-card);
+    color: var(--reminders-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.reminders-mic-btn:hover:not(:disabled) {
+    background: var(--reminders-accent-light);
+    border-color: var(--reminders-accent);
+    color: var(--reminders-accent);
+}
+
+.reminders-mic-btn--recording {
+    background: #fee2e2;
+    border-color: var(--reminders-danger);
+    color: var(--reminders-danger);
+    animation: reminders-mic-pulse 1.2s ease-in-out infinite;
+}
+
+.reminders-mic-btn--unsupported {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.reminders-mic-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.reminders-mic-status {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: var(--reminders-danger);
+}
+
+@keyframes reminders-mic-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .reminders-item {

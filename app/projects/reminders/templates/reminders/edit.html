@@ -19,7 +19,17 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="reminders-form-group">
-                    <label for="title" class="reminders-label">Title <span class="reminders-required">*</span></label>
+                    <div class="reminders-label-row">
+                        <label for="title" class="reminders-label">Title <span class="reminders-required">*</span></label>
+                        <button type="button" id="reminders-mic-btn" class="reminders-mic-btn" title="Dictate title">
+                            <svg class="reminders-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="2" width="6" height="12" rx="3"/>
+                                <path d="M5 10a7 7 0 0 0 14 0"/>
+                                <line x1="12" y1="17" x2="12" y2="22"/>
+                                <line x1="8" y1="22" x2="16" y2="22"/>
+                            </svg>
+                        </button>
+                    </div>
                     <input
                         type="text"
                         id="title"
@@ -29,6 +39,7 @@
                         required
                         autofocus
                     >
+                    <p id="reminders-mic-status" class="reminders-mic-status" hidden></p>
                 </div>
 
                 <div class="reminders-form-group">
@@ -74,6 +85,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('reminders.static', filename='reminders-dictate.js') }}"></script>
 <script>
 // Prevent selecting a time in the past
 const dtInput = document.getElementById('remind_at');
