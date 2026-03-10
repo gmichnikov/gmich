@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Travel Log{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <h1 class="tlog-title">Hello</h1>
+    </div>
+</div>
+{% endblock %}

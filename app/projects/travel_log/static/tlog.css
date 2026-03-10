@@ -1,0 +1,31 @@
+/* Travel Log App Styles — all classes prefixed with tlog- */
+
+:root {
+    --tlog-bg: #f8fafc;
+    --tlog-container-bg: #ffffff;
+    --tlog-border: #e5e7eb;
+    --tlog-text: #1f2937;
+}
+
+.tlog-page {
+    background: var(--tlog-bg);
+    min-height: 100vh;
+    margin: -40px -20px 0 -20px;
+    padding: 40px 20px;
+}
+
+.tlog-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    background: var(--tlog-container-bg);
+    border: 1px solid var(--tlog-border);
+    border-radius: 10px;
+}
+
+.tlog-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--tlog-text);
+}

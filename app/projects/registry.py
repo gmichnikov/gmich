@@ -366,6 +366,17 @@ PROJECTS = [
         "icon": "⏰",
         "order": 17,
     },
+    {
+        "id": "travel_log",
+        "name": "Travel Log",
+        "description": "Log your travels",
+        "url": "/travel-log",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "✈️",
+        "order": 18,
+    },
 ]
 
 
