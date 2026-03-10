@@ -29,7 +29,7 @@ Collections group entries (e.g. "Tokyo 2026", "Portugal Summer"). Entries always
 - When starting to log, the **default collection** is the one used for the most recently created or edited entry
 - A **subtle control** to change collection is available while logging (e.g. during place selection or on the creation form)
 - Users can **rename** and **delete** collections
-- Delete collection: behavior for existing entries (move to ungrouped vs. require reassignment) to be defined in implementation plan
+- **Delete collection:** Deletes the collection and all its entries. Confirmation dialog must show how many entries will be deleted (e.g. "Are you sure? This will permanently delete 12 entries.")
 - Collections are ordered by **last modified** (when an entry was added/edited, or the collection itself was edited)
 
 ---
@@ -48,6 +48,7 @@ User must have at least one collection. Default collection = most recently used 
 - App gets GPS via `navigator.geolocation.getCurrentPosition()`
 - Fires Nearby Search with a **narrow radius first** (~200m); if fewer than 3 results, widen and retry
 - Displays list of nearby places
+- **Filter out** places with `businessStatus` != `OPERATIONAL` (client-side)
 - Default: unfiltered. When many results, user can **filter by category** (Food & Drink, Shop, Attraction, Other) or **type to search**
 - User taps the correct place
 
@@ -57,7 +58,12 @@ User must have at least one collection. Default collection = most recently used 
 - App fires Text Search with `locationRestriction` (rectangle around user's coordinates)
 - Uses narrow box first; widens if too few results
 - Displays matching results
+- **Filter out** places with `businessStatus` != `OPERATIONAL` (request `places.businessStatus` in field mask; filter client-side)
 - User taps the correct place
+
+**Both flows (client-side):**
+
+- Sort results by distance from user's exact coordinates (API doesn't guarantee order)
 
 ### Creation Form
 
@@ -129,6 +135,21 @@ When things fail, the app must not lose the user's intent to log something:
 - User selects from results → we pre-fill editable form → user's text is what we save
 - When displaying Places API results (the selection list), show Google logo/attribution
 - Use Basic tier fields only in field mask (no rating, reviews, hours — those cost more)
+- Include `places.businessStatus` in field mask for both Browse and Search (needed to filter out closed/temporarily closed places)
+
+---
+
+## Category Filtering (Reference)
+
+When the user filters by category in the browse flow, use these `includedTypes` groupings. See [Places API place types](https://developers.google.com/maps/documentation/places/web-service/place-types) for the full list.
+
+**Food & Drink:** `restaurant`, `cafe`, `bar`, `bakery`, `coffee_shop`, `ice_cream_shop`, `meal_takeaway`
+
+**Shopping:** `store`, `shopping_mall`, `book_store`, `clothing_store`, `grocery_store`, `convenience_store`
+
+**Attractions:** `tourist_attraction`, `museum`, `art_gallery`, `historical_landmark`, `park`, `amusement_park`, `zoo`, `aquarium`
+
+**Other / All:** No `includedTypes` filter — return everything nearby. Filter out unhelpful types client-side (e.g. `route`, `locality`, `political`, `real_estate_agency`).
 
 ---
 
