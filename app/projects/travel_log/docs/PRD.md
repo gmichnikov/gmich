@@ -67,7 +67,7 @@ User must have at least one collection. Default collection = most recently used 
 
 ### Creation Form
 
-- **Minimal for v1:** Place name and address only (pre-filled from selection, editable)
+- **Minimal for v1:** Place name, address, and visited_date (name/address pre-filled from selection; visited_date defaults from lat/lng or today — all editable so users can log places from days ago)
 - User taps "Save"
 - **Notes and photos are added via Edit**, not at creation — keeps the flow fast (avoids photo upload delay, works on slow connections, lowers cognitive load)
 

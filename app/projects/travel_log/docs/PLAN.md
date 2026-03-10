@@ -157,6 +157,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 - [ ] Implement `GET /travel-log/collections/<id>` route
   - [ ] Verify ownership (404 if not)
   - [ ] Query entries for this collection, ordered by `updated_at DESC`
+  - [ ] **updated_at** must be set on entry creation and updated on entry edit and photo add/remove (for correct ordering)
   - [ ] Pass collection and entries to template
 - [ ] Create `templates/travel_log/collections/show.html`
   - [ ] Collection name in header
@@ -254,7 +255,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
   - [ ] When many results: category filter buttons (Food & Drink, Shop, Attraction, Other)
   - [ ] Results list: place name, address, distance (server returns already filtered and sorted)
   - [ ] **Google logo/attribution** when displaying Places results
-  - [ ] Selecting a place → show creation form (name, address editable only; visited_date set server-side at save)
+  - [ ] Selecting a place → show creation form: name, address, visited_date (all editable; visited_date defaults from lat/lng or today, user can override — supports logging places days later)
   - [ ] `tlog-` prefix
 
 **Manual Testing 4.1:**
@@ -287,9 +288,9 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 ### 4.3 Create Entry Backend
 
 - [ ] Implement `POST /travel-log/entries/create`
-  - [ ] Expect: `collection_id`, `user_name`, `user_address`, `place_id` (optional), `lat`, `lng` (optional), `visited_date` (optional)
+  - [ ] Expect: `collection_id`, `user_name`, `user_address`, `place_id` (optional), `lat`, `lng` (optional), `visited_date` (optional — from form, or default)
   - [ ] Validate: collection belongs to user, user_name not empty
-  - [ ] Default `visited_date`: if lat/lng present, derive from timezone (timezonefinder) → today in that TZ; else use creation date
+  - [ ] Default `visited_date` when not provided: if lat/lng present, derive from timezone (timezonefinder) → today in that TZ; else use creation date. User can override via form.
   - [ ] Create Entry, update collection `last_modified`
   - [ ] Flash success, redirect to collection detail
 - [ ] Add `timezonefinder` to requirements.txt
@@ -299,6 +300,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 - [ ] Submit creation form — entry created, redirects to collection
 - [ ] Verify visited_date default from lat/lng when available
 - [ ] Verify visited_date default from today when no lat/lng
+- [ ] Override visited_date at creation (e.g. log yesterday's lunch) — verify saved correctly
 - [ ] Verify collection last_modified updated
 - [ ] Test manual fallback (no place_id, no lat/lng)
 
@@ -443,13 +445,11 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ## Phase 8: Polish & Integration
 
-### 8.1 Collection Last Modified
+### 8.1 Timestamps (last_modified, updated_at)
 
-- [ ] Ensure `last_modified` is updated on:
-  - [ ] Entry created
-  - [ ] Entry updated (incl. photo add/remove)
-  - [ ] Collection renamed
-  - [ ] Migration: backfill `last_modified` for existing collections (if any)
+- [ ] Ensure `collection.last_modified` is updated on: entry created, entry updated (incl. photo add/remove), collection renamed
+- [ ] Ensure `entry.updated_at` is set on create and updated on: entry field edits, photo add, photo remove (for correct ordering in collection detail)
+- [ ] Migration: backfill `last_modified` for existing collections (if any)
 
 **Manual Testing 8.1:**
 - [ ] Create entry → collection moves to top of list
