@@ -31,14 +31,28 @@
                 <textarea id="tlog-edit-notes" name="notes" class="tlog-input tlog-textarea" rows="4">{{ entry.notes or '' }}</textarea>
             </div>
             <div class="tlog-form-actions">
-                <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
+                <button type="submit" class="tlog-btn tlog-btn-primary" id="tlog-save-btn" disabled>Save</button>
                 <a href="{{ url_for('travel_log.collections_show', id=entry.collection_id) }}" class="tlog-btn tlog-btn-secondary">Cancel</a>
             </div>
         </form>
 
-        <div class="tlog-edit-photos-section">
+        <div class="tlog-edit-photos-section" id="tlog-photos-section" data-entry-id="{{ entry.id }}" data-csrf-token="{{ csrf_token() }}">
             <h2 class="tlog-edit-photos-title">Photos</h2>
-            <p class="tlog-edit-photos-placeholder">Photo upload coming in Phase 6. ({{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }})</p>
+            <div class="tlog-photos-grid" id="tlog-photos-grid">
+                {% for photo in entry.photos.all() %}
+                <div class="tlog-photo-item" data-photo-id="{{ photo.id }}">
+                    <img src="{{ get_photo_view_url(photo) }}" alt="Photo" class="tlog-photo-img" loading="lazy">
+                    <form method="post" action="{{ url_for('travel_log.entries_photo_delete', id=entry.id, photo_id=photo.id) }}" class="tlog-photo-remove-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="tlog-photo-remove-btn">Remove</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="tlog-photo-add">
+                <input type="file" id="tlog-photo-input" class="tlog-photo-input" accept="image/*" multiple>
+                <label for="tlog-photo-input" class="tlog-photo-add-label">Add photos</label>
+            </div>
         </div>
 
         <div class="tlog-form-divider"></div>
@@ -48,4 +62,9 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('travel_log.static', filename='photo_upload.js') }}"></script>
+<script src="{{ url_for('travel_log.static', filename='entry_edit.js') }}"></script>
 {% endblock %}

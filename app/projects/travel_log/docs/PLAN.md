@@ -55,9 +55,30 @@ This plan follows the PRD and breaks implementation into small, testable phases.
   ```
 - [ ] R2 endpoint for boto3: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
 
+**CORS (required for browser photo uploads):**  
+The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That is a cross-origin request, so the bucket must have CORS configured. If you see "Failed to fetch" or "Upload to storage failed" when adding photos, add CORS:
+
+1. Cloudflare Dashboard → **R2** → select your bucket → **Settings**
+2. Find **CORS policy** and add:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://127.0.0.1:5518", "http://localhost:5518"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["Content-Type", "Content-Length"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+3. For production, add your real app origins (e.g. `https://yoursite.com`).
+
 **Manual verification:**
 - [ ] Use boto3 in Python shell to list bucket (or upload a test file)
 - [ ] Confirm credentials work before starting Phase 6
+- [ ] Add CORS policy if testing photo upload from browser
 
 ---
 
@@ -329,10 +350,10 @@ This plan follows the PRD and breaks implementation into small, testable phases.
   - [x] Back to collection link
 
 **Manual Testing 5.1:**
-- [ ] View entry — edit form loads with correct data
-- [ ] Edit and save — changes persist
-- [ ] Delete entry — removed from collection, redirects
-- [ ] Try editing another user's entry — 404
+- [x] View entry — edit form loads with correct data
+- [x] Edit and save — changes persist
+- [x] Delete entry — removed from collection, redirects
+- [x] Try editing another user's entry — 404
 
 ---
 
@@ -340,24 +361,24 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 6.1 R2 Service & Presigned URLs
 
-- [ ] Add `boto3` to requirements.txt
-- [ ] Add R2 env vars to config (from env)
-- [ ] Create `app/projects/travel_log/services/r2.py`
-  - [ ] Configure boto3 client for R2 (endpoint, credentials)
-  - [ ] `generate_presigned_upload_url(key, expires_in=300)` — PUT URL for browser upload
-  - [ ] `generate_presigned_download_url(key, expires_in=3600)` — GET URL for displaying photo
-  - [ ] Key format: `travel_log/{user_id}/{entry_id}/{uuid}.jpg`
-- [ ] Implement `POST /travel-log/api/photos/presign` (JSON)
-  - [ ] Expect: `{ "entry_id": int }`
-  - [ ] Verify entry belongs to user
-  - [ ] Generate key, presigned upload URL
-  - [ ] Return `{ "upload_url": str, "key": str }`
-- [ ] Implement `POST /travel-log/api/photos/confirm`
-  - [ ] Expect: `{ "entry_id": int, "key": str }`
-  - [ ] Verify entry belongs to user
-  - [ ] Create EntryPhoto, set sort_order (append)
-  - [ ] Update entry `updated_at`, collection `last_modified`
-  - [ ] Return success (photo saved immediately — no extra "Save" needed)
+- [x] Add `boto3` to requirements.txt
+- [x] Add R2 env vars to config (from env)
+- [x] Create `app/projects/travel_log/services/r2.py`
+  - [x] Configure boto3 client for R2 (endpoint, credentials)
+  - [x] `generate_presigned_upload_url(key, expires_in=300)` — PUT URL for browser upload
+  - [x] `generate_presigned_download_url(key, expires_in=3600)` — GET URL for displaying photo
+  - [x] Key format: `travel_log/{user_id}/{entry_id}/{uuid}.jpg`
+- [x] Implement `POST /travel-log/api/photos/presign` (JSON)
+  - [x] Expect: `{ "entry_id": int }`
+  - [x] Verify entry belongs to user
+  - [x] Generate key, presigned upload URL
+  - [x] Return `{ "upload_url": str, "key": str }`
+- [x] Implement `POST /travel-log/api/photos/confirm`
+  - [x] Expect: `{ "entry_id": int, "key": str }`
+  - [x] Verify entry belongs to user
+  - [x] Create EntryPhoto, set sort_order (append)
+  - [x] Update entry `updated_at`, collection `last_modified`
+  - [x] Return success (photo saved immediately — no extra "Save" needed)
 
 **Manual Testing 6.1:**
 - [ ] In Flask shell, generate presigned URL — verify format
@@ -369,9 +390,9 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 6.2 Photo Display URLs
 
-- [ ] When rendering entry (edit or collection list): for each photo, generate presigned **download** URL server-side
-- [ ] Add helper or template logic: `get_photo_view_url(photo)` → presigned GET URL
-- [ ] Include in entry JSON or template
+- [x] When rendering entry (edit or collection list): for each photo, generate presigned **download** URL server-side
+- [x] Add helper or template logic: `get_photo_view_url(photo)` → presigned GET URL
+- [x] Include in entry JSON or template
 
 **Manual Testing 6.2:**
 - [ ] Upload photo, view entry — image loads from R2 via presigned URL
@@ -380,19 +401,19 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 6.3 Client-Side Photo Upload
 
-- [ ] Create `static/travel_log/photo_upload.js` (or in edit page)
-  - [ ] File input (accept image)
-  - [ ] On select: compress via Canvas (resize long edge to 1200–1600px, JPEG 70–80%)
-  - [ ] Request presign from `/api/photos/presign`
-  - [ ] PUT compressed blob to presigned URL
-  - [ ] Call `/api/photos/confirm` with key
-  - [ ] On success: append photo to UI, no page reload
-  - [ ] Error handling: show message, allow retry
-  - [ ] Support multiple photos (add more)
-- [ ] Add "Remove" for each photo
-  - [ ] Implement `POST /travel-log/entries/<id>/photos/<photo_id>/delete`
-  - [ ] Delete EntryPhoto (R2 object can be orphaned for now, or add cleanup job later)
-- [ ] Photos save **immediately** on upload — no "Save" button needed for photos
+- [x] Create `static/travel_log/photo_upload.js` (or in edit page)
+  - [x] File input (accept image)
+  - [x] On select: compress via Canvas (resize long edge to 1200px, JPEG 0.8)
+  - [x] Request presign from `/api/photos/presign`
+  - [x] PUT compressed blob to presigned URL
+  - [x] Call `/api/photos/confirm` with key
+  - [x] On success: append photo to UI, no page reload
+  - [x] Error handling: show message, allow retry
+  - [x] Support multiple photos (add more)
+- [x] Add "Remove" for each photo
+  - [x] Implement `POST /travel-log/entries/<id>/photos/<photo_id>/delete`
+  - [x] Delete EntryPhoto (R2 object can be orphaned for now, or add cleanup job later)
+- [x] Photos save **immediately** on upload — no "Save" button needed for photos
 
 **Manual Testing 6.3:**
 - [ ] Upload photo on edit page — appears immediately

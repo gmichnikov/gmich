@@ -1,10 +1,15 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import abort, Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import csrf, db
-from app.projects.travel_log.models import TlogCollection, TlogEntry
+from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto
+from app.projects.travel_log.services.r2 import (
+    generate_photo_key,
+    generate_presigned_download_url,
+    generate_presigned_upload_url,
+)
 from app.projects.travel_log.utils import get_visited_date_default
 from app.projects.travel_log.services.places import (
     CATEGORY_TYPES,
@@ -38,6 +43,11 @@ def _get_default_collection_id(collections):
     if last_entry:
         return last_entry.collection_id
     return collections[0].id if collections else None
+
+
+def get_photo_view_url(photo):
+    """Return presigned download URL for a photo. Pass to templates when rendering entry."""
+    return generate_presigned_download_url(photo.r2_key) if photo else None
 
 
 @travel_log_bp.route("/")
@@ -282,7 +292,11 @@ def entries_create():
 def entries_edit(id):
     """View/edit entry."""
     entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
-    return render_template("travel_log/entries/edit.html", entry=entry)
+    return render_template(
+        "travel_log/entries/edit.html",
+        entry=entry,
+        get_photo_view_url=get_photo_view_url,
+    )
 
 
 @travel_log_bp.route("/entries/<int:id>/update", methods=["POST"])
@@ -328,3 +342,79 @@ def entries_delete(id):
 
     flash(f'"{user_name}" deleted.', "success")
     return redirect(url_for("travel_log.collections_show", id=collection_id))
+
+
+# --- Photo upload API ---
+
+
+@travel_log_bp.route("/api/photos/presign", methods=["POST"])
+@csrf.exempt
+@login_required
+def api_photos_presign():
+    """JSON: { entry_id } → { upload_url, key }. Verify entry belongs to user."""
+    data = request.get_json(silent=True) or {}
+    entry_id = data.get("entry_id")
+    if entry_id is None:
+        return jsonify({"error": "entry_id required"}), 400
+
+    entry = TlogEntry.query.filter_by(id=entry_id, user_id=current_user.id).first()
+    if not entry:
+        return jsonify({"error": "Entry not found"}), 404
+
+    key = generate_photo_key(current_user.id, entry_id)
+    upload_url, _ = generate_presigned_upload_url(key, content_type="image/jpeg")
+    if not upload_url:
+        return jsonify({"error": "Failed to generate upload URL"}), 500
+
+    return jsonify({"upload_url": upload_url, "key": key})
+
+
+@travel_log_bp.route("/api/photos/confirm", methods=["POST"])
+@csrf.exempt
+@login_required
+def api_photos_confirm():
+    """JSON: { entry_id, key } → { success, photo_id?, view_url? }. Create TlogEntryPhoto, update timestamps."""
+    data = request.get_json(silent=True) or {}
+    entry_id = data.get("entry_id")
+    key = data.get("key")
+    if entry_id is None or not key:
+        return jsonify({"error": "entry_id and key required"}), 400
+
+    entry = TlogEntry.query.filter_by(id=entry_id, user_id=current_user.id).first()
+    if not entry:
+        return jsonify({"error": "Entry not found"}), 404
+
+    max_order = (
+        TlogEntryPhoto.query.filter_by(entry_id=entry_id)
+        .with_entities(db.func.max(TlogEntryPhoto.sort_order))
+        .scalar()
+    )
+    sort_order = (max_order or 0) + 1
+
+    photo = TlogEntryPhoto(entry_id=entry_id, r2_key=key, sort_order=sort_order)
+    db.session.add(photo)
+    entry.updated_at = datetime.utcnow()
+    entry.collection.last_modified = datetime.utcnow()
+    db.session.commit()
+
+    view_url = get_photo_view_url(photo)
+    return jsonify({"success": True, "photo_id": photo.id, "view_url": view_url})
+
+
+@travel_log_bp.route("/entries/<int:id>/photos/<int:photo_id>/delete", methods=["POST"])
+@login_required
+def entries_photo_delete(id, photo_id):
+    """Delete photo. Verify photo's entry belongs to user. Redirect to entries_edit."""
+    photo = TlogEntryPhoto.query.filter_by(id=photo_id).first_or_404()
+    if photo.entry.user_id != current_user.id:
+        abort(404)
+    entry = photo.entry
+    collection = entry.collection
+
+    db.session.delete(photo)
+    entry.updated_at = datetime.utcnow()
+    collection.last_modified = datetime.utcnow()
+    db.session.commit()
+
+    flash("Photo removed.", "success")
+    return redirect(url_for("travel_log.entries_edit", id=id))
