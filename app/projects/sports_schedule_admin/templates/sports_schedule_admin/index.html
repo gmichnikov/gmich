@@ -311,7 +311,12 @@
         }
 
         function getSelectedTeamIds() {
-            return Array.from(teamListEl.querySelectorAll('.ssa-team-checkbox:checked')).map(cb => cb.value);
+            // Only count checked boxes in visible (non-filtered) rows, so Sync Selected
+            // syncs what the user sees selected, not previously selected hidden rows
+            return getVisibleTeamRows()
+                .map(row => row.querySelector('.ssa-team-checkbox'))
+                .filter(cb => cb && cb.checked)
+                .map(cb => cb.value);
         }
 
         function applyTeamFilter() {
@@ -320,13 +325,20 @@
                 const searchText = (row.getAttribute('data-search') || '').toLowerCase();
                 const matches = !q || searchText.includes(q);
                 row.classList.toggle('ssa-team-row--hidden', !matches);
+                // Uncheck hidden rows so Sync Selected only syncs what you see
+                if (!matches) {
+                    const cb = row.querySelector('.ssa-team-checkbox');
+                    if (cb) cb.checked = false;
+                }
             });
             updateSyncButtonsState();
+            updatePreview();
         }
 
         function updateSyncButtonsState() {
             const selected = getSelectedTeamIds().length;
             syncSelectedBtn.disabled = selected === 0;
+            syncSelectedBtn.textContent = selected === 0 ? 'Sync Selected' : 'Sync Selected (' + selected + ')';
             syncAllBtn.disabled = teamsCache.length === 0;
         }
 
@@ -463,7 +475,11 @@
             doBulkSync(getSelectedTeamIds());
         });
         syncAllBtn.addEventListener('click', function() {
-            doBulkSync(teamsCache.map(t => t.espn_team_id));
+            const allIds = teamsCache.map(t => t.espn_team_id);
+            if (allIds.length > 15 && !confirm('Sync all ' + allIds.length + ' teams? This may take several minutes.')) {
+                return;
+            }
+            doBulkSync(allIds);
         });
 
         discoverBtn.addEventListener('click', async function() {

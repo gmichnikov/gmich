@@ -21,7 +21,7 @@ def sync_league_teams(league_code, actor_id=None):
     teams = espn.fetch_teams(league_code)
     
     if not teams:
-        return {"league": league_code, "created": 0, "updated": 0}
+        return {"league": league_code, "found": 0, "created": 0, "updated": 0}
 
     created = 0
     updated = 0

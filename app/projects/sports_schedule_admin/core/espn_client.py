@@ -1,10 +1,17 @@
 import requests
 import logging
 import re
+import time
 import pytz
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+# Leagues where site.api.espn.com /teams returns empty - use Core API fallback
+# Maps league_code -> (sport, league_slug) for sports.core.api.espn.com
+CORE_API_TEAMS_FALLBACK = {
+    "NCLM": ("lacrosse", "mens-college-lacrosse"),
+}
 
 # US state full name -> 2-letter code (for normalizing ESPN venue addresses)
 STATE_NAME_TO_CODE = {
@@ -79,6 +86,7 @@ class ESPNClient:
         "WNBA": ("basketball", "wnba", "pro"),
         "NCHM": ("hockey", "mens-college-hockey", "college"),
         "NCHW": ("hockey", "womens-college-hockey", "college"),
+        "NCLM": ("lacrosse", "mens-college-lacrosse", "college"),
     }
 
     # Season type for "current season" filtering in coverage.
@@ -98,6 +106,7 @@ class ESPNClient:
         "NCAAW": "school",
         "NCHM": "school",
         "NCHW": "school",
+        "NCLM": "school",
         "CFB": "school",
         "EPL": "school",
         "CL": "school",
@@ -122,6 +131,7 @@ class ESPNClient:
         "NCB": "College Baseball (NCB)",
         "NCHM": "Men's College Hockey (NCHM)",
         "NCHW": "Women's College Hockey (NCHW)",
+        "NCLM": "Men's College Lacrosse (NCLM)",
     }
 
     def fetch_schedule(self, league_code, date_str):
@@ -178,10 +188,76 @@ class ESPNClient:
                             "sport": sport_name,
                             "league_code": league_code
                         })
+            if teams_data:
+                return teams_data
+
+            # Fallback: site API returns empty for some leagues (e.g. NCLM)
+            if league_code in CORE_API_TEAMS_FALLBACK:
+                return self._fetch_teams_core_api(league_code, sport_name)
+
             return teams_data
         except requests.exceptions.RequestException as e:
             logger.error(f"ESPN Teams API error for {league_code}: {e}")
             return []
+
+    def _fetch_teams_core_api(self, league_code, sport_name):
+        """
+        Fetch teams from ESPN Core API (sports.core.api.espn.com) when site API returns empty.
+        Used for NCLM and other leagues where site.api.espn.com/teams has no data.
+        """
+        if league_code not in CORE_API_TEAMS_FALLBACK:
+            return []
+
+        sport, league_slug = CORE_API_TEAMS_FALLBACK[league_code]
+        list_url = (
+            f"https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league_slug}/teams"
+        )
+        params = {"limit": 200}
+
+        try:
+            response = requests.get(list_url, params=params, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"ESPN Core API teams list error for {league_code}: {e}")
+            return []
+
+        items = data.get("items", [])
+        teams_data = []
+        for item in items:
+            ref = item.get("$ref", "")
+            if not ref:
+                continue
+            # Extract team ID from URL like .../teams/118?lang=en...
+            match = re.search(r"/teams/(-?\d+)(?:\?|$)", ref)
+            if not match:
+                continue
+            team_id = match.group(1)
+            if int(team_id) < 0:  # Skip -1, -2 (aggregate/all-star entries)
+                continue
+
+            try:
+                team_resp = requests.get(ref.replace("http://", "https://"), timeout=10)
+                team_resp.raise_for_status()
+                team_data = team_resp.json()
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Failed to fetch team {team_id} for {league_code}: {e}")
+                continue
+
+            tid = team_data.get("id")
+            name = team_data.get("displayName")
+            if tid is None or name is None:
+                continue
+            teams_data.append({
+                "espn_team_id": str(tid),
+                "name": name,
+                "abbreviation": team_data.get("abbreviation"),
+                "sport": sport_name,
+                "league_code": league_code,
+            })
+            time.sleep(0.15)  # Polite delay between team fetches
+
+        return teams_data
 
     def fetch_team_schedule(self, league_code, team_id):
         """
@@ -245,6 +321,13 @@ class ESPNClient:
                 home_state = self._normalize_state(address.get("state", ""))
                 # ESPN sometimes puts "City, State" in city with empty state (e.g. MLS/NWSL)
                 home_city, home_state = self._parse_city_state(home_city, home_state)
+                # Fallback: when ESPN omits venue (e.g. college lacrosse), infer from home team
+                if (not home_state or not home_city) and level == "college" and home_team:
+                    from app.projects.sports_schedule_admin.core.college_locations import get_college_location
+                    fallback_city, fallback_state = get_college_location(home_team)
+                    if fallback_city or fallback_state:
+                        home_city = home_city or (fallback_city or "")
+                        home_state = home_state or (fallback_state or "")
 
                 # Primary Key Generation: {league}_{date}_{home_slug}_vs_{road_slug}
                 home_slug = self._slugify(home_team)
