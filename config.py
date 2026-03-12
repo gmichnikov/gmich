@@ -13,6 +13,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+# Google Places API (New) — for travel log place search
+GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
+
 # Google Ads Configuration
 _google_ads_ids = os.getenv("GOOGLE_ADS_IDS", "")
 GOOGLE_ADS_IDS = [id.strip() for id in _google_ads_ids.split(",") if id.strip()]

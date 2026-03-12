@@ -1,10 +1,15 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
 from app.projects.travel_log.models import TlogCollection, TlogEntry
+from app.projects.travel_log.services.places import (
+    CATEGORY_TYPES,
+    search_nearby,
+    search_text,
+)
 from app.utils.logging import log_project_visit
 
 travel_log_bp = Blueprint(
@@ -143,6 +148,46 @@ def log():
         return redirect(url_for("travel_log.index"))
     flash("Log Place coming in Phase 4.", "info")
     return redirect(url_for("travel_log.collections_show", id=collections[0].id))
+
+
+@travel_log_bp.route("/api/places/nearby", methods=["POST"])
+@login_required
+def api_places_nearby():
+    """JSON: { lat, lng, radius?, category? } → list of places."""
+    data = request.get_json(silent=True) or {}
+    lat = data.get("lat")
+    lng = data.get("lng")
+    if lat is None or lng is None:
+        return jsonify({"error": "lat and lng required"}), 400
+    try:
+        lat, lng = float(lat), float(lng)
+    except (TypeError, ValueError):
+        return jsonify({"error": "lat and lng must be numbers"}), 400
+    radius = data.get("radius")
+    radius_m = int(radius) if radius is not None else 200
+    category = data.get("category")  # "food", "shopping", "attractions", "other" or null
+    included_types = CATEGORY_TYPES.get(category) if category else None
+    places = search_nearby(lat, lng, radius_m=radius_m, included_types=included_types)
+    return jsonify({"places": places})
+
+
+@travel_log_bp.route("/api/places/search", methods=["POST"])
+@login_required
+def api_places_search():
+    """JSON: { query, lat?, lng? } → list of places. lat/lng optional (GPS-failure flow)."""
+    data = request.get_json(silent=True) or {}
+    query = data.get("query") or ""
+    if not query.strip():
+        return jsonify({"error": "query required"}), 400
+    lat = data.get("lat")
+    lng = data.get("lng")
+    if lat is not None and lng is not None:
+        try:
+            lat, lng = float(lat), float(lng)
+        except (TypeError, ValueError):
+            lat, lng = None, None
+    places = search_text(query, lat=lat, lng=lng)
+    return jsonify({"places": places})
 
 
 @travel_log_bp.route("/entries/<int:id>")

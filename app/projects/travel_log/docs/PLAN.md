@@ -168,9 +168,9 @@ This plan follows the PRD and breaks implementation into small, testable phases.
   - [x] `tlog-` prefix
 
 **Manual Testing 2.1:**
-- [ ] Click collection from index — collection detail loads
-- [ ] Empty collection shows empty state
-- [ ] Verify 404 for other user's collection
+- [x] Click collection from index — collection detail loads
+- [x] Empty collection shows empty state
+- [x] Verify 404 for other user's collection
 
 ---
 
@@ -182,34 +182,34 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 - [x] Tap entry → goes to edit page (Phase 5)
 
 **Manual Testing 2.2:**
-- [ ] Insert test entry via Flask shell or minimal form — verify it displays on collection detail
-- [ ] Verify ordering by updated_at
+- [x] Insert test entry via Flask shell or minimal form — verify it displays on collection detail
+- [x] Verify ordering by updated_at
 
 ---
 
-## Phase 3: Google Places API Service
+## Phase 3: Google Places API Service ✅
 
 ### 3.1 Config & Places Service
 
-- [ ] Add `GOOGLE_PLACES_API_KEY` to `config.py` (from env)
+- [x] Add `GOOGLE_PLACES_API_KEY` to `config.py` (from env)
 - [ ] Create `app/projects/travel_log/services/` directory (with `__init__.py`)
 - [ ] Create `app/projects/travel_log/services/places.py` (see INITIAL_SPEC 5.3, 5.4, 5.6)
-  - [ ] Function `search_nearby(lat, lng, radius_m=200, included_types=None)`
-    - [ ] POST to `https://places.googleapis.com/v1/places:searchNearby`
+  - [x] Function `search_nearby(lat, lng, radius_m=200, included_types=None)`
+    - [x] POST to `https://places.googleapis.com/v1/places:searchNearby`
     - [ ] Field mask: `places.displayName,places.formattedAddress,places.location,places.id,places.types,places.businessStatus`
-    - [ ] `locationRestriction.circle` with center and radius
-    - [ ] If `included_types`: pass as `includedTypes` array; if "other" or None: no includedTypes, filter out types `route`, `locality`, `political`, `real_estate_agency`
-    - [ ] Return list of places; filter out `businessStatus != OPERATIONAL`; sort by distance from (lat, lng)
-    - [ ] If fewer than 3 results and radius < 500: retry with wider radius
-  - [ ] Function `search_text(query, lat=None, lng=None, box_size_m=400)`
-    - [ ] POST to `https://places.googleapis.com/v1/places:searchText`
-    - [ ] Field mask: same as above
-    - [ ] If lat/lng provided: build `locationRestriction.rectangle` from coordinates and box_size (use longitude offset formula for latitude)
-    - [ ] If lat/lng absent: omit `locationRestriction` — user includes location in query (e.g. "coffee Tokyo")
-    - [ ] Filter `businessStatus != OPERATIONAL`; when lat/lng present, sort by distance; otherwise return as-is
-    - [ ] If fewer than 3 results: widen box and retry (optional)
-  - [ ] Error handling: log failures, return empty list or raise
-- [ ] Category type mappings (from PRD): Food & Drink, Shopping, Attractions, Other (no filter)
+    - [x] `locationRestriction.circle` with center and radius
+    - [x] If `included_types`: pass as `includedTypes` array; if "other" or None: no includedTypes, filter out types `route`, `locality`, `political`, `real_estate_agency`
+    - [x] Return list of places; filter out `businessStatus != OPERATIONAL`; sort by distance from (lat, lng)
+    - [x] If fewer than 3 results and radius < 500: retry with wider radius
+  - [x] Function `search_text(query, lat=None, lng=None, box_size_m=400)`
+    - [x] POST to `https://places.googleapis.com/v1/places:searchText`
+    - [x] Field mask: same as above
+    - [x] If lat/lng provided: build `locationRestriction.rectangle` from coordinates and box_size (use longitude offset formula for latitude)
+    - [x] If lat/lng absent: omit `locationRestriction` — user includes location in query (e.g. "coffee Tokyo")
+    - [x] Filter `businessStatus != OPERATIONAL`; when lat/lng present, sort by distance; otherwise return as-is
+    - [x] If fewer than 3 results: widen box and retry (optional)
+  - [x] Error handling: log failures, return empty list or raise
+- [x] Category type mappings (from PRD): Food & Drink, Shopping, Attractions, Other (no filter)
 
 **Manual Testing 3.1:**
 - [ ] In Flask shell, call `search_nearby(40.74, -74.38, 200)` — verify results
@@ -221,17 +221,17 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 3.2 Places API Proxy Endpoints
 
-- [ ] Implement `POST /travel-log/api/places/nearby` (JSON API)
-  - [ ] Expect JSON: `{ "lat": float, "lng": float, "radius": int?, "category": str? }`
-  - [ ] category: "food", "shopping", "attractions", "other" (or null)
-  - [ ] Call `search_nearby`, return JSON list of places
-  - [ ] `@login_required`
-- [ ] Implement `POST /travel-log/api/places/search` (JSON API)
-  - [ ] Expect JSON: `{ "query": str, "lat": float?, "lng": float? }` — lat/lng optional (for GPS-failure flow)
-  - [ ] If lat/lng present: call `search_text` with `locationRestriction`
-  - [ ] If lat/lng absent: call `search_text` with query only (no locationRestriction)
-  - [ ] `@login_required`
-- [ ] Ensure fetch requests include CSRF token in header (e.g. `X-CSRFToken` from meta tag)
+- [x] Implement `POST /travel-log/api/places/nearby` (JSON API)
+  - [x] Expect JSON: `{ "lat": float, "lng": float, "radius": int?, "category": str? }`
+  - [x] category: "food", "shopping", "attractions", "other" (or null)
+  - [x] Call `search_nearby`, return JSON list of places
+  - [x] `@login_required`
+- [x] Implement `POST /travel-log/api/places/search` (JSON API)
+  - [x] Expect JSON: `{ "query": str, "lat": float?, "lng": float? }` — lat/lng optional (for GPS-failure flow)
+  - [x] If lat/lng present: call `search_text` with `locationRestriction`
+  - [x] If lat/lng absent: call `search_text` with query only (no locationRestriction)
+  - [x] `@login_required`
+- [x] Ensure fetch requests include CSRF token in header (e.g. `X-CSRFToken` from meta tag)
 
 **Manual Testing 3.2:**
 - [ ] `curl` or Postman: POST search with valid lat/lng — verify JSON response
