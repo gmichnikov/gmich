@@ -280,6 +280,51 @@ def entries_create():
 @travel_log_bp.route("/entries/<int:id>")
 @login_required
 def entries_edit(id):
-    """View/edit entry. Edit form comes in Phase 5; for now read-only display."""
+    """View/edit entry."""
     entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     return render_template("travel_log/entries/edit.html", entry=entry)
+
+
+@travel_log_bp.route("/entries/<int:id>/update", methods=["POST"])
+@login_required
+def entries_update(id):
+    """Update entry: user_name, user_address, notes, visited_date."""
+    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    user_name = (request.form.get("user_name") or "").strip()
+    if not user_name:
+        flash("Place name is required.", "error")
+        return redirect(url_for("travel_log.entries_edit", id=id))
+
+    entry.user_name = user_name
+    entry.user_address = (request.form.get("user_address") or "").strip() or None
+    entry.notes = (request.form.get("notes") or "").strip() or None
+    visited_date_str = request.form.get("visited_date")
+    if visited_date_str:
+        try:
+            from datetime import datetime as dt
+            entry.visited_date = dt.strptime(visited_date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            pass  # keep existing if parse fails
+    entry.updated_at = datetime.utcnow()
+    entry.collection.last_modified = datetime.utcnow()
+    db.session.commit()
+
+    flash("Entry updated.", "success")
+    return redirect(url_for("travel_log.collections_show", id=entry.collection_id))
+
+
+@travel_log_bp.route("/entries/<int:id>/delete", methods=["POST"])
+@login_required
+def entries_delete(id):
+    """Delete entry (cascade photos)."""
+    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    collection_id = entry.collection_id
+    collection = entry.collection
+    user_name = entry.user_name
+
+    db.session.delete(entry)
+    collection.last_modified = datetime.utcnow()
+    db.session.commit()
+
+    flash(f'"{user_name}" deleted.', "success")
+    return redirect(url_for("travel_log.collections_show", id=collection_id))

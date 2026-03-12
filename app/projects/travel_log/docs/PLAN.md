@@ -192,11 +192,11 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 ### 3.1 Config & Places Service
 
 - [x] Add `GOOGLE_PLACES_API_KEY` to `config.py` (from env)
-- [ ] Create `app/projects/travel_log/services/` directory (with `__init__.py`)
-- [ ] Create `app/projects/travel_log/services/places.py` (see INITIAL_SPEC 5.3, 5.4, 5.6)
+- [x] Create `app/projects/travel_log/services/` directory (with `__init__.py`)
+- [x] Create `app/projects/travel_log/services/places.py` (see INITIAL_SPEC 5.3, 5.4, 5.6)
   - [x] Function `search_nearby(lat, lng, radius_m=200, included_types=None)`
     - [x] POST to `https://places.googleapis.com/v1/places:searchNearby`
-    - [ ] Field mask: `places.displayName,places.formattedAddress,places.location,places.id,places.types,places.businessStatus`
+    - [x] Field mask: `places.displayName,places.formattedAddress,places.location,places.id,places.types,places.businessStatus`
     - [x] `locationRestriction.circle` with center and radius
     - [x] If `included_types`: pass as `includedTypes` array; if "other" or None: no includedTypes, filter out types `route`, `locality`, `political`, `real_estate_agency`
     - [x] Return list of places; filter out `businessStatus != OPERATIONAL`; sort by distance from (lat, lng)
@@ -239,94 +239,94 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ---
 
-## Phase 4: Log Place UI (Browse, Search, Create)
+## Phase 4: Log Place UI (Browse, Search, Create) ✅
 
 ### 4.1 Log Place Page Structure
 
-- [ ] Implement `GET /travel-log/log` route
-  - [ ] Require at least one collection (redirect to create-first if none)
-  - [ ] Default collection = most recently used: query last Entry by current_user → its collection_id; if no entries yet, use most recently modified collection
-  - [ ] Pass collections list and default_collection_id to template
-- [ ] Create `templates/travel_log/log.html`
-  - [ ] **Subtle collection selector** — dropdown or link to change collection (default visible but not prominent)
-  - [ ] Two modes: Browse (no typing) and Search (typed)
-  - [ ] Browse: "Log This Place" button → triggers GPS → calls `/api/places/nearby` → shows results
-  - [ ] Search: search input → on input/debounce → calls `/api/places/search` with query + GPS
-  - [ ] When many results: category filter buttons (Food & Drink, Shop, Attraction, Other)
-  - [ ] Results list: place name, address, distance (server returns already filtered and sorted)
-  - [ ] **Google logo/attribution** when displaying Places results
-  - [ ] Selecting a place → show creation form: name, address, visited_date (all editable; visited_date defaults from lat/lng or today, user can override — supports logging places days later)
-  - [ ] `tlog-` prefix
+- [x] Implement `GET /travel-log/log` route
+  - [x] Require at least one collection (redirect to create-first if none)
+  - [x] Default collection = most recently used: query last Entry by current_user → its collection_id; if no entries yet, use most recently modified collection
+  - [x] Pass collections list and default_collection_id to template
+- [x] Create `templates/travel_log/log.html`
+  - [x] **Subtle collection selector** — dropdown or link to change collection (default visible but not prominent)
+  - [x] Two modes: Browse (no typing) and Search (typed)
+  - [x] Browse: "Log This Place" button → triggers GPS → calls `/api/places/nearby` → shows results
+  - [x] Search: search input → on input/debounce → calls `/api/places/search` with query + GPS
+  - [x] When many results: category filter buttons (Food & Drink, Shop, Attraction, Other)
+  - [x] Results list: place name, address, distance (server returns already filtered and sorted)
+  - [x] **Google logo/attribution** when displaying Places results
+  - [x] Selecting a place → show creation form: name, address, visited_date (all editable; visited_date defaults from lat/lng or today, user can override — supports logging places days later)
+  - [x] `tlog-` prefix
 
 **Manual Testing 4.1:**
-- [ ] Navigate to `/travel-log/log` — page loads
-- [ ] Grant GPS — Browse shows nearby places
-- [ ] Type in search — Search shows results
-- [ ] Select place — creation form appears with pre-filled name/address
-- [ ] Change collection via subtle control — verify selection persists
+- [x] Navigate to `/travel-log/log` — page loads
+- [x] Grant GPS — Browse shows nearby places
+- [x] Type in search — Search shows results
+- [x] Select place — creation form appears with pre-filled name/address
+- [x] Change collection via subtle control — verify selection persists
 
 ---
 
 ### 4.2 Client-Side: GPS, API Calls, Place Selection
 
-- [ ] Create `static/travel_log/log.js` (or similar)
-  - [ ] `navigator.geolocation.getCurrentPosition()` — get lat/lng; handle errors (show message, enable search-without-GPS or manual fallback)
-  - [ ] Fetch `/api/places/nearby` with lat, lng, radius (start 200), category
-  - [ ] If results < 3: retry with radius 400
-  - [ ] Fetch `/api/places/search` with query + lat/lng when GPS available; with query only when GPS failed (user includes location in search)
-  - [ ] Render results (server returns filtered, sorted); on tap → show form with place data
-  - [ ] Error handling: API failure → show "Add manually" fallback form (name, address only)
+- [x] Create `static/travel_log/log.js` (or similar)
+  - [x] `navigator.geolocation.getCurrentPosition()` — get lat/lng; handle errors (show message, enable search-without-GPS or manual fallback)
+  - [x] Fetch `/api/places/nearby` with lat, lng, radius (start 200), category
+  - [x] If results < 3: retry with radius 400
+  - [x] Fetch `/api/places/search` with query + lat/lng when GPS available; with query only when GPS failed (user includes location in search)
+  - [x] Render results (server returns filtered, sorted); on tap → show form with place data
+  - [x] Error handling: API failure → show "Add manually" fallback form (name, address only)
 
 **Manual Testing 4.2:**
-- [ ] Test Browse flow on real device or with location mock
-- [ ] Test Search flow with "coffee", "restaurant"
-- [ ] Test GPS denied — search with query only works (e.g. "coffee Tokyo"); manual form available
-- [ ] Test API error — fallback form appears
+- [x] Test Browse flow on real device or with location mock
+- [x] Test Search flow with "coffee", "restaurant"
+- [x] Test GPS denied — search with query only works (e.g. "coffee Tokyo"); manual form available
+- [x] Test API error — fallback form appears
 
 ---
 
 ### 4.3 Create Entry Backend
 
-- [ ] Implement `POST /travel-log/entries/create`
-  - [ ] Expect: `collection_id`, `user_name`, `user_address`, `place_id` (optional), `lat`, `lng` (optional), `visited_date` (optional — from form, or default)
-  - [ ] Validate: collection belongs to user, user_name not empty
-  - [ ] Default `visited_date` when not provided: if lat/lng present, derive from timezone (timezonefinder) → today in that TZ; else use creation date. User can override via form.
-  - [ ] Create Entry, update collection `last_modified`
-  - [ ] Flash success, redirect to collection detail
-- [ ] Add `timezonefinder` to requirements.txt
-- [ ] Helper: `get_visited_date_default(lat, lng)` → use timezonefinder to get IANA zone, then `datetime.now(ZoneInfo(zone)).date()`
+- [x] Implement `POST /travel-log/entries/create`
+  - [x] Expect: `collection_id`, `user_name`, `user_address`, `place_id` (optional), `lat`, `lng` (optional), `visited_date` (optional — from form, or default)
+  - [x] Validate: collection belongs to user, user_name not empty
+  - [x] Default `visited_date` when not provided: if lat/lng present, derive from timezone (timezonefinder) → today in that TZ; else use creation date. User can override via form.
+  - [x] Create Entry, update collection `last_modified`
+  - [x] Flash success, redirect to collection detail
+- [x] Add `timezonefinder` to requirements.txt
+- [x] Helper: `get_visited_date_default(lat, lng)` → use timezonefinder to get IANA zone, then `datetime.now(ZoneInfo(zone)).date()`
 
 **Manual Testing 4.3:**
-- [ ] Submit creation form — entry created, redirects to collection
-- [ ] Verify visited_date default from lat/lng when available
-- [ ] Verify visited_date default from today when no lat/lng
-- [ ] Override visited_date at creation (e.g. log yesterday's lunch) — verify saved correctly
-- [ ] Verify collection last_modified updated
-- [ ] Test manual fallback (no place_id, no lat/lng)
+- [x] Submit creation form — entry created, redirects to collection
+- [x] Verify visited_date default from lat/lng when available
+- [x] Verify visited_date default from today when no lat/lng
+- [x] Override visited_date at creation (e.g. log yesterday's lunch) — verify saved correctly
+- [x] Verify collection last_modified updated
+- [x] Test manual fallback (no place_id, no lat/lng)
 
 ---
 
-## Phase 5: Entry View & Edit
+## Phase 5: Entry View & Edit ✅
 
 ### 5.1 Entry Detail / Edit Page
 
-- [ ] Implement `GET /travel-log/entries/<id>` route
-  - [ ] Fetch entry, verify ownership (404 if not)
-  - [ ] Pass entry (with photos) to template
-- [ ] Implement `POST /travel-log/entries/<id>/update`
-  - [ ] Validate ownership
-  - [ ] Update: user_name, user_address, notes, visited_date
-  - [ ] Update collection `last_modified`
-  - [ ] Flash success, redirect to collection or stay on edit
-- [ ] Implement `POST /travel-log/entries/<id>/delete`
-  - [ ] Verify ownership, delete entry (cascade photos), update collection last_modified
-  - [ ] Flash success, redirect to collection
-- [ ] Create `templates/travel_log/entries/edit.html`
-  - [ ] Editable: name, address, notes, visited_date (date picker)
-  - [ ] Photos section (Phase 6)
-  - [ ] Delete button with confirmation
-  - [ ] Save button
-  - [ ] Back to collection link
+- [x] Implement `GET /travel-log/entries/<id>` route
+  - [x] Fetch entry, verify ownership (404 if not)
+  - [x] Pass entry (with photos) to template
+- [x] Implement `POST /travel-log/entries/<id>/update`
+  - [x] Validate ownership
+  - [x] Update: user_name, user_address, notes, visited_date
+  - [x] Update collection `last_modified`
+  - [x] Flash success, redirect to collection
+- [x] Implement `POST /travel-log/entries/<id>/delete`
+  - [x] Verify ownership, delete entry (cascade photos), update collection last_modified
+  - [x] Flash success, redirect to collection
+- [x] Create `templates/travel_log/entries/edit.html`
+  - [x] Editable: name, address, notes, visited_date (date picker)
+  - [x] Photos section placeholder (Phase 6)
+  - [x] Delete button with confirmation
+  - [x] Save button
+  - [x] Back to collection link
 
 **Manual Testing 5.1:**
 - [ ] View entry — edit form loads with correct data

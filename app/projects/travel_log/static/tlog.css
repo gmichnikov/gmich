@@ -165,6 +165,11 @@
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+.tlog-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
 .tlog-form-actions {
     display: flex;
     gap: 12px;
@@ -179,6 +184,22 @@
 
 .tlog-delete-form {
     margin-top: 0;
+}
+
+.tlog-edit-photos-section {
+    margin-top: 24px;
+}
+
+.tlog-edit-photos-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+
+.tlog-edit-photos-placeholder {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
 }
 
 /* Collection show page */

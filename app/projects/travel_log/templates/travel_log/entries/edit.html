@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ entry.user_name }} - Travel Log{% endblock %}
+{% block title %}Edit {{ entry.user_name }} - Travel Log{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
@@ -10,20 +10,42 @@
 <div class="tlog-page">
     <div class="tlog-container">
         <a href="{{ url_for('travel_log.collections_show', id=entry.collection_id) }}" class="tlog-back-link">← Back to {{ entry.collection.name }}</a>
-        <h1 class="tlog-title">{{ entry.user_name }}</h1>
+        <h1 class="tlog-title">Edit place</h1>
 
-        <div class="tlog-entry-detail">
-            {% if entry.user_address %}
-            <p class="tlog-entry-detail-address">{{ entry.user_address }}</p>
-            {% endif %}
-            <p class="tlog-entry-detail-date">Visited: {{ entry.visited_date.strftime('%B %d, %Y') }}</p>
-            {% if entry.notes %}
-            <p class="tlog-entry-detail-notes">{{ entry.notes }}</p>
-            {% endif %}
-            <p class="tlog-entry-detail-photos">{{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}</p>
+        <form method="post" action="{{ url_for('travel_log.entries_update', id=entry.id) }}" class="tlog-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="tlog-form-group">
+                <label for="tlog-edit-name" class="tlog-label">Place name</label>
+                <input type="text" id="tlog-edit-name" name="user_name" class="tlog-input" value="{{ entry.user_name or '' }}" required>
+            </div>
+            <div class="tlog-form-group">
+                <label for="tlog-edit-address" class="tlog-label">Address</label>
+                <input type="text" id="tlog-edit-address" name="user_address" class="tlog-input" value="{{ entry.user_address or '' }}">
+            </div>
+            <div class="tlog-form-group">
+                <label for="tlog-edit-date" class="tlog-label">Visited date</label>
+                <input type="date" id="tlog-edit-date" name="visited_date" class="tlog-input" value="{{ entry.visited_date.isoformat() }}" required>
+            </div>
+            <div class="tlog-form-group">
+                <label for="tlog-edit-notes" class="tlog-label">Notes</label>
+                <textarea id="tlog-edit-notes" name="notes" class="tlog-input tlog-textarea" rows="4">{{ entry.notes or '' }}</textarea>
+            </div>
+            <div class="tlog-form-actions">
+                <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
+                <a href="{{ url_for('travel_log.collections_show', id=entry.collection_id) }}" class="tlog-btn tlog-btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <div class="tlog-edit-photos-section">
+            <h2 class="tlog-edit-photos-title">Photos</h2>
+            <p class="tlog-edit-photos-placeholder">Photo upload coming in Phase 6. ({{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }})</p>
         </div>
 
-        <p class="tlog-edit-coming">Edit form coming in Phase 5.</p>
+        <div class="tlog-form-divider"></div>
+        <form method="post" action="{{ url_for('travel_log.entries_delete', id=entry.id) }}" class="tlog-delete-form" onsubmit="return confirm('Delete this entry? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="tlog-btn tlog-btn-danger">Delete entry</button>
+        </form>
     </div>
 </div>
 {% endblock %}
