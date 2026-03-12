@@ -106,8 +106,9 @@ def search_nearby(lat, lng, radius_m=200, included_types=None, api_key=None):
         data = resp.json()
         places_raw = data.get("places", [])
 
-        # Filter OPERATIONAL only
-        operational = [p for p in places_raw if p.get("businessStatus") == "OPERATIONAL"]
+        # Exclude closed places; include OPERATIONAL and places without businessStatus (e.g. parks, landmarks)
+        closed = {"CLOSED_PERMANENTLY", "CLOSED_TEMPORARILY"}
+        operational = [p for p in places_raw if p.get("businessStatus") not in closed]
         if not included_types or included_types == "other":
             operational = [p for p in operational if not (set(p.get("types", [])) & UNHELPFUL_TYPES)]
 
@@ -177,7 +178,8 @@ def search_text(query, lat=None, lng=None, box_size_m=400, api_key=None):
         data = resp.json()
         places_raw = data.get("places", [])
 
-        operational = [p for p in places_raw if p.get("businessStatus") == "OPERATIONAL"]
+        closed = {"CLOSED_PERMANENTLY", "CLOSED_TEMPORARILY"}
+        operational = [p for p in places_raw if p.get("businessStatus") not in closed]
         results = []
         for p in operational:
             d = _place_to_dict(p, lat, lng)

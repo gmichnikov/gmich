@@ -3,8 +3,9 @@ from datetime import datetime
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from app import db
+from app import csrf, db
 from app.projects.travel_log.models import TlogCollection, TlogEntry
+from app.projects.travel_log.utils import get_visited_date_default
 from app.projects.travel_log.services.places import (
     CATEGORY_TYPES,
     search_nearby,
@@ -29,6 +30,14 @@ def _get_user_collections():
         .order_by(TlogCollection.last_modified.desc())
         .all()
     )
+
+
+def _get_default_collection_id(collections):
+    """Most recently used collection: last entry's collection, else most recently modified."""
+    last_entry = TlogEntry.query.filter_by(user_id=current_user.id).order_by(TlogEntry.updated_at.desc()).first()
+    if last_entry:
+        return last_entry.collection_id
+    return collections[0].id if collections else None
 
 
 @travel_log_bp.route("/")
@@ -141,16 +150,28 @@ def collections_delete(id):
 @travel_log_bp.route("/log")
 @login_required
 def log():
-    """Log Place page. Full implementation in Phase 4; stub for now."""
+    """Log Place page — Browse/Search nearby places, create entry."""
     collections = _get_user_collections()
     if not collections:
         flash("Create a collection first to log places.", "error")
         return redirect(url_for("travel_log.index"))
-    flash("Log Place coming in Phase 4.", "info")
-    return redirect(url_for("travel_log.collections_show", id=collections[0].id))
+
+    # Optional pre-select from query param (e.g. from collection page)
+    requested_id = request.args.get("collection_id", type=int)
+    if requested_id and any(c.id == requested_id for c in collections):
+        default_collection_id = requested_id
+    else:
+        default_collection_id = _get_default_collection_id(collections)
+
+    return render_template(
+        "travel_log/log.html",
+        collections=collections,
+        default_collection_id=default_collection_id,
+    )
 
 
 @travel_log_bp.route("/api/places/nearby", methods=["POST"])
+@csrf.exempt
 @login_required
 def api_places_nearby():
     """JSON: { lat, lng, radius?, category? } → list of places."""
@@ -167,11 +188,15 @@ def api_places_nearby():
     radius_m = int(radius) if radius is not None else 200
     category = data.get("category")  # "food", "shopping", "attractions", "other" or null
     included_types = CATEGORY_TYPES.get(category) if category else None
-    places = search_nearby(lat, lng, radius_m=radius_m, included_types=included_types)
+    try:
+        places = search_nearby(lat, lng, radius_m=radius_m, included_types=included_types)
+    except Exception as e:
+        return jsonify({"error": "Could not fetch nearby places. Please try again.", "places": []}), 500
     return jsonify({"places": places})
 
 
 @travel_log_bp.route("/api/places/search", methods=["POST"])
+@csrf.exempt
 @login_required
 def api_places_search():
     """JSON: { query, lat?, lng? } → list of places. lat/lng optional (GPS-failure flow)."""
@@ -186,8 +211,70 @@ def api_places_search():
             lat, lng = float(lat), float(lng)
         except (TypeError, ValueError):
             lat, lng = None, None
-    places = search_text(query, lat=lat, lng=lng)
+    try:
+        places = search_text(query, lat=lat, lng=lng)
+    except Exception as e:
+        return jsonify({"error": "Could not search places. Please try again.", "places": []}), 500
     return jsonify({"places": places})
+
+
+@travel_log_bp.route("/entries/create", methods=["POST"])
+@login_required
+def entries_create():
+    """Create entry from Log Place form. Expects form or JSON; returns JSON with redirect."""
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+    else:
+        data = request.form
+
+    collection_id = data.get("collection_id")
+    user_name = (data.get("user_name") or "").strip()
+    if not collection_id or not user_name:
+        return jsonify({"error": "collection_id and user_name required"}), 400
+
+    collection = TlogCollection.query.filter_by(id=collection_id, user_id=current_user.id).first()
+    if not collection:
+        return jsonify({"error": "Collection not found"}), 404
+
+    place_id = data.get("place_id") or None
+    lat = data.get("lat")
+    lng = data.get("lng")
+    if lat is not None and lng is not None:
+        try:
+            lat, lng = float(lat), float(lng)
+        except (TypeError, ValueError):
+            lat, lng = None, None
+    else:
+        lat, lng = None, None
+
+    visited_date_str = data.get("visited_date")
+    if visited_date_str:
+        try:
+            from datetime import datetime as dt
+            visited_date = dt.strptime(visited_date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            visited_date = get_visited_date_default(lat, lng) if (lat and lng) else datetime.utcnow().date()
+    else:
+        visited_date = get_visited_date_default(lat, lng) if (lat and lng) else datetime.utcnow().date()
+
+    now = datetime.utcnow()
+    entry = TlogEntry(
+        user_id=current_user.id,
+        collection_id=collection.id,
+        place_id=place_id,
+        lat=lat,
+        lng=lng,
+        user_name=user_name,
+        user_address=(data.get("user_address") or "").strip() or None,
+        notes=None,
+        visited_date=visited_date,
+    )
+    db.session.add(entry)
+    collection.last_modified = now
+    db.session.commit()
+
+    redirect_url = url_for("travel_log.collections_show", id=collection.id)
+    return jsonify({"redirect": redirect_url})
 
 
 @travel_log_bp.route("/entries/<int:id>")

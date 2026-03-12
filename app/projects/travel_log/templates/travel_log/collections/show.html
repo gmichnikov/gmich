@@ -13,7 +13,7 @@
             <a href="{{ url_for('travel_log.index') }}" class="tlog-back-link">← Back to Collections</a>
             <h1 class="tlog-title">{{ collection.name }}</h1>
             <div class="tlog-header-actions">
-                <a href="{{ url_for('travel_log.log') }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+                <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
                 <a href="{{ url_for('travel_log.collections_edit', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Edit</a>
             </div>
         </div>
@@ -21,7 +21,7 @@
         {% if not entries %}
         <div class="tlog-empty">
             <p class="tlog-empty-text">No entries yet. Log your first place.</p>
-            <a href="{{ url_for('travel_log.log') }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+            <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
         </div>
         {% else %}
         <ul class="tlog-entries-list">

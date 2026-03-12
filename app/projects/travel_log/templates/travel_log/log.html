@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Log Place - Travel Log{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <a href="{{ url_for('travel_log.index') }}" class="tlog-back-link">← Back to Collections</a>
+        <h1 class="tlog-title">Log Place</h1>
+
+        <div class="tlog-log-collection-select" id="tlog-collection-select">
+            <label for="tlog-collection-id" class="tlog-label">Collection</label>
+            <select id="tlog-collection-id" class="tlog-select" data-default="{{ default_collection_id }}">
+                {% for c in collections %}
+                <option value="{{ c.id }}" {% if c.id == default_collection_id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="tlog-log-mode tlog-log-browse">
+            <button type="button" id="tlog-browse-btn" class="tlog-btn tlog-btn-primary">Log This Place</button>
+            <p class="tlog-log-hint">Uses your location to find nearby places.</p>
+            <p class="tlog-location-indicator" id="tlog-location-indicator" aria-live="polite">—</p>
+        </div>
+
+        <div class="tlog-log-search">
+            <label for="tlog-search-input" class="tlog-label">Or search</label>
+            <input type="text" id="tlog-search-input" class="tlog-input" placeholder="e.g. latte, ramen, coffee Tokyo, italian chatham nj" autocomplete="off">
+            <label class="tlog-search-nearby-wrap">
+                <input type="checkbox" id="tlog-search-nearby" class="tlog-search-nearby-cb" checked disabled>
+                <span class="tlog-search-nearby-label">Search near my location</span>
+            </label>
+        </div>
+
+        <div class="tlog-log-categories" id="tlog-categories" style="display: none;">
+            <button type="button" class="tlog-cat-btn" data-cat="food">Food &amp; Drink</button>
+            <button type="button" class="tlog-cat-btn" data-cat="shopping">Shopping</button>
+            <button type="button" class="tlog-cat-btn" data-cat="attractions">Attractions</button>
+            <button type="button" class="tlog-cat-btn" data-cat="other">Other</button>
+        </div>
+
+        <div class="tlog-log-results" id="tlog-results" style="display: none;">
+            <p class="tlog-filter-label tlog-results-label" id="tlog-filter-label"></p>
+            <div class="tlog-google-attribution">
+                <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-attribution-link" translate="no">Powered by Google</a>
+            </div>
+            <ul class="tlog-places-list" id="tlog-places-list"></ul>
+        </div>
+
+        <div class="tlog-log-form-wrap" id="tlog-form-wrap" style="display: none;">
+            <form id="tlog-create-form" class="tlog-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="tlog-form-collection-id" name="collection_id" value="{{ default_collection_id }}">
+                <input type="hidden" id="tlog-form-place-id" name="place_id" value="">
+                <input type="hidden" id="tlog-form-lat" name="lat" value="">
+                <input type="hidden" id="tlog-form-lng" name="lng" value="">
+                <div class="tlog-form-group">
+                    <label for="tlog-form-name" class="tlog-label">Place name</label>
+                    <input type="text" id="tlog-form-name" name="user_name" class="tlog-input" required>
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-form-address" class="tlog-label">Address</label>
+                    <input type="text" id="tlog-form-address" name="user_address" class="tlog-input">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-form-date" class="tlog-label">Visited date</label>
+                    <input type="date" id="tlog-form-date" name="visited_date" class="tlog-input" required>
+                </div>
+                <div class="tlog-form-actions">
+                    <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
+                    <button type="button" id="tlog-form-cancel" class="tlog-btn tlog-btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tlog-log-fallback" id="tlog-fallback" style="display: none;">
+            <p class="tlog-empty-text">Location or search unavailable. Add place manually:</p>
+            <button type="button" id="tlog-fallback-btn" class="tlog-btn tlog-btn-secondary">Add Manually</button>
+        </div>
+
+        <div class="tlog-log-status" id="tlog-status"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('travel_log.static', filename='log.js') }}"></script>
+{% endblock %}
