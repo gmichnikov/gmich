@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import func
 from app.models import User, LogEntry, db
 from app.forms import (
     RegistrationForm,
@@ -93,13 +94,16 @@ def register():
 
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        email_normalized = form.email.data.strip().lower()
+        user = db.session.query(User).filter(
+            func.lower(User.email) == email_normalized
+        ).first()
         if user:
             flash("Email already registered.")
             return redirect(url_for("auth.register"))
 
         new_user = User(
-            email=form.email.data,
+            email=email_normalized,
             full_name=form.full_name.data.strip(),
             short_name=form.short_name.data.strip(),
             time_zone=form.time_zone.data,
@@ -107,7 +111,7 @@ def register():
         )
         new_user.set_password(form.password.data)
         # Automatically make user with ADMIN_EMAIL an admin
-        if form.email.data == ADMIN_EMAIL:
+        if ADMIN_EMAIL and email_normalized == ADMIN_EMAIL.strip().lower():
             new_user.is_admin = True
 
         db.session.add(new_user)
@@ -277,8 +281,8 @@ def resend_verification():
             )
             return render_template("auth/resend_verification.html", form=form)
 
-        # Find user by email
-        user = User.query.filter_by(email=email).first()
+        # Find user by email (case-insensitive for users who registered before lowercase normalization)
+        user = db.session.query(User).filter(func.lower(User.email) == email).first()
 
         # Security: Always show success message, even if user doesn't exist
         # This prevents email enumeration attacks
@@ -345,7 +349,10 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        email_normalized = form.email.data.strip().lower()
+        user = db.session.query(User).filter(
+            func.lower(User.email) == email_normalized
+        ).first()
         if user and user.check_password(form.password.data):
             # Check if email is verified
             if not user.email_verified:
@@ -506,8 +513,8 @@ def request_password_reset():
             )
             return render_template("auth/request_password_reset.html", form=form)
 
-        # Find user by email
-        user = User.query.filter_by(email=email).first()
+        # Find user by email (case-insensitive for users who registered before lowercase normalization)
+        user = db.session.query(User).filter(func.lower(User.email) == email).first()
 
         # Security: Always show success message, even if user doesn't exist
         # This prevents email enumeration attacks

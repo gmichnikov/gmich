@@ -21,12 +21,14 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 ## Environment & Dependencies
 
 **New env vars needed:**
+
 - `GOOGLE_PLACES_API_KEY` — for Places API (New)
 - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` — for Cloudflare R2
 
 **New Python deps:** `boto3`, `timezonefinder` (for lat/lng → timezone)
 
 **Implementation notes:**
+
 - Places API is proxied through Flask (keeps API key server-side). Browser calls `/api/places/*`.
 - For JSON API routes (`/api/places/*`, `/api/photos/*`): pass CSRF token in header (e.g. `X-CSRFToken` from meta tag).
 - R2: private bucket; presigned URLs for upload and download.
@@ -38,6 +40,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 **Why R2 over S3?** R2 has zero egress fees — when users view their photos, there's no per-GB charge. S3 charges ~$0.09/GB for downloads, which adds up for a photo-heavy journal. Both use the same boto3/presigned URL pattern. R2 is recommended for this use case. (S3 is simpler only if you already have an AWS account and expect minimal traffic.)
 
 **Setup steps:**
+
 - [ ] Create Cloudflare account at https://dash.cloudflare.com/sign-up
 - [ ] In left sidebar: **R2 Object Storage** → **Overview**
 - [ ] Click **Create bucket** — name it (e.g. `gmich-travel-log`)
@@ -76,6 +79,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 3. For production, add your real app origins (e.g. `https://yoursite.com`).
 
 **Manual verification:**
+
 - [ ] Use boto3 in Python shell to list bucket (or upload a test file)
 - [ ] Confirm credentials work before starting Phase 6
 - [ ] Add CORS policy if testing photo upload from browser
@@ -107,6 +111,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Import models in `app/__init__.py`
 
 **Manual Testing 1.1:**
+
 - [x] Run `flask db migrate -m "Add travel log models"`
 - [x] Review migration — check columns, FKs, CASCADE on entry_photos
 - [x] Run `flask db upgrade`
@@ -130,6 +135,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] Use `tlog-` CSS prefix
 
 **Manual Testing 1.2:**
+
 - [x] Navigate to `/travel-log/` as new user (no collections) — see empty state
 - [x] Verify login required
 
@@ -147,6 +153,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] `tlog-` prefix
 
 **Manual Testing 1.3:**
+
 - [x] Create a collection — verify it appears on index
 - [x] Create second collection — verify both listed, ordered by last_modified
 
@@ -165,6 +172,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Add delete button with **confirmation dialog**: "Are you sure? This will permanently delete N entries." (N = actual count)
 
 **Manual Testing 1.4:**
+
 - [x] Rename a collection — verify change persists
 - [x] Delete empty collection — verify removed
 - [x] Create collection with entries (Phase 2), then delete — verify confirmation shows entry count, and entries are gone after confirm
@@ -189,6 +197,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] `tlog-` prefix
 
 **Manual Testing 2.1:**
+
 - [x] Click collection from index — collection detail loads
 - [x] Empty collection shows empty state
 - [x] Verify 404 for other user's collection
@@ -203,6 +212,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Tap entry → goes to edit page (Phase 5)
 
 **Manual Testing 2.2:**
+
 - [x] Insert test entry via Flask shell or minimal form — verify it displays on collection detail
 - [x] Verify ordering by updated_at
 
@@ -233,6 +243,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Category type mappings (from PRD): Food & Drink, Shopping, Attractions, Other (no filter)
 
 **Manual Testing 3.1:**
+
 - [ ] In Flask shell, call `search_nearby(40.74, -74.38, 200)` — verify results
 - [ ] Call `search_text("coffee", 40.74, -74.38)` — verify results
 - [ ] Verify OPERATIONAL filter works (if any closed place in results)
@@ -255,6 +266,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Ensure fetch requests include CSRF token in header (e.g. `X-CSRFToken` from meta tag)
 
 **Manual Testing 3.2:**
+
 - [ ] `curl` or Postman: POST search with valid lat/lng — verify JSON response
 - [ ] POST search with query only (no lat/lng) — verify results (GPS-failure flow)
 
@@ -280,6 +292,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] `tlog-` prefix
 
 **Manual Testing 4.1:**
+
 - [x] Navigate to `/travel-log/log` — page loads
 - [x] Grant GPS — Browse shows nearby places
 - [x] Type in search — Search shows results
@@ -299,6 +312,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] Error handling: API failure → show "Add manually" fallback form (name, address only)
 
 **Manual Testing 4.2:**
+
 - [x] Test Browse flow on real device or with location mock
 - [x] Test Search flow with "coffee", "restaurant"
 - [x] Test GPS denied — search with query only works (e.g. "coffee Tokyo"); manual form available
@@ -318,6 +332,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Helper: `get_visited_date_default(lat, lng)` → use timezonefinder to get IANA zone, then `datetime.now(ZoneInfo(zone)).date()`
 
 **Manual Testing 4.3:**
+
 - [x] Submit creation form — entry created, redirects to collection
 - [x] Verify visited_date default from lat/lng when available
 - [x] Verify visited_date default from today when no lat/lng
@@ -350,6 +365,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] Back to collection link
 
 **Manual Testing 5.1:**
+
 - [x] View entry — edit form loads with correct data
 - [x] Edit and save — changes persist
 - [x] Delete entry — removed from collection, redirects
@@ -381,6 +397,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] Return success (photo saved immediately — no extra "Save" needed)
 
 **Manual Testing 6.1:**
+
 - [ ] In Flask shell, generate presigned URL — verify format
 - [ ] Call presign endpoint — get URL
 - [ ] Upload a file to the URL with curl — verify it lands in R2
@@ -395,6 +412,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Include in entry JSON or template
 
 **Manual Testing 6.2:**
+
 - [ ] Upload photo, view entry — image loads from R2 via presigned URL
 
 ---
@@ -419,6 +437,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Save button disabled until form changes (photos autosave)
 
 **Manual Testing 6.3:**
+
 - [ ] Upload photo on edit page — appears immediately
 - [ ] Upload multiple — all appear
 - [ ] Remove photo — disappears, DB updated
@@ -437,6 +456,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] `visited_date` defaults to creation date (no lat/lng to derive timezone)
 
 **Manual Testing 7.1:**
+
 - [ ] Simulate API failure (wrong key, network error) — fallback form appears
 - [ ] Submit fallback form — entry created, displays correctly
 
@@ -451,6 +471,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
   - [x] Manual form: name, address, visited_date (default today) — always available as fallback
 
 **Manual Testing 7.2:**
+
 - [ ] Deny GPS — search box allows query; try "coffee Tokyo" — verify results
 - [ ] Verify manual form still available when no results or user prefers it
 
@@ -463,6 +484,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Don't block user from continuing to edit other fields
 
 **Manual Testing 7.3:**
+
 - [ ] Simulate R2 failure — error shown, user can still save other edits
 
 ---
@@ -476,6 +498,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Migration: backfill `last_modified` for existing collections (if any) — model defaults handle new data; optional data migration only if legacy rows exist
 
 **Manual Testing 8.1:**
+
 - [ ] Create entry → collection moves to top of list
 - [ ] Edit entry → collection order updates
 - [ ] Rename collection → order updates
@@ -490,6 +513,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Mobile-friendly: touch targets (min-height 44px), readable text, tlog-page container
 
 **Manual Testing 8.2:**
+
 - [ ] Full flow: Index → Collection → Log Place → Create → back to Collection
 - [ ] Full flow: Log Place → Create → Collection shows new entry
 - [ ] Test on 375px viewport
@@ -502,6 +526,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] Reference: [Places API attribution](https://developers.google.com/maps/documentation/places/web-service/policies#attribution)
 
 **Manual Testing 8.3:**
+
 - [ ] Verify Google attribution visible in place selection UI
 
 ---
@@ -517,6 +542,7 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - [x] 404 for other users' resources (not 403)
 
 **Manual Testing 8.4:**
+
 - [ ] Full user flow: Create collection → Log place (Browse) → Edit → Add photo → View in journal
 - [ ] Full user flow: Log place (Search) → Create → Edit → Delete
 - [ ] Delete collection with entries — confirm dialog, verify cascade
@@ -552,3 +578,4 @@ The browser PUTs directly to the presigned R2 URL (cloudflarestorage.com). That 
 - Dedicated "add place manually" flow
 - R2 object cleanup job (delete orphaned objects)
 - Full offline-first PWA
+- Pretend I'm at coords

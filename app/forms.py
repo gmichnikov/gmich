@@ -21,7 +21,8 @@ from wtforms.validators import (
     Optional,
 )
 import pytz
-from app.models import User
+from sqlalchemy import func
+from app.models import User, db
 
 
 class RegistrationForm(FlaskForm):
@@ -39,9 +40,13 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
     def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError("Email already registered.")
+        email_normalized = (email.data or "").strip().lower()
+        if email_normalized:
+            user = db.session.query(User).filter(
+                func.lower(User.email) == email_normalized
+            ).first()
+            if user:
+                raise ValidationError("Email already registered.")
 
     def validate_full_name(self, field):
         if not field.data or not field.data.strip():
