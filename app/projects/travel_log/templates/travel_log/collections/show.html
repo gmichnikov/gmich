@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ collection.name }} - Travel Log{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <div class="tlog-show-header">
+            <a href="{{ url_for('travel_log.index') }}" class="tlog-back-link">← Back to Collections</a>
+            <h1 class="tlog-title">{{ collection.name }}</h1>
+            <div class="tlog-header-actions">
+                <a href="{{ url_for('travel_log.log') }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+                <a href="{{ url_for('travel_log.collections_edit', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Edit</a>
+            </div>
+        </div>
+
+        {% if not entries %}
+        <div class="tlog-empty">
+            <p class="tlog-empty-text">No entries yet. Log your first place.</p>
+            <a href="{{ url_for('travel_log.log') }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+        </div>
+        {% else %}
+        <ul class="tlog-entries-list">
+            {% for entry in entries %}
+            <li class="tlog-entry-item">
+                <a href="{{ url_for('travel_log.entries_edit', id=entry.id) }}" class="tlog-entry-link">
+                    <span class="tlog-entry-name">{{ entry.user_name }}</span>
+                    {% if entry.user_address %}
+                    <span class="tlog-entry-address">{{ entry.user_address }}</span>
+                    {% endif %}
+                    <span class="tlog-entry-meta">
+                        {{ entry.visited_date.strftime('%b %d, %Y') }}
+                        {% if entry.notes %}
+                        · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
+                        {% endif %}
+                        · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

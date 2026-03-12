@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -201,5 +201,10 @@ def create_app():
     init_betfake_commands(app)
     init_sports_admin_commands(app)
     init_reminders_commands(app)
+
+    # App-level 404 handler — catches 404s from any blueprint (travel_log, notes, etc.)
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template("404.html"), 404
 
     return app

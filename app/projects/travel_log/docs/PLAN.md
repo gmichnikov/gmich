@@ -61,111 +61,111 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ---
 
-## Phase 1: Database Models & Collections CRUD
+## Phase 1: Database Models & Collections CRUD ✅
 
 ### 1.1 Database Models
 
-- [ ] Create `models.py` with:
-  - [ ] `Collection` model
-    - [ ] `id`, `user_id` (FK to User), `name` (VARCHAR 255), `created_at`, `updated_at`
-    - [ ] `last_modified` — denormalized; updated when entry added/edited or collection renamed (for ordering)
-    - [ ] Relationship to Entry
-    - [ ] `__repr__`
-  - [ ] `Entry` model
-    - [ ] `id`, `user_id`, `collection_id` (FK, nullable=False)
-    - [ ] `place_id` (VARCHAR 255, nullable), `lat` (Float, nullable), `lng` (Float, nullable)
-    - [ ] `user_name` (VARCHAR 255, nullable=False), `user_address` (Text, nullable), `notes` (Text, nullable)
-    - [ ] `visited_date` (Date, nullable=False) — default from lat/lng timezone or creation date
-    - [ ] `created_at`, `updated_at`
-    - [ ] Relationship to Collection, EntryPhoto
-    - [ ] `__repr__`
-  - [ ] `EntryPhoto` model
-    - [ ] `id`, `entry_id` (FK, ON DELETE CASCADE), `r2_key` (VARCHAR 255), `sort_order` (Int, default 0), `created_at`
-    - [ ] `__repr__`
-- [ ] Add index on `Entry(collection_id)`, `Entry(user_id)`, `Collection(user_id)`, `Collection(last_modified)`
-- [ ] Import models in `app/__init__.py`
+- [x] Create `models.py` with:
+  - [x] `Collection` model
+    - [x] `id`, `user_id` (FK to User), `name` (VARCHAR 255), `created_at`, `updated_at`
+    - [x] `last_modified` — denormalized; updated when entry added/edited or collection renamed (for ordering)
+    - [x] Relationship to Entry
+    - [x] `__repr__`
+  - [x] `Entry` model
+    - [x] `id`, `user_id`, `collection_id` (FK, nullable=False)
+    - [x] `place_id` (VARCHAR 255, nullable), `lat` (Float, nullable), `lng` (Float, nullable)
+    - [x] `user_name` (VARCHAR 255, nullable=False), `user_address` (Text, nullable), `notes` (Text, nullable)
+    - [x] `visited_date` (Date, nullable=False) — default from lat/lng timezone or creation date
+    - [x] `created_at`, `updated_at`
+    - [x] Relationship to Collection, EntryPhoto
+    - [x] `__repr__`
+  - [x] `EntryPhoto` model
+    - [x] `id`, `entry_id` (FK, ON DELETE CASCADE), `r2_key` (VARCHAR 255), `sort_order` (Int, default 0), `created_at`
+    - [x] `__repr__`
+- [x] Add index on `Entry(collection_id)`, `Entry(user_id)`, `Collection(user_id)`, `Collection(last_modified)`
+- [x] Import models in `app/__init__.py`
 
 **Manual Testing 1.1:**
-- [ ] Run `flask db migrate -m "Add travel log models"`
-- [ ] Review migration — check columns, FKs, CASCADE on entry_photos
-- [ ] Run `flask db upgrade`
-- [ ] Verify tables exist with correct schema
+- [x] Run `flask db migrate -m "Add travel log models"`
+- [x] Review migration — check columns, FKs, CASCADE on entry_photos
+- [x] Run `flask db upgrade`
+- [x] Verify tables exist with correct schema
 
 ---
 
 ### 1.2 Collections List & First-Time Flow
 
-- [ ] Update `GET /travel-log/` (index) route:
-  - [ ] If user has **zero collections** → redirect to "create first collection" flow (or render collections page with prominent empty state)
-  - [ ] Otherwise: query user's collections ordered by `last_modified DESC`
-  - [ ] For each collection: entry count, most recent entry preview (if any)
-  - [ ] Pass to template
-- [ ] Create `templates/travel_log/index.html` (Collections page)
-  - [ ] Page title "Travel Log"
-  - [ ] List of collections (name, entry count, last modified / preview)
-  - [ ] Empty state: "Create your first collection to start logging places"
-  - [ ] "New Collection" button
-  - [ ] "Log Place" button (disabled or hidden if no collections?)
-  - [ ] Use `tlog-` CSS prefix
+- [x] Update `GET /travel-log/` (index) route:
+  - [x] If user has **zero collections** → redirect to "create first collection" flow (or render collections page with prominent empty state)
+  - [x] Otherwise: query user's collections ordered by `last_modified DESC`
+  - [x] For each collection: entry count, most recent entry preview (if any)
+  - [x] Pass to template
+- [x] Create `templates/travel_log/index.html` (Collections page)
+  - [x] Page title "Travel Log"
+  - [x] List of collections (name, entry count, last modified / preview)
+  - [x] Empty state: "Create your first collection to start logging places"
+  - [x] "New Collection" button
+  - [x] "Log Place" button (disabled or hidden if no collections?)
+  - [x] Use `tlog-` CSS prefix
 
 **Manual Testing 1.2:**
-- [ ] Navigate to `/travel-log/` as new user (no collections) — see empty state
-- [ ] Verify login required
+- [x] Navigate to `/travel-log/` as new user (no collections) — see empty state
+- [x] Verify login required
 
 ---
 
 ### 1.3 Create Collection
 
-- [ ] Implement `GET /travel-log/collections/new` — render create form
-- [ ] Implement `POST /travel-log/collections/create`
-  - [ ] Validate name not empty
-  - [ ] Create Collection, set `last_modified = created_at`
-  - [ ] Flash success, redirect to index (or to Log Place flow?)
-- [ ] Create `templates/travel_log/collections/new.html`
-  - [ ] Name input, Submit, Cancel
-  - [ ] `tlog-` prefix
+- [x] Implement `GET /travel-log/collections/new` — render create form
+- [x] Implement `POST /travel-log/collections/create`
+  - [x] Validate name not empty
+  - [x] Create Collection, set `last_modified = created_at`
+  - [x] Flash success, redirect to index (or to Log Place flow?)
+- [x] Create `templates/travel_log/collections/new.html`
+  - [x] Name input, Submit, Cancel
+  - [x] `tlog-` prefix
 
 **Manual Testing 1.3:**
-- [ ] Create a collection — verify it appears on index
-- [ ] Create second collection — verify both listed, ordered by last_modified
+- [x] Create a collection — verify it appears on index
+- [x] Create second collection — verify both listed, ordered by last_modified
 
 ---
 
 ### 1.4 Rename & Delete Collection
 
-- [ ] Implement `GET /travel-log/collections/<id>/edit` — render rename form
-- [ ] Implement `POST /travel-log/collections/<id>/update` — update name, set `last_modified`, redirect
-- [ ] Implement `POST /travel-log/collections/<id>/delete`
-  - [ ] Verify ownership
-  - [ ] Count entries that will be deleted
-  - [ ] Delete collection (cascade deletes entries and entry_photos)
-  - [ ] Flash success, redirect to index
-- [ ] Create `templates/travel_log/collections/edit.html` (rename form)
-- [ ] Add delete button with **confirmation dialog**: "Are you sure? This will permanently delete N entries." (N = actual count)
+- [x] Implement `GET /travel-log/collections/<id>/edit` — render rename form
+- [x] Implement `POST /travel-log/collections/<id>/update` — update name, set `last_modified`, redirect
+- [x] Implement `POST /travel-log/collections/<id>/delete`
+  - [x] Verify ownership
+  - [x] Count entries that will be deleted
+  - [x] Delete collection (cascade deletes entries and entry_photos)
+  - [x] Flash success, redirect to index
+- [x] Create `templates/travel_log/collections/edit.html` (rename form)
+- [x] Add delete button with **confirmation dialog**: "Are you sure? This will permanently delete N entries." (N = actual count)
 
 **Manual Testing 1.4:**
-- [ ] Rename a collection — verify change persists
-- [ ] Delete empty collection — verify removed
-- [ ] Create collection with entries (Phase 2), then delete — verify confirmation shows entry count, and entries are gone after confirm
+- [x] Rename a collection — verify change persists
+- [x] Delete empty collection — verify removed
+- [x] Create collection with entries (Phase 2), then delete — verify confirmation shows entry count, and entries are gone after confirm
 
 ---
 
-## Phase 2: Journal View (Collections & Entries List)
+## Phase 2: Journal View (Collections & Entries List) ✅
 
 ### 2.1 Collection Detail Page
 
-- [ ] Implement `GET /travel-log/collections/<id>` route
-  - [ ] Verify ownership (404 if not)
-  - [ ] Query entries for this collection, ordered by `updated_at DESC`
-  - [ ] **updated_at** must be set on entry creation and updated on entry edit and photo add/remove (for correct ordering)
-  - [ ] Pass collection and entries to template
-- [ ] Create `templates/travel_log/collections/show.html`
-  - [ ] Collection name in header
-  - [ ] List of entries: place name, address, visited_date, notes preview (truncated), photo count/thumbnails
-  - [ ] Empty state: "No entries yet. Log your first place."
-  - [ ] "Log Place" button
-  - [ ] "Back to Collections" link
-  - [ ] `tlog-` prefix
+- [x] Implement `GET /travel-log/collections/<id>` route
+  - [x] Verify ownership (404 if not)
+  - [x] Query entries for this collection, ordered by `updated_at DESC`
+  - [x] **updated_at** must be set on entry creation and updated on entry edit and photo add/remove (for correct ordering)
+  - [x] Pass collection and entries to template
+- [x] Create `templates/travel_log/collections/show.html`
+  - [x] Collection name in header
+  - [x] List of entries: place name, address, visited_date, notes preview (truncated), photo count/thumbnails
+  - [x] Empty state: "No entries yet. Log your first place."
+  - [x] "Log Place" button
+  - [x] "Back to Collections" link
+  - [x] `tlog-` prefix
 
 **Manual Testing 2.1:**
 - [ ] Click collection from index — collection detail loads
@@ -176,10 +176,10 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 
 ### 2.2 Entry Placeholder (Create Without Places API)
 
-- [ ] For testing Phase 2, add a minimal "Create Test Entry" route or seed script
-  - [ ] OR: skip until Phase 4; Phase 2 can be tested with empty list and manual DB insert
-- [ ] Entry display: place name, address, visited_date, notes preview, "No photos" or photo thumbnails
-- [ ] Tap entry → goes to edit page (Phase 5)
+- [x] For testing Phase 2, add a minimal "Create Test Entry" route or seed script
+  - [x] OR: skip until Phase 4; Phase 2 can be tested with empty list and manual DB insert
+- [x] Entry display: place name, address, visited_date, notes preview, "No photos" or photo thumbnails
+- [x] Tap entry → goes to edit page (Phase 5)
 
 **Manual Testing 2.2:**
 - [ ] Insert test entry via Flask shell or minimal form — verify it displays on collection detail

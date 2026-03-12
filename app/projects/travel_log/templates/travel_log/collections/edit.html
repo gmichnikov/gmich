@@ -9,7 +9,7 @@
 {% block content %}
 <div class="tlog-page">
     <div class="tlog-container">
-        <h1 class="tlog-title">Rename Collection</h1>
+        <h1 class="tlog-title">Edit Collection</h1>
 
         <form method="post" action="{{ url_for('travel_log.collections_update', id=collection.id) }}" class="tlog-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

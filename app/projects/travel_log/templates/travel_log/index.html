@@ -24,7 +24,7 @@
         <ul class="tlog-collections-list">
             {% for item in collections %}
             <li class="tlog-collection-item">
-                <a href="{{ url_for('travel_log.collections_edit', id=item.collection.id) }}" class="tlog-collection-link">
+                <a href="{{ url_for('travel_log.collections_show', id=item.collection.id) }}" class="tlog-collection-link">
                     <span class="tlog-collection-name">{{ item.collection.name }}</span>
                     <span class="tlog-collection-meta">
                         {{ item.entry_count }} {{ 'entry' if item.entry_count == 1 else 'entries' }}

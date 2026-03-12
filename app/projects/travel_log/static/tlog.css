@@ -180,3 +180,195 @@
 .tlog-delete-form {
     margin-top: 0;
 }
+
+/* Collection show page */
+.tlog-show-header {
+    margin-bottom: 24px;
+}
+
+.tlog-back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.tlog-back-link:hover {
+    color: #2563eb;
+}
+
+.tlog-header-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* Entries list */
+.tlog-entries-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tlog-entry-item {
+    margin-bottom: 8px;
+}
+
+.tlog-entry-link {
+    display: block;
+    padding: 14px 16px;
+    background: #f9fafb;
+    border: 1px solid var(--tlog-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tlog-text);
+    transition: background 0.15s;
+}
+
+.tlog-entry-link:hover {
+    background: #f3f4f6;
+}
+
+.tlog-entry-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.tlog-entry-address {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.tlog-entry-meta {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+/* Entry detail (edit page) */
+.tlog-entry-detail {
+    margin-top: 20px;
+}
+
+.tlog-entry-detail p {
+    margin: 0 0 8px;
+}
+
+.tlog-entry-detail-address {
+    color: #6b7280;
+}
+
+.tlog-entry-detail-date {
+    font-weight: 500;
+}
+
+.tlog-entry-detail-notes {
+    white-space: pre-wrap;
+}
+
+.tlog-edit-coming {
+    margin-top: 24px;
+    padding: 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+/* Phase 2: Collection detail & entry list */
+.tlog-back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.tlog-back-link:hover {
+    color: var(--tlog-text);
+}
+
+.tlog-show-header {
+    margin-bottom: 24px;
+}
+
+.tlog-show-header .tlog-title {
+    margin-bottom: 12px;
+}
+
+.tlog-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Entries list */
+.tlog-entries-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tlog-entry-item {
+    margin-bottom: 8px;
+}
+
+.tlog-entry-link {
+    display: block;
+    padding: 14px 16px;
+    background: #f9fafb;
+    border: 1px solid var(--tlog-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tlog-text);
+    transition: background 0.15s;
+}
+
+.tlog-entry-link:hover {
+    background: #f3f4f6;
+}
+
+.tlog-entry-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.tlog-entry-address {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.tlog-entry-meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Entry detail (read-only view) */
+.tlog-entry-detail {
+    margin-top: 20px;
+}
+
+.tlog-entry-detail p {
+    margin: 0 0 8px;
+    color: var(--tlog-text);
+}
+
+.tlog-entry-detail-address {
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+.tlog-edit-coming {
+    margin-top: 24px;
+    padding: 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}

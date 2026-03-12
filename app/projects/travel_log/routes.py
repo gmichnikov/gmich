@@ -4,7 +4,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
-from app.projects.travel_log.models import TlogCollection
+from app.projects.travel_log.models import TlogCollection, TlogEntry
 from app.utils.logging import log_project_visit
 
 travel_log_bp = Blueprint(
@@ -78,6 +78,18 @@ def collections_create():
     return redirect(url_for("travel_log.index"))
 
 
+@travel_log_bp.route("/collections/<int:id>")
+@login_required
+def collections_show(id):
+    collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    entries = collection.entries.order_by(TlogEntry.updated_at.desc()).all()
+    return render_template(
+        "travel_log/collections/show.html",
+        collection=collection,
+        entries=entries,
+    )
+
+
 @travel_log_bp.route("/collections/<int:id>/edit", methods=["GET"])
 @login_required
 def collections_edit(id):
@@ -103,7 +115,7 @@ def collections_update(id):
     collection.last_modified = datetime.utcnow()
     db.session.commit()
 
-    flash(f'Collection renamed to "{name}".', "success")
+    flash("Collection updated.", "success")
     return redirect(url_for("travel_log.index"))
 
 
@@ -119,3 +131,23 @@ def collections_delete(id):
 
     flash(f'Collection "{name}" and {entry_count} entries deleted.', "success")
     return redirect(url_for("travel_log.index"))
+
+
+@travel_log_bp.route("/log")
+@login_required
+def log():
+    """Log Place page. Full implementation in Phase 4; stub for now."""
+    collections = _get_user_collections()
+    if not collections:
+        flash("Create a collection first to log places.", "error")
+        return redirect(url_for("travel_log.index"))
+    flash("Log Place coming in Phase 4.", "info")
+    return redirect(url_for("travel_log.collections_show", id=collections[0].id))
+
+
+@travel_log_bp.route("/entries/<int:id>")
+@login_required
+def entries_edit(id):
+    """View/edit entry. Edit form comes in Phase 5; for now read-only display."""
+    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    return render_template("travel_log/entries/edit.html", entry=entry)

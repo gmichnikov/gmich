@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entry.user_name }} - Travel Log{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <a href="{{ url_for('travel_log.collections_show', id=entry.collection_id) }}" class="tlog-back-link">← Back to {{ entry.collection.name }}</a>
+        <h1 class="tlog-title">{{ entry.user_name }}</h1>
+
+        <div class="tlog-entry-detail">
+            {% if entry.user_address %}
+            <p class="tlog-entry-detail-address">{{ entry.user_address }}</p>
+            {% endif %}
+            <p class="tlog-entry-detail-date">Visited: {{ entry.visited_date.strftime('%B %d, %Y') }}</p>
+            {% if entry.notes %}
+            <p class="tlog-entry-detail-notes">{{ entry.notes }}</p>
+            {% endif %}
+            <p class="tlog-entry-detail-photos">{{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}</p>
+        </div>
+
+        <p class="tlog-edit-coming">Edit form coming in Phase 5.</p>
+    </div>
+</div>
+{% endblock %}
