@@ -8,7 +8,7 @@ from app.projects.sports_schedule_admin.core.leagues import (
 )
 
 # --- Low-cardinality filter options (schema values) ---
-SPORTS = ["basketball", "hockey", "football", "baseball", "soccer"]
+SPORTS = ["basketball", "hockey", "football", "baseball", "soccer", "lacrosse"]
 
 LEVELS = ["pro", "college", "minor"]
 
