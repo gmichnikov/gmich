@@ -28,9 +28,9 @@
             {% for entry in entries %}
             <li class="tlog-entry-item">
                 <a href="{{ url_for('travel_log.entries_edit', id=entry.id) }}" class="tlog-entry-link">
-                    <span class="tlog-entry-name">{{ entry.user_name }}</span>
+                    <span class="tlog-entry-name">{{ (entry.user_name[:60] + '…') if entry.user_name|length > 60 else entry.user_name }}</span>
                     {% if entry.user_address %}
-                    <span class="tlog-entry-address">{{ entry.user_address }}</span>
+                    <span class="tlog-entry-address">{{ (entry.user_address[:60] + '…') if entry.user_address|length > 60 else entry.user_address }}</span>
                     {% endif %}
                     <span class="tlog-entry-meta">
                         {{ entry.visited_date.strftime('%b %d, %Y') }}

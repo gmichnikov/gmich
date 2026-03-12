@@ -73,6 +73,8 @@
       </form>
     `;
     grid.appendChild(item);
+    const placeholder = section.querySelector('.tlog-edit-photos-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
   }
 
   async function uploadFile(file) {

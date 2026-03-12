@@ -30,7 +30,7 @@
                     <span class="tlog-collection-meta">
                         {{ item.entry_count }} {{ 'entry' if item.entry_count == 1 else 'entries' }}
                         {% if item.latest_entry %}
-                        · Last: {{ item.latest_entry.user_name }}
+                        · Last: {{ (item.latest_entry.user_name[:40] + '…') if item.latest_entry.user_name|length > 40 else item.latest_entry.user_name }}
                         {% endif %}
                     </span>
                 </a>

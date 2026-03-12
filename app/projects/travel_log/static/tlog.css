@@ -38,10 +38,13 @@
     color: var(--tlog-text);
 }
 
-/* Buttons */
+/* Buttons — min-height 44px for mobile touch targets */
 .tlog-btn {
     display: inline-block;
     padding: 8px 16px;
+    min-height: 44px;
+    box-sizing: border-box;
+    line-height: 1.4;
     border-radius: 6px;
     font-size: 0.95rem;
     font-weight: 500;
@@ -743,6 +746,20 @@ body.tlog-lightbox-open {
 .tlog-no-results {
     padding: 16px;
     color: #6b7280;
+}
+
+.tlog-inline-add-manual {
+    background: none;
+    border: none;
+    color: #2563eb;
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+
+.tlog-inline-add-manual:hover {
+    color: #1d4ed8;
 }
 
 .tlog-log-form-wrap {

@@ -79,43 +79,62 @@
     });
   }
 
+  function showFallback() {
+    const fallback = $('#tlog-fallback');
+    if (fallback) fallback.style.display = 'block';
+  }
+
   async function fetchNearby(category = null) {
-    const coords = userLat != null && userLng != null ? { lat: userLat, lng: userLng } : await getGps();
-    if (!coords) return [];
-    const body = { lat: coords.lat, lng: coords.lng, radius: 200 };
-    if (category) body.category = category;
-    const r = await fetch(apiBase + '/nearby', { method: 'POST', headers: getCsrfHeaders(), body: JSON.stringify(body) });
-    if (!r.ok) {
-      let errMsg = 'Could not fetch nearby places.';
-      try {
-        const d = await r.json();
-        if (d && d.error) errMsg = d.error;
-      } catch (_) {}
-      showStatus(errMsg, true);
+    try {
+      const coords = userLat != null && userLng != null ? { lat: userLat, lng: userLng } : await getGps();
+      if (!coords) return [];
+      const body = { lat: coords.lat, lng: coords.lng, radius: 200 };
+      if (category) body.category = category;
+      const r = await fetch(apiBase + '/nearby', { method: 'POST', headers: getCsrfHeaders(), body: JSON.stringify(body) });
+      if (!r.ok) {
+        let errMsg = 'Could not fetch nearby places.';
+        try {
+          const d = await r.json();
+          if (d && d.error) errMsg = d.error;
+        } catch (_) {}
+        showStatus(errMsg, true);
+        showFallback();
+        return [];
+      }
+      const data = await r.json();
+      return data.places || [];
+    } catch (e) {
+      showStatus('Network error. Add place manually.', true);
+      showFallback();
       return [];
     }
-    const data = await r.json();
-    return data.places || [];
   }
 
   async function fetchSearch(query, useLocation = true) {
-    const body = { query };
-    if (useLocation && userLat != null && userLng != null) {
-      body.lat = userLat;
-      body.lng = userLng;
-    }
-    const r = await fetch(apiBase + '/search', { method: 'POST', headers: getCsrfHeaders(), body: JSON.stringify(body) });
-    if (!r.ok) {
-      let errMsg = 'Search failed. Please try again.';
-      try {
-        const d = await r.json();
-        if (d && d.error) errMsg = d.error;
-      } catch (_) {}
-      showStatus(errMsg, true);
+    try {
+      const body = { query };
+      if (useLocation && userLat != null && userLng != null) {
+        body.lat = userLat;
+        body.lng = userLng;
+      }
+      const r = await fetch(apiBase + '/search', { method: 'POST', headers: getCsrfHeaders(), body: JSON.stringify(body) });
+      if (!r.ok) {
+        let errMsg = 'Search failed. Please try again.';
+        try {
+          const d = await r.json();
+          if (d && d.error) errMsg = d.error;
+        } catch (_) {}
+        showStatus(errMsg, true);
+        showFallback();
+        return [];
+      }
+      const data = await r.json();
+      return data.places || [];
+    } catch (e) {
+      showStatus('Network error. Add place manually.', true);
+      showFallback();
       return [];
     }
-    const data = await r.json();
-    return data.places || [];
   }
 
   function escapeHtml(s) {
@@ -144,7 +163,10 @@
     if (!ul) return;
     ul.innerHTML = '';
     if (places.length === 0) {
-      ul.innerHTML = '<li class="tlog-no-results">No places found. Try a different search or add manually.</li>';
+      ul.innerHTML = '<li class="tlog-no-results">No places found. Try a different search or <button type="button" class="tlog-inline-add-manual" id="tlog-inline-add-manual">add manually</button>.</li>';
+      const btn = $('#tlog-inline-add-manual');
+      if (btn) btn.addEventListener('click', showManualForm);
+      showFallback();
       return;
     }
     places.forEach((p) => {
@@ -242,8 +264,8 @@
         const places = await fetchNearby();
         showStatus('');
         if (places.length === 0 && gpsFailed) {
-          showStatus('Location not available. Search by name (e.g. "coffee Tokyo") or add manually.', true);
-          $('#tlog-fallback').style.display = 'block';
+          showStatus('Location not available. You can search by name (include location in your search, e.g. "coffee Tokyo" or "ramen Myeongdong Seoul") or add manually.', true);
+          showFallback();
         }
         updateFilterLabel(null, true);
         renderPlaces(places);

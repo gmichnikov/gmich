@@ -38,6 +38,9 @@
 
         <div class="tlog-edit-photos-section" id="tlog-photos-section" data-entry-id="{{ entry.id }}" data-csrf-token="{{ csrf_token() }}">
             <h2 class="tlog-edit-photos-title">Photos</h2>
+            {% if not entry.photos.all() %}
+            <p class="tlog-edit-photos-placeholder">No photos yet. Add photos below.</p>
+            {% endif %}
             <div class="tlog-photos-grid" id="tlog-photos-grid">
                 {% for photo in entry.photos.all() %}
                 <div class="tlog-photo-item" data-photo-id="{{ photo.id }}">
