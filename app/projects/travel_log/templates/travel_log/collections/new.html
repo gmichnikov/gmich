@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}New Collection - Travel Log{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <h1 class="tlog-title">New Collection</h1>
+
+        <form method="post" action="{{ url_for('travel_log.collections_create') }}" class="tlog-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="tlog-form-group">
+                <label for="tlog-collection-name" class="tlog-label">Name</label>
+                <input
+                    type="text"
+                    id="tlog-collection-name"
+                    name="name"
+                    class="tlog-input"
+                    placeholder="e.g. Tokyo 2026"
+                    required
+                    autofocus
+                >
+            </div>
+            <div class="tlog-form-actions">
+                <button type="submit" class="tlog-btn tlog-btn-primary">Create</button>
+                <a href="{{ url_for('travel_log.index') }}" class="tlog-btn tlog-btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

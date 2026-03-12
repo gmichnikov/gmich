@@ -166,6 +166,7 @@ def create_app():
     )
     from app.projects.sports_schedules.models import SportsScheduleSavedQuery
     from app.projects.reminders.models import Reminder
+    from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto
 
     # Inject PostHog API key into all templates
     @app.context_processor

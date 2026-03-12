@@ -9,7 +9,34 @@
 {% block content %}
 <div class="tlog-page">
     <div class="tlog-container">
-        <h1 class="tlog-title">Hello</h1>
+        <h1 class="tlog-title">Travel Log</h1>
+
+        {% if not collections %}
+        <div class="tlog-empty">
+            <p class="tlog-empty-text">Create your first collection to start logging places.</p>
+            <a href="{{ url_for('travel_log.collections_new') }}" class="tlog-btn tlog-btn-primary">New Collection</a>
+        </div>
+        {% else %}
+        <div class="tlog-header">
+            <a href="{{ url_for('travel_log.collections_new') }}" class="tlog-btn tlog-btn-primary">New Collection</a>
+        </div>
+
+        <ul class="tlog-collections-list">
+            {% for item in collections %}
+            <li class="tlog-collection-item">
+                <a href="{{ url_for('travel_log.collections_edit', id=item.collection.id) }}" class="tlog-collection-link">
+                    <span class="tlog-collection-name">{{ item.collection.name }}</span>
+                    <span class="tlog-collection-meta">
+                        {{ item.entry_count }} {{ 'entry' if item.entry_count == 1 else 'entries' }}
+                        {% if item.latest_entry %}
+                        · Last: {{ item.latest_entry.user_name }}
+                        {% endif %}
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
