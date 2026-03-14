@@ -233,6 +233,8 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             valid_sort_cols.add("# Games")
         if sort_column in valid_sort_cols:
             dir_sql = "DESC" if sort_dir == "desc" else "ASC"
+            # Time sort: SQL lexicographic order is wrong (12pm after 1pm). Client-side sort
+            # in index.html handles time correctly after fetch.
             order_by = f"ORDER BY `{sort_column}` {dir_sql}"
         else:
             if count and valid_dims:

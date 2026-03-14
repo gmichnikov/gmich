@@ -972,7 +972,24 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
           document.getElementById('ss-results-error').style.display = 'block';
           return;
         }
-        ssRenderResults(data.rows || [], data.sql || '', params.get('dimensions') || '', params.get('limit') || '500', params);
+        var rows = data.rows || [];
+        if (params.get('sort_column') === 'time' && rows.length > 0) {
+          var dir = (params.get('sort_dir') || 'asc') === 'asc' ? 1 : -1;
+          rows = rows.slice().sort(function(a, b) {
+            var ma = ssParseTimeToMinutes(a.time);
+            var mb = ssParseTimeToMinutes(b.time);
+            var ta = ma != null ? ma : 24 * 60;
+            var tb = mb != null ? mb : 24 * 60;
+            return dir * (ta - tb);
+          });
+        }
+        if (params.get('sort_column')) {
+          window._ssSortState = { col: params.get('sort_column'), dir: params.get('sort_dir') || 'asc' };
+        } else {
+          window._ssSortState = { col: null, dir: 'asc' };
+        }
+        ssRenderResults(rows, data.sql || '', params.get('dimensions') || '', params.get('limit') || '500', params);
+        ssUpdateSortIndicators();
         document.getElementById('ss-results-content').style.display = 'block';
         ssUpdateSqlSection(data.sql || '');
         ssUpdateUrlFromParams(params);
@@ -1047,13 +1064,17 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   function ssParseTimeToMinutes(str) {
     if (!str || str === '') return null;
     str = String(str).trim();
-    var m = str.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+    /* Strip trailing " (ET)", " (Eastern)", etc. so "12:00 PM (ET)" parses */
+    str = str.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    /* Match HH:MM with optional am/pm, a.m./p.m., etc. (capture group 3 for AM/PM) */
+    var m = str.match(/^(\d{1,2}):(\d{2})(?:\s*((?:am|pm|a\.?m\.?|p\.?m\.?)))?$/i);
     if (!m) return null;
     var h = parseInt(m[1], 10);
     var min = parseInt(m[2], 10) || 0;
-    if (m[3]) {
-      if (/pm/i.test(m[3]) && h < 12) h += 12;
-      if (/am/i.test(m[3]) && h === 12) h = 0;
+    var suffix = (m[3] || '').toLowerCase();
+    if (suffix) {
+      if ((suffix.indexOf('p') >= 0) && h < 12) h += 12;
+      if ((suffix.indexOf('a') >= 0) && h === 12) h = 0;
     }
     return h * 60 + min;
   }
@@ -1083,6 +1104,10 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var mb = ssParseTimeToMinutes(vb);
       if (ma != null && mb != null) {
         cmp = ma - mb;
+      } else if (col === 'time') {
+        var ta = ma != null ? ma : 24 * 60;
+        var tb = mb != null ? mb : 24 * 60;
+        cmp = ta - tb;
       } else if (col === '# Games' || col === '#Games') {
         cmp = (Number(va) || 0) - (Number(vb) || 0);
       } else if (col === 'date' || (String(va).match(/^\d{4}-\d{2}-\d{2}$/) && String(vb).match(/^\d{4}-\d{2}-\d{2}$/))) {
