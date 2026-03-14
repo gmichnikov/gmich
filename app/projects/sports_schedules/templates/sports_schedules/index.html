@@ -542,6 +542,10 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     return new Date().toLocaleDateString('en-CA');
   }
 
+  function ssGetAnchorDateForRelative() {
+    return new Date().toLocaleDateString('en-CA');
+  }
+
   var dateModeSelect = document.getElementById('ss-date-mode-select');
   if (dateModeSelect) dateModeSelect.addEventListener('change', function() { ssUpdateDateModeVisibility(); ssUpdateFilterSelected('date'); });
   ssUpdateDateModeVisibility();
@@ -876,17 +880,17 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
           }
         } else if (mode === 'future') {
           params.set('date_mode', 'future');
-          params.set('anchor_date', ssGetAnchorDate());
+          params.set('anchor_date', ssGetAnchorDateForRelative());
         } else if (mode === 'next_week') {
           params.set('date_mode', mode);
-          params.set('anchor_date', ssGetAnchorDate());
+          params.set('anchor_date', ssGetAnchorDateForRelative());
         } else if (mode === 'last_n' || mode === 'next_n') {
           const nEl = document.getElementById('ss-date-n');
           const n = nEl ? parseInt(nEl.value, 10) : 0;
           if (n > 0) {
             params.set('date_mode', mode);
             params.set('date_n', String(n));
-            params.set('anchor_date', ssGetAnchorDate());
+            params.set('anchor_date', ssGetAnchorDateForRelative());
           }
         }
       } else if (col === 'either_team') {
@@ -1593,7 +1597,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
     /* For relative date modes, always use today—not the anchor from when the query was saved */
     var relativeModes = ['this_weekend', 'today', 'next_week', 'last_n', 'next_n', 'future'];
-    var anchor = (relativeModes.indexOf(config.date_mode) >= 0) ? ssGetAnchorDate() : (config.anchor_date || ssGetAnchorDate());
+    var anchor = (relativeModes.indexOf(config.date_mode) >= 0) ? ssGetAnchorDateForRelative() : (config.anchor_date || ssGetAnchorDate());
     if (config.date_mode === 'this_weekend') {
       var w = ssComputeThisWeekend(anchor);
       params.set('date_mode', 'this_weekend');

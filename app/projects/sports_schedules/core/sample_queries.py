@@ -54,6 +54,11 @@ def config_to_params(config: dict, anchor_date: str | None = None) -> dict:
     """
     Convert stored config to the params dict that build_sql() expects.
     Used for validating sample configs. Frontend has equivalent logic for loading.
+
+    For relative date modes (this_weekend, next_week, last_n, next_n, future), we always
+    use the runtime anchor (passed anchor_date or today). The config's stored anchor_date
+    is from when the query was saved and must not be used—otherwise "next 30 days" would
+    show dates from the save date instead of from today.
     """
     anchor = anchor_date or datetime.utcnow().strftime("%Y-%m-%d")
     params = {
@@ -71,10 +76,10 @@ def config_to_params(config: dict, anchor_date: str | None = None) -> dict:
         "sort_column": config.get("sort_column") or "",
         "sort_dir": config.get("sort_dir") or "asc",
     }
-    # For relative date modes, fill date_start/date_end or anchor
     mode = params["date_mode"]
     if mode == "this_weekend" and not params["date_start"]:
         params["date_start"], params["date_end"] = _compute_this_weekend(anchor)
-    elif mode in ("next_week", "last_n", "next_n", "future") and not params["anchor_date"]:
+    elif mode in ("next_week", "last_n", "next_n", "future"):
+        # Always use runtime anchor for relative modes; never use stale config.anchor_date
         params["anchor_date"] = anchor
     return params
