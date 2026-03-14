@@ -223,7 +223,7 @@
 </div>
 
 <!-- Digest modal (weekly email digest settings) -->
-<div id="ss-digest-modal" class="ss-digest-modal" style="display: none;" role="dialog" aria-labelledby="ss-digest-modal-title" aria-modal="true" data-email-verified="{{ 'true' if email_verified else 'false' }}">
+<div id="ss-digest-modal" class="ss-digest-modal" style="display: none;" role="dialog" aria-labelledby="ss-digest-modal-title" aria-modal="true" data-email-verified="{{ 'true' if email_verified else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}">
   <div class="ss-digest-modal-backdrop" onclick="ssCloseDigestModal()"></div>
   <div class="ss-digest-modal-box">
     <h3 id="ss-digest-modal-title" class="ss-digest-modal-title">Weekly email digest</h3>
@@ -251,6 +251,9 @@
       <div class="ss-digest-modal-actions">
         <button type="button" class="ss-digest-save-btn" id="ss-digest-save-btn" onclick="ssDigestSave()">Save</button>
         <button type="button" class="ss-digest-modal-cancel" onclick="ssCloseDigestModal()">Close</button>
+        {% if is_admin %}
+        <button type="button" id="ss-digest-send-test-btn" class="ss-digest-send-test-btn" onclick="ssDigestSendTest()" title="Send a test email now (admin only)">Send test now</button>
+        {% endif %}
       </div>
       <span id="ss-digest-message" class="ss-digest-message" style="display: none;"></span>
     </div>
@@ -1744,6 +1747,10 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
 
   function ssDeleteSavedQuery(id, el) {
+    var nameEl = el && el.querySelector('.ss-saved-query-name');
+    var name = nameEl ? nameEl.textContent.trim() : 'this query';
+    var msg = name ? 'Delete "' + name + '"? This cannot be undone.' : 'Delete this saved query? This cannot be undone.';
+    if (!confirm(msg)) return;
     var meta = document.querySelector('meta[name="csrf-token"]');
     var headers = { 'Content-Type': 'application/json' };
     if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
@@ -2098,6 +2105,34 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       .catch(function() {
         if (btn) btn.disabled = false;
         if (msgEl) { msgEl.textContent = 'Save failed.'; msgEl.style.color = '#721c24'; msgEl.style.display = 'inline'; }
+      });
+  };
+
+  window.ssDigestSendTest = function() {
+    var btn = document.getElementById('ss-digest-send-test-btn');
+    var msgEl = document.getElementById('ss-digest-message');
+    if (!btn) return;
+    if (btn) btn.disabled = true;
+    if (msgEl) msgEl.style.display = 'none';
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var headers = { 'Content-Type': 'application/json' };
+    if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
+    fetch('/sports-schedules/api/digest/send-test', {
+      method: 'POST',
+      headers: headers,
+      credentials: 'same-origin'
+    }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+      .then(function(res) {
+        if (btn) btn.disabled = false;
+        if (res.ok) {
+          if (msgEl) { msgEl.textContent = 'Test email sent.'; msgEl.style.color = '#155724'; msgEl.style.display = 'inline'; }
+        } else {
+          if (msgEl) { msgEl.textContent = res.data.error || 'Send failed.'; msgEl.style.color = '#721c24'; msgEl.style.display = 'inline'; }
+        }
+      })
+      .catch(function() {
+        if (btn) btn.disabled = false;
+        if (msgEl) { msgEl.textContent = 'Send failed.'; msgEl.style.color = '#721c24'; msgEl.style.display = 'inline'; }
       });
   };
 

@@ -108,6 +108,7 @@ def index():
         login_url=url_for("auth.login"),
         credits=current_user.credits if current_user.is_authenticated else 0,
         email_verified=current_user.email_verified if current_user.is_authenticated else False,
+        is_admin=getattr(current_user, "is_admin", False) if current_user.is_authenticated else False,
     )
 
 
@@ -491,3 +492,32 @@ def api_digest_put():
             "query_ids": query_ids_out,
         }
     })
+
+
+@sports_schedules_bp.route("/api/digest/send-test", methods=["POST"])
+def api_digest_send_test():
+    """Send digest email immediately (admin only, for testing). Bypasses Thursday/hour checks."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    if not getattr(current_user, "is_admin", False):
+        return jsonify({"error": "Admin only"}), 403
+
+    digest = (
+        SportsScheduleScheduledDigest.query.filter_by(user_id=current_user.id)
+        .options(
+            db.joinedload(SportsScheduleScheduledDigest.user),
+            db.selectinload(SportsScheduleScheduledDigest.digest_queries).selectinload(
+                SportsScheduleScheduledDigestQuery.saved_query
+            ),
+        )
+        .first()
+    )
+    if not digest:
+        return jsonify({"error": "No digest configured"}), 400
+
+    from app.projects.sports_schedules.commands import send_digest_immediately
+
+    success, err = send_digest_immediately(digest)
+    if success:
+        return jsonify({"ok": True, "message": "Test email sent."})
+    return jsonify({"error": err or "Send failed"}), 400

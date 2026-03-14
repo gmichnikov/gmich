@@ -15,6 +15,72 @@ from app import db
 logger = logging.getLogger(__name__)
 
 
+def send_digest_immediately(digest):
+    """
+    Send a digest email immediately, bypassing Thursday/hour checks.
+    Used for admin testing. Returns (success: bool, error: str | None).
+    """
+    from app.core.dolthub_client import DoltHubClient
+    from app.projects.sports_schedules.core.config_to_url import config_to_url_params
+    from app.projects.sports_schedules.core.query_builder import build_sql
+    from app.projects.sports_schedules.core.sample_queries import config_to_params
+    from app.projects.sports_schedules.email import send_digest_email
+
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    user = digest.user
+    try:
+        tz = ZoneInfo(user.time_zone or "UTC")
+    except Exception:
+        tz = ZoneInfo("UTC")
+    now = datetime.utcnow().replace(tzinfo=ZoneInfo("UTC"))
+    user_local = now.astimezone(tz)
+    anchor_ymd = user_local.strftime("%Y-%m-%d")
+
+    valid_dqs = [dq for dq in digest.digest_queries if dq.saved_query and dq.saved_query.user_id == digest.user_id]
+    if not valid_dqs:
+        return False, "No saved queries in digest"
+
+    if (user.credits or 0) < 1:
+        return False, "Insufficient credits"
+
+    if not user.email_verified:
+        return False, "Email not verified"
+
+    query_results = []
+    dolt = DoltHubClient()
+    for dq in valid_dqs:
+        sq = dq.saved_query
+        config = json.loads(sq.config) if isinstance(sq.config, str) else sq.config
+        params = config_to_params(config, anchor_date=anchor_ymd)
+        params["limit"] = 25
+        url = config_to_url_params(config, base_url, anchor_date=anchor_ymd)
+        sql, err = build_sql(params)
+        if err:
+            query_results.append({"name": sq.name, "rows": [], "count": False, "url": url, "error": err})
+            continue
+        result = dolt.execute_sql(sql)
+        if "error" in result:
+            query_results.append({"name": sq.name, "rows": [], "count": params.get("count", False), "url": url, "error": result["error"]})
+            continue
+        rows = result.get("rows", [])[:25]
+        query_results.append({"name": sq.name, "rows": rows, "count": params.get("count", False), "url": url, "error": None})
+
+    if not query_results:
+        return False, "No query results"
+
+    try:
+        send_digest_email(digest, query_results)
+        digest.last_sent_at = datetime.utcnow()
+        user.credits = (user.credits or 0) - 1
+        db.session.commit()
+        logger.info(f"Sent digest {digest.id} to {user.email} (test)")
+        return True, None
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to send digest {digest.id}: {e}")
+        return False, str(e)
+
+
 def init_app(app):
     app.cli.add_command(sports_schedules_cli)
 
