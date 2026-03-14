@@ -25,9 +25,20 @@ from app.projects.sports_schedules.core.nl_prompt import build_nl_prompt
 from app.projects.sports_schedules.core.nl_service import call_nl_llm
 from app.projects.sports_schedules.core.query_builder import build_sql
 from app.projects.sports_schedules.core.sample_queries import SAMPLE_QUERIES, config_to_params
-from app.projects.sports_schedules.models import SportsScheduleSavedQuery
+from app.projects.sports_schedules.models import (
+    SportsScheduleSavedQuery,
+    SportsScheduleScheduledDigest,
+    SportsScheduleScheduledDigestQuery,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _require_auth():
+    """Return (None, response) if ok, else (error_response, status_code)."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    return None, None
 
 sports_schedules_bp = Blueprint(
     "sports_schedules",
@@ -96,6 +107,7 @@ def index():
         is_authenticated=current_user.is_authenticated,
         login_url=url_for("auth.login"),
         credits=current_user.credits if current_user.is_authenticated else 0,
+        email_verified=current_user.email_verified if current_user.is_authenticated else False,
     )
 
 
@@ -377,3 +389,105 @@ def api_saved_queries_delete(query_id):
     db.session.delete(q)
     db.session.commit()
     return "", 204
+
+
+@sports_schedules_bp.route("/api/digest", methods=["GET"])
+def api_digest_get():
+    """Get the current user's digest settings. Requires login."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    digest = SportsScheduleScheduledDigest.query.filter_by(user_id=current_user.id).first()
+    if not digest:
+        return jsonify({"digest": None})
+    query_ids = [
+        dq.saved_query_id
+        for dq in sorted(digest.digest_queries, key=lambda dq: dq.sort_order)
+    ]
+    return jsonify({
+        "digest": {
+            "id": digest.id,
+            "schedule_hour": digest.schedule_hour,
+            "enabled": digest.enabled,
+            "last_sent_at": digest.last_sent_at.isoformat() if digest.last_sent_at else None,
+            "query_ids": query_ids,
+        }
+    })
+
+
+@sports_schedules_bp.route("/api/digest", methods=["PUT"])
+def api_digest_put():
+    """Create or update digest settings. Requires login."""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Login required"}), 401
+    if not current_user.email_verified:
+        return jsonify({"error": "Verify your email to use weekly digests"}), 400
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request body"}), 400
+
+    schedule_hour = data.get("schedule_hour")
+    if schedule_hour is None:
+        schedule_hour = 8
+    try:
+        schedule_hour = int(schedule_hour)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid schedule_hour"}), 400
+    if schedule_hour < 5 or schedule_hour > 22:
+        return jsonify({"error": "Schedule hour must be 5–22 (5am–10pm)"}), 400
+
+    enabled = data.get("enabled", False)
+    query_ids = data.get("query_ids") or []
+
+    if enabled and not query_ids:
+        return jsonify({"error": "Select at least one saved query"}), 400
+
+    # Validate each query_id belongs to current user
+    valid_ids = []
+    if query_ids:
+        owned = {
+            q.id for q in
+            SportsScheduleSavedQuery.query.filter(
+                SportsScheduleSavedQuery.id.in_(query_ids),
+                SportsScheduleSavedQuery.user_id == current_user.id,
+            ).all()
+        }
+        valid_ids = [qid for qid in query_ids if qid in owned]
+
+    digest = SportsScheduleScheduledDigest.query.filter_by(user_id=current_user.id).first()
+    if not digest:
+        digest = SportsScheduleScheduledDigest(
+            user_id=current_user.id,
+            schedule_hour=schedule_hour,
+            enabled=enabled,
+        )
+        db.session.add(digest)
+        db.session.flush()
+    else:
+        digest.schedule_hour = schedule_hour
+        digest.enabled = enabled
+
+    # Replace digest queries
+    SportsScheduleScheduledDigestQuery.query.filter_by(digest_id=digest.id).delete()
+    for i, qid in enumerate(valid_ids):
+        dq = SportsScheduleScheduledDigestQuery(
+            digest_id=digest.id,
+            saved_query_id=qid,
+            sort_order=i,
+        )
+        db.session.add(dq)
+
+    db.session.commit()
+
+    query_ids_out = [
+        dq.saved_query_id
+        for dq in sorted(digest.digest_queries, key=lambda dq: dq.sort_order)
+    ]
+    return jsonify({
+        "digest": {
+            "id": digest.id,
+            "schedule_hour": digest.schedule_hour,
+            "enabled": digest.enabled,
+            "last_sent_at": digest.last_sent_at.isoformat() if digest.last_sent_at else None,
+            "query_ids": query_ids_out,
+        }
+    })

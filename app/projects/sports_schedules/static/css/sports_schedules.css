@@ -303,6 +303,23 @@
   color: #6c757d;
 }
 
+.ss-digest-btn {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ss-digest-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
 .ss-saved-queries-content {
   padding: 0.75rem 1rem;
   overflow: hidden;
@@ -428,6 +445,189 @@
   font-size: 0.85rem;
   color: #6c757d;
   margin: 0;
+}
+
+/* ===== Weekly digest ===== */
+.ss-digest-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.ss-digest-header {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: #333;
+}
+
+.ss-digest-desc {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0 0 0.75rem 0;
+}
+
+.ss-digest-unverified {
+  font-size: 0.9rem;
+  color: #856404;
+  background: #fff3cd;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.ss-digest-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ss-digest-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ss-digest-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.ss-digest-hour-select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+.ss-digest-credits {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-left: 0.5rem;
+}
+
+.ss-digest-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ss-digest-queries-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ss-digest-queries-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.ss-digest-queries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ss-digest-query-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ss-digest-save-btn {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #0d6efd;
+  background: #0d6efd;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ss-digest-save-btn:hover {
+  background: #0b5ed7;
+  border-color: #0b5ed7;
+}
+
+.ss-digest-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ss-digest-message {
+  font-size: 0.9rem;
+}
+
+/* Digest modal (overlay) */
+.ss-digest-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.ss-digest-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.ss-digest-modal-box {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.ss-digest-modal-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.ss-digest-modal-desc {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0 0 1rem 0;
+}
+
+.ss-digest-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.ss-digest-modal-cancel {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.ss-digest-modal-cancel:hover {
+  background: #e9ecef;
 }
 
 /* ===== Save modal ===== */

@@ -107,6 +107,9 @@
       <div id="ss-saved-queries" class="ss-saved-queries" data-is-authenticated="{{ 'true' if is_authenticated else 'false' }}" data-login-url="{{ login_url }}">
         <div class="ss-saved-queries-header" onclick="ssToggleSavedQueries()" aria-expanded="true" aria-controls="ss-saved-queries-content">
           <span>Saved Queries <span class="ss-saved-queries-help" data-ss-tooltip="To add a Saved Query, click Save at the bottom of any data result" onclick="event.stopPropagation()">?</span></span>
+          {% if is_authenticated %}
+          <button type="button" class="ss-digest-btn" onclick="event.stopPropagation(); ssOpenDigestModal();" title="Weekly email digest">Email digest</button>
+          {% endif %}
           <span class="ss-saved-queries-toggle" id="ss-saved-queries-toggle">▼</span>
         </div>
         <div id="ss-saved-queries-content" class="ss-saved-queries-content" role="group">
@@ -216,6 +219,41 @@
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- Digest modal (weekly email digest settings) -->
+<div id="ss-digest-modal" class="ss-digest-modal" style="display: none;" role="dialog" aria-labelledby="ss-digest-modal-title" aria-modal="true" data-email-verified="{{ 'true' if email_verified else 'false' }}">
+  <div class="ss-digest-modal-backdrop" onclick="ssCloseDigestModal()"></div>
+  <div class="ss-digest-modal-box">
+    <h3 id="ss-digest-modal-title" class="ss-digest-modal-title">Weekly email digest</h3>
+    <p class="ss-digest-modal-desc">Get a weekly email every Thursday with results from your chosen saved queries.</p>
+    <div id="ss-digest-unverified" class="ss-digest-unverified" style="display: none;">Verify your email to use weekly digests.</div>
+    <div id="ss-digest-form" class="ss-digest-form" style="display: none;">
+      <div class="ss-digest-row">
+        <label class="ss-digest-label" for="ss-digest-hour">Send at:</label>
+        <select id="ss-digest-hour" class="ss-digest-hour-select">
+          {% for h in range(5, 23) %}
+          <option value="{{ h }}">{{ h % 12 or 12 }}{% if h < 12 %}am{% else %}pm{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="ss-digest-row">
+        <label class="ss-digest-toggle-wrap">
+          <input type="checkbox" id="ss-digest-enabled" class="ss-digest-enabled-cb">
+          <span>Enable digest</span>
+        </label>
+      </div>
+      <div class="ss-digest-queries-wrap">
+        <span class="ss-digest-queries-label">Include these saved queries:</span>
+        <div id="ss-digest-queries-list" class="ss-digest-queries-list"></div>
+      </div>
+      <div class="ss-digest-modal-actions">
+        <button type="button" class="ss-digest-save-btn" id="ss-digest-save-btn" onclick="ssDigestSave()">Save</button>
+        <button type="button" class="ss-digest-modal-cancel" onclick="ssCloseDigestModal()">Close</button>
+      </div>
+      <span id="ss-digest-message" class="ss-digest-message" style="display: none;"></span>
+    </div>
   </div>
 </div>
 
@@ -1746,6 +1784,16 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     if (modal) modal.style.display = 'none';
   };
 
+  window.ssOpenDigestModal = function() {
+    var modal = document.getElementById('ss-digest-modal');
+    if (modal) modal.style.display = 'flex';
+  };
+
+  window.ssCloseDigestModal = function() {
+    var modal = document.getElementById('ss-digest-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
   function ssSubmitSave() {
     var inp = document.getElementById('ss-save-modal-name');
     var errEl = document.getElementById('ss-save-modal-error');
@@ -1959,12 +2007,106 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
   }
 
+  function ssInitDigest() {
+    var modal = document.getElementById('ss-digest-modal');
+    if (!modal) return;
+    var emailVerified = modal.getAttribute('data-email-verified') === 'true';
+    var unverified = document.getElementById('ss-digest-unverified');
+    var form = document.getElementById('ss-digest-form');
+    if (!emailVerified) {
+      if (unverified) unverified.style.display = 'block';
+      if (form) form.style.display = 'none';
+      return;
+    }
+    if (unverified) unverified.style.display = 'none';
+    if (form) form.style.display = 'block';
+    Promise.all([
+      fetch('/sports-schedules/api/digest').then(function(r) { return r.json(); }),
+      fetch('/sports-schedules/api/saved-queries').then(function(r) { return r.json(); })
+    ]).then(function(results) {
+      var digestData = results[0];
+      var savedData = results[1];
+      var digest = digestData.digest;
+      var userQueries = savedData.user_queries || [];
+      var queryIds = digest ? digest.query_ids || [] : [];
+      var hourSel = document.getElementById('ss-digest-hour');
+      var enabledCb = document.getElementById('ss-digest-enabled');
+      var listEl = document.getElementById('ss-digest-queries-list');
+      if (hourSel) hourSel.value = digest ? String(digest.schedule_hour) : '8';
+      if (enabledCb) enabledCb.checked = digest ? digest.enabled : false;
+      if (listEl) {
+        listEl.innerHTML = '';
+        userQueries.forEach(function(q) {
+          var label = document.createElement('label');
+          label.className = 'ss-digest-query-checkbox';
+          var cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.value = String(q.id);
+          cb.checked = queryIds.indexOf(q.id) >= 0;
+          label.appendChild(cb);
+          label.appendChild(document.createTextNode(' ' + (q.name || '')));
+          listEl.appendChild(label);
+        });
+      }
+    }).catch(function() {
+      var msg = document.getElementById('ss-digest-message');
+      if (msg) { msg.textContent = 'Failed to load digest settings.'; msg.style.display = 'inline'; }
+    });
+  }
+
+  window.ssDigestSave = function() {
+    var enabledCb = document.getElementById('ss-digest-enabled');
+    var hourSel = document.getElementById('ss-digest-hour');
+    var listEl = document.getElementById('ss-digest-queries-list');
+    var msgEl = document.getElementById('ss-digest-message');
+    var btn = document.getElementById('ss-digest-save-btn');
+    if (!enabledCb || !hourSel || !listEl) return;
+    var enabled = enabledCb.checked;
+    var queryIds = [];
+    listEl.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+      queryIds.push(parseInt(cb.value, 10));
+    });
+    if (enabled && queryIds.length === 0) {
+      if (msgEl) { msgEl.textContent = 'Select at least one saved query.'; msgEl.style.display = 'inline'; msgEl.style.color = '#721c24'; }
+      return;
+    }
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var headers = { 'Content-Type': 'application/json' };
+    if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
+    if (btn) btn.disabled = true;
+    if (msgEl) msgEl.style.display = 'none';
+    fetch('/sports-schedules/api/digest', {
+      method: 'PUT',
+      headers: headers,
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        schedule_hour: parseInt(hourSel.value, 10),
+        enabled: enabled,
+        query_ids: queryIds
+      })
+    }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+      .then(function(res) {
+        if (btn) btn.disabled = false;
+        if (res.ok) {
+          if (msgEl) { msgEl.textContent = 'Saved.'; msgEl.style.color = '#155724'; msgEl.style.display = 'inline'; }
+          var creditsEl = document.getElementById('ss-digest-credits-count');
+          if (creditsEl && res.data && res.data.digest !== undefined) { /* credits unchanged on save */ }
+        } else {
+          if (msgEl) { msgEl.textContent = res.data.error || 'Save failed.'; msgEl.style.color = '#721c24'; msgEl.style.display = 'inline'; }
+        }
+      })
+      .catch(function() {
+        if (btn) btn.disabled = false;
+        if (msgEl) { msgEl.textContent = 'Save failed.'; msgEl.style.color = '#721c24'; msgEl.style.display = 'inline'; }
+      });
+  };
+
   function ssInitWithPromptSaveCheck() {
     ssInitSidebarState();
     ssInitAutoRunToggle();
     ssInitFromUrl();
     var isAuth = document.getElementById('ss-saved-queries') && document.getElementById('ss-saved-queries').getAttribute('data-is-authenticated') === 'true';
-    if (isAuth) ssInitNlModal();
+    if (isAuth) { ssInitNlModal(); ssInitDigest(); }
     var params = new URLSearchParams(window.location.search);
     var promptSave = params.get('prompt_save') === '1';
     if (promptSave && isAuth) {
