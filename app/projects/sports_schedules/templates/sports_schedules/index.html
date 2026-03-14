@@ -973,7 +973,13 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
           return;
         }
         var rows = data.rows || [];
-        if (params.get('sort_column') === 'time' && rows.length > 0) {
+        var sortCol = params.get('sort_column') || '';
+        var countOn = document.getElementById('ss-count') && document.getElementById('ss-count').checked;
+        if (!sortCol && !countOn) {
+          var dims = (params.get('dimensions') || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+          sortCol = dims[0] || '';
+        }
+        if (sortCol === 'time' && rows.length > 0) {
           var dir = (params.get('sort_dir') || 'asc') === 'asc' ? 1 : -1;
           rows = rows.slice().sort(function(a, b) {
             var ma = ssParseTimeToMinutes(a.time);
@@ -983,8 +989,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
             return dir * (ta - tb);
           });
         }
-        if (params.get('sort_column')) {
-          window._ssSortState = { col: params.get('sort_column'), dir: params.get('sort_dir') || 'asc' };
+        if (sortCol) {
+          window._ssSortState = { col: sortCol, dir: params.get('sort_dir') || 'asc' };
         } else {
           window._ssSortState = { col: null, dir: 'asc' };
         }
