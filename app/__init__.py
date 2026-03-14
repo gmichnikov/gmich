@@ -164,7 +164,11 @@ def create_app():
         MealsFamilyMember,
         MealsEntry,
     )
-    from app.projects.sports_schedules.models import SportsScheduleSavedQuery
+    from app.projects.sports_schedules.models import (
+        SportsScheduleSavedQuery,
+        SportsScheduleScheduledDigest,
+        SportsScheduleScheduledDigestQuery,
+    )
     from app.projects.reminders.models import Reminder
     from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto
 
