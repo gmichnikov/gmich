@@ -634,6 +634,7 @@
 
   const autocompleteEl = document.getElementById("docs-demo-autocomplete");
   const helpBtn = document.getElementById("docs-demo-help-btn");
+  const sendBtn = document.getElementById("docs-demo-send-btn");
 
   let autocompleteFilteredCommands = [];
   let autocompleteSelectedIndex = 0;
@@ -759,6 +760,13 @@
     });
     commandInput.addEventListener("blur", function () {
       setTimeout(hideAutocomplete, 200);
+    });
+  }
+
+  if (sendBtn) {
+    sendBtn.addEventListener('click', function () {
+      hideAutocomplete();
+      handleSubmit();
     });
   }
 

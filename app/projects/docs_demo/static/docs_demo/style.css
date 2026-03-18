@@ -562,6 +562,31 @@
   margin-left: 8px;
 }
 
+.docs-demo-send-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #1a73e8;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.docs-demo-send-btn svg {
+  width: 13px;
+  height: 13px;
+  color: #fff;
+}
+
+.docs-demo-send-btn:hover {
+  background: #1765cc;
+}
+
 .docs-demo-help-btn {
   width: 24px;
   height: 24px;
