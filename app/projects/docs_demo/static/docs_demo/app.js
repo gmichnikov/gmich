@@ -366,7 +366,7 @@
     window.docsDemo.setLoading(true);
     const docText = getDocumentText();
     const reviewPrompt =
-      'You are a writing editor. Review this document and provide passage-level feedback. Return a JSON array of objects, each with "target" (exact quote from the document) and "comment" (your feedback). Quote the target text exactly as it appears. Keep each comment to 1-2 sentences. Example: [{"target":"exact phrase","comment":"Brief feedback here."}]';
+      'You are a writing editor. Review this document and provide passage-level feedback. Return a JSON array of 2 to 4 objects (no more than 4), each with "target" (exact quote from the document) and "comment" (your feedback). Quote the target text exactly as it appears. Keep each comment to 1-2 sentences. Example: [{"target":"exact phrase","comment":"Brief feedback here."}]';
     const commentPrompt = extra
       ? 'You are a writing editor. The user wants you to look for: "' +
         extra +
@@ -886,6 +886,7 @@
 
   const aboutBtn = document.getElementById("docs-demo-about-btn");
   const sampleBtn = document.getElementById("docs-demo-sample-btn");
+  const runDemoBtn = document.getElementById("docs-demo-rundemo-btn");
 
   if (aboutBtn) {
     aboutBtn.addEventListener("click", function () {
@@ -930,9 +931,74 @@
           const html = options[Math.floor(Math.random() * options.length)];
           loadSampleText(html);
           document.body.removeChild(overlay);
+          showDemoTooltip('Now type / in the pill below');
+          setTimeout(hideDemoTooltip, 3500);
         });
         optionsEl.appendChild(btn);
       });
+    });
+  }
+
+  function showDemoTooltip(text) {
+    var existing = document.getElementById('docs-demo-demo-tooltip');
+    if (existing) existing.remove();
+    var tip = document.createElement('div');
+    tip.id = 'docs-demo-demo-tooltip';
+    tip.className = 'docs-demo-demo-tooltip';
+    tip.textContent = text;
+    if (commandPillWrapper) {
+      commandPillWrapper.style.position = 'relative';
+      commandPillWrapper.appendChild(tip);
+    }
+    return tip;
+  }
+
+  function hideDemoTooltip() {
+    var tip = document.getElementById('docs-demo-demo-tooltip');
+    if (tip) tip.remove();
+  }
+
+  if (runDemoBtn) {
+    runDemoBtn.addEventListener('click', function () {
+      runDemoBtn.disabled = true;
+
+      // Step 1: show tooltip then load sample text
+      showDemoTooltip('Writing some text…');
+      setTimeout(function () {
+        loadSampleText(SAMPLE_TEXTS['Fake student writing'][0]);
+      }, 400);
+
+      // Step 2: focus pill, type /, show autocomplete
+      setTimeout(function () {
+        if (!commandInput) return;
+        commandInput.focus();
+        commandInput.value = '/';
+        showAutocomplete('/');
+        showDemoTooltip('Typing a slash command…');
+      }, 1900);
+
+      // Step 3: highlight /review in autocomplete
+      setTimeout(function () {
+        autocompleteSelectedIndex = autocompleteFilteredCommands.indexOf('/review');
+        if (autocompleteSelectedIndex < 0) autocompleteSelectedIndex = 0;
+        updateAutocompleteSelection();
+        showDemoTooltip('Selecting /review…');
+      }, 5200);
+
+      // Step 4: select it — fills the input
+      setTimeout(function () {
+        selectAutocompleteItem('/review');
+        showDemoTooltip('Running /review…');
+      }, 7400);
+
+      // Step 5: submit
+      setTimeout(function () {
+        hideDemoTooltip();
+        hideAutocomplete();
+        handleCommentsCommand('/review', '');
+        if (commandInput) commandInput.value = '/review';
+        runDemoBtn.disabled = false;
+      }, 9200);
     });
   }
 
