@@ -1,0 +1,39 @@
+/* Docs Demo - prefixed styles to avoid collisions across projects */
+
+.docs-demo-shell {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.docs-demo-page {
+    background: var(--docs-demo-bg, #fff);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.docs-demo-header {
+    margin-bottom: 1.5rem;
+}
+
+.docs-demo-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.docs-demo-subtitle {
+    color: #666;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.docs-demo-body {
+    line-height: 1.6;
+}
+
+.docs-demo-intro {
+    margin: 0;
+    color: #444;
+}

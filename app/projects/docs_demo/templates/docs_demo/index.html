@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Docs Demo{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('docs_demo.static', filename='docs_demo/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="docs-demo-shell">
+    <div class="docs-demo-page">
+        <header class="docs-demo-header">
+            <h1 class="docs-demo-title">Docs Demo</h1>
+            <p class="docs-demo-subtitle">A simple demo project — no login required, no database.</p>
+        </header>
+        <div class="docs-demo-body">
+            <p class="docs-demo-intro">This project is set up as a minimal example that does not require authentication or database access.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -90,6 +90,7 @@ def create_app():
     from app.projects.randomizer.routes import randomizer_bp
     from app.projects.reminders.routes import reminders_bp
     from app.projects.travel_log.routes import travel_log_bp
+    from app.projects.docs_demo.routes import docs_demo_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -124,6 +125,7 @@ def create_app():
     app.register_blueprint(randomizer_bp, url_prefix="/randomizer")
     app.register_blueprint(reminders_bp)
     app.register_blueprint(travel_log_bp)
+    app.register_blueprint(docs_demo_bp, url_prefix="/docs-demo")
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

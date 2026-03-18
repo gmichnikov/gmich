@@ -377,6 +377,17 @@ PROJECTS = [
         "icon": "✈️",
         "order": 18,
     },
+    {
+        "id": "docs_demo",
+        "name": "Docs Demo",
+        "description": "A simple demo project — no login, no database",
+        "url": "/docs-demo",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "📄",
+        "order": 19,
+    },
 ]
 
 
