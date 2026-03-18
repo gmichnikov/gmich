@@ -63,17 +63,7 @@
     </button>
 
     <div class="docs-demo-gemini-btn" id="docs-demo-gemini-btn" title="Toggle AI (Gemini)">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 2C12 2 13.5 7.5 16 10C18.5 12.5 22 12 22 12C22 12 18.5 13.5 16 16C13.5 18.5 12 22 12 22C12 22 10.5 16.5 8 14C5.5 11.5 2 12 2 12C2 12 5.5 10.5 8 8C10.5 5.5 12 2 12 2Z" fill="url(#docs-demo-gemini-grad)"/>
-        <defs>
-          <linearGradient id="docs-demo-gemini-grad" x1="2" y1="2" x2="22" y2="22">
-            <stop stop-color="#4285F4"/>
-            <stop offset="0.33" stop-color="#9B72CB"/>
-            <stop offset="0.66" stop-color="#D96570"/>
-            <stop offset="1" stop-color="#D96570"/>
-          </linearGradient>
-        </defs>
-      </svg>
+      <img src="{{ url_for('docs_demo.static', filename='docs_demo/Gemini-icon.png') }}" alt="Gemini" class="docs-demo-gemini-icon-img">
     </div>
 
     <div class="docs-demo-avatar" title="Account">A</div>
@@ -155,6 +145,7 @@
 <div class="docs-demo-command-pill-wrapper" id="docs-demo-command-pill-wrapper">
   <div class="docs-demo-command-pill" id="docs-demo-command-pill">
     <div class="docs-demo-command-row">
+      <img src="{{ url_for('docs_demo.static', filename='docs_demo/Gemini-icon.png') }}" alt="Gemini" class="docs-demo-pill-gemini-icon">
       <div class="docs-demo-command-input-wrap">
         <textarea id="docs-demo-command-input" placeholder="Type / for commands or ask Gemini anything..." rows="1"></textarea>
         <div class="docs-demo-autocomplete" id="docs-demo-autocomplete"></div>
@@ -171,7 +162,6 @@
   <div class="docs-demo-status-left">
     <span>1 of 1</span>
     <span id="docs-demo-word-count">0 words</span>
-    <span id="docs-demo-debug-response" style="margin-left:1em;color:#888;font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="Last LLM response"></span>
   </div>
   <div class="docs-demo-status-right">
     <div class="docs-demo-zoom-control">100%</div>

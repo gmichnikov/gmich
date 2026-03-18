@@ -35,9 +35,7 @@ def generate_text(prompt: str, text: str) -> str:
         contents=full_prompt,
         config={"max_output_tokens": MAX_OUTPUT_TOKENS},
     )
-    result = (response.text or "").strip()
-    logger.info("generate_text result (%d chars): %s", len(result), repr(result[:200]) + ("..." if len(result) > 200 else ""))
-    return result
+    return (response.text or "").strip()
 
 
 def generate_comments(prompt: str, document_text: str) -> list[dict]:

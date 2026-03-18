@@ -14,7 +14,6 @@
   const errorEl = document.getElementById('docs-demo-error');
   const spinnerEl = document.getElementById('docs-demo-spinner');
   const wordCountEl = document.getElementById('docs-demo-word-count');
-  const debugResponseEl = document.getElementById('docs-demo-debug-response');
 
   let savedSelection = null;
   let savedSelectionText = '';
@@ -308,10 +307,6 @@
       .then(function (data) {
         if (data.error) throw new Error(data.error);
         const result = data.result || '';
-        console.log('[docs-demo] LLM response:', result);
-        if (window.docsDemo && window.docsDemo.setDebugResponse) {
-          window.docsDemo.setDebugResponse(result);
-        }
         applyTextResult(result, isBrainstorm, hadSelection);
       })
       .catch(function (err) {
@@ -352,12 +347,17 @@
       });
   }
 
+  function normalizeWS(str) {
+    return str.replace(/\s+/g, ' ').trim();
+  }
+
   function renderComments(comments) {
     if (!commentsGutter) return;
     commentsGutter.innerHTML = '';
     if (comments.length === 0) return;
 
     const docText = getDocumentText();
+    const normDocText = normalizeWS(docText);
     const highlights = [];
     let id = 0;
 
@@ -366,16 +366,35 @@
       const comment = (c.comment || '').trim();
       if (!target || !comment) return;
 
-      const idx = docText.indexOf(target);
-      if (idx < 0) return;
+      // Try exact match, then whitespace-normalized match
+      let idx = docText.indexOf(target);
+      let matchedTarget = target;
+      if (idx < 0) {
+        const normTarget = normalizeWS(target);
+        const normIdx = normDocText.indexOf(normTarget);
+        if (normIdx < 0) return; // truly not found
+        idx = normIdx;
+        matchedTarget = normTarget;
+      }
 
       const span = document.createElement('span');
       span.className = 'docs-demo-comment-card';
       span.dataset.commentId = String(id);
-      span.innerHTML = '<div class="docs-demo-comment-text">' + escapeHtml(comment) + '</div>';
+      span.innerHTML = '<div class="docs-demo-comment-body"><div class="docs-demo-comment-text">' + escapeHtml(comment) + '</div><button class="docs-demo-resolve-btn" title="Resolve comment" aria-label="Resolve">&#10003;</button></div>';
       commentsGutter.appendChild(span);
 
-      highlights.push({ target: target, idx: idx, id: id });
+      span.querySelector('.docs-demo-resolve-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        const cid = span.dataset.commentId;
+        pageContent.querySelectorAll('.docs-demo-comment-highlight[data-comment-id="' + cid + '"]').forEach(function (hl) {
+          const parent = hl.parentNode;
+          while (hl.firstChild) parent.insertBefore(hl.firstChild, hl);
+          parent.removeChild(hl);
+        });
+        span.remove();
+      });
+
+      highlights.push({ target: matchedTarget, idx: idx, id: id });
       id++;
     });
 
@@ -409,9 +428,41 @@
       const fullText = data.fullText;
       const map = data.map;
 
-      const idx = fullText.indexOf(h.target, h.idx);
+      // Search with normalized whitespace since innerText and textContent diverge at block boundaries
+      const normFull = normalizeWS(fullText);
+      const normTarget = normalizeWS(h.target);
+      let idx = normFull.indexOf(normTarget);
       if (idx < 0) return;
-      const end = idx + h.target.length;
+
+      // Map normalized index back to raw fullText index by counting non-collapsed chars
+      let rawIdx = 0;
+      let normPos = 0;
+      let wsCollapsed = false;
+      for (let i = 0; i < fullText.length && normPos < idx; i++) {
+        if (/\s/.test(fullText[i])) {
+          if (!wsCollapsed) { normPos++; wsCollapsed = true; }
+        } else {
+          normPos++;
+          wsCollapsed = false;
+        }
+        rawIdx = i + 1;
+      }
+
+      // Find actual end in raw text by matching normalized length
+      let rawEnd = rawIdx;
+      let normLen = 0;
+      wsCollapsed = false;
+      for (let i = rawIdx; i < fullText.length && normLen < normTarget.length; i++) {
+        if (/\s/.test(fullText[i])) {
+          if (!wsCollapsed) { normLen++; wsCollapsed = true; }
+        } else {
+          normLen++;
+          wsCollapsed = false;
+        }
+        rawEnd = i + 1;
+      }
+
+      const end = rawEnd;
 
       for (let i = 0; i < map.length; i++) {
         const m = map[i];
@@ -621,12 +672,6 @@
       if (errorEl) {
         errorEl.textContent = '';
         errorEl.style.display = 'none';
-      }
-    },
-    setDebugResponse: function (text) {
-      if (debugResponseEl) {
-        debugResponseEl.textContent = 'LLM returned: ' + (text || '(empty)');
-        debugResponseEl.title = text || '';
       }
     },
     setLoading: function (loading) {

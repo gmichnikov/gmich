@@ -118,7 +118,7 @@
   position: relative;
 }
 .docs-demo-gemini-btn:hover { background: rgba(66,133,244,0.08); }
-.docs-demo-gemini-btn svg { width: 22px; height: 22px; }
+.docs-demo-gemini-icon-img { width: 22px; height: 22px; display: block; }
 
 .docs-demo-share-btn {
   display: flex; align-items: center; gap: 8px;
@@ -315,6 +315,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.docs-demo-pill-gemini-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
 }
 
 .docs-demo-command-pill textarea {
@@ -531,9 +537,46 @@
   border-left: 4px solid #1a73e8;
 }
 
+.docs-demo-comment-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 .docs-demo-comment-text {
   color: #202124;
   word-wrap: break-word;
+  flex: 1;
+}
+
+.docs-demo-resolve-btn {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #dadce0;
+  border-radius: 50%;
+  background: #fff;
+  color: #5f6368;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.docs-demo-comment-card:hover .docs-demo-resolve-btn,
+.docs-demo-comment-card.docs-demo-active .docs-demo-resolve-btn {
+  opacity: 1;
+}
+
+.docs-demo-resolve-btn:hover {
+  background: #e6f4ea;
+  border-color: #34a853;
+  color: #34a853;
 }
 
 /* Error message */
