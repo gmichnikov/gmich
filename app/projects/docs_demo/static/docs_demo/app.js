@@ -21,6 +21,17 @@
   let savedSelectionText = "";
 
   const SLASH_COMMANDS = {
+    "/review": {
+      label: "Feedback throughout the doc",
+      type: "comments",
+      requiresSelection: false,
+    },
+    "/comment": {
+      label: "e.g. /comment look for passive voice",
+      type: "comments",
+      requiresSelection: false,
+      requiresExtraText: true,
+    },
     "/more_formal": {
       label: "Make more formal",
       prompt:
@@ -55,17 +66,6 @@
         "Convert the following prose into a concise bullet list. Each bullet should be a short, clear point extracted from the text. Return only the bullet list (use - for each item), no intro text, no explanation:\n\n{text}",
       requiresSelection: false,
       type: "text",
-    },
-    "/review": {
-      label: "Passage-level feedback",
-      type: "comments",
-      requiresSelection: false,
-    },
-    "/comment": {
-      label: "e.g. /comment look for passive voice",
-      type: "comments",
-      requiresSelection: false,
-      requiresExtraText: true,
     },
   };
 
@@ -306,7 +306,9 @@
         return;
       }
       if (def.requiresSelection && !selectedText) {
-        window.docsDemo.showError("Please select text or add content to bulletize.");
+        window.docsDemo.showError(
+          "Please select text or add content to bulletize.",
+        );
         return;
       }
 
@@ -689,15 +691,15 @@
     autocompleteEl.innerHTML = autocompleteFilteredCommands
       .map(function (cmd) {
         const def = SLASH_COMMANDS[cmd];
-        const label = def ? def.label : cmd;
+        const isComments = def && def.type === "comments";
+        const label = isComments && def.label ? def.label : "";
         return (
           '<div class="docs-demo-autocomplete-item" data-cmd="' +
           escapeHtml(cmd) +
           '">' +
           escapeHtml(cmd) +
-          " <span>" +
-          escapeHtml(label) +
-          "</span></div>"
+          (label ? " <span>" + escapeHtml(label) + "</span>" : "") +
+          "</div>"
         );
       })
       .join("");
@@ -784,27 +786,29 @@
       const popup = document.createElement("div");
       popup.className = "docs-demo-help-popup";
       popup.style.cssText =
-        "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #dadce0;border-radius:12px;padding:16px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:1000;max-width:480px;";
+        "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #dadce0;border-radius:12px;padding:16px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:1000;max-width:640px;";
       const tableRows = Object.keys(SLASH_COMMANDS)
         .map(function (cmd) {
           const d = SLASH_COMMANDS[cmd];
+          const isComments = d.type === "comments";
           let code = d.requiresExtraText ? cmd + " <instructions>" : cmd;
-          const label = d.label || cmd;
-          const selLabel = getSelectionLabel(d);
+          const descCell = isComments
+            ? '<td class="docs-demo-help-desc">' +
+              escapeHtml(d.label || cmd) +
+              "</td>"
+            : '<td class="docs-demo-help-desc"></td>';
           return (
             '<tr><td class="docs-demo-help-cmd"><code>' +
             escapeHtml(code) +
-            '</code></td><td class="docs-demo-help-desc">' +
-            escapeHtml(label) +
-            '</td><td class="docs-demo-help-sel">' +
-            escapeHtml(selLabel) +
-            "</td></tr>"
+            "</code></td>" +
+            descCell +
+            "</tr>"
           );
         })
         .join("");
       popup.innerHTML =
         '<div class="docs-demo-help-title">Commands</div>' +
-        '<table class="docs-demo-help-table"><thead><tr><th>Command</th><th>Description</th><th>Operates on</th></tr></thead><tbody>' +
+        '<table class="docs-demo-help-table"><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>' +
         tableRows +
         "</tbody></table>";
       const overlay = document.createElement("div");
@@ -909,13 +913,9 @@
         "<p>The first idea is re-using Docos as the interface for Gemini to give feedback on the doc. I think Docos are one of the defining features of Docs, and I think this feedback format would make some users more likely to opt for Docs over LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus), and they move away from having everything as a single unwieldy conversation in the sidebar. Gemini could periodically scan and provide feedback in comments while you are writing.</p>",
         "<p>The second idea is introducing slash commands / skills as a new entry point for writing improvement features. These are common in many AI powered editors and I think they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands that you can use (including 2 that provide feedback in Docos), but Docs would allow users to define their own commands. The commands in this demo are:</p>",
         "<ul>",
-        "<li><strong>/more_formal</strong> — rewrites the text in a more formal, professional tone</li>",
-        "<li><strong>/more_casual</strong> — rewrites the text in a more casual, conversational tone</li>",
-        "<li><strong>/elaborate</strong> — elaborates with more detail</li>",
-        "<li><strong>/summarize</strong> — condenses the text into a shorter summary</li>",
-        "<li><strong>/bulletize</strong> — converts prose into bullet points (selection or full doc)</li>",
-        "<li><strong>/review</strong> — adds AI comments to the document with passage-level feedback</li>",
-        "<li><strong>/comment [instructions]</strong> — adds targeted comments based on your instructions, e.g. <em>/comment look for passive voice</em></li>",
+        "<li><strong>/review</strong> — adds comments with suggested improvements throughout the doc</li>",
+        "<li><strong>/comment [instructions]</strong> — adds comments based on your instructions, e.g. <em>/comment look for passive voice</em></li>",
+        "<li><strong>/more_formal</strong>, <strong>/more_casual</strong>, <strong>/elaborate</strong>, <strong>/summarize</strong>, <strong>/bulletize</strong></li>",
         "</ul>",
         '<button class="docs-demo-modal-close-btn" id="docs-demo-about-close">Got it</button>',
       ].join("");
