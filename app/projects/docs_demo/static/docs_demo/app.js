@@ -21,17 +21,24 @@
   let savedSelectionText = "";
 
   const SLASH_COMMANDS = {
-    "/improve": {
-      label: "Polish and clarify",
+    "/more_formal": {
+      label: "Make more formal",
       prompt:
-        "Rewrite the following text to be clearer, more concise, and more professional. Return only the improved text, no explanation:\n\n{text}",
+        "Rewrite the following text in a more formal, professional tone. Preserve the meaning. Return only the rewritten text, no explanation:\n\n{text}",
       requiresSelection: false,
       type: "text",
     },
-    "/expand": {
-      label: "Add detail, elaborate",
+    "/more_casual": {
+      label: "Make more casual",
       prompt:
-        "Elaborate on the following text with more detail and supporting points. Return only the expanded text, no explanation:\n\n{text}",
+        "Rewrite the following text in a more casual, conversational tone. Preserve the meaning. Return only the rewritten text, no explanation:\n\n{text}",
+      requiresSelection: false,
+      type: "text",
+    },
+    "/elaborate": {
+      label: "Elaborate",
+      prompt:
+        "Elaborate on the following text with more detail and supporting points. Return only the elaborated text, no explanation:\n\n{text}",
       requiresSelection: false,
       type: "text",
     },
@@ -42,11 +49,11 @@
       requiresSelection: false,
       type: "text",
     },
-    "/brainstorm": {
-      label: "Bullet-point ideas",
+    "/bulletize": {
+      label: "Turn into bullets",
       prompt:
-        "Generate exactly 3 to 5 bullet-point ideas about the following topic. Return only the bullet list (use - for each item), no intro text, no explanation, no extra items:\n\n{text}",
-      requiresSelection: true,
+        "Convert the following prose into a concise bullet list. Each bullet should be a short, clear point extracted from the text. Return only the bullet list (use - for each item), no intro text, no explanation:\n\n{text}",
+      requiresSelection: false,
       type: "text",
     },
     "/review": {
@@ -205,21 +212,18 @@
           ul.appendChild(li);
         }
       });
-      // Insert after the selection marker span if it exists, otherwise after savedSelection
+      // Replace the selection (or marker span) with the <ul>
       if (selectionMarkerSpan && selectionMarkerSpan.parentNode) {
-        selectionMarkerSpan.parentNode.insertBefore(
-          ul,
-          selectionMarkerSpan.nextSibling,
-        );
+        selectionMarkerSpan.parentNode.replaceChild(ul, selectionMarkerSpan);
+        selectionMarkerSpan = null;
       } else if (
         savedSelection &&
         pageContent.contains(savedSelection.commonAncestorContainer)
       ) {
-        const range = savedSelection.cloneRange();
-        range.collapse(false);
-        range.insertNode(ul);
+        savedSelection.deleteContents();
+        savedSelection.insertNode(ul);
       } else {
-        pageContent.appendChild(ul);
+        replaceFullDocument(text);
       }
     } else if (
       hadSelection &&
@@ -302,12 +306,12 @@
         return;
       }
       if (def.requiresSelection && !selectedText) {
-        window.docsDemo.showError("Please select text to brainstorm about.");
+        window.docsDemo.showError("Please select text or add content to bulletize.");
         return;
       }
 
       const prompt = def.prompt.replace(/{text}/g, text);
-      callGenerateText(prompt, text, cmd === "/brainstorm", !!selectedText);
+      callGenerateText(prompt, text, cmd === "/bulletize", !!selectedText);
     } else {
       const selectedText = savedSelectionText;
       const text = selectedText || getDocumentText();
@@ -905,10 +909,11 @@
         "<p>The first idea is re-using Docos as the interface for Gemini to give feedback on the doc. I think Docos are one of the defining features of Docs, and I think this feedback format would make some users more likely to opt for Docs over LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus), and they move away from having everything as a single unwieldy conversation in the sidebar. Gemini could periodically scan and provide feedback in comments while you are writing.</p>",
         "<p>The second idea is introducing slash commands / skills as a new entry point for writing improvement features. These are common in many AI powered editors and I think they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands that you can use (including 2 that provide feedback in Docos), but Docs would allow users to define their own commands. The commands in this demo are:</p>",
         "<ul>",
-        "<li><strong>/improve</strong> — rewrites your text to be clearer and more professional</li>",
-        "<li><strong>/expand</strong> — adds more detail and elaboration</li>",
+        "<li><strong>/more_formal</strong> — rewrites the text in a more formal, professional tone</li>",
+        "<li><strong>/more_casual</strong> — rewrites the text in a more casual, conversational tone</li>",
+        "<li><strong>/elaborate</strong> — elaborates with more detail</li>",
         "<li><strong>/summarize</strong> — condenses the text into a shorter summary</li>",
-        "<li><strong>/brainstorm</strong> — generates bullet-point ideas (select a topic first)</li>",
+        "<li><strong>/bulletize</strong> — converts prose into bullet points (selection or full doc)</li>",
         "<li><strong>/review</strong> — adds AI comments to the document with passage-level feedback</li>",
         "<li><strong>/comment [instructions]</strong> — adds targeted comments based on your instructions, e.g. <em>/comment look for passive voice</em></li>",
         "</ul>",
