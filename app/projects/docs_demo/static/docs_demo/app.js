@@ -764,7 +764,7 @@
   }
 
   if (sendBtn) {
-    sendBtn.addEventListener('click', function () {
+    sendBtn.addEventListener("click", function () {
       hideAutocomplete();
       handleSubmit();
     });
@@ -902,7 +902,8 @@
       content.innerHTML = [
         '<h2 class="docs-demo-modal-title">About this demo</h2>',
         "<p>This demo includes two ideas for Gemini in Google Docs.</p>",
-        "<p>The first idea is slash commands / skills. These are common in many AI powered editors and I think they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands that you can use, but Docs would allow users to define their own commands.</p>",
+        "<p>The first idea is re-using Docos as the interface for Gemini to give feedback on the doc. I think Docos are one of the defining features of Docs, and I think this feedback format would make some users more likely to opt for Docs over LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus), and they move away from having everything as a single unwieldy conversation in the sidebar. Gemini could periodically scan and provide feedback in comments while you are writing.</p>",
+        "<p>The second idea is introducing slash commands / skills as a new entry point for writing improvement features. These are common in many AI powered editors and I think they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands that you can use (including 2 that provide feedback in Docos), but Docs would allow users to define their own commands. The commands in this demo are:</p>",
         "<ul>",
         "<li><strong>/improve</strong> — rewrites your text to be clearer and more professional</li>",
         "<li><strong>/expand</strong> — adds more detail and elaboration</li>",
@@ -911,7 +912,6 @@
         "<li><strong>/review</strong> — adds AI comments to the document with passage-level feedback</li>",
         "<li><strong>/comment [instructions]</strong> — adds targeted comments based on your instructions, e.g. <em>/comment look for passive voice</em></li>",
         "</ul>",
-        "<p>The second idea is re-using Docos as the interface for the AI to give feedback on the doc. I think Docos are one of the defining features of Docs, and I think this feedback format would make some users more likely to opt for Docs over LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus). Gemini could periodically scan and provide feedback in comments while you are writing.</p>",
         '<button class="docs-demo-modal-close-btn" id="docs-demo-about-close">Got it</button>',
       ].join("");
       const overlay = showOverlayModal(content);
@@ -939,7 +939,7 @@
           const html = options[Math.floor(Math.random() * options.length)];
           loadSampleText(html);
           document.body.removeChild(overlay);
-          showDemoTooltip('Now type / in the pill below');
+          showDemoTooltip("Now type / in the pill below");
           setTimeout(hideDemoTooltip, 3500);
         });
         optionsEl.appendChild(btn);
@@ -948,63 +948,64 @@
   }
 
   function showDemoTooltip(text) {
-    var existing = document.getElementById('docs-demo-demo-tooltip');
+    var existing = document.getElementById("docs-demo-demo-tooltip");
     if (existing) existing.remove();
-    var tip = document.createElement('div');
-    tip.id = 'docs-demo-demo-tooltip';
-    tip.className = 'docs-demo-demo-tooltip';
+    var tip = document.createElement("div");
+    tip.id = "docs-demo-demo-tooltip";
+    tip.className = "docs-demo-demo-tooltip";
     tip.textContent = text;
     if (commandPillWrapper) {
-      commandPillWrapper.style.position = 'relative';
+      commandPillWrapper.style.position = "relative";
       commandPillWrapper.appendChild(tip);
     }
     return tip;
   }
 
   function hideDemoTooltip() {
-    var tip = document.getElementById('docs-demo-demo-tooltip');
+    var tip = document.getElementById("docs-demo-demo-tooltip");
     if (tip) tip.remove();
   }
 
   if (runDemoBtn) {
-    runDemoBtn.addEventListener('click', function () {
+    runDemoBtn.addEventListener("click", function () {
       runDemoBtn.disabled = true;
 
       // Step 1: show tooltip then load sample text
-      showDemoTooltip('Writing some text…');
+      showDemoTooltip("Writing some text…");
       setTimeout(function () {
-        loadSampleText(SAMPLE_TEXTS['Fake student writing'][0]);
+        loadSampleText(SAMPLE_TEXTS["Fake student writing"][0]);
       }, 400);
 
       // Step 2: focus pill, type /, show autocomplete
       setTimeout(function () {
         if (!commandInput) return;
         commandInput.focus();
-        commandInput.value = '/';
-        showAutocomplete('/');
-        showDemoTooltip('Typing a slash command…');
+        commandInput.value = "/";
+        showAutocomplete("/");
+        showDemoTooltip("Typing a slash command…");
       }, 1900);
 
       // Step 3: highlight /review in autocomplete
       setTimeout(function () {
-        autocompleteSelectedIndex = autocompleteFilteredCommands.indexOf('/review');
+        autocompleteSelectedIndex =
+          autocompleteFilteredCommands.indexOf("/review");
         if (autocompleteSelectedIndex < 0) autocompleteSelectedIndex = 0;
         updateAutocompleteSelection();
-        showDemoTooltip('Selecting /review…');
+        showDemoTooltip("Selecting /review…");
       }, 5200);
 
       // Step 4: select it — fills the input
       setTimeout(function () {
-        selectAutocompleteItem('/review');
-        showDemoTooltip('Running /review…');
+        selectAutocompleteItem("/review");
+        showDemoTooltip("Running /review…");
       }, 7400);
 
       // Step 5: submit
       setTimeout(function () {
         hideDemoTooltip();
         hideAutocomplete();
-        handleCommentsCommand('/review', '');
-        if (commandInput) commandInput.value = '/review';
+        handleCommentsCommand("/review", "");
+        if (commandInput) commandInput.value = "/review";
         runDemoBtn.disabled = false;
       }, 9200);
     });
