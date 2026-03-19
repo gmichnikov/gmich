@@ -791,7 +791,7 @@
         .map(function (cmd) {
           const d = SLASH_COMMANDS[cmd];
           const isComments = d.type === "comments";
-          let code = d.requiresExtraText ? cmd + " <instructions>" : cmd;
+          let code = d.requiresExtraText ? cmd + " [instructions]" : cmd;
           const descCell = isComments
             ? '<td class="docs-demo-help-desc">' +
               escapeHtml(d.label || cmd) +
@@ -910,8 +910,8 @@
       content.innerHTML = [
         '<h2 class="docs-demo-modal-title">About this demo</h2>',
         "<p>This demo includes two ideas for Gemini in Google Docs.</p>",
-        "<p>The first idea is re-using Docos as the interface for Gemini to give feedback on the doc. I think Docos are one of the defining features of Docs, and I think this feedback format would make some users more likely to opt for Docs over LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus), and they move away from having everything as a single unwieldy conversation in the sidebar. Gemini could periodically scan and provide feedback in comments while you are writing.</p>",
-        "<p>The second idea is introducing slash commands / skills as a new entry point for writing improvement features. These are common in many AI powered editors and I think they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands that you can use (including 2 that provide feedback in Docos), but Docs would allow users to define their own commands. The commands in this demo are:</p>",
+        "<p>The first idea is re-using Docos as the interface for Gemini to give feedback on the doc. Docos is one of the defining features of Docs, and I think this feedback format would make some users prefer Docs to LLM chatbots. Comments are nice because they don't interrupt the flow (in terms of both text and user focus), and they move away from having everything as a single unwieldy conversation in the sidebar. Gemini could periodically scan and provide feedback in comments while the user is writing.</p>",
+        "<p>The second idea is introducing slash commands / skills as a new entry point for writing improvement features. These are common in many AI powered editors and they would be a natural fit in Docs. The reusability would save time and bring consistency across organizations. In the demo, I have hardcoded a few commands (five existing Docs actions and 2 new ones that provide feedback via Docos), but Docs would allow users to define their own commands. The commands in this demo are:</p>",
         "<ul>",
         "<li><strong>/review</strong> — adds comments with suggested improvements throughout the doc</li>",
         "<li><strong>/comment [instructions]</strong> — adds comments based on your instructions, e.g. <em>/comment look for passive voice</em></li>",
