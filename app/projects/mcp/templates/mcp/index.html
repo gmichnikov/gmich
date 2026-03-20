@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal MCP Server - gregmichnikov.com</title>
+  <style>
+    .mcp-page { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    .mcp-page h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .mcp-page p { color: #444; line-height: 1.6; }
+    .mcp-page .mcp-url-box { background: #f5f5f5; padding: 1rem; border-radius: 6px; font-family: monospace; word-break: break-all; margin: 1rem 0; }
+    .mcp-page .mcp-url-box code { font-size: 0.9rem; }
+    .mcp-page .mcp-copy-btn { margin-top: 0.5rem; padding: 0.4rem 0.8rem; cursor: pointer; }
+    .mcp-page ul { margin: 1rem 0; padding-left: 1.5rem; }
+    .mcp-page a { color: #0066cc; }
+  </style>
+</head>
+<body class="mcp-page">
+  <h1>Personal MCP Server</h1>
+  <p>Queryable bio and résumé for AI assistants. Add this server as a connector in Cursor, Claude, ChatGPT, or Claude Code.</p>
+
+  <p><strong>Connector URL:</strong></p>
+  <div class="mcp-url-box">
+    <code id="mcp-url">{{ url_for('mcp.mcp_endpoint', _external=True) }}</code>
+  </div>
+  <button class="mcp-copy-btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('mcp-url').textContent); this.textContent='Copied!'">Copy URL</button>
+
+  <p><strong>Supported clients:</strong></p>
+  <ul>
+    <li><strong>Cursor</strong> — <code>mcp.json</code> → add URL under remotes</li>
+    <li><strong>Claude Desktop</strong> — Settings → Connectors → paste URL</li>
+    <li><strong>claude.ai</strong> — Settings → Connectors → paste URL</li>
+    <li><strong>ChatGPT</strong> — Developer Mode → add URL (Plus/Pro/Team)</li>
+    <li><strong>Claude Code</strong> — <code>claude mcp add --transport http &lt;url&gt;</code></li>
+  </ul>
+
+  <p><strong>Tools:</strong> get_bio, get_skills, get_projects, get_experience, get_contact, get_resume, answer_question</p>
+</body>
+</html>

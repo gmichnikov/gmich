@@ -91,6 +91,7 @@ def create_app():
     from app.projects.reminders.routes import reminders_bp
     from app.projects.travel_log.routes import travel_log_bp
     from app.projects.docs_demo.routes import docs_demo_bp
+    from app.projects.mcp.routes import mcp_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -126,6 +127,7 @@ def create_app():
     app.register_blueprint(reminders_bp)
     app.register_blueprint(travel_log_bp)
     app.register_blueprint(docs_demo_bp, url_prefix="/docs-demo")
+    app.register_blueprint(mcp_bp, url_prefix="/mcp")
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

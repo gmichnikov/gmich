@@ -1,0 +1,15 @@
+{
+  "bio": {
+    "short": "Your short bio goes here.",
+    "long": "Your longer biography goes here."
+  },
+  "skills": [],
+  "projects": [],
+  "experience": [],
+  "contact": {
+    "email": "",
+    "linkedin": "",
+    "github": "",
+    "website": ""
+  }
+}

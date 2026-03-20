@@ -388,6 +388,17 @@ PROJECTS = [
         "icon": "📄",
         "order": 19,
     },
+    {
+        "id": "mcp",
+        "name": "Personal MCP Server",
+        "description": "Queryable bio/résumé for AI assistants — add as a connector in Cursor, Claude, etc.",
+        "url": "/mcp",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🤖",
+        "order": 20,
+    },
 ]
 
 
