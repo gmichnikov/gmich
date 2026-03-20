@@ -19,46 +19,14 @@ mcp_bp = Blueprint(
 # MCP tool definitions for protocol
 MCP_TOOLS = [
     {
-        "name": "get_bio",
-        "description": "Short and long biography",
-        "inputSchema": {
-            "type": "object",
-            "properties": {"short": {"type": "boolean", "default": True}},
-        },
-    },
-    {
-        "name": "get_skills",
-        "description": "Technical and professional skills",
+        "name": "get_personal",
+        "description": "Personal and family life: bio, contact, interests, family",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
-        "name": "get_projects",
-        "description": "Portfolio projects with links, stack, outcomes",
+        "name": "get_work",
+        "description": "Work background: skills, projects, experience",
         "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "get_experience",
-        "description": "Work history",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "get_contact",
-        "description": "Contact info and socials",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "get_resume",
-        "description": "Full structured résumé",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "answer_question",
-        "description": "Freeform Q&A about you, powered by Claude with your data as context",
-        "inputSchema": {
-            "type": "object",
-            "properties": {"question": {"type": "string"}},
-            "required": ["question"],
-        },
     },
 ]
 

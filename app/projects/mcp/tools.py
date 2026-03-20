@@ -1,8 +1,7 @@
 """
 MCP tool implementations for the personal bio server.
 
-Tools: get_bio, get_skills, get_projects, get_experience, get_contact,
-       get_resume, answer_question
+Tools: get_personal, get_work
 """
 
 import json
@@ -18,58 +17,20 @@ def _load_data():
         return json.load(f)
 
 
-def get_bio(short: bool = True) -> dict:
-    """Return short or long biography."""
+def get_personal() -> dict:
+    """Return personal and family life info: bio, contact, interests, family."""
     data = _load_data()
-    key = "short" if short else "long"
-    return {"bio": data["bio"].get(key, "")}
+    return data.get("personal", {})
 
 
-def get_skills() -> dict:
-    """Return technical and professional skills."""
+def get_work() -> dict:
+    """Return work background: skills, projects, experience."""
     data = _load_data()
-    return {"skills": data.get("skills", [])}
-
-
-def get_projects() -> dict:
-    """Return portfolio projects with links, stack, outcomes."""
-    data = _load_data()
-    return {"projects": data.get("projects", [])}
-
-
-def get_experience() -> dict:
-    """Return work history."""
-    data = _load_data()
-    return {"experience": data.get("experience", [])}
-
-
-def get_contact() -> dict:
-    """Return contact info and socials."""
-    data = _load_data()
-    return {"contact": data.get("contact", {})}
-
-
-def get_resume() -> dict:
-    """Return full structured résumé."""
-    return _load_data()
-
-
-def answer_question(question: str) -> dict:
-    """
-    Freeform Q&A about you, powered by Claude with your data as context.
-    Stub for now — will need Claude API integration.
-    """
-    # TODO: Integrate with Claude API, pass data as context
-    return {"answer": f"Question received: {question}. (answer_question not yet implemented)"}
+    return data.get("work", {})
 
 
 # Tool definitions for MCP protocol (name -> handler)
 TOOL_HANDLERS = {
-    "get_bio": get_bio,
-    "get_skills": get_skills,
-    "get_projects": get_projects,
-    "get_experience": get_experience,
-    "get_contact": get_contact,
-    "get_resume": get_resume,
-    "answer_question": answer_question,
+    "get_personal": get_personal,
+    "get_work": get_work,
 }

@@ -1,15 +1,73 @@
 {
-  "bio": {
-    "short": "Your short bio goes here.",
-    "long": "Your longer biography goes here."
+  "personal": {
+    "bio": {
+      "short": "Product Manager and former teacher. Lives in Chatham, NJ with wife and 3 kids.",
+      "long": "Greg grew up in Massachusetts and remains a Boston sports fan. He lives in Chatham, NJ with his wife and three kids (Liam, Jake, Asher). He enjoys traveling, attending youth sports practices and games, going to the beach, playing board games, and building with LLMs. Before Google he taught Math and CS at Success Academy charter schools in NYC."
+    },
+    "location": "Chatham, NJ",
+    "family": {
+      "spouse": "Caitlin",
+      "kids": ["Liam", "Jake", "Asher"]
+    },
+    "interests": [
+      "traveling",
+      "attending youth sports practices and games",
+      "going to the beach",
+      "playing board games",
+      "building with LLMs"
+    ],
+    "hometown": "Massachusetts",
+    "sports": "Boston sports teams",
+    "contact": {
+      "email": "greg@gregmichnikov.com",
+      "linkedin": "https://www.linkedin.com/in/gregmichnikov/",
+      "github": "https://github.com/gregmichnikov",
+      "website": "https://gregmichnikov.com"
+    }
   },
-  "skills": [],
-  "projects": [],
-  "experience": [],
-  "contact": {
-    "email": "",
-    "linkedin": "",
-    "github": "",
-    "website": ""
+  "work": {
+    "education": [
+      {
+        "school": "Harvard University",
+        "degree": "Bachelor of Arts in Economics",
+        "dates": "2002-2006"
+      },
+      {
+        "school": "Touro University",
+        "degree": "Master's in General and Special Education",
+        "dates": "2013-2014"
+      },
+      {
+        "school": "App Academy",
+        "degree": "Software Engineering bootcamp",
+        "dates": "2016"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Google",
+        "title": "Product Manager",
+        "dates": "2021-present",
+        "description": "Product Manager on Looker and Display Ads"
+      },
+      {
+        "company": "Google",
+        "title": "Software Engineer",
+        "dates": "2017-2021",
+        "description": "SWE on Google Sheets"
+      },
+      {
+        "company": "Success Academy Charter Schools",
+        "title": "Math and CS Teacher",
+        "dates": "2013-2016",
+        "description": "Taught Math and Computer Science"
+      },
+      {
+        "company": "Achievement First",
+        "title": "Data Fellow",
+        "dates": "2012-2013",
+        "description": "Data analysis and reporting for teacher performance and student assessments"
+      }
+    ]
   }
 }
