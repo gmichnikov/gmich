@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from flask import abort, Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from sqlalchemy import func
 from flask_login import current_user, login_required
 
 from app import csrf, db
@@ -102,15 +103,66 @@ def collections_create():
     return redirect(url_for("travel_log.index"))
 
 
+def _parse_date(s):
+    """Parse YYYY-MM-DD string to date or None."""
+    if not s or not s.strip():
+        return None
+    try:
+        return datetime.strptime(s.strip(), "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
 @travel_log_bp.route("/collections/<int:id>")
 @login_required
 def collections_show(id):
     collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
-    entries = collection.entries.order_by(TlogEntry.updated_at.desc()).all()
+    base_query = collection.entries.order_by(TlogEntry.updated_at.desc())
+
+    # Date filter: range (date_from, date_to) — single day = same from/to
+    filter_date_from = request.args.get("date_from")
+    filter_date_to = request.args.get("date_to")
+
+    parsed_from = _parse_date(filter_date_from)
+    parsed_to = _parse_date(filter_date_to)
+
+    if parsed_from:
+        base_query = base_query.filter(TlogEntry.visited_date >= parsed_from)
+    if parsed_to:
+        base_query = base_query.filter(TlogEntry.visited_date <= parsed_to)
+
+    entries = base_query.all()
+
+    # Human-readable chip label
+    filter_chip_label = None
+    if parsed_from and parsed_to:
+        if parsed_from == parsed_to:
+            filter_chip_label = parsed_from.strftime("%b %d, %Y")
+        else:
+            filter_chip_label = f"{parsed_from.strftime('%b %d, %Y')} – {parsed_to.strftime('%b %d, %Y')}"
+    elif parsed_from:
+        filter_chip_label = f"From {parsed_from.strftime('%b %d, %Y')}"
+    elif parsed_to:
+        filter_chip_label = f"Until {parsed_to.strftime('%b %d, %Y')}"
+
+    # Collection date range for prepopulating the filter modal (unfiltered)
+    date_range = (
+        db.session.query(func.min(TlogEntry.visited_date), func.max(TlogEntry.visited_date))
+        .filter(TlogEntry.collection_id == collection.id)
+        .first()
+    )
+    collection_date_min = date_range[0].isoformat() if date_range and date_range[0] else None
+    collection_date_max = date_range[1].isoformat() if date_range and date_range[1] else None
+
     return render_template(
         "travel_log/collections/show.html",
         collection=collection,
         entries=entries,
+        filter_date_from=filter_date_from,
+        filter_date_to=filter_date_to,
+        filter_chip_label=filter_chip_label,
+        collection_date_min=collection_date_min,
+        collection_date_max=collection_date_max,
     )
 
 

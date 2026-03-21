@@ -18,10 +18,53 @@
             </div>
         </div>
 
+        <div class="tlog-filter-chips">
+            <button type="button" class="tlog-filter-chip{% if filter_chip_label %} tlog-filter-chip-active{% endif %}" id="tlog-date-chip" data-collection-url="{{ url_for('travel_log.collections_show', id=collection.id) }}" data-date-min="{{ collection_date_min or '' }}" data-date-max="{{ collection_date_max or '' }}" aria-label="Filter by date" aria-haspopup="dialog">
+                {{ filter_chip_label or 'Date' }}
+            </button>
+        </div>
+
+        <!-- Date filter modal -->
+        <div id="tlog-date-modal" class="tlog-modal" role="dialog" aria-modal="true" aria-labelledby="tlog-date-modal-title" aria-hidden="true" hidden>
+            <div class="tlog-modal-backdrop" id="tlog-date-modal-backdrop"></div>
+            <div class="tlog-modal-box">
+                <h3 id="tlog-date-modal-title" class="tlog-modal-title">Filter by visit date</h3>
+                <form id="tlog-date-modal-form" class="tlog-modal-form" method="get" action="{{ url_for('travel_log.collections_show', id=collection.id) }}">
+                    <div class="tlog-modal-fields">
+                        <div class="tlog-form-group">
+                            <label for="tlog-modal-date-from-input" class="tlog-label">From</label>
+                            <div class="tlog-date-input-wrap">
+                                <button type="button" class="tlog-date-adj-btn" id="tlog-date-from-minus" aria-label="Decrease date by 1 day">−</button>
+                                <input type="date" id="tlog-modal-date-from-input" name="date_from" class="tlog-input tlog-date-input" value="{{ filter_date_from or '' }}">
+                                <button type="button" class="tlog-date-adj-btn" id="tlog-date-from-plus" aria-label="Increase date by 1 day">+</button>
+                            </div>
+                        </div>
+                        <div class="tlog-form-group">
+                            <label for="tlog-modal-date-to-input" class="tlog-label">To</label>
+                            <div class="tlog-date-input-wrap">
+                                <button type="button" class="tlog-date-adj-btn" id="tlog-date-to-minus" aria-label="Decrease date by 1 day">−</button>
+                                <input type="date" id="tlog-modal-date-to-input" name="date_to" class="tlog-input tlog-date-input" value="{{ filter_date_to or '' }}">
+                                <button type="button" class="tlog-date-adj-btn" id="tlog-date-to-plus" aria-label="Increase date by 1 day">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tlog-modal-actions">
+                        <button type="button" class="tlog-btn tlog-btn-secondary" id="tlog-date-modal-clear">Clear</button>
+                        <button type="submit" class="tlog-btn tlog-btn-primary">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         {% if not entries %}
         <div class="tlog-empty">
+            {% if filter_chip_label %}
+            <p class="tlog-empty-text">No entries match your date filter.</p>
+            <a href="{{ url_for('travel_log.collections_show', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Clear filter</a>
+            {% else %}
             <p class="tlog-empty-text">No entries yet. Log your first place.</p>
             <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+            {% endif %}
         </div>
         {% else %}
         <ul class="tlog-entries-list">
@@ -46,4 +89,83 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const chip = document.getElementById('tlog-date-chip');
+    const modal = document.getElementById('tlog-date-modal');
+    const backdrop = document.getElementById('tlog-date-modal-backdrop');
+    const form = document.getElementById('tlog-date-modal-form');
+    const clearBtn = document.getElementById('tlog-date-modal-clear');
+    const fromInput = document.getElementById('tlog-modal-date-from-input');
+    const toInput = document.getElementById('tlog-modal-date-to-input');
+    const collectionUrl = chip ? chip.getAttribute('data-collection-url') : '';
+    const dateMin = chip ? chip.getAttribute('data-date-min') || '' : '';
+    const dateMax = chip ? chip.getAttribute('data-date-max') || '' : '';
+
+    function addDays(isoStr, delta) {
+        if (!isoStr) return '';
+        var d = new Date(isoStr + 'T12:00:00');
+        d.setDate(d.getDate() + delta);
+        return d.toISOString().slice(0, 10);
+    }
+
+    function openModal() {
+        if (modal) {
+            if (!fromInput.value && !toInput.value && dateMin && dateMax) {
+                fromInput.value = dateMin;
+                toInput.value = dateMax;
+            }
+            modal.removeAttribute('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('tlog-modal-open');
+        }
+    }
+
+    function closeModal() {
+        if (modal) {
+            modal.setAttribute('hidden', '');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('tlog-modal-open');
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.hasAttribute('hidden')) closeModal();
+    });
+
+    if (chip) chip.addEventListener('click', openModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (clearBtn) clearBtn.addEventListener('click', function() { window.location = collectionUrl; });
+
+    if (fromInput) {
+        document.getElementById('tlog-date-from-minus').addEventListener('click', function() {
+            fromInput.value = addDays(fromInput.value, -1);
+        });
+        document.getElementById('tlog-date-from-plus').addEventListener('click', function() {
+            fromInput.value = addDays(fromInput.value, 1);
+        });
+    }
+    if (toInput) {
+        document.getElementById('tlog-date-to-minus').addEventListener('click', function() {
+            toInput.value = addDays(toInput.value, -1);
+        });
+        document.getElementById('tlog-date-to-plus').addEventListener('click', function() {
+            toInput.value = addDays(toInput.value, 1);
+        });
+    }
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var from = document.getElementById('tlog-modal-date-from-input');
+            var to = document.getElementById('tlog-modal-date-to-input');
+            if (from && to && !from.value && !to.value) {
+                e.preventDefault();
+                window.location = collectionUrl;
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

@@ -399,6 +399,140 @@ body.tlog-lightbox-open {
     margin-bottom: 24px;
 }
 
+/* Date filter chip */
+.tlog-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tlog-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--tlog-text);
+    background: #f3f4f6;
+    border: 1px solid var(--tlog-border);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.tlog-filter-chip:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+}
+
+.tlog-filter-chip.tlog-filter-chip-active {
+    background: #dbeafe;
+    border-color: #2563eb;
+    color: #1d4ed8;
+}
+
+/* Date filter modal */
+body.tlog-modal-open {
+    overflow: hidden;
+}
+
+.tlog-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.tlog-modal[hidden] {
+    display: none;
+}
+
+.tlog-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+}
+
+.tlog-modal-box {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    padding: 24px;
+    background: var(--tlog-container-bg);
+    border: 1px solid var(--tlog-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.tlog-modal-title {
+    margin: 0 0 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--tlog-text);
+}
+
+.tlog-modal-form {
+    margin: 0;
+}
+
+.tlog-modal-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.tlog-date-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tlog-date-input-wrap .tlog-date-input {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+}
+
+.tlog-date-adj-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid var(--tlog-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tlog-date-adj-btn:hover {
+    background: #e5e7eb;
+    color: var(--tlog-text);
+}
+
+.tlog-date-input {
+    max-width: 200px;
+    padding: 8px 10px;
+}
+
+.tlog-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
 .tlog-back-link {
     display: inline-block;
     margin-bottom: 12px;
