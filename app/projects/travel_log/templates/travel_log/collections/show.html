@@ -82,29 +82,36 @@
             {% for entry in entries %}
             <li class="tlog-entry-item" data-visited-date="{{ entry.visited_date.isoformat() }}" data-tag-ids="{{ entry.tags|map(attribute='id')|join(',') }}">
                 <div class="tlog-entry-link" data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}" role="link" tabindex="0">
-                    <span class="tlog-entry-name">{{ (entry.user_name[:60] + '…') if entry.user_name|length > 60 else entry.user_name }}</span>
-                    {% if entry.user_name or entry.user_address %}
-                    <span class="tlog-entry-address-row">
-                        {% if entry.user_address %}
-                        <span class="tlog-entry-address">{{ (entry.user_address[:60] + '…') if entry.user_address|length > 60 else entry.user_address }}</span>
-                        {% endif %}
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ ([entry.user_name, entry.user_address]|select|join(', '))|urlencode }}" target="_blank" rel="noopener noreferrer" class="tlog-map-link" aria-label="Open in Google Maps">Map</a>
-                    </span>
-                    {% endif %}
-                    <span class="tlog-entry-meta">
-                        {{ entry.visited_date.strftime('%b %d, %Y') }}
-                        {% if entry.notes %}
-                        · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
-                        {% endif %}
-                        · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
-                        {% if entry.tags %}
-                        <span class="tlog-entry-tags">
-                            {% for tag in entry.tags %}
-                            <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
-                            {% endfor %}
+                    <div class="tlog-entry-content">
+                        <span class="tlog-entry-name">{{ (entry.user_name[:60] + '…') if entry.user_name|length > 60 else entry.user_name }}</span>
+                        {% if entry.user_name or entry.user_address %}
+                        <span class="tlog-entry-address-row">
+                            {% if entry.user_address %}
+                            <span class="tlog-entry-address">{{ (entry.user_address[:60] + '…') if entry.user_address|length > 60 else entry.user_address }}</span>
+                            {% endif %}
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ ([entry.user_name, entry.user_address]|select|join(', '))|urlencode }}" target="_blank" rel="noopener noreferrer" class="tlog-map-link" aria-label="Open in Google Maps">Map</a>
                         </span>
                         {% endif %}
-                    </span>
+                        <span class="tlog-entry-meta">
+                            {{ entry.visited_date.strftime('%b %d, %Y') }}
+                            {% if entry.notes %}
+                            · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
+                            {% endif %}
+                            · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                            {% if entry.tags %}
+                            <span class="tlog-entry-tags">
+                                {% for tag in entry.tags %}
+                                <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
+                                {% endfor %}
+                            </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if entry.random_photo %}
+                    <div class="tlog-entry-thumb" data-photo-urls='{{ entry.all_photo_urls|tojson|e }}' role="button" tabindex="0" aria-label="View photo">
+                        <img src="{{ get_photo_view_url(entry.random_photo) }}" alt="" class="tlog-entry-thumb-img" loading="lazy">
+                    </div>
+                    {% endif %}
                 </div>
             </li>
             {% endfor %}
@@ -193,10 +200,29 @@
     if (entriesList) {
         entriesList.addEventListener('click', function(e) {
             if (e.target.closest('.tlog-map-link')) return;
+            if (e.target.closest('.tlog-entry-thumb')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const thumb = e.target.closest('.tlog-entry-thumb');
+                const urlsJson = thumb.getAttribute('data-photo-urls');
+                const urls = urlsJson ? JSON.parse(urlsJson) : [];
+                if (urls.length) openLightbox(urls, 0);
+                return;
+            }
             const link = e.target.closest('.tlog-entry-link');
             if (link && link.dataset.editUrl) window.location = link.dataset.editUrl;
         });
         entriesList.addEventListener('keydown', function(e) {
+            if (e.target.closest('.tlog-entry-thumb')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const thumb = e.target.closest('.tlog-entry-thumb');
+                    const urlsJson = thumb.getAttribute('data-photo-urls');
+                    const urls = urlsJson ? JSON.parse(urlsJson) : [];
+                    if (urls.length) openLightbox(urls, 0);
+                }
+                return;
+            }
             if (e.key === 'Enter' || e.key === ' ') {
                 const link = e.target.closest('.tlog-entry-link');
                 if (link && link.dataset.editUrl && !e.target.closest('.tlog-map-link')) {
@@ -205,6 +231,58 @@
                 }
             }
         });
+    }
+
+    function openLightbox(urls, index) {
+        if (!urls || urls.length === 0) return;
+        var idx = index >= 0 ? index : 0;
+        var overlay = document.createElement('div');
+        overlay.className = 'tlog-lightbox-overlay';
+        overlay.setAttribute('aria-hidden', 'false');
+        overlay.innerHTML = '<button type="button" class="tlog-lightbox-close" aria-label="Close">×</button>' +
+            (urls.length > 1 ? '<button type="button" class="tlog-lightbox-prev" aria-label="Previous">‹</button><button type="button" class="tlog-lightbox-next" aria-label="Next">›</button>' : '') +
+            '<div class="tlog-lightbox-content"><img src="" alt="Photo" class="tlog-lightbox-img"></div>' +
+            (urls.length > 1 ? '<span class="tlog-lightbox-counter">1 / ' + urls.length + '</span>' : '');
+
+        var lightboxImg = overlay.querySelector('.tlog-lightbox-img');
+        var counterEl = overlay.querySelector('.tlog-lightbox-counter');
+
+        function showPhoto(i) {
+            idx = ((i % urls.length) + urls.length) % urls.length;
+            lightboxImg.src = urls[idx];
+            if (counterEl) counterEl.textContent = (idx + 1) + ' / ' + urls.length;
+        }
+        showPhoto(idx);
+
+        function close() {
+            overlay.remove();
+            document.body.classList.remove('tlog-lightbox-open');
+            document.removeEventListener('keydown', onKeydown);
+        }
+
+        function onKeydown(ev) {
+            if (ev.key === 'Escape') close();
+            if (urls.length > 1 && ev.key === 'ArrowLeft') showPhoto(idx - 1);
+            if (urls.length > 1 && ev.key === 'ArrowRight') showPhoto(idx + 1);
+        }
+
+        overlay.querySelector('.tlog-lightbox-close').addEventListener('click', close);
+        overlay.addEventListener('click', function(ev) {
+            if (ev.target === overlay) close();
+        });
+        if (urls.length > 1) {
+            overlay.querySelector('.tlog-lightbox-prev').addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                showPhoto(idx - 1);
+            });
+            overlay.querySelector('.tlog-lightbox-next').addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                showPhoto(idx + 1);
+            });
+        }
+        document.addEventListener('keydown', onKeydown);
+        document.body.classList.add('tlog-lightbox-open');
+        document.body.appendChild(overlay);
     }
 })();
 </script>

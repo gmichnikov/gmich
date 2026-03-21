@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 from flask import abort, Blueprint, flash, jsonify, redirect, render_template, request, url_for
@@ -152,10 +153,21 @@ def collections_show(id):
     collection_date_min = date_range[0].isoformat() if date_range and date_range[0] else None
     collection_date_max = date_range[1].isoformat() if date_range and date_range[1] else None
 
+    # Attach random thumbnail photo and all photo URLs per entry (for lightbox)
+    for entry in entries:
+        photos = entry.photos.all()
+        if photos:
+            entry.random_photo = random.choice(photos)
+            entry.all_photo_urls = [get_photo_view_url(p) for p in photos]
+        else:
+            entry.random_photo = None
+            entry.all_photo_urls = []
+
     return render_template(
         "travel_log/collections/show.html",
         collection=collection,
         entries=entries,
+        get_photo_view_url=get_photo_view_url,
         collection_dates=collection_dates,
         collection_tags=collection_tags,
         collection_date_min=collection_date_min,
