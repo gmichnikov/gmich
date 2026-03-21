@@ -618,6 +618,7 @@ body.tlog-modal-open {
     text-decoration: none;
     color: var(--tlog-text);
     transition: background 0.15s;
+    cursor: pointer;
 }
 
 .tlog-entry-link:hover {
@@ -635,6 +636,28 @@ body.tlog-modal-open {
     font-size: 0.875rem;
     color: #6b7280;
     margin-bottom: 4px;
+}
+
+.tlog-entry-address-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tlog-entry-address-row .tlog-entry-address {
+    margin-bottom: 0;
+}
+
+.tlog-map-link {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.tlog-map-link:hover {
+    color: #2563eb;
+    text-decoration: underline;
 }
 
 .tlog-entry-meta {
@@ -782,6 +805,7 @@ body.tlog-modal-open {
     text-decoration: none;
     color: var(--tlog-text);
     transition: background 0.15s;
+    cursor: pointer;
 }
 
 .tlog-entry-link:hover {
@@ -1024,6 +1048,17 @@ body.tlog-modal-open {
 }
 
 /* Log Place page */
+.tlog-address-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tlog-address-row .tlog-input {
+    flex: 1;
+    min-width: 0;
+}
+
 .tlog-log-collection-select { margin-bottom: 20px; }
 .tlog-select { padding: 8px 12px; border: 1px solid var(--tlog-border); border-radius: 6px; font-size: 1rem; max-width: 320px; }
 .tlog-log-browse { margin-bottom: 20px; }
