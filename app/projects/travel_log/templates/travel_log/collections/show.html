@@ -18,14 +18,30 @@
             </div>
         </div>
 
+        {% if entries %}
         <div class="tlog-filter-chips">
-            <button type="button" class="tlog-filter-chip{% if filter_chip_label %} tlog-filter-chip-active{% endif %}" id="tlog-date-chip" data-collection-url="{{ url_for('travel_log.collections_show', id=collection.id) }}" data-date-min="{{ collection_date_min or '' }}" data-date-max="{{ collection_date_max or '' }}" aria-label="Filter by date" aria-haspopup="dialog">
-                {{ filter_chip_label or 'Date' }}
-            </button>
+            <div class="tlog-filter-chips-main">
+                <button type="button" class="tlog-filter-chip" id="tlog-date-btn" aria-label="Filter by date" aria-expanded="false">Date</button>
+                {% if collection_tags %}<button type="button" class="tlog-filter-chip" id="tlog-tags-btn" aria-label="Filter by tags" aria-expanded="false">Tags</button>{% endif %}
+                <button type="button" class="tlog-filter-chip tlog-hidden" id="tlog-date-range-btn" data-collection-url="{{ url_for('travel_log.collections_show', id=collection.id) }}" data-date-min="{{ collection_date_min or '' }}" data-date-max="{{ collection_date_max or '' }}" aria-label="Filter by date range">Date Range</button>
+            </div>
+            <div class="tlog-date-day-chips tlog-date-day-chips-hidden" id="tlog-date-day-chips">
+                {% for date_iso, date_label in collection_dates %}
+                <button type="button" class="tlog-filter-chip tlog-date-day-chip" data-date="{{ date_iso }}">{{ date_label }}</button>
+                {% endfor %}
+            </div>
+            {% if collection_tags %}
+            <div class="tlog-tag-filter-chips tlog-date-day-chips-hidden" id="tlog-tag-filter-chips">
+                {% for tag_id, tag_name in collection_tags %}
+                <button type="button" class="tlog-filter-chip tlog-tag-filter-chip" data-tag-id="{{ tag_id }}">{{ tag_name }}</button>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
+        {% endif %}
 
-        <!-- Date filter modal -->
-        <div id="tlog-date-modal" class="tlog-modal" role="dialog" aria-modal="true" aria-labelledby="tlog-date-modal-title" aria-hidden="true" hidden>
+        <!-- Date Range modal (hidden for now) -->
+        <div id="tlog-date-modal" class="tlog-modal tlog-modal-hidden" role="dialog" aria-modal="true" aria-labelledby="tlog-date-modal-title" aria-hidden="true" hidden>
             <div class="tlog-modal-backdrop" id="tlog-date-modal-backdrop"></div>
             <div class="tlog-modal-box">
                 <h3 id="tlog-date-modal-title" class="tlog-modal-title">Filter by visit date</h3>
@@ -35,7 +51,7 @@
                             <label for="tlog-modal-date-from-input" class="tlog-label">From</label>
                             <div class="tlog-date-input-wrap">
                                 <button type="button" class="tlog-date-adj-btn" id="tlog-date-from-minus" aria-label="Decrease date by 1 day">−</button>
-                                <input type="date" id="tlog-modal-date-from-input" name="date_from" class="tlog-input tlog-date-input" value="{{ filter_date_from or '' }}">
+                                <input type="date" id="tlog-modal-date-from-input" name="date_from" class="tlog-input tlog-date-input" value="{{ collection_date_min or '' }}">
                                 <button type="button" class="tlog-date-adj-btn" id="tlog-date-from-plus" aria-label="Increase date by 1 day">+</button>
                             </div>
                         </div>
@@ -43,7 +59,7 @@
                             <label for="tlog-modal-date-to-input" class="tlog-label">To</label>
                             <div class="tlog-date-input-wrap">
                                 <button type="button" class="tlog-date-adj-btn" id="tlog-date-to-minus" aria-label="Decrease date by 1 day">−</button>
-                                <input type="date" id="tlog-modal-date-to-input" name="date_to" class="tlog-input tlog-date-input" value="{{ filter_date_to or '' }}">
+                                <input type="date" id="tlog-modal-date-to-input" name="date_to" class="tlog-input tlog-date-input" value="{{ collection_date_max or '' }}">
                                 <button type="button" class="tlog-date-adj-btn" id="tlog-date-to-plus" aria-label="Increase date by 1 day">+</button>
                             </div>
                         </div>
@@ -58,18 +74,13 @@
 
         {% if not entries %}
         <div class="tlog-empty">
-            {% if filter_chip_label %}
-            <p class="tlog-empty-text">No entries match your date filter.</p>
-            <a href="{{ url_for('travel_log.collections_show', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Clear filter</a>
-            {% else %}
             <p class="tlog-empty-text">No entries yet. Log your first place.</p>
             <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
-            {% endif %}
         </div>
         {% else %}
         <ul class="tlog-entries-list">
             {% for entry in entries %}
-            <li class="tlog-entry-item">
+            <li class="tlog-entry-item" data-visited-date="{{ entry.visited_date.isoformat() }}" data-tag-ids="{{ entry.tags|map(attribute='id')|join(',') }}">
                 <a href="{{ url_for('travel_log.entries_edit', id=entry.id) }}" class="tlog-entry-link">
                     <span class="tlog-entry-name">{{ (entry.user_name[:60] + '…') if entry.user_name|length > 60 else entry.user_name }}</span>
                     {% if entry.user_address %}
@@ -81,6 +92,13 @@
                         · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
                         {% endif %}
                         · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                        {% if entry.tags %}
+                        <span class="tlog-entry-tags">
+                            {% for tag in entry.tags %}
+                            <span class="tlog-entry-tag">{{ tag.name }}</span>
+                            {% endfor %}
+                        </span>
+                        {% endif %}
                     </span>
                 </a>
             </li>
@@ -94,78 +112,77 @@
 {% block scripts %}
 <script>
 (function() {
-    const chip = document.getElementById('tlog-date-chip');
-    const modal = document.getElementById('tlog-date-modal');
-    const backdrop = document.getElementById('tlog-date-modal-backdrop');
-    const form = document.getElementById('tlog-date-modal-form');
-    const clearBtn = document.getElementById('tlog-date-modal-clear');
-    const fromInput = document.getElementById('tlog-modal-date-from-input');
-    const toInput = document.getElementById('tlog-modal-date-to-input');
-    const collectionUrl = chip ? chip.getAttribute('data-collection-url') : '';
-    const dateMin = chip ? chip.getAttribute('data-date-min') || '' : '';
-    const dateMax = chip ? chip.getAttribute('data-date-max') || '' : '';
+    const dateBtn = document.getElementById('tlog-date-btn');
+    const tagsBtn = document.getElementById('tlog-tags-btn');
+    const dayChipsContainer = document.getElementById('tlog-date-day-chips');
+    const tagChipsContainer = document.getElementById('tlog-tag-filter-chips');
+    const dayChips = document.querySelectorAll('.tlog-date-day-chip');
+    const tagChips = document.querySelectorAll('.tlog-tag-filter-chip');
+    const entryItems = document.querySelectorAll('.tlog-entry-item');
 
-    function addDays(isoStr, delta) {
-        if (!isoStr) return '';
-        var d = new Date(isoStr + 'T12:00:00');
-        d.setDate(d.getDate() + delta);
-        return d.toISOString().slice(0, 10);
+    function updateVisibleEntries() {
+        const selectedDates = new Set(
+            Array.from(dayChips).filter(c => c.classList.contains('tlog-filter-chip-active')).map(c => c.getAttribute('data-date'))
+        );
+        const selectedTagIds = new Set(
+            Array.from(tagChips).filter(c => c.classList.contains('tlog-filter-chip-active')).map(c => c.getAttribute('data-tag-id'))
+        );
+        entryItems.forEach(function(item) {
+            const dateMatch = selectedDates.size === 0 || selectedDates.has(item.getAttribute('data-visited-date'));
+            const tagIdsStr = item.getAttribute('data-tag-ids') || '';
+            const entryTagIds = tagIdsStr ? tagIdsStr.split(',').filter(Boolean) : [];
+            const tagMatch = selectedTagIds.size === 0 || entryTagIds.some(id => selectedTagIds.has(id));
+            item.style.display = (dateMatch && tagMatch) ? '' : 'none';
+        });
     }
 
-    function openModal() {
-        if (modal) {
-            if (!fromInput.value && !toInput.value && dateMin && dateMax) {
-                fromInput.value = dateMin;
-                toInput.value = dateMax;
+    if (dateBtn && dayChipsContainer) {
+        dateBtn.addEventListener('click', function() {
+            if (dayChipsContainer.classList.contains('tlog-date-day-chips-hidden')) {
+                dayChipsContainer.classList.remove('tlog-date-day-chips-hidden');
+                dateBtn.classList.add('tlog-filter-chip-expanded');
+                dateBtn.setAttribute('aria-expanded', 'true');
+                dayChips.forEach(function(c) { c.classList.remove('tlog-filter-chip-active'); });
+            } else {
+                dayChipsContainer.classList.add('tlog-date-day-chips-hidden');
+                dateBtn.classList.remove('tlog-filter-chip-expanded');
+                dateBtn.setAttribute('aria-expanded', 'false');
+                dayChips.forEach(function(c) { c.classList.remove('tlog-filter-chip-active'); });
             }
-            modal.removeAttribute('hidden');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('tlog-modal-open');
-        }
+            updateVisibleEntries();
+        });
     }
 
-    function closeModal() {
-        if (modal) {
-            modal.setAttribute('hidden', '');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('tlog-modal-open');
-        }
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal && !modal.hasAttribute('hidden')) closeModal();
+    dayChips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chip.classList.toggle('tlog-filter-chip-active');
+            updateVisibleEntries();
+        });
     });
 
-    if (chip) chip.addEventListener('click', openModal);
-    if (backdrop) backdrop.addEventListener('click', closeModal);
-    if (clearBtn) clearBtn.addEventListener('click', function() { window.location = collectionUrl; });
-
-    if (fromInput) {
-        document.getElementById('tlog-date-from-minus').addEventListener('click', function() {
-            fromInput.value = addDays(fromInput.value, -1);
-        });
-        document.getElementById('tlog-date-from-plus').addEventListener('click', function() {
-            fromInput.value = addDays(fromInput.value, 1);
-        });
-    }
-    if (toInput) {
-        document.getElementById('tlog-date-to-minus').addEventListener('click', function() {
-            toInput.value = addDays(toInput.value, -1);
-        });
-        document.getElementById('tlog-date-to-plus').addEventListener('click', function() {
-            toInput.value = addDays(toInput.value, 1);
-        });
-    }
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            var from = document.getElementById('tlog-modal-date-from-input');
-            var to = document.getElementById('tlog-modal-date-to-input');
-            if (from && to && !from.value && !to.value) {
-                e.preventDefault();
-                window.location = collectionUrl;
+    if (tagsBtn && tagChipsContainer) {
+        tagsBtn.addEventListener('click', function() {
+            if (tagChipsContainer.classList.contains('tlog-date-day-chips-hidden')) {
+                tagChipsContainer.classList.remove('tlog-date-day-chips-hidden');
+                tagsBtn.classList.add('tlog-filter-chip-expanded');
+                tagsBtn.setAttribute('aria-expanded', 'true');
+                tagChips.forEach(function(c) { c.classList.remove('tlog-filter-chip-active'); });
+            } else {
+                tagChipsContainer.classList.add('tlog-date-day-chips-hidden');
+                tagsBtn.classList.remove('tlog-filter-chip-expanded');
+                tagsBtn.setAttribute('aria-expanded', 'false');
+                tagChips.forEach(function(c) { c.classList.remove('tlog-filter-chip-active'); });
             }
+            updateVisibleEntries();
         });
     }
+
+    tagChips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chip.classList.toggle('tlog-filter-chip-active');
+            updateVisibleEntries();
+        });
+    });
 })();
 </script>
 {% endblock %}

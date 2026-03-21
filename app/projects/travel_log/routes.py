@@ -5,7 +5,7 @@ from sqlalchemy import func
 from flask_login import current_user, login_required
 
 from app import csrf, db
-from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto
+from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto, TlogTag
 from app.projects.travel_log.services.r2 import (
     generate_photo_key,
     generate_presigned_download_url,
@@ -117,35 +117,27 @@ def _parse_date(s):
 @login_required
 def collections_show(id):
     collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
-    base_query = collection.entries.order_by(TlogEntry.updated_at.desc())
+    entries = collection.entries.order_by(TlogEntry.updated_at.desc()).all()
 
-    # Date filter: range (date_from, date_to) — single day = same from/to
-    filter_date_from = request.args.get("date_from")
-    filter_date_to = request.args.get("date_to")
+    # Unique dates in collection (for date chip filter UI), sorted
+    collection_dates = []
+    # Tags used in this collection (for tag chip filter UI)
+    collection_tags = []
+    if entries:
+        seen_dates = set()
+        seen_tag_ids = set()
+        for e in entries:
+            if e.visited_date and e.visited_date not in seen_dates:
+                seen_dates.add(e.visited_date)
+                collection_dates.append((e.visited_date.isoformat(), e.visited_date.strftime("%b %d, %Y")))
+            for tag in e.tags:
+                if tag.id not in seen_tag_ids:
+                    seen_tag_ids.add(tag.id)
+                    collection_tags.append((tag.id, tag.name))
+        collection_dates.sort(key=lambda x: x[0])
+        collection_tags.sort(key=lambda x: x[1])
 
-    parsed_from = _parse_date(filter_date_from)
-    parsed_to = _parse_date(filter_date_to)
-
-    if parsed_from:
-        base_query = base_query.filter(TlogEntry.visited_date >= parsed_from)
-    if parsed_to:
-        base_query = base_query.filter(TlogEntry.visited_date <= parsed_to)
-
-    entries = base_query.all()
-
-    # Human-readable chip label
-    filter_chip_label = None
-    if parsed_from and parsed_to:
-        if parsed_from == parsed_to:
-            filter_chip_label = parsed_from.strftime("%b %d, %Y")
-        else:
-            filter_chip_label = f"{parsed_from.strftime('%b %d, %Y')} – {parsed_to.strftime('%b %d, %Y')}"
-    elif parsed_from:
-        filter_chip_label = f"From {parsed_from.strftime('%b %d, %Y')}"
-    elif parsed_to:
-        filter_chip_label = f"Until {parsed_to.strftime('%b %d, %Y')}"
-
-    # Collection date range for prepopulating the filter modal (unfiltered)
+    # Date range for the range modal (hidden for now)
     date_range = (
         db.session.query(func.min(TlogEntry.visited_date), func.max(TlogEntry.visited_date))
         .filter(TlogEntry.collection_id == collection.id)
@@ -158,9 +150,8 @@ def collections_show(id):
         "travel_log/collections/show.html",
         collection=collection,
         entries=entries,
-        filter_date_from=filter_date_from,
-        filter_date_to=filter_date_to,
-        filter_chip_label=filter_chip_label,
+        collection_dates=collection_dates,
+        collection_tags=collection_tags,
         collection_date_min=collection_date_min,
         collection_date_max=collection_date_max,
     )
@@ -344,9 +335,11 @@ def entries_create():
 def entries_edit(id):
     """View/edit entry."""
     entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    global_tags = TlogTag.query.filter_by(scope="global").order_by(TlogTag.name).all()
     return render_template(
         "travel_log/entries/edit.html",
         entry=entry,
+        global_tags=global_tags,
         get_photo_view_url=get_photo_view_url,
     )
 
@@ -354,7 +347,7 @@ def entries_edit(id):
 @travel_log_bp.route("/entries/<int:id>/update", methods=["POST"])
 @login_required
 def entries_update(id):
-    """Update entry: user_name, user_address, notes, visited_date."""
+    """Update entry: user_name, user_address, notes, visited_date, tags."""
     entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     user_name = (request.form.get("user_name") or "").strip()
     if not user_name:
@@ -371,6 +364,14 @@ def entries_update(id):
             entry.visited_date = dt.strptime(visited_date_str, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             pass  # keep existing if parse fails
+
+    # Tags: getlist for multi-select
+    tag_ids = request.form.getlist("tag_ids", type=int)
+    valid_tag_ids = {t.id for t in TlogTag.query.filter_by(scope="global").filter(TlogTag.id.in_(tag_ids)).all()}
+    entry.tags = [t for t in entry.tags if t.scope != "global"] + list(TlogTag.query.filter(TlogTag.id.in_(valid_tag_ids)).all())
+    # Simpler: replace with selected global tags only (for now we only have global)
+    entry.tags = list(TlogTag.query.filter(TlogTag.id.in_(valid_tag_ids)).all())
+
     entry.updated_at = datetime.utcnow()
     entry.collection.last_modified = datetime.utcnow()
     db.session.commit()

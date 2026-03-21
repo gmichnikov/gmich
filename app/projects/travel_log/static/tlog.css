@@ -402,9 +402,34 @@ body.tlog-lightbox-open {
 /* Date filter chip */
 .tlog-filter-chips {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
     margin-bottom: 20px;
+}
+
+.tlog-filter-chips-main {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tlog-hidden {
+    display: none !important;
+}
+
+.tlog-date-day-chips,
+.tlog-tag-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tlog-date-day-chips-hidden {
+    display: none !important;
+}
+
+.tlog-modal-hidden {
+    display: none !important;
 }
 
 .tlog-filter-chip {
@@ -430,6 +455,11 @@ body.tlog-lightbox-open {
     background: #dbeafe;
     border-color: #2563eb;
     color: #1d4ed8;
+}
+
+.tlog-filter-chip.tlog-filter-chip-expanded {
+    background: #e5e7eb;
+    border-color: #d1d5db;
 }
 
 /* Date filter modal */
@@ -614,6 +644,61 @@ body.tlog-modal-open {
 
 .tlog-entry-detail-notes {
     white-space: pre-wrap;
+}
+
+.tlog-tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tlog-tag-chip-wrap {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.tlog-tag-chip-cb {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tlog-tag-chip {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid var(--tlog-border);
+    border-radius: 9999px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tlog-tag-chip-wrap:hover .tlog-tag-chip {
+    background: #e5e7eb;
+}
+
+.tlog-tag-chip-cb:checked + .tlog-tag-chip {
+    background: #dbeafe;
+    border-color: #2563eb;
+    color: #1d4ed8;
+}
+
+.tlog-entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.tlog-entry-tag {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    color: #6b7280;
 }
 
 .tlog-edit-coming {

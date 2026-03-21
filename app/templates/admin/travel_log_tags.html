@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Travel Log Tags{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">🏷️ Travel Log Tags</h1>
+            <p class="admin-subtitle">Global tags for categorizing travel log entries. Lowercase, hyphens, numbers only (e.g. kid-friendly, coffee).</p>
+        </div>
+
+        <form method="post" action="{{ url_for('admin.travel_log_tags_create') }}" class="admin-form" style="margin-bottom: 24px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="admin-form-group" style="display: flex; gap: 12px; align-items: flex-end;">
+                <div>
+                    <label for="tag-name" class="admin-label">New tag</label>
+                    <input type="text" id="tag-name" name="name" class="admin-input" placeholder="e.g. kid-friendly" pattern="[a-z0-9-]+" maxlength="64" style="width: 200px;">
+                </div>
+                <button type="submit" class="admin-submit-btn">Add</button>
+            </div>
+        </form>
+
+        {% if tags %}
+        <div style="margin-top: 20px;">
+            {% for tag in tags %}
+            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px 16px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                <div style="flex: 1; min-width: 120px;">
+                    <span style="font-weight: 600;">{{ tag.name }}</span>
+                    <span style="font-size: 0.85em; color: #6c757d; margin-left: 8px;">({{ tag.entries.count() }} entries)</span>
+                </div>
+                <form method="post" action="{{ url_for('admin.travel_log_tags_update', tag_id=tag.id) }}" style="display: flex; gap: 8px; align-items: center;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="name" value="{{ tag.name }}" class="admin-input" style="width: 150px;" pattern="[a-z0-9-]+" maxlength="64">
+                    <button type="submit" class="admin-link" style="padding: 6px 12px; background: #007bff; color: white; border-radius: 4px; border: none; cursor: pointer;">Rename</button>
+                </form>
+                <form method="post" action="{{ url_for('admin.travel_log_tags_delete', tag_id=tag.id) }}" style="display: inline;" onsubmit="return confirm('Delete tag &quot;{{ tag.name }}&quot;? It will be removed from {{ tag.entries.count() }} entries.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="admin-link" style="padding: 6px 12px; background: #dc3545; color: white; border-radius: 4px; border: none; cursor: pointer;">Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: #6c757d;">No tags yet. Add one above.</p>
+        {% endif %}
+
+        <div class="admin-footer" style="margin-top: 24px;">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

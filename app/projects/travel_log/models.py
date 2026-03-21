@@ -1,4 +1,4 @@
-"""Travel Log models: Collection, Entry, EntryPhoto."""
+"""Travel Log models: Collection, Entry, EntryPhoto, Tag."""
 
 from datetime import datetime, date
 
@@ -59,6 +59,12 @@ class TlogEntry(db.Model):
         cascade="all, delete-orphan",
         order_by="TlogEntryPhoto.sort_order, TlogEntryPhoto.created_at",
     )
+    tags = db.relationship(
+        "TlogTag",
+        secondary="tlog_entry_tag",
+        backref=db.backref("entries", lazy="dynamic"),
+        lazy="joined",
+    )
 
     __table_args__ = (
         db.Index("ix_tlog_entry_collection_id", "collection_id"),
@@ -82,3 +88,39 @@ class TlogEntryPhoto(db.Model):
 
     def __repr__(self):
         return f"<TlogEntryPhoto {self.id}: {self.r2_key}>"
+
+
+class TlogTag(db.Model):
+    """
+    Tag for categorizing entries.
+    scope='global': admin-defined, available to all users.
+    scope='user': user-defined (future).
+    scope='collection': collection-specific (future).
+    """
+
+    __tablename__ = "tlog_tag"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)  # stored: lowercase, hyphens, numbers only
+    scope = db.Column(db.String(20), nullable=False, default="global")
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    collection_id = db.Column(db.Integer, db.ForeignKey("tlog_collection.id", ondelete="CASCADE"), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index("ix_tlog_tag_scope", "scope"),
+        # Global tags: unique name (partial index, scope=global implies user_id/collection_id are null)
+        db.Index("ix_tlog_tag_global_name", "name", unique=True, postgresql_where=db.text("scope = 'global'")),
+    )
+
+    def __repr__(self):
+        return f"<TlogTag {self.id}: {self.name}>"
+
+
+class TlogEntryTag(db.Model):
+    """Junction: entry <-> tag (many-to-many)."""
+
+    __tablename__ = "tlog_entry_tag"
+
+    entry_id = db.Column(db.Integer, db.ForeignKey("tlog_entry.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+    tag_id = db.Column(db.Integer, db.ForeignKey("tlog_tag.id", ondelete="CASCADE"), primary_key=True, nullable=False)

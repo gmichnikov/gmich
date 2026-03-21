@@ -386,3 +386,107 @@ def delete_swap_request(swap_request_id):
         flash(f"Error deleting swap request: {str(e)}", "error")
 
     return redirect(url_for("admin.view_swap_requests"))
+
+
+# --- Travel Log Tags (global tags, admin CRUD) ---
+
+
+@admin_bp.route("/travel-log-tags")
+@login_required
+@admin_required
+def travel_log_tags():
+    """List and manage global Travel Log tags."""
+    from app.projects.travel_log.models import TlogTag
+
+    tags = TlogTag.query.filter_by(scope="global").order_by(TlogTag.name).all()
+    return render_template("admin/travel_log_tags.html", tags=tags)
+
+
+@admin_bp.route("/travel-log-tags/create", methods=["POST"])
+@login_required
+@admin_required
+def travel_log_tags_create():
+    """Create a new global tag."""
+    from app.projects.travel_log.models import TlogTag
+    from app.projects.travel_log.utils import normalize_tag_name
+
+    raw = (request.form.get("name") or "").strip()
+    name = normalize_tag_name(raw)
+    if not name:
+        flash("Invalid tag name. Use lowercase letters, numbers, and hyphens only (e.g. kid-friendly).", "error")
+        return redirect(url_for("admin.travel_log_tags"))
+
+    existing = TlogTag.query.filter_by(scope="global", name=name).first()
+    if existing:
+        flash(f'Tag "{name}" already exists.', "error")
+        return redirect(url_for("admin.travel_log_tags"))
+
+    tag = TlogTag(name=name, scope="global", user_id=None, collection_id=None)
+    db.session.add(tag)
+    log_entry = LogEntry(
+        project="admin",
+        category="Travel Log Tags",
+        actor_id=current_user.id,
+        description=f"{current_user.email} created tag '{name}'",
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+    flash(f'Tag "{name}" created.', "success")
+    return redirect(url_for("admin.travel_log_tags"))
+
+
+@admin_bp.route("/travel-log-tags/<int:tag_id>/update", methods=["POST"])
+@login_required
+@admin_required
+def travel_log_tags_update(tag_id):
+    """Rename a global tag."""
+    from app.projects.travel_log.models import TlogTag, TlogEntryTag
+    from app.projects.travel_log.utils import normalize_tag_name
+
+    tag = TlogTag.query.filter_by(id=tag_id, scope="global").first_or_404()
+    raw = (request.form.get("name") or "").strip()
+    name = normalize_tag_name(raw)
+    if not name:
+        flash("Invalid tag name. Use lowercase letters, numbers, and hyphens only.", "error")
+        return redirect(url_for("admin.travel_log_tags"))
+
+    if name != tag.name:
+        existing = TlogTag.query.filter_by(scope="global", name=name).first()
+        if existing:
+            flash(f'Tag "{name}" already exists.', "error")
+            return redirect(url_for("admin.travel_log_tags"))
+        old_name = tag.name
+        tag.name = name
+        log_entry = LogEntry(
+            project="admin",
+            category="Travel Log Tags",
+            actor_id=current_user.id,
+            description=f"{current_user.email} renamed tag '{old_name}' to '{name}'",
+        )
+        db.session.add(log_entry)
+    db.session.commit()
+    flash("Tag updated.", "success")
+    return redirect(url_for("admin.travel_log_tags"))
+
+
+@admin_bp.route("/travel-log-tags/<int:tag_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def travel_log_tags_delete(tag_id):
+    """Delete a global tag (removes from all entries)."""
+    from app.projects.travel_log.models import TlogTag
+
+    tag = TlogTag.query.filter_by(id=tag_id, scope="global").first_or_404()
+    name = tag.name
+    entry_count = tag.entries.count()
+    db.session.delete(tag)
+    log_entry = LogEntry(
+        project="admin",
+        category="Travel Log Tags",
+        actor_id=current_user.id,
+        description=f"{current_user.email} deleted tag '{name}' (was on {entry_count} entries)",
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+    flash(f'Tag "{name}" deleted.', "success")
+    return redirect(url_for("admin.travel_log_tags"))

@@ -30,6 +30,19 @@
                 <label for="tlog-edit-notes" class="tlog-label">Notes</label>
                 <textarea id="tlog-edit-notes" name="notes" class="tlog-input tlog-textarea" rows="4">{{ entry.notes or '' }}</textarea>
             </div>
+            {% if global_tags %}
+            <div class="tlog-form-group">
+                <span class="tlog-label">Tags</span>
+                <div class="tlog-tag-chips">
+                    {% for tag in global_tags %}
+                    <label class="tlog-tag-chip-wrap">
+                        <input type="checkbox" name="tag_ids" value="{{ tag.id }}" class="tlog-tag-chip-cb" {% if tag in entry.tags %}checked{% endif %}>
+                        <span class="tlog-tag-chip">{{ tag.name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             <div class="tlog-form-actions">
                 <button type="submit" class="tlog-btn tlog-btn-primary" id="tlog-save-btn" disabled>Save</button>
                 <a href="{{ url_for('travel_log.collections_show', id=entry.collection_id) }}" class="tlog-btn tlog-btn-secondary">Cancel</a>
