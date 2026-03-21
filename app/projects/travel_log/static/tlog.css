@@ -688,6 +688,8 @@ body.tlog-modal-open {
     font-size: 0.8125rem;
     color: #6b7280;
     background: #f3f4f6;
+    opacity: 0.5;
+    transition: opacity 0.15s;
     border: 1px solid var(--tlog-border);
     border-radius: 9999px;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -695,12 +697,18 @@ body.tlog-modal-open {
 
 .tlog-tag-chip-wrap:hover .tlog-tag-chip {
     background: #e5e7eb;
+    opacity: 0.75;
+}
+
+.tlog-tag-chip-wrap:hover .tlog-tag-chip-cb:checked + .tlog-tag-chip {
+    opacity: 1;
 }
 
 .tlog-tag-chip-cb:checked + .tlog-tag-chip {
     background: #dbeafe;
     border-color: #2563eb;
     color: #1d4ed8;
+    opacity: 1;
 }
 
 .tlog-entry-tags {
