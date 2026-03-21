@@ -11,7 +11,7 @@ from app.projects.travel_log.services.r2 import (
     generate_presigned_download_url,
     generate_presigned_upload_url,
 )
-from app.projects.travel_log.utils import get_visited_date_default
+from app.projects.travel_log.utils import contrast_text_color, get_visited_date_default
 from app.projects.travel_log.services.places import (
     CATEGORY_TYPES,
     search_nearby,
@@ -27,6 +27,12 @@ travel_log_bp = Blueprint(
     static_folder="static",
     static_url_path="/travel-log/static",
 )
+
+
+@travel_log_bp.app_template_filter("tlog_contrast_text")
+def tlog_contrast_text_filter(bg_hex):
+    """Return 'light' or 'dark' for tag text contrast."""
+    return contrast_text_color(bg_hex)
 
 
 def _get_user_collections():
@@ -133,9 +139,9 @@ def collections_show(id):
             for tag in e.tags:
                 if tag.id not in seen_tag_ids:
                     seen_tag_ids.add(tag.id)
-                    collection_tags.append((tag.id, tag.name))
+                    collection_tags.append(tag)
         collection_dates.sort(key=lambda x: x[0])
-        collection_tags.sort(key=lambda x: x[1])
+        collection_tags.sort(key=lambda t: t.name)
 
     # Date range for the range modal (hidden for now)
     date_range = (

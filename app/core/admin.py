@@ -408,7 +408,7 @@ def travel_log_tags():
 def travel_log_tags_create():
     """Create a new global tag."""
     from app.projects.travel_log.models import TlogTag
-    from app.projects.travel_log.utils import normalize_tag_name
+    from app.projects.travel_log.utils import normalize_tag_name, normalize_hex_color
 
     raw = (request.form.get("name") or "").strip()
     name = normalize_tag_name(raw)
@@ -421,7 +421,9 @@ def travel_log_tags_create():
         flash(f'Tag "{name}" already exists.', "error")
         return redirect(url_for("admin.travel_log_tags"))
 
-    tag = TlogTag(name=name, scope="global", user_id=None, collection_id=None)
+    bg_color = normalize_hex_color(request.form.get("bg_color") or "")
+
+    tag = TlogTag(name=name, scope="global", user_id=None, collection_id=None, bg_color=bg_color)
     db.session.add(tag)
     log_entry = LogEntry(
         project="admin",
@@ -439,9 +441,9 @@ def travel_log_tags_create():
 @login_required
 @admin_required
 def travel_log_tags_update(tag_id):
-    """Rename a global tag."""
-    from app.projects.travel_log.models import TlogTag, TlogEntryTag
-    from app.projects.travel_log.utils import normalize_tag_name
+    """Update a global tag (name, bg_color)."""
+    from app.projects.travel_log.models import TlogTag
+    from app.projects.travel_log.utils import normalize_tag_name, normalize_hex_color
 
     tag = TlogTag.query.filter_by(id=tag_id, scope="global").first_or_404()
     raw = (request.form.get("name") or "").strip()
@@ -449,6 +451,9 @@ def travel_log_tags_update(tag_id):
     if not name:
         flash("Invalid tag name. Use lowercase letters, numbers, and hyphens only.", "error")
         return redirect(url_for("admin.travel_log_tags"))
+
+    bg_color = normalize_hex_color(request.form.get("bg_color") or "")
+    tag.bg_color = bg_color if bg_color else None
 
     if name != tag.name:
         existing = TlogTag.query.filter_by(scope="global", name=name).first()

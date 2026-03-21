@@ -424,6 +424,23 @@ body.tlog-lightbox-open {
     gap: 8px;
 }
 
+/* Unselected filter chips: faded so selected ones stand out */
+.tlog-date-day-chip:not(.tlog-filter-chip-active),
+.tlog-tag-filter-chip:not(.tlog-filter-chip-active) {
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.tlog-date-day-chip:not(.tlog-filter-chip-active):hover,
+.tlog-tag-filter-chip:not(.tlog-filter-chip-active):hover {
+    opacity: 0.75;
+}
+
+.tlog-date-day-chip.tlog-filter-chip-active,
+.tlog-tag-filter-chip.tlog-filter-chip-active {
+    opacity: 1;
+}
+
 .tlog-date-day-chips-hidden {
     display: none !important;
 }

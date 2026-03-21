@@ -32,8 +32,8 @@
             </div>
             {% if collection_tags %}
             <div class="tlog-tag-filter-chips tlog-date-day-chips-hidden" id="tlog-tag-filter-chips">
-                {% for tag_id, tag_name in collection_tags %}
-                <button type="button" class="tlog-filter-chip tlog-tag-filter-chip" data-tag-id="{{ tag_id }}">{{ tag_name }}</button>
+                {% for tag in collection_tags %}
+                <button type="button" class="tlog-filter-chip tlog-tag-filter-chip {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" data-tag-id="{{ tag.id }}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; border-color: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</button>
                 {% endfor %}
             </div>
             {% endif %}
@@ -95,7 +95,7 @@
                         {% if entry.tags %}
                         <span class="tlog-entry-tags">
                             {% for tag in entry.tags %}
-                            <span class="tlog-entry-tag">{{ tag.name }}</span>
+                            <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
                             {% endfor %}
                         </span>
                         {% endif %}

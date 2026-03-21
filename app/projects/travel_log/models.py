@@ -102,6 +102,7 @@ class TlogTag(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)  # stored: lowercase, hyphens, numbers only
+    bg_color = db.Column(db.String(7), nullable=True)  # hex e.g. #ff5733, null = default gray
     scope = db.Column(db.String(20), nullable=False, default="global")
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     collection_id = db.Column(db.Integer, db.ForeignKey("tlog_collection.id", ondelete="CASCADE"), nullable=True)
