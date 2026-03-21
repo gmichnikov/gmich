@@ -21,19 +21,31 @@
             </select>
         </div>
 
-        <div class="tlog-log-mode tlog-log-browse">
-            <button type="button" id="tlog-browse-btn" class="tlog-btn tlog-btn-primary">Log This Place</button>
-            <p class="tlog-log-hint">Uses your location to find nearby places.</p>
-            <p class="tlog-location-indicator" id="tlog-location-indicator" aria-live="polite">—</p>
+        <div class="tlog-log-mode-toggle" role="tablist" aria-label="How to find a place">
+            <button type="button" id="tlog-mode-nearby" class="tlog-mode-btn tlog-mode-btn-active" role="tab" aria-selected="true" aria-controls="tlog-panel-nearby">Near me</button>
+            <button type="button" id="tlog-mode-search" class="tlog-mode-btn" role="tab" aria-selected="false" aria-controls="tlog-panel-search">Search</button>
         </div>
 
-        <div class="tlog-log-search">
-            <label for="tlog-search-input" class="tlog-label">Or search</label>
-            <input type="text" id="tlog-search-input" class="tlog-input" placeholder="e.g. latte, ramen, coffee Tokyo, italian chatham nj" autocomplete="off">
-            <label class="tlog-search-nearby-wrap">
-                <input type="checkbox" id="tlog-search-nearby" class="tlog-search-nearby-cb" checked disabled>
-                <span class="tlog-search-nearby-label">Search near my location</span>
-            </label>
+        <div id="tlog-panel-nearby" class="tlog-log-panel tlog-log-panel-visible" role="tabpanel">
+            <div class="tlog-log-browse">
+                <button type="button" id="tlog-browse-btn" class="tlog-btn tlog-btn-primary">Find nearby places</button>
+                <p class="tlog-log-hint">Uses your location to find places within 200m.</p>
+                <p class="tlog-location-indicator" id="tlog-location-indicator" aria-live="polite">—</p>
+            </div>
+        </div>
+
+        <div id="tlog-panel-search" class="tlog-log-panel" role="tabpanel" aria-hidden="true">
+            <div class="tlog-log-search">
+                <label for="tlog-search-input" class="tlog-label">Search by name or address</label>
+                <div class="tlog-search-row">
+                    <input type="text" id="tlog-search-input" class="tlog-input tlog-search-input" placeholder="e.g. latte Tokyo, ramen Myeongdong, italian Chatham NJ" autocomplete="off">
+                    <button type="button" id="tlog-search-btn" class="tlog-btn tlog-btn-secondary tlog-search-submit-btn">Search</button>
+                </div>
+                <label class="tlog-search-nearby-wrap">
+                    <input type="checkbox" id="tlog-search-nearby" class="tlog-search-nearby-cb" checked disabled>
+                    <span class="tlog-search-nearby-label">Bias results near my location</span>
+                </label>
+            </div>
         </div>
 
         <div class="tlog-log-categories" id="tlog-categories" style="display: none;">
@@ -45,6 +57,10 @@
 
         <div class="tlog-log-results" id="tlog-results" style="display: none;">
             <p class="tlog-filter-label tlog-results-label" id="tlog-filter-label"></p>
+            <div class="tlog-results-client-filter-wrap" id="tlog-results-client-filter-wrap" style="display: none;">
+                <label for="tlog-results-filter-input" class="tlog-label">Filter this list</label>
+                <input type="text" id="tlog-results-filter-input" class="tlog-input tlog-results-filter-input" placeholder="Match name or address…" autocomplete="off" inputmode="search">
+            </div>
             <div class="tlog-google-attribution">
                 <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-attribution-link" translate="no">Powered by Google</a>
             </div>

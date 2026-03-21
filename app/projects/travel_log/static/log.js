@@ -10,6 +10,11 @@
   let userLng = null;
   let gpsFailed = false;
 
+  /** Last places returned from API (nearby or search); client filter runs on this snapshot. */
+  let lastPlacesSnapshot = [];
+  /** True when the last API response had zero places (vs. filter hiding all). */
+  let lastApiReturnedEmpty = true;
+
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
@@ -158,15 +163,41 @@
     el.style.display = 'block';
   }
 
-  function renderPlaces(places) {
+  function getClientFilterNeedle() {
+    return ($('#tlog-results-filter-input')?.value || '').trim().toLowerCase();
+  }
+
+  function placeMatchesClientFilter(p, needle) {
+    if (!needle) return true;
+    const hay = ((p.name || '') + ' ' + (p.address || '')).toLowerCase();
+    return hay.includes(needle);
+  }
+
+  function getFilteredPlaces() {
+    const needle = getClientFilterNeedle();
+    return lastPlacesSnapshot.filter((p) => placeMatchesClientFilter(p, needle));
+  }
+
+  function updateClientFilterWrapVisibility() {
+    const wrap = $('#tlog-results-client-filter-wrap');
+    if (wrap) wrap.style.display = lastPlacesSnapshot.length > 0 ? 'block' : 'none';
+  }
+
+  function renderPlacesList(places) {
     const ul = $('#tlog-places-list');
     if (!ul) return;
     ul.innerHTML = '';
     if (places.length === 0) {
-      ul.innerHTML = '<li class="tlog-no-results">No places found. Try a different search or <button type="button" class="tlog-inline-add-manual" id="tlog-inline-add-manual">add manually</button>.</li>';
-      const btn = $('#tlog-inline-add-manual');
-      if (btn) btn.addEventListener('click', showManualForm);
-      showFallback();
+      if (lastApiReturnedEmpty) {
+        ul.innerHTML =
+          '<li class="tlog-no-results">No places found. Try a different search or <button type="button" class="tlog-inline-add-manual" id="tlog-inline-add-manual">add manually</button>.</li>';
+        const btn = $('#tlog-inline-add-manual');
+        if (btn) btn.addEventListener('click', showManualForm);
+        showFallback();
+      } else {
+        ul.innerHTML =
+          '<li class="tlog-no-results tlog-no-filter-matches">No places match your filter. Clear or change the text above to see all results.</li>';
+      }
       return;
     }
     places.forEach((p) => {
@@ -179,13 +210,46 @@
     });
   }
 
-  function selectPlace(place) {
-    const formWrap = $('#tlog-form-wrap');
-    const browse = $('.tlog-log-browse');
-    const search = $('.tlog-log-search');
+  /** Call after every nearby/search API response. */
+  function setPlacesFromApi(places) {
+    lastPlacesSnapshot = Array.isArray(places) ? places.slice() : [];
+    lastApiReturnedEmpty = lastPlacesSnapshot.length === 0;
+    const filterInput = $('#tlog-results-filter-input');
+    if (filterInput) filterInput.value = '';
+    updateClientFilterWrapVisibility();
+    renderPlacesList(getFilteredPlaces());
+  }
+
+  function applyClientFilterOnly() {
+    renderPlacesList(getFilteredPlaces());
+  }
+
+  function hideFinder() {
+    const toggle = $('.tlog-log-mode-toggle');
+    const nearbyPanel = $('#tlog-panel-nearby');
+    const searchPanel = $('#tlog-panel-search');
     const results = $('#tlog-results');
     const categories = $('#tlog-categories');
-    if (!formWrap || !browse) return;
+    if (toggle) toggle.style.display = 'none';
+    if (nearbyPanel) nearbyPanel.style.display = 'none';
+    if (searchPanel) searchPanel.style.display = 'none';
+    if (results) results.style.display = 'none';
+    if (categories) categories.style.display = 'none';
+  }
+
+  function showFinder() {
+    const toggle = $('.tlog-log-mode-toggle');
+    const nearbyPanel = $('#tlog-panel-nearby');
+    const searchPanel = $('#tlog-panel-search');
+    if (toggle) toggle.style.display = 'flex';
+    if (nearbyPanel) nearbyPanel.style.display = '';
+    if (searchPanel) searchPanel.style.display = '';
+    switchMode('nearby');
+  }
+
+  function selectPlace(place) {
+    const formWrap = $('#tlog-form-wrap');
+    if (!formWrap) return;
 
     $('#tlog-form-name').value = place.name || '';
     $('#tlog-form-address').value = place.address || '';
@@ -195,19 +259,12 @@
     const dateEl = $('#tlog-form-date');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
 
-    browse.style.display = 'none';
-    if (search) search.style.display = 'none';
-    if (results) results.style.display = 'none';
-    if (categories) categories.style.display = 'none';
+    hideFinder();
     formWrap.style.display = 'block';
   }
 
   function showManualForm() {
     const formWrap = $('#tlog-form-wrap');
-    const browse = $('.tlog-log-browse');
-    const search = $('.tlog-log-search');
-    const results = $('#tlog-results');
-    const categories = $('#tlog-categories');
     if (!formWrap) return;
 
     $('#tlog-form-name').value = '';
@@ -218,34 +275,45 @@
     const dateEl = $('#tlog-form-date');
     if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
 
-    browse.style.display = 'none';
-    if (search) search.style.display = 'none';
-    if (results) results.style.display = 'none';
-    if (categories) categories.style.display = 'none';
+    hideFinder();
     formWrap.style.display = 'block';
   }
 
-  function goBackFromForm() {
+    function goBackFromForm() {
     const formWrap = $('#tlog-form-wrap');
-    const browse = $('.tlog-log-browse');
-    const search = $('.tlog-log-search');
-    const results = $('#tlog-results');
-    const categories = $('#tlog-categories');
-    if (!formWrap || !browse) return;
-
+    if (!formWrap) return;
     formWrap.style.display = 'none';
-    browse.style.display = 'block';
-    if (search) search.style.display = 'block';
-    if (results) results.style.display = 'none';
-    if (categories) categories.style.display = 'none';
+    showFinder();
   }
 
-  function debounce(fn, ms) {
-    let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), ms);
-    };
+  function hideResults() {
+    if ($('#tlog-results')) $('#tlog-results').style.display = 'none';
+    if ($('#tlog-categories')) $('#tlog-categories').style.display = 'none';
+    lastPlacesSnapshot = [];
+    lastApiReturnedEmpty = true;
+    const filterInput = $('#tlog-results-filter-input');
+    if (filterInput) filterInput.value = '';
+    const wrap = $('#tlog-results-client-filter-wrap');
+    if (wrap) wrap.style.display = 'none';
+  }
+
+  function switchMode(mode) {
+    const nearbyBtn = $('#tlog-mode-nearby');
+    const searchBtn = $('#tlog-mode-search');
+    const nearbyPanel = $('#tlog-panel-nearby');
+    const searchPanel = $('#tlog-panel-search');
+    if (!nearbyBtn || !searchBtn || !nearbyPanel || !searchPanel) return;
+
+    const isNearby = mode === 'nearby';
+    nearbyBtn.classList.toggle('tlog-mode-btn-active', isNearby);
+    nearbyBtn.setAttribute('aria-selected', isNearby);
+    searchBtn.classList.toggle('tlog-mode-btn-active', !isNearby);
+    searchBtn.setAttribute('aria-selected', !isNearby);
+    nearbyPanel.classList.toggle('tlog-log-panel-visible', isNearby);
+    nearbyPanel.setAttribute('aria-hidden', !isNearby);
+    searchPanel.classList.toggle('tlog-log-panel-visible', !isNearby);
+    searchPanel.setAttribute('aria-hidden', isNearby);
+    hideResults();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -257,6 +325,11 @@
     const formCancel = $('#tlog-form-cancel');
     const createForm = $('#tlog-create-form');
     const collectionSelect = $('#tlog-collection-id');
+    const nearbyModeBtn = $('#tlog-mode-nearby');
+    const searchModeBtn = $('#tlog-mode-search');
+
+    if (nearbyModeBtn) nearbyModeBtn.addEventListener('click', () => switchMode('nearby'));
+    if (searchModeBtn) searchModeBtn.addEventListener('click', () => switchMode('search'));
 
     if (browseBtn) {
       browseBtn.addEventListener('click', async () => {
@@ -267,8 +340,8 @@
           showStatus('Location not available. You can search by name (include location in your search, e.g. "coffee Tokyo" or "ramen Myeongdong Seoul") or add manually.', true);
           showFallback();
         }
-        updateFilterLabel(null, true);
-        renderPlaces(places);
+        updateFilterLabel(null, false);
+        setPlacesFromApi(places);
         if (results) {
           results.style.display = 'block';
           if (places.length > 3 && $('#tlog-categories')) $('#tlog-categories').style.display = 'flex';
@@ -276,12 +349,13 @@
       });
     }
 
-    const doSearch = debounce(async () => {
+    async function runSearch() {
       const q = searchInput?.value?.trim();
       if (!q) {
         if (results) results.style.display = 'none';
         const fl = $('#tlog-filter-label');
         if (fl) fl.style.display = 'none';
+        showStatus('Enter what you want to find, then tap Search.', false);
         return;
       }
       const useLocation = $('#tlog-search-nearby')?.checked ?? true;
@@ -289,14 +363,23 @@
       const places = await fetchSearch(q, useLocation);
       showStatus('');
       updateFilterLabel(null, true);
-      renderPlaces(places);
+      setPlacesFromApi(places);
       if (results) {
         results.style.display = 'block';
         if (places.length > 3 && $('#tlog-categories')) $('#tlog-categories').style.display = 'flex';
       }
-    }, 400);
+    }
 
-    if (searchInput) searchInput.addEventListener('input', doSearch);
+    const searchBtn = $('#tlog-search-btn');
+    if (searchBtn) searchBtn.addEventListener('click', runSearch);
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          runSearch();
+        }
+      });
+    }
 
     categoryBtns.forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -306,9 +389,14 @@
         showStatus('Searching…');
         const places = await fetchNearby(cat);
         showStatus('');
-        renderPlaces(places);
+        setPlacesFromApi(places);
       });
     });
+
+    const resultsFilterInput = $('#tlog-results-filter-input');
+    if (resultsFilterInput) {
+      resultsFilterInput.addEventListener('input', applyClientFilterOnly);
+    }
 
     if (fallbackBtn) fallbackBtn.addEventListener('click', showManualForm);
     if (formCancel) formCancel.addEventListener('click', goBackFromForm);
