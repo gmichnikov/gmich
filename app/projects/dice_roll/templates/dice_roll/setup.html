@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Dice Roll — Settings{% endblock %}
+
+{% block viewport_extra %}, viewport-fit=cover{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('dice_roll.static', filename='dice_roll/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="diceroll-setup-shell" id="diceroll-setup-root">
+    <header class="diceroll-setup-header">
+        <h1 class="diceroll-setup-title">Dice Roll</h1>
+        <p class="diceroll-setup-lead">How many six-sided dice?</p>
+    </header>
+
+    <div class="diceroll-setup-choices" role="group" aria-label="Number of dice">
+        <button type="button" class="diceroll-setup-choice" data-count="1" aria-pressed="false">
+            <span class="diceroll-setup-choice-num">1</span>
+            <span class="diceroll-setup-choice-label">die</span>
+        </button>
+        <button type="button" class="diceroll-setup-choice" data-count="2" aria-pressed="false">
+            <span class="diceroll-setup-choice-num">2</span>
+            <span class="diceroll-setup-choice-label">dice</span>
+        </button>
+        <button type="button" class="diceroll-setup-choice" data-count="5" aria-pressed="false">
+            <span class="diceroll-setup-choice-num">5</span>
+            <span class="diceroll-setup-choice-label">dice</span>
+        </button>
+    </div>
+
+    <p class="diceroll-setup-note">On the roll screen, tap a die to hold its value (for games like Yahtzee). Everything else is a big “roll” button.</p>
+
+    <div class="diceroll-setup-actions">
+        <a href="{{ url_for('dice_roll.index') }}" class="diceroll-setup-done">Done — go roll</a>
+        <a href="{{ url_for('main.index') }}" class="diceroll-setup-home">Site home</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('dice_roll.static', filename='dice_roll/app.js') }}" defer></script>
+{% endblock %}

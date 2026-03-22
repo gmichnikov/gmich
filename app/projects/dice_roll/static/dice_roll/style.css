@@ -1,44 +1,578 @@
 /* dice_roll — prefixed to avoid collisions with other hub projects */
 
-.diceroll-shell {
-    max-width: 42rem;
-    margin: 0 auto;
-    padding: 1.5rem 1rem 3rem;
+/* ---- Play (roll) screen ---- */
+.diceroll-play-root {
+    position: relative;
+    margin: -40px -20px;
+    padding: 0.5rem 0.75rem 1.25rem;
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    overflow-x: hidden;
+    max-width: none;
+    /* 100dvh tracks mobile browser chrome; 100vh fallback for older engines */
+    min-height: min(92vh, calc(100vh - 5.25rem));
+    min-height: min(92dvh, calc(100dvh - 5.25rem));
 }
 
-.diceroll-header {
-    text-align: center;
-    margin-bottom: 2rem;
+.diceroll-settings-link {
+    position: absolute;
+    top: max(0.35rem, env(safe-area-inset-top, 0px));
+    right: max(0.65rem, env(safe-area-inset-right, 0px));
+    z-index: 2;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0.4rem 0.55rem;
+    line-height: 1.2;
+    /* Adults still get a proper tap target without looking huge */
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
-.diceroll-title {
-    font-size: 1.75rem;
+.diceroll-settings-link:hover,
+.diceroll-settings-link:focus-visible {
+    color: #64748b;
+    outline: none;
+}
+
+.diceroll-settings-link:focus-visible {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6366f1;
+    border-radius: 4px;
+}
+
+.diceroll-roll-surface {
+    /* JS sets --diceroll-bg-* each roll (Sorry!-style random pastels; instant repaint on all browsers). */
+    --diceroll-bg-1: #e8ecff;
+    --diceroll-bg-2: #f8fafc;
+    --diceroll-bg-3: #eef2f7;
+    --diceroll-angle: 165deg;
+    position: relative;
+    isolation: isolate;
+    min-height: min(82vh, calc(100vh - 6.5rem));
+    min-height: min(82dvh, calc(100dvh - 6.5rem));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 4vh, 2rem);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior-y: contain;
+    border-radius: 20px;
+    margin-top: 1.5rem;
+    padding: 1rem 0.5rem calc(3.35rem + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+.diceroll-roll-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 0;
+    background: linear-gradient(
+        var(--diceroll-angle),
+        var(--diceroll-bg-1) 0%,
+        var(--diceroll-bg-2) 48%,
+        var(--diceroll-bg-3) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    pointer-events: none;
+}
+
+.diceroll-roll-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+        ellipse 90% 75% at 50% 40%,
+        rgba(255, 255, 255, 0.7),
+        rgba(165, 180, 252, 0.35) 42%,
+        transparent 68%
+    );
+}
+
+.diceroll-roll-surface.diceroll-roll-surface--roll-ping::after {
+    animation: diceroll-roll-ping 0.48s ease-out;
+}
+
+@keyframes diceroll-roll-ping {
+    0% {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+    22% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+}
+
+.diceroll-roll-surface:active,
+.diceroll-roll-surface.diceroll-roll-surface--pressed {
+    transform: scale(0.998);
+    box-shadow:
+        inset 0 3px 12px rgba(99, 102, 241, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.diceroll-roll-surface:focus {
+    outline: none;
+}
+
+.diceroll-roll-surface:focus-visible {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 0 0 3px #c7d2fe,
+        0 0 0 5px #6366f1;
+}
+
+.diceroll-hint {
+    margin: 0;
+    position: relative;
+    z-index: 2;
+    font-size: clamp(1rem, 3.5vw, 1.2rem);
     font-weight: 700;
-    margin: 0 0 0.5rem;
+    color: #0f172a;
+    letter-spacing: 0.02em;
+    text-align: center;
+    pointer-events: none;
+    padding: 0.5rem 1.2rem;
+    max-width: 22rem;
+    margin-left: auto;
+    margin-right: auto;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 999px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.diceroll-roll-badge {
+    position: absolute;
+    bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    margin: 0;
+    padding: 0.4rem 0.95rem;
+    min-width: 5.5rem;
+    text-align: center;
+    font-size: clamp(1.05rem, 3.8vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px solid rgba(15, 23, 42, 0.12);
+    border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    pointer-events: none;
+}
+
+.diceroll-roll-badge:empty {
+    display: none;
+}
+
+.diceroll-dice-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(0.45rem, 2.5vw, 1.1rem);
+    max-width: 100%;
+    padding: 0.5rem;
+    /* Room for “Held” labels below dice on small screens */
+    padding-bottom: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.diceroll-die {
+    --diceroll-die-size: clamp(3.35rem, 17vw, 5.5rem);
+    width: var(--diceroll-die-size);
+    height: var(--diceroll-die-size);
+    flex-shrink: 0;
+    padding: 0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow:
+        0 4px 0 #cbd5e1,
+        0 8px 24px rgba(15, 23, 42, 0.12);
+    border: 3px solid #e2e8f0;
+    cursor: pointer;
+    position: relative;
+    display: block;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+.diceroll-die:not(.diceroll-die--held) {
+    border-color: #e2e8f0;
+    background: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .diceroll-die:not(.diceroll-die--held):hover {
+        border-color: #94a3b8;
+    }
+}
+
+.diceroll-die:focus {
+    outline: none;
+}
+
+.diceroll-die:focus-visible {
+    box-shadow:
+        0 4px 0 #cbd5e1,
+        0 8px 24px rgba(15, 23, 42, 0.12),
+        0 0 0 3px #6366f1;
+}
+
+.diceroll-die.diceroll-die--held {
+    border-color: #d97706;
+    background: linear-gradient(180deg, #fffbeb 0%, #fff 55%);
+    box-shadow:
+        0 4px 0 #f59e0b,
+        0 8px 20px rgba(217, 119, 6, 0.2);
+}
+
+.diceroll-die.diceroll-die--bump {
+    animation: diceroll-bump 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .diceroll-die.diceroll-die--bump {
+        animation: none;
+    }
+
+    .diceroll-roll-surface:active {
+        transform: none;
+    }
+
+    .diceroll-roll-surface {
+        transition: transform 0.08s ease, box-shadow 0.15s ease;
+    }
+
+    .diceroll-roll-surface.diceroll-roll-surface--roll-ping::after {
+        animation: diceroll-roll-ping-reduced 0.32s ease-out;
+    }
+
+    .diceroll-die {
+        transition:
+            border-color 0.12s ease,
+            box-shadow 0.15s ease,
+            transform 0.12s ease;
+    }
+}
+
+@keyframes diceroll-roll-ping-reduced {
+    0% {
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes diceroll-bump {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    40% {
+        transform: scale(1.06) rotate(-4deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.diceroll-pips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+    padding: 14%;
+    gap: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.diceroll-pip {
+    display: block;
+    border-radius: 50%;
+    background: transparent;
+    margin: auto;
+    width: 78%;
+    height: 78%;
+    max-width: 0.65rem;
+    max-height: 0.65rem;
+}
+
+.diceroll-pip.diceroll-pip--on {
+    background: #1e293b;
+}
+
+.diceroll-held-tag {
+    position: absolute;
+    bottom: -1.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* ---- Setup screen ---- */
+.diceroll-setup-shell {
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 0.5rem 0 2.5rem;
+}
+
+.diceroll-setup-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.diceroll-setup-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
     letter-spacing: -0.02em;
 }
 
-.diceroll-subtitle {
+.diceroll-setup-lead {
     margin: 0;
-    color: #555;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
 }
 
-.diceroll-main {
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-    padding: 2rem 1.5rem;
-    background: #fafafa;
-    min-height: 12rem;
+.diceroll-setup-choices {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
 }
 
-.diceroll-placeholder {
-    margin: 0;
-    color: #888;
+.diceroll-setup-choice {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.15rem 2.75rem 1.15rem 1.25rem;
+    border-radius: 14px;
+    border: 3px solid #e2e8f0;
+    background: #f8fafc;
+    cursor: pointer;
+    font: inherit;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        transform 0.08s ease,
+        box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.diceroll-setup-choice:hover:not(.diceroll-setup-choice--selected) {
+    border-color: #cbd5e1;
+    background: #fff;
+}
+
+.diceroll-setup-choice.diceroll-setup-choice--selected:hover {
+    border-color: #047857;
+    background: #f0fdf4;
+}
+
+.diceroll-setup-choice:active {
+    transform: scale(0.99);
+}
+
+.diceroll-setup-choice:focus {
+    outline: none;
+}
+
+.diceroll-setup-choice:focus-visible {
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.45);
+    border-color: #14b8a6;
+}
+
+/* Green/teal (not purple) so selection stands apart from the purple Done button */
+.diceroll-setup-choice.diceroll-setup-choice--selected {
+    border-color: #059669;
+    background: #fff;
+    box-shadow:
+        0 4px 0 #047857,
+        inset 0 0 0 1px rgba(5, 150, 105, 0.12);
+}
+
+.diceroll-setup-choice.diceroll-setup-choice--selected::after {
+    content: "✓";
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #059669;
+}
+
+.diceroll-setup-choice.diceroll-setup-choice--selected .diceroll-setup-choice-num {
+    color: #065f46;
+}
+
+.diceroll-setup-choice.diceroll-setup-choice--selected .diceroll-setup-choice-label {
+    color: #047857;
+}
+
+.diceroll-setup-choice-num {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #312e81;
+    line-height: 1;
+}
+
+.diceroll-setup-choice-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.diceroll-setup-note {
+    margin: 0 0 1.75rem;
     font-size: 0.95rem;
+    line-height: 1.55;
+    color: #0f172a;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.diceroll-setup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
     text-align: center;
+}
+
+.diceroll-setup-done {
+    display: block;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    background: #4f46e5;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none;
+    box-shadow: 0 4px 0 #3730a3;
+    transition: filter 0.12s ease, transform 0.08s ease;
+}
+
+.diceroll-setup-done:hover {
+    filter: brightness(1.06);
+}
+
+.diceroll-setup-done:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #3730a3;
+}
+
+.diceroll-setup-home {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.diceroll-setup-home:hover {
+    color: #64748b;
+}
+
+/* ---- Mobile / coarse pointer (phones, tablets) ---- */
+@media (pointer: coarse) {
+    .diceroll-die {
+        --diceroll-die-size: clamp(3.85rem, 18vw, 5.85rem);
+    }
+
+    .diceroll-dice-row {
+        gap: clamp(0.55rem, 3vw, 1.15rem);
+        padding-bottom: 2.35rem;
+    }
+
+    .diceroll-hint {
+        font-size: clamp(1.1rem, 4.2vw, 1.35rem);
+    }
+
+    .diceroll-pip {
+        max-width: 0.72rem;
+        max-height: 0.72rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .diceroll-play-root {
+        margin: -36px -12px;
+        padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+    }
+
+    .diceroll-roll-surface {
+        margin-top: 2.5rem;
+        padding-left: max(0.35rem, env(safe-area-inset-left, 0px));
+        padding-right: max(0.35rem, env(safe-area-inset-right, 0px));
+        padding-bottom: calc(3.35rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 16px;
+    }
+
+    .diceroll-setup-shell {
+        padding-left: max(0rem, env(safe-area-inset-left, 0px));
+        padding-right: max(0rem, env(safe-area-inset-right, 0px));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .diceroll-setup-choice {
+        padding: 1.35rem 1.5rem;
+        min-height: 52px;
+    }
+
+    .diceroll-setup-done {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

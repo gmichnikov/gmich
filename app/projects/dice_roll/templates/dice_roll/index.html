@@ -2,19 +2,27 @@
 
 {% block title %}Dice Roll{% endblock %}
 
+{% block viewport_extra %}, viewport-fit=cover{% endblock %}
+
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('dice_roll.static', filename='dice_roll/style.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="diceroll-shell">
-    <header class="diceroll-header">
-        <h1 class="diceroll-title">Dice Roll</h1>
-        <p class="diceroll-subtitle">Game night helper — rolls and controls will go here.</p>
-    </header>
-    <main class="diceroll-main" aria-label="Dice roll area">
-        <p class="diceroll-placeholder">Skeleton ready. Add dice types, roll button, and history in <code>app.js</code>.</p>
-    </main>
+<div class="diceroll-play-root" id="diceroll-play-root">
+    <a href="{{ url_for('dice_roll.setup') }}" class="diceroll-settings-link">Settings</a>
+
+    <div
+        class="diceroll-roll-surface"
+        id="diceroll-roll-surface"
+        role="button"
+        tabindex="0"
+        aria-label="Roll dice. Tap a die to hold or release it for the next roll."
+    >
+        <p class="diceroll-hint" aria-hidden="true">Tap almost anywhere to roll</p>
+        <div class="diceroll-dice-row" id="diceroll-dice-row" aria-live="polite" aria-atomic="true"></div>
+        <p class="diceroll-roll-badge" id="diceroll-roll-badge" role="status" aria-live="polite"></p>
+    </div>
 </div>
 {% endblock %}
 
