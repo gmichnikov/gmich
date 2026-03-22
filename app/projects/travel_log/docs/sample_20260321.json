@@ -1,0 +1,796 @@
+{
+  "places": [
+    {
+      "id": "ChIJszwddPSlw4kR-43ZmDf0bq0",
+      "types": ["playground", "point_of_interest", "establishment"],
+      "formattedAddress": "20-38 Greenwood Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "20-38",
+          "shortText": "20-38",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Greenwood Avenue",
+          "shortText": "Greenwood Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.759119399999996,
+        "longitude": -74.411208399999992
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7576842197085,
+          "longitude": -74.4124657802915
+        },
+        "high": {
+          "latitude": 40.760382180291494,
+          "longitude": -74.409767819708492
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=12497194535624478203&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Dodge Field Playground",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Playground",
+        "languageCode": "en-US"
+      },
+      "primaryType": "playground",
+      "shortFormattedAddress": "20-38 Greenwood Ave, Madison"
+    },
+    {
+      "id": "ChIJ1Uwo9POlw4kRZpRlWhyZZQA",
+      "types": [
+        "athletic_field",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "49 Central Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "49",
+          "shortText": "49",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Central Avenue",
+          "shortText": "Central Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "1848",
+          "shortText": "1848",
+          "types": ["postal_code_suffix"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7601509,
+        "longitude": -74.412086399999993
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7588552197085,
+          "longitude": -74.4135002802915
+        },
+        "high": {
+          "latitude": 40.761553180291493,
+          "longitude": -74.4108023197085
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=28597319702516838&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Dodge Field",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Athletic Field",
+        "languageCode": "en-US"
+      },
+      "primaryType": "athletic_field",
+      "shortFormattedAddress": "49 Central Ave, Madison"
+    },
+    {
+      "id": "ChIJFUe2bPSlw4kRE-b0yRK3Nu4",
+      "types": ["dentist", "point_of_interest", "health", "establishment"],
+      "formattedAddress": "41 Greenwood Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "41",
+          "shortText": "41",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Greenwood Avenue",
+          "shortText": "Greenwood Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "2127",
+          "shortText": "2127",
+          "types": ["postal_code_suffix"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7591125,
+        "longitude": -74.4102881
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7578581197085,
+          "longitude": -74.411573480291509
+        },
+        "high": {
+          "latitude": 40.7605560802915,
+          "longitude": -74.408875519708488
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=17165108321094788627&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Dr. Roger L. Paetzell, DMD LLC",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Dentist",
+        "languageCode": "en-US"
+      },
+      "primaryType": "dentist",
+      "shortFormattedAddress": "41 Greenwood Ave, Madison"
+    },
+    {
+      "id": "ChIJsUo3v76lw4kRWthct4tlxHQ",
+      "types": [
+        "athletic_field",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "39 Greenwood Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "39",
+          "shortText": "39",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Greenwood Avenue",
+          "shortText": "Greenwood Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7594097,
+        "longitude": -74.4107987
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7579857697085,
+          "longitude": -74.412049130291493
+        },
+        "high": {
+          "latitude": 40.76068373029149,
+          "longitude": -74.409351169708486
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=8413961654586103898&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Dodge Field Basketball Courts",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Athletic Field",
+        "languageCode": "en-US"
+      },
+      "primaryType": "athletic_field",
+      "shortFormattedAddress": "39 Greenwood Ave, Madison"
+    },
+    {
+      "id": "ChIJvRlDqO2lw4kRdkKm7P79hwg",
+      "types": ["dentist", "point_of_interest", "health", "establishment"],
+      "formattedAddress": "41 Greenwood Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "41",
+          "shortText": "41",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Greenwood Avenue",
+          "shortText": "Greenwood Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7591125,
+        "longitude": -74.4102881
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7578581197085,
+          "longitude": -74.411573480291509
+        },
+        "high": {
+          "latitude": 40.7605560802915,
+          "longitude": -74.408875519708488
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=614739145493201526&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Paetzell",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Dentist",
+        "languageCode": "en-US"
+      },
+      "primaryType": "dentist",
+      "shortFormattedAddress": "41 Greenwood Ave, Madison"
+    },
+    {
+      "id": "ChIJUxnpWibsywQRHj-hv1z3QlA",
+      "types": [
+        "general_contractor",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "24 Alexander Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "24",
+          "shortText": "24",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Alexander Avenue",
+          "shortText": "Alexander Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7582695,
+        "longitude": -74.4099329
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.7568465697085,
+          "longitude": -74.4111597802915
+        },
+        "high": {
+          "latitude": 40.7595445302915,
+          "longitude": -74.408461819708492
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=5783456849221205790&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "The Grade Outdoors LLC",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "General Contractor",
+        "languageCode": "en-US"
+      },
+      "primaryType": "general_contractor",
+      "shortFormattedAddress": "24 Alexander Ave, Madison"
+    },
+    {
+      "id": "ChIJnblTgsKlw4kRLAHePdzHkgU",
+      "types": [
+        "ice_cream_shop",
+        "dessert_shop",
+        "confectionery",
+        "food_store",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "55 Central Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "55",
+          "shortText": "55",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Central Avenue",
+          "shortText": "Central Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.759076,
+        "longitude": -74.4116227
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.757694969708496,
+          "longitude": -74.413015780291516
+        },
+        "high": {
+          "latitude": 40.760392930291495,
+          "longitude": -74.4103178197085
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=401603065534087468&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "CLOSED_TEMPORARILY",
+      "displayName": {
+        "text": "Calvin's Shaved Ice",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Ice Cream Shop",
+        "languageCode": "en-US"
+      },
+      "primaryType": "ice_cream_shop",
+      "shortFormattedAddress": "55 Central Ave, Madison"
+    },
+    {
+      "id": "ChIJOQ6UitSlw4kRBCs1eaZzmkA",
+      "types": ["service", "point_of_interest", "establishment"],
+      "formattedAddress": "Howell St, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "Howell Street",
+          "shortText": "Howell St",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7604136,
+        "longitude": -74.4106977
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.759099969708508,
+          "longitude": -74.4120939302915
+        },
+        "high": {
+          "latitude": 40.7617979302915,
+          "longitude": -74.4093959697085
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=4655160323676121860&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Devost Design LLC",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Services",
+        "languageCode": "en-US"
+      },
+      "primaryType": "service",
+      "shortFormattedAddress": "Howell St, Madison"
+    },
+    {
+      "id": "ChIJJWuN6-ilw4kRxtpSxV1-RKo",
+      "types": [
+        "bar",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "17 Madison Ave Apartment 44, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "Apartment 44",
+          "shortText": "Apartment 44",
+          "types": ["subpremise"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "17",
+          "shortText": "17",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Madison Avenue",
+          "shortText": "Madison Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "1848",
+          "shortText": "1848",
+          "types": ["postal_code_suffix"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7591057,
+        "longitude": -74.4115814
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.757709769708505,
+          "longitude": -74.4129950302915
+        },
+        "high": {
+          "latitude": 40.760407730291504,
+          "longitude": -74.410297069708491
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=12269070226071673542&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "CLOSED_TEMPORARILY",
+      "displayName": {
+        "text": "Calvin's Food Stand",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Bar",
+        "languageCode": "en-US"
+      },
+      "primaryType": "bar",
+      "shortFormattedAddress": "17 Madison Ave Apartment 44, Madison"
+    },
+    {
+      "id": "ChIJ__8PdPSlw4kRxMUt4HP_sJE",
+      "types": ["playground", "point_of_interest", "establishment"],
+      "formattedAddress": "Greenwood Ave, Madison, NJ 07940, USA",
+      "addressComponents": [
+        {
+          "longText": "Greenwood Avenue",
+          "shortText": "Greenwood Ave",
+          "types": ["route"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Madison",
+          "shortText": "Madison",
+          "types": ["locality", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "Morris County",
+          "shortText": "Morris County",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "New Jersey",
+          "shortText": "NJ",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "United States",
+          "shortText": "US",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "07940",
+          "shortText": "07940",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 40.7591502,
+        "longitude": -74.41120389999999
+      },
+      "viewport": {
+        "low": {
+          "latitude": 40.757715419708504,
+          "longitude": -74.4124421302915
+        },
+        "high": {
+          "latitude": 40.7604133802915,
+          "longitude": -74.409744169708489
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=10498171604548044228&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Playground",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Playground",
+        "languageCode": "en-US"
+      },
+      "primaryType": "playground",
+      "shortFormattedAddress": "Greenwood Ave, Madison"
+    }
+  ]
+}

@@ -89,6 +89,130 @@ def tag_display_name(name: str) -> str:
     return " ".join(part.capitalize() for part in name.split("-"))
 
 
+# Max lengths for place detail fields (Google-derived + user-editable)
+TLOG_PLACE_DETAIL_MAX = {
+    "primary_type": 64,
+    "primary_type_display_name": 128,
+    "short_formatted_address": 512,
+    "addr_locality": 128,
+    "addr_admin_area_1": 128,
+    "addr_admin_area_2": 255,
+    "addr_admin_area_3": 128,
+    "addr_country_code": 2,
+}
+
+TLOG_PLACE_DETAIL_KEYS = tuple(TLOG_PLACE_DETAIL_MAX.keys())
+
+
+def _truncate_place_detail_str(value: str | None, max_len: int) -> str | None:
+    if not value or not isinstance(value, str):
+        return None
+    s = value.strip()
+    if not s:
+        return None
+    if len(s) > max_len:
+        s = s[:max_len]
+    return s
+
+
+def parse_address_components_for_place_detail(components: list | None) -> dict[str, str | None]:
+    """
+    Walk Google Places API (New) addressComponents.
+    Skip entries with no types. Country uses shortText as ISO alpha-2 when valid.
+    """
+    out: dict[str, str | None] = {
+        "addr_locality": None,
+        "addr_admin_area_1": None,
+        "addr_admin_area_2": None,
+        "addr_admin_area_3": None,
+        "addr_country_code": None,
+    }
+    if not components:
+        return out
+
+    type_to_key = (
+        ("locality", "addr_locality"),
+        ("administrative_area_level_1", "addr_admin_area_1"),
+        ("administrative_area_level_2", "addr_admin_area_2"),
+        ("administrative_area_level_3", "addr_admin_area_3"),
+    )
+
+    for comp in components:
+        if not isinstance(comp, dict):
+            continue
+        types = comp.get("types")
+        if not types:
+            continue
+        types_set = set(types)
+        if "country" in types_set:
+            code = (comp.get("shortText") or "").strip().upper()
+            if len(code) == 2 and code.isalpha():
+                out["addr_country_code"] = code
+            continue
+        for t, key in type_to_key:
+            if t in types_set and out[key] is None:
+                long_t = (comp.get("longText") or "").strip()
+                out[key] = _truncate_place_detail_str(long_t, TLOG_PLACE_DETAIL_MAX[key])
+                break
+
+    return out
+
+
+def extract_place_detail_from_api_place(place: dict | None) -> dict[str, str | None]:
+    """Map a Places API place object to our eight nullable detail fields."""
+    empty = {k: None for k in TLOG_PLACE_DETAIL_KEYS}
+    if not place or not isinstance(place, dict):
+        return empty
+
+    addr = parse_address_components_for_place_detail(place.get("addressComponents"))
+    ptdn = place.get("primaryTypeDisplayName") or {}
+    ptdn_text = ptdn.get("text") if isinstance(ptdn, dict) else None
+
+    return {
+        "primary_type": _truncate_place_detail_str(
+            place.get("primaryType") if isinstance(place.get("primaryType"), str) else None,
+            TLOG_PLACE_DETAIL_MAX["primary_type"],
+        ),
+        "primary_type_display_name": _truncate_place_detail_str(
+            ptdn_text,
+            TLOG_PLACE_DETAIL_MAX["primary_type_display_name"],
+        ),
+        "short_formatted_address": _truncate_place_detail_str(
+            place.get("shortFormattedAddress")
+            if isinstance(place.get("shortFormattedAddress"), str)
+            else None,
+            TLOG_PLACE_DETAIL_MAX["short_formatted_address"],
+        ),
+        **addr,
+    }
+
+
+def parse_place_detail_from_client(data) -> dict[str, str | None]:
+    """
+    Read optional place detail keys from a form-like mapping (request.form or JSON dict).
+    Strips, truncates, validates addr_country_code as two letters.
+    """
+    result: dict[str, str | None] = {}
+    for key in TLOG_PLACE_DETAIL_KEYS:
+        max_len = TLOG_PLACE_DETAIL_MAX[key]
+        raw = data.get(key) if hasattr(data, "get") else None
+        if raw is None:
+            result[key] = None
+            continue
+        if not isinstance(raw, str):
+            raw = str(raw)
+        s = raw.strip()
+        if not s:
+            result[key] = None
+            continue
+        if key == "addr_country_code":
+            s = s.upper()[:2]
+            result[key] = s if len(s) == 2 and s.isalpha() else None
+        else:
+            result[key] = s[:max_len] if len(s) > max_len else s
+    return result
+
+
 def get_visited_date_default(lat, lng):
     """
     Default visited_date from lat/lng timezone, or today if unavailable.

@@ -27,6 +27,42 @@
                     {% endif %}
                 </div>
             </div>
+            <fieldset class="tlog-place-details-fieldset">
+                <legend class="tlog-place-details-legend">Place details</legend>
+                <p class="tlog-place-details-hint">Optional listing fields. <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-inline-attribution-link" translate="no">Powered by Google</a></p>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-primary-type" class="tlog-label">Primary type (code)</label>
+                    <input type="text" id="tlog-edit-primary-type" name="primary_type" class="tlog-input" maxlength="64" value="{{ entry.primary_type or '' }}" autocomplete="off">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-primary-type-display" class="tlog-label">Primary type (display)</label>
+                    <input type="text" id="tlog-edit-primary-type-display" name="primary_type_display_name" class="tlog-input" maxlength="128" value="{{ entry.primary_type_display_name or '' }}" autocomplete="off">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-short-address" class="tlog-label">Short formatted address</label>
+                    <input type="text" id="tlog-edit-short-address" name="short_formatted_address" class="tlog-input" maxlength="512" value="{{ entry.short_formatted_address or '' }}" autocomplete="off">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-addr-locality" class="tlog-label">City / locality</label>
+                    <input type="text" id="tlog-edit-addr-locality" name="addr_locality" class="tlog-input" maxlength="128" value="{{ entry.addr_locality or '' }}" autocomplete="address-level2">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-addr-admin-1" class="tlog-label">Admin area 1 (e.g. state / region)</label>
+                    <input type="text" id="tlog-edit-addr-admin-1" name="addr_admin_area_1" class="tlog-input" maxlength="128" value="{{ entry.addr_admin_area_1 or '' }}" autocomplete="address-level1">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-addr-admin-2" class="tlog-label">Admin area 2 (e.g. county / province code)</label>
+                    <input type="text" id="tlog-edit-addr-admin-2" name="addr_admin_area_2" class="tlog-input" maxlength="255" value="{{ entry.addr_admin_area_2 or '' }}" autocomplete="off">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-addr-admin-3" class="tlog-label">Admin area 3</label>
+                    <input type="text" id="tlog-edit-addr-admin-3" name="addr_admin_area_3" class="tlog-input" maxlength="128" value="{{ entry.addr_admin_area_3 or '' }}" autocomplete="off">
+                </div>
+                <div class="tlog-form-group">
+                    <label for="tlog-edit-addr-country" class="tlog-label">Country code (ISO 2-letter)</label>
+                    <input type="text" id="tlog-edit-addr-country" name="addr_country_code" class="tlog-input tlog-input-country-code" maxlength="2" value="{{ entry.addr_country_code or '' }}" inputmode="text" autocapitalize="characters" autocomplete="country">
+                </div>
+            </fieldset>
             <div class="tlog-form-group">
                 <label for="tlog-edit-date" class="tlog-label">Visited date</label>
                 <input type="date" id="tlog-edit-date" name="visited_date" class="tlog-input" value="{{ entry.visited_date.isoformat() }}" required>

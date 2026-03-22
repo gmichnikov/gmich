@@ -4,6 +4,8 @@ import logging
 import math
 import requests
 
+from app.projects.travel_log.utils import extract_place_detail_from_api_place
+
 # Types to filter out when no category selected ("other")
 UNHELPFUL_TYPES = {"route", "locality", "political", "real_estate_agency"}
 
@@ -25,8 +27,9 @@ CATEGORY_TYPES = {
 }
 
 FIELD_MASK = (
-    "places.displayName,places.formattedAddress,places.location,"
-    "places.id,places.types,places.businessStatus"
+    "places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location,"
+    "places.id,places.types,places.businessStatus,"
+    "places.addressComponents,places.primaryType,places.primaryTypeDisplayName"
 )
 
 
@@ -61,6 +64,9 @@ def _place_to_dict(place, center_lat=None, center_lng=None):
     status = place.get("businessStatus")
     if status:
         out["businessStatus"] = status
+
+    details = extract_place_detail_from_api_place(place)
+    out.update(details)
     return out
 
 

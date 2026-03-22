@@ -247,6 +247,49 @@
     switchMode('nearby');
   }
 
+  function setPlaceDetailInputs(place) {
+    const v = (x) => (x != null && x !== '' ? String(x) : '');
+    const el = (id) => $(id);
+    const set = (id, key) => {
+      const node = el(id);
+      if (node) node.value = v(place[key]);
+    };
+    set('#tlog-form-primary-type', 'primary_type');
+    set('#tlog-form-primary-type-display', 'primary_type_display_name');
+    set('#tlog-form-short-address', 'short_formatted_address');
+    set('#tlog-form-addr-locality', 'addr_locality');
+    set('#tlog-form-addr-admin-1', 'addr_admin_area_1');
+    set('#tlog-form-addr-admin-2', 'addr_admin_area_2');
+    set('#tlog-form-addr-admin-3', 'addr_admin_area_3');
+    set('#tlog-form-addr-country', 'addr_country_code');
+
+    const aa3Wrap = $('#tlog-form-addr-admin-3-wrap');
+    if (aa3Wrap) {
+      const loc = (place.addr_locality || '').trim();
+      const aa3 = (place.addr_admin_area_3 || '').trim();
+      const dup = loc && aa3 && loc === aa3;
+      aa3Wrap.style.display = dup ? 'none' : '';
+    }
+  }
+
+  function clearPlaceDetailInputs() {
+    [
+      '#tlog-form-primary-type',
+      '#tlog-form-primary-type-display',
+      '#tlog-form-short-address',
+      '#tlog-form-addr-locality',
+      '#tlog-form-addr-admin-1',
+      '#tlog-form-addr-admin-2',
+      '#tlog-form-addr-admin-3',
+      '#tlog-form-addr-country',
+    ].forEach((id) => {
+      const node = $(id);
+      if (node) node.value = '';
+    });
+    const aa3Wrap = $('#tlog-form-addr-admin-3-wrap');
+    if (aa3Wrap) aa3Wrap.style.display = '';
+  }
+
   function selectPlace(place) {
     const formWrap = $('#tlog-form-wrap');
     if (!formWrap) return;
@@ -256,6 +299,7 @@
     $('#tlog-form-place-id').value = place.place_id || '';
     $('#tlog-form-lat').value = place.lat != null ? String(place.lat) : '';
     $('#tlog-form-lng').value = place.lng != null ? String(place.lng) : '';
+    setPlaceDetailInputs(place);
     const dateEl = $('#tlog-form-date');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
 
@@ -272,6 +316,7 @@
     $('#tlog-form-place-id').value = '';
     $('#tlog-form-lat').value = '';
     $('#tlog-form-lng').value = '';
+    clearPlaceDetailInputs();
     const dateEl = $('#tlog-form-date');
     if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
 

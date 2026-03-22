@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 
 from app import csrf, db
 from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto, TlogTag
+from app.projects.travel_log.utils import parse_place_detail_from_client
 from app.projects.travel_log.services.r2 import (
     generate_photo_key,
     generate_presigned_download_url,
@@ -328,6 +329,8 @@ def entries_create():
     else:
         visited_date = get_visited_date_default(lat, lng) if (lat and lng) else datetime.utcnow().date()
 
+    place_detail = parse_place_detail_from_client(data)
+
     now = datetime.utcnow()
     entry = TlogEntry(
         user_id=current_user.id,
@@ -339,6 +342,7 @@ def entries_create():
         user_address=(data.get("user_address") or "").strip() or None,
         notes=None,
         visited_date=visited_date,
+        **place_detail,
     )
     db.session.add(entry)
     collection.last_modified = now
@@ -365,7 +369,7 @@ def entries_edit(id):
 @travel_log_bp.route("/entries/<int:id>/update", methods=["POST"])
 @login_required
 def entries_update(id):
-    """Update entry: user_name, user_address, notes, visited_date, tags."""
+    """Update entry: user_name, user_address, place detail fields, notes, visited_date, tags."""
     entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     user_name = (request.form.get("user_name") or "").strip()
     if not user_name:
@@ -375,6 +379,16 @@ def entries_update(id):
     entry.user_name = user_name
     entry.user_address = (request.form.get("user_address") or "").strip() or None
     entry.notes = (request.form.get("notes") or "").strip() or None
+
+    pd = parse_place_detail_from_client(request.form)
+    entry.primary_type = pd["primary_type"]
+    entry.primary_type_display_name = pd["primary_type_display_name"]
+    entry.short_formatted_address = pd["short_formatted_address"]
+    entry.addr_locality = pd["addr_locality"]
+    entry.addr_admin_area_1 = pd["addr_admin_area_1"]
+    entry.addr_admin_area_2 = pd["addr_admin_area_2"]
+    entry.addr_admin_area_3 = pd["addr_admin_area_3"]
+    entry.addr_country_code = pd["addr_country_code"]
     visited_date_str = request.form.get("visited_date")
     if visited_date_str:
         try:

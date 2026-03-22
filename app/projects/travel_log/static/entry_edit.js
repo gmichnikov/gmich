@@ -1,13 +1,26 @@
 /**
  * Travel Log — Entry edit page: enable Save button only when form has changes.
- * Photos are autosaved; Save applies only to name, address, notes, visited_date, tags.
+ * Photos are autosaved; Save applies to name, address, place details, notes, visited_date, tags.
  */
 (function () {
   const form = document.querySelector('.tlog-form');
   const saveBtn = document.getElementById('tlog-save-btn');
   if (!form || !saveBtn) return;
 
-  const fields = ['tlog-edit-name', 'tlog-edit-address', 'tlog-edit-date', 'tlog-edit-notes'];
+  const fields = [
+    'tlog-edit-name',
+    'tlog-edit-address',
+    'tlog-edit-primary-type',
+    'tlog-edit-primary-type-display',
+    'tlog-edit-short-address',
+    'tlog-edit-addr-locality',
+    'tlog-edit-addr-admin-1',
+    'tlog-edit-addr-admin-2',
+    'tlog-edit-addr-admin-3',
+    'tlog-edit-addr-country',
+    'tlog-edit-date',
+    'tlog-edit-notes',
+  ];
   const inputs = fields.map(id => document.getElementById(id)).filter(Boolean);
   const tagCheckboxes = form.querySelectorAll('input[name="tag_ids"]');
 

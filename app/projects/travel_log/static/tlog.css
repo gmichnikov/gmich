@@ -178,6 +178,37 @@
     resize: vertical;
 }
 
+.tlog-place-details-fieldset {
+    border: 1px solid var(--tlog-border);
+    border-radius: 8px;
+    padding: 12px 16px 16px;
+    margin-bottom: 16px;
+    margin-top: 4px;
+}
+
+.tlog-place-details-legend {
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0 6px;
+}
+
+.tlog-place-details-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+.tlog-google-inline-attribution-link {
+    font-size: inherit;
+    white-space: nowrap;
+}
+
+.tlog-input-country-code {
+    max-width: 5rem;
+    text-transform: uppercase;
+}
+
 .tlog-form-actions {
     display: flex;
     gap: 12px;

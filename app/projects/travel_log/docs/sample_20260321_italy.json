@@ -1,0 +1,1738 @@
+{
+  "places": [
+    {
+      "id": "ChIJ2dWvyARUKhMR5jIRx28JmNU",
+      "types": [
+        "bridge",
+        "tourist_attraction",
+        "transportation_service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Ponte Santa Trinita, 50100 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "Ponte Santa Trinita",
+          "shortText": "Ponte Santa Trinita",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50100",
+          "shortText": "50100",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7690208,
+        "longitude": 11.2503107
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7676832197085,
+          "longitude": 11.2489964697085
+        },
+        "high": {
+          "latitude": 43.770381180291494,
+          "longitude": 11.251694430291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=15391062102224483046&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Ponte Santa Trinita",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Bridge",
+        "languageCode": "en-US"
+      },
+      "primaryType": "bridge",
+      "shortFormattedAddress": "Ponte Santa Trinita, Firenze"
+    },
+    {
+      "id": "ChIJI26mmwZUKhMRh7BBz9Oq8mw",
+      "types": [
+        "italian_restaurant",
+        "steak_house",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via dei Palchetti, 6R, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "6R",
+          "shortText": "6R",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via dei Palchetti",
+          "shortText": "Via dei Palchetti",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7716158,
+        "longitude": 11.2493335
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7702563197085,
+          "longitude": 11.247972369708497
+        },
+        "high": {
+          "latitude": 43.772954280291493,
+          "longitude": 11.250670330291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=7850524927152205959&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Il Latini",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Italian Restaurant",
+        "languageCode": "en-US"
+      },
+      "primaryType": "italian_restaurant",
+      "shortFormattedAddress": "Via dei Palchetti, 6R, Firenze"
+    },
+    {
+      "id": "ChIJh4GamKxWKhMR7RbQK8gJtRQ",
+      "types": [
+        "art_museum",
+        "tourist_attraction",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Piazza di Santa Trinita, 5R, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "5R",
+          "shortText": "5R",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Piazza di Santa Trinita",
+          "shortText": "Piazza di Santa Trinita",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.769842999999995,
+        "longitude": 11.251206
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.768580519708493,
+          "longitude": 11.249869619708498
+        },
+        "high": {
+          "latitude": 43.771278480291492,
+          "longitude": 11.252567580291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=1492109606876354285&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Museo Ferragamo",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Art museum",
+        "languageCode": "en"
+      },
+      "primaryType": "art_museum",
+      "shortFormattedAddress": "Piazza di Santa Trinita, 5R, Firenze"
+    },
+    {
+      "id": "ChIJJb2gbKpWKhMRpRUgjXvIqYs",
+      "types": [
+        "resort_hotel",
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via de' Tornabuoni, 3, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "3",
+          "shortText": "3",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via dè Tornabuoni",
+          "shortText": "Via de' Tornabuoni",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7703194,
+        "longitude": 11.251227799999999
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7689664697085,
+          "longitude": 11.249923169708499
+        },
+        "high": {
+          "latitude": 43.7716644302915,
+          "longitude": 11.252621130291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=10063795275310306725&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "IL Tornabuoni Hotel - The Unbound Collection by Hyatt",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Resort hotel",
+        "languageCode": "en-US"
+      },
+      "primaryType": "resort_hotel",
+      "shortFormattedAddress": "Via de' Tornabuoni, 3, Firenze"
+    },
+    {
+      "id": "ChIJ848xlqpWKhMROxuq70GulAQ",
+      "types": ["hotel", "lodging", "point_of_interest", "establishment"],
+      "formattedAddress": "Lungarno degli Acciaiuoli, 14, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "14",
+          "shortText": "14",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Lungarno degli Acciaiuoli",
+          "shortText": "Lungarno degli Acciaiuoli",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.769236299999996,
+        "longitude": 11.2514802
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7680327697085,
+          "longitude": 11.250211669708497
+        },
+        "high": {
+          "latitude": 43.7707307302915,
+          "longitude": 11.252909630291501
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=330080270921898811&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hotel Berchielli",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en-US"
+      },
+      "primaryType": "hotel",
+      "shortFormattedAddress": "Lungarno degli Acciaiuoli, 14, Firenze"
+    },
+    {
+      "id": "ChIJ1XShFKpWKhMRMUo1sW4tRS4",
+      "types": [
+        "womens_clothing_store",
+        "jewelry_store",
+        "general_contractor",
+        "service",
+        "clothing_store",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via de' Tornabuoni, 73R, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "73R",
+          "shortText": "73R",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via dè Tornabuoni",
+          "shortText": "Via de' Tornabuoni",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.771240999999996,
+        "longitude": 11.2511721
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7700183197085,
+          "longitude": 11.249916769708499
+        },
+        "high": {
+          "latitude": 43.7727162802915,
+          "longitude": 11.252614730291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=3334121052580432433&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Gucci - Firenze Flagship",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Clothing Store",
+        "languageCode": "en-US"
+      },
+      "primaryType": "clothing_store",
+      "shortFormattedAddress": "Via de' Tornabuoni, 73R, Firenze"
+    },
+    {
+      "id": "ChIJYdW_LABUKhMRAUMUVqfxIZw",
+      "types": ["hotel", "lodging", "point_of_interest", "establishment"],
+      "formattedAddress": "Via Porta Rossa, 19, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "19",
+          "shortText": "19",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via Porta Rossa",
+          "shortText": "Via Porta Rossa",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7701176,
+        "longitude": 11.251984799999999
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7688540197085,
+          "longitude": 11.250607419708498
+        },
+        "high": {
+          "latitude": 43.771551980291491,
+          "longitude": 11.253305380291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=11250539045154210561&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hotel NH Collection Firenze Porta Rossa",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en-US"
+      },
+      "primaryType": "hotel",
+      "shortFormattedAddress": "Via Porta Rossa, 19, Firenze"
+    },
+    {
+      "id": "ChIJK_ejbKpWKhMRpqtAlzTCy6Y",
+      "types": [
+        "clothing_store",
+        "womens_clothing_store",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via della Spada, 1, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "1",
+          "shortText": "1",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via della Spada",
+          "shortText": "Via della Spada",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7715187,
+        "longitude": 11.2510339
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.770141619708504,
+          "longitude": 11.249739569708497
+        },
+        "high": {
+          "latitude": 43.7728395802915,
+          "longitude": 11.252437530291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=12018913561699986342&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "COS",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Clothing Store",
+        "languageCode": "en-US"
+      },
+      "primaryType": "clothing_store",
+      "shortFormattedAddress": "Via della Spada, 1, Firenze"
+    },
+    {
+      "id": "ChIJgT_LiKpWKhMRaIHt1eFJagw",
+      "types": [
+        "parking_lot",
+        "parking",
+        "transportation_service",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via delle Terme, 47, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "47",
+          "shortText": "47",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via delle Terme",
+          "shortText": "Via delle Terme",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7699521,
+        "longitude": 11.2521033
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.768620369708508,
+          "longitude": 11.250774269708497
+        },
+        "high": {
+          "latitude": 43.7713183302915,
+          "longitude": 11.2534722302915
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=894608710292046184&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Garage delle Terme",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Parking Lot",
+        "languageCode": "en-US"
+      },
+      "primaryType": "parking_lot",
+      "shortFormattedAddress": "Via delle Terme, 47, Firenze"
+    },
+    {
+      "id": "ChIJ1ftgzKtWKhMREztIPW75Ygo",
+      "types": [
+        "steak_house",
+        "italian_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via del Moro, 22r, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "22r",
+          "shortText": "22r",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via del Moro",
+          "shortText": "Via del Moro",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7714072,
+        "longitude": 11.248562399999999
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7701088697085,
+          "longitude": 11.247254319708498
+        },
+        "high": {
+          "latitude": 43.7728068302915,
+          "longitude": 11.249952280291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=748434739966786323&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "L'Osteria di Giovanni",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Italian Restaurant",
+        "languageCode": "en-US"
+      },
+      "primaryType": "italian_restaurant",
+      "shortFormattedAddress": "Via del Moro, 22r, Firenze"
+    },
+    {
+      "id": "ChIJyfIB9apWKhMRbaorRAItrjY",
+      "types": [
+        "tourist_attraction",
+        "church",
+        "place_of_worship",
+        "association_or_organization",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Piazza di Santa Trinita, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "Piazza di Santa Trinita",
+          "shortText": "Piazza di Santa Trinita",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7700714,
+        "longitude": 11.2510018
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7688281197085,
+          "longitude": 11.249659119708497
+        },
+        "high": {
+          "latitude": 43.771526080291494,
+          "longitude": 11.252357080291501
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=3940136211752659565&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Basilica di Santa Trinita",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Church",
+        "languageCode": "en-US"
+      },
+      "primaryType": "church",
+      "shortFormattedAddress": "Piazza di Santa Trinita, Firenze"
+    },
+    {
+      "id": "ChIJt5_qq6tWKhMRhmDhzhNlb-8",
+      "types": [
+        "italian_restaurant",
+        "steak_house",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via del Parione, 74/76 r, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "74/76 r",
+          "shortText": "74/76 r",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via del Parione",
+          "shortText": "Via del Parione",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7708771,
+        "longitude": 11.248903
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.769539869708495,
+          "longitude": 11.247539269708499
+        },
+        "high": {
+          "latitude": 43.772237830291495,
+          "longitude": 11.250237230291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=17253119833229320326&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Parione",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Italian Restaurant",
+        "languageCode": "en-US"
+      },
+      "primaryType": "italian_restaurant",
+      "shortFormattedAddress": "Via del Parione, 74/76 r, Firenze"
+    },
+    {
+      "id": "ChIJ-9MLUsZXKhMRKJzeVtEtVNo",
+      "types": [
+        "clothing_store",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Piazza de' Rucellai 4/R 5/R 6/R 7/R, Piazza de' Rucellai, 6/red, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "Piazza de' Rucellai 4/R 5/R 6/R 7/R",
+          "languageCode": "it"
+        },
+        {
+          "longText": "6/red",
+          "shortText": "6/red",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Piazza de' Rucellai",
+          "shortText": "Piazza de' Rucellai",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.771060399999996,
+        "longitude": 11.2497182
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7697082197085,
+          "longitude": 11.248365869708497
+        },
+        "high": {
+          "latitude": 43.7724061802915,
+          "longitude": 11.251063830291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=15732249775440829480&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Barbour Store",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Clothing Store",
+        "languageCode": "en-US"
+      },
+      "primaryType": "clothing_store",
+      "shortFormattedAddress": "Piazza de' Rucellai 4/R 5/R 6/R 7/R, Piazza de' Rucellai, 6/red, Firenze"
+    },
+    {
+      "id": "ChIJ2x32QapWKhMREr3183US3fc",
+      "types": [
+        "parking_lot",
+        "parking",
+        "transportation_service",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via dell'Inferno, 7/9r, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "9r",
+          "shortText": "9r",
+          "types": ["subpremise"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "7",
+          "shortText": "7",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via dell'Inferno",
+          "shortText": "Via dell'Inferno",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7710072,
+        "longitude": 11.2506831
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.769650669708504,
+          "longitude": 11.249360219708498
+        },
+        "high": {
+          "latitude": 43.7723486302915,
+          "longitude": 11.252058180291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=17860451995034696978&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Garage Tornabuoni",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Transportation Service",
+        "languageCode": "en-US"
+      },
+      "primaryType": "transportation_service",
+      "shortFormattedAddress": "Via dell'Inferno, 7/9r, Firenze"
+    },
+    {
+      "id": "ChIJ2SJ65apWKhMRUZJsfPtYgOs",
+      "types": ["hotel", "lodging", "point_of_interest", "establishment"],
+      "formattedAddress": "Lungarno Corsini, 2, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "2",
+          "shortText": "2",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Lungarno Corsini",
+          "shortText": "Lungarno Corsini",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.769853999999995,
+        "longitude": 11.250245
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7684438697085,
+          "longitude": 11.248848419708498
+        },
+        "high": {
+          "latitude": 43.7711418302915,
+          "longitude": 11.251546380291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=16969661233079554641&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Palazzo Alfieri Residenza d'Epoca - Alfieri Collezione",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en-US"
+      },
+      "primaryType": "hotel",
+      "shortFormattedAddress": "Lungarno Corsini, 2, Firenze"
+    },
+    {
+      "id": "ChIJZWY6VKpWKhMRPQwxux5bmjo",
+      "types": ["store", "point_of_interest", "establishment"],
+      "formattedAddress": "Via del Parione, 31, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "31",
+          "shortText": "31",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via del Parione",
+          "shortText": "Via del Parione",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.770696099999995,
+        "longitude": 11.249324
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.769338169708504,
+          "longitude": 11.2482399197085
+        },
+        "high": {
+          "latitude": 43.772036130291504,
+          "longitude": 11.250937880291504
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=4222787788160961597&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Il Bisonte Florence",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Store",
+        "languageCode": "en-US"
+      },
+      "primaryType": "store",
+      "shortFormattedAddress": "Via del Parione, 31, Firenze"
+    },
+    {
+      "id": "ChIJxdn_CFNXKhMR_e-weqQ6syc",
+      "types": ["bar", "point_of_interest", "establishment"],
+      "formattedAddress": "Via della Spada, 15 R, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "15 R",
+          "shortText": "15 R",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via della Spada",
+          "shortText": "Via della Spada",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7716487,
+        "longitude": 11.2507748
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.770340219708494,
+          "longitude": 11.249402219708498
+        },
+        "high": {
+          "latitude": 43.773038180291493,
+          "longitude": 11.252100180291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=2860694666417860605&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Giacosa 1815",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Bar",
+        "languageCode": "en-US"
+      },
+      "primaryType": "bar",
+      "shortFormattedAddress": "Via della Spada, 15 R, Firenze"
+    },
+    {
+      "id": "ChIJC75l1KpWKhMRNP1FLyPaRxU",
+      "types": [
+        "ice_cream_shop",
+        "chocolate_shop",
+        "dessert_shop",
+        "candy_store",
+        "confectionery",
+        "food_store",
+        "restaurant",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Lungarno Guicciardini 5, Piazza de' Frescobaldi, 11/R, 50125 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "Lungarno Guicciardini 5",
+          "languageCode": "it"
+        },
+        {
+          "longText": "11/R",
+          "shortText": "11/R",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Piazza de' Frescobaldi",
+          "shortText": "Piazza de' Frescobaldi",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50125",
+          "shortText": "50125",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7685069,
+        "longitude": 11.2497553
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.767143019708506,
+          "longitude": 11.2484974697085
+        },
+        "high": {
+          "latitude": 43.769840980291505,
+          "longitude": 11.251195430291503
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=1533434042794769716&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Venchi Cioccolato e Gelato, Firenze Ponte Santa Trinita",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Ice Cream Shop",
+        "languageCode": "en-US"
+      },
+      "primaryType": "ice_cream_shop",
+      "shortFormattedAddress": "Lungarno Guicciardini 5, Piazza de' Frescobaldi, 11/R, Firenze"
+    },
+    {
+      "id": "ChIJ_2BNeapWKhMRkP-scVicW4c",
+      "types": [
+        "hotel",
+        "wellness_center",
+        "sauna",
+        "public_bath",
+        "massage_spa",
+        "spa",
+        "massage",
+        "lodging",
+        "service",
+        "point_of_interest",
+        "health",
+        "establishment"
+      ],
+      "formattedAddress": "Piazza degli Strozzi, 11r, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "11r",
+          "shortText": "11r",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Piazza degli Strozzi",
+          "shortText": "Piazza degli Strozzi",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7706107,
+        "longitude": 11.2519903
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.7690989697085,
+          "longitude": 11.250687019708499
+        },
+        "high": {
+          "latitude": 43.771796930291494,
+          "longitude": 11.253384980291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=9753561321679159184&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Golden Tower Hotel & Spa",
+        "languageCode": "en"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en-US"
+      },
+      "primaryType": "hotel",
+      "shortFormattedAddress": "Piazza degli Strozzi, 11r, Firenze"
+    },
+    {
+      "id": "ChIJ_w8MhKpWKhMRSA8A-h6cW4c",
+      "types": [
+        "steak_house",
+        "italian_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Via delle Terme, 51 / r, 50123 Firenze FI, Italy",
+      "addressComponents": [
+        {
+          "longText": "51 / r",
+          "shortText": "51 / r",
+          "types": ["street_number"],
+          "languageCode": "en-US"
+        },
+        {
+          "longText": "Via delle Terme",
+          "shortText": "Via delle Terme",
+          "types": ["route"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["locality", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Firenze",
+          "shortText": "Firenze",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Città Metropolitana di Firenze",
+          "shortText": "FI",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Toscana",
+          "shortText": "Toscana",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "it"
+        },
+        {
+          "longText": "Italy",
+          "shortText": "IT",
+          "types": ["country", "political"],
+          "languageCode": "en"
+        },
+        {
+          "longText": "50123",
+          "shortText": "50123",
+          "types": ["postal_code"],
+          "languageCode": "en-US"
+        }
+      ],
+      "location": {
+        "latitude": 43.7699692,
+        "longitude": 11.251953300000002
+      },
+      "viewport": {
+        "low": {
+          "latitude": 43.768639069708506,
+          "longitude": 11.250629769708498
+        },
+        "high": {
+          "latitude": 43.7713370302915,
+          "longitude": 11.253327730291502
+        }
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=9753561074858200904&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Ristorante Oliviero 1962",
+        "languageCode": "it"
+      },
+      "primaryTypeDisplayName": {
+        "text": "Italian Restaurant",
+        "languageCode": "en-US"
+      },
+      "primaryType": "italian_restaurant",
+      "shortFormattedAddress": "Via delle Terme, 51 / r, Firenze"
+    }
+  ]
+}

@@ -82,6 +82,42 @@
                     <label for="tlog-form-address" class="tlog-label">Address</label>
                     <input type="text" id="tlog-form-address" name="user_address" class="tlog-input">
                 </div>
+                <fieldset class="tlog-place-details-fieldset">
+                    <legend class="tlog-place-details-legend">Place details</legend>
+                    <p class="tlog-place-details-hint">Optional fields, often filled from search. Edit before saving. <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-inline-attribution-link" translate="no">Powered by Google</a></p>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-primary-type" class="tlog-label">Primary type (code)</label>
+                        <input type="text" id="tlog-form-primary-type" name="primary_type" class="tlog-input" maxlength="64" autocomplete="off">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-primary-type-display" class="tlog-label">Primary type (display)</label>
+                        <input type="text" id="tlog-form-primary-type-display" name="primary_type_display_name" class="tlog-input" maxlength="128" autocomplete="off">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-short-address" class="tlog-label">Short formatted address</label>
+                        <input type="text" id="tlog-form-short-address" name="short_formatted_address" class="tlog-input" maxlength="512" autocomplete="off">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-addr-locality" class="tlog-label">City / locality</label>
+                        <input type="text" id="tlog-form-addr-locality" name="addr_locality" class="tlog-input" maxlength="128" autocomplete="address-level2">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-addr-admin-1" class="tlog-label">Admin area 1 (e.g. state / region)</label>
+                        <input type="text" id="tlog-form-addr-admin-1" name="addr_admin_area_1" class="tlog-input" maxlength="128" autocomplete="address-level1">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-addr-admin-2" class="tlog-label">Admin area 2 (e.g. county / province code)</label>
+                        <input type="text" id="tlog-form-addr-admin-2" name="addr_admin_area_2" class="tlog-input" maxlength="255" autocomplete="off">
+                    </div>
+                    <div class="tlog-form-group" id="tlog-form-addr-admin-3-wrap">
+                        <label for="tlog-form-addr-admin-3" class="tlog-label">Admin area 3</label>
+                        <input type="text" id="tlog-form-addr-admin-3" name="addr_admin_area_3" class="tlog-input" maxlength="128" autocomplete="off">
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-form-addr-country" class="tlog-label">Country code (ISO 2-letter)</label>
+                        <input type="text" id="tlog-form-addr-country" name="addr_country_code" class="tlog-input tlog-input-country-code" maxlength="2" inputmode="text" autocapitalize="characters" autocomplete="country">
+                    </div>
+                </fieldset>
                 <div class="tlog-form-group">
                     <label for="tlog-form-date" class="tlog-label">Visited date</label>
                     <input type="date" id="tlog-form-date" name="visited_date" class="tlog-input" required>
