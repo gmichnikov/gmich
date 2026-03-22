@@ -1,7 +1,9 @@
-"""Google Places API (New) proxy — search_nearby and search_text."""
+"""Google Places API (New) proxy — search_nearby, search_text, and place details."""
 
 import logging
 import math
+from urllib.parse import quote
+
 import requests
 
 from app.projects.travel_log.utils import extract_place_detail_from_api_place
@@ -30,6 +32,12 @@ FIELD_MASK = (
     "places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location,"
     "places.id,places.types,places.businessStatus,"
     "places.addressComponents,places.primaryType,places.primaryTypeDisplayName"
+)
+
+# Place Details (GET) uses top-level field names — no "places." prefix
+PLACE_DETAILS_FIELD_MASK = (
+    "id,displayName,formattedAddress,shortFormattedAddress,location,"
+    "types,businessStatus,addressComponents,primaryType,primaryTypeDisplayName"
 )
 
 
@@ -68,6 +76,41 @@ def _place_to_dict(place, center_lat=None, center_lng=None):
     details = extract_place_detail_from_api_place(place)
     out.update(details)
     return out
+
+
+def fetch_place_details(place_id: str, api_key=None, timeout=15):
+    """
+    Place Details (New): GET places/{place_id}.
+    Returns the raw Place JSON object, or None on error / NOT_FOUND.
+    Requires Flask app context for GOOGLE_PLACES_API_KEY unless api_key is passed.
+    """
+    from flask import current_app
+
+    if not place_id or not str(place_id).strip():
+        return None
+    pid = str(place_id).strip()
+    if pid.startswith("places/"):
+        pid = pid.split("/", 1)[1]
+    key = api_key or current_app.config.get("GOOGLE_PLACES_API_KEY")
+    if not key:
+        logging.error("GOOGLE_PLACES_API_KEY not configured")
+        return None
+
+    url = f"https://places.googleapis.com/v1/places/{quote(pid, safe='')}"
+    headers = {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": PLACE_DETAILS_FIELD_MASK,
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=timeout)
+        if resp.status_code == 404:
+            logging.warning("Place Details NOT_FOUND for place_id=%s", pid[:24])
+            return None
+        resp.raise_for_status()
+        return resp.json()
+    except requests.RequestException as e:
+        logging.exception("Place Details request failed for place_id=%s: %s", pid[:24], e)
+        return None
 
 
 def search_nearby(lat, lng, radius_m=200, included_types=None, api_key=None):

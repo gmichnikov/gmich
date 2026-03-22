@@ -10,6 +10,7 @@ This plan follows the PRD and breaks implementation into small, testable phases.
 - `app/projects/travel_log/models.py` — Collection, Entry, EntryPhoto models
 - `app/projects/travel_log/routes.py` — blueprint and all routes
 - `app/projects/travel_log/services/places.py` — Google Places API proxy (server-side)
+- `scripts/tlog_backfill_place_details.py` — one-off backfill of place-detail columns via Place Details (New) using `place_id`
 - `app/projects/travel_log/services/r2.py` — R2 presigned URL generation
 - `app/projects/travel_log/templates/travel_log/` — all templates
 - `app/projects/travel_log/static/` — CSS (`tlog.css`), JS for place logging and photo upload
