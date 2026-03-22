@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Dice Roll{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('dice_roll.static', filename='dice_roll/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="diceroll-shell">
+    <header class="diceroll-header">
+        <h1 class="diceroll-title">Dice Roll</h1>
+        <p class="diceroll-subtitle">Game night helper — rolls and controls will go here.</p>
+    </header>
+    <main class="diceroll-main" aria-label="Dice roll area">
+        <p class="diceroll-placeholder">Skeleton ready. Add dice types, roll button, and history in <code>app.js</code>.</p>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('dice_roll.static', filename='dice_roll/app.js') }}" defer></script>
+{% endblock %}

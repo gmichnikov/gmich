@@ -177,6 +177,17 @@ PROJECTS = [
         "order": 605,
     },
     {
+        "id": "dice_roll",
+        "name": "Dice Roll",
+        "description": "Roll dice for tabletop and party games",
+        "url": "/dice-roll",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "game_night_tools",
+        "order": 606,
+    },
+    {
         "id": "coding_bootcamp",
         "name": "Coding Bootcamp",
         "description": "Things I made while I was at App Academy in 2016",

@@ -1,0 +1,44 @@
+/* dice_roll — prefixed to avoid collisions with other hub projects */
+
+.diceroll-shell {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+.diceroll-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.diceroll-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.diceroll-subtitle {
+    margin: 0;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.diceroll-main {
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    background: #fafafa;
+    min-height: 12rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.diceroll-placeholder {
+    margin: 0;
+    color: #888;
+    font-size: 0.95rem;
+    text-align: center;
+}
