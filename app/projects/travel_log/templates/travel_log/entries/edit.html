@@ -27,8 +27,12 @@
                     {% endif %}
                 </div>
             </div>
-            <fieldset class="tlog-place-details-fieldset">
-                <legend class="tlog-place-details-legend">Place details</legend>
+            <details class="tlog-place-details-disclosure" id="tlog-edit-place-details">
+                <summary class="tlog-place-details-summary">
+                    <span class="tlog-place-details-summary-title">Place details</span>
+                    <span class="tlog-place-details-summary-sub">Optional · from Google</span>
+                </summary>
+                <div class="tlog-place-details-body">
                 <p class="tlog-place-details-hint">Optional listing fields. <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-inline-attribution-link" translate="no">Powered by Google</a></p>
                 <div class="tlog-form-group">
                     <label for="tlog-edit-primary-type" class="tlog-label">Primary type (code)</label>
@@ -62,7 +66,8 @@
                     <label for="tlog-edit-addr-country" class="tlog-label">Country code (ISO 2-letter)</label>
                     <input type="text" id="tlog-edit-addr-country" name="addr_country_code" class="tlog-input tlog-input-country-code" maxlength="2" value="{{ entry.addr_country_code or '' }}" inputmode="text" autocapitalize="characters" autocomplete="country">
                 </div>
-            </fieldset>
+                </div>
+            </details>
             <div class="tlog-form-group">
                 <label for="tlog-edit-date" class="tlog-label">Visited date</label>
                 <input type="date" id="tlog-edit-date" name="visited_date" class="tlog-input" value="{{ entry.visited_date.isoformat() }}" required>

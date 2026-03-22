@@ -82,9 +82,13 @@
                     <label for="tlog-form-address" class="tlog-label">Address</label>
                     <input type="text" id="tlog-form-address" name="user_address" class="tlog-input">
                 </div>
-                <fieldset class="tlog-place-details-fieldset">
-                    <legend class="tlog-place-details-legend">Place details</legend>
-                    <p class="tlog-place-details-hint">Optional fields, often filled from search. Edit before saving. <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-inline-attribution-link" translate="no">Powered by Google</a></p>
+                <details class="tlog-place-details-disclosure" open>
+                    <summary class="tlog-place-details-summary">
+                        <span class="tlog-place-details-summary-title">Place details</span>
+                        <span class="tlog-place-details-summary-sub">Optional · from Google</span>
+                    </summary>
+                    <div class="tlog-place-details-body">
+                    <p class="tlog-place-details-hint">Often filled from search; edit before saving. <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="tlog-google-inline-attribution-link" translate="no">Powered by Google</a></p>
                     <div class="tlog-form-group">
                         <label for="tlog-form-primary-type" class="tlog-label">Primary type (code)</label>
                         <input type="text" id="tlog-form-primary-type" name="primary_type" class="tlog-input" maxlength="64" autocomplete="off">
@@ -117,7 +121,8 @@
                         <label for="tlog-form-addr-country" class="tlog-label">Country code (ISO 2-letter)</label>
                         <input type="text" id="tlog-form-addr-country" name="addr_country_code" class="tlog-input tlog-input-country-code" maxlength="2" inputmode="text" autocapitalize="characters" autocomplete="country">
                     </div>
-                </fieldset>
+                    </div>
+                </details>
                 <div class="tlog-form-group">
                     <label for="tlog-form-date" class="tlog-label">Visited date</label>
                     <input type="date" id="tlog-form-date" name="visited_date" class="tlog-input" required>
