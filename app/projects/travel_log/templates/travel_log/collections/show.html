@@ -98,15 +98,15 @@
                             · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
                             {% endif %}
                             · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
-                            {% if entry.tags %}
-                            <span class="tlog-entry-tags">
-                                {% for tag in entry.tags %}
-                                <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
-                                {% endfor %}
-                            </span>
-                            {% endif %}
                         </span>
                     </div>
+                    {% if entry.tags %}
+                    <div class="tlog-entry-tags-aside" aria-label="Tags">
+                        {% for tag in entry.tags %}
+                        <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     {% if entry.random_photo %}
                     <div class="tlog-entry-thumb" data-photo-urls='{{ entry.all_photo_urls|tojson|e }}' role="button" tabindex="0" aria-label="View photo">
                         <img src="{{ get_photo_view_url(entry.random_photo) }}" alt="" class="tlog-entry-thumb-img" loading="lazy">

@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 
 from app import csrf, db
 from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto, TlogTag
+from app.projects.travel_log.tag_inference import infer_tag_names_from_google_place, parse_google_types_from_request
 from app.projects.travel_log.utils import parse_place_detail_from_client
 from app.projects.travel_log.services.r2 import (
     generate_photo_key,
@@ -330,6 +331,15 @@ def entries_create():
         visited_date = get_visited_date_default(lat, lng) if (lat and lng) else datetime.utcnow().date()
 
     place_detail = parse_place_detail_from_client(data)
+    google_types = parse_google_types_from_request(data)
+    inferred_names = infer_tag_names_from_google_place(google_types, place_detail.get("primary_type"))
+    auto_tags = (
+        TlogTag.query.filter_by(scope="global")
+        .filter(TlogTag.name.in_(inferred_names))
+        .all()
+        if inferred_names
+        else []
+    )
 
     now = datetime.utcnow()
     entry = TlogEntry(
@@ -345,6 +355,8 @@ def entries_create():
         **place_detail,
     )
     db.session.add(entry)
+    db.session.flush()
+    entry.tags = auto_tags
     collection.last_modified = now
     db.session.commit()
 

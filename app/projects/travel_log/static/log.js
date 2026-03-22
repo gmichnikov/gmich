@@ -263,6 +263,12 @@
     set('#tlog-form-addr-admin-3', 'addr_admin_area_3');
     set('#tlog-form-addr-country', 'addr_country_code');
 
+    const gt = $('#tlog-form-google-types');
+    if (gt) {
+      const arr = Array.isArray(place.types) ? place.types : [];
+      gt.value = JSON.stringify(arr);
+    }
+
     const aa3Wrap = $('#tlog-form-addr-admin-3-wrap');
     if (aa3Wrap) {
       const loc = (place.addr_locality || '').trim();
@@ -288,6 +294,8 @@
     });
     const aa3Wrap = $('#tlog-form-addr-admin-3-wrap');
     if (aa3Wrap) aa3Wrap.style.display = '';
+    const gt = $('#tlog-form-google-types');
+    if (gt) gt.value = '';
   }
 
   function selectPlace(place) {
@@ -367,7 +375,6 @@
     const results = $('#tlog-results');
     const categoryBtns = $$('.tlog-cat-btn');
     const fallbackBtn = $('#tlog-fallback-btn');
-    const formCancel = $('#tlog-form-cancel');
     const createForm = $('#tlog-create-form');
     const collectionSelect = $('#tlog-collection-id');
     const nearbyModeBtn = $('#tlog-mode-nearby');
@@ -444,9 +451,11 @@
     }
 
     if (fallbackBtn) fallbackBtn.addEventListener('click', showManualForm);
-    if (formCancel) formCancel.addEventListener('click', goBackFromForm);
 
     if (createForm) {
+      createForm.querySelectorAll('.tlog-form-cancel').forEach((btn) => {
+        btn.addEventListener('click', goBackFromForm);
+      });
       createForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const collId = collectionSelect?.value || $('#tlog-form-collection-id')?.value;

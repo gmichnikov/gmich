@@ -271,7 +271,17 @@
 
 .tlog-form-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
+    margin-top: 20px;
+}
+
+.tlog-form-actions.tlog-form-actions-top {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.tlog-form-actions.tlog-form-actions-bottom {
     margin-top: 20px;
 }
 
@@ -702,8 +712,8 @@ body.tlog-modal-open {
 
 .tlog-entry-link {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-start;
+    gap: 12px;
     padding: 14px 16px;
     background: #f9fafb;
     border: 1px solid var(--tlog-border);
@@ -723,6 +733,17 @@ body.tlog-modal-open {
     min-width: 0;
 }
 
+.tlog-entry-tags-aside {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    align-content: flex-start;
+    max-width: min(11rem, 38%);
+    padding-top: 2px;
+}
+
 .tlog-entry-thumb {
     flex-shrink: 0;
     width: 56px;
@@ -731,6 +752,7 @@ body.tlog-modal-open {
     overflow: hidden;
     background: #e5e7eb;
     cursor: pointer;
+    align-self: center;
 }
 
 .tlog-entry-thumb:hover {
@@ -854,19 +876,35 @@ body.tlog-modal-open {
     opacity: 1;
 }
 
-.tlog-entry-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-}
-
 .tlog-entry-tag {
     font-size: 0.75rem;
     padding: 4px 8px;
     background: #f3f4f6;
     border-radius: 6px;
     color: #6b7280;
+}
+
+@media (max-width: 480px) {
+    .tlog-entry-link {
+        flex-wrap: wrap;
+    }
+
+    .tlog-entry-content {
+        order: 1;
+        flex: 1 1 calc(100% - 68px);
+    }
+
+    .tlog-entry-thumb {
+        order: 2;
+    }
+
+    .tlog-entry-tags-aside {
+        order: 3;
+        flex-basis: 100%;
+        max-width: 100%;
+        justify-content: flex-start;
+        padding-top: 6px;
+    }
 }
 
 .tlog-edit-coming {
@@ -903,53 +941,6 @@ body.tlog-modal-open {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-}
-
-/* Entries list */
-.tlog-entries-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.tlog-entry-item {
-    margin-bottom: 8px;
-}
-
-.tlog-entry-link {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background: #f9fafb;
-    border: 1px solid var(--tlog-border);
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--tlog-text);
-    transition: background 0.15s;
-    cursor: pointer;
-}
-
-.tlog-entry-link:hover {
-    background: #f3f4f6;
-}
-
-.tlog-entry-name {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.tlog-entry-address {
-    display: block;
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-
-.tlog-entry-meta {
-    font-size: 0.875rem;
-    color: #6b7280;
 }
 
 /* Entry detail (read-only view) */

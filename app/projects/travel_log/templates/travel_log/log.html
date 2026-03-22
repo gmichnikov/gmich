@@ -74,6 +74,11 @@
                 <input type="hidden" id="tlog-form-place-id" name="place_id" value="">
                 <input type="hidden" id="tlog-form-lat" name="lat" value="">
                 <input type="hidden" id="tlog-form-lng" name="lng" value="">
+                <input type="hidden" id="tlog-form-google-types" name="google_types" value="">
+                <div class="tlog-form-actions tlog-form-actions-top">
+                    <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
+                    <button type="button" class="tlog-btn tlog-btn-secondary tlog-form-cancel">Cancel</button>
+                </div>
                 <div class="tlog-form-group">
                     <label for="tlog-form-name" class="tlog-label">Place name</label>
                     <input type="text" id="tlog-form-name" name="user_name" class="tlog-input" required>
@@ -127,9 +132,9 @@
                     <label for="tlog-form-date" class="tlog-label">Visited date</label>
                     <input type="date" id="tlog-form-date" name="visited_date" class="tlog-input" required>
                 </div>
-                <div class="tlog-form-actions">
+                <div class="tlog-form-actions tlog-form-actions-bottom">
                     <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
-                    <button type="button" id="tlog-form-cancel" class="tlog-btn tlog-btn-secondary">Cancel</button>
+                    <button type="button" class="tlog-btn tlog-btn-secondary tlog-form-cancel">Cancel</button>
                 </div>
             </form>
         </div>
