@@ -6,7 +6,25 @@ from sqlalchemy import func
 from flask_login import current_user, login_required
 
 from app import csrf, db
-from app.projects.travel_log.models import TlogCollection, TlogEntry, TlogEntryPhoto, TlogTag
+from app.models import User
+from app.projects.travel_log.models import (
+    TlogCollection,
+    TlogCollectionMember,
+    TlogEntry,
+    TlogEntryPhoto,
+    TlogTag,
+)
+from app.projects.travel_log.permissions import (
+    ROLE_EDITOR,
+    can_edit_collection,
+    can_edit_entry,
+    can_manage_collection_settings,
+    can_manage_sharing,
+    get_collection_for_access,
+    get_entry_for_access,
+    is_collection_owner,
+    normalize_invite_email,
+)
 from app.projects.travel_log.tag_inference import infer_tag_names_from_google_place, parse_google_types_from_request
 from app.projects.travel_log.utils import parse_place_detail_from_client
 from app.projects.travel_log.services.r2 import (
@@ -38,21 +56,73 @@ def tlog_contrast_text_filter(bg_hex):
     return contrast_text_color(bg_hex)
 
 
+def _owned_collections_query():
+    return TlogCollection.query.filter_by(user_id=current_user.id).order_by(TlogCollection.last_modified.desc())
+
+
 def _get_user_collections():
-    """User's collections ordered by last_modified DESC."""
+    """Collections the current user owns (ordered by last_modified DESC)."""
+    return _owned_collections_query().all()
+
+
+def _shared_collections_with_owners():
+    """(TlogCollection, owner User) for collections shared as editor."""
     return (
-        TlogCollection.query.filter_by(user_id=current_user.id)
+        db.session.query(TlogCollection, User)
+        .join(TlogCollectionMember, TlogCollectionMember.collection_id == TlogCollection.id)
+        .join(User, User.id == TlogCollection.user_id)
+        .filter(
+            TlogCollectionMember.user_id == current_user.id,
+            TlogCollectionMember.role == ROLE_EDITOR,
+            TlogCollection.user_id != current_user.id,
+        )
         .order_by(TlogCollection.last_modified.desc())
         .all()
     )
 
 
-def _get_default_collection_id(collections):
-    """Most recently used collection: last entry's collection, else most recently modified."""
-    last_entry = TlogEntry.query.filter_by(user_id=current_user.id).order_by(TlogEntry.updated_at.desc()).first()
+def _log_collection_items():
+    """Owned + shared rows for Log Place: { collection, shared, owner_label }."""
+    items = []
+    for c in _owned_collections_query().all():
+        items.append({"collection": c, "shared": False, "owner_label": None})
+    for c, owner in _shared_collections_with_owners():
+        label = (owner.short_name or owner.full_name or owner.email or "Owner").strip()
+        items.append({"collection": c, "shared": True, "owner_label": label})
+    return items
+
+
+def _parse_invite_emails(raw: str) -> list[str]:
+    if not raw or not isinstance(raw, str):
+        return []
+    chunks = raw.replace(",", "\n").split("\n")
+    seen: set[str] = set()
+    out: list[str] = []
+    for line in chunks:
+        for part in line.split(","):
+            n = normalize_invite_email(part)
+            if n and n not in seen:
+                seen.add(n)
+                out.append(n)
+    return out
+
+
+def _default_log_collection_id(items):
+    """Last collection where current user created an entry, else first in list."""
+    if not items:
+        return None
+    ids = [i["collection"].id for i in items]
+    last_entry = (
+        TlogEntry.query.filter(
+            TlogEntry.collection_id.in_(ids),
+            TlogEntry.user_id == current_user.id,
+        )
+        .order_by(TlogEntry.updated_at.desc())
+        .first()
+    )
     if last_entry:
         return last_entry.collection_id
-    return collections[0].id if collections else None
+    return items[0]["collection"].id
 
 
 def get_photo_view_url(photo):
@@ -64,24 +134,32 @@ def get_photo_view_url(photo):
 @login_required
 def index():
     log_project_visit("travel_log", "Travel Log")
-    collections = _get_user_collections()
 
-    # Build preview data for each collection
-    collection_data = []
-    for c in collections:
-        entry_count = c.entries.count()
-        latest = c.entries.first()  # already ordered by updated_at desc
-        collection_data.append(
+    owned_data = []
+    for c in _owned_collections_query().all():
+        owned_data.append(
             {
                 "collection": c,
-                "entry_count": entry_count,
-                "latest_entry": latest,
+                "entry_count": c.entries.count(),
+                "latest_entry": c.entries.first(),
+            }
+        )
+
+    shared_data = []
+    for c, owner in _shared_collections_with_owners():
+        shared_data.append(
+            {
+                "collection": c,
+                "entry_count": c.entries.count(),
+                "latest_entry": c.entries.first(),
+                "owner_name": (owner.short_name or owner.full_name or owner.email or "").strip(),
             }
         )
 
     return render_template(
         "travel_log/index.html",
-        collections=collection_data,
+        owned_collections=owned_data,
+        shared_collections=shared_data,
     )
 
 
@@ -125,7 +203,12 @@ def _parse_date(s):
 @travel_log_bp.route("/collections/<int:id>")
 @login_required
 def collections_show(id):
-    collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    collection = get_collection_for_access(current_user, id)
+    is_owner = is_collection_owner(current_user, collection)
+    owner_display = None
+    if not is_owner and collection.user:
+        u = collection.user
+        owner_display = (u.short_name or u.full_name or u.email or "").strip()
     entries = collection.entries.order_by(TlogEntry.updated_at.desc()).all()
 
     # Unique dates in collection (for date chip filter UI), sorted
@@ -174,13 +257,17 @@ def collections_show(id):
         collection_tags=collection_tags,
         collection_date_min=collection_date_min,
         collection_date_max=collection_date_max,
+        is_owner=is_owner,
+        owner_display=owner_display,
     )
 
 
 @travel_log_bp.route("/collections/<int:id>/edit", methods=["GET"])
 @login_required
 def collections_edit(id):
-    collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_collection_settings(current_user, collection):
+        abort(404)
     entry_count = collection.entries.count()
     return render_template(
         "travel_log/collections/edit.html",
@@ -192,7 +279,9 @@ def collections_edit(id):
 @travel_log_bp.route("/collections/<int:id>/update", methods=["POST"])
 @login_required
 def collections_update(id):
-    collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_collection_settings(current_user, collection):
+        abort(404)
     name = (request.form.get("name") or "").strip()
     if not name:
         flash("Collection name is required.", "error")
@@ -209,7 +298,9 @@ def collections_update(id):
 @travel_log_bp.route("/collections/<int:id>/delete", methods=["POST"])
 @login_required
 def collections_delete(id):
-    collection = TlogCollection.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_collection_settings(current_user, collection):
+        abort(404)
     entry_count = collection.entries.count()
     name = collection.name
 
@@ -220,25 +311,131 @@ def collections_delete(id):
     return redirect(url_for("travel_log.index"))
 
 
+@travel_log_bp.route("/collections/<int:id>/sharing/members", methods=["GET"])
+@login_required
+def collection_sharing_members(id):
+    """JSON: owner + editors for share modal."""
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_sharing(current_user, collection):
+        return jsonify({"error": "Forbidden"}), 403
+    owner = collection.user
+    editors = []
+    for m in collection.memberships.order_by(TlogCollectionMember.created_at).all():
+        u = m.user
+        editors.append(
+            {
+                "user_id": u.id,
+                "email": u.email,
+                "display_name": (u.short_name or u.full_name or u.email or "").strip(),
+            }
+        )
+    return jsonify(
+        {
+            "owner": {
+                "user_id": owner.id,
+                "email": owner.email,
+                "display_name": (owner.short_name or owner.full_name or owner.email or "").strip(),
+            },
+            "editors": editors,
+        }
+    )
+
+
+@travel_log_bp.route("/collections/<int:id>/sharing/invite", methods=["POST"])
+@csrf.exempt
+@login_required
+def collection_sharing_invite(id):
+    """JSON: { emails: string } — add editors by email (registered users only)."""
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_sharing(current_user, collection):
+        return jsonify({"error": "Forbidden"}), 403
+    data = request.get_json(silent=True) or {}
+    emails_str = data.get("emails") or ""
+    added = []
+    skipped_unknown = []
+    already_access = []
+    skipped_owner = []
+    owner_email = normalize_invite_email(collection.user.email or "")
+    for em in _parse_invite_emails(emails_str):
+        if em == owner_email:
+            skipped_owner.append(em)
+            continue
+        target = User.query.filter(func.lower(User.email) == em).first()
+        if not target:
+            skipped_unknown.append(em)
+            continue
+        if target.id == collection.user_id:
+            skipped_owner.append(em)
+            continue
+        existing = TlogCollectionMember.query.filter_by(collection_id=collection.id, user_id=target.id).first()
+        if existing:
+            already_access.append(em)
+            continue
+        db.session.add(
+            TlogCollectionMember(collection_id=collection.id, user_id=target.id, role=ROLE_EDITOR)
+        )
+        added.append(em)
+    db.session.commit()
+    return jsonify(
+        {
+            "added": added,
+            "skipped_unknown": skipped_unknown,
+            "already_access": already_access,
+            "skipped_owner": skipped_owner,
+        }
+    )
+
+
+@travel_log_bp.route("/collections/<int:id>/sharing/remove", methods=["POST"])
+@csrf.exempt
+@login_required
+def collection_sharing_remove(id):
+    """JSON: { user_id: int } — remove an editor."""
+    collection = TlogCollection.query.get_or_404(id)
+    if not can_manage_sharing(current_user, collection):
+        return jsonify({"error": "Forbidden"}), 403
+    data = request.get_json(silent=True) or {}
+    uid = data.get("user_id")
+    if uid is None:
+        return jsonify({"error": "user_id required"}), 400
+    try:
+        uid = int(uid)
+    except (TypeError, ValueError):
+        return jsonify({"error": "user_id invalid"}), 400
+    if uid == collection.user_id:
+        return jsonify({"error": "Cannot remove owner"}), 400
+    m = TlogCollectionMember.query.filter_by(collection_id=collection.id, user_id=uid).first()
+    if not m:
+        return jsonify({"error": "Not a member"}), 404
+    db.session.delete(m)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
 @travel_log_bp.route("/log")
 @login_required
 def log():
     """Log Place page — Browse/Search nearby places, create entry."""
-    collections = _get_user_collections()
-    if not collections:
-        flash("Create a collection first to log places.", "error")
+    log_collections = _log_collection_items()
+    if not log_collections:
+        flash("Create a collection or get invited to one to log places.", "error")
         return redirect(url_for("travel_log.index"))
 
     # Optional pre-select from query param (e.g. from collection page)
     requested_id = request.args.get("collection_id", type=int)
-    if requested_id and any(c.id == requested_id for c in collections):
+    ids = {i["collection"].id for i in log_collections}
+    if requested_id and requested_id in ids:
         default_collection_id = requested_id
     else:
-        default_collection_id = _get_default_collection_id(collections)
+        default_collection_id = _default_log_collection_id(log_collections)
+
+    log_owned = [i for i in log_collections if not i["shared"]]
+    log_shared = [i for i in log_collections if i["shared"]]
 
     return render_template(
         "travel_log/log.html",
-        collections=collections,
+        log_collections_owned=log_owned,
+        log_collections_shared=log_shared,
         default_collection_id=default_collection_id,
     )
 
@@ -305,8 +502,12 @@ def entries_create():
     if not collection_id or not user_name:
         return jsonify({"error": "collection_id and user_name required"}), 400
 
-    collection = TlogCollection.query.filter_by(id=collection_id, user_id=current_user.id).first()
-    if not collection:
+    try:
+        cid = int(collection_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Collection not found"}), 404
+    collection = TlogCollection.query.get(cid)
+    if not collection or not can_edit_collection(current_user, collection):
         return jsonify({"error": "Collection not found"}), 404
 
     place_id = data.get("place_id") or None
@@ -368,7 +569,7 @@ def entries_create():
 @login_required
 def entries_edit(id):
     """View/edit entry."""
-    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    entry = get_entry_for_access(current_user, id)
     global_tags = TlogTag.query.filter_by(scope="global").order_by(TlogTag.name).all()
     return render_template(
         "travel_log/entries/edit.html",
@@ -382,7 +583,7 @@ def entries_edit(id):
 @login_required
 def entries_update(id):
     """Update entry: user_name, user_address, place detail fields, notes, visited_date, tags."""
-    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    entry = get_entry_for_access(current_user, id)
     user_name = (request.form.get("user_name") or "").strip()
     if not user_name:
         flash("Place name is required.", "error")
@@ -428,7 +629,7 @@ def entries_update(id):
 @login_required
 def entries_delete(id):
     """Delete entry (cascade photos)."""
-    entry = TlogEntry.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    entry = get_entry_for_access(current_user, id)
     collection_id = entry.collection_id
     collection = entry.collection
     user_name = entry.user_name
@@ -454,8 +655,8 @@ def api_photos_presign():
     if entry_id is None:
         return jsonify({"error": "entry_id required"}), 400
 
-    entry = TlogEntry.query.filter_by(id=entry_id, user_id=current_user.id).first()
-    if not entry:
+    entry = TlogEntry.query.get(entry_id)
+    if not entry or not can_edit_entry(current_user, entry):
         return jsonify({"error": "Entry not found"}), 404
 
     key = generate_photo_key(current_user.id, entry_id)
@@ -477,8 +678,8 @@ def api_photos_confirm():
     if entry_id is None or not key:
         return jsonify({"error": "entry_id and key required"}), 400
 
-    entry = TlogEntry.query.filter_by(id=entry_id, user_id=current_user.id).first()
-    if not entry:
+    entry = TlogEntry.query.get(entry_id)
+    if not entry or not can_edit_entry(current_user, entry):
         return jsonify({"error": "Entry not found"}), 404
 
     max_order = (
@@ -503,7 +704,7 @@ def api_photos_confirm():
 def entries_photo_delete(id, photo_id):
     """Delete photo. Verify photo's entry belongs to user. Redirect to entries_edit."""
     photo = TlogEntryPhoto.query.filter_by(id=photo_id).first_or_404()
-    if photo.entry.user_id != current_user.id:
+    if not can_edit_entry(current_user, photo.entry):
         abort(404)
     entry = photo.entry
     collection = entry.collection

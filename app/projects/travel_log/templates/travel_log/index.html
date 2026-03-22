@@ -11,7 +11,7 @@
     <div class="tlog-container">
         <h1 class="tlog-title">Travel Log</h1>
 
-        {% if not collections %}
+        {% if not owned_collections and not shared_collections %}
         <div class="tlog-empty">
             <p class="tlog-empty-text">Create your first collection to start logging places.</p>
             <a href="{{ url_for('travel_log.collections_new') }}" class="tlog-btn tlog-btn-primary">New Collection</a>
@@ -21,8 +21,10 @@
             <a href="{{ url_for('travel_log.collections_new') }}" class="tlog-btn tlog-btn-primary">New Collection</a>
         </div>
 
+        {% if owned_collections %}
+        <h2 class="tlog-index-section-title">My collections</h2>
         <ul class="tlog-collections-list">
-            {% for item in collections %}
+            {% for item in owned_collections %}
             <li class="tlog-collection-item">
                 <a href="{{ url_for('travel_log.collections_show', id=item.collection.id) }}" class="tlog-collection-link">
                     <span class="tlog-collection-name">{{ item.collection.name }}</span>
@@ -36,6 +38,27 @@
             </li>
             {% endfor %}
         </ul>
+        {% endif %}
+
+        {% if shared_collections %}
+        <h2 class="tlog-index-section-title">Shared with me</h2>
+        <ul class="tlog-collections-list">
+            {% for item in shared_collections %}
+            <li class="tlog-collection-item">
+                <a href="{{ url_for('travel_log.collections_show', id=item.collection.id) }}" class="tlog-collection-link">
+                    <span class="tlog-collection-name">{{ item.collection.name }}</span>
+                    <span class="tlog-collection-meta">
+                        Owner: {{ item.owner_name }}
+                        · {{ item.entry_count }} {{ 'entry' if item.entry_count == 1 else 'entries' }}
+                        {% if item.latest_entry %}
+                        · Last: {{ (item.latest_entry.user_name[:40] + '…') if item.latest_entry.user_name|length > 40 else item.latest_entry.user_name }}
+                        {% endif %}
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         {% endif %}
     </div>
 </div>

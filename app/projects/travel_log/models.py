@@ -19,6 +19,12 @@ class TlogCollection(db.Model):
     last_modified = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = db.relationship("User", backref=db.backref("tlog_collections", lazy="dynamic"))
+    memberships = db.relationship(
+        "TlogCollectionMember",
+        back_populates="collection",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
     entries = db.relationship(
         "TlogEntry",
         backref="collection",
@@ -31,6 +37,33 @@ class TlogCollection(db.Model):
 
     def __repr__(self):
         return f"<TlogCollection {self.id}: {self.name}>"
+
+
+class TlogCollectionMember(db.Model):
+    """
+    Non-owner access to a collection (e.g. editor). Owner is always collection.user_id only.
+    role: 'editor' in v1; reserve for 'viewer' later.
+    """
+
+    __tablename__ = "tlog_collection_member"
+
+    id = db.Column(db.Integer, primary_key=True)
+    collection_id = db.Column(db.Integer, db.ForeignKey("tlog_collection.id", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="editor")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    collection = db.relationship("TlogCollection", back_populates="memberships")
+    user = db.relationship("User", backref=db.backref("tlog_collection_memberships", lazy="dynamic"))
+
+    __table_args__ = (
+        db.UniqueConstraint("collection_id", "user_id", name="uq_tlog_collection_member_collection_user"),
+        db.Index("ix_tlog_collection_member_user_id", "user_id"),
+        db.Index("ix_tlog_collection_member_collection_id", "collection_id"),
+    )
+
+    def __repr__(self):
+        return f"<TlogCollectionMember coll={self.collection_id} user={self.user_id} role={self.role}>"
 
 
 class TlogEntry(db.Model):

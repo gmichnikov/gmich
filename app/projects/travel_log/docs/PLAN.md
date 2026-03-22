@@ -2,6 +2,8 @@
 
 This plan follows the PRD and breaks implementation into small, testable phases. Each phase ends with manual testing steps before moving on.
 
+**Collection sharing (collaborators / editors):** see [`docs/sharing_prd.md`](sharing_prd.md).
+
 ---
 
 ## Relevant Files

@@ -15,9 +15,20 @@
         <div class="tlog-log-collection-select" id="tlog-collection-select">
             <label for="tlog-collection-id" class="tlog-label">Collection</label>
             <select id="tlog-collection-id" class="tlog-select" data-default="{{ default_collection_id }}">
-                {% for c in collections %}
-                <option value="{{ c.id }}" {% if c.id == default_collection_id %}selected{% endif %}>{{ c.name }}</option>
-                {% endfor %}
+                {% if log_collections_owned %}
+                <optgroup label="My collections">
+                    {% for item in log_collections_owned %}
+                    <option value="{{ item.collection.id }}" {% if item.collection.id == default_collection_id %}selected{% endif %}>{{ item.collection.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+                {% if log_collections_shared %}
+                <optgroup label="Shared with me">
+                    {% for item in log_collections_shared %}
+                    <option value="{{ item.collection.id }}" {% if item.collection.id == default_collection_id %}selected{% endif %}>{{ item.collection.name }} — {{ item.owner_label }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
             </select>
         </div>
 

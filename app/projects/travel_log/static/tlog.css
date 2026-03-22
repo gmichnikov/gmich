@@ -943,6 +943,100 @@ body.tlog-modal-open {
     gap: 12px;
 }
 
+.tlog-index-section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--tlog-text);
+}
+
+.tlog-collections-list + .tlog-index-section-title {
+    margin-top: 28px;
+}
+
+.tlog-collection-owner-line {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: -4px 0 12px;
+}
+
+.tlog-share-modal-hint {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+.tlog-share-emails-textarea {
+    max-width: 100%;
+    min-height: 4.5rem;
+    resize: vertical;
+}
+
+.tlog-share-modal-status {
+    font-size: 0.85rem;
+    color: #374151;
+    margin: 12px 0 0;
+    min-height: 1.25em;
+}
+
+.tlog-share-people-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 20px 0 10px;
+}
+
+.tlog-share-people-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tlog-share-person {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--tlog-border);
+    font-size: 0.9rem;
+}
+
+.tlog-share-person-owner {
+    font-weight: 500;
+}
+
+.tlog-share-person-role {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tlog-share-person-meta {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.tlog-share-remove-btn {
+    margin-left: auto;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border: 1px solid var(--tlog-border);
+    border-radius: 6px;
+    background: #fff;
+    color: #b91c1c;
+    cursor: pointer;
+}
+
+.tlog-share-remove-btn:hover {
+    background: #fef2f2;
+}
+
+.tlog-share-modal-box {
+    max-width: 28rem;
+}
+
 /* Entry detail (read-only view) */
 .tlog-entry-detail {
     margin-top: 20px;

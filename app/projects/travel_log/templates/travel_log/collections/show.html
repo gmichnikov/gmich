@@ -12,9 +12,15 @@
         <div class="tlog-show-header">
             <a href="{{ url_for('travel_log.index') }}" class="tlog-back-link">← Back to Collections</a>
             <h1 class="tlog-title">{{ collection.name }}</h1>
+            {% if not is_owner and owner_display %}
+            <p class="tlog-collection-owner-line">Owner: {{ owner_display }}</p>
+            {% endif %}
             <div class="tlog-header-actions">
                 <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
-                <a href="{{ url_for('travel_log.collections_edit', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Edit</a>
+                {% if is_owner %}
+                <button type="button" class="tlog-btn tlog-btn-secondary" id="tlog-share-open-btn">Share</button>
+                <a href="{{ url_for('travel_log.collections_edit', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Edit collection</a>
+                {% endif %}
             </div>
         </div>
 
@@ -117,11 +123,37 @@
             {% endfor %}
         </ul>
         {% endif %}
+
+        {% if is_owner %}
+        <div id="tlog-share-modal" class="tlog-modal tlog-modal-hidden" role="dialog" aria-modal="true" aria-labelledby="tlog-share-modal-title" aria-hidden="true" hidden
+             data-members-url="{{ url_for('travel_log.collection_sharing_members', id=collection.id) }}"
+             data-invite-url="{{ url_for('travel_log.collection_sharing_invite', id=collection.id) }}"
+             data-remove-url="{{ url_for('travel_log.collection_sharing_remove', id=collection.id) }}">
+            <div class="tlog-modal-backdrop" id="tlog-share-modal-backdrop"></div>
+            <div class="tlog-modal-box tlog-share-modal-box">
+                <h3 id="tlog-share-modal-title" class="tlog-modal-title">Share collection</h3>
+                <p class="tlog-share-modal-hint">Enter email addresses (comma or newline separated). Only people who already have an account are added.</p>
+                <div class="tlog-form-group">
+                    <label for="tlog-share-emails-input" class="tlog-label">Invite by email</label>
+                    <textarea id="tlog-share-emails-input" class="tlog-input tlog-share-emails-textarea" rows="3" placeholder="friend@example.com" autocomplete="off"></textarea>
+                </div>
+                <div class="tlog-modal-actions">
+                    <button type="button" class="tlog-btn tlog-btn-primary" id="tlog-share-invite-btn">Add editors</button>
+                </div>
+                <p class="tlog-share-modal-status" id="tlog-share-invite-status" aria-live="polite"></p>
+                <h4 class="tlog-share-people-title">People with access</h4>
+                <ul class="tlog-share-people-list" id="tlog-share-people-list"></ul>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+{% if is_owner %}
+<script src="{{ url_for('travel_log.static', filename='share_modal.js') }}"></script>
+{% endif %}
 <script>
 (function() {
     const dateBtn = document.getElementById('tlog-date-btn');
