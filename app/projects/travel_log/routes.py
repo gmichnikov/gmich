@@ -25,7 +25,7 @@ from app.projects.travel_log.permissions import (
     is_collection_owner,
     normalize_invite_email,
 )
-from app.projects.travel_log.tag_inference import infer_tag_names_from_google_place, parse_google_types_from_request
+from app.projects.travel_log.tag_inference import infer_tag_names_from_google_place
 from app.projects.travel_log.utils import parse_place_detail_from_client
 from app.projects.travel_log.services.r2 import (
     generate_photo_key,
@@ -432,11 +432,14 @@ def log():
     log_owned = [i for i in log_collections if not i["shared"]]
     log_shared = [i for i in log_collections if i["shared"]]
 
+    global_tags = TlogTag.query.filter_by(scope="global").order_by(TlogTag.name).all()
+
     return render_template(
         "travel_log/log.html",
         log_collections_owned=log_owned,
         log_collections_shared=log_shared,
         default_collection_id=default_collection_id,
+        global_tags=global_tags,
     )
 
 
@@ -488,6 +491,30 @@ def api_places_search():
     return jsonify({"places": places})
 
 
+@travel_log_bp.route("/api/tags/suggest", methods=["POST"])
+@csrf.exempt
+@login_required
+def api_tags_suggest():
+    """JSON: { types: string[], primary_type?: string } → { tag_ids: int[] } for Log Place UI."""
+    data = request.get_json(silent=True) or {}
+    types = data.get("types") or []
+    if not isinstance(types, list):
+        types = []
+    types = [str(t).strip() for t in types if t is not None and str(t).strip()]
+    primary_type = data.get("primary_type")
+    if primary_type is not None and not isinstance(primary_type, str):
+        primary_type = str(primary_type) if primary_type else None
+    inferred_names = infer_tag_names_from_google_place(types, primary_type)
+    if not inferred_names:
+        return jsonify({"tag_ids": []})
+    tags = (
+        TlogTag.query.filter_by(scope="global")
+        .filter(TlogTag.name.in_(inferred_names))
+        .all()
+    )
+    return jsonify({"tag_ids": [t.id for t in tags]})
+
+
 @travel_log_bp.route("/entries/create", methods=["POST"])
 @login_required
 def entries_create():
@@ -532,15 +559,36 @@ def entries_create():
         visited_date = get_visited_date_default(lat, lng) if (lat and lng) else datetime.utcnow().date()
 
     place_detail = parse_place_detail_from_client(data)
-    google_types = parse_google_types_from_request(data)
-    inferred_names = infer_tag_names_from_google_place(google_types, place_detail.get("primary_type"))
-    auto_tags = (
-        TlogTag.query.filter_by(scope="global")
-        .filter(TlogTag.name.in_(inferred_names))
-        .all()
-        if inferred_names
-        else []
-    )
+
+    def _tags_for_new_entry():
+        """Explicit tag_ids when provided; else infer from types (JSON only). Form uses checkboxes only."""
+        if request.is_json:
+            raw = data.get("tag_ids")
+            if raw is not None:
+                if not isinstance(raw, list):
+                    return []
+                try:
+                    ids = [int(x) for x in raw]
+                except (TypeError, ValueError):
+                    return []
+                valid = {t.id for t in TlogTag.query.filter_by(scope="global").filter(TlogTag.id.in_(ids)).all()}
+                return list(TlogTag.query.filter(TlogTag.id.in_(valid)).all())
+            google_types = data.get("google_types")
+            gt_list = [str(t) for t in google_types] if isinstance(google_types, list) else []
+            names = infer_tag_names_from_google_place(gt_list, place_detail.get("primary_type"))
+            if not names:
+                return []
+            return (
+                TlogTag.query.filter_by(scope="global")
+                .filter(TlogTag.name.in_(names))
+                .all()
+            )
+
+        tag_ids = request.form.getlist("tag_ids", type=int)
+        valid_ids = {t.id for t in TlogTag.query.filter_by(scope="global").filter(TlogTag.id.in_(tag_ids)).all()}
+        return list(TlogTag.query.filter(TlogTag.id.in_(valid_ids)).all())
+
+    entry_tags = _tags_for_new_entry()
 
     now = datetime.utcnow()
     entry = TlogEntry(
@@ -557,7 +605,7 @@ def entries_create():
     )
     db.session.add(entry)
     db.session.flush()
-    entry.tags = auto_tags
+    entry.tags = entry_tags
     collection.last_modified = now
     db.session.commit()
 

@@ -5,6 +5,7 @@
 (function () {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
   const apiBase = '/travel-log/api/places';
+  const tagsSuggestUrl = '/travel-log/api/tags/suggest';
 
   let userLat = null;
   let userLng = null;
@@ -296,9 +297,41 @@
     if (aa3Wrap) aa3Wrap.style.display = '';
     const gt = $('#tlog-form-google-types');
     if (gt) gt.value = '';
+    clearCreateTagCheckboxes();
   }
 
-  function selectPlace(place) {
+  function clearCreateTagCheckboxes() {
+    const form = $('#tlog-create-form');
+    if (!form) return;
+    form.querySelectorAll('input[name="tag_ids"].tlog-tag-chip-cb').forEach((cb) => {
+      cb.checked = false;
+    });
+  }
+
+  async function applySuggestedTagsFromPlace(place) {
+    const types = Array.isArray(place.types) ? place.types : [];
+    const primaryType = place.primary_type != null && place.primary_type !== '' ? String(place.primary_type) : '';
+    try {
+      const r = await fetch(tagsSuggestUrl, {
+        method: 'POST',
+        headers: getCsrfHeaders(),
+        body: JSON.stringify({ types, primary_type: primaryType || null }),
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      const ids = new Set((data.tag_ids || []).map((x) => parseInt(x, 10)));
+      const form = $('#tlog-create-form');
+      if (!form) return;
+      form.querySelectorAll('input[name="tag_ids"].tlog-tag-chip-cb').forEach((cb) => {
+        const id = parseInt(cb.value, 10);
+        cb.checked = ids.has(id);
+      });
+    } catch (_) {
+      /* keep current checkbox state */
+    }
+  }
+
+  async function selectPlace(place) {
     const formWrap = $('#tlog-form-wrap');
     if (!formWrap) return;
 
@@ -308,6 +341,7 @@
     $('#tlog-form-lat').value = place.lat != null ? String(place.lat) : '';
     $('#tlog-form-lng').value = place.lng != null ? String(place.lng) : '';
     setPlaceDetailInputs(place);
+    await applySuggestedTagsFromPlace(place);
     const dateEl = $('#tlog-form-date');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
 
@@ -325,6 +359,7 @@
     $('#tlog-form-lat').value = '';
     $('#tlog-form-lng').value = '';
     clearPlaceDetailInputs();
+    clearCreateTagCheckboxes();
     const dateEl = $('#tlog-form-date');
     if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
 

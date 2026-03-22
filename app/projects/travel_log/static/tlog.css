@@ -1062,6 +1062,13 @@ body.tlog-modal-open {
 }
 
 /* Log Place page */
+.tlog-log-tags-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 10px;
+    line-height: 1.4;
+}
+
 .tlog-log-collection-select {
     margin-bottom: 20px;
 }

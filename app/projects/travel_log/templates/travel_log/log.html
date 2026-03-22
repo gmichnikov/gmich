@@ -143,6 +143,20 @@
                     <label for="tlog-form-date" class="tlog-label">Visited date</label>
                     <input type="date" id="tlog-form-date" name="visited_date" class="tlog-input" required>
                 </div>
+                {% if global_tags %}
+                <div class="tlog-form-group">
+                    <span class="tlog-label">Tags</span>
+                    <p class="tlog-log-tags-hint">When you pick a place from search, we suggest tags from its type—you can change them before saving.</p>
+                    <div class="tlog-tag-chips" id="tlog-create-tag-chips">
+                        {% for tag in global_tags %}
+                        <label class="tlog-tag-chip-wrap">
+                            <input type="checkbox" name="tag_ids" value="{{ tag.id }}" class="tlog-tag-chip-cb" id="tlog-create-tag-{{ tag.id }}">
+                            <span class="tlog-tag-chip {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; border-color: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
                 <div class="tlog-form-actions tlog-form-actions-bottom">
                     <button type="submit" class="tlog-btn tlog-btn-primary">Save</button>
                     <button type="button" class="tlog-btn tlog-btn-secondary tlog-form-cancel">Cancel</button>
