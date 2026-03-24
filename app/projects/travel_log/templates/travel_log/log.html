@@ -53,8 +53,14 @@
                     <button type="button" id="tlog-search-btn" class="tlog-btn tlog-btn-secondary tlog-search-submit-btn">Search</button>
                 </div>
                 <label class="tlog-search-nearby-wrap">
-                    <input type="checkbox" id="tlog-search-nearby" class="tlog-search-nearby-cb" checked disabled>
-                    <span class="tlog-search-nearby-label">Bias results near my location</span>
+                    <span class="tlog-search-nearby-text">
+                        <span class="tlog-search-nearby-title">Bias results near my location</span>
+                        <span class="tlog-search-nearby-hint">When on, search ranks matches closer to your GPS. Turn off to search worldwide.</span>
+                    </span>
+                    <span class="tlog-search-nearby-switch-ui">
+                        <input type="checkbox" id="tlog-search-nearby" class="tlog-search-nearby-cb" checked disabled>
+                        <span class="tlog-search-nearby-switch-track" aria-hidden="true"></span>
+                    </span>
                 </label>
             </div>
         </div>

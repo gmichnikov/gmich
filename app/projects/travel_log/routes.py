@@ -248,10 +248,15 @@ def collections_show(id):
             entry.random_photo = None
             entry.all_photo_urls = []
 
+    entries_with_coords_count = sum(
+        1 for e in entries if e.lat is not None and e.lng is not None
+    )
+
     return render_template(
         "travel_log/collections/show.html",
         collection=collection,
         entries=entries,
+        entries_with_coords_count=entries_with_coords_count,
         get_photo_view_url=get_photo_view_url,
         collection_dates=collection_dates,
         collection_tags=collection_tags,

@@ -44,6 +44,11 @@
             </div>
             {% endif %}
         </div>
+
+        <div class="tlog-view-tabs" id="tlog-view-tabs" role="tablist" aria-label="Collection view">
+            <button type="button" class="tlog-view-tab tlog-view-tab-active" id="tlog-tab-list" role="tab" aria-selected="true" aria-controls="tlog-view-list" data-tlog-view="list">List</button>
+            <button type="button" class="tlog-view-tab" id="tlog-tab-map" role="tab" aria-selected="false" aria-controls="tlog-view-map" data-tlog-view="map">Map</button>
+        </div>
         {% endif %}
 
         <!-- Date Range modal (hidden for now) -->
@@ -84,9 +89,27 @@
             <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
         </div>
         {% else %}
+        <div class="tlog-view-panel-wrap">
+        <div class="tlog-view-panel" id="tlog-view-list" role="tabpanel" aria-labelledby="tlog-tab-list">
         <ul class="tlog-entries-list">
             {% for entry in entries %}
-            <li class="tlog-entry-item" data-visited-date="{{ entry.visited_date.isoformat() }}" data-tag-ids="{{ entry.tags|map(attribute='id')|join(',') }}">
+            <li class="tlog-entry-item"
+                data-entry-id="{{ entry.id }}"
+                data-lat="{% if entry.lat is not none %}{{ entry.lat }}{% endif %}"
+                data-lng="{% if entry.lng is not none %}{{ entry.lng }}{% endif %}"
+                data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}"
+                data-entry-name="{{ entry.user_name|e }}"
+                data-entry-address="{{ (entry.user_address or '')|e }}"
+                data-visited-date="{{ entry.visited_date.isoformat() }}"
+                data-primary-type-display="{{ (entry.primary_type_display_name or '')|e }}"
+                data-notes-preview="{{ ((entry.notes[:100] + '…') if entry.notes and entry.notes|length > 100 else (entry.notes or ''))|e }}"
+                data-photo-count="{{ entry.photos.count() }}"
+                data-photo-thumb-url="{% if entry.random_photo %}{{ get_photo_view_url(entry.random_photo)|e }}{% endif %}"
+                data-tags-labels="{{ entry.tags|map(attribute='name')|join(', ')|e }}"
+                data-tag-ids="{{ entry.tags|map(attribute='id')|join(',') }}"
+                data-first-tag-name="{% if entry.tags %}{{ entry.tags[0].name|e }}{% endif %}"
+                data-first-tag-bg="{% if entry.tags and entry.tags[0].bg_color %}{{ entry.tags[0].bg_color|e }}{% endif %}"
+                data-first-tag-letter-contrast="{% if entry.tags and entry.tags[0].bg_color %}{{ entry.tags[0].bg_color|tlog_contrast_text }}{% endif %}">
                 <div class="tlog-entry-link" data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}" role="link" tabindex="0">
                     <div class="tlog-entry-content">
                         <span class="tlog-entry-name">{{ (entry.user_name[:60] + '…') if entry.user_name|length > 60 else entry.user_name }}</span>
@@ -99,11 +122,13 @@
                         </span>
                         {% endif %}
                         <span class="tlog-entry-meta">
-                            {{ entry.visited_date.strftime('%b %d, %Y') }}
-                            {% if entry.notes %}
-                            · {{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}
-                            {% endif %}
+                            {% if entry.primary_type_display_name or entry.notes %}
+                            {% if entry.primary_type_display_name %}{{ entry.primary_type_display_name }}{% endif %}
+                            {% if entry.notes %}{% if entry.primary_type_display_name %} · {% endif %}{{ (entry.notes[:60] + '…') if entry.notes|length > 60 else entry.notes }}{% endif %}
                             · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                            {% else %}
+                            {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                            {% endif %}
                         </span>
                     </div>
                     {% if entry.tags %}
@@ -122,6 +147,16 @@
             </li>
             {% endfor %}
         </ul>
+        </div>
+        <div class="tlog-view-panel tlog-hidden" id="tlog-view-map" role="tabpanel" aria-labelledby="tlog-tab-map" hidden>
+            {% if entries_with_coords_count == 0 %}
+            <p class="tlog-map-empty-message" id="tlog-map-empty-message">None of these places have map coordinates yet. Coordinates are saved when you log from the map-based flow.</p>
+            {% else %}
+            <div id="tlog-collection-map" class="tlog-collection-map"></div>
+            <p class="tlog-map-attribution">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors</p>
+            {% endif %}
+        </div>
+        </div>
         {% endif %}
 
         {% if is_owner %}
@@ -154,6 +189,9 @@
 {% if is_owner %}
 <script src="{{ url_for('travel_log.static', filename='share_modal.js') }}"></script>
 {% endif %}
+{% if entries %}
+<script src="{{ url_for('travel_log.static', filename='collection_show.js') }}"></script>
+{% endif %}
 <script>
 (function() {
     const dateBtn = document.getElementById('tlog-date-btn');
@@ -178,6 +216,7 @@
             const tagMatch = selectedTagIds.size === 0 || entryTagIds.some(id => selectedTagIds.has(id));
             item.style.display = (dateMatch && tagMatch) ? '' : 'none';
         });
+        document.dispatchEvent(new CustomEvent('tlog-collection-filters-changed'));
     }
 
     if (dateBtn && dayChipsContainer) {
