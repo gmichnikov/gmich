@@ -90,12 +90,21 @@
     if (fallback) fallback.style.display = 'block';
   }
 
+  function hideFallback() {
+    const fallback = $('#tlog-fallback');
+    if (fallback) fallback.style.display = 'none';
+  }
+
   async function fetchNearby(category = null) {
     try {
       const coords = userLat != null && userLng != null ? { lat: userLat, lng: userLng } : await getGps();
       if (!coords) return [];
-      const body = { lat: coords.lat, lng: coords.lng, radius: 200 };
-      if (category) body.category = category;
+      const body = {
+        lat: coords.lat,
+        lng: coords.lng,
+        radius: 200,
+        category: category || 'other',
+      };
       const r = await fetch(apiBase + '/nearby', { method: 'POST', headers: getCsrfHeaders(), body: JSON.stringify(body) });
       if (!r.ok) {
         let errMsg = 'Could not fetch nearby places.';
@@ -108,6 +117,7 @@
         return [];
       }
       const data = await r.json();
+      hideFallback();
       return data.places || [];
     } catch (e) {
       showStatus('Network error. Add place manually.', true);
@@ -135,6 +145,7 @@
         return [];
       }
       const data = await r.json();
+      hideFallback();
       return data.places || [];
     } catch (e) {
       showStatus('Network error. Add place manually.', true);
@@ -149,17 +160,28 @@
     return div.innerHTML;
   }
 
-  const CATEGORY_LABELS = { food: 'Food & Drink', shopping: 'Shopping', attractions: 'Attractions', other: 'Other' };
+  const CATEGORY_LABELS = {
+    food: 'Food & Drink',
+    shopping: 'Shopping',
+    attractions: 'Attractions',
+    other: 'All Types',
+  };
+
+  function getSelectedCategory() {
+    const active = $('.tlog-cat-btn.tlog-cat-active');
+    const cat = active?.dataset?.cat;
+    return cat || 'other';
+  }
 
   function updateFilterLabel(category, fromSearch = false) {
     const el = $('#tlog-filter-label');
     if (!el) return;
-    if (category && CATEGORY_LABELS[category]) {
-      el.textContent = 'Filter: ' + CATEGORY_LABELS[category];
-    } else if (fromSearch) {
+    if (fromSearch) {
       el.textContent = 'Search results';
     } else {
-      el.textContent = 'Nearby places';
+      const cat = category != null ? category : getSelectedCategory();
+      const label = CATEGORY_LABELS[cat] || CATEGORY_LABELS.other;
+      el.textContent = 'Filter: ' + label;
     }
     el.style.display = 'block';
   }
@@ -212,9 +234,13 @@
   }
 
   /** Call after every nearby/search API response. */
-  function setPlacesFromApi(places) {
+  function setPlacesFromApi(places, opts = {}) {
     lastPlacesSnapshot = Array.isArray(places) ? places.slice() : [];
-    lastApiReturnedEmpty = lastPlacesSnapshot.length === 0;
+    if (typeof opts.apiReturnedEmpty === 'boolean') {
+      lastApiReturnedEmpty = opts.apiReturnedEmpty;
+    } else {
+      lastApiReturnedEmpty = lastPlacesSnapshot.length === 0;
+    }
     const filterInput = $('#tlog-results-filter-input');
     if (filterInput) filterInput.value = '';
     updateClientFilterWrapVisibility();
@@ -230,21 +256,24 @@
     const nearbyPanel = $('#tlog-panel-nearby');
     const searchPanel = $('#tlog-panel-search');
     const results = $('#tlog-results');
-    const categories = $('#tlog-categories');
+    const categoriesGroup = $('#tlog-categories-group');
     if (toggle) toggle.style.display = 'none';
     if (nearbyPanel) nearbyPanel.style.display = 'none';
     if (searchPanel) searchPanel.style.display = 'none';
     if (results) results.style.display = 'none';
-    if (categories) categories.style.display = 'none';
+    if (categoriesGroup) categoriesGroup.style.display = 'none';
+    hideFallback();
   }
 
   function showFinder() {
     const toggle = $('.tlog-log-mode-toggle');
     const nearbyPanel = $('#tlog-panel-nearby');
     const searchPanel = $('#tlog-panel-search');
+    const categoriesGroup = $('#tlog-categories-group');
     if (toggle) toggle.style.display = 'flex';
     if (nearbyPanel) nearbyPanel.style.display = '';
     if (searchPanel) searchPanel.style.display = '';
+    if (categoriesGroup) categoriesGroup.style.display = 'block';
     switchMode('nearby');
   }
 
@@ -359,7 +388,6 @@
     $('#tlog-form-lat').value = '';
     $('#tlog-form-lng').value = '';
     clearPlaceDetailInputs();
-    clearCreateTagCheckboxes();
     const dateEl = $('#tlog-form-date');
     if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
 
@@ -367,7 +395,7 @@
     formWrap.style.display = 'block';
   }
 
-    function goBackFromForm() {
+  function goBackFromForm() {
     const formWrap = $('#tlog-form-wrap');
     if (!formWrap) return;
     formWrap.style.display = 'none';
@@ -376,7 +404,6 @@
 
   function hideResults() {
     if ($('#tlog-results')) $('#tlog-results').style.display = 'none';
-    if ($('#tlog-categories')) $('#tlog-categories').style.display = 'none';
     lastPlacesSnapshot = [];
     lastApiReturnedEmpty = true;
     const filterInput = $('#tlog-results-filter-input');
@@ -401,6 +428,10 @@
     nearbyPanel.setAttribute('aria-hidden', !isNearby);
     searchPanel.classList.toggle('tlog-log-panel-visible', !isNearby);
     searchPanel.setAttribute('aria-hidden', isNearby);
+    const categoriesGroup = $('#tlog-categories-group');
+    if (categoriesGroup) {
+      categoriesGroup.style.display = isNearby ? 'block' : 'none';
+    }
     hideResults();
   }
 
@@ -418,21 +449,11 @@
     if (nearbyModeBtn) nearbyModeBtn.addEventListener('click', () => switchMode('nearby'));
     if (searchModeBtn) searchModeBtn.addEventListener('click', () => switchMode('search'));
 
-    if (browseBtn) {
-      browseBtn.addEventListener('click', async () => {
-        showStatus('Getting location…');
-        const places = await fetchNearby();
-        showStatus('');
-        if (places.length === 0 && gpsFailed) {
-          showStatus('Location not available. You can search by name (include location in your search, e.g. "coffee Tokyo" or "ramen Myeongdong Seoul") or add manually.', true);
-          showFallback();
-        }
-        updateFilterLabel(null, false);
-        setPlacesFromApi(places);
-        if (results) {
-          results.style.display = 'block';
-          if (places.length > 3 && $('#tlog-categories')) $('#tlog-categories').style.display = 'flex';
-        }
+    function setCategoryActive(clickedBtn) {
+      categoryBtns.forEach((b) => {
+        const on = b === clickedBtn;
+        b.classList.toggle('tlog-cat-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
     }
 
@@ -451,10 +472,26 @@
       showStatus('');
       updateFilterLabel(null, true);
       setPlacesFromApi(places);
-      if (results) {
-        results.style.display = 'block';
-        if (places.length > 3 && $('#tlog-categories')) $('#tlog-categories').style.display = 'flex';
-      }
+      if (results) results.style.display = 'block';
+    }
+
+    if (browseBtn) {
+      browseBtn.addEventListener('click', async () => {
+        const cat = getSelectedCategory();
+        showStatus('Getting location…');
+        const places = await fetchNearby(cat);
+        showStatus('');
+        if (places.length === 0 && gpsFailed) {
+          showStatus(
+            'Location not available. You can search by name (include location in your search, e.g. "coffee Tokyo" or "ramen Myeongdong Seoul") or add manually.',
+            true
+          );
+          showFallback();
+        }
+        updateFilterLabel(cat, false);
+        setPlacesFromApi(places, { apiReturnedEmpty: places.length === 0 });
+        if (results) results.style.display = 'block';
+      });
     }
 
     const searchBtn = $('#tlog-search-btn');
@@ -470,13 +507,18 @@
 
     categoryBtns.forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const cat = btn.dataset.cat || null;
-        categoryBtns.forEach((b) => b.classList.toggle('tlog-cat-active', b === btn));
-        updateFilterLabel(cat);
-        showStatus('Searching…');
-        const places = await fetchNearby(cat);
-        showStatus('');
-        setPlacesFromApi(places);
+        const cat = btn.dataset.cat || 'other';
+        setCategoryActive(btn);
+        const isNearby = $('#tlog-mode-nearby')?.classList.contains('tlog-mode-btn-active');
+        const resultsShown = results && results.style.display === 'block';
+
+        if (isNearby && resultsShown) {
+          updateFilterLabel(cat, false);
+          showStatus('Searching…');
+          const places = await fetchNearby(cat);
+          showStatus('');
+          setPlacesFromApi(places, { apiReturnedEmpty: places.length === 0 });
+        }
       });
     });
 

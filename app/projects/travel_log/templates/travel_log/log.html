@@ -32,6 +32,17 @@
             </select>
         </div>
 
+        <div class="tlog-log-categories-group" id="tlog-categories-group">
+            <span class="tlog-label" id="tlog-categories-heading">What kind of place?</span>
+            <p class="tlog-log-categories-hint">Used for <strong>Near me</strong> only. <strong>All Types</strong> is the same as no category filter.</p>
+            <div class="tlog-log-categories" id="tlog-categories" role="group" aria-labelledby="tlog-categories-heading">
+                <button type="button" class="tlog-cat-btn tlog-cat-active" data-cat="other" aria-pressed="true">All Types</button>
+                <button type="button" class="tlog-cat-btn" data-cat="food" aria-pressed="false">Food &amp; Drink</button>
+                <button type="button" class="tlog-cat-btn" data-cat="shopping" aria-pressed="false">Shopping</button>
+                <button type="button" class="tlog-cat-btn" data-cat="attractions" aria-pressed="false">Attractions</button>
+            </div>
+        </div>
+
         <div class="tlog-log-mode-toggle" role="tablist" aria-label="How to find a place">
             <button type="button" id="tlog-mode-nearby" class="tlog-mode-btn tlog-mode-btn-active" role="tab" aria-selected="true" aria-controls="tlog-panel-nearby">Near me</button>
             <button type="button" id="tlog-mode-search" class="tlog-mode-btn" role="tab" aria-selected="false" aria-controls="tlog-panel-search">Search</button>
@@ -63,13 +74,6 @@
                     </span>
                 </label>
             </div>
-        </div>
-
-        <div class="tlog-log-categories" id="tlog-categories" style="display: none;">
-            <button type="button" class="tlog-cat-btn" data-cat="food">Food &amp; Drink</button>
-            <button type="button" class="tlog-cat-btn" data-cat="shopping">Shopping</button>
-            <button type="button" class="tlog-cat-btn" data-cat="attractions">Attractions</button>
-            <button type="button" class="tlog-cat-btn" data-cat="other">Other</button>
         </div>
 
         <div class="tlog-log-results" id="tlog-results" style="display: none;">

@@ -158,7 +158,7 @@ def search_nearby(lat, lng, radius_m=200, included_types=None, api_key=None):
         # Exclude closed places; include OPERATIONAL and places without businessStatus (e.g. parks, landmarks)
         closed = {"CLOSED_PERMANENTLY", "CLOSED_TEMPORARILY"}
         operational = [p for p in places_raw if p.get("businessStatus") not in closed]
-        if not included_types or included_types == "other":
+        if not included_types:
             operational = [p for p in operational if not (set(p.get("types", [])) & UNHELPFUL_TYPES)]
 
         results = []
