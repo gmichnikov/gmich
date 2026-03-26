@@ -1497,16 +1497,8 @@ body.tlog-modal-open {
     }
 }
 
-.tlog-log-categories-group {
-    margin-bottom: 20px;
-}
-
-.tlog-log-categories-hint {
-    margin: 0 0 12px;
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.45;
-    max-width: 42rem;
+.tlog-log-browse .tlog-log-categories-group {
+    margin-bottom: 16px;
 }
 
 .tlog-log-categories {

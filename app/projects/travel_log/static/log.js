@@ -256,12 +256,10 @@
     const nearbyPanel = $('#tlog-panel-nearby');
     const searchPanel = $('#tlog-panel-search');
     const results = $('#tlog-results');
-    const categoriesGroup = $('#tlog-categories-group');
     if (toggle) toggle.style.display = 'none';
     if (nearbyPanel) nearbyPanel.style.display = 'none';
     if (searchPanel) searchPanel.style.display = 'none';
     if (results) results.style.display = 'none';
-    if (categoriesGroup) categoriesGroup.style.display = 'none';
     hideFallback();
   }
 
@@ -269,11 +267,9 @@
     const toggle = $('.tlog-log-mode-toggle');
     const nearbyPanel = $('#tlog-panel-nearby');
     const searchPanel = $('#tlog-panel-search');
-    const categoriesGroup = $('#tlog-categories-group');
     if (toggle) toggle.style.display = 'flex';
     if (nearbyPanel) nearbyPanel.style.display = '';
     if (searchPanel) searchPanel.style.display = '';
-    if (categoriesGroup) categoriesGroup.style.display = 'block';
     switchMode('nearby');
   }
 
@@ -428,10 +424,6 @@
     nearbyPanel.setAttribute('aria-hidden', !isNearby);
     searchPanel.classList.toggle('tlog-log-panel-visible', !isNearby);
     searchPanel.setAttribute('aria-hidden', isNearby);
-    const categoriesGroup = $('#tlog-categories-group');
-    if (categoriesGroup) {
-      categoriesGroup.style.display = isNearby ? 'block' : 'none';
-    }
     hideResults();
   }
 
