@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Sports Scores{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('sports_scores.static', filename='css/sports_scores.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ssc-wrapper">
+  <h1 class="ssc-title">Sports Scores</h1>
+  <p class="ssc-lead">Public score tracking. This page is a starting point — add games, teams, and results next.</p>
+  <div class="ssc-panel">
+    <p class="ssc-meta">Data models and migrations will be added once the schema is defined.</p>
+  </div>
+</div>
+{% endblock %}

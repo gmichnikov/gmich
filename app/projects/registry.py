@@ -410,6 +410,17 @@ PROJECTS = [
         "icon": "🤖",
         "order": 20,
     },
+    {
+        "id": "sports_scores",
+        "name": "Sports Scores",
+        "description": "View and track sports scores",
+        "url": "/sports-scores",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "⚽",
+        "order": 21,
+    },
 ]
 
 

@@ -1,0 +1,31 @@
+/* Prefixed with ssc- to avoid collisions with other projects in this app */
+
+.ssc-wrapper {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+.ssc-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.ssc-lead {
+  color: var(--muted-foreground, #555);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+.ssc-panel {
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: var(--card, #fafafa);
+}
+
+.ssc-meta {
+  font-size: 0.9rem;
+  margin: 0;
+}
