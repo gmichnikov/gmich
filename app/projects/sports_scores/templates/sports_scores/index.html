@@ -29,7 +29,8 @@
 
   {# Scores content #}
   <div class="sco-content">
-    {% if not games_by_date or games_by_date.values() | list | sum(start=[]) | length == 0 and not last_updated %}
+    {% set total_games = games_by_date.values() | list | sum(start=[]) | length %}
+    {% if not games_by_date or (total_games == 0 and not last_updated) %}
       {# ESPN never responded and nothing is stored #}
       <div class="sco-fetch-error">
         Scores unavailable. Refresh to try again.
