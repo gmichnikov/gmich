@@ -1,31 +1,237 @@
-/* Prefixed with ssc- to avoid collisions with other projects in this app */
+/* Sports Scores — all classes use sco- prefix */
 
-.ssc-wrapper {
-  max-width: 42rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 2rem;
+/* ── Wrapper ─────────────────────────────────────────────── */
+.sco-wrapper {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  max-width: 680px;
+  margin: 24px auto;
+  padding: 24px 20px 32px;
 }
 
-.ssc-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem;
+/* ── Header ──────────────────────────────────────────────── */
+.sco-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
-.ssc-lead {
-  color: var(--muted-foreground, #555);
-  margin: 0 0 1.25rem;
-  line-height: 1.5;
-}
-
-.ssc-panel {
-  border: 1px solid var(--border, #e0e0e0);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  background: var(--card, #fafafa);
-}
-
-.ssc-meta {
-  font-size: 0.9rem;
+.sco-title {
+  font-size: 1.5rem;
+  font-weight: 700;
   margin: 0;
+  color: #111;
+}
+
+.sco-last-updated {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+/* ── Sport tabs ──────────────────────────────────────────── */
+.sco-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.sco-tab {
+  display: inline-block;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  text-decoration: none;
+  border-radius: 6px 6px 0 0;
+  border: 2px solid transparent;
+  border-bottom: none;
+  margin-bottom: -2px;
+  transition: color 0.15s, background 0.15s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.sco-tab:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.sco-tab--active {
+  color: #1d4ed8;
+  background: #fff;
+  border-color: #e5e7eb;
+  border-bottom-color: #fff;
+}
+
+/* ── Date sections ───────────────────────────────────────── */
+.sco-date-section {
+  margin-bottom: 28px;
+}
+
+.sco-date-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* ── Game list ───────────────────────────────────────────── */
+.sco-game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Game card ───────────────────────────────────────────── */
+.sco-game-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.sco-game-card--in {
+  border-left: 3px solid #16a34a;
+  background: #f0fdf4;
+}
+
+.sco-game-card--post {
+  opacity: 0.85;
+}
+
+/* ── Matchup (teams + scores) ────────────────────────────── */
+.sco-matchup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sco-team {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sco-team-name {
+  font-size: 0.95rem;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.sco-score {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Status column ───────────────────────────────────────── */
+.sco-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 72px;
+  text-align: right;
+}
+
+.sco-status-time {
+  font-size: 0.82rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.sco-status-final {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sco-status-detail {
+  font-size: 0.82rem;
+  color: #15803d;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sco-live-badge {
+  display: inline-block;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* ── Empty / error states ────────────────────────────────── */
+.sco-no-games {
+  font-size: 0.88rem;
+  color: #9ca3af;
+  margin: 4px 0 0;
+}
+
+.sco-fetch-error {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.95rem;
+  padding: 32px 0;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .sco-wrapper {
+    margin: 12px 8px;
+    padding: 16px 12px 24px;
+    border-radius: 8px;
+  }
+
+  .sco-tabs {
+    gap: 2px;
+  }
+
+  .sco-tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .sco-team-name {
+    font-size: 0.88rem;
+  }
+
+  .sco-score {
+    font-size: 1rem;
+  }
+
+  .sco-status {
+    min-width: 60px;
+  }
 }

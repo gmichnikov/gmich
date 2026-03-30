@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block title %}Sports Scores{% endblock %}
 
@@ -7,11 +7,81 @@
 {% endblock %}
 
 {% block content %}
-<div class="ssc-wrapper">
-  <h1 class="ssc-title">Sports Scores</h1>
-  <p class="ssc-lead">Public score tracking. This page is a starting point — add games, teams, and results next.</p>
-  <div class="ssc-panel">
-    <p class="ssc-meta">Data models and migrations will be added once the schema is defined.</p>
+<div class="sco-wrapper">
+
+  <div class="sco-header">
+    <h1 class="sco-title">Sports Scores</h1>
+    {% if last_updated %}
+    <span class="sco-last-updated">{{ last_updated }}</span>
+    {% endif %}
   </div>
-</div>
+
+  {# Sport tabs #}
+  <nav class="sco-tabs" aria-label="Sport navigation">
+    {% for key in supported_sports %}
+    <a href="{{ url_for('sports_scores.index', sport=key) }}"
+       class="sco-tab{% if key == sport_key %} sco-tab--active{% endif %}"
+       aria-current="{% if key == sport_key %}page{% else %}false{% endif %}">
+      {{ sport_display[key] }}
+    </a>
+    {% endfor %}
+  </nav>
+
+  {# Scores content #}
+  <div class="sco-content">
+    {% if not games_by_date or games_by_date.values() | list | sum(start=[]) | length == 0 and not last_updated %}
+      {# ESPN never responded and nothing is stored #}
+      <div class="sco-fetch-error">
+        Scores unavailable. Refresh to try again.
+      </div>
+    {% else %}
+      {% for date_str, games in games_by_date.items() | sort %}
+      <section class="sco-date-section">
+        <h2 class="sco-date-header">{{ date_labels[date_str] }}</h2>
+
+        {% if games %}
+          <div class="sco-game-list">
+            {% for game in games %}
+            <div class="sco-game-card sco-game-card--{{ game.status_state }}">
+
+              {# Teams + scores #}
+              <div class="sco-matchup">
+                <div class="sco-team sco-team--away">
+                  <span class="sco-team-name">{{ game.away_team }}</span>
+                  <span class="sco-score">
+                    {% if game.status_state == 'pre' %}–{% else %}{{ game.away_score if game.away_score is not none else '–' }}{% endif %}
+                  </span>
+                </div>
+                <div class="sco-team sco-team--home">
+                  <span class="sco-team-name">{{ game.home_team }}</span>
+                  <span class="sco-score">
+                    {% if game.status_state == 'pre' %}–{% else %}{{ game.home_score if game.home_score is not none else '–' }}{% endif %}
+                  </span>
+                </div>
+              </div>
+
+              {# Status #}
+              <div class="sco-status">
+                {% if game.status_state == 'pre' %}
+                  <span class="sco-status-time">{{ game.start_time_et or game.status_detail or 'TBD' }}</span>
+                {% elif game.status_state == 'in' %}
+                  <span class="sco-live-badge">LIVE</span>
+                  <span class="sco-status-detail">{{ game.status_detail }}</span>
+                {% else %}
+                  <span class="sco-status-final">Final</span>
+                {% endif %}
+              </div>
+
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="sco-no-games">No games scheduled.</p>
+        {% endif %}
+      </section>
+      {% endfor %}
+    {% endif %}
+  </div>{# /sco-content #}
+
+</div>{# /sco-wrapper #}
 {% endblock %}

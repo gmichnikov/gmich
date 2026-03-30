@@ -1,1 +1,3 @@
-# Sports Scores — public project; no login required. DB models will be added when the schema is defined.
+from app.projects.sports_scores.models import ScoresFetchLog, ScoresGame
+
+__all__ = ["ScoresFetchLog", "ScoresGame"]

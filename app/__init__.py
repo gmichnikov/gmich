@@ -184,6 +184,8 @@ def create_app():
         TlogEntry,
         TlogEntryPhoto,
     )
+    from app.projects.sports_scores.models import ScoresFetchLog, ScoresGame
+
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():
