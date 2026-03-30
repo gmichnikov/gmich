@@ -4,7 +4,7 @@ This plan follows the Sports Scores PRD and breaks implementation into smaller, 
 
 **Status:** Phase 1 🔲 Phase 2 🔲 Phase 3 🔲 Phase 4 🔲
 
-**CSS prefix:** `sc-` (Sports sCores)
+**CSS prefix:** `sco-` (Sports SCOres)
 
 ---
 
@@ -16,14 +16,14 @@ This plan follows the Sports Scores PRD and breaks implementation into smaller, 
 - `app/projects/sports_scores/core/espn_parser.py` — Parse ESPN scoreboard JSON → normalized game dicts
 - `app/projects/sports_scores/core/scores_service.py` — Orchestrate fetch/throttle/upsert logic
 - `app/projects/sports_scores/templates/sports_scores/index.html` — Main scores page
-- `app/projects/sports_scores/static/css/sports_scores.css` — Styles (all classes use `sc-` prefix)
+- `app/projects/sports_scores/static/css/sports_scores.css` — Styles (all classes use `sco-` prefix)
 - `app/projects/sports_schedule_admin/core/espn_client.py` — Reuse `ESPNClient` and `LEAGUE_MAP`
 - `app/__init__.py` — Register blueprint
 - `app/projects/registry.py` — Already registered
 
 ### Notes
 
-- All CSS classes must use the `sc-` prefix to avoid collisions with other projects.
+- All CSS classes must use the `sco-` prefix to avoid collisions with other projects.
 - No auth required; same data for all visitors.
 - No background jobs; fetch happens on page load (throttled to 1/min per sport).
 - Supported sports for v1: **NFL, NBA, MLB, NHL** only.
@@ -184,19 +184,19 @@ Unique constraint: `(espn_event_id, sport_key)`. Upserted on each successful fet
 
 - [ ] Create `app/projects/sports_scores/templates/sports_scores/index.html`
   - [ ] Extend base template
-  - [ ] `sc-wrapper`: page container with its own background (white/light neutral panel, not the homepage purple gradient)
+  - [ ] `sco-wrapper`: page container with its own background (white/light neutral panel, not the homepage purple gradient)
   - [ ] Sport tabs: `NFL | NBA | MLB | NHL` — each tab is a link to `?sport=nfl` etc.
   - [ ] Active tab highlighted
   - [ ] Below tabs: scores content area (date sections + game cards)
   - [ ] Include a small "Last updated: X min ago" or "Live" indicator near the tab bar
 - [ ] Create `app/projects/sports_scores/static/css/sports_scores.css`
-  - [ ] `sc-wrapper`: background, padding, max-width, margin, optional border-radius/box-shadow
-  - [ ] `sc-tabs`: tab bar styles; `sc-tab`, `sc-tab--active`
-  - [ ] `sc-date-section`: date header + game list grouping
-  - [ ] `sc-date-header`: date label (e.g. "Sunday, Mar 30")
-  - [ ] `sc-game-card`: individual game row/card
-  - [ ] `sc-no-games`: "No games scheduled" empty state text
-  - [ ] All classes use `sc-` prefix
+  - [ ] `sco-wrapper`: background, padding, max-width, margin, optional border-radius/box-shadow
+  - [ ] `sco-tabs`: tab bar styles; `sco-tab`, `sco-tab--active`
+  - [ ] `sco-date-section`: date header + game list grouping
+  - [ ] `sco-date-header`: date label (e.g. "Sunday, Mar 30")
+  - [ ] `sco-game-card`: individual game row/card
+  - [ ] `sco-no-games`: "No games scheduled" empty state text
+  - [ ] All classes use `sco-` prefix
 
 **Manual Testing 2.2:**
 - [ ] Page loads at `/sports-scores/`
@@ -209,15 +209,15 @@ Unique constraint: `(espn_event_id, sport_key)`. Upserted on each successful fet
 ### 2.3 Game Cards
 
 - [ ] Implement game card HTML in template (loop over `games_by_date`)
-  - [ ] For each date key (past 2 days + today), render a `sc-date-section`:
-    - [ ] `sc-date-header`: formatted date (e.g. "Sunday, Mar 30" or "Today, Mar 30")
-    - [ ] If no games for date: `sc-no-games` message
-    - [ ] For each game: `sc-game-card` containing:
+  - [ ] For each date key (past 2 days + today), render a `sco-date-section`:
+    - [ ] `sco-date-header`: formatted date (e.g. "Sunday, Mar 30" or "Today, Mar 30")
+    - [ ] If no games for date: `sco-no-games` message
+    - [ ] For each game: `sco-game-card` containing:
       - Away team name + score (or `–` if pre-game)
       - Home team name + score (or `–` if pre-game)
       - Status display (per display logic table above):
         - `"pre"`: scheduled time in ET (e.g. `7:30 PM ET`)
-        - `"in"`: `status_detail` + `sc-live-badge` ("LIVE")
+        - `"in"`: `status_detail` + `sco-live-badge` ("LIVE")
         - `"post"`: "Final"
   - [ ] Order: most recent date at top, oldest at bottom (or reverse — see question below — decided: **most recent first**)
   - [ ] Within a date: games sorted by `start_time_utc` ascending
@@ -235,14 +235,14 @@ Unique constraint: `(espn_event_id, sport_key)`. Upserted on each successful fet
 
 ### 3.1 Game Card Styling
 
-- [ ] Style `sc-game-card` for clarity and scannability:
+- [ ] Style `sco-game-card` for clarity and scannability:
   - [ ] Two-row or two-column layout: away team on top/left, home team on bottom/right
   - [ ] Score prominent (larger font, bold)
   - [ ] Team name readable but secondary to score
   - [ ] Status (time / LIVE / Final) clearly visible, right-aligned or below scores
-  - [ ] `sc-live-badge`: small colored badge (e.g. red/green dot or pill) for in-progress games
+  - [ ] `sco-live-badge`: small colored badge (e.g. red/green dot or pill) for in-progress games
   - [ ] Subtle divider between game cards
-- [ ] Style `sc-date-header`: bold, slightly larger, clear visual separation between date groups
+- [ ] Style `sco-date-header`: bold, slightly larger, clear visual separation between date groups
 
 **Manual Testing 3.1:**
 - [ ] Scores are the most prominent element on each card
@@ -337,7 +337,7 @@ Before considering v1 complete:
 - [ ] "Updated X min ago" indicator present
 - [ ] ESPN errors handled gracefully (no stack traces in UI)
 - [ ] Mobile layout usable at 375px
-- [ ] All CSS uses `sc-` prefix
+- [ ] All CSS uses `sco-` prefix
 - [ ] No auth required (public access)
 
 ---
