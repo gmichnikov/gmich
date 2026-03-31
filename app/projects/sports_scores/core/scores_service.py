@@ -192,6 +192,28 @@ def get_games_for_display(sport_key, anchor_date=None):
     return result
 
 
+def get_games_for_team(team_name, limit=20):
+    """
+    Return up to `limit` most recent games (across all sports) where
+    home_team or away_team matches team_name (exact, case-insensitive).
+    Returns a flat list of game dicts ordered by game_date desc, start_time_utc desc.
+    """
+    from sqlalchemy import func, or_
+    rows = (
+        ScoresGame.query
+        .filter(
+            or_(
+                func.lower(ScoresGame.home_team) == team_name.lower(),
+                func.lower(ScoresGame.away_team) == team_name.lower(),
+            )
+        )
+        .order_by(ScoresGame.game_date.desc(), ScoresGame.start_time_utc.desc())
+        .limit(limit)
+        .all()
+    )
+    return [_game_to_dict(row) for row in rows]
+
+
 def _game_to_dict(game):
     """Serialize a ScoresGame row to a plain dict for template / JSON use."""
     start_et = None

@@ -9,6 +9,7 @@ from app.projects.sports_scores.core.scores_service import (
     should_fetch,
     fetch_and_store,
     get_games_for_display,
+    get_games_for_team,
     get_fetch_log,
     _today_et,
 )
@@ -96,6 +97,29 @@ def index():
         games_by_date=games_by_date,
         date_labels=date_labels,
         anchor_date=anchor_date.isoformat(),
+        last_updated=last_updated,
+    )
+
+
+@sports_scores_bp.route("/team/<team_name>")
+def team(team_name):
+    sport_key = request.args.get("sport", "").lower()
+    if sport_key not in SUPPORTED_SPORTS:
+        sport_key = None
+
+    # Freshen data for this sport if throttle allows
+    if sport_key and should_fetch(sport_key):
+        fetch_and_store(sport_key, _today_et())
+
+    games = get_games_for_team(team_name, limit=20)
+    last_updated = _last_fetched_display(sport_key) if sport_key else None
+
+    return render_template(
+        "sports_scores/team.html",
+        team_name=team_name,
+        sport_key=sport_key,
+        sport_display=SPORT_DISPLAY,
+        games=games,
         last_updated=last_updated,
     )
 

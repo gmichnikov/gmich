@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team_name }} Scores{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('sports_scores.static', filename='css/sports_scores.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sco-wrapper">
+
+  <div class="sco-header">
+    <div class="sco-header-left">
+      <a href="{{ url_for('sports_scores.index', sport=sport_key) }}" class="sco-back-link">← Scores</a>
+      <h1 class="sco-title">{{ team_name }}</h1>
+    </div>
+    {% if last_updated %}
+    <span class="sco-last-updated">{{ last_updated }}</span>
+    {% endif %}
+  </div>
+
+  {% if games %}
+  <div class="sco-game-list">
+    {% for game in games %}
+    {% set is_home = game.home_team | lower == team_name | lower %}
+    {% set opponent = game.away_team if is_home else game.home_team %}
+    {% set team_score = game.home_score if is_home else game.away_score %}
+    {% set opp_score  = game.away_score if is_home else game.home_score %}
+
+    <div class="sco-game-card sco-game-card--{{ game.status_state }}">
+
+      <div class="sco-matchup">
+        {# Date + sport badge #}
+        <div class="sco-team-game-meta">
+          <span class="sco-game-date-label">{{ game.game_date }}</span>
+          <span class="sco-sport-badge">{{ sport_display.get(game.sport_key, game.sport_key | upper) }}</span>
+          <span class="sco-home-away">{{ 'vs' if is_home else '@' }}</span>
+          <a href="{{ url_for('sports_scores.team', team_name=opponent, sport=game.sport_key) }}"
+             class="sco-team-link">{{ opponent }}</a>
+        </div>
+
+        {# Score row #}
+        {% if game.status_state != 'pre' %}
+        {% set has_scores = team_score is not none and opp_score is not none %}
+        {% set won = has_scores and team_score > opp_score %}
+        {% set lost = has_scores and team_score < opp_score %}
+        <div class="sco-team-score-row">
+          {% if game.status_state == 'post' and has_scores %}
+            <span class="sco-wl-badge sco-wl-badge--{{ 'w' if won else 'l' }}">{{ 'W' if won else 'L' }}</span>
+          {% endif %}
+          <span class="sco-score{% if game.status_state == 'post' and won %} sco-score--win{% endif %}">
+            {{ team_score if team_score is not none else '–' }}
+          </span>
+          <span class="sco-score-sep">–</span>
+          <span class="sco-score">{{ opp_score if opp_score is not none else '–' }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {# Status #}
+      <div class="sco-status">
+        {% if game.status_state == 'pre' %}
+          <span class="sco-status-time">{{ game.start_time_et or game.status_detail or 'TBD' }}</span>
+        {% elif game.status_state == 'in' %}
+          <span class="sco-live-badge">LIVE</span>
+          <span class="sco-status-detail">{{ game.status_detail }}</span>
+        {% else %}
+          <span class="sco-status-final">Final</span>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <p class="sco-no-games">No recent games found for {{ team_name }}.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

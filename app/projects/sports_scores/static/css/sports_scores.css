@@ -213,6 +213,102 @@
   text-transform: uppercase;
 }
 
+/* ── Team links ──────────────────────────────────────────── */
+.sco-team-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sco-team-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* ── Back link ───────────────────────────────────────────── */
+.sco-back-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+.sco-back-link:hover {
+  color: #1d4ed8;
+}
+
+.sco-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Team page game cards ─────────────────────────────────── */
+.sco-team-game-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.sco-game-date-label {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.sco-sport-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #e5e7eb;
+  color: #374151;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.sco-home-away {
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.sco-team-score-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sco-score-sep {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.sco-score--win {
+  color: #15803d;
+}
+
+.sco-wl-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.sco-wl-badge--w {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.sco-wl-badge--l {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 /* ── Empty / error states ────────────────────────────────── */
 .sco-no-games {
   font-size: 0.88rem;

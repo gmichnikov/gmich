@@ -55,13 +55,15 @@
                 {# Teams + scores #}
                 <div class="sco-matchup">
                   <div class="sco-team sco-team--away">
-                    <span class="sco-team-name">{{ game.away_team }}</span>
+                    <a href="{{ url_for('sports_scores.team', team_name=game.away_team, sport=game.sport_key) }}"
+                       class="sco-team-name sco-team-link">{{ game.away_team }}</a>
                     <span class="sco-score">
                       {% if game.status_state == 'pre' %}–{% else %}{{ game.away_score if game.away_score is not none else '–' }}{% endif %}
                     </span>
                   </div>
                   <div class="sco-team sco-team--home">
-                    <span class="sco-team-name">{{ game.home_team }}</span>
+                    <a href="{{ url_for('sports_scores.team', team_name=game.home_team, sport=game.sport_key) }}"
+                       class="sco-team-name sco-team-link">{{ game.home_team }}</a>
                     <span class="sco-score">
                       {% if game.status_state == 'pre' %}–{% else %}{{ game.home_score if game.home_score is not none else '–' }}{% endif %}
                     </span>
