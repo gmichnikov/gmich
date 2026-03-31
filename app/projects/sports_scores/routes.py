@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import date, datetime, timezone, timedelta
 
@@ -73,12 +72,12 @@ def index():
     if sport_key not in SUPPORTED_SPORTS:
         sport_key = "nfl"
 
+    # Compute anchor_date once for the entire request so fetch + display use the same date
     anchor_date = _parse_anchor_date(request.args.get("date"))
 
     # Fetch from ESPN if throttle allows
     if should_fetch(sport_key):
-        dates_param = anchor_date.strftime("%Y%m%d")
-        fetch_and_store(sport_key, dates_param)
+        fetch_and_store(sport_key, anchor_date)
 
     games_by_date = get_games_for_display(sport_key, anchor_date)
     last_updated = _last_fetched_display(sport_key)
@@ -111,8 +110,7 @@ def api_scores():
     anchor_date = _parse_anchor_date(request.args.get("date"))
 
     if should_fetch(sport_key):
-        dates_param = anchor_date.strftime("%Y%m%d")
-        fetch_and_store(sport_key, dates_param)
+        fetch_and_store(sport_key, anchor_date)
 
     games_by_date = get_games_for_display(sport_key, anchor_date)
     last_updated = _last_fetched_display(sport_key)

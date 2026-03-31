@@ -66,16 +66,55 @@ def _scoreboard_url(sport_key):
     return f"{ESPN_BASE_URL}/{sport}/{league}/scoreboard"
 
 
-def fetch_and_store(sport_key, dates_param=None):
-    """
-    Fetch the ESPN scoreboard for sport_key, parse it, upsert games into DB,
-    and update the fetch log.
+def _upsert_games(games):
+    """Upsert a list of parsed game dicts into the DB."""
+    for g in games:
+        existing = ScoresGame.query.filter_by(
+            espn_event_id=g["espn_event_id"],
+            sport_key=g["sport_key"],
+        ).first()
 
-    dates_param: YYYYMMDD string. Defaults to today in ET.
+        if existing:
+            existing.game_date = g["game_date"]
+            existing.start_time_utc = g["start_time_utc"]
+            existing.home_team = g["home_team"]
+            existing.away_team = g["away_team"]
+            existing.home_score = g["home_score"]
+            existing.away_score = g["away_score"]
+            existing.status_state = g["status_state"]
+            existing.status_detail = g["status_detail"]
+            existing.updated_at = _utc_now()
+        else:
+            db.session.add(ScoresGame(
+                espn_event_id=g["espn_event_id"],
+                sport_key=g["sport_key"],
+                game_date=g["game_date"],
+                start_time_utc=g["start_time_utc"],
+                home_team=g["home_team"],
+                away_team=g["away_team"],
+                home_score=g["home_score"],
+                away_score=g["away_score"],
+                status_state=g["status_state"],
+                status_detail=g["status_detail"],
+                updated_at=_utc_now(),
+            ))
+
+
+def fetch_and_store(sport_key, anchor_date=None):
+    """
+    Fetch the ESPN scoreboard for sport_key covering the full display window
+    (anchor_date - 2 days through anchor_date) in a single API call using a
+    date range (dates=YYYYMMDD-YYYYMMDD), then upsert all games into the DB.
+
+    anchor_date defaults to today in ET.
+    Updates the fetch log on success.
     Returns True on success, False on ESPN error.
     """
-    if dates_param is None:
-        dates_param = _today_et().strftime("%Y%m%d")
+    if anchor_date is None:
+        anchor_date = _today_et()
+
+    start_date = anchor_date - timedelta(days=2)
+    dates_param = f"{start_date.strftime('%Y%m%d')}-{anchor_date.strftime('%Y%m%d')}"
 
     try:
         url = _scoreboard_url(sport_key)
@@ -97,41 +136,8 @@ def fetch_and_store(sport_key, dates_param=None):
         return False
 
     games = parse_scoreboard(sport_key, data)
+    _upsert_games(games)
 
-    # Upsert each game
-    for g in games:
-        existing = ScoresGame.query.filter_by(
-            espn_event_id=g["espn_event_id"],
-            sport_key=g["sport_key"],
-        ).first()
-
-        if existing:
-            existing.game_date = g["game_date"]
-            existing.start_time_utc = g["start_time_utc"]
-            existing.home_team = g["home_team"]
-            existing.away_team = g["away_team"]
-            existing.home_score = g["home_score"]
-            existing.away_score = g["away_score"]
-            existing.status_state = g["status_state"]
-            existing.status_detail = g["status_detail"]
-            existing.updated_at = _utc_now()
-        else:
-            new_game = ScoresGame(
-                espn_event_id=g["espn_event_id"],
-                sport_key=g["sport_key"],
-                game_date=g["game_date"],
-                start_time_utc=g["start_time_utc"],
-                home_team=g["home_team"],
-                away_team=g["away_team"],
-                home_score=g["home_score"],
-                away_score=g["away_score"],
-                status_state=g["status_state"],
-                status_detail=g["status_detail"],
-                updated_at=_utc_now(),
-            )
-            db.session.add(new_game)
-
-    # Update (or create) the fetch log
     log = get_fetch_log(sport_key)
     if log:
         log.last_fetched_at = _utc_now()
