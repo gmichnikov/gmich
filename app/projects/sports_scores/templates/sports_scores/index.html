@@ -36,53 +36,77 @@
         Scores unavailable. Refresh to try again.
       </div>
     {% else %}
-      {% for date_str, games in games_by_date.items() | sort %}
+      {% for date_str, games in games_by_date.items() | sort(reverse=true) %}
       <section class="sco-date-section">
-        <h2 class="sco-date-header">{{ date_labels[date_str] }}</h2>
+        <button class="sco-date-header"
+                aria-expanded="true"
+                aria-controls="sco-games-{{ loop.index }}">
+          <span>{{ date_labels[date_str] }}</span>
+          <span class="sco-chevron">▲</span>
+        </button>
 
-        {% if games %}
-          <div class="sco-game-list">
-            {% for game in games %}
-            <div class="sco-game-card sco-game-card--{{ game.status_state }}">
+        <div id="sco-games-{{ loop.index }}"
+             class="sco-game-list-wrap">
+          {% if games %}
+            <div class="sco-game-list">
+              {% for game in games %}
+              <div class="sco-game-card sco-game-card--{{ game.status_state }}">
 
-              {# Teams + scores #}
-              <div class="sco-matchup">
-                <div class="sco-team sco-team--away">
-                  <span class="sco-team-name">{{ game.away_team }}</span>
-                  <span class="sco-score">
-                    {% if game.status_state == 'pre' %}–{% else %}{{ game.away_score if game.away_score is not none else '–' }}{% endif %}
-                  </span>
+                {# Teams + scores #}
+                <div class="sco-matchup">
+                  <div class="sco-team sco-team--away">
+                    <span class="sco-team-name">{{ game.away_team }}</span>
+                    <span class="sco-score">
+                      {% if game.status_state == 'pre' %}–{% else %}{{ game.away_score if game.away_score is not none else '–' }}{% endif %}
+                    </span>
+                  </div>
+                  <div class="sco-team sco-team--home">
+                    <span class="sco-team-name">{{ game.home_team }}</span>
+                    <span class="sco-score">
+                      {% if game.status_state == 'pre' %}–{% else %}{{ game.home_score if game.home_score is not none else '–' }}{% endif %}
+                    </span>
+                  </div>
                 </div>
-                <div class="sco-team sco-team--home">
-                  <span class="sco-team-name">{{ game.home_team }}</span>
-                  <span class="sco-score">
-                    {% if game.status_state == 'pre' %}–{% else %}{{ game.home_score if game.home_score is not none else '–' }}{% endif %}
-                  </span>
+
+                {# Status #}
+                <div class="sco-status">
+                  {% if game.status_state == 'pre' %}
+                    <span class="sco-status-time">{{ game.start_time_et or game.status_detail or 'TBD' }}</span>
+                  {% elif game.status_state == 'in' %}
+                    <span class="sco-live-badge">LIVE</span>
+                    <span class="sco-status-detail">{{ game.status_detail }}</span>
+                  {% else %}
+                    <span class="sco-status-final">Final</span>
+                  {% endif %}
                 </div>
-              </div>
 
-              {# Status #}
-              <div class="sco-status">
-                {% if game.status_state == 'pre' %}
-                  <span class="sco-status-time">{{ game.start_time_et or game.status_detail or 'TBD' }}</span>
-                {% elif game.status_state == 'in' %}
-                  <span class="sco-live-badge">LIVE</span>
-                  <span class="sco-status-detail">{{ game.status_detail }}</span>
-                {% else %}
-                  <span class="sco-status-final">Final</span>
-                {% endif %}
               </div>
-
+              {% endfor %}
             </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p class="sco-no-games">No games scheduled.</p>
-        {% endif %}
+          {% else %}
+            <p class="sco-no-games">No games scheduled.</p>
+          {% endif %}
+        </div>
       </section>
       {% endfor %}
     {% endif %}
   </div>{# /sco-content #}
 
 </div>{# /sco-wrapper #}
+
+<script>
+  document.querySelectorAll('.sco-date-header').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+      var target = document.getElementById(btn.getAttribute('aria-controls'));
+      btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      btn.querySelector('.sco-chevron').textContent = expanded ? '▼' : '▲';
+      if (expanded) {
+        target.setAttribute('hidden', '');
+      } else {
+        target.removeAttribute('hidden');
+      }
+    });
+  });
+</script>
 {% endblock %}

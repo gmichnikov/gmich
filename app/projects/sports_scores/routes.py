@@ -68,9 +68,9 @@ def _format_date_label(d, anchor_date):
 def index():
     log_project_visit("sports_scores", "Sports Scores")
 
-    sport_key = request.args.get("sport", "nfl").lower()
+    sport_key = request.args.get("sport", "nba").lower()
     if sport_key not in SUPPORTED_SPORTS:
-        sport_key = "nfl"
+        sport_key = "nba"
 
     # Compute anchor_date once for the entire request so fetch + display use the same date
     anchor_date = _parse_anchor_date(request.args.get("date"))

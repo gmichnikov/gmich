@@ -10,19 +10,19 @@ SUPPORTED_LEAGUES = ["NFL", "NBA", "MLB", "NHL"]
 
 # Maps uppercase league code → lowercase sport_key stored in DB / used in URLs
 LEAGUE_TO_SPORT_KEY = {
-    "NFL": "nfl",
     "NBA": "nba",
-    "MLB": "mlb",
     "NHL": "nhl",
+    "MLB": "mlb",
+    "NFL": "nfl",
 }
 
 SPORT_KEY_TO_LEAGUE = {v: k for k, v in LEAGUE_TO_SPORT_KEY.items()}
 
 SPORT_DISPLAY = {
-    "nfl": "NFL",
     "nba": "NBA",
-    "mlb": "MLB",
     "nhl": "NHL",
+    "mlb": "MLB",
+    "nfl": "NFL",
 }
 
 SUPPORTED_SPORTS = list(SPORT_DISPLAY.keys())
