@@ -160,6 +160,15 @@
   min-width: 0;
 }
 
+.sco-team--winner .sco-team-name {
+  font-weight: 700;
+}
+
+.sco-team--loser .sco-team-name,
+.sco-team--loser .sco-score {
+  color: #9ca3af;
+}
+
 .sco-score {
   font-size: 1.1rem;
   font-weight: 700;
@@ -167,6 +176,15 @@
   min-width: 28px;
   text-align: right;
   flex-shrink: 0;
+}
+
+.sco-team--winner .sco-score {
+  color: #111;
+}
+
+.sco-team--loser .sco-score {
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 /* ── Status column ───────────────────────────────────────── */

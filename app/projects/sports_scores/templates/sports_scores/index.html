@@ -53,15 +53,19 @@
               <div class="sco-game-card sco-game-card--{{ game.status_state }}">
 
                 {# Teams + scores #}
+                {% set final = game.status_state == 'post' %}
+                {% set has_scores = game.home_score is not none and game.away_score is not none %}
+                {% set away_won = final and has_scores and game.away_score > game.home_score %}
+                {% set home_won = final and has_scores and game.home_score > game.away_score %}
                 <div class="sco-matchup">
-                  <div class="sco-team sco-team--away">
+                  <div class="sco-team sco-team--away{% if away_won %} sco-team--winner{% elif final and has_scores %} sco-team--loser{% endif %}">
                     <a href="{{ url_for('sports_scores.team', team_name=game.away_team, sport=game.sport_key) }}"
                        class="sco-team-name sco-team-link">{{ game.away_team }}</a>
                     <span class="sco-score">
                       {% if game.status_state == 'pre' %}–{% else %}{{ game.away_score if game.away_score is not none else '–' }}{% endif %}
                     </span>
                   </div>
-                  <div class="sco-team sco-team--home">
+                  <div class="sco-team sco-team--home{% if home_won %} sco-team--winner{% elif final and has_scores %} sco-team--loser{% endif %}">
                     <a href="{{ url_for('sports_scores.team', team_name=game.home_team, sport=game.sport_key) }}"
                        class="sco-team-name sco-team-link">{{ game.home_team }}</a>
                     <span class="sco-score">
