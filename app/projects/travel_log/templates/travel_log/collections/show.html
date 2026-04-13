@@ -17,6 +17,9 @@
             {% endif %}
             <div class="tlog-header-actions">
                 <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+                {% if can_edit %}
+                <a href="{{ url_for('travel_log.collections_notes_photos', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Add notes &amp; photos</a>
+                {% endif %}
                 {% if is_owner %}
                 <button type="button" class="tlog-btn tlog-btn-secondary" id="tlog-share-open-btn">Share</button>
                 <a href="{{ url_for('travel_log.collections_edit', id=collection.id) }}" class="tlog-btn tlog-btn-secondary">Edit collection</a>

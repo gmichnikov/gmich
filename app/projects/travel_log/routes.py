@@ -205,6 +205,7 @@ def _parse_date(s):
 def collections_show(id):
     collection = get_collection_for_access(current_user, id)
     is_owner = is_collection_owner(current_user, collection)
+    can_edit = can_edit_collection(current_user, collection)
     owner_display = None
     if not is_owner and collection.user:
         u = collection.user
@@ -263,7 +264,24 @@ def collections_show(id):
         collection_date_min=collection_date_min,
         collection_date_max=collection_date_max,
         is_owner=is_owner,
+        can_edit=can_edit,
         owner_display=owner_display,
+    )
+
+
+@travel_log_bp.route("/collections/<int:id>/notes-photos", methods=["GET"])
+@login_required
+def collections_notes_photos(id):
+    """Bulk page to edit notes and add photos for all entries in a collection."""
+    collection = get_collection_for_access(current_user, id)
+    if not can_edit_collection(current_user, collection):
+        abort(404)
+    entries = collection.entries.order_by(TlogEntry.user_name.asc()).all()
+    return render_template(
+        "travel_log/collections/notes_photos.html",
+        collection=collection,
+        entries=entries,
+        get_photo_view_url=get_photo_view_url,
     )
 
 
@@ -750,6 +768,26 @@ def api_photos_confirm():
 
     view_url = get_photo_view_url(photo)
     return jsonify({"success": True, "photo_id": photo.id, "view_url": view_url})
+
+
+@travel_log_bp.route("/api/entries/<int:id>/notes", methods=["POST"])
+@csrf.exempt
+@login_required
+def api_entries_notes_update(id):
+    """JSON: { notes } -> save notes for one entry."""
+    entry = get_entry_for_access(current_user, id)
+    data = request.get_json(silent=True) or {}
+    notes_val = data.get("notes")
+    if notes_val is None:
+        notes_val = ""
+    if not isinstance(notes_val, str):
+        notes_val = str(notes_val)
+    entry.notes = notes_val.strip() or None
+    now = datetime.utcnow()
+    entry.updated_at = now
+    entry.collection.last_modified = now
+    db.session.commit()
+    return jsonify({"success": True, "updated_at": now.isoformat()})
 
 
 @travel_log_bp.route("/entries/<int:id>/photos/<int:photo_id>/delete", methods=["POST"])

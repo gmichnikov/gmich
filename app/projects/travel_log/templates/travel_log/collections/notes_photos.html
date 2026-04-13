@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Add Notes & Photos - {{ collection.name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('travel_log.static', filename='tlog.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tlog-page">
+    <div class="tlog-container">
+        <a href="{{ url_for('travel_log.collections_show', id=collection.id) }}" class="tlog-back-link">← Back to {{ collection.name }}</a>
+        <div class="tlog-bulk-header">
+            <h1 class="tlog-title">Add notes &amp; photos</h1>
+            <div class="tlog-bulk-header-actions">
+                <button type="button" class="tlog-btn tlog-btn-secondary" id="tlog-bulk-save-all-btn">Save all now</button>
+            </div>
+        </div>
+        <p class="tlog-bulk-subtitle">Edit notes inline. Changes save automatically, and photos upload immediately for each place.</p>
+        <p class="tlog-bulk-global-status" id="tlog-bulk-global-status" aria-live="polite"></p>
+
+        {% if not entries %}
+        <div class="tlog-empty">
+            <p class="tlog-empty-text">No entries in this collection yet.</p>
+            <a href="{{ url_for('travel_log.log', collection_id=collection.id) }}" class="tlog-btn tlog-btn-primary">Log Place</a>
+        </div>
+        {% else %}
+        <div id="tlog-bulk-root" data-csrf-token="{{ csrf_token() }}">
+            <ul class="tlog-bulk-list">
+                {% for entry in entries %}
+                <li class="tlog-bulk-item" data-entry-id="{{ entry.id }}">
+                    <div class="tlog-bulk-item-head">
+                        <div class="tlog-bulk-item-title-wrap">
+                            <h2 class="tlog-bulk-item-name">{{ entry.user_name }}</h2>
+                            <a href="{{ url_for('travel_log.entries_edit', id=entry.id) }}" class="tlog-bulk-item-edit-link" aria-label="Edit {{ entry.user_name }}">Edit</a>
+                        </div>
+                        <span class="tlog-bulk-item-status" id="tlog-bulk-status-{{ entry.id }}" aria-live="polite">Saved</span>
+                    </div>
+                    <div class="tlog-form-group">
+                        <label for="tlog-bulk-notes-{{ entry.id }}" class="tlog-label">Notes</label>
+                        <textarea id="tlog-bulk-notes-{{ entry.id }}" class="tlog-input tlog-textarea tlog-bulk-notes-input" rows="4" data-entry-id="{{ entry.id }}">{{ entry.notes or '' }}</textarea>
+                    </div>
+                    <div class="tlog-form-group">
+                        <span class="tlog-label">Photos</span>
+                        <p class="tlog-bulk-photos-caption">Already added photos</p>
+                        <div class="tlog-photos-grid tlog-bulk-photos-grid" id="tlog-bulk-photos-grid-{{ entry.id }}">
+                            {% for photo in entry.photos.all() %}
+                            <div class="tlog-photo-item">
+                                <img src="{{ get_photo_view_url(photo) }}" alt="Photo for {{ entry.user_name }}" class="tlog-photo-img" loading="lazy">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="tlog-photo-add">
+                            <input type="file" id="tlog-bulk-photo-input-{{ entry.id }}" class="tlog-photo-input tlog-bulk-photo-input" data-entry-id="{{ entry.id }}" accept="image/*" multiple>
+                            <label for="tlog-bulk-photo-input-{{ entry.id }}" class="tlog-photo-add-label">Add more photos</label>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('travel_log.static', filename='bulk_notes_photos.js') }}"></script>
+{% endblock %}

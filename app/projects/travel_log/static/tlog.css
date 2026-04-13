@@ -40,17 +40,23 @@
 
 /* Buttons — min-height 44px for mobile touch targets */
 .tlog-btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
     padding: 8px 16px;
     min-height: 44px;
     box-sizing: border-box;
-    line-height: 1.4;
+    line-height: 1.2;
     border-radius: 6px;
     font-size: 0.95rem;
     font-weight: 500;
+    font-family: inherit;
     text-decoration: none;
     cursor: pointer;
     border: 1px solid transparent;
+    appearance: none;
+    -webkit-appearance: none;
     transition: background 0.15s;
 }
 
@@ -1670,4 +1676,102 @@ body.tlog-modal-open {
 .tlog-log-status { margin-top: 12px; font-size: 0.9rem; min-height: 1.5em; }
 .tlog-log-status-error { color: #dc2626; }
 .tlog-log-status-info { color: #6b7280; }
+
+/* Bulk notes + photos page */
+.tlog-bulk-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tlog-bulk-subtitle {
+    margin: 10px 0 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.tlog-bulk-global-status {
+    margin: 10px 0 18px;
+    font-size: 0.9rem;
+    color: #4b5563;
+    min-height: 1.35em;
+}
+
+.tlog-bulk-global-status-error {
+    color: #b91c1c;
+}
+
+.tlog-bulk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.tlog-bulk-item {
+    border: 1px solid var(--tlog-border);
+    border-radius: 10px;
+    padding: 14px;
+    background: #f9fafb;
+}
+
+.tlog-bulk-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.tlog-bulk-item-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--tlog-text);
+}
+
+.tlog-bulk-item-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.tlog-bulk-item-edit-link {
+    font-size: 0.85rem;
+    color: #2563eb;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tlog-bulk-item-edit-link:hover {
+    text-decoration: underline;
+}
+
+.tlog-bulk-item-status {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.tlog-bulk-item-status-error {
+    color: #b91c1c;
+}
+
+.tlog-bulk-item .tlog-input {
+    max-width: 100%;
+}
+
+.tlog-bulk-photos-grid {
+    margin-bottom: 10px;
+}
+
+.tlog-bulk-photos-caption {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
 
