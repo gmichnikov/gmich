@@ -1736,8 +1736,9 @@ body.tlog-modal-open {
 
 .tlog-bulk-item-title-wrap {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px 8px;
     min-width: 0;
 }
 
@@ -1750,6 +1751,16 @@ body.tlog-modal-open {
 
 .tlog-bulk-item-edit-link:hover {
     text-decoration: underline;
+}
+
+.tlog-bulk-item-location {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #6b7280;
+    max-width: min(100%, 22rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tlog-bulk-item-status {

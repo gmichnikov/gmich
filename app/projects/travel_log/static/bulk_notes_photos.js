@@ -168,6 +168,77 @@
     grid.appendChild(item);
   }
 
+  /** URLs for one place only (same grid as clicked thumbnail). */
+  function getPhotoUrlsForGrid(grid) {
+    if (!grid) return [];
+    return Array.from(grid.querySelectorAll(".tlog-photo-item .tlog-photo-img"))
+      .map((img) => img.src)
+      .filter(Boolean);
+  }
+
+  function openLightboxForGrid(grid, clickedSrc) {
+    const urls = getPhotoUrlsForGrid(grid);
+    if (!urls.length) return;
+    let idx = clickedSrc ? urls.indexOf(clickedSrc) : 0;
+    if (idx < 0) idx = 0;
+
+    const overlay = document.createElement("div");
+    overlay.className = "tlog-lightbox-overlay";
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.innerHTML = `
+      <button type="button" class="tlog-lightbox-close" aria-label="Close">×</button>
+      ${urls.length > 1 ? `
+        <button type="button" class="tlog-lightbox-prev" aria-label="Previous">‹</button>
+        <button type="button" class="tlog-lightbox-next" aria-label="Next">›</button>
+      ` : ""}
+      <div class="tlog-lightbox-content">
+        <img src="${urls[idx].replace(/"/g, "&quot;")}" alt="Photo" class="tlog-lightbox-img">
+      </div>
+      ${urls.length > 1 ? `<span class="tlog-lightbox-counter">${idx + 1} / ${urls.length}</span>` : ""}
+    `;
+
+    let currentIdx = idx;
+    const lightboxImg = overlay.querySelector(".tlog-lightbox-img");
+    const counterEl = overlay.querySelector(".tlog-lightbox-counter");
+
+    function showPhoto(i) {
+      currentIdx = ((i % urls.length) + urls.length) % urls.length;
+      lightboxImg.src = urls[currentIdx];
+      if (counterEl) counterEl.textContent = `${currentIdx + 1} / ${urls.length}`;
+    }
+
+    function close() {
+      overlay.remove();
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("tlog-lightbox-open");
+      document.removeEventListener("keydown", onKeydown);
+    }
+
+    function onKeydown(e) {
+      if (e.key === "Escape") close();
+      if (urls.length > 1 && e.key === "ArrowLeft") showPhoto(currentIdx - 1);
+      if (urls.length > 1 && e.key === "ArrowRight") showPhoto(currentIdx + 1);
+    }
+
+    overlay.querySelector(".tlog-lightbox-close").addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    if (urls.length > 1) {
+      overlay.querySelector(".tlog-lightbox-prev").addEventListener("click", function (e) {
+        e.stopPropagation();
+        showPhoto(currentIdx - 1);
+      });
+      overlay.querySelector(".tlog-lightbox-next").addEventListener("click", function (e) {
+        e.stopPropagation();
+        showPhoto(currentIdx + 1);
+      });
+    }
+    document.addEventListener("keydown", onKeydown);
+    document.body.classList.add("tlog-lightbox-open");
+    document.body.appendChild(overlay);
+  }
+
   async function uploadSinglePhoto(entryId, file) {
     const state = ensureEntryState(entryId);
     state.uploadCount += 1;
@@ -267,6 +338,16 @@
       this.disabled = false;
     });
   }
+
+  /* Lightbox: click a thumbnail to view larger; prev/next only within this place's grid */
+  root.addEventListener("click", function (e) {
+    const img = e.target.closest(".tlog-bulk-photos-grid .tlog-photo-img");
+    if (!img) return;
+    e.preventDefault();
+    const grid = img.closest(".tlog-bulk-photos-grid");
+    if (!grid) return;
+    openLightboxForGrid(grid, img.src);
+  });
 
   window.addEventListener("beforeunload", function (e) {
     const hasPending = Array.from(stateByEntryId.values()).some((s) => s.dirty || s.saving || s.uploadCount > 0);

@@ -56,6 +56,24 @@ def tlog_contrast_text_filter(bg_hex):
     return contrast_text_color(bg_hex)
 
 
+@travel_log_bp.app_template_filter("tlog_entry_location")
+def tlog_entry_location_filter(entry):
+    """City, state/region, country code — comma-separated; empty string if nothing stored."""
+    if not entry:
+        return ""
+    parts = []
+    loc = (entry.addr_locality or "").strip()
+    if loc:
+        parts.append(loc)
+    adm = (entry.addr_admin_area_1 or "").strip()
+    if adm:
+        parts.append(adm)
+    cc = (entry.addr_country_code or "").strip()
+    if cc:
+        parts.append(cc.upper())
+    return ", ".join(parts)
+
+
 def _owned_collections_query():
     return TlogCollection.query.filter_by(user_id=current_user.id).order_by(TlogCollection.last_modified.desc())
 

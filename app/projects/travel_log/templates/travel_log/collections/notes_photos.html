@@ -32,6 +32,10 @@
                     <div class="tlog-bulk-item-head">
                         <div class="tlog-bulk-item-title-wrap">
                             <h2 class="tlog-bulk-item-name">{{ entry.user_name }}</h2>
+                            {% set loc_label = entry | tlog_entry_location %}
+                            {% if loc_label %}
+                            <span class="tlog-bulk-item-location" title="Location">({{ loc_label }})</span>
+                            {% endif %}
                             <a href="{{ url_for('travel_log.entries_edit', id=entry.id) }}" class="tlog-bulk-item-edit-link" aria-label="Edit {{ entry.user_name }}">Edit</a>
                         </div>
                         <span class="tlog-bulk-item-status" id="tlog-bulk-status-{{ entry.id }}" aria-live="polite">Saved</span>
