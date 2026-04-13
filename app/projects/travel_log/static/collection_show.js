@@ -9,10 +9,14 @@
     var mapEl = document.getElementById("tlog-collection-map");
     var tabListBtn = document.getElementById("tlog-tab-list");
     var tabMapBtn = document.getElementById("tlog-tab-map");
+    var tabCalBtn = document.getElementById("tlog-tab-calendar");
+    var calPanel = document.getElementById("tlog-view-calendar");
 
     if (!tabsRoot || !listPanel || !mapPanel || !tabListBtn || !tabMapBtn) {
         return;
     }
+
+    var hasCalendarTab = !!(calPanel && tabCalBtn);
 
     var map = null;
     var markersLayer = null;
@@ -212,6 +216,18 @@
 
     function setView(view) {
         currentView = view;
+        if (hasCalendarTab) {
+            setPanelVisible(listPanel, view === "list");
+            setPanelVisible(calPanel, view === "calendar");
+            setPanelVisible(mapPanel, view === "map");
+            tabListBtn.classList.toggle("tlog-view-tab-active", view === "list");
+            tabCalBtn.classList.toggle("tlog-view-tab-active", view === "calendar");
+            tabMapBtn.classList.toggle("tlog-view-tab-active", view === "map");
+            tabListBtn.setAttribute("aria-selected", view === "list" ? "true" : "false");
+            tabCalBtn.setAttribute("aria-selected", view === "calendar" ? "true" : "false");
+            tabMapBtn.setAttribute("aria-selected", view === "map" ? "true" : "false");
+            return;
+        }
         if (view === "list") {
             setPanelVisible(listPanel, true);
             setPanelVisible(mapPanel, false);
@@ -407,6 +423,12 @@
     tabListBtn.addEventListener("click", function () {
         setView("list");
     });
+
+    if (hasCalendarTab) {
+        tabCalBtn.addEventListener("click", function () {
+            setView("calendar");
+        });
+    }
 
     tabMapBtn.addEventListener("click", function () {
         setView("map");

@@ -88,6 +88,8 @@ class TlogEntry(db.Model):
     addr_admin_area_2 = db.Column(db.String(255), nullable=True)
     addr_admin_area_3 = db.Column(db.String(128), nullable=True)
     addr_country_code = db.Column(db.String(2), nullable=True)  # ISO 3166-1 alpha-2
+    # Optional: time-of-day bucket for list/calendar ordering (see day_period.py)
+    day_period = db.Column(db.String(32), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     visited_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

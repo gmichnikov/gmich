@@ -73,6 +73,15 @@
                 <input type="date" id="tlog-edit-date" name="visited_date" class="tlog-input" value="{{ entry.visited_date.isoformat() }}" required>
             </div>
             <div class="tlog-form-group">
+                <label for="tlog-edit-day-period" class="tlog-label">Time of day</label>
+                <select id="tlog-edit-day-period" name="day_period" class="tlog-input tlog-select tlog-day-period-select">
+                    <option value="" {% if not entry.day_period %}selected{% endif %}>Unknown</option>
+                    {% for value, label in day_period_options %}
+                    <option value="{{ value }}" {% if entry.day_period == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="tlog-form-group">
                 <label for="tlog-edit-notes" class="tlog-label">Notes</label>
                 <textarea id="tlog-edit-notes" name="notes" class="tlog-input tlog-textarea" rows="4">{{ entry.notes or '' }}</textarea>
             </div>

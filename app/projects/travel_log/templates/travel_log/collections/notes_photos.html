@@ -40,6 +40,23 @@
                         </div>
                         <span class="tlog-bulk-item-status" id="tlog-bulk-status-{{ entry.id }}" aria-live="polite">Saved</span>
                     </div>
+                    <div class="tlog-form-group tlog-bulk-date-period-group">
+                        <div class="tlog-bulk-date-period-row">
+                            <div class="tlog-bulk-field tlog-bulk-field-date">
+                                <label for="tlog-bulk-visited-{{ entry.id }}" class="tlog-label">Visited date</label>
+                                <input type="date" id="tlog-bulk-visited-{{ entry.id }}" class="tlog-input tlog-bulk-visited-date" value="{{ entry.visited_date.isoformat() }}" data-entry-id="{{ entry.id }}" required>
+                            </div>
+                            <div class="tlog-bulk-field tlog-bulk-field-period">
+                                <label for="tlog-bulk-day-period-{{ entry.id }}" class="tlog-label">Time of day</label>
+                                <select id="tlog-bulk-day-period-{{ entry.id }}" class="tlog-input tlog-select tlog-bulk-day-period-select" data-entry-id="{{ entry.id }}">
+                                    <option value="" {% if not entry.day_period %}selected{% endif %}>Unknown</option>
+                                    {% for value, label in day_period_options %}
+                                    <option value="{{ value }}" {% if entry.day_period == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div class="tlog-form-group">
                         <label for="tlog-bulk-notes-{{ entry.id }}" class="tlog-label">Notes</label>
                         <textarea id="tlog-bulk-notes-{{ entry.id }}" class="tlog-input tlog-textarea tlog-bulk-notes-input" rows="4" data-entry-id="{{ entry.id }}">{{ entry.notes or '' }}</textarea>

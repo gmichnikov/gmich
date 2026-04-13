@@ -50,6 +50,7 @@
 
         <div class="tlog-view-tabs" id="tlog-view-tabs" role="tablist" aria-label="Collection view">
             <button type="button" class="tlog-view-tab tlog-view-tab-active" id="tlog-tab-list" role="tab" aria-selected="true" aria-controls="tlog-view-list" data-tlog-view="list">List</button>
+            <button type="button" class="tlog-view-tab" id="tlog-tab-calendar" role="tab" aria-selected="false" aria-controls="tlog-view-calendar" data-tlog-view="calendar">Calendar</button>
             <button type="button" class="tlog-view-tab" id="tlog-tab-map" role="tab" aria-selected="false" aria-controls="tlog-view-map" data-tlog-view="map">Map</button>
         </div>
         {% endif %}
@@ -96,8 +97,9 @@
         <div class="tlog-view-panel" id="tlog-view-list" role="tabpanel" aria-labelledby="tlog-tab-list">
         <ul class="tlog-entries-list">
             {% for entry in entries %}
-            <li class="tlog-entry-item"
+            <li class="tlog-entry-item tlog-filterable-entry"
                 data-entry-id="{{ entry.id }}"
+                data-tlog-meal="{% if entry.day_period|tlog_is_meal_period %}1{% else %}0{% endif %}"
                 data-lat="{% if entry.lat is not none %}{{ entry.lat }}{% endif %}"
                 data-lng="{% if entry.lng is not none %}{{ entry.lng }}{% endif %}"
                 data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}"
@@ -151,6 +153,80 @@
             {% endfor %}
         </ul>
         </div>
+        <div class="tlog-view-panel tlog-hidden" id="tlog-view-calendar" role="tabpanel" aria-labelledby="tlog-tab-calendar" hidden>
+            <div class="tlog-cal-toolbar">
+                <span class="tlog-cal-toolbar-label" id="tlog-cal-filters-label">Show</span>
+                <div class="tlog-cal-meal-filters" role="group" aria-labelledby="tlog-cal-filters-label">
+                    <button type="button" class="tlog-cal-meal-btn tlog-cal-meal-active" data-tlog-cal-meal="all">All</button>
+                    <button type="button" class="tlog-cal-meal-btn" data-tlog-cal-meal="meals">Meals</button>
+                    <button type="button" class="tlog-cal-meal-btn" data-tlog-cal-meal="non_meals">Non-meals</button>
+                </div>
+            </div>
+            <div class="tlog-cal-days" id="tlog-cal-days">
+                {% for day in calendar_days %}
+                <section class="tlog-cal-day" data-date="{{ day.date_iso }}">
+                    <h3 class="tlog-cal-day-title">{{ day.date_label }}</h3>
+                    {% for period in day.periods %}
+                    <div class="tlog-cal-period" data-period-key="{{ period.key or '' }}">
+                        <h4 class="tlog-cal-period-title">{{ period.label }}</h4>
+                        <ul class="tlog-cal-period-entries">
+                            {% for entry in period.entries %}
+                            <li class="tlog-cal-entry tlog-filterable-entry"
+                                data-entry-id="{{ entry.id }}"
+                                data-lat="{% if entry.lat is not none %}{{ entry.lat }}{% endif %}"
+                                data-lng="{% if entry.lng is not none %}{{ entry.lng }}{% endif %}"
+                                data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}"
+                                data-entry-name="{{ entry.user_name|e }}"
+                                data-entry-address="{{ (entry.user_address or '')|e }}"
+                                data-visited-date="{{ entry.visited_date.isoformat() }}"
+                                data-primary-type-display="{{ (entry.primary_type_display_name or '')|e }}"
+                                data-notes-preview="{{ ((entry.notes[:100] + '…') if entry.notes and entry.notes|length > 100 else (entry.notes or ''))|e }}"
+                                data-photo-count="{{ entry.photos.count() }}"
+                                data-photo-thumb-url="{% if entry.random_photo %}{{ get_photo_view_url(entry.random_photo)|e }}{% endif %}"
+                                data-tags-labels="{{ entry.tags|map(attribute='name')|join(', ')|e }}"
+                                data-tag-ids="{{ entry.tags|map(attribute='id')|join(',') }}"
+                                data-first-tag-name="{% if entry.tags %}{{ entry.tags[0].name|e }}{% endif %}"
+                                data-first-tag-bg="{% if entry.tags and entry.tags[0].bg_color %}{{ entry.tags[0].bg_color|e }}{% endif %}"
+                                data-first-tag-letter-contrast="{% if entry.tags and entry.tags[0].bg_color %}{{ entry.tags[0].bg_color|tlog_contrast_text }}{% endif %}"
+                                data-tlog-meal="{% if entry.day_period|tlog_is_meal_period %}1{% else %}0{% endif %}">
+                                <div class="tlog-cal-entry-link" data-edit-url="{{ url_for('travel_log.entries_edit', id=entry.id) }}" role="link" tabindex="0">
+                                    <div class="tlog-cal-entry-main">
+                                        <span class="tlog-cal-entry-name">{{ (entry.user_name[:80] + '…') if entry.user_name|length > 80 else entry.user_name }}</span>
+                                        {% if entry.user_address %}
+                                        <span class="tlog-cal-entry-address">{{ (entry.user_address[:80] + '…') if entry.user_address|length > 80 else entry.user_address }}</span>
+                                        {% endif %}
+                                        <span class="tlog-cal-entry-meta">
+                                            {% if entry.primary_type_display_name or entry.notes %}
+                                            {% if entry.primary_type_display_name %}{{ entry.primary_type_display_name }}{% endif %}
+                                            {% if entry.notes %}{% if entry.primary_type_display_name %} · {% endif %}{{ (entry.notes[:50] + '…') if entry.notes|length > 50 else entry.notes }}{% endif %}
+                                            · {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                                            {% else %}
+                                            {{ entry.photos.count() }} {{ 'photo' if entry.photos.count() == 1 else 'photos' }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    {% if entry.tags %}
+                                    <div class="tlog-cal-entry-tags" aria-label="Tags">
+                                        {% for tag in entry.tags %}
+                                        <span class="tlog-entry-tag {% if tag.bg_color %}tlog-tag-has-bg{% endif %}" {% if tag.bg_color %}style="background: {{ tag.bg_color }}; color: {% if tag.bg_color|tlog_contrast_text == 'light' %}#ffffff{% else %}#1f2937{% endif %};"{% endif %}>{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if entry.random_photo %}
+                                    <div class="tlog-entry-thumb tlog-cal-entry-thumb" data-photo-urls='{{ entry.all_photo_urls|tojson|e }}' role="button" tabindex="0" aria-label="View photo">
+                                        <img src="{{ get_photo_view_url(entry.random_photo) }}" alt="" class="tlog-entry-thumb-img" loading="lazy">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </section>
+                {% endfor %}
+            </div>
+        </div>
         <div class="tlog-view-panel tlog-hidden" id="tlog-view-map" role="tabpanel" aria-labelledby="tlog-tab-map" hidden>
             {% if entries_with_coords_count == 0 %}
             <p class="tlog-map-empty-message" id="tlog-map-empty-message">None of these places have map coordinates yet. Coordinates are saved when you log from the map-based flow.</p>
@@ -203,24 +279,65 @@
     const tagChipsContainer = document.getElementById('tlog-tag-filter-chips');
     const dayChips = document.querySelectorAll('.tlog-date-day-chip');
     const tagChips = document.querySelectorAll('.tlog-tag-filter-chip');
-    const entryItems = document.querySelectorAll('.tlog-entry-item');
+    const filterableEntries = document.querySelectorAll('.tlog-filterable-entry');
+    var calMealFilter = 'all';
 
-    function updateVisibleEntries() {
+    function entryMatchesDateTag(item) {
         const selectedDates = new Set(
             Array.from(dayChips).filter(c => c.classList.contains('tlog-filter-chip-active')).map(c => c.getAttribute('data-date'))
         );
         const selectedTagIds = new Set(
             Array.from(tagChips).filter(c => c.classList.contains('tlog-filter-chip-active')).map(c => c.getAttribute('data-tag-id'))
         );
-        entryItems.forEach(function(item) {
-            const dateMatch = selectedDates.size === 0 || selectedDates.has(item.getAttribute('data-visited-date'));
-            const tagIdsStr = item.getAttribute('data-tag-ids') || '';
-            const entryTagIds = tagIdsStr ? tagIdsStr.split(',').filter(Boolean) : [];
-            const tagMatch = selectedTagIds.size === 0 || entryTagIds.some(id => selectedTagIds.has(id));
-            item.style.display = (dateMatch && tagMatch) ? '' : 'none';
+        const dateMatch = selectedDates.size === 0 || selectedDates.has(item.getAttribute('data-visited-date'));
+        const tagIdsStr = item.getAttribute('data-tag-ids') || '';
+        const entryTagIds = tagIdsStr ? tagIdsStr.split(',').filter(Boolean) : [];
+        const tagMatch = selectedTagIds.size === 0 || entryTagIds.some(function(id) { return selectedTagIds.has(id); });
+        return dateMatch && tagMatch;
+    }
+
+    function entryMatchesCalMeal(item) {
+        if (!item.classList.contains('tlog-cal-entry')) return true;
+        if (calMealFilter === 'all') return true;
+        const isMeal = item.getAttribute('data-tlog-meal') === '1';
+        if (calMealFilter === 'meals') return isMeal;
+        if (calMealFilter === 'non_meals') return !isMeal;
+        return true;
+    }
+
+    function refreshCalSections() {
+        document.querySelectorAll('.tlog-cal-period').forEach(function(sec) {
+            const visible = Array.from(sec.querySelectorAll('.tlog-cal-entry')).some(function(el) {
+                return el.style.display !== 'none';
+            });
+            sec.style.display = visible ? '' : 'none';
         });
+        document.querySelectorAll('.tlog-cal-day').forEach(function(dayEl) {
+            const visible = Array.from(dayEl.querySelectorAll('.tlog-cal-entry')).some(function(el) {
+                return el.style.display !== 'none';
+            });
+            dayEl.style.display = visible ? '' : 'none';
+        });
+    }
+
+    function updateVisibleEntries() {
+        filterableEntries.forEach(function(item) {
+            const show = entryMatchesDateTag(item) && entryMatchesCalMeal(item);
+            item.style.display = show ? '' : 'none';
+        });
+        refreshCalSections();
         document.dispatchEvent(new CustomEvent('tlog-collection-filters-changed'));
     }
+
+    document.querySelectorAll('.tlog-cal-meal-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            calMealFilter = btn.getAttribute('data-tlog-cal-meal') || 'all';
+            document.querySelectorAll('.tlog-cal-meal-btn').forEach(function(b) {
+                b.classList.toggle('tlog-cal-meal-active', b === btn);
+            });
+            updateVisibleEntries();
+        });
+    });
 
     if (dateBtn && dayChipsContainer) {
         dateBtn.addEventListener('click', function() {
@@ -300,6 +417,43 @@
             if (e.key === 'Enter' || e.key === ' ') {
                 const link = e.target.closest('.tlog-entry-link');
                 if (link && link.dataset.editUrl && !e.target.closest('.tlog-map-link')) {
+                    e.preventDefault();
+                    window.location = link.dataset.editUrl;
+                }
+            }
+        });
+    }
+
+    const calViewPanel = document.getElementById('tlog-view-calendar');
+    if (calViewPanel) {
+        calViewPanel.addEventListener('click', function(e) {
+            if (e.target.closest('.tlog-map-link')) return;
+            if (e.target.closest('.tlog-entry-thumb')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const thumb = e.target.closest('.tlog-entry-thumb');
+                const urlsJson = thumb.getAttribute('data-photo-urls');
+                const urls = urlsJson ? JSON.parse(urlsJson) : [];
+                if (urls.length) openLightbox(urls, 0);
+                return;
+            }
+            const link = e.target.closest('.tlog-cal-entry-link');
+            if (link && link.dataset.editUrl) window.location = link.dataset.editUrl;
+        });
+        calViewPanel.addEventListener('keydown', function(e) {
+            if (e.target.closest('.tlog-entry-thumb')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const thumb = e.target.closest('.tlog-entry-thumb');
+                    const urlsJson = thumb.getAttribute('data-photo-urls');
+                    const urls = urlsJson ? JSON.parse(urlsJson) : [];
+                    if (urls.length) openLightbox(urls, 0);
+                }
+                return;
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                const link = e.target.closest('.tlog-cal-entry-link');
+                if (link && link.dataset.editUrl) {
                     e.preventDefault();
                     window.location = link.dataset.editUrl;
                 }

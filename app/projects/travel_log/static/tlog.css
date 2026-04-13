@@ -1776,6 +1776,38 @@ body.tlog-modal-open {
     max-width: 100%;
 }
 
+/* Date + time-of-day on one row (bulk notes page) */
+.tlog-bulk-date-period-group {
+    margin-bottom: 16px;
+}
+
+.tlog-bulk-date-period-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 20px;
+}
+
+.tlog-bulk-field-date {
+    flex: 0 0 auto;
+}
+
+.tlog-bulk-field-date .tlog-bulk-visited-date {
+    max-width: 11rem;
+    width: 100%;
+}
+
+.tlog-bulk-field-period {
+    flex: 0 1 10.5rem;
+    min-width: min(10.5rem, 100%);
+    max-width: 11rem;
+}
+
+.tlog-bulk-field-period .tlog-bulk-day-period-select {
+    max-width: 100%;
+    width: 100%;
+}
+
 .tlog-bulk-photos-grid {
     margin-bottom: 10px;
 }
@@ -1784,5 +1816,189 @@ body.tlog-modal-open {
     margin: 0 0 8px;
     font-size: 0.85rem;
     color: #6b7280;
+}
+
+.tlog-bulk-item .tlog-select {
+    max-width: 100%;
+}
+
+/* Collection calendar (by day) */
+.tlog-cal-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-bottom: 16px;
+}
+
+.tlog-cal-toolbar-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--tlog-text);
+}
+
+.tlog-cal-meal-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tlog-cal-meal-btn {
+    padding: 6px 14px;
+    min-height: 40px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--tlog-text);
+    background: #f3f4f6;
+    border: 1px solid var(--tlog-border);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.tlog-cal-meal-btn:hover {
+    background: #e5e7eb;
+}
+
+.tlog-cal-meal-btn.tlog-cal-meal-active {
+    background: #dbeafe;
+    border-color: #2563eb;
+    color: #1d4ed8;
+}
+
+.tlog-cal-days {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 900px) {
+    .tlog-cal-days {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .tlog-cal-days {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.tlog-cal-day {
+    border: 1px solid var(--tlog-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #f9fafb;
+    align-self: start;
+}
+
+.tlog-cal-day-title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--tlog-text);
+}
+
+.tlog-cal-period {
+    margin-bottom: 14px;
+}
+
+.tlog-cal-period:last-child {
+    margin-bottom: 0;
+}
+
+.tlog-cal-period-title {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+}
+
+.tlog-cal-period-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tlog-cal-entry {
+    margin-bottom: 8px;
+}
+
+.tlog-cal-entry:last-child {
+    margin-bottom: 0;
+}
+
+.tlog-cal-entry-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid var(--tlog-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tlog-text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tlog-cal-entry-link:hover {
+    background: #f3f4f6;
+}
+
+.tlog-cal-entry-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.tlog-cal-entry-name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.tlog-cal-entry-address {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.tlog-cal-entry-meta {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.tlog-cal-entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    max-width: 8rem;
+    flex-shrink: 0;
+}
+
+.tlog-cal-entry .tlog-cal-entry-thumb {
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .tlog-cal-entry-link {
+        flex-wrap: wrap;
+    }
+
+    .tlog-cal-entry-tags {
+        flex-basis: 100%;
+        max-width: 100%;
+        justify-content: flex-start;
+        order: 3;
+    }
+
+    .tlog-cal-entry .tlog-cal-entry-thumb {
+        order: 2;
+    }
 }
 

@@ -33,6 +33,13 @@ from app.projects.travel_log.services.r2 import (
     generate_presigned_upload_url,
 )
 from app.projects.travel_log.utils import contrast_text_color, get_visited_date_default
+from app.projects.travel_log.day_period import (
+    build_calendar_days,
+    day_period_options_for_template,
+    is_meal_period,
+    normalize_day_period,
+    period_order_case,
+)
 from app.projects.travel_log.services.places import (
     CATEGORY_TYPES,
     search_nearby,
@@ -72,6 +79,12 @@ def tlog_entry_location_filter(entry):
     if cc:
         parts.append(cc.upper())
     return ", ".join(parts)
+
+
+@travel_log_bp.app_template_filter("tlog_is_meal_period")
+def tlog_is_meal_period_filter(period):
+    """True if period is breakfast/lunch/dinner."""
+    return is_meal_period(period)
 
 
 def _owned_collections_query():
@@ -228,7 +241,13 @@ def collections_show(id):
     if not is_owner and collection.user:
         u = collection.user
         owner_display = (u.short_name or u.full_name or u.email or "").strip()
-    entries = collection.entries.order_by(TlogEntry.updated_at.desc()).all()
+    entries = (
+        collection.entries.order_by(
+            TlogEntry.visited_date.asc(),
+            period_order_case(TlogEntry),
+            TlogEntry.id.asc(),
+        ).all()
+    )
 
     # Unique dates in collection (for date chip filter UI), sorted
     collection_dates = []
@@ -271,10 +290,15 @@ def collections_show(id):
         1 for e in entries if e.lat is not None and e.lng is not None
     )
 
+    calendar_days = build_calendar_days(entries)
+    day_period_options = day_period_options_for_template()
+
     return render_template(
         "travel_log/collections/show.html",
         collection=collection,
         entries=entries,
+        calendar_days=calendar_days,
+        day_period_options=day_period_options,
         entries_with_coords_count=entries_with_coords_count,
         get_photo_view_url=get_photo_view_url,
         collection_dates=collection_dates,
@@ -294,11 +318,18 @@ def collections_notes_photos(id):
     collection = get_collection_for_access(current_user, id)
     if not can_edit_collection(current_user, collection):
         abort(404)
-    entries = collection.entries.order_by(TlogEntry.user_name.asc()).all()
+    entries = (
+        collection.entries.order_by(
+            TlogEntry.visited_date.asc(),
+            period_order_case(TlogEntry),
+            TlogEntry.id.asc(),
+        ).all()
+    )
     return render_template(
         "travel_log/collections/notes_photos.html",
         collection=collection,
         entries=entries,
+        day_period_options=day_period_options_for_template(),
         get_photo_view_url=get_photo_view_url,
     )
 
@@ -664,6 +695,7 @@ def entries_edit(id):
         "travel_log/entries/edit.html",
         entry=entry,
         global_tags=global_tags,
+        day_period_options=day_period_options_for_template(),
         get_photo_view_url=get_photo_view_url,
     )
 
@@ -681,6 +713,7 @@ def entries_update(id):
     entry.user_name = user_name
     entry.user_address = (request.form.get("user_address") or "").strip() or None
     entry.notes = (request.form.get("notes") or "").strip() or None
+    entry.day_period = normalize_day_period(request.form.get("day_period"))
 
     pd = parse_place_detail_from_client(request.form)
     entry.primary_type = pd["primary_type"]
@@ -792,20 +825,40 @@ def api_photos_confirm():
 @csrf.exempt
 @login_required
 def api_entries_notes_update(id):
-    """JSON: { notes } -> save notes for one entry."""
+    """JSON: { notes?, day_period?, visited_date? } -> partial update for bulk edit."""
     entry = get_entry_for_access(current_user, id)
     data = request.get_json(silent=True) or {}
-    notes_val = data.get("notes")
-    if notes_val is None:
-        notes_val = ""
-    if not isinstance(notes_val, str):
-        notes_val = str(notes_val)
-    entry.notes = notes_val.strip() or None
+    if "notes" not in data and "day_period" not in data and "visited_date" not in data:
+        return jsonify({"error": "notes, day_period, or visited_date required"}), 400
+    if "notes" in data:
+        notes_val = data.get("notes")
+        if notes_val is None:
+            notes_val = ""
+        if not isinstance(notes_val, str):
+            notes_val = str(notes_val)
+        entry.notes = notes_val.strip() or None
+    if "day_period" in data:
+        entry.day_period = normalize_day_period(data.get("day_period"))
+    if "visited_date" in data:
+        vd_raw = data.get("visited_date")
+        if vd_raw is None or (isinstance(vd_raw, str) and not str(vd_raw).strip()):
+            return jsonify({"error": "visited_date required when provided"}), 400
+        parsed = _parse_date(str(vd_raw))
+        if not parsed:
+            return jsonify({"error": "visited_date must be YYYY-MM-DD"}), 400
+        entry.visited_date = parsed
     now = datetime.utcnow()
     entry.updated_at = now
     entry.collection.last_modified = now
     db.session.commit()
-    return jsonify({"success": True, "updated_at": now.isoformat()})
+    return jsonify(
+        {
+            "success": True,
+            "updated_at": now.isoformat(),
+            "day_period": entry.day_period,
+            "visited_date": entry.visited_date.isoformat(),
+        }
+    )
 
 
 @travel_log_bp.route("/entries/<int:id>/photos/<int:photo_id>/delete", methods=["POST"])

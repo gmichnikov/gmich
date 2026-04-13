@@ -19,6 +19,7 @@
     'tlog-edit-addr-admin-3',
     'tlog-edit-addr-country',
     'tlog-edit-date',
+    'tlog-edit-day-period',
     'tlog-edit-notes',
   ];
   const inputs = fields.map(id => document.getElementById(id)).filter(Boolean);

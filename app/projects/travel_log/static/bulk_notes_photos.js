@@ -119,6 +119,105 @@
     }
   }
 
+  async function saveDayPeriod(entryId, value) {
+    const state = ensureEntryState(entryId);
+    state.saving = true;
+    state.error = null;
+    setEntryStatus(entryId, "Saving...", false);
+    refreshGlobalStatus();
+    try {
+      const res = await fetch(`/travel-log/api/entries/${entryId}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({ day_period: value || null }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Save failed.");
+      }
+      state.error = null;
+      setEntryStatus(entryId, "Saved", false);
+    } catch (err) {
+      state.error = err.message || "Save failed.";
+      setEntryStatus(entryId, "Error saving time of day", true);
+    } finally {
+      state.saving = false;
+      refreshGlobalStatus();
+    }
+  }
+
+  async function saveVisitedDate(entryId, isoDate) {
+    const state = ensureEntryState(entryId);
+    state.saving = true;
+    state.error = null;
+    setEntryStatus(entryId, "Saving...", false);
+    refreshGlobalStatus();
+    try {
+      const res = await fetch(`/travel-log/api/entries/${entryId}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({ visited_date: isoDate }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Save failed.");
+      }
+      state.error = null;
+      setEntryStatus(entryId, "Saved", false);
+    } catch (err) {
+      state.error = err.message || "Save failed.";
+      setEntryStatus(entryId, "Error saving date", true);
+    } finally {
+      state.saving = false;
+      refreshGlobalStatus();
+    }
+  }
+
+  async function saveEntryBulk(entryId, notes, dayPeriod, visitedDate) {
+    const state = ensureEntryState(entryId);
+    state.saveRevision += 1;
+    const revision = state.saveRevision;
+    state.saving = true;
+    state.error = null;
+    setEntryStatus(entryId, "Saving...", false);
+    refreshGlobalStatus();
+    try {
+      const res = await fetch(`/travel-log/api/entries/${entryId}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({
+          notes,
+          day_period: dayPeriod || null,
+          ...(visitedDate ? { visited_date: visitedDate } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Save failed.");
+      }
+      if (state.saveRevision === revision) {
+        state.dirty = false;
+        state.error = null;
+        setEntryStatus(entryId, "Saved", false);
+      }
+    } catch (err) {
+      state.error = err.message || "Save failed.";
+      setEntryStatus(entryId, "Error saving", true);
+    } finally {
+      state.saving = false;
+      refreshGlobalStatus();
+    }
+  }
+
   function queueAutosave(entryId) {
     const state = ensureEntryState(entryId);
     state.dirty = true;
@@ -306,7 +405,11 @@
         clearTimeout(state.timer);
         state.timer = null;
       }
-      tasks.push(saveNotes(entryId, input.value));
+      const sel = document.querySelector(`.tlog-bulk-day-period-select[data-entry-id="${entryId}"]`);
+      const dayPeriod = sel ? sel.value : "";
+      const dateInput = document.querySelector(`.tlog-bulk-visited-date[data-entry-id="${entryId}"]`);
+      const visitedDate = dateInput && dateInput.value ? dateInput.value : "";
+      tasks.push(saveEntryBulk(entryId, input.value, dayPeriod, visitedDate));
     });
     await Promise.all(tasks);
   }
@@ -316,6 +419,25 @@
     if (!entryId) return;
     ensureEntryState(entryId);
     input.addEventListener("input", () => queueAutosave(entryId));
+  });
+
+  document.querySelectorAll(".tlog-bulk-day-period-select").forEach((sel) => {
+    const entryId = Number(sel.getAttribute("data-entry-id"));
+    if (!entryId) return;
+    ensureEntryState(entryId);
+    sel.addEventListener("change", function () {
+      saveDayPeriod(entryId, this.value);
+    });
+  });
+
+  document.querySelectorAll(".tlog-bulk-visited-date").forEach((input) => {
+    const entryId = Number(input.getAttribute("data-entry-id"));
+    if (!entryId) return;
+    ensureEntryState(entryId);
+    input.addEventListener("change", function () {
+      if (!this.value) return;
+      saveVisitedDate(entryId, this.value);
+    });
   });
 
   document.querySelectorAll(".tlog-bulk-photo-input").forEach((input) => {
