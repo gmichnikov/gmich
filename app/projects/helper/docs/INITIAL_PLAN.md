@@ -40,7 +40,8 @@ A **family / group** task tracker inside the existing Flask app. Authorized memb
 
 - **Mailgun signature verification** is **required in v1** — verify the webhook request before doing any work (not deferred to a later phase).
 - Unauthorized or invalid requests: no task actions; still return **HTTP 200** where appropriate so Mailgun does not retry endlessly (see error handling).
-- **Sender authorization:** Resolve Mailgun’s **sender** to a **`User`** by email. The sender must **exist as a user** and be a **member of that group**. If there is no matching user, or the user is not in the group, log and take no task action (and still 200 per policy below).
+- **Sender authorization:** Resolve Mailgun’s **sender** to a **`User`** by email. The sender must **exist as a user** and be a **member of that group**. If there is no matching user, or the user is not in the group, **take no task action** (and still 200 per policy below).
+- **Visibility — “wrong person” email (resolved):** When the **recipient** matches a group but the **sender** is **not** in that group (or is not a known user), you still want to **know it happened**. The **inbound log row** is stored with subject/body and a **status** such as `sender_not_allowed` (or split **unknown user** vs **not a member** if useful). Optional **`helper_action_log`** line. **Not** a silent discard after signature verification — this case is **first-class for audit** (e.g. future admin filter: “emails to our address from non-members”).
 
 ### Idempotency (resolved)
 
