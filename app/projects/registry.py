@@ -421,6 +421,17 @@ PROJECTS = [
         "icon": "⚽",
         "order": 21,
     },
+    {
+        "id": "helper",
+        "name": "Helper",
+        "description": "Starter helper project with login and database-backed items",
+        "url": "/helper",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🧰",
+        "order": 22,
+    },
 ]
 
 
