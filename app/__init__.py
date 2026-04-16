@@ -180,6 +180,13 @@ def create_app():
         SportsScheduleScheduledDigestQuery,
     )
     from app.projects.reminders.models import Reminder
+    from app.projects.helper.models import (
+        HelperGroup,
+        HelperGroupMember,
+        HelperInboundEmail,
+        HelperActionLog,
+        HelperTask,
+    )
     from app.projects.travel_log.models import (
         TlogCollection,
         TlogCollectionMember,

@@ -126,15 +126,16 @@ INITIAL_PLAN describes one linear story including Claude. Here we split that sto
 5. **Verify Mailgun signature.** Invalid → **`signature_invalid`**, **`helper_action_log`**, **200**, **stop**.
 6. **Resolve `recipient`** (normalized) → **`helper_group`**. None → **`unknown_recipient`**, action log, **200**, **stop** (row already has subject/body).
 7. **Resolve `sender`** → **`User`**; check **`helper_group_member`**. Not a user or not in group → **`sender_not_allowed`** (optionally two statuses: unknown user vs not member), action log, **200**, **stop** (row still has audit text).
-8. If you reached here, **member is OK** for Pipeline A: ensure **`group_id`**, **`sender_user_id`**, **subject**, **`body_text`** are set; status e.g. **`pending_llm`** — **still no Claude call** until Milestone Phase 5.
+8. **Check for empty content:** If both `subject` and `body_text` are empty (or only whitespace), set status **`empty_content`**, write **`helper_action_log`**, return **200**, **stop** (saves Claude costs and prevents hallucinations).
+9. If you reached here, **member is OK** and content exists for Pipeline A: ensure **`group_id`**, **`sender_user_id`**, **subject**, **`body_text`** are set; status e.g. **`pending_llm`** — **still no Claude call** until Milestone Phase 5.
 
 ### Pipeline B — Claude + tasks (Milestone Phase 5)
 
-9. Build the **Claude** prompt: subject + body + **member names / assignee options** ([INITIAL_PLAN — Claude](./INITIAL_PLAN.md#3-claude-anthropic-api)).
-10. Call Claude → expect **JSON**; intents **`add_task`** / **`unknown`**.
-11. **`add_task`:** title; optional **due_date** as **date** using **`User.time_zone`**; assignee or default to sender; mismatch → **`assignee_user_id` NULL**.
-12. Insert **`helper_task`** (`source_inbound_email_id`, **`notes`** NULL unless you copy from email later).
-13. **`helper_action_log`** for success or for **`unknown_intent`**, **`claude_error`**, etc. Failures → **no task**, **200**.
+10. Build the **Claude** prompt: subject + body + **member names / assignee options** ([INITIAL_PLAN — Claude](./INITIAL_PLAN.md#3-claude-anthropic-api)).
+11. Call Claude → expect **JSON**; intents **`add_task`** / **`unknown`**.
+12. **`add_task`:** title; optional **due_date** as **date** using **`User.time_zone`**; assignee or default to sender; mismatch → **`assignee_user_id` NULL**.
+13. Insert **`helper_task`** (`source_inbound_email_id`, **`notes`** NULL unless you copy from email later).
+14. **`helper_action_log`** for success or for **`unknown_intent`**, **`claude_error`**, etc. Failures → **no task**, **200**.
 
 For every handled outcome above, return **HTTP 200** when appropriate so Mailgun does not hammer retries ([error table](./INITIAL_PLAN.md#error-handling-target-behavior)).
 
@@ -148,15 +149,17 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Work**
 
-- Add **`app/projects/helper/models.py`** with models mapping to **`helper_group`**, **`helper_group_member`**, **`helper_inbound_email`**, **`helper_action_log`**, **`helper_task`**.
-- **Uniques:** `inbound_email` on group; **`(group_id, user_id)`** on membership; **`idempotency_key`** on inbound.
-- **Types:** **`due_date`** = **Date** (not datetime); **`notes`** = Text on task; optional **`created_by_user_id`** on group; **`signature_valid`**, **`mailgun_timestamp`**, timestamps per INITIAL_PLAN.
-- **Indexes** on inbound (`group_id`, `status`, `created_at`) and tasks as in INITIAL_PLAN.
-- Import models in **`app/__init__.py`**.
+- [ ] Add **`app/projects/helper/models.py`** with models mapping to **`helper_group`**, **`helper_group_member`**, **`helper_inbound_email`**, **`helper_action_log`**, **`helper_task`**.
+- [ ] **Uniques:** `inbound_email` on group; **`(group_id, user_id)`** on membership; **`idempotency_key`** on inbound.
+- [ ] **Types:** **`due_date`** = **Date** (not datetime); **`notes`** = Text on task; optional **`created_by_user_id`** on group; **`signature_valid`**, **`mailgun_timestamp`**, timestamps per INITIAL_PLAN.
+- [ ] **Indexes** on inbound (`group_id`, `status`, `created_at`) and tasks as in INITIAL_PLAN.
+- [ ] Import models in **`app/__init__.py`**.
 
-**You run:** `flask db migrate -m "helper tables"` → `flask db upgrade`
-
-**Verify:** [ ] Migration applies; all tables and FKs present.
+**Manual Testing 1.1:**
+- [ ] Run `flask db migrate -m "helper tables"`
+- [ ] Review migration file — check columns, nullability, uniques, indexes
+- [ ] Run `flask db upgrade`
+- [ ] Verify all five tables exist in database with correct schema
 
 ---
 
@@ -166,15 +169,28 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Goal:** Implement **[Pipeline A — inbound only](#pipeline-a--inbound-only-milestone-phase-2)**: verify signature, log everything, **no** Claude and **no** `helper_task` rows.
 
+**Work:**
+- [ ] Add **Mailgun** secrets to env for **webhook signature verification**.
+- [ ] Implement `POST /hooks/helper/mailgun` with `@csrf.exempt`.
+- [ ] Parse Mailgun form fields.
+- [ ] Compute `idempotency_key`.
+- [ ] Check for duplicate key -> 200.
+- [ ] Insert `helper_inbound_email`.
+- [ ] Verify signature. Invalid -> 200.
+- [ ] Resolve `recipient` to `helper_group`. None -> 200.
+- [ ] Resolve `sender` to `User` and check `helper_group_member`. Invalid -> 200.
+- [ ] Check for empty subject and body -> 200.
+- [ ] Update `helper_inbound_email` status and insert `helper_action_log` along the way.
+
 **Ops:** Mailgun Inbound Route → `https://<your-host>/hooks/helper/mailgun` (or tunnel).
 
-**Verify**
-
-- [ ] Bad signature → row + status, **200**.
-- [ ] Unknown `recipient` → row + status, **200**.
-- [ ] Known group, sender **not** allowed → row **with** subject/body visible, **200**.
-- [ ] Duplicate idempotency key → **200**, no duplicate processing.
-- [ ] **200** for normal handled cases.
+**Manual Testing 2.1:**
+- [ ] Send POST with bad signature → verify row + status `signature_invalid`, **200**.
+- [ ] Send POST with unknown `recipient` → verify row + status `unknown_recipient`, **200**.
+- [ ] Send POST to known group, sender **not** allowed → verify row **with** subject/body visible, status `sender_not_allowed`, **200**.
+- [ ] Send POST with duplicate idempotency key → verify **200**, no duplicate processing, status `duplicate`.
+- [ ] Send POST with empty subject and body -> verify **200**, status `empty_content`.
+- [ ] Send POST for normal handled case -> verify **200**, status e.g. `pending_llm`.
 
 ---
 
@@ -184,16 +200,19 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Goal:** **`admin_required`** only. One transaction: **name**, **unique inbound_email**, **≥1 member**, **admin’s email in the list**, **every email = existing User** — else rollback and show which emails failed.
 
-**Work**
+**Work:**
+- [ ] Add admin route `GET /helper/admin/groups/new` and `POST /helper/admin/groups/create`.
+- [ ] Create template for group creation.
+- [ ] Implement validation: ≥1 member, admin included, all emails match existing `User`.
+- [ ] Set **`created_by_user_id`** on the group.
+- [ ] Add admin route for adding members to existing groups (optional for v1, but good to have).
 
-- Set **`created_by_user_id`** on the group.
-- Optional: “Add member” form for existing groups (same rules).
-- **Ops reminder:** New `inbound_email` usually needs a **new Mailgun route** to the same webhook URL ([Mailgun](./INITIAL_PLAN.md#system-components-v1)).
+**Ops reminder:** New `inbound_email` usually needs a **new Mailgun route** to the same webhook URL.
 
-**Verify**
-
-- [ ] Invalid data → **no** partial rows.
-- [ ] Stored `inbound_email` **matches** Phase 2 normalization of Mailgun `recipient`.
+**Manual Testing 3.1:**
+- [ ] Try creating group with invalid email → verify transaction rolls back, **no** partial rows, error shown.
+- [ ] Try creating group without admin email → verify error shown.
+- [ ] Create group successfully → verify stored `inbound_email` is normalized correctly.
 
 ---
 
@@ -203,9 +222,15 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Goal:** **`@login_required`**. Show groups where **`current_user`** is a **member**. Empty state: explain an **admin** must add them.
 
-**Work:** Templates use **`helper-` CSS prefix** (avoid collisions with other projects).
+**Work:** 
+- [ ] Add `GET /helper/` route.
+- [ ] Create `templates/helper/index.html`.
+- [ ] Templates use **`helper-` CSS prefix** (avoid collisions with other projects).
+- [ ] Add to `app/projects/registry.py`.
 
-**Verify:** [ ] Member sees group(s); non-member sees empty state.
+**Manual Testing 4.1:**
+- [ ] Log in as member of a group → verify group(s) listed.
+- [ ] Log in as non-member → verify empty state explaining admin must add them.
 
 ---
 
@@ -215,12 +240,20 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Goal:** Implement **[Pipeline B — Claude + tasks](#pipeline-b--claude--tasks-milestone-phase-5)** only when inbound mail has passed Pipeline A as an **authorized member**.
 
-**Work:** Anthropic env; strict JSON; handle **`unknown`** and API errors with logs and **no** task; task insert failure → log, **200**.
+**Work:** 
+- [ ] Add Anthropic API key to env.
+- [ ] Build Claude prompt with subject + body + member names / assignee options.
+- [ ] Parse Claude JSON response for intents `add_task` / `unknown`.
+- [ ] Handle `add_task`: title, `due_date` (convert using `User.time_zone`), assignee matching.
+- [ ] Insert `helper_task` and `helper_action_log`.
+- [ ] Handle errors (API, bad JSON, `unknown` intent) gracefully -> log, **no** task, return 200.
 
-**Verify**
-
-- [ ] Supported-action examples behave as in INITIAL_PLAN.
-- [ ] **`unknown` / errors** → no task row; audit trail intact.
+**Manual Testing 5.1:**
+- [ ] Send valid "Buy milk" email -> verify task created, assigned to sender.
+- [ ] Send valid "Remind me to call John tomorrow" -> verify task created, due date calculated correctly based on sender timezone.
+- [ ] Send valid "Assign Sarah to pick up dry cleaning" -> verify task created, assignee matched to Sarah.
+- [ ] Send invalid/unparsable JSON from Claude (mock) -> verify error logged, no task created, **200**.
+- [ ] Send email with `unknown` intent -> verify action logged, no task created, **200**.
 
 ---
 
@@ -228,12 +261,21 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Covers:** [Task tracker](./INITIAL_PLAN.md#4-task-tracker-shared-per-group), [`helper_task`](./INITIAL_PLAN.md#5-helper_task).
 
-**Goal:** Members **list** / **complete** tasks and edit **`notes`**; **authorize** by **`group_id`** membership.
+**Goal:** Members **list**, **complete**, and **delete** tasks (soft or hard delete) and edit **`notes`**; **authorize** by **`group_id`** membership.
 
-**Verify**
+**Work:**
+- [ ] Add route to view tasks for a group `GET /helper/group/<id>`.
+- [ ] Add route to toggle task completion `POST /helper/task/<id>/complete`.
+- [ ] Add route to delete task `POST /helper/task/<id>/delete`.
+- [ ] Add route to edit notes `POST /helper/task/<id>/notes`.
+- [ ] Update templates to display and interact with tasks.
 
-- [ ] Two members in one group both see that group’s tasks; **no** cross-group access.
-- [ ] **Completed by** / **completed_at** updated correctly.
+**Manual Testing 6.1:**
+- [ ] Two members in one group -> verify both see that group’s tasks.
+- [ ] Member of group A tries to view group B -> verify access denied (403/404).
+- [ ] Complete a task -> verify `completed_by_user_id` and `completed_at` updated.
+- [ ] Delete a task -> verify task removed from list.
+- [ ] Edit notes -> verify notes updated.
 
 ---
 

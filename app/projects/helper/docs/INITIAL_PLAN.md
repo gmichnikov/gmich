@@ -112,7 +112,7 @@ The audit log **stores the content of emails** (at least subject + body text you
 3. Compute **idempotency key** — if duplicate, mark skipped, return **200**, stop.
 4. Parse **recipient** → load **group** (if none, log, return **200**, stop).
 5. Parse **sender** → load **`User`**; check **group membership** (if no user or not a member, log, return **200**, stop).
-6. Extract **subject** + **plain-text body** for Claude (see **Email text for Claude** below); attachments ignored.
+6. Extract **subject** + **plain-text body** for Claude (see **Email text for Claude** below); attachments ignored. If both are empty, log as `empty_content`, return **200**, stop.
 7. Call **Claude**; on success parse JSON; create **task** when appropriate; append **action** log rows; return **200**.
 
 - **Always return HTTP 200** for these “handled” outcomes so Mailgun does not retry (see error table).
@@ -140,7 +140,7 @@ Mailgun’s inbound POST includes **several** body-related fields. In short:
 
 - Backed by the **app database**, scoped to **group**.
 - Fields (conceptual): title, optional **due date** (date only), **notes** (optional freeform text — users edit in the UI for discussion / extra detail), assignee, created by, created at, status, completed by, completed at — exact schema in migrations.
-- **UI** for listing and managing tasks: part of Helper project; **layout and filters can evolve later** — no spec lock-in for v1.
+- **UI** for listing and managing tasks: part of Helper project. Users can **list**, **complete**, and **delete** tasks (essential for removing mistakes), as well as edit **notes**. Layout and filters can evolve later — no spec lock-in for v1.
 
 ### 5. Admin UI (site admin only)
 
@@ -182,6 +182,7 @@ Calendar-related rows are **out of v1** (see deferred).
 | Cannot resolve recipient to group | Inbound log row, return 200                               |
 | Sender not a user or not in group | Inbound log row, return 200                               |
 | Duplicate idempotency key         | Inbound log + skip, return 200                          |
+| Empty email (no subject or body)  | Inbound log row with `empty_content` status, return 200 |
 | Claude returns `unknown`          | Log, return 200                  |
 | Claude API error / timeout / bad JSON | Action log (+ inbound status), return 200, no task |
 | Task insert fails                 | Log error, return 200                           |
@@ -241,7 +242,7 @@ This is a **starting point**; exact column types and enum strings get finalized 
 | `id` | PK |
 | `inbound_email_id` | FK → `helper_inbound_email` (required) |
 | `action_type` | Short string, e.g. `task_created`, `duplicate_skipped`, `claude_error`, `unknown_intent`, `not_member` |
-| `detail` | JSON or text — structured payload (task id created, error body, etc.) |
+| `detail` | **JSONB** (since using Postgres) — structured payload (task id created, Claude's raw JSON response, error body, etc.) |
 | `error_message` | Nullable |
 | `created_at` | |
 
