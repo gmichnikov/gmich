@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.utils.logging import log_project_visit
+from app.projects.helper.models import HelperGroup, HelperGroupMember
 
 helper_bp = Blueprint(
     "helper",
@@ -16,4 +17,12 @@ helper_bp = Blueprint(
 @login_required
 def index():
     log_project_visit("helper", "Helper")
-    return render_template("helper/index.html")
+    memberships = (
+        HelperGroupMember.query
+        .filter_by(user_id=current_user.id)
+        .join(HelperGroup)
+        .order_by(HelperGroup.name)
+        .all()
+    )
+    groups = [m.group for m in memberships]
+    return render_template("helper/index.html", groups=groups)

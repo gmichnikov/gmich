@@ -2,9 +2,44 @@
 
 {% block title %}Helper{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('helper.static', filename='helper.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-    <h1>Helper</h1>
-    <p>Starter page.</p>
+<div class="helper-page">
+    <div class="helper-container">
+
+        <div class="helper-header">
+            <h1 class="helper-title">Helper</h1>
+            <p class="helper-subtitle">Your family task lists, managed by email.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="helper-flash helper-flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if groups %}
+            {% for group in groups %}
+            <div class="helper-group-card">
+                <div class="helper-group-header">
+                    <h2 class="helper-group-name">{{ group.name }}</h2>
+                    <span class="helper-group-email">{{ group.inbound_email }}</span>
+                </div>
+                <p class="helper-group-hint">Email <strong>{{ group.inbound_email }}</strong> to add tasks to this list.</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="helper-empty">
+                <p class="helper-empty-text">You're not in any groups yet.</p>
+                <p class="helper-empty-hint">Ask an admin to add you to a Helper group.</p>
+            </div>
+        {% endif %}
+
+    </div>
 </div>
 {% endblock %}

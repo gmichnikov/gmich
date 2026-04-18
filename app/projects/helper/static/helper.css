@@ -1,0 +1,100 @@
+.helper-page {
+    background: #f8fafc;
+    min-height: 100vh;
+    margin: -20px -20px 0 -20px;
+    padding: 2rem;
+}
+
+.helper-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.helper-header {
+    margin-bottom: 2rem;
+}
+
+.helper-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: #1f2937;
+}
+
+.helper-subtitle {
+    color: #6b7280;
+    margin: 0;
+}
+
+.helper-flash {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.helper-flash-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.helper-flash-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.helper-group-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.helper-group-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.helper-group-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: #111;
+}
+
+.helper-group-email {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.helper-group-hint {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0;
+}
+
+.helper-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+}
+
+.helper-empty-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+}
+
+.helper-empty-hint {
+    font-size: 0.9rem;
+    color: #999;
+    margin: 0;
+}
