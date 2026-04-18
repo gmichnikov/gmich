@@ -1,7 +1,7 @@
 """
 Mailgun inbound webhook handler for the Helper project.
 
-Pipeline A (this file):
+Pipeline A:
   1. Parse POST fields
   2. Compute idempotency key
   3. Check for duplicate
@@ -11,8 +11,9 @@ Pipeline A (this file):
   7. Resolve sender -> User + membership check
   8. Check for empty content
 
-Pipeline B (Phase 5):
-  Claude + task creation (not implemented here)
+Pipeline B:
+  9. Call Claude -> parse intent
+  10. Create helper_task on add_task intent
 """
 import hashlib
 import hmac
@@ -30,7 +31,9 @@ from app.projects.helper.models import (
     HelperGroup,
     HelperGroupMember,
     HelperInboundEmail,
+    HelperTask,
 )
+from app.projects.helper.claude import parse_email_for_task
 
 logger = logging.getLogger(__name__)
 
@@ -243,13 +246,116 @@ def mailgun_inbound():
         return ("", 200)
 
     # ------------------------------------------------------------------
-    # Pipeline A complete — ready for Claude (Phase 5)
+    # Pipeline B — Claude + task creation
     # ------------------------------------------------------------------
     inbound.status = "pending_llm"
     db.session.commit()
     logger.info(
         f"Inbound email id={inbound.id} accepted for group={group.id}, "
-        f"sender_user={sender_user.id}, status=pending_llm"
+        f"sender_user={sender_user.id}, calling Claude"
     )
 
+    # Build member list for Claude prompt
+    member_names_emails = [
+        (m.user.full_name, m.user.email)
+        for m in group.members
+        if m.user is not None
+    ]
+
+    # Step 9 — Call Claude
+    try:
+        result = parse_email_for_task(
+            subject=subject,
+            body=body_text,
+            member_names_emails=member_names_emails,
+            sender_tz=sender_user.time_zone or "UTC",
+        )
+    except Exception as e:
+        logger.error(f"Claude error for inbound_email id={inbound.id}: {e}")
+        inbound.status = "error"
+        db.session.commit()
+        _log_action(inbound, "claude_error", error=str(e))
+        return ("", 200)
+
+    intent = result.get("intent", "unknown")
+
+    # Step 10 — Handle intent
+    if intent == "unknown":
+        inbound.status = "processed"
+        db.session.commit()
+        _log_action(inbound, "unknown_intent", detail={"claude_response": result})
+        logger.info(f"Claude returned unknown intent for inbound_email id={inbound.id}")
+        return ("", 200)
+
+    if intent == "add_task":
+        title = (result.get("title") or "").strip()
+        due_date_str = result.get("due_date")
+        assignee_email = result.get("assignee_email")
+
+        if not title:
+            inbound.status = "error"
+            db.session.commit()
+            _log_action(inbound, "claude_error", error="add_task intent missing title", detail={"claude_response": result})
+            return ("", 200)
+
+        # Parse due_date
+        due_date = None
+        if due_date_str:
+            try:
+                from datetime import date
+                due_date = date.fromisoformat(due_date_str)
+            except (ValueError, TypeError):
+                logger.warning(f"Could not parse due_date '{due_date_str}' for inbound_email id={inbound.id}")
+
+        # Resolve assignee — match by email against group members; default to sender
+        assignee_user_id = None
+        if assignee_email:
+            matched = next(
+                (m.user for m in group.members if m.user and m.user.email.lower() == assignee_email.lower()),
+                None,
+            )
+            if matched:
+                assignee_user_id = matched.id
+            else:
+                logger.info(f"Claude assignee '{assignee_email}' not found in group; leaving unset")
+        # If no assignee specified by Claude, default to sender
+        if assignee_user_id is None and not assignee_email:
+            assignee_user_id = sender_user.id
+
+        # Insert task
+        try:
+            task = HelperTask(
+                group_id=group.id,
+                title=title,
+                due_date=due_date,
+                assignee_user_id=assignee_user_id,
+                created_by_user_id=sender_user.id,
+                status="open",
+                source_inbound_email_id=inbound.id,
+            )
+            db.session.add(task)
+            db.session.flush()
+            inbound.status = "processed"
+            db.session.commit()
+            _log_action(inbound, "task_created", detail={
+                "task_id": task.id,
+                "title": title,
+                "due_date": due_date_str,
+                "assignee_user_id": assignee_user_id,
+                "claude_response": result,
+            })
+            logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Task insert failed for inbound_email id={inbound.id}: {e}")
+            inbound.status = "error"
+            db.session.commit()
+            _log_action(inbound, "task_insert_error", error=str(e))
+
+        return ("", 200)
+
+    # Unknown intent value from Claude
+    inbound.status = "processed"
+    db.session.commit()
+    _log_action(inbound, "unknown_intent", detail={"claude_response": result})
     return ("", 200)
