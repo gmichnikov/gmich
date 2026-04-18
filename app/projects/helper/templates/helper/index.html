@@ -27,10 +27,32 @@
             {% for group in groups %}
             <div class="helper-group-card">
                 <div class="helper-group-header">
-                    <h2 class="helper-group-name">{{ group.name }}</h2>
+                    <a href="{{ url_for('helper.group_detail', group_id=group.id) }}" class="helper-group-name">{{ group.name }}</a>
                     <span class="helper-group-email">{{ group.inbound_email }}</span>
                 </div>
-                <p class="helper-group-hint">Email <strong>{{ group.inbound_email }}</strong> to add tasks to this list.</p>
+
+                {% set tasks = open_tasks[group.id] %}
+                {% if tasks %}
+                <ul class="helper-task-list">
+                    {% for task in tasks %}
+                    <li class="helper-task-item">
+                        <span class="helper-task-title">{{ task.title }}</span>
+                        {% if task.due_date %}
+                        <span class="helper-task-due">Due {{ task.due_date.strftime('%b %-d') }}</span>
+                        {% endif %}
+                        {% if task.assignee %}
+                        <span class="helper-task-assignee">{{ task.assignee.short_name }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="helper-task-empty">No open tasks.</p>
+                {% endif %}
+
+                <div class="helper-group-footer">
+                    <a href="{{ url_for('helper.group_detail', group_id=group.id) }}" class="helper-link">View all →</a>
+                </div>
             </div>
             {% endfor %}
         {% else %}

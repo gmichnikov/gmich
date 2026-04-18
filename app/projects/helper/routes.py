@@ -1,7 +1,11 @@
-from flask import Blueprint, render_template
-from flask_login import login_required, current_user
+from datetime import datetime
+
+from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
+from app import db
+from app.projects.helper.models import HelperGroup, HelperGroupMember, HelperTask
 from app.utils.logging import log_project_visit
-from app.projects.helper.models import HelperGroup, HelperGroupMember
 
 helper_bp = Blueprint(
     "helper",
@@ -12,6 +16,21 @@ helper_bp = Blueprint(
     static_url_path="/helper/static",
 )
 
+
+def _get_member_group_or_404(group_id):
+    """Return group if current_user is a member, else 404."""
+    group = HelperGroup.query.get_or_404(group_id)
+    membership = HelperGroupMember.query.filter_by(
+        group_id=group.id, user_id=current_user.id
+    ).first()
+    if not membership:
+        abort(404)
+    return group
+
+
+# ---------------------------------------------------------------------------
+# Index — list groups + open tasks
+# ---------------------------------------------------------------------------
 
 @helper_bp.route("/")
 @login_required
@@ -25,4 +44,107 @@ def index():
         .all()
     )
     groups = [m.group for m in memberships]
-    return render_template("helper/index.html", groups=groups)
+
+    # Pre-fetch open tasks per group
+    open_tasks = {}
+    for group in groups:
+        open_tasks[group.id] = (
+            HelperTask.query
+            .filter_by(group_id=group.id, status="open")
+            .order_by(HelperTask.due_date.asc().nullslast(), HelperTask.created_at.asc())
+            .all()
+        )
+
+    return render_template("helper/index.html", groups=groups, open_tasks=open_tasks)
+
+
+# ---------------------------------------------------------------------------
+# Group detail — all tasks (open + completed)
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/group/<int:group_id>")
+@login_required
+def group_detail(group_id):
+    group = _get_member_group_or_404(group_id)
+    open_tasks = (
+        HelperTask.query
+        .filter_by(group_id=group.id, status="open")
+        .order_by(HelperTask.due_date.asc().nullslast(), HelperTask.created_at.asc())
+        .all()
+    )
+    completed_tasks = (
+        HelperTask.query
+        .filter_by(group_id=group.id, status="complete")
+        .order_by(HelperTask.completed_at.desc())
+        .limit(20)
+        .all()
+    )
+    members = [m.user for m in group.members if m.user]
+    return render_template(
+        "helper/group.html",
+        group=group,
+        open_tasks=open_tasks,
+        completed_tasks=completed_tasks,
+        members=members,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Complete a task
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>/complete", methods=["POST"])
+@login_required
+def task_complete(task_id):
+    task = HelperTask.query.get_or_404(task_id)
+    _get_member_group_or_404(task.group_id)
+    task.status = "complete"
+    task.completed_by_user_id = current_user.id
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+    return redirect(url_for("helper.group_detail", group_id=task.group_id))
+
+
+# ---------------------------------------------------------------------------
+# Reopen a completed task
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>/reopen", methods=["POST"])
+@login_required
+def task_reopen(task_id):
+    task = HelperTask.query.get_or_404(task_id)
+    _get_member_group_or_404(task.group_id)
+    task.status = "open"
+    task.completed_by_user_id = None
+    task.completed_at = None
+    db.session.commit()
+    return redirect(url_for("helper.group_detail", group_id=task.group_id))
+
+
+# ---------------------------------------------------------------------------
+# Delete a task
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>/delete", methods=["POST"])
+@login_required
+def task_delete(task_id):
+    task = HelperTask.query.get_or_404(task_id)
+    group_id = task.group_id
+    _get_member_group_or_404(group_id)
+    db.session.delete(task)
+    db.session.commit()
+    return redirect(url_for("helper.group_detail", group_id=group_id))
+
+
+# ---------------------------------------------------------------------------
+# Edit notes on a task
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>/notes", methods=["POST"])
+@login_required
+def task_notes(task_id):
+    task = HelperTask.query.get_or_404(task_id)
+    _get_member_group_or_404(task.group_id)
+    task.notes = request.form.get("notes", "").strip() or None
+    db.session.commit()
+    return redirect(url_for("helper.group_detail", group_id=task.group_id))

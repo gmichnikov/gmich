@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} — Helper{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('helper.static', filename='helper.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="helper-page">
+    <div class="helper-container">
+
+        <div class="helper-header">
+            <div>
+                <a href="{{ url_for('helper.index') }}" class="helper-back">← All Groups</a>
+                <h1 class="helper-title">{{ group.name }}</h1>
+                <p class="helper-subtitle">Email <strong>{{ group.inbound_email }}</strong> to add tasks.</p>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="helper-flash helper-flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Open Tasks -->
+        <section class="helper-section">
+            <h2 class="helper-section-title">Open Tasks</h2>
+
+            {% if open_tasks %}
+            <ul class="helper-task-list helper-task-list-full">
+                {% for task in open_tasks %}
+                <li class="helper-task-item helper-task-item-full">
+                    <div class="helper-task-main">
+                        <span class="helper-task-title">{{ task.title }}</span>
+                        <div class="helper-task-meta">
+                            {% if task.due_date %}
+                            <span class="helper-task-due">Due {{ task.due_date.strftime('%b %-d, %Y') }}</span>
+                            {% endif %}
+                            {% if task.assignee %}
+                            <span class="helper-task-assignee">{{ task.assignee.short_name }}</span>
+                            {% endif %}
+                            <span class="helper-task-created">Added {{ task.created_at.strftime('%b %-d') }}</span>
+                        </div>
+
+                        {% if task.notes %}
+                        <p class="helper-task-notes">{{ task.notes }}</p>
+                        {% endif %}
+
+                        <!-- Edit notes -->
+                        <form method="post" action="{{ url_for('helper.task_notes', task_id=task.id) }}" class="helper-notes-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <textarea name="notes" class="helper-notes-input" placeholder="Add a note…" rows="2">{{ task.notes or '' }}</textarea>
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Save Note</button>
+                        </form>
+                    </div>
+
+                    <div class="helper-task-actions">
+                        <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">✓ Done</button>
+                        </form>
+                        <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" onsubmit="return confirm('Delete this task?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="helper-task-empty">No open tasks. Email {{ group.inbound_email }} to add one.</p>
+            {% endif %}
+        </section>
+
+        <!-- Completed Tasks -->
+        {% if completed_tasks %}
+        <section class="helper-section helper-section-muted">
+            <h2 class="helper-section-title">Recently Completed</h2>
+            <ul class="helper-task-list helper-task-list-full">
+                {% for task in completed_tasks %}
+                <li class="helper-task-item helper-task-item-full helper-task-item-done">
+                    <div class="helper-task-main">
+                        <span class="helper-task-title">{{ task.title }}</span>
+                        <div class="helper-task-meta">
+                            {% if task.completed_at %}
+                            <span class="helper-task-created">Done {{ task.completed_at.strftime('%b %-d') }}</span>
+                            {% endif %}
+                            {% if task.completer %}
+                            <span class="helper-task-assignee">by {{ task.completer.short_name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="helper-task-actions">
+                        <form method="post" action="{{ url_for('helper.task_reopen', task_id=task.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Reopen</button>
+                        </form>
+                        <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" onsubmit="return confirm('Delete this task?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <!-- Members -->
+        <section class="helper-section helper-section-muted">
+            <h2 class="helper-section-title">Members</h2>
+            <ul class="helper-member-list">
+                {% for user in members %}
+                <li class="helper-member-item">{{ user.full_name }} <span style="color:#999;">{{ user.email }}</span></li>
+                {% endfor %}
+            </ul>
+        </section>
+
+    </div>
+</div>
+{% endblock %}
