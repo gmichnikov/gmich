@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Groups{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">Helper Groups</h1>
+            <p class="admin-subtitle">Manage groups and their members</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <a href="{{ url_for('admin.helper_group_new') }}" class="admin-submit-btn" style="display:inline-block; text-decoration:none;">+ New Group</a>
+        </div>
+
+        {% if groups %}
+            {% for group in groups %}
+            <div class="admin-card" style="margin-bottom: 1.5rem;">
+                <h2 style="margin-top:0;">{{ group.name }}</h2>
+                <p style="color:#666; font-size:0.9rem;">
+                    Inbound: <code>{{ group.inbound_email }}</code> &nbsp;|&nbsp;
+                    Created: {{ group.created_at.strftime('%Y-%m-%d') }}
+                </p>
+
+                <h3 style="font-size:1rem;">Members</h3>
+                {% if group.members %}
+                <ul style="margin:0 0 1rem 0; padding-left:1.2rem;">
+                    {% for membership in group.members %}
+                    <li>{{ membership.user.email }} ({{ membership.user.full_name }})</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="color:#999;">No members.</p>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('admin.helper_group_add_member', group_id=group.id) }}" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="email" name="email" placeholder="Add member by email" class="admin-input" style="flex:1; min-width:200px;" required>
+                    <button type="submit" class="admin-submit-btn" style="margin:0;">Add Member</button>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:#999;">No groups yet. Create one above.</p>
+        {% endif %}
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

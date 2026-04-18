@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}New Helper Group{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">Create Helper Group</h1>
+            <p class="admin-subtitle">All emails must match existing users. Your email must be included.</p>
+        </div>
+
+        {% if errors %}
+        <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:1rem; margin-bottom:1.5rem;">
+            <strong style="color:#dc2626;">Please fix the following:</strong>
+            <ul style="margin:0.5rem 0 0 0; padding-left:1.2rem; color:#dc2626;">
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" class="admin-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="admin-form-group">
+                <label class="admin-label" for="name">Group Name</label>
+                <input type="text" id="name" name="name" class="admin-input" value="{{ name or '' }}" placeholder="e.g. The Michnikov Family" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-label" for="inbound_email_prefix">Inbound Email Address</label>
+                <div style="display:flex; align-items:center; gap:0;">
+                    <input type="text" id="inbound_email_prefix" name="inbound_email_prefix" class="admin-input" value="{{ inbound_email_prefix or '' }}" placeholder="family" required style="border-radius:6px 0 0 6px; flex:1;">
+                    <span style="background:#f3f4f6; border:1px solid #d1d5db; border-left:none; padding:0.5rem 0.75rem; border-radius:0 6px 6px 0; color:#555; white-space:nowrap;">@helper.gregmichnikov.com</span>
+                </div>
+                <small style="color:#666;">Must be unique across all groups. Remember to add a matching Mailgun inbound route for this address.</small>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-label" for="member_emails">Member Emails <small style="font-weight:normal;">(one per line)</small></label>
+                <textarea id="member_emails" name="member_emails" class="admin-input" rows="5" placeholder="greg.michnikov@gmail.com&#10;someone@example.com" required>{{ member_emails or '' }}</textarea>
+                <small style="color:#666;">All must match existing accounts.</small>
+            </div>
+
+            <div class="admin-form-group">
+                <button type="submit" class="admin-submit-btn">Create Group</button>
+            </div>
+        </form>
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('admin.helper_groups') }}" class="admin-link">← Back to Groups</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

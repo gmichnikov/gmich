@@ -495,3 +495,126 @@ def travel_log_tags_delete(tag_id):
     db.session.commit()
     flash(f'Tag "{name}" deleted.', "success")
     return redirect(url_for("admin.travel_log_tags"))
+
+
+# ---------------------------------------------------------------------------
+# Helper — Group management
+# ---------------------------------------------------------------------------
+
+@admin_bp.route("/helper/groups")
+@login_required
+@admin_required
+def helper_groups():
+    from app.projects.helper.models import HelperGroup
+    groups = HelperGroup.query.order_by(HelperGroup.created_at.desc()).all()
+    return render_template("admin/helper_groups.html", groups=groups)
+
+
+@admin_bp.route("/helper/groups/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def helper_group_new():
+    from app.projects.helper.models import HelperGroup, HelperGroupMember
+
+    if request.method == "GET":
+        return render_template("admin/helper_group_new.html")
+
+    # --- Parse form ---
+    name = request.form.get("name", "").strip()
+    inbound_email_prefix = request.form.get("inbound_email_prefix", "").strip().lower()
+    inbound_email = f"{inbound_email_prefix}@helper.gregmichnikov.com" if inbound_email_prefix else ""
+    member_emails_raw = request.form.get("member_emails", "")
+    member_emails = [e.strip().lower() for e in member_emails_raw.splitlines() if e.strip()]
+
+    errors = []
+
+    if not name:
+        errors.append("Group name is required.")
+    if not inbound_email_prefix:
+        errors.append("Inbound email prefix is required.")
+    if not member_emails:
+        errors.append("At least one member email is required.")
+
+    # Check inbound_email uniqueness
+    if inbound_email and HelperGroup.query.filter_by(inbound_email=inbound_email).first():
+        errors.append(f"Inbound email '{inbound_email}' is already in use by another group.")
+
+    # Resolve all member emails to Users
+    resolved_users = []
+    bad_emails = []
+    for email in member_emails:
+        user = User.query.filter(db.func.lower(User.email) == email).first()
+        if user:
+            resolved_users.append(user)
+        else:
+            bad_emails.append(email)
+
+    if bad_emails:
+        errors.append(f"These emails don't match any existing user: {', '.join(bad_emails)}")
+
+    if errors:
+        return render_template(
+            "admin/helper_group_new.html",
+            errors=errors,
+            name=name,
+            inbound_email_prefix=inbound_email_prefix,
+            member_emails=member_emails_raw,
+        )
+
+    # --- Atomic create ---
+    try:
+        group = HelperGroup(
+            name=name,
+            inbound_email=inbound_email,
+            created_by_user_id=current_user.id,
+        )
+        db.session.add(group)
+        db.session.flush()
+
+        seen_user_ids = set()
+        for user in resolved_users:
+            if user.id not in seen_user_ids:
+                db.session.add(HelperGroupMember(group_id=group.id, user_id=user.id))
+                seen_user_ids.add(user.id)
+
+        db.session.commit()
+        flash(f"Group '{name}' created with {len(seen_user_ids)} member(s).", "success")
+        return redirect(url_for("admin.helper_groups"))
+    except Exception as e:
+        db.session.rollback()
+        return render_template(
+            "admin/helper_group_new.html",
+            errors=[f"Unexpected error: {e}"],
+            name=name,
+            inbound_email_prefix=inbound_email_prefix,
+            member_emails=member_emails_raw,
+        )
+
+
+@admin_bp.route("/helper/groups/<int:group_id>/add-member", methods=["POST"])
+@login_required
+@admin_required
+def helper_group_add_member(group_id):
+    from app.projects.helper.models import HelperGroup, HelperGroupMember
+
+    group = HelperGroup.query.get_or_404(group_id)
+    email = request.form.get("email", "").strip().lower()
+
+    if not email:
+        flash("Email is required.", "error")
+        return redirect(url_for("admin.helper_groups"))
+
+    user = User.query.filter(db.func.lower(User.email) == email).first()
+    if not user:
+        flash(f"No user found with email '{email}'.", "error")
+        return redirect(url_for("admin.helper_groups"))
+
+    existing = HelperGroupMember.query.filter_by(group_id=group.id, user_id=user.id).first()
+    if existing:
+        flash(f"{email} is already a member of '{group.name}'.", "error")
+        return redirect(url_for("admin.helper_groups"))
+
+    db.session.add(HelperGroupMember(group_id=group.id, user_id=user.id))
+    db.session.commit()
+    flash(f"Added {email} to '{group.name}'.", "success")
+    return redirect(url_for("admin.helper_groups"))
