@@ -26,6 +26,9 @@ R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
 _google_ads_ids = os.getenv("GOOGLE_ADS_IDS", "")
 GOOGLE_ADS_IDS = [id.strip() for id in _google_ads_ids.split(",") if id.strip()]
 
+# Helper project — Mailgun inbound webhook signature verification
+MAILGUN_WEBHOOK_SIGNING_KEY = os.getenv("MAILGUN_WEBHOOK_SIGNING_KEY")
+
 # Jinja2 whitespace control - prevents unwanted line breaks in rendered HTML
 JINJA2_TRIM_BLOCKS = True
 JINJA2_LSTRIP_BLOCKS = True
