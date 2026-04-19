@@ -248,6 +248,28 @@ a.helper-group-name:hover {
     flex-wrap: wrap;
 }
 
+.helper-task-done-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.helper-task-done-check {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.1rem;
+    border-radius: 999px;
+    background: #d1fae5;
+    color: #059669;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .helper-task-item-done .helper-task-title {
     text-decoration: line-through;
     color: #9ca3af;

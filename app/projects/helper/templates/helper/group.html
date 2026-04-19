@@ -77,7 +77,7 @@
                     <div class="helper-task-actions">
                         <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">✓ Done</button>
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Mark as Done</button>
                         </form>
                         <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" onsubmit="return confirm('Delete this task?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -100,7 +100,10 @@
                 {% for task in completed_tasks %}
                 <li class="helper-task-item helper-task-item-full helper-task-item-done">
                     <div class="helper-task-main">
-                        <span class="helper-task-title">{{ task.title }}</span>
+                        <div class="helper-task-done-heading">
+                            <span class="helper-task-done-check" title="Completed" aria-label="Completed">✓</span>
+                            <span class="helper-task-title">{{ task.title }}</span>
+                        </div>
                         <div class="helper-task-meta">
                             <span class="helper-task-created">
                                 Added {{ task.created_at.strftime('%b %-d, %Y') }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}
