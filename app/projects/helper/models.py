@@ -67,7 +67,16 @@ class HelperInboundEmail(db.Model):
     sender_user = db.relationship("User", foreign_keys=[sender_user_id])
     group = db.relationship("HelperGroup", back_populates="inbound_emails")
     action_logs = db.relationship("HelperActionLog", back_populates="inbound_email", cascade="all, delete-orphan")
-    tasks = db.relationship("HelperTask", back_populates="source_inbound_email")
+    tasks_sourced_from = db.relationship(
+        "HelperTask",
+        foreign_keys="HelperTask.source_inbound_email_id",
+        back_populates="source_inbound_email",
+    )
+    tasks_completed_via = db.relationship(
+        "HelperTask",
+        foreign_keys="HelperTask.completed_via_inbound_email_id",
+        back_populates="completed_via_inbound_email",
+    )
 
     __table_args__ = (
         db.Index("ix_helper_inbound_email_group_id", "group_id"),
@@ -109,6 +118,9 @@ class HelperTask(db.Model):
     status = db.Column(db.String(50), nullable=False, default="open")
     completed_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
+    completed_via_inbound_email_id = db.Column(
+        db.Integer, db.ForeignKey("helper_inbound_email.id"), nullable=True
+    )
     source_inbound_email_id = db.Column(db.Integer, db.ForeignKey("helper_inbound_email.id"), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
@@ -120,7 +132,16 @@ class HelperTask(db.Model):
     assignee = db.relationship("User", foreign_keys=[assignee_user_id])
     creator = db.relationship("User", foreign_keys=[created_by_user_id])
     completer = db.relationship("User", foreign_keys=[completed_by_user_id])
-    source_inbound_email = db.relationship("HelperInboundEmail", back_populates="tasks")
+    source_inbound_email = db.relationship(
+        "HelperInboundEmail",
+        foreign_keys=[source_inbound_email_id],
+        back_populates="tasks_sourced_from",
+    )
+    completed_via_inbound_email = db.relationship(
+        "HelperInboundEmail",
+        foreign_keys=[completed_via_inbound_email_id],
+        back_populates="tasks_completed_via",
+    )
 
     __table_args__ = (
         db.Index("ix_helper_task_group_status", "group_id", "status"),

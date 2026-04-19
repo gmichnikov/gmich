@@ -114,6 +114,7 @@ def task_complete(task_id):
     task.status = "complete"
     task.completed_by_user_id = current_user.id
     task.completed_at = datetime.utcnow()
+    task.completed_via_inbound_email_id = None
     db.session.commit()
     return redirect(url_for("helper.group_detail", group_id=task.group_id))
 
@@ -130,6 +131,7 @@ def task_reopen(task_id):
     task.status = "open"
     task.completed_by_user_id = None
     task.completed_at = None
+    task.completed_via_inbound_email_id = None
     db.session.commit()
     return redirect(url_for("helper.group_detail", group_id=task.group_id))
 

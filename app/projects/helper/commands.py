@@ -242,6 +242,7 @@ def _delete_seed_group(group):
 
     for t in HelperTask.query.filter_by(group_id=group.id).all():
         t.source_inbound_email_id = None
+        t.completed_via_inbound_email_id = None
     db.session.flush()
 
     for inbound in HelperInboundEmail.query.filter_by(group_id=group.id).all():

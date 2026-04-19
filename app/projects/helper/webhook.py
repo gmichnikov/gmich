@@ -419,6 +419,7 @@ def mailgun_inbound():
             task.status = "complete"
             task.completed_by_user_id = sender_user.id
             task.completed_at = datetime.utcnow()
+            task.completed_via_inbound_email_id = inbound.id
             inbound.status = "processed"
             db.session.commit()
             _log_action(inbound, "task_completed", detail={
