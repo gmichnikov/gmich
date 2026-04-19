@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Action Log{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">📋 Action Log</h1>
+            <p class="admin-subtitle">What the app decided and did for each inbound email — {{ rows.total }} total</p>
+        </div>
+
+        {% if rows.items %}
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">ID</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Time</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Inbound #</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Action</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Detail</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows.items %}
+                    <tr style="border-bottom:1px solid #f3f4f6;">
+                        <td style="padding:0.5rem 0.75rem; color:#9ca3af;">{{ row.id }}</td>
+                        <td style="padding:0.5rem 0.75rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
+                        <td style="padding:0.5rem 0.75rem;">
+                            <a href="{{ url_for('admin.helper_inbound_log') }}" class="admin-link">#{{ row.inbound_email_id }}</a>
+                        </td>
+                        <td style="padding:0.5rem 0.75rem;">
+                            <span style="
+                                padding:0.15rem 0.5rem;
+                                border-radius:4px;
+                                font-size:0.75rem;
+                                font-weight:600;
+                                background:{% if row.action_type == 'task_created' %}#d1fae5{% elif 'error' in row.action_type %}#fee2e2{% elif row.action_type == 'unknown_intent' %}#fef3c7{% else %}#f3f4f6{% endif %};
+                                color:{% if row.action_type == 'task_created' %}#065f46{% elif 'error' in row.action_type %}#991b1b{% elif row.action_type == 'unknown_intent' %}#92400e{% else %}#374151{% endif %};
+                            ">{{ row.action_type }}</span>
+                        </td>
+                        <td style="padding:0.5rem 0.75rem; max-width:300px; font-family:monospace; font-size:0.75rem; color:#4b5563; word-break:break-all;">
+                            {% if row.detail %}{{ row.detail | tojson | truncate(200) }}{% else %}—{% endif %}
+                        </td>
+                        <td style="padding:0.5rem 0.75rem; max-width:200px; color:#dc2626; font-size:0.8rem; word-break:break-all;">
+                            {{ row.error_message or '—' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if rows.pages > 1 %}
+        <div style="margin-top:1rem; display:flex; gap:0.5rem; justify-content:center;">
+            {% if rows.has_prev %}
+            <a href="{{ url_for('admin.helper_action_log', page=rows.prev_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">← Prev</a>
+            {% endif %}
+            <span style="padding:0.4rem 0.75rem; color:#6b7280;">Page {{ rows.page }} of {{ rows.pages }}</span>
+            {% if rows.has_next %}
+            <a href="{{ url_for('admin.helper_action_log', page=rows.next_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">Next →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <p style="color:#9ca3af;">No action log entries yet.</p>
+        {% endif %}
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('admin.helper_admin') }}" class="admin-link">← Helper Admin</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

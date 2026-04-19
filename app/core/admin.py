@@ -498,6 +498,17 @@ def travel_log_tags_delete(tag_id):
 
 
 # ---------------------------------------------------------------------------
+# Helper — Admin hub
+# ---------------------------------------------------------------------------
+
+@admin_bp.route("/helper")
+@login_required
+@admin_required
+def helper_admin():
+    return render_template("admin/helper_admin.html")
+
+
+# ---------------------------------------------------------------------------
 # Helper — Group management
 # ---------------------------------------------------------------------------
 
@@ -618,3 +629,31 @@ def helper_group_add_member(group_id):
     db.session.commit()
     flash(f"Added {email} to '{group.name}'.", "success")
     return redirect(url_for("admin.helper_groups"))
+
+
+@admin_bp.route("/helper/inbound-log")
+@login_required
+@admin_required
+def helper_inbound_log():
+    from app.projects.helper.models import HelperInboundEmail
+    page = request.args.get("page", 1, type=int)
+    rows = (
+        HelperInboundEmail.query
+        .order_by(HelperInboundEmail.created_at.desc())
+        .paginate(page=page, per_page=50, error_out=False)
+    )
+    return render_template("admin/helper_inbound_log.html", rows=rows)
+
+
+@admin_bp.route("/helper/action-log")
+@login_required
+@admin_required
+def helper_action_log():
+    from app.projects.helper.models import HelperActionLog
+    page = request.args.get("page", 1, type=int)
+    rows = (
+        HelperActionLog.query
+        .order_by(HelperActionLog.created_at.desc())
+        .paginate(page=page, per_page=50, error_out=False)
+    )
+    return render_template("admin/helper_action_log.html", rows=rows)

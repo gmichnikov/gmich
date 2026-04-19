@@ -13,6 +13,11 @@
         <div class="helper-header">
             <h1 class="helper-title">Helper</h1>
             <p class="helper-subtitle">Your family task lists, managed by email.</p>
+            {% if current_user.is_admin %}
+            <div style="margin-top:0.5rem;">
+                <a href="{{ url_for('admin.helper_admin') }}" class="helper-link" style="font-size:0.85rem;">⚙️ Admin</a>
+            </div>
+            {% endif %}
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}

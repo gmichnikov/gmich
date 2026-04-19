@@ -52,10 +52,10 @@
 
 ## Prerequisites (before Phase 1)
 
-- [ ] **Public HTTPS URL** (prod or **ngrok** for dev) — Mailgun must reach your webhook.
-- [ ] **Mailgun** account; domain/receiving setup when you send real mail ([INITIAL_PLAN — system components](./INITIAL_PLAN.md#system-components-v1)).
-- [ ] **Anthropic API key** — only when you start **Phase 5**.
-- [ ] App already has **`DATABASE_URL`**, **Flask-Login**, **`User.time_zone`**, **`User.is_admin`**.
+- [x] **Public HTTPS URL** (prod or **ngrok** for dev) — Mailgun must reach your webhook.
+- [x] **Mailgun** account; domain/receiving setup when you send real mail ([INITIAL_PLAN — system components](./INITIAL_PLAN.md#system-components-v1)).
+- [x] **Anthropic API key** — only when you start **Phase 5**.
+- [x] App already has **`DATABASE_URL`**, **Flask-Login**, **`User.time_zone`**, **`User.is_admin`**.
 
 ---
 
@@ -141,7 +141,7 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 ---
 
-## Phase 1 — Database models and first migration
+## Phase 1 — Database models and first migration ✅
 
 **Covers:** [Database tables](./INITIAL_PLAN.md#database-tables-v1-sketch).
 
@@ -149,139 +149,142 @@ For every handled outcome above, return **HTTP 200** when appropriate so Mailgun
 
 **Work**
 
-- [ ] Add **`app/projects/helper/models.py`** with models mapping to **`helper_group`**, **`helper_group_member`**, **`helper_inbound_email`**, **`helper_action_log`**, **`helper_task`**.
-- [ ] **Uniques:** `inbound_email` on group; **`(group_id, user_id)`** on membership; **`idempotency_key`** on inbound.
-- [ ] **Types:** **`due_date`** = **Date** (not datetime); **`notes`** = Text on task; optional **`created_by_user_id`** on group; **`signature_valid`**, **`mailgun_timestamp`**, timestamps per INITIAL_PLAN.
-- [ ] **Indexes** on inbound (`group_id`, `status`, `created_at`) and tasks as in INITIAL_PLAN.
-- [ ] Import models in **`app/__init__.py`**.
+- [x] Add **`app/projects/helper/models.py`** with models mapping to **`helper_group`**, **`helper_group_member`**, **`helper_inbound_email`**, **`helper_action_log`**, **`helper_task`**.
+- [x] **Uniques:** `inbound_email` on group; **`(group_id, user_id)`** on membership; **`idempotency_key`** on inbound.
+- [x] **Types:** **`due_date`** = **Date** (not datetime); **`notes`** = Text on task; optional **`created_by_user_id`** on group; **`signature_valid`**, **`mailgun_timestamp`**, timestamps per INITIAL_PLAN.
+- [x] **Indexes** on inbound (`group_id`, `status`, `created_at`) and tasks as in INITIAL_PLAN.
+- [x] Import models in **`app/__init__.py`**.
 
 **Manual Testing 1.1:**
-- [ ] Run `flask db migrate -m "helper tables"`
-- [ ] Review migration file — check columns, nullability, uniques, indexes
-- [ ] Run `flask db upgrade`
-- [ ] Verify all five tables exist in database with correct schema
+- [x] Run `flask db migrate -m "helper tables"`
+- [x] Review migration file — check columns, nullability, uniques, indexes
+- [x] Run `flask db upgrade`
+- [x] Verify all five tables exist in database with correct schema
 
 ---
 
-## Phase 2 — Mailgun webhook + inbound audit
+## Phase 2 — Mailgun webhook + inbound audit ✅
 
 **Covers:** [Email entry](./INITIAL_PLAN.md#email-entry-point), [webhook §2](./INITIAL_PLAN.md#system-components-v1), [Security](./INITIAL_PLAN.md#security-v1), [Logging](./INITIAL_PLAN.md#logging-first-class), [Idempotency](./INITIAL_PLAN.md#idempotency-resolved).
 
 **Goal:** Implement **[Pipeline A — inbound only](#pipeline-a--inbound-only-milestone-phase-2)**: verify signature, log everything, **no** Claude and **no** `helper_task` rows.
 
 **Work:**
-- [ ] Add **Mailgun** secrets to env for **webhook signature verification**.
-- [ ] Implement `POST /hooks/helper/mailgun` with `@csrf.exempt`.
-- [ ] Parse Mailgun form fields.
-- [ ] Compute `idempotency_key`.
-- [ ] Check for duplicate key -> 200.
-- [ ] Insert `helper_inbound_email`.
-- [ ] Verify signature. Invalid -> 200.
-- [ ] Resolve `recipient` to `helper_group`. None -> 200.
-- [ ] Resolve `sender` to `User` and check `helper_group_member`. Invalid -> 200.
-- [ ] Check for empty subject and body -> 200.
-- [ ] Update `helper_inbound_email` status and insert `helper_action_log` along the way.
+- [x] Add **Mailgun** secrets to env for **webhook signature verification**.
+- [x] Implement `POST /hooks/helper/mailgun` with `@csrf.exempt`.
+- [x] Parse Mailgun form fields.
+- [x] Compute `idempotency_key`.
+- [x] Check for duplicate key -> 200.
+- [x] Insert `helper_inbound_email`.
+- [x] Verify signature. Invalid -> 200.
+- [x] Resolve `recipient` to `helper_group`. None -> 200.
+- [x] Resolve `sender` to `User` and check `helper_group_member`. Invalid -> 200.
+- [x] Check for empty subject and body -> 200.
+- [x] Update `helper_inbound_email` status and insert `helper_action_log` along the way.
 
 **Ops:** Mailgun Inbound Route → `https://<your-host>/hooks/helper/mailgun` (or tunnel).
 
 **Manual Testing 2.1:**
-- [ ] Send POST with bad signature → verify row + status `signature_invalid`, **200**.
-- [ ] Send POST with unknown `recipient` → verify row + status `unknown_recipient`, **200**.
-- [ ] Send POST to known group, sender **not** allowed → verify row **with** subject/body visible, status `sender_not_allowed`, **200**.
-- [ ] Send POST with duplicate idempotency key → verify **200**, no duplicate processing, status `duplicate`.
-- [ ] Send POST with empty subject and body -> verify **200**, status `empty_content`.
-- [ ] Send POST for normal handled case -> verify **200**, status e.g. `pending_llm`.
+- [x] Send POST with bad signature → verify row + status `signature_invalid`, **200**.
+- [x] Send POST with unknown `recipient` → verify row + status `unknown_recipient`, **200**.
+- [x] Send POST to known group, sender **not** allowed → verify row **with** subject/body visible, status `sender_not_allowed`, **200**.
+- [x] Send POST with duplicate idempotency key → verify **200**, no duplicate processing, status `duplicate`.
+- [x] Send POST with empty subject and body -> verify **200**, status `empty_content`.
+- [x] Send POST for normal handled case -> verify **200**, status e.g. `pending_llm`.
 
 ---
 
-## Phase 3 — Admin UI: create group + members
+## Phase 3 — Admin UI: create group + members ✅
 
 **Covers:** [Admin UI](./INITIAL_PLAN.md#5-admin-ui-site-admin-only), [Group creation](./INITIAL_PLAN.md#group-creation-resolved).
 
-**Goal:** **`admin_required`** only. One transaction: **name**, **unique inbound_email**, **≥1 member**, **admin’s email in the list**, **every email = existing User** — else rollback and show which emails failed.
+**Goal:** **`admin_required`** only. One transaction: **name**, **unique inbound_email**, **≥1 member**, **every email = existing User** — else rollback and show which emails failed.
 
 **Work:**
-- [ ] Add admin route `GET /helper/admin/groups/new` and `POST /helper/admin/groups/create`.
-- [ ] Create template for group creation.
-- [ ] Implement validation: ≥1 member, admin included, all emails match existing `User`.
-- [ ] Set **`created_by_user_id`** on the group.
-- [ ] Add admin route for adding members to existing groups (optional for v1, but good to have).
+- [x] Add admin route `GET /admin/helper/groups/new` and `POST /admin/helper/groups/create`.
+- [x] Create template for group creation.
+- [x] Implement validation: ≥1 member, all emails match existing `User`.
+- [x] Set **`created_by_user_id`** on the group.
+- [x] Add admin route for adding members to existing groups.
 
 **Ops reminder:** New `inbound_email` usually needs a **new Mailgun route** to the same webhook URL.
 
 **Manual Testing 3.1:**
-- [ ] Try creating group with invalid email → verify transaction rolls back, **no** partial rows, error shown.
-- [ ] Try creating group without admin email → verify error shown.
-- [ ] Create group successfully → verify stored `inbound_email` is normalized correctly.
+- [x] Try creating group with invalid email → verify transaction rolls back, **no** partial rows, error shown.
+- [x] Create group successfully → verify stored `inbound_email` is normalized correctly.
 
 ---
 
-## Phase 4 — Member Helper UI (shell)
+## Phase 4 — Member Helper UI (shell) ✅
 
 **Covers:** [Overview / groups](./INITIAL_PLAN.md#overview).
 
 **Goal:** **`@login_required`**. Show groups where **`current_user`** is a **member**. Empty state: explain an **admin** must add them.
 
-**Work:** 
-- [ ] Add `GET /helper/` route.
-- [ ] Create `templates/helper/index.html`.
-- [ ] Templates use **`helper-` CSS prefix** (avoid collisions with other projects).
-- [ ] Add to `app/projects/registry.py`.
+**Work:**
+- [x] Add `GET /helper/` route.
+- [x] Create `templates/helper/index.html`.
+- [x] Templates use **`helper-` CSS prefix** (avoid collisions with other projects).
+- [x] Add to `app/projects/registry.py`.
 
 **Manual Testing 4.1:**
-- [ ] Log in as member of a group → verify group(s) listed.
-- [ ] Log in as non-member → verify empty state explaining admin must add them.
+- [x] Log in as member of a group → verify group(s) listed.
+- [x] Log in as non-member → verify empty state explaining admin must add them.
 
 ---
 
-## Phase 5 — Claude + tasks (email path)
+## Phase 5 — Claude + tasks (email path) ✅
 
 **Covers:** [Claude](./INITIAL_PLAN.md#3-claude-anthropic-api), [Tasks](./INITIAL_PLAN.md#4-task-tracker-shared-per-group), [Supported actions](./INITIAL_PLAN.md#supported-actions-v1), [Timezone](./INITIAL_PLAN.md#timezone).
 
 **Goal:** Implement **[Pipeline B — Claude + tasks](#pipeline-b--claude--tasks-milestone-phase-5)** only when inbound mail has passed Pipeline A as an **authorized member**.
 
-**Work:** 
-- [ ] Add Anthropic API key to env.
-- [ ] Build Claude prompt with subject + body + member names / assignee options.
-- [ ] Parse Claude JSON response for intents `add_task` / `unknown`.
-- [ ] Handle `add_task`: title, `due_date` (convert using `User.time_zone`), assignee matching.
-- [ ] Insert `helper_task` and `helper_action_log`.
-- [ ] Handle errors (API, bad JSON, `unknown` intent) gracefully -> log, **no** task, return 200.
+**Work:**
+- [x] Add Anthropic API key to env.
+- [x] Build Claude prompt with subject + body + member names / assignee options.
+- [x] Parse Claude JSON response for intents `add_task` / `unknown`.
+- [x] Handle `add_task`: title, `due_date` (convert using `User.time_zone`), assignee matching.
+- [x] Insert `helper_task` and `helper_action_log`.
+- [x] Handle errors (API, bad JSON, `unknown` intent) gracefully -> log, **no** task, return 200.
+- [x] Strip markdown code fences from Claude response before JSON parsing (Claude sometimes wraps output in ```json blocks).
 
 **Manual Testing 5.1:**
-- [ ] Send valid "Buy milk" email -> verify task created, assigned to sender.
-- [ ] Send valid "Remind me to call John tomorrow" -> verify task created, due date calculated correctly based on sender timezone.
-- [ ] Send valid "Assign Sarah to pick up dry cleaning" -> verify task created, assignee matched to Sarah.
-- [ ] Send invalid/unparsable JSON from Claude (mock) -> verify error logged, no task created, **200**.
-- [ ] Send email with `unknown` intent -> verify action logged, no task created, **200**.
+- [x] Send valid "Buy milk" email -> verify task created, assigned to sender.
+- [x] Send valid email with due date -> verify task created, due date calculated correctly based on sender timezone.
+- [x] Send email with `unknown` intent -> verify action logged, no task created, **200**.
 
 ---
 
-## Phase 6 — Task UI
+## Phase 6 — Task UI ✅
 
 **Covers:** [Task tracker](./INITIAL_PLAN.md#4-task-tracker-shared-per-group), [`helper_task`](./INITIAL_PLAN.md#5-helper_task).
 
 **Goal:** Members **list**, **complete**, and **delete** tasks (soft or hard delete) and edit **`notes`**; **authorize** by **`group_id`** membership.
 
 **Work:**
-- [ ] Add route to view tasks for a group `GET /helper/group/<id>`.
-- [ ] Add route to toggle task completion `POST /helper/task/<id>/complete`.
-- [ ] Add route to delete task `POST /helper/task/<id>/delete`.
-- [ ] Add route to edit notes `POST /helper/task/<id>/notes`.
-- [ ] Update templates to display and interact with tasks.
+- [x] Add route to view tasks for a group `GET /helper/group/<id>`.
+- [x] Add route to toggle task completion `POST /helper/task/<id>/complete`.
+- [x] Add route to reopen a completed task `POST /helper/task/<id>/reopen`.
+- [x] Add route to delete task `POST /helper/task/<id>/delete`.
+- [x] Add route to edit notes `POST /helper/task/<id>/notes`.
+- [x] Update templates to display and interact with tasks.
+- [x] Index page shows open tasks inline per group.
 
 **Manual Testing 6.1:**
-- [ ] Two members in one group -> verify both see that group’s tasks.
-- [ ] Member of group A tries to view group B -> verify access denied (403/404).
-- [ ] Complete a task -> verify `completed_by_user_id` and `completed_at` updated.
-- [ ] Delete a task -> verify task removed from list.
-- [ ] Edit notes -> verify notes updated.
+- [x] Two members in one group -> verify both see that group's tasks.
+- [x] Complete a task -> verify `completed_by_user_id` and `completed_at` updated.
+- [x] Delete a task -> verify task removed from list.
+- [x] Edit notes -> verify notes updated.
 
 ---
 
-## Optional — Admin inbound log viewer
+## Admin log viewers ✅
 
-**Site-admin-only** read-only list of **`helper_inbound_email`** rows — supports [logging](./INITIAL_PLAN.md#logging-first-class) and [privacy](./INITIAL_PLAN.md#privacy-stored-email-content) expectations. Can ship after Phase **2**.
+**Site-admin-only** read-only views supporting [logging](./INITIAL_PLAN.md#logging-first-class) and [privacy](./INITIAL_PLAN.md#privacy-stored-email-content) expectations.
+
+- [x] `/admin/helper` — hub page linking to all Helper admin areas; linked from Helper homepage (admins only) and the Admin nav dropdown.
+- [x] `/admin/helper/inbound-log` — paginated table of all `helper_inbound_email` rows with color-coded status, sender, recipient, subject, signature validity.
+- [x] `/admin/helper/action-log` — paginated table of all `helper_action_log` rows with color-coded action type, detail JSON, error message.
 
 ---
 

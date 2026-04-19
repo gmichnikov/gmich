@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Inbound Email Log{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">📬 Inbound Email Log</h1>
+            <p class="admin-subtitle">Every webhook POST from Mailgun — {{ rows.total }} total</p>
+        </div>
+
+        {% if rows.items %}
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">ID</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Received</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Status</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">From</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">To</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Subject</th>
+                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Sig?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows.items %}
+                    <tr style="border-bottom:1px solid #f3f4f6;">
+                        <td style="padding:0.5rem 0.75rem; color:#9ca3af;">{{ row.id }}</td>
+                        <td style="padding:0.5rem 0.75rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
+                        <td style="padding:0.5rem 0.75rem;">
+                            <span style="
+                                padding:0.15rem 0.5rem;
+                                border-radius:4px;
+                                font-size:0.75rem;
+                                font-weight:600;
+                                background:{% if row.status == 'processed' %}#d1fae5{% elif row.status in ['signature_invalid','sender_not_allowed','unknown_recipient','error'] %}#fee2e2{% elif row.status == 'duplicate' %}#fef3c7{% else %}#f3f4f6{% endif %};
+                                color:{% if row.status == 'processed' %}#065f46{% elif row.status in ['signature_invalid','sender_not_allowed','unknown_recipient','error'] %}#991b1b{% elif row.status == 'duplicate' %}#92400e{% else %}#374151{% endif %};
+                            ">{{ row.status }}</span>
+                        </td>
+                        <td style="padding:0.5rem 0.75rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ row.sender_raw }}">{{ row.sender_raw }}</td>
+                        <td style="padding:0.5rem 0.75rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ row.recipient }}">{{ row.recipient }}</td>
+                        <td style="padding:0.5rem 0.75rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ row.subject }}">{{ row.subject or '—' }}</td>
+                        <td style="padding:0.5rem 0.75rem; text-align:center;">
+                            {% if row.signature_valid is none %}—
+                            {% elif row.signature_valid %}✅
+                            {% else %}❌{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if rows.pages > 1 %}
+        <div style="margin-top:1rem; display:flex; gap:0.5rem; justify-content:center;">
+            {% if rows.has_prev %}
+            <a href="{{ url_for('admin.helper_inbound_log', page=rows.prev_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">← Prev</a>
+            {% endif %}
+            <span style="padding:0.4rem 0.75rem; color:#6b7280;">Page {{ rows.page }} of {{ rows.pages }}</span>
+            {% if rows.has_next %}
+            <a href="{{ url_for('admin.helper_inbound_log', page=rows.next_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">Next →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <p style="color:#9ca3af;">No inbound emails logged yet.</p>
+        {% endif %}
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('admin.helper_admin') }}" class="admin-link">← Helper Admin</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

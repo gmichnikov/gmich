@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">Helper Admin</h1>
+            <p class="admin-subtitle">Manage groups, members, and view logs</p>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+            <a href="{{ url_for('admin.helper_groups') }}" class="admin-submit-btn" style="display:block; text-decoration:none; text-align:center;">
+                👥 Groups &amp; Members
+            </a>
+            <a href="{{ url_for('admin.helper_inbound_log') }}" class="admin-submit-btn" style="display:block; text-decoration:none; text-align:center; background:#6b7280;">
+                📬 Inbound Email Log
+            </a>
+            <a href="{{ url_for('admin.helper_action_log') }}" class="admin-submit-btn" style="display:block; text-decoration:none; text-align:center; background:#6b7280;">
+                📋 Action Log
+            </a>
+        </div>
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
