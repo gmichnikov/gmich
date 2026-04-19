@@ -45,7 +45,7 @@ Today's date is {today.isoformat()} (use this to resolve relative dates like "to
 The group members are:
 {members_list}
 
-An authorized group member sent the following email. Extract a task from it if possible.
+An authorized group member sent the following email. They send emails to this address to add tasks to the group list. Forwarding an email (e.g. a sign-up link, a bill, an event announcement) is an implicit signal they want to create a task related to it.
 
 ---
 Subject: {subject}
@@ -59,7 +59,8 @@ If you can extract a task:
   "intent": "add_task",
   "title": "concise task title",
   "due_date": "YYYY-MM-DD or null",
-  "assignee_email": "exact email from the member list above, or null if unclear/unspecified"
+  "assignee_email": "exact email from the member list above, or null if unclear/unspecified",
+  "notes": "supplementary context or null"
 }}
 
 If the message is not a task request:
@@ -68,11 +69,12 @@ If the message is not a task request:
 }}
 
 Rules:
-- Title should be short and action-oriented.
+- Title should be short and action-oriented (e.g. "Register for lacrosse clinic").
 - due_date must be a calendar date string (YYYY-MM-DD) or null. No times.
 - assignee_email must exactly match one of the emails in the member list, or be null.
 - If the sender says "me" or "I", they are the assignee — but you don't know their email, so return null for assignee_email (the caller will default to the sender).
-- Do not invent tasks. If the message is a question, reply, or chat, return unknown.
+- notes should capture useful supplementary detail from the email that isn't in the title: location, price, registration links, event times, deadlines, or any other context that helps identify or complete the task. Keep it concise. Use null if there is nothing worth adding beyond the title.
+- Do not invent tasks. If the message is a question, conversational reply, or contains no actionable content, return unknown.
 """
 
 
