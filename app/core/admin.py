@@ -657,3 +657,17 @@ def helper_action_log():
         .paginate(page=page, per_page=50, error_out=False)
     )
     return render_template("admin/helper_action_log.html", rows=rows)
+
+
+@admin_bp.route("/helper/email-detail")
+@login_required
+@admin_required
+def helper_email_detail():
+    from app.projects.helper.models import HelperInboundEmail
+    page = request.args.get("page", 1, type=int)
+    rows = (
+        HelperInboundEmail.query
+        .order_by(HelperInboundEmail.created_at.desc())
+        .paginate(page=page, per_page=25, error_out=False)
+    )
+    return render_template("admin/helper_email_detail.html", rows=rows)

@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Email Detail{% endblock %}
+
+{% block content %}
+<div style="padding:2rem 1.5rem; max-width:1100px; margin:0 auto;">
+
+  <div style="display:flex; align-items:baseline; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <h1 style="margin:0; font-size:1.4rem; font-weight:700;">🔍 Email Detail</h1>
+    <span style="color:#6b7280; font-size:0.9rem;">{{ rows.total }} emails — each card shows the email and all its actions</span>
+    <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{{ url_for('admin.helper_inbound_log') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Inbound log</a>
+      <a href="{{ url_for('admin.helper_action_log') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Action log</a>
+      <a href="{{ url_for('admin.helper_admin') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Helper Admin</a>
+    </div>
+  </div>
+
+  <style>
+    .hed-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .hed-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid #f3f4f6;
+      flex-wrap: wrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    .hed-card-header:hover { background: #fafafa; }
+    .hed-id { color: #9ca3af; font-size: 0.8rem; white-space: nowrap; }
+    .hed-time { color: #6b7280; font-size: 0.82rem; white-space: nowrap; }
+    .hed-badge {
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .hed-from { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+    .hed-to { color: #6b7280; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+    .hed-subject { color: #374151; font-size: 0.88rem; flex: 1; min-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hed-chevron { margin-left: auto; color: #9ca3af; font-size: 0.85rem; transition: transform 0.2s; }
+    .hed-body-section {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #f3f4f6;
+      display: none;
+    }
+    .hed-body-text {
+      white-space: pre-wrap;
+      font-size: 0.84rem;
+      color: #374151;
+      line-height: 1.6;
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin: 0;
+    }
+    .hed-actions-section {
+      padding: 0.75rem 1.25rem;
+      display: none;
+    }
+    .hed-action-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f9fafb;
+      font-size: 0.82rem;
+    }
+    .hed-action-row:last-child { border-bottom: none; }
+    .hed-action-time { color: #9ca3af; white-space: nowrap; min-width: 75px; padding-top: 2px; }
+    .hed-action-detail {
+      font-family: monospace;
+      font-size: 0.76rem;
+      color: #4b5563;
+      white-space: pre-wrap;
+      background: #f9fafb;
+      border-radius: 4px;
+      padding: 0.35rem 0.6rem;
+      flex: 1;
+      max-height: 5rem;
+      overflow: hidden;
+    }
+    .hed-action-detail.expanded { max-height: none; }
+    .hed-show-more { font-size: 0.72rem; color: #2563eb; background: none; border: none; cursor: pointer; padding: 2px 0 0; }
+    .hed-error { color: #dc2626; font-size: 0.78rem; }
+    .hed-no-actions { color: #9ca3af; font-size: 0.82rem; padding: 0.4rem 0; }
+  </style>
+
+  {% macro status_badge(status) %}
+    <span class="hed-badge" style="
+      background:{% if status == 'processed' %}#d1fae5{% elif status in ['signature_invalid','sender_not_allowed','unknown_recipient','error'] %}#fee2e2{% elif status == 'duplicate' %}#fef3c7{% else %}#f3f4f6{% endif %};
+      color:{% if status == 'processed' %}#065f46{% elif status in ['signature_invalid','sender_not_allowed','unknown_recipient','error'] %}#991b1b{% elif status == 'duplicate' %}#92400e{% else %}#374151{% endif %};">
+      {{ status }}
+    </span>
+  {% endmacro %}
+
+  {% macro action_badge(atype) %}
+    <span class="hed-badge" style="
+      background:{% if atype == 'task_created' %}#d1fae5{% elif atype == 'confirmation_sent' %}#dbeafe{% elif 'error' in atype or atype == 'confirmation_failed' %}#fee2e2{% elif atype == 'unknown_intent' %}#fef3c7{% else %}#f3f4f6{% endif %};
+      color:{% if atype == 'task_created' %}#065f46{% elif atype == 'confirmation_sent' %}#1e40af{% elif 'error' in atype or atype == 'confirmation_failed' %}#991b1b{% elif atype == 'unknown_intent' %}#92400e{% else %}#374151{% endif %};">
+      {{ atype }}
+    </span>
+  {% endmacro %}
+
+  {% if rows.items %}
+    {% for email in rows.items %}
+    <div class="hed-card">
+
+      <!-- Header row — always visible, click to expand -->
+      <div class="hed-card-header" onclick="toggleCard(this)">
+        <span class="hed-id">#{{ email.id }}</span>
+        <span class="hed-time">{{ email.created_at.strftime('%m/%d %H:%M') }}</span>
+        {{ status_badge(email.status) }}
+        <span class="hed-from" title="{{ email.sender_raw }}">{{ email.sender_raw }}</span>
+        <span style="color:#9ca3af; font-size:0.8rem;">→</span>
+        <span class="hed-to" title="{{ email.recipient }}">{{ email.recipient }}</span>
+        <span class="hed-subject" title="{{ email.subject }}">{{ email.subject or '(no subject)' }}</span>
+        <span class="hed-chevron">▼</span>
+      </div>
+
+      <!-- Email body -->
+      <div class="hed-body-section">
+        <div style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.4rem;">Body</div>
+        {% if email.body_text %}
+        <pre class="hed-body-text">{{ email.body_text }}</pre>
+        {% else %}
+        <span style="color:#9ca3af; font-size:0.82rem;">(empty)</span>
+        {% endif %}
+      </div>
+
+      <!-- Actions -->
+      <div class="hed-actions-section">
+        <div style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.5rem;">Actions ({{ email.action_logs | length }})</div>
+        {% if email.action_logs %}
+          {% for action in email.action_logs | sort(attribute='created_at') %}
+          <div class="hed-action-row">
+            <span class="hed-action-time">{{ action.created_at.strftime('%H:%M:%S') }}</span>
+            {{ action_badge(action.action_type) }}
+            {% if action.detail %}
+            <div style="flex:1; min-width:0;">
+              <pre class="hed-action-detail" id="detail-{{ action.id }}">{{ action.detail | tojson(indent=2) }}</pre>
+              {% if (action.detail | tojson | length) > 100 %}
+              <button class="hed-show-more" onclick="toggleActionDetail('detail-{{ action.id }}', this)">show more</button>
+              {% endif %}
+            </div>
+            {% else %}
+            <span style="color:#9ca3af; font-size:0.78rem; flex:1;">—</span>
+            {% endif %}
+            {% if action.error_message %}
+            <span class="hed-error" title="{{ action.error_message }}">{{ action.error_message | truncate(60) }}</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="hed-no-actions">No actions recorded.</div>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if rows.pages > 1 %}
+    <div style="margin-top:1.25rem; display:flex; gap:0.5rem; justify-content:center; align-items:center;">
+      {% if rows.has_prev %}
+      <a href="{{ url_for('admin.helper_email_detail', page=rows.prev_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Prev</a>
+      {% endif %}
+      <span style="color:#6b7280; font-size:0.85rem;">Page {{ rows.page }} of {{ rows.pages }}</span>
+      {% if rows.has_next %}
+      <a href="{{ url_for('admin.helper_email_detail', page=rows.next_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  {% else %}
+  <div style="background:white; border-radius:12px; padding:2rem; text-align:center; color:#9ca3af; box-shadow:0 2px 10px rgba(0,0,0,0.07);">No inbound emails yet.</div>
+  {% endif %}
+
+</div>
+
+<script>
+function toggleCard(header) {
+  const card = header.parentElement;
+  const body = card.querySelector('.hed-body-section');
+  const actions = card.querySelector('.hed-actions-section');
+  const chevron = header.querySelector('.hed-chevron');
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  actions.style.display = open ? 'none' : 'block';
+  chevron.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function toggleActionDetail(id, btn) {
+  const pre = document.getElementById(id);
+  const expanded = pre.classList.contains('expanded');
+  pre.classList.toggle('expanded', !expanded);
+  pre.style.maxHeight = expanded ? '' : 'none';
+  btn.textContent = expanded ? 'show more' : 'show less';
+}
+</script>
+{% endblock %}

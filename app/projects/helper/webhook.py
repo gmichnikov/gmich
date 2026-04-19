@@ -34,6 +34,7 @@ from app.projects.helper.models import (
     HelperTask,
 )
 from app.projects.helper.claude import parse_email_for_task
+from app.projects.helper.email import send_task_confirmation
 
 logger = logging.getLogger(__name__)
 
@@ -345,6 +346,11 @@ def mailgun_inbound():
                 "claude_response": result,
             })
             logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
+            confirmed = send_task_confirmation(task, sender_user, group)
+            if confirmed:
+                _log_action(inbound, "confirmation_sent", detail={"to": sender_user.email})
+            else:
+                _log_action(inbound, "confirmation_failed", detail={"to": sender_user.email})
         except Exception as e:
             db.session.rollback()
             logger.error(f"Task insert failed for inbound_email id={inbound.id}: {e}")

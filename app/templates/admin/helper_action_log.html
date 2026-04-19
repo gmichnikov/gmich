@@ -3,76 +3,128 @@
 {% block title %}Helper Action Log{% endblock %}
 
 {% block content %}
-<div class="admin-page-container">
-    <div class="admin-card">
-        <div class="admin-header">
-            <h1 class="admin-title">📋 Action Log</h1>
-            <p class="admin-subtitle">What the app decided and did for each inbound email — {{ rows.total }} total</p>
-        </div>
+<div style="padding:2rem 1.5rem; max-width:1400px; margin:0 auto;">
 
-        {% if rows.items %}
-        <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-                <thead>
-                    <tr style="border-bottom:2px solid #e5e7eb; text-align:left;">
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">ID</th>
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Time</th>
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Inbound #</th>
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Action</th>
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Detail</th>
-                        <th style="padding:0.5rem 0.75rem; color:#6b7280;">Error</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in rows.items %}
-                    <tr style="border-bottom:1px solid #f3f4f6;">
-                        <td style="padding:0.5rem 0.75rem; color:#9ca3af;">{{ row.id }}</td>
-                        <td style="padding:0.5rem 0.75rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
-                        <td style="padding:0.5rem 0.75rem;">
-                            <a href="{{ url_for('admin.helper_inbound_log') }}" class="admin-link">#{{ row.inbound_email_id }}</a>
-                        </td>
-                        <td style="padding:0.5rem 0.75rem;">
-                            <span style="
-                                padding:0.15rem 0.5rem;
-                                border-radius:4px;
-                                font-size:0.75rem;
-                                font-weight:600;
-                                background:{% if row.action_type == 'task_created' %}#d1fae5{% elif 'error' in row.action_type %}#fee2e2{% elif row.action_type == 'unknown_intent' %}#fef3c7{% else %}#f3f4f6{% endif %};
-                                color:{% if row.action_type == 'task_created' %}#065f46{% elif 'error' in row.action_type %}#991b1b{% elif row.action_type == 'unknown_intent' %}#92400e{% else %}#374151{% endif %};
-                            ">{{ row.action_type }}</span>
-                        </td>
-                        <td style="padding:0.5rem 0.75rem; max-width:300px; font-family:monospace; font-size:0.75rem; color:#4b5563; word-break:break-all;">
-                            {% if row.detail %}{{ row.detail | tojson | truncate(200) }}{% else %}—{% endif %}
-                        </td>
-                        <td style="padding:0.5rem 0.75rem; max-width:200px; color:#dc2626; font-size:0.8rem; word-break:break-all;">
-                            {{ row.error_message or '—' }}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        {% if rows.pages > 1 %}
-        <div style="margin-top:1rem; display:flex; gap:0.5rem; justify-content:center;">
-            {% if rows.has_prev %}
-            <a href="{{ url_for('admin.helper_action_log', page=rows.prev_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">← Prev</a>
-            {% endif %}
-            <span style="padding:0.4rem 0.75rem; color:#6b7280;">Page {{ rows.page }} of {{ rows.pages }}</span>
-            {% if rows.has_next %}
-            <a href="{{ url_for('admin.helper_action_log', page=rows.next_num) }}" class="admin-submit-btn" style="padding:0.4rem 1rem; text-decoration:none;">Next →</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        {% else %}
-        <p style="color:#9ca3af;">No action log entries yet.</p>
-        {% endif %}
-
-        <div class="admin-footer">
-            <p class="admin-footer-text"><a href="{{ url_for('admin.helper_admin') }}" class="admin-link">← Helper Admin</a></p>
-        </div>
+  <div style="display:flex; align-items:baseline; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <h1 style="margin:0; font-size:1.4rem; font-weight:700;">📋 Action Log</h1>
+    <span style="color:#6b7280; font-size:0.9rem;">{{ rows.total }} total</span>
+    <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+      <a href="{{ url_for('admin.helper_email_detail') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Combined view</a>
+      <a href="{{ url_for('admin.helper_admin') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Helper Admin</a>
     </div>
+  </div>
+
+  <!-- Client-side filter -->
+  <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;" id="filter-bar">
+    <button class="hial-filter active" data-action="all" onclick="filterAction('all', this)">All</button>
+    {% set seen = [] %}
+    {% for row in rows.items %}
+      {% if row.action_type not in seen %}
+        {% set _ = seen.append(row.action_type) %}
+        <button class="hial-filter" data-action="{{ row.action_type }}" onclick="filterAction('{{ row.action_type }}', this)">{{ row.action_type }}</button>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <style>
+    .hial-filter {
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #374151;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .hial-filter.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    .hial-filter:hover:not(.active) {
+      background: #f3f4f6;
+    }
+  </style>
+
+  {% if rows.items %}
+  <div style="overflow-x:auto; background:white; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+    <table id="action-table" style="width:100%; border-collapse:collapse; font-size:0.84rem;">
+      <thead>
+        <tr style="border-bottom:2px solid #e5e7eb; background:#f9fafb; text-align:left;">
+          <th style="padding:0.6rem 0.9rem; color:#6b7280; white-space:nowrap;">#</th>
+          <th style="padding:0.6rem 0.9rem; color:#6b7280; white-space:nowrap;">Time</th>
+          <th style="padding:0.6rem 0.9rem; color:#6b7280; white-space:nowrap;">Inbound #</th>
+          <th style="padding:0.6rem 0.9rem; color:#6b7280;">Action</th>
+          <th style="padding:0.6rem 0.9rem; color:#6b7280;">Detail</th>
+          <th style="padding:0.6rem 0.9rem; color:#6b7280;">Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows.items %}
+        <tr class="hial-row" data-action="{{ row.action_type }}" style="border-bottom:1px solid #f3f4f6; vertical-align:top;">
+          <td style="padding:0.55rem 0.9rem; color:#9ca3af; white-space:nowrap;">{{ row.id }}</td>
+          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
+          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">
+            <a href="{{ url_for('admin.helper_inbound_log') }}" style="color:#2563eb; text-decoration:none;">#{{ row.inbound_email_id }}</a>
+          </td>
+          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">
+            <span style="
+              padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;
+              background:{% if row.action_type == 'task_created' %}#d1fae5{% elif row.action_type == 'confirmation_sent' %}#dbeafe{% elif 'error' in row.action_type or row.action_type == 'confirmation_failed' %}#fee2e2{% elif row.action_type == 'unknown_intent' %}#fef3c7{% else %}#f3f4f6{% endif %};
+              color:{% if row.action_type == 'task_created' %}#065f46{% elif row.action_type == 'confirmation_sent' %}#1e40af{% elif 'error' in row.action_type or row.action_type == 'confirmation_failed' %}#991b1b{% elif row.action_type == 'unknown_intent' %}#92400e{% else %}#374151{% endif %};
+            ">{{ row.action_type }}</span>
+          </td>
+          <td style="padding:0.55rem 0.9rem; max-width:480px;">
+            {% if row.detail %}
+            <pre style="margin:0; white-space:pre-wrap; font-size:0.76rem; color:#4b5563; font-family:monospace; max-height:5rem; overflow:hidden;" class="hial-detail">{{ row.detail | tojson(indent=2) }}</pre>
+            {% if (row.detail | tojson | length) > 120 %}
+            <button onclick="toggleDetail(this)" style="font-size:0.75rem; color:#2563eb; background:none; border:none; cursor:pointer; padding:0; margin-top:2px;">show more</button>
+            {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td style="padding:0.55rem 0.9rem; max-width:220px; color:#dc2626; font-size:0.8rem; word-break:break-word;">
+            {{ row.error_message or '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if rows.pages > 1 %}
+  <div style="margin-top:1.25rem; display:flex; gap:0.5rem; justify-content:center; align-items:center;">
+    {% if rows.has_prev %}
+    <a href="{{ url_for('admin.helper_action_log', page=rows.prev_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Prev</a>
+    {% endif %}
+    <span style="color:#6b7280; font-size:0.85rem;">Page {{ rows.page }} of {{ rows.pages }}</span>
+    {% if rows.has_next %}
+    <a href="{{ url_for('admin.helper_action_log', page=rows.next_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="background:white; border-radius:12px; padding:2rem; text-align:center; color:#9ca3af; box-shadow:0 2px 12px rgba(0,0,0,0.07);">No action log entries yet.</div>
+  {% endif %}
+
 </div>
+
+<script>
+function filterAction(action, btn) {
+  document.querySelectorAll('.hial-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.hial-row').forEach(row => {
+    row.style.display = (action === 'all' || row.dataset.action === action) ? '' : 'none';
+  });
+}
+
+function toggleDetail(btn) {
+  const pre = btn.previousElementSibling;
+  const expanded = pre.style.maxHeight === 'none';
+  pre.style.maxHeight = expanded ? '5rem' : 'none';
+  pre.style.overflow = expanded ? 'hidden' : 'visible';
+  btn.textContent = expanded ? 'show more' : 'show less';
+}
+</script>
 {% endblock %}

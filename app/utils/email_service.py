@@ -30,7 +30,7 @@ def _get_mailgun_config():
     }
 
 
-def send_email(to_email, subject, text_content, html_content=None):
+def send_email(to_email, subject, text_content, html_content=None, from_name="Greg", from_email=None, reply_to=None):
     """
     Send an email using Mailgun API.
     
@@ -39,6 +39,9 @@ def send_email(to_email, subject, text_content, html_content=None):
         subject: Email subject
         text_content: Plain text email content
         html_content: Optional HTML email content
+        from_name: Display name for the From header (default: "Greg")
+        from_email: Sender address (default: SENDER_EMAIL env var)
+        reply_to: Optional Reply-To address; if set, replies go here instead of from_email
     
     Returns:
         requests.Response object if successful
@@ -48,16 +51,20 @@ def send_email(to_email, subject, text_content, html_content=None):
         requests.exceptions.RequestException: If email sending fails
     """
     config = _get_mailgun_config()
-    
+    sender = from_email or config['sender_email']
+
     data = {
-        "from": f"Greg <{config['sender_email']}>",
+        "from": f"{from_name} <{sender}>",
         "to": to_email,
         "subject": subject,
-        "text": text_content
+        "text": text_content,
     }
-    
+
     if html_content:
         data["html"] = html_content
+
+    if reply_to:
+        data["h:Reply-To"] = reply_to
     
     try:
         response = requests.post(
