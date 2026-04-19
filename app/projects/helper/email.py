@@ -43,9 +43,15 @@ def send_task_confirmation(task, sender_user, group):
     details_text = "\n".join(f"  {d}" for d in details)
     details_html = "".join(f"<li>{d}</li>" for d in details)
 
+    notes_text = f"\n  Notes: {task.notes}" if task.notes else ""
+    notes_html = (
+        f'<p style="margin:10px 0 0 0; font-size:0.9rem; color:#4b5563;">'
+        f'<strong>Notes:</strong> {task.notes}</p>'
+    ) if task.notes else ""
+
     reply_hint = (
         f"Reply to this email (or send a new message to {group_address}) "
-        f"to add more tasks to {group.name}."
+        f"to add more tasks to {group.name}, or reply \u201cDone\u201d to mark this task complete."
     )
 
     text_content = f"""Hi {sender_user.full_name},
@@ -53,7 +59,7 @@ def send_task_confirmation(task, sender_user, group):
 Your task has been added to {group.name}:
 
   {task.title}
-{details_text}
+{details_text}{notes_text}
 
 View the full task list: {group_url}
 
@@ -84,6 +90,7 @@ View the full task list: {group_url}
       <ul class="task-details">
         {details_html}
       </ul>
+      {notes_html}
     </div>
 
     <p><a href="{group_url}">View the full task list &rarr;</a></p>

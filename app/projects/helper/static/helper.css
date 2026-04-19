@@ -212,11 +212,24 @@ a.helper-group-name:hover {
     border-radius: 0 4px 4px 0;
 }
 
+.helper-btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: #6366f1;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 0.25rem;
+    display: inline-block;
+}
+
+.helper-btn-link:hover {
+    text-decoration: underline;
+}
+
 .helper-notes-form {
     margin-top: 0.5rem;
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
 }
 
 .helper-notes-input {

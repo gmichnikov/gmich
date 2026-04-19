@@ -37,7 +37,8 @@
                 </div>
 
                 {% set tasks = open_tasks[group.id] %}
-                {% if tasks %}
+                {% set done = recent_completed[group.id] %}
+                {% if tasks or done %}
                 <ul class="helper-task-list">
                     {% for task in tasks %}
                     <li class="helper-task-item">
@@ -47,6 +48,16 @@
                         {% endif %}
                         {% if task.assignee %}
                         <span class="helper-task-assignee">{{ task.assignee.short_name }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                    {% for task in done %}
+                    <li class="helper-task-item helper-task-item-done">
+                        <span class="helper-task-title">{{ task.title }}</span>
+                        {% if task.completer %}
+                        <span class="helper-task-created" style="font-size:0.78rem;">✓ {{ task.completer.short_name }}</span>
+                        {% else %}
+                        <span class="helper-task-created" style="font-size:0.78rem;">✓ done</span>
                         {% endif %}
                     </li>
                     {% endfor %}

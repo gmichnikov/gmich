@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint, abort, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
@@ -45,8 +45,9 @@ def index():
     )
     groups = [m.group for m in memberships]
 
-    # Pre-fetch open tasks per group
+    # Pre-fetch open + recently completed tasks per group
     open_tasks = {}
+    recent_completed = {}
     for group in groups:
         open_tasks[group.id] = (
             HelperTask.query
@@ -54,8 +55,20 @@ def index():
             .order_by(HelperTask.due_date.asc().nullslast(), HelperTask.created_at.asc())
             .all()
         )
+        recent_completed[group.id] = (
+            HelperTask.query
+            .filter_by(group_id=group.id, status="complete")
+            .order_by(HelperTask.completed_at.desc())
+            .limit(3)
+            .all()
+        )
 
-    return render_template("helper/index.html", groups=groups, open_tasks=open_tasks)
+    return render_template(
+        "helper/index.html",
+        groups=groups,
+        open_tasks=open_tasks,
+        recent_completed=recent_completed,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -147,4 +160,6 @@ def task_notes(task_id):
     _get_member_group_or_404(task.group_id)
     task.notes = request.form.get("notes", "").strip() or None
     db.session.commit()
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True, "notes": task.notes or ""})
     return redirect(url_for("helper.group_detail", group_id=task.group_id))

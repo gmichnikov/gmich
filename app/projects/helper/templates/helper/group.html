@@ -46,15 +46,31 @@
                             <span class="helper-task-created">Added {{ task.created_at.strftime('%b %-d, %Y') }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}</span>
                         </div>
 
-                        {% if task.notes %}
-                        <p class="helper-task-notes">{{ task.notes }}</p>
-                        {% endif %}
+                        <!-- Notes: show text with Edit link, or "Add note" if empty -->
+                        <div class="helper-notes-display" id="notes-display-{{ task.id }}">
+                            {% if task.notes %}
+                            <p class="helper-task-notes">{{ task.notes }}</p>
+                            {% endif %}
+                            <button type="button"
+                                class="helper-btn-link"
+                                onclick="showNotesEditor({{ task.id }})">
+                                {{ 'Edit note' if task.notes else 'Add note' }}
+                            </button>
+                        </div>
 
-                        <!-- Edit notes -->
-                        <form method="post" action="{{ url_for('helper.task_notes', task_id=task.id) }}" class="helper-notes-form">
+                        <form method="post"
+                            action="{{ url_for('helper.task_notes', task_id=task.id) }}"
+                            class="helper-notes-form"
+                            id="notes-form-{{ task.id }}"
+                            style="display:none;"
+                            onsubmit="saveNotes(event, {{ task.id }})">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <textarea name="notes" class="helper-notes-input" placeholder="Add a note…" rows="2">{{ task.notes or '' }}</textarea>
-                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Save Note</button>
+                            <textarea name="notes" class="helper-notes-input" rows="2">{{ task.notes or '' }}</textarea>
+                            <div style="display:flex; gap:0.4rem; margin-top:0.35rem;">
+                                <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Save</button>
+                                <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary"
+                                    onclick="hideNotesEditor({{ task.id }})">Cancel</button>
+                            </div>
                         </form>
                     </div>
 
@@ -124,4 +140,72 @@
 
     </div>
 </div>
+
+<script>
+function showNotesEditor(taskId) {
+    document.getElementById('notes-display-' + taskId).style.display = 'none';
+    const form = document.getElementById('notes-form-' + taskId);
+    form.style.display = 'block';
+    form.querySelector('textarea').focus();
+}
+
+function hideNotesEditor(taskId) {
+    document.getElementById('notes-display-' + taskId).style.display = '';
+    document.getElementById('notes-form-' + taskId).style.display = 'none';
+}
+
+function saveNotes(event, taskId) {
+    event.preventDefault();
+    const form = document.getElementById('notes-form-' + taskId);
+    const textarea = form.querySelector('textarea');
+    const saveBtn = form.querySelector('button[type="submit"]');
+    const notes = textarea.value.trim();
+
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+
+    const body = new FormData();
+    body.append('notes', notes);
+    body.append('csrf_token', form.querySelector('input[name="csrf_token"]').value);
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) throw new Error('Server error');
+
+        // Update the display area
+        const display = document.getElementById('notes-display-' + taskId);
+        const existingNote = display.querySelector('.helper-task-notes');
+        const editBtn = display.querySelector('button');
+
+        if (data.notes) {
+            if (existingNote) {
+                existingNote.textContent = data.notes;
+            } else {
+                const p = document.createElement('p');
+                p.className = 'helper-task-notes';
+                p.textContent = data.notes;
+                display.insertBefore(p, editBtn);
+            }
+            editBtn.textContent = 'Edit note';
+        } else {
+            if (existingNote) existingNote.remove();
+            editBtn.textContent = 'Add note';
+        }
+
+        // Sync textarea in case user re-opens editor
+        textarea.value = data.notes;
+        hideNotesEditor(taskId);
+    })
+    .catch(() => {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        alert('Could not save note. Please try again.');
+    });
+}
+</script>
 {% endblock %}
