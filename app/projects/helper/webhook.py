@@ -345,16 +345,16 @@ def mailgun_inbound():
 
         # Insert task
         try:
-                task = HelperTask(
-                    group_id=group.id,
-                    title=title,
-                    due_date=due_date,
-                    notes=notes,
-                    assignee_user_id=assignee_user_id,
-                    created_by_user_id=sender_user.id,
-                    status="open",
-                    source_inbound_email_id=inbound.id,
-                )
+            task = HelperTask(
+                group_id=group.id,
+                title=title,
+                due_date=due_date,
+                notes=notes,
+                assignee_user_id=assignee_user_id,
+                created_by_user_id=sender_user.id,
+                status="open",
+                source_inbound_email_id=inbound.id,
+            )
             db.session.add(task)
             db.session.flush()
             inbound.status = "processed"
