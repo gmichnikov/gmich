@@ -116,3 +116,171 @@ View the full task list: {group_url}
             f"for task id={task.id}: {e}"
         )
         return None
+
+
+def send_task_completed_confirmation(task, sender_user, group):
+    """
+    Notify the sender that their email marked a task as complete.
+
+    Args:
+        task: HelperTask instance (already marked complete)
+        sender_user: User who completed it
+        group: HelperGroup
+    """
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    group_address = group.inbound_email
+
+    subject = f"\u2713 Marked complete: {task.title}"
+
+    text_content = f"""Hi {sender_user.full_name},
+
+Got it — marked as complete:
+
+  {task.title}
+
+View the full task list: {group_url}
+
+Reply to this email (or send to {group_address}) to add more tasks or complete others.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .task-box {{ background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
+    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #15803d; margin: 0; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi {sender_user.full_name},</p>
+    <p>Got it — marked as complete:</p>
+
+    <div class="task-box">
+      <p class="task-title">{task.title}</p>
+    </div>
+
+    <p><a href="{group_url}">View the full task list &rarr;</a></p>
+
+    <div class="footer">
+      <p>Reply to this email (or send to {group_address}) to add more tasks or complete others.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    try:
+        send_email(
+            to_email=sender_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name=f"Helper ({group.name})",
+            from_email=group_address,
+            reply_to=group_address,
+        )
+        logger.info(
+            f"Task completed confirmation sent to {sender_user.email} "
+            f"for task id={task.id} group={group.id}"
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            f"Failed to send task completed confirmation to {sender_user.email} "
+            f"for task id={task.id}: {e}"
+        )
+        return None
+
+
+def send_complete_task_failed(open_tasks, sender_user, group):
+    """
+    Tell the sender we couldn't identify which task they meant, and list open tasks.
+
+    Args:
+        open_tasks: list of HelperTask instances currently open in the group
+        sender_user: User who sent the email
+        group: HelperGroup
+    """
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    group_address = group.inbound_email
+
+    subject = f"Couldn\u2019t identify which task to complete \u2014 {group.name}"
+
+    if open_tasks:
+        tasks_text = "\n".join(f"  \u2022 {t.title}" for t in open_tasks)
+        tasks_html = "".join(
+            f'<li style="margin:4px 0;">{t.title}</li>' for t in open_tasks
+        )
+        list_section_text = f"Here are the currently open tasks:\n\n{tasks_text}"
+        list_section_html = f"""<p>Here are the currently open tasks:</p>
+    <ul style="padding-left:1.2rem; color:#374151;">{tasks_html}</ul>"""
+    else:
+        list_section_text = "There are no open tasks in this group right now."
+        list_section_html = "<p>There are no open tasks in this group right now.</p>"
+
+    text_content = f"""Hi {sender_user.full_name},
+
+We received your email but couldn't figure out which task you meant to complete.
+
+{list_section_text}
+
+To complete a task, reply with something like "Done with [task name]" or mark it complete on the task list: {group_url}
+
+You can also reply to this email to add a new task.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .notice-box {{ background: #fef9c3; border-left: 4px solid #eab308; border-radius: 4px; padding: 14px 18px; margin: 20px 0; color: #713f12; font-size: 0.9rem; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi {sender_user.full_name},</p>
+
+    <div class="notice-box">
+      We received your email but couldn&rsquo;t figure out which task you meant to complete.
+    </div>
+
+    {list_section_html}
+
+    <p>To complete a task, reply with something like <em>&ldquo;Done with [task name]&rdquo;</em> or <a href="{group_url}">mark it complete on the task list</a>.</p>
+
+    <div class="footer">
+      <p>You can also reply to this email to add a new task.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    try:
+        send_email(
+            to_email=sender_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name=f"Helper ({group.name})",
+            from_email=group_address,
+            reply_to=group_address,
+        )
+        logger.info(
+            f"Complete-task-failed email sent to {sender_user.email} group={group.id}"
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            f"Failed to send complete-task-failed email to {sender_user.email}: {e}"
+        )
+        return None

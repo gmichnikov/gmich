@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import time
+from datetime import datetime
 
 from flask import Blueprint, request
 
@@ -34,7 +35,11 @@ from app.projects.helper.models import (
     HelperTask,
 )
 from app.projects.helper.claude import parse_email_for_task
-from app.projects.helper.email import send_task_confirmation
+from app.projects.helper.email import (
+    send_task_confirmation,
+    send_task_completed_confirmation,
+    send_complete_task_failed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -263,6 +268,18 @@ def mailgun_inbound():
         if m.user is not None
     ]
 
+    # Fetch open tasks for this group to pass as context
+    open_tasks_db = (
+        HelperTask.query
+        .filter_by(group_id=group.id, status="open")
+        .order_by(HelperTask.created_at.asc())
+        .all()
+    )
+    open_tasks = [
+        {"id": t.id, "title": t.title, "notes": t.notes}
+        for t in open_tasks_db
+    ]
+
     # Step 9 — Call Claude
     try:
         result = parse_email_for_task(
@@ -270,6 +287,7 @@ def mailgun_inbound():
             body=body_text,
             member_names_emails=member_names_emails,
             sender_tz=sender_user.time_zone or "UTC",
+            open_tasks=open_tasks,
         )
     except Exception as e:
         logger.error(f"Claude error for inbound_email id={inbound.id}: {e}")
@@ -360,6 +378,67 @@ def mailgun_inbound():
             inbound.status = "error"
             db.session.commit()
             _log_action(inbound, "task_insert_error", error=str(e))
+
+        return ("", 200)
+
+    if intent == "complete_task":
+        task_id = result.get("task_id")
+
+        # Validate task_id is in the open tasks we sent Claude
+        open_task_ids = {t["id"] for t in open_tasks}
+        if not task_id or task_id not in open_task_ids:
+            logger.warning(
+                f"Claude returned complete_task with invalid task_id={task_id} "
+                f"for inbound_email id={inbound.id}"
+            )
+            inbound.status = "processed"
+            db.session.commit()
+            _log_action(inbound, "complete_task_invalid_id", detail={
+                "task_id": task_id,
+                "claude_response": result,
+            })
+            send_complete_task_failed(open_tasks_db, sender_user, group)
+            return ("", 200)
+
+        task = HelperTask.query.get(task_id)
+        if not task or task.status != "open":
+            logger.warning(
+                f"Claude returned complete_task but task id={task_id} "
+                f"not found or already closed for inbound_email id={inbound.id}"
+            )
+            inbound.status = "processed"
+            db.session.commit()
+            _log_action(inbound, "complete_task_not_found", detail={
+                "task_id": task_id,
+                "claude_response": result,
+            })
+            send_complete_task_failed(open_tasks_db, sender_user, group)
+            return ("", 200)
+
+        try:
+            task.status = "complete"
+            task.completed_by_user_id = sender_user.id
+            task.completed_at = datetime.utcnow()
+            inbound.status = "processed"
+            db.session.commit()
+            _log_action(inbound, "task_completed", detail={
+                "task_id": task.id,
+                "title": task.title,
+                "claude_response": result,
+            })
+            logger.info(
+                f"Task id={task.id} completed via email for inbound_email id={inbound.id}"
+            )
+            send_task_completed_confirmation(task, sender_user, group)
+        except Exception as e:
+            db.session.rollback()
+            logger.error(
+                f"Task complete failed for task id={task_id} "
+                f"inbound_email id={inbound.id}: {e}"
+            )
+            inbound.status = "error"
+            db.session.commit()
+            _log_action(inbound, "complete_task_error", error=str(e))
 
         return ("", 200)
 
