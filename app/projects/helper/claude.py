@@ -76,6 +76,8 @@ Subject: {subject}
 Body: {body or '(empty)'}
 ---
 
+Emails often have a **footer** after the real message: unsubscribe links, privacy policy, "powered by" branding, or a **physical address belonging to the email vendor** (e.g. SendGrid, Mailgun) for legal/compliance — not the school, venue, or place the user must go. The important details (event location, gym name, school name, times) are almost always in the **main body above that**. Do **not** treat footer-only addresses or boilerplate as the task location unless the main text clearly says to go there.
+
 Respond with ONLY a valid JSON object (no explanation, no markdown) in one of these formats:
 
 If you can extract a new task:
@@ -103,7 +105,7 @@ Rules:
 - due_date must be a calendar date string (YYYY-MM-DD) or null. No times.
 - assignee_email must exactly match one of the emails in the member list, or be null.
 - If the sender says "me" or "I", they are the assignee — return null for assignee_email (the caller defaults to the sender).
-- notes should capture supplementary detail not in the title: location, price, registration links, event times, deadlines. Keep concise. Null if nothing useful to add.
+- notes should capture supplementary detail not in the title: location, price, registration links, event times, deadlines — taken from the **substantive part** of the email, not from vendor/footer blocks (see above). Keep concise. Null if nothing useful to add.
 - For complete_task: only use this if you are confident the email refers to one of the open tasks. task_id must be an id from the open task list above. If you cannot confidently match, return unknown.
 - If the email could create a new task AND complete an existing one, prefer add_task.
 - Do not invent tasks. If the message is a question, conversational reply, or contains no actionable content, return unknown.
