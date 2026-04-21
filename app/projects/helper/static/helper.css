@@ -444,6 +444,31 @@ a.helper-task-title-link:hover {
     font-style: italic;
 }
 
+.helper-completion-via {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.12rem 0.5rem;
+    border-radius: 4px;
+    margin-right: 0.35rem;
+    vertical-align: baseline;
+}
+
+.helper-completion-via-email {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.helper-completion-via-ui {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.helper-completion-via-hint {
+    font-size: 0.88rem;
+    color: #6b7280;
+}
+
 /* Collapsible source email (task detail) */
 .helper-source-email-details {
     margin: 0;

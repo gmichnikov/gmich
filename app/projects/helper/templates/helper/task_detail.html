@@ -66,12 +66,24 @@
                     {% if task.completer %} by {{ task.completer.full_name }}{% endif %}
                 </dd>
             </div>
+            <div class="helper-task-detail-meta-row">
+                <dt>Completed via</dt>
+                <dd>
+                    {% if task.completed_via_inbound_email %}
+                    <span class="helper-completion-via helper-completion-via-email">Email</span>
+                    <span class="helper-completion-via-hint">Inbound message that marked this done — <a href="#helper-completion-email" class="helper-link">jump to message</a>.</span>
+                    {% else %}
+                    <span class="helper-completion-via helper-completion-via-ui">In Helper</span>
+                    <span class="helper-task-detail-muted">Marked complete on the website (not from email).</span>
+                    {% endif %}
+                </dd>
+            </div>
             {% endif %}
         </dl>
 
         {% if task.source_inbound_email %}
         <section class="helper-section">
-            <details class="helper-source-email-details">
+            <details class="helper-source-email-details" open>
                 <summary class="helper-section-title helper-source-email-summary">
                     <span class="helper-details-chevron" aria-hidden="true"></span>
                     Source email
@@ -89,17 +101,22 @@
         {% endif %}
 
         {% if task.status == 'complete' and task.completed_via_inbound_email %}
-        <section class="helper-section">
-            <h2 class="helper-section-title">Completion email</h2>
-            <div class="helper-email-block">
-                {% set em = task.completed_via_inbound_email %}
-                <p class="helper-email-line"><strong>Subject:</strong> {{ em.subject or '(no subject)' }}</p>
-                <p class="helper-email-line"><strong>From:</strong> {{ em.sender_raw }}</p>
-                <p class="helper-email-line"><strong>Received:</strong> {{ em.created_at|user_local_datetime }}</p>
-                {% if em.body_text %}
-                <pre class="helper-email-body">{{ em.body_text }}</pre>
-                {% endif %}
-            </div>
+        <section class="helper-section" id="helper-completion-email">
+            <details class="helper-source-email-details" open>
+                <summary class="helper-section-title helper-source-email-summary">
+                    <span class="helper-details-chevron" aria-hidden="true"></span>
+                    Completion email
+                </summary>
+                <div class="helper-email-block helper-email-block-below-summary">
+                    {% set em = task.completed_via_inbound_email %}
+                    <p class="helper-email-line"><strong>Subject:</strong> {{ em.subject or '(no subject)' }}</p>
+                    <p class="helper-email-line"><strong>From:</strong> {{ em.sender_raw }}</p>
+                    <p class="helper-email-line"><strong>Received:</strong> {{ em.created_at|user_local_datetime }}</p>
+                    {% if em.body_text %}
+                    <pre class="helper-email-body">{{ em.body_text }}</pre>
+                    {% endif %}
+                </div>
+            </details>
         </section>
         {% endif %}
 

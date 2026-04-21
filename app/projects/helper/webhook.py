@@ -368,16 +368,26 @@ def mailgun_inbound():
             })
             logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
             confirmed = send_task_confirmation(task, sender_user, group)
+            conf_detail = {
+                "to": sender_user.email,
+                "task_id": task.id,
+                "title": task.title,
+            }
             if confirmed:
-                _log_action(inbound, "confirmation_sent", detail={"to": sender_user.email})
+                _log_action(inbound, "confirmation_sent", detail=conf_detail)
             else:
-                _log_action(inbound, "confirmation_failed", detail={"to": sender_user.email})
+                _log_action(inbound, "confirmation_failed", detail=conf_detail)
         except Exception as e:
             db.session.rollback()
             logger.error(f"Task insert failed for inbound_email id={inbound.id}: {e}")
             inbound.status = "error"
             db.session.commit()
-            _log_action(inbound, "task_insert_error", error=str(e))
+            _log_action(
+                inbound,
+                "task_insert_error",
+                error=str(e),
+                detail={"title": title},
+            )
 
         return ("", 200)
 
@@ -393,8 +403,10 @@ def mailgun_inbound():
             )
             inbound.status = "processed"
             db.session.commit()
+            invalid_task = HelperTask.query.get(task_id) if task_id else None
             _log_action(inbound, "complete_task_invalid_id", detail={
                 "task_id": task_id,
+                "title": invalid_task.title if invalid_task else None,
                 "claude_response": result,
             })
             send_complete_task_failed(open_tasks_db, sender_user, group)
@@ -408,8 +420,10 @@ def mailgun_inbound():
             )
             inbound.status = "processed"
             db.session.commit()
+            stale_task = HelperTask.query.get(task_id)
             _log_action(inbound, "complete_task_not_found", detail={
                 "task_id": task_id,
+                "title": stale_task.title if stale_task else None,
                 "claude_response": result,
             })
             send_complete_task_failed(open_tasks_db, sender_user, group)
@@ -439,7 +453,16 @@ def mailgun_inbound():
             )
             inbound.status = "error"
             db.session.commit()
-            _log_action(inbound, "complete_task_error", error=str(e))
+            err_task = HelperTask.query.get(task_id) if task_id else None
+            _log_action(
+                inbound,
+                "complete_task_error",
+                error=str(e),
+                detail={
+                    "task_id": task_id,
+                    "title": err_task.title if err_task else None,
+                },
+            )
 
         return ("", 200)
 

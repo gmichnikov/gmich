@@ -10,7 +10,6 @@
     <h1 style="margin:0; font-size:1.4rem; font-weight:700;">🔍 Email Detail</h1>
     <span style="color:#6b7280; font-size:0.9rem;">{{ rows.total }} emails — each card shows the email and all its actions</span>
     <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap;">
-      <a href="{{ url_for('admin.helper_inbound_log') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Inbound log</a>
       <a href="{{ url_for('admin.helper_action_log') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Action log</a>
       <a href="{{ url_for('admin.helper_admin') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Helper Admin</a>
     </div>
@@ -45,13 +44,47 @@
       white-space: nowrap;
     }
     .hed-from { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
-    .hed-to { color: #6b7280; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
-    .hed-subject { color: #374151; font-size: 0.88rem; flex: 1; min-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hed-subject { color: #374151; font-size: 0.88rem; min-width: 100px; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hed-body-snippet {
+      color: #6b7280;
+      font-size: 0.8rem;
+      line-height: 1.35;
+      flex: 1;
+      min-width: 0;
+      max-width: 420px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .hed-chevron { margin-left: auto; color: #9ca3af; font-size: 0.85rem; transition: transform 0.2s; }
-    .hed-body-section {
-      padding: 1rem 1.25rem;
+    .hed-body-details {
       border-bottom: 1px solid #f3f4f6;
-      display: none;
+    }
+    .hed-body-summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .hed-body-summary::-webkit-details-marker { display: none; }
+    .hed-body-summary::before {
+      content: '▶';
+      display: inline-block;
+      font-size: 0.55rem;
+      color: #9ca3af;
+      transition: transform 0.15s ease;
+    }
+    .hed-body-details[open] > .hed-body-summary::before {
+      transform: rotate(90deg);
+    }
+    .hed-body-inner {
+      padding: 0 1.25rem 1rem 1.25rem;
     }
     .hed-body-text {
       white-space: pre-wrap;
@@ -113,7 +146,7 @@
 
   {% if rows.items %}
     {% for email in rows.items %}
-    <div class="hed-card">
+    <div class="hed-card" id="hed-email-{{ email.id }}">
 
       <!-- Header row — always visible, click to expand -->
       <div class="hed-card-header" onclick="toggleCard(this)">
@@ -121,21 +154,29 @@
         <span class="hed-time">{{ email.created_at|user_local_datetime('%m/%d %H:%M') }}</span>
         {{ status_badge(email.status) }}
         <span class="hed-from" title="{{ email.sender_raw }}">{{ email.sender_raw }}</span>
-        <span style="color:#9ca3af; font-size:0.8rem;">→</span>
-        <span class="hed-to" title="{{ email.recipient }}">{{ email.recipient }}</span>
         <span class="hed-subject" title="{{ email.subject }}">{{ email.subject or '(no subject)' }}</span>
+        <span class="hed-body-snippet" {% if email.body_text %}title="{{ email.body_text|e }}"{% endif %}>
+          {% if email.body_text %}
+            {% set snip = email.body_text | replace('\r', '') | replace('\n', ' ') %}
+            {{ snip[:180] }}{% if snip | length > 180 %}…{% endif %}
+          {% else %}
+            <span style="color:#d1d5db;">(no body)</span>
+          {% endif %}
+        </span>
         <span class="hed-chevron">▼</span>
       </div>
 
-      <!-- Email body -->
-      <div class="hed-body-section">
-        <div style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.4rem;">Body</div>
-        {% if email.body_text %}
-        <pre class="hed-body-text">{{ email.body_text }}</pre>
-        {% else %}
-        <span style="color:#9ca3af; font-size:0.82rem;">(empty)</span>
-        {% endif %}
-      </div>
+      <!-- Email body (collapsible, open by default) -->
+      <details class="hed-body-details" open>
+        <summary class="hed-body-summary">Body</summary>
+        <div class="hed-body-inner">
+          {% if email.body_text %}
+          <pre class="hed-body-text">{{ email.body_text }}</pre>
+          {% else %}
+          <span style="color:#9ca3af; font-size:0.82rem;">(empty)</span>
+          {% endif %}
+        </div>
+      </details>
 
       <!-- Actions -->
       <div class="hed-actions-section">
@@ -191,13 +232,11 @@
 <script>
 function toggleCard(header) {
   const card = header.parentElement;
-  const body = card.querySelector('.hed-body-section');
   const actions = card.querySelector('.hed-actions-section');
   const chevron = header.querySelector('.hed-chevron');
-  const open = body.style.display === 'block';
-  body.style.display = open ? 'none' : 'block';
-  actions.style.display = open ? 'none' : 'block';
-  chevron.style.transform = open ? '' : 'rotate(180deg)';
+  const expanded = actions.style.display === 'block';
+  actions.style.display = expanded ? 'none' : 'block';
+  chevron.style.transform = expanded ? '' : 'rotate(180deg)';
 }
 
 function toggleActionDetail(id, btn) {
