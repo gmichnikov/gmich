@@ -3,8 +3,10 @@
 import html as html_module
 import logging
 import os
+from datetime import datetime
 
 from app.utils.email_service import send_email
+from app.utils.user_time import format_user_local_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,20 @@ def _fmt_date(d):
     return d.strftime("%B %-d, %Y")
 
 
+def _fmt_datetime_recipient_local(dt, user):
+    """
+    Format a naive UTC datetime in the recipient's profile timezone.
+    Includes abbreviation (e.g. EDT) and explicit IANA id (e.g. America/New_York).
+    """
+    if dt is None or not isinstance(dt, datetime):
+        return ""
+    iana = (getattr(user, "time_zone", None) or "UTC") if user is not None else "UTC"
+    wall = format_user_local_datetime(
+        dt, user, "%B %-d, %Y at %-I:%M %p %Z"
+    )
+    return f"{wall} ({iana})"
+
+
 def _notes_block(task):
     notes_text = f"\n  Notes: {task.notes}" if task.notes else ""
     notes_html = (
@@ -21,6 +37,27 @@ def _notes_block(task):
         f"<strong>Notes:</strong> {task.notes}</p>"
     ) if task.notes else ""
     return notes_text, notes_html
+
+
+def _reminder_scheduled_notice(task, recipient_user):
+    """
+    If an open task has a pending reminder, return extra plaintext + HTML
+    stating when the reminder email will be sent and that it can be changed on the task page.
+    """
+    if not task.reminder_at or task.status != "open":
+        return "", ""
+    when = _fmt_datetime_recipient_local(task.reminder_at, recipient_user)
+    text = (
+        f"\n\nReminder email: we\u2019ll send one around {when}. "
+        f"You can change the time or turn it off on the task page if you need to."
+    )
+    html = (
+        f'<p style="margin:12px 0 0 0; font-size:0.9rem; color:#374151;">'
+        f"<strong>Reminder email:</strong> we&rsquo;ll send one around {html_module.escape(when)}. "
+        f"You can change the time or turn it off on the task page if you need to."
+        f"</p>"
+    )
+    return text, html
 
 
 def _due_assignee_lines(task, sender_user, *, unassigned_use_sender=True):
@@ -44,14 +81,13 @@ def _lines_to_text_and_html(lines):
     return details_text, details_html
 
 
-def _completed_summary_lines(task):
+def _completed_summary_lines(task, recipient_user):
     """Extra context after a task is marked complete (time, due, assignee)."""
     lines = []
     if task.completed_at:
         who = f" by {task.completer.full_name}" if task.completer else ""
-        lines.append(
-            f"Completed: {task.completed_at.strftime('%B %d, %Y at %H:%M UTC')}{who}"
-        )
+        when = _fmt_datetime_recipient_local(task.completed_at, recipient_user)
+        lines.append(f"Completed: {when}{who}")
     if task.due_date:
         lines.append(f"Due: {_fmt_date(task.due_date)}")
     if task.assignee:
@@ -117,6 +153,9 @@ def send_task_confirmation(task, sender_user, group):
     detail_lines = _due_assignee_lines(task, sender_user, unassigned_use_sender=True)
     details_text, details_html = _lines_to_text_and_html(detail_lines)
     notes_text, notes_html = _notes_block(task)
+    reminder_notice_text, reminder_notice_html = _reminder_scheduled_notice(
+        task, sender_user
+    )
 
     reply_hint = (
         f"Reply to this email (or send a new message to {group_address}) "
@@ -128,7 +167,7 @@ def send_task_confirmation(task, sender_user, group):
 Your task has been added to {group.name}:
 
   {task.title}
-{details_text}{notes_text}
+{details_text}{notes_text}{reminder_notice_text}
 
 View this task: {task_url}
 View the full task list: {group_url}
@@ -161,6 +200,7 @@ View the full task list: {group_url}
         {details_html}
       </ul>
       {notes_html}
+      {reminder_notice_html}
     </div>
 
     <p>
@@ -214,7 +254,7 @@ def send_task_logged_completed_confirmation(task, sender_user, group):
 
     subject = f"\u2713 Logged: {task.title}"
 
-    summary_lines = _completed_summary_lines(task)
+    summary_lines = _completed_summary_lines(task, sender_user)
     details_text, details_html = _lines_to_text_and_html(summary_lines)
     notes_text, notes_html = _notes_block(task)
 
@@ -321,13 +361,16 @@ def send_duplicate_task_skipped(existing_task, sender_user, group):
     )
     details_text, details_html = _lines_to_text_and_html(detail_lines)
     notes_text, notes_html = _notes_block(existing_task)
+    reminder_notice_text, reminder_notice_html = _reminder_scheduled_notice(
+        existing_task, sender_user
+    )
 
     text_content = f"""Hi {sender_user.full_name},
 
 This sounds like a task you already have open in {group.name}:
 
   {existing_task.title}
-{details_text}{notes_text}
+{details_text}{notes_text}{reminder_notice_text}
 
 We did not create a duplicate. View or edit it here:
 
@@ -363,6 +406,7 @@ Reply to this email (or send to {group_address}) to add something else or reply 
         {details_html}
       </ul>
       {notes_html}
+      {reminder_notice_html}
       <p style="margin:0.75rem 0 0 0; font-size:0.9rem; color:#4b5563;">No duplicate was added.</p>
     </div>
 
@@ -417,7 +461,7 @@ def send_task_completed_confirmation(task, sender_user, group):
 
     subject = f"\u2713 Marked complete: {task.title}"
 
-    summary_lines = _completed_summary_lines(task)
+    summary_lines = _completed_summary_lines(task, sender_user)
     details_text, details_html = _lines_to_text_and_html(summary_lines)
     notes_text, notes_html = _notes_block(task)
 
@@ -604,16 +648,35 @@ def send_task_reminder_email(task, recipient_user, group):
         f"{html_module.escape(task.notes)}</p>"
     ) if task.notes else ""
 
+    reminder_when = ""
+    reminder_html_fragment = ""
+    if task.reminder_at:
+        rw = _fmt_datetime_recipient_local(task.reminder_at, recipient_user)
+        reminder_when = f"\n  This reminder was scheduled for: {rw}"
+        reminder_html_fragment = (
+            f'<p class="reminder-line"><strong>Scheduled for:</strong> '
+            f"{html_module.escape(rw)}</p>"
+        )
+
+    change_reminder_text = (
+        f"\nTo change or clear reminder emails for this task, open the task page:\n  {task_url}\n"
+    )
+    change_reminder_html = (
+        f'<p style="margin:14px 0 0 0; font-size:0.9rem; color:#4b5563;">'
+        f"To change or clear reminder emails for this task, "
+        f'<a href="{task_url}">open the task page</a>.</p>'
+    )
+
     text_content = f"""Hi {recipient_user.full_name},
 
 Reminder — this task is coming due for {group.name}:
 
   {task.title}
-  Due: {_fmt_date(task.due_date) if task.due_date else "(no due date)"}{notes_line}
+  Due: {_fmt_date(task.due_date) if task.due_date else "(no due date)"}{reminder_when}{notes_line}
 
 Open task: {task_url}
 Group list: {group_url}
-
+{change_reminder_text}
 Reply to {group_address} to add tasks or send updates.
 """
 
@@ -626,6 +689,7 @@ Reply to {group_address} to add tasks or send updates.
     .task-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
     .task-title {{ font-size: 1.1rem; font-weight: bold; color: #1e3a8a; margin: 0 0 8px 0; }}
     .due-line {{ font-size: 0.95rem; color: #374151; margin: 0; }}
+    .reminder-line {{ font-size: 0.92rem; color: #4b5563; margin: 8px 0 0 0; }}
     .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
     a {{ color: #2563eb; }}
   </style>
@@ -638,6 +702,7 @@ Reply to {group_address} to add tasks or send updates.
     <div class="task-box">
       <p class="task-title">{title_esc}</p>
       <p class="due-line">Due: {_fmt_date(task.due_date) if task.due_date else "(no due date)"}</p>
+      {reminder_html_fragment}
       {notes_html}
     </div>
 
@@ -645,6 +710,8 @@ Reply to {group_address} to add tasks or send updates.
       <a href="{task_url}">Open this task &rarr;</a><br>
       <a href="{group_url}">View the group task list &rarr;</a>
     </p>
+
+    {change_reminder_html}
 
     <div class="footer">
       <p>Reply to {group_address} to add tasks or send updates.</p>
