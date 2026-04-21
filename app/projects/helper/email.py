@@ -1,11 +1,93 @@
 """Outbound email sending for the Helper project."""
 
+import html as html_module
 import logging
 import os
 
 from app.utils.email_service import send_email
 
 logger = logging.getLogger(__name__)
+
+
+def _fmt_date(d):
+    """Format a date for email bodies (matches task-added style)."""
+    return d.strftime("%B %-d, %Y")
+
+
+def _notes_block(task):
+    notes_text = f"\n  Notes: {task.notes}" if task.notes else ""
+    notes_html = (
+        f'<p style="margin:10px 0 0 0; font-size:0.9rem; color:#4b5563;">'
+        f"<strong>Notes:</strong> {task.notes}</p>"
+    ) if task.notes else ""
+    return notes_text, notes_html
+
+
+def _due_assignee_lines(task, sender_user, *, unassigned_use_sender=True):
+    """Build Due + Assigned lines (same semantics as task-added email when unassigned_use_sender)."""
+    lines = []
+    if task.due_date:
+        lines.append(f"Due: {_fmt_date(task.due_date)}")
+    if task.assignee:
+        lines.append(f"Assigned to: {task.assignee.full_name}")
+    else:
+        if unassigned_use_sender:
+            lines.append(f"Assigned to: {sender_user.full_name}")
+        else:
+            lines.append("Assigned to: Unassigned")
+    return lines
+
+
+def _lines_to_text_and_html(lines):
+    details_text = "\n".join(f"  {d}" for d in lines) if lines else ""
+    details_html = "".join(f"<li>{d}</li>" for d in lines) if lines else ""
+    return details_text, details_html
+
+
+def _completed_summary_lines(task):
+    """Extra context after a task is marked complete (time, due, assignee)."""
+    lines = []
+    if task.completed_at:
+        who = f" by {task.completer.full_name}" if task.completer else ""
+        lines.append(
+            f"Completed: {task.completed_at.strftime('%B %d, %Y at %H:%M UTC')}{who}"
+        )
+    if task.due_date:
+        lines.append(f"Due: {_fmt_date(task.due_date)}")
+    if task.assignee:
+        lines.append(f"Assigned to: {task.assignee.full_name}")
+    else:
+        lines.append("Assigned to: Unassigned")
+    return lines
+
+
+def _open_tasks_rich_list_for_failed(open_tasks, max_notes=100):
+    """Plaintext + HTML lines listing open tasks with due, assignee, notes snippet."""
+    text_lines = []
+    html_items = []
+    for t in open_tasks:
+        bits = []
+        if t.due_date:
+            bits.append(f"Due {_fmt_date(t.due_date)}")
+        if t.assignee:
+            bits.append(f"Assigned: {t.assignee.full_name}")
+        else:
+            bits.append("Unassigned")
+        if t.notes:
+            n = " ".join(t.notes.split())
+            if len(n) > max_notes:
+                n = n[: max_notes - 1] + "…"
+            bits.append(f"Notes: {n}")
+        sub = " · ".join(bits)
+        text_lines.append(f"  • {t.title}")
+        text_lines.append(f"    {sub}")
+        esc_title = html_module.escape(t.title)
+        esc_sub = html_module.escape(sub)
+        html_items.append(
+            f'<li style="margin:8px 0;"><strong>{esc_title}</strong><br>'
+            f'<span style="font-size:0.88rem;color:#4b5563;">{esc_sub}</span></li>'
+        )
+    return "\n".join(text_lines), "".join(html_items)
 
 
 def send_task_confirmation(task, sender_user, group):
@@ -32,23 +114,9 @@ def send_task_confirmation(task, sender_user, group):
 
     subject = f"\u2713 Task added: {task.title}"
 
-    # Build detail lines for the body
-    details = []
-    if task.due_date:
-        details.append(f"Due: {task.due_date.strftime('%B %-d, %Y')}")
-    if task.assignee:
-        details.append(f"Assigned to: {task.assignee.full_name}")
-    else:
-        details.append(f"Assigned to: {sender_user.full_name}")
-
-    details_text = "\n".join(f"  {d}" for d in details)
-    details_html = "".join(f"<li>{d}</li>" for d in details)
-
-    notes_text = f"\n  Notes: {task.notes}" if task.notes else ""
-    notes_html = (
-        f'<p style="margin:10px 0 0 0; font-size:0.9rem; color:#4b5563;">'
-        f'<strong>Notes:</strong> {task.notes}</p>'
-    ) if task.notes else ""
+    detail_lines = _due_assignee_lines(task, sender_user, unassigned_use_sender=True)
+    details_text, details_html = _lines_to_text_and_html(detail_lines)
+    notes_text, notes_html = _notes_block(task)
 
     reply_hint = (
         f"Reply to this email (or send a new message to {group_address}) "
@@ -146,11 +214,16 @@ def send_task_logged_completed_confirmation(task, sender_user, group):
 
     subject = f"\u2713 Logged: {task.title}"
 
+    summary_lines = _completed_summary_lines(task)
+    details_text, details_html = _lines_to_text_and_html(summary_lines)
+    notes_text, notes_html = _notes_block(task)
+
     text_content = f"""Hi {sender_user.full_name},
 
 Recorded in {group.name} as done:
 
   {task.title}
+{details_text}{notes_text}
 
 (This was not matched to an open task — it is saved to your history as completed.)
 
@@ -168,7 +241,9 @@ Reply to this email (or send to {group_address}) to add tasks or report more com
     .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
     .task-box {{ background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
     .task-title {{ font-size: 1.1rem; font-weight: bold; color: #15803d; margin: 0 0 8px 0; }}
-    .hint {{ font-size: 0.9rem; color: #4b5563; margin: 0; }}
+    .task-details {{ list-style: none; margin: 0; padding: 0; color: #374151; font-size: 0.95rem; }}
+    .task-details li {{ margin: 4px 0; }}
+    .hint {{ font-size: 0.9rem; color: #4b5563; margin: 0.75rem 0 0 0; }}
     .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
     a {{ color: #2563eb; }}
   </style>
@@ -180,6 +255,10 @@ Reply to this email (or send to {group_address}) to add tasks or report more com
 
     <div class="task-box">
       <p class="task-title">{task.title}</p>
+      <ul class="task-details">
+        {details_html}
+      </ul>
+      {notes_html}
       <p class="hint">Not matched to an open task — saved to your history as completed.</p>
     </div>
 
@@ -237,13 +316,20 @@ def send_duplicate_task_skipped(existing_task, sender_user, group):
 
     subject = f"Already on your list: {existing_task.title}"
 
+    detail_lines = _due_assignee_lines(
+        existing_task, sender_user, unassigned_use_sender=False
+    )
+    details_text, details_html = _lines_to_text_and_html(detail_lines)
+    notes_text, notes_html = _notes_block(existing_task)
+
     text_content = f"""Hi {sender_user.full_name},
 
 This sounds like a task you already have open in {group.name}:
 
   {existing_task.title}
+{details_text}{notes_text}
 
-We did not create a duplicate. You can view or edit it here:
+We did not create a duplicate. View or edit it here:
 
   {task_url}
 
@@ -260,6 +346,8 @@ Reply to this email (or send to {group_address}) to add something else or reply 
     .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
     .task-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
     .task-title {{ font-size: 1.1rem; font-weight: bold; color: #1e40af; margin: 0 0 8px 0; }}
+    .task-details {{ list-style: none; margin: 0; padding: 0; color: #374151; font-size: 0.95rem; }}
+    .task-details li {{ margin: 4px 0; }}
     .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
     a {{ color: #2563eb; }}
   </style>
@@ -271,7 +359,11 @@ Reply to this email (or send to {group_address}) to add something else or reply 
 
     <div class="task-box">
       <p class="task-title">{existing_task.title}</p>
-      <p style="margin:0; font-size:0.9rem; color:#4b5563;">No duplicate was added.</p>
+      <ul class="task-details">
+        {details_html}
+      </ul>
+      {notes_html}
+      <p style="margin:0.75rem 0 0 0; font-size:0.9rem; color:#4b5563;">No duplicate was added.</p>
     </div>
 
     <p>
@@ -325,11 +417,16 @@ def send_task_completed_confirmation(task, sender_user, group):
 
     subject = f"\u2713 Marked complete: {task.title}"
 
+    summary_lines = _completed_summary_lines(task)
+    details_text, details_html = _lines_to_text_and_html(summary_lines)
+    notes_text, notes_html = _notes_block(task)
+
     text_content = f"""Hi {sender_user.full_name},
 
 Got it — marked as complete:
 
   {task.title}
+{details_text}{notes_text}
 
 View this task: {task_url}
 View the full task list: {group_url}
@@ -344,7 +441,9 @@ Reply to this email (or send to {group_address}) to add more tasks or complete o
     body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
     .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
     .task-box {{ background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
-    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #15803d; margin: 0; }}
+    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #15803d; margin: 0 0 8px 0; }}
+    .task-details {{ list-style: none; margin: 0; padding: 0; color: #374151; font-size: 0.95rem; }}
+    .task-details li {{ margin: 4px 0; }}
     .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
     a {{ color: #2563eb; }}
   </style>
@@ -356,6 +455,10 @@ Reply to this email (or send to {group_address}) to add more tasks or complete o
 
     <div class="task-box">
       <p class="task-title">{task.title}</p>
+      <ul class="task-details">
+        {details_html}
+      </ul>
+      {notes_html}
     </div>
 
     <p>
@@ -409,13 +512,10 @@ def send_complete_task_failed(open_tasks, sender_user, group):
     subject = f"Couldn\u2019t identify which task to complete \u2014 {group.name}"
 
     if open_tasks:
-        tasks_text = "\n".join(f"  \u2022 {t.title}" for t in open_tasks)
-        tasks_html = "".join(
-            f'<li style="margin:4px 0;">{t.title}</li>' for t in open_tasks
-        )
+        tasks_text, tasks_html = _open_tasks_rich_list_for_failed(open_tasks)
         list_section_text = f"Here are the currently open tasks:\n\n{tasks_text}"
         list_section_html = f"""<p>Here are the currently open tasks:</p>
-    <ul style="padding-left:1.2rem; color:#374151;">{tasks_html}</ul>"""
+    <ul style="padding-left:1.2rem; color:#374151; list-style:none;">{tasks_html}</ul>"""
     else:
         list_section_text = "There are no open tasks in this group right now."
         list_section_html = "<p>There are no open tasks in this group right now.</p>"
