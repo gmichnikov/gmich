@@ -859,3 +859,42 @@ a.helper-task-title-link:hover {
         display: none;
     }
 }
+
+/* Scheduled email reminder */
+.helper-reminder-dd {
+    max-width: 100%;
+}
+
+.helper-reminder-preview {
+    font-size: 0.92rem;
+    color: #374151;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.45;
+}
+
+.helper-reminder-preview-muted {
+    color: #9ca3af;
+}
+
+.helper-reminder-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.helper-reminder-edit-wrap {
+    margin-top: 0.5rem;
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.helper-reminder-datetime {
+    font-size: 0.9rem;
+    padding: 0.28rem 0.45rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+}

@@ -582,6 +582,104 @@ You can also reply to this email to add a new task.
         return None
 
 
+def send_task_reminder_email(task, recipient_user, group):
+    """
+    Scheduled reminder for an open task (assignee or creator).
+
+    Subject includes due date + short title for inbox triage (PRD).
+    """
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    task_url = f"{base_url}/helper/task/{task.id}"
+    group_address = group.inbound_email
+
+    due_part = _fmt_date(task.due_date) if task.due_date else "no date"
+    title_short = task.title if len(task.title) <= 70 else task.title[:67] + "…"
+    subject = f"Reminder: Due {due_part} — {title_short}"
+
+    notes_line = f"\n\nNotes: {task.notes}" if task.notes else ""
+    title_esc = html_module.escape(task.title)
+    notes_html = (
+        f'<p style="margin:12px 0 0 0; font-size:0.9rem; color:#4b5563;"><strong>Notes:</strong> '
+        f"{html_module.escape(task.notes)}</p>"
+    ) if task.notes else ""
+
+    text_content = f"""Hi {recipient_user.full_name},
+
+Reminder — this task is coming due for {group.name}:
+
+  {task.title}
+  Due: {_fmt_date(task.due_date) if task.due_date else "(no due date)"}{notes_line}
+
+Open task: {task_url}
+Group list: {group_url}
+
+Reply to {group_address} to add tasks or send updates.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .task-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
+    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #1e3a8a; margin: 0 0 8px 0; }}
+    .due-line {{ font-size: 0.95rem; color: #374151; margin: 0; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi {recipient_user.full_name},</p>
+    <p>Reminder — <strong>{html_module.escape(group.name)}</strong>:</p>
+
+    <div class="task-box">
+      <p class="task-title">{title_esc}</p>
+      <p class="due-line">Due: {_fmt_date(task.due_date) if task.due_date else "(no due date)"}</p>
+      {notes_html}
+    </div>
+
+    <p>
+      <a href="{task_url}">Open this task &rarr;</a><br>
+      <a href="{group_url}">View the group task list &rarr;</a>
+    </p>
+
+    <div class="footer">
+      <p>Reply to {group_address} to add tasks or send updates.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    try:
+        send_email(
+            to_email=recipient_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name=f"Helper ({group.name})",
+            from_email=group_address,
+            reply_to=group_address,
+        )
+        logger.info(
+            "Task reminder sent to %s for task id=%s group=%s",
+            recipient_user.email,
+            task.id,
+            group.id,
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            "Failed to send task reminder to %s for task id=%s: %s",
+            recipient_user.email,
+            task.id,
+            e,
+        )
+        return None
+
+
 def notify_helper_claude_error_to_admin(
     inbound_id: int,
     group_name: str,

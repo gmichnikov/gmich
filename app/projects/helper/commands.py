@@ -21,6 +21,28 @@ def helper_cli():
     pass
 
 
+@helper_cli.command("send-reminders")
+@click.option(
+    "--limit",
+    default=100,
+    show_default=True,
+    help="Max reminders to process in one run.",
+)
+@with_appcontext
+def send_reminders_command(limit):
+    """
+    Send due task reminder emails (Heroku Scheduler / cron).
+
+    Run: flask helper send-reminders
+    """
+    from app.projects.helper.reminder_dispatch import run_pending_reminders
+
+    result = run_pending_reminders(limit=limit)
+    click.echo(
+        f"candidates={result['candidates']} sent={result['sent']} failed={result['failed']}"
+    )
+
+
 def _seed_inbound_email(domain: str, group_id: int, user_id: int, **kwargs) -> str:
     """Insert one inbound row + optional action log; return idempotency key used."""
     from app.projects.helper.models import HelperActionLog, HelperInboundEmail
@@ -186,6 +208,11 @@ def seed_command(user_email, clear):
         )
 
     db.session.flush()
+
+    from app.projects.helper.reminder_logic import sync_reminder_with_due_date
+
+    for t in HelperTask.query.filter_by(group_id=group.id, status="open").all():
+        sync_reminder_with_due_date(t)
 
     # Sample inbound + logs (for admin log UIs)
     _seed_inbound_email(

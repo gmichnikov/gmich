@@ -35,6 +35,7 @@ from app.projects.helper.models import (
     HelperTask,
 )
 from app.projects.helper.claude import ClaudeResponseError, parse_email_for_task
+from app.projects.helper.reminder_logic import clear_task_reminders, sync_reminder_with_due_date
 from app.projects.helper.email import (
     notify_helper_claude_error_to_admin,
     send_duplicate_task_skipped,
@@ -456,6 +457,8 @@ def mailgun_inbound():
                 )
             db.session.add(task)
             db.session.flush()
+            if not already_completed:
+                sync_reminder_with_due_date(task)
             inbound.status = "processed"
             db.session.commit()
             if already_completed:
@@ -546,6 +549,7 @@ def mailgun_inbound():
             task.completed_by_user_id = sender_user.id
             task.completed_at = datetime.utcnow()
             task.completed_via_inbound_email_id = inbound.id
+            clear_task_reminders(task)
             inbound.status = "processed"
             db.session.commit()
             _log_action(inbound, "task_completed", detail={

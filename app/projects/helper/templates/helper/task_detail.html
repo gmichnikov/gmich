@@ -15,6 +15,10 @@
             data-title-url="{{ url_for('helper.task_title', task_id=task.id) }}"
             data-due-url="{{ url_for('helper.task_due', task_id=task.id) }}"
             data-assignee-url="{{ url_for('helper.task_assignee', task_id=task.id) }}"
+            {% if task.status == 'open' %}
+            data-reminder-url="{{ url_for('helper.task_reminder', task_id=task.id) }}"
+            data-reminder-at-utc="{{ (task.reminder_at.isoformat() + 'Z') if task.reminder_at else '' }}"
+            {% endif %}
             data-csrf="{{ csrf_token() }}"></div>
 
         <div class="helper-header">
@@ -100,6 +104,26 @@
                     </div>
                 </dd>
             </div>
+            {% if task.status == 'open' %}
+            <div class="helper-task-detail-meta-row">
+                <dt>Reminder</dt>
+                <dd class="helper-reminder-dd">
+                    <p id="reminder-preview-{{ task.id }}" class="helper-reminder-preview{% if not reminder_preview %} helper-reminder-preview-muted{% endif %}">
+                        {% if reminder_preview %}{{ reminder_preview }}{% else %}No reminder scheduled.{% endif %}
+                    </p>
+                    <div class="helper-reminder-actions">
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary" onclick="helperReminderApplyDefault({{ task.id }})">Use default</button>
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary" onclick="helperReminderClear({{ task.id }})">Clear</button>
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-primary" onclick="helperReminderToggleEdit({{ task.id }})">Set time</button>
+                    </div>
+                    <div id="reminder-edit-{{ task.id }}" class="helper-reminder-edit-wrap">
+                        <input type="datetime-local" id="reminder-input-{{ task.id }}" class="helper-reminder-datetime" aria-label="Reminder date and time" />
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-primary" onclick="helperReminderSave({{ task.id }})">Save</button>
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary" onclick="helperReminderCancelEdit({{ task.id }})">Cancel</button>
+                    </div>
+                </dd>
+            </div>
+            {% endif %}
             <div class="helper-task-detail-meta-row">
                 <dt>Assigned to</dt>
                 <dd>
@@ -217,8 +241,122 @@ function helperEditConfig() {
         titleUrl: el.dataset.titleUrl,
         dueUrl: el.dataset.dueUrl,
         assigneeUrl: el.dataset.assigneeUrl,
+        reminderUrl: el.dataset.reminderUrl,
+        reminderAtUtc: el.dataset.reminderAtUtc || '',
         taskId: el.dataset.taskId,
     };
+}
+
+function utcIsoToDatetimeLocalValue(iso) {
+    if (!iso) return '';
+    const s = iso.trim();
+    const normalized = (s.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(s)) ? s : s + 'Z';
+    const d = new Date(normalized);
+    if (isNaN(d.getTime())) return '';
+    const pad = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+        + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+function datetimeLocalToUtcIso(localVal) {
+    if (!localVal) return '';
+    const d = new Date(localVal);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString();
+}
+
+function helperReminderUpdateFromResponse(data) {
+    const cfg = helperEditConfig();
+    if (!cfg || !cfg.taskId) return;
+    const meta = document.getElementById('helper-task-edit-data');
+    if (meta && data.reminder_at !== undefined) {
+        meta.dataset.reminderAtUtc = data.reminder_at || '';
+    }
+    const preview = document.getElementById('reminder-preview-' + cfg.taskId);
+    if (!preview) return;
+    if (data.reminder_preview) {
+        preview.textContent = data.reminder_preview;
+        preview.classList.remove('helper-reminder-preview-muted');
+    } else {
+        preview.textContent = 'No reminder scheduled.';
+        preview.classList.add('helper-reminder-preview-muted');
+    }
+}
+
+function helperReminderApplyDefault(taskId) {
+    const cfg = helperEditConfig();
+    if (!cfg.reminderUrl) return;
+    helperPost(cfg.reminderUrl, { apply_default: '1' })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(helperReminderUpdateFromResponse)
+        .catch(function () {
+            alert('Could not update reminder. Please try again.');
+        });
+}
+
+function helperReminderClear(taskId) {
+    const cfg = helperEditConfig();
+    if (!cfg.reminderUrl) return;
+    helperPost(cfg.reminderUrl, { clear: '1' })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(helperReminderUpdateFromResponse)
+        .catch(function () {
+            alert('Could not clear reminder. Please try again.');
+        });
+}
+
+function helperReminderToggleEdit(taskId) {
+    const wrap = document.getElementById('reminder-edit-' + taskId);
+    const cfg = helperEditConfig();
+    if (!wrap || !cfg.reminderUrl) return;
+    if (wrap.style.display === 'flex') {
+        wrap.style.display = 'none';
+        return;
+    }
+    const input = document.getElementById('reminder-input-' + taskId);
+    input.value = utcIsoToDatetimeLocalValue(cfg.reminderAtUtc);
+    wrap.style.display = 'flex';
+    input.focus();
+}
+
+function helperReminderCancelEdit(taskId) {
+    const wrap = document.getElementById('reminder-edit-' + taskId);
+    if (wrap) wrap.style.display = 'none';
+}
+
+function helperReminderSave(taskId) {
+    const cfg = helperEditConfig();
+    if (!cfg.reminderUrl) return;
+    const input = document.getElementById('reminder-input-' + taskId);
+    const iso = datetimeLocalToUtcIso(input.value.trim());
+    if (!iso) {
+        alert('Pick a date and time.');
+        return;
+    }
+    helperPost(cfg.reminderUrl, { reminder_at: iso })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            helperReminderUpdateFromResponse(data);
+            helperReminderCancelEdit(taskId);
+        })
+        .catch(function (err) {
+            alert(err.message || 'Could not save reminder. Please try again.');
+        });
 }
 
 function helperPost(url, fields) {
@@ -315,6 +453,9 @@ function saveDueDate(taskId) {
                 label.textContent = data.due_label;
             } else {
                 label.innerHTML = '<span class="helper-task-detail-muted">No due date</span>';
+            }
+            if (data.reminder_preview !== undefined) {
+                helperReminderUpdateFromResponse(data);
             }
             hideDueEditor(taskId);
         })

@@ -6,6 +6,12 @@ from sqlalchemy.orm import joinedload
 
 from app import db
 from app.projects.helper.models import HelperGroup, HelperGroupMember, HelperTask
+from app.projects.helper.reminder_logic import (
+    clear_task_reminders,
+    parse_reminder_at_iso,
+    reminder_preview_for_viewer,
+    sync_reminder_with_due_date,
+)
 from app.utils.logging import log_project_visit
 from app.utils.user_time import format_user_local_date
 
@@ -40,6 +46,14 @@ def _redirect_after_task_post(task):
 
 def _is_helper_xhr():
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def _reminder_api_fields(task, viewer):
+    """JSON fragment for task reminder state (naive UTC stored; expose with Z for clients)."""
+    return {
+        "reminder_at": (task.reminder_at.isoformat() + "Z") if task.reminder_at else "",
+        "reminder_preview": reminder_preview_for_viewer(task, viewer),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -145,12 +159,14 @@ def task_detail(task_id):
     log_project_visit("helper", f"Helper — {task.title[:40]}")
     detail_url = url_for("helper.task_detail", task_id=task.id)
     members = [m.user for m in group.members if m.user]
+    reminder_preview = reminder_preview_for_viewer(task, current_user)
     return render_template(
         "helper/task_detail.html",
         task=task,
         group=group,
         members=members,
         detail_url=detail_url,
+        reminder_preview=reminder_preview,
     )
 
 
@@ -167,6 +183,7 @@ def task_complete(task_id):
     task.completed_by_user_id = current_user.id
     task.completed_at = datetime.utcnow()
     task.completed_via_inbound_email_id = None
+    clear_task_reminders(task)
     db.session.commit()
     return _redirect_after_task_post(task)
 
@@ -178,12 +195,18 @@ def task_complete(task_id):
 @helper_bp.route("/task/<int:task_id>/reopen", methods=["POST"])
 @login_required
 def task_reopen(task_id):
-    task = HelperTask.query.get_or_404(task_id)
+    task = (
+        HelperTask.query.options(
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+        ).get_or_404(task_id)
+    )
     _get_member_group_or_404(task.group_id)
     task.status = "open"
     task.completed_by_user_id = None
     task.completed_at = None
     task.completed_via_inbound_email_id = None
+    sync_reminder_with_due_date(task)
     db.session.commit()
     return _redirect_after_task_post(task)
 
@@ -259,6 +282,8 @@ def task_due(task_id):
             if _is_helper_xhr():
                 return jsonify({"ok": False, "error": "Invalid date"}), 400
             return redirect(url_for("helper.task_detail", task_id=task.id))
+    if task.status == "open":
+        sync_reminder_with_due_date(task)
     db.session.commit()
     due_label = (
         format_user_local_date(task.due_date, current_user, "%b %-d, %Y")
@@ -266,13 +291,14 @@ def task_due(task_id):
         else ""
     )
     if _is_helper_xhr():
-        return jsonify(
-            {
-                "ok": True,
-                "due_date": task.due_date.isoformat() if task.due_date else "",
-                "due_label": due_label or None,
-            }
-        )
+        payload = {
+            "ok": True,
+            "due_date": task.due_date.isoformat() if task.due_date else "",
+            "due_label": due_label or None,
+        }
+        if task.status == "open":
+            payload.update(_reminder_api_fields(task, current_user))
+        return jsonify(payload)
     return _redirect_after_task_post(task)
 
 
@@ -311,4 +337,68 @@ def task_assignee(task_id):
                 "assignee_short": task.assignee.short_name if task.assignee else "",
             }
         )
+    return _redirect_after_task_post(task)
+
+
+# ---------------------------------------------------------------------------
+# Reminder (scheduled email)
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>/reminder", methods=["POST"])
+@login_required
+def task_reminder(task_id):
+    task = (
+        HelperTask.query.options(
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+        ).get_or_404(task_id)
+    )
+    _get_member_group_or_404(task.group_id)
+    if task.status != "open":
+        if _is_helper_xhr():
+            return jsonify({"ok": False, "error": "Task is not open"}), 400
+        return redirect(url_for("helper.task_detail", task_id=task.id))
+
+    apply_default = (request.form.get("apply_default") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    clear_flag = (request.form.get("clear") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    raw_at = (request.form.get("reminder_at") or "").strip()
+
+    if apply_default:
+        sync_reminder_with_due_date(task)
+    elif clear_flag:
+        clear_task_reminders(task)
+    elif raw_at:
+        dt = parse_reminder_at_iso(raw_at)
+        if not dt:
+            if _is_helper_xhr():
+                return jsonify({"ok": False, "error": "Invalid reminder time"}), 400
+            return redirect(url_for("helper.task_detail", task_id=task.id))
+        if dt <= datetime.utcnow():
+            if _is_helper_xhr():
+                return jsonify(
+                    {"ok": False, "error": "Reminder must be in the future"},
+                ), 400
+            return redirect(url_for("helper.task_detail", task_id=task.id))
+        task.reminder_at = dt
+        task.reminder_sent_at = None
+    else:
+        if _is_helper_xhr():
+            return jsonify(
+                {"ok": False, "error": "Missing apply_default, clear, or reminder_at"},
+            ), 400
+        return redirect(url_for("helper.task_detail", task_id=task.id))
+
+    db.session.commit()
+    if _is_helper_xhr():
+        return jsonify({"ok": True, **_reminder_api_fields(task, current_user)})
     return _redirect_after_task_post(task)

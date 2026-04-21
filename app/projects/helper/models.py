@@ -105,6 +105,26 @@ class HelperActionLog(db.Model):
         return f"<HelperActionLog {self.id}: {self.action_type}>"
 
 
+class HelperReminderLog(db.Model):
+    """Audit log for scheduled reminder emails (not tied to inbound mail)."""
+
+    __tablename__ = "helper_reminder_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey("helper_task.id"), nullable=False)
+    action_type = db.Column(db.String(50), nullable=False)
+    detail = db.Column(JSONB, nullable=True)
+    error_message = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    task = db.relationship("HelperTask", back_populates="reminder_logs")
+
+    __table_args__ = (db.Index("ix_helper_reminder_log_task_id", "task_id"),)
+
+    def __repr__(self):
+        return f"<HelperReminderLog {self.id}: {self.action_type} task={self.task_id}>"
+
+
 class HelperTask(db.Model):
     __tablename__ = "helper_task"
 
@@ -126,6 +146,8 @@ class HelperTask(db.Model):
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    reminder_at = db.Column(db.DateTime, nullable=True)
+    reminder_sent_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     group = db.relationship("HelperGroup", back_populates="tasks")
@@ -142,10 +164,16 @@ class HelperTask(db.Model):
         foreign_keys=[completed_via_inbound_email_id],
         back_populates="tasks_completed_via",
     )
+    reminder_logs = db.relationship(
+        "HelperReminderLog",
+        back_populates="task",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         db.Index("ix_helper_task_group_status", "group_id", "status"),
         db.Index("ix_helper_task_created_at", "created_at"),
+        db.Index("ix_helper_task_reminder_at", "reminder_at"),
     )
 
     def __repr__(self):
