@@ -15,6 +15,15 @@
     </div>
   </div>
 
+  {% if rows.items %}
+  <div style="margin-bottom:1rem;">
+    <label for="hial-search-input" style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:0.35rem;">Search (matches all columns)</label>
+    <input type="search" id="hial-search-input" placeholder="Type to filter rows…" autocomplete="off"
+      style="width:100%;max-width:560px;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;"
+      oninput="applyHialFilters()" />
+  </div>
+  {% endif %}
+
   <!-- Client-side filter -->
   <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;" id="filter-bar">
     <button class="hial-filter active" data-action="all" onclick="filterAction('all', this)">All</button>
@@ -122,12 +131,26 @@
 </div>
 
 <script>
+function getHialSearchQuery() {
+  const inp = document.getElementById('hial-search-input');
+  return inp && inp.value ? inp.value.trim().toLowerCase() : '';
+}
+
+function applyHialFilters() {
+  const activeBtn = document.querySelector('.hial-filter.active');
+  const action = activeBtn ? activeBtn.dataset.action : 'all';
+  const q = getHialSearchQuery();
+  document.querySelectorAll('.hial-row').forEach(function(row) {
+    const actionOk = action === 'all' || row.dataset.action === action;
+    const textOk = !q || row.textContent.toLowerCase().includes(q);
+    row.style.display = actionOk && textOk ? '' : 'none';
+  });
+}
+
 function filterAction(action, btn) {
   document.querySelectorAll('.hial-filter').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.hial-row').forEach(row => {
-    row.style.display = (action === 'all' || row.dataset.action === action) ? '' : 'none';
-  });
+  applyHialFilters();
 }
 
 function toggleDetail(btn) {

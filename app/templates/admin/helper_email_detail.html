@@ -145,6 +145,12 @@
   {% endmacro %}
 
   {% if rows.items %}
+    <div class="hed-search-wrap" style="margin-bottom:1.25rem;">
+      <label for="hed-search-input" style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:0.35rem;">Search (matches all text in each email card)</label>
+      <input type="search" id="hed-search-input" placeholder="Type to filter by subject, body, actions, JSON…" autocomplete="off"
+        style="width:100%;max-width:560px;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;"
+        oninput="applyHedSearch()" />
+    </div>
     {% for email in rows.items %}
     <div class="hed-card" id="hed-email-{{ email.id }}">
 
@@ -209,6 +215,8 @@
     </div>
     {% endfor %}
 
+    <p id="hed-search-empty" style="display:none; text-align:center; color:#9ca3af; padding:1.5rem; font-size:0.9rem;">No emails match your search on this page.</p>
+
     <!-- Pagination -->
     {% if rows.pages > 1 %}
     <div style="margin-top:1.25rem; display:flex; gap:0.5rem; justify-content:center; align-items:center;">
@@ -245,6 +253,22 @@ function toggleActionDetail(id, btn) {
   pre.classList.toggle('expanded', !expanded);
   pre.style.maxHeight = expanded ? '' : 'none';
   btn.textContent = expanded ? 'show more' : 'show less';
+}
+
+function applyHedSearch() {
+  const input = document.getElementById('hed-search-input');
+  const q = (input && input.value) ? input.value.trim().toLowerCase() : '';
+  const cards = document.querySelectorAll('.hed-card');
+  let visible = 0;
+  cards.forEach(function(card) {
+    const ok = !q || card.textContent.toLowerCase().includes(q);
+    card.style.display = ok ? '' : 'none';
+    if (ok) visible += 1;
+  });
+  const empty = document.getElementById('hed-search-empty');
+  if (empty) {
+    empty.style.display = (q && visible === 0) ? 'block' : 'none';
+  }
 }
 </script>
 {% endblock %}

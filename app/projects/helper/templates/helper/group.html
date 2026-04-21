@@ -26,6 +26,13 @@
         {% endif %}
         {% endwith %}
 
+        <div class="helper-group-search-wrap">
+            <label class="helper-group-search-label" for="helper-group-search-input">Search tasks</label>
+            <input type="search" id="helper-group-search-input" class="helper-group-search-input"
+                placeholder="Filter by title, notes, dates, names…" autocomplete="off"
+                oninput="applyHelperGroupSearch()" />
+        </div>
+
         <!-- Open Tasks -->
         <section class="helper-section">
             <h2 class="helper-section-title">Open Tasks</h2>
@@ -145,6 +152,15 @@
 </div>
 
 <script>
+function applyHelperGroupSearch() {
+    const inp = document.getElementById('helper-group-search-input');
+    const q = inp && inp.value ? inp.value.trim().toLowerCase() : '';
+    document.querySelectorAll('.helper-task-item-full').forEach(function(li) {
+        const ok = !q || li.textContent.toLowerCase().includes(q);
+        li.style.display = ok ? '' : 'none';
+    });
+}
+
 function showNotesEditor(taskId) {
     document.getElementById('notes-display-' + taskId).style.display = 'none';
     const form = document.getElementById('notes-form-' + taskId);
