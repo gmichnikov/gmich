@@ -66,7 +66,6 @@
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
                             <th class="helper-table-col-action" scope="col"></th>
-                            <th class="helper-table-col-delete" scope="col"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,12 +105,6 @@
                                     <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Mark Done</button>
                                 </form>
                             </td>
-                            <td class="helper-table-col-delete">
-                                <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
-                                </form>
-                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -138,7 +131,6 @@
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
                             <th class="helper-table-col-action" scope="col"></th>
-                            <th class="helper-table-col-delete" scope="col"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -179,12 +171,6 @@
                                 <form method="post" action="{{ url_for('helper.task_reopen', task_id=task.id) }}" class="helper-inline-form">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Reopen</button>
-                                </form>
-                            </td>
-                            <td class="helper-table-col-delete">
-                                <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>

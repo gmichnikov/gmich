@@ -10,13 +10,32 @@
 <div class="helper-page">
     <div class="helper-container">
 
+        <div id="helper-task-edit-data" hidden
+            data-task-id="{{ task.id }}"
+            data-title-url="{{ url_for('helper.task_title', task_id=task.id) }}"
+            data-due-url="{{ url_for('helper.task_due', task_id=task.id) }}"
+            data-assignee-url="{{ url_for('helper.task_assignee', task_id=task.id) }}"
+            data-csrf="{{ csrf_token() }}"></div>
+
         <div class="helper-header">
             <div>
                 <a href="{{ url_for('helper.index') }}" class="helper-back">← All Groups</a>
                 <p class="helper-task-detail-breadcrumb">
                     <a href="{{ url_for('helper.group_detail', group_id=group.id) }}" class="helper-link">{{ group.name }}</a>
                 </p>
-                <h1 class="helper-title helper-task-detail-h1">{{ task.title }}</h1>
+                <div class="helper-task-detail-title-wrap">
+                    <div id="title-display-{{ task.id }}" class="helper-task-detail-title-display">
+                        <h1 class="helper-title helper-task-detail-h1" id="title-heading-{{ task.id }}">{{ task.title }}</h1>
+                        <button type="button" class="helper-icon-btn" onclick="showTitleEditor({{ task.id }})" title="Edit title" aria-label="Edit title">✎</button>
+                    </div>
+                    <form id="title-form-{{ task.id }}" class="helper-title-form" style="display:none;" onsubmit="saveTitle(event, {{ task.id }})">
+                        <input type="text" name="title" id="title-input-{{ task.id }}" class="helper-title-input" value="{{ task.title|e }}" maxlength="255" autocomplete="off" />
+                        <div class="helper-title-form-actions">
+                            <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Save</button>
+                            <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary" onclick="hideTitleEditor({{ task.id }})">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -67,15 +86,31 @@
         </div>
 
         <dl class="helper-task-detail-meta">
-            {% if task.due_date %}
             <div class="helper-task-detail-meta-row">
                 <dt>Due</dt>
-                <dd>{{ task.due_date|user_local_date('%B %-d, %Y') }}</dd>
+                <dd class="helper-task-detail-due-dd">
+                    <div id="due-view-{{ task.id }}" class="helper-inline-edit-view" data-due-iso="{{ task.due_date.isoformat() if task.due_date else '' }}">
+                        <span id="due-label-{{ task.id }}">{% if task.due_date %}{{ task.due_date|user_local_date('%B %-d, %Y') }}{% else %}<span class="helper-task-detail-muted">No due date</span>{% endif %}</span>
+                        <button type="button" class="helper-icon-btn" onclick="showDueEditor({{ task.id }})" title="Edit due date" aria-label="Edit due date">📅</button>
+                    </div>
+                    <div id="due-edit-{{ task.id }}" class="helper-due-edit-wrap" style="display:none;">
+                        <input type="date" id="due-input-{{ task.id }}" class="helper-due-input" value="{{ task.due_date.isoformat() if task.due_date else '' }}" />
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-primary" onclick="saveDueDate({{ task.id }})">Save</button>
+                        <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary" onclick="hideDueEditor({{ task.id }})">Cancel</button>
+                    </div>
+                </dd>
             </div>
-            {% endif %}
             <div class="helper-task-detail-meta-row">
                 <dt>Assigned to</dt>
-                <dd>{% if task.assignee %}{{ task.assignee.full_name }}{% else %}<span class="helper-task-detail-muted">Unassigned</span>{% endif %}</dd>
+                <dd>
+                    <select id="assignee-select-{{ task.id }}" class="helper-select-assignee" data-task-id="{{ task.id }}" aria-label="Assign to">
+                        <option value="">Unassigned</option>
+                        {% for m in members %}
+                        <option value="{{ m.id }}" {% if task.assignee_user_id == m.id %}selected{% endif %}>{{ m.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <span id="assignee-hint-{{ task.id }}" class="helper-inline-save-hint" aria-live="polite"></span>
+                </dd>
             </div>
             <div class="helper-task-detail-meta-row">
                 <dt>Created</dt>
@@ -174,6 +209,160 @@
 </div>
 
 <script>
+function helperEditConfig() {
+    const el = document.getElementById('helper-task-edit-data');
+    if (!el) return null;
+    return {
+        csrf: el.dataset.csrf,
+        titleUrl: el.dataset.titleUrl,
+        dueUrl: el.dataset.dueUrl,
+        assigneeUrl: el.dataset.assigneeUrl,
+        taskId: el.dataset.taskId,
+    };
+}
+
+function helperPost(url, fields) {
+    const cfg = helperEditConfig();
+    const body = new FormData();
+    body.append('csrf_token', cfg.csrf);
+    Object.keys(fields).forEach(function (k) {
+        body.append(k, fields[k]);
+    });
+    return fetch(url, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: body,
+    });
+}
+
+function showTitleEditor(taskId) {
+    document.getElementById('title-display-' + taskId).style.display = 'none';
+    const form = document.getElementById('title-form-' + taskId);
+    const input = document.getElementById('title-input-' + taskId);
+    input.value = document.getElementById('title-heading-' + taskId).textContent.trim();
+    form.style.display = 'block';
+    input.focus();
+    input.select();
+}
+
+function hideTitleEditor(taskId) {
+    document.getElementById('title-form-' + taskId).style.display = 'none';
+    document.getElementById('title-display-' + taskId).style.display = '';
+}
+
+function saveTitle(event, taskId) {
+    event.preventDefault();
+    const cfg = helperEditConfig();
+    const input = document.getElementById('title-input-' + taskId);
+    const saveBtn = document.querySelector('#title-form-' + taskId + ' button[type="submit"]');
+    const title = input.value.trim();
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+    helperPost(cfg.titleUrl, { title: title })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            document.getElementById('title-heading-' + taskId).textContent = data.title;
+            document.title = data.title + ' — Helper';
+            hideTitleEditor(taskId);
+        })
+        .catch(function () {
+            alert('Could not save title. Please try again.');
+        })
+        .finally(function () {
+            saveBtn.textContent = 'Save';
+            saveBtn.disabled = false;
+        });
+}
+
+function showDueEditor(taskId) {
+    document.getElementById('due-view-' + taskId).style.display = 'none';
+    const wrap = document.getElementById('due-edit-' + taskId);
+    const view = document.getElementById('due-view-' + taskId);
+    const iso = view.getAttribute('data-due-iso') || '';
+    document.getElementById('due-input-' + taskId).value = iso;
+    wrap.style.display = 'flex';
+    document.getElementById('due-input-' + taskId).focus();
+}
+
+function hideDueEditor(taskId) {
+    document.getElementById('due-edit-' + taskId).style.display = 'none';
+    document.getElementById('due-view-' + taskId).style.display = '';
+}
+
+function saveDueDate(taskId) {
+    const cfg = helperEditConfig();
+    const raw = document.getElementById('due-input-' + taskId).value.trim();
+    const saveBtn = document.querySelector('#due-edit-' + taskId + ' .helper-btn-primary');
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+    helperPost(cfg.dueUrl, { due_date: raw })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            const view = document.getElementById('due-view-' + taskId);
+            const label = document.getElementById('due-label-' + taskId);
+            view.setAttribute('data-due-iso', data.due_date || '');
+            if (data.due_date && data.due_label) {
+                label.textContent = data.due_label;
+            } else {
+                label.innerHTML = '<span class="helper-task-detail-muted">No due date</span>';
+            }
+            hideDueEditor(taskId);
+        })
+        .catch(function () {
+            alert('Could not save due date. Please try again.');
+        })
+        .finally(function () {
+            saveBtn.textContent = 'Save';
+            saveBtn.disabled = false;
+        });
+}
+
+function onAssigneeChange(ev) {
+    const sel = ev.target;
+    const taskId = sel.getAttribute('data-task-id');
+    const hint = document.getElementById('assignee-hint-' + taskId);
+    const prev = sel.dataset.lastValue !== undefined ? sel.dataset.lastValue : sel.value;
+    const cfg = helperEditConfig();
+    hint.textContent = 'Saving…';
+    helperPost(cfg.assigneeUrl, { assignee_user_id: sel.value })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok || !data.ok) throw new Error(data.error || 'Request failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            sel.dataset.lastValue = sel.value;
+            hint.textContent = 'Saved';
+            setTimeout(function () { hint.textContent = ''; }, 1500);
+        })
+        .catch(function () {
+            sel.value = prev;
+            hint.textContent = '';
+            alert('Could not update assignee.');
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const cfg = helperEditConfig();
+    if (!cfg) return;
+    const sel = document.getElementById('assignee-select-' + cfg.taskId);
+    if (sel) {
+        sel.dataset.lastValue = sel.value;
+        sel.addEventListener('change', onAssigneeChange);
+    }
+});
+
 function showNotesEditor(taskId) {
     document.getElementById('notes-display-' + taskId).style.display = 'none';
     const form = document.getElementById('notes-form-' + taskId);
