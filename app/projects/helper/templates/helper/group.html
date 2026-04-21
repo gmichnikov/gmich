@@ -65,7 +65,8 @@
                             <th class="helper-table-col-assigned">Assigned</th>
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
-                            <th class="helper-table-col-actions">Actions</th>
+                            <th class="helper-table-col-action">Done</th>
+                            <th class="helper-table-col-delete">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,18 +100,17 @@
                                 <span class="helper-table-muted">—</span>
                                 {% endif %}
                             </td>
-                            <td class="helper-table-col-actions">
-                                <div class="helper-table-actions">
-                                    <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}" class="helper-inline-form">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Done</button>
-                                    </form>
-                                    <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
-                                    </form>
-                                </div>
-                                <a href="{{ url_for('helper.task_detail', task_id=task.id) }}" class="helper-table-detail-link">Task page</a>
+                            <td class="helper-table-col-action">
+                                <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}" class="helper-inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Done</button>
+                                </form>
+                            </td>
+                            <td class="helper-table-col-delete">
+                                <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -137,7 +137,8 @@
                             <th class="helper-table-col-assigned">Assigned</th>
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
-                            <th class="helper-table-col-actions">Actions</th>
+                            <th class="helper-table-col-action">Reopen</th>
+                            <th class="helper-table-col-delete">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -174,18 +175,17 @@
                                 <span class="helper-table-muted">—</span>
                                 {% endif %}
                             </td>
-                            <td class="helper-table-col-actions">
-                                <div class="helper-table-actions">
-                                    <form method="post" action="{{ url_for('helper.task_reopen', task_id=task.id) }}" class="helper-inline-form">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Reopen</button>
-                                    </form>
-                                    <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
-                                    </form>
-                                </div>
-                                <a href="{{ url_for('helper.task_detail', task_id=task.id) }}" class="helper-table-detail-link">Task page</a>
+                            <td class="helper-table-col-action">
+                                <form method="post" action="{{ url_for('helper.task_reopen', task_id=task.id) }}" class="helper-inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-secondary">Reopen</button>
+                                </form>
+                            </td>
+                            <td class="helper-table-col-delete">
+                                <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" class="helper-inline-form" onsubmit="return confirm('Delete this task?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-danger">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}

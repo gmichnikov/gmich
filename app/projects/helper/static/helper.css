@@ -600,16 +600,26 @@ a.helper-task-title-link:hover {
     font-size: 0.78rem;
     cursor: pointer;
     font-family: inherit;
+    transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
 }
 
-.helper-chip:hover {
-    background: #f9fafb;
+/* Inactive: light border emphasis only — no gray wash */
+.helper-chip:not(.helper-chip-active):hover {
+    border-color: #c7d2fe;
+    color: #4338ca;
 }
 
 .helper-chip-active {
     background: #4f46e5;
     color: #fff;
     border-color: #4f46e5;
+}
+
+/* Selected chip: stay purple; hover slightly deepens (no flash to gray) */
+.helper-chip-active:hover {
+    background: #4338ca;
+    border-color: #4338ca;
+    color: #fff;
 }
 
 .helper-group-filters .helper-group-search-wrap {
@@ -729,20 +739,15 @@ a.helper-task-title-link:hover {
     align-items: center;
 }
 
+.helper-table-col-action,
+.helper-table-col-delete {
+    white-space: nowrap;
+    vertical-align: middle;
+    width: 1%;
+}
+
 .helper-inline-form {
     display: inline;
-}
-
-.helper-table-detail-link {
-    display: block;
-    margin-top: 0.3rem;
-    font-size: 0.72rem;
-    color: #6366f1;
-    text-decoration: none;
-}
-
-.helper-table-detail-link:hover {
-    text-decoration: underline;
 }
 
 .helper-filter-empty {
