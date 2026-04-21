@@ -24,6 +24,72 @@ logger = logging.getLogger(__name__)
 CLAUDE_MODEL = "claude-haiku-4-5"
 
 
+class ClaudeResponseError(ValueError):
+    """
+    Claude returned text we could not parse into a valid intent dict.
+
+    ``raw_response`` is set when the API succeeded but JSON/intent validation failed,
+    so operators can inspect what the model returned.
+    """
+
+    def __init__(self, message: str, *, raw_response: str | None = None):
+        super().__init__(message)
+        self.raw_response = raw_response
+
+
+def _log_malformed_claude_response(reason: str, text: str) -> None:
+    """Log the full model output (truncated) for debugging and support."""
+    max_len = 8000
+    if len(text) > max_len:
+        snippet = text[:max_len] + "\n... [truncated]"
+    else:
+        snippet = text
+    logger.error("Malformed Claude response (%s). Full raw:\n%s", reason, snippet)
+
+
+def _parse_intent_json(raw: str) -> dict:
+    """
+    Parse the first JSON object from Claude's reply.
+
+    The model sometimes outputs valid JSON followed by extra text or a second
+    object; ``json.loads`` then fails with "Extra data: line N column M".
+    """
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if len(lines) >= 2:
+            text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:]).strip()
+
+    start = text.find("{")
+    if start == -1:
+        _log_malformed_claude_response("no JSON object (no '{' found)", text)
+        raise ValueError("No JSON object found in Claude response")
+
+    decoder = json.JSONDecoder()
+    try:
+        result, end = decoder.raw_decode(text, start)
+    except json.JSONDecodeError as e:
+        _log_malformed_claude_response(f"JSON decode error: {e}", text)
+        raise ValueError(f"Invalid JSON in Claude response: {e}") from e
+
+    trailing = text[end:].strip()
+    if trailing:
+        logger.warning(
+            "Claude response had %d extra characters after JSON (ignored): %s",
+            len(trailing),
+            trailing[:400],
+        )
+
+    if not isinstance(result, dict):
+        _log_malformed_claude_response(
+            f"JSON root must be an object, got {type(result).__name__}", text
+        )
+        raise ValueError(
+            f"Claude JSON root must be an object, got {type(result).__name__}"
+        )
+    return result
+
+
 def _build_prompt(
     subject: str,
     body: str,
@@ -172,14 +238,16 @@ def parse_email_for_task(
     raw = response.content[0].text.strip()
     logger.info(f"Claude raw response: {raw}")
 
-    # Strip markdown code fences if present (some models wrap JSON despite instructions)
-    if raw.startswith("```"):
-        lines = raw.splitlines()
-        raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:]).strip()
-
-    result = json.loads(raw)
+    try:
+        result = _parse_intent_json(raw)
+    except ValueError as e:
+        raise ClaudeResponseError(str(e), raw_response=raw) from e
 
     if "intent" not in result:
-        raise ValueError(f"Claude response missing 'intent' key: {raw}")
+        _log_malformed_claude_response("missing 'intent' key", raw)
+        raise ClaudeResponseError(
+            "Claude response missing 'intent' key",
+            raw_response=raw,
+        )
 
     return result

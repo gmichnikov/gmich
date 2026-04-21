@@ -34,8 +34,9 @@ from app.projects.helper.models import (
     HelperInboundEmail,
     HelperTask,
 )
-from app.projects.helper.claude import parse_email_for_task
+from app.projects.helper.claude import ClaudeResponseError, parse_email_for_task
 from app.projects.helper.email import (
+    notify_helper_claude_error_to_admin,
     send_duplicate_task_skipped,
     send_task_confirmation,
     send_task_completed_confirmation,
@@ -303,10 +304,35 @@ def mailgun_inbound():
             open_tasks=open_tasks,
         )
     except Exception as e:
-        logger.error(f"Claude error for inbound_email id={inbound.id}: {e}")
+        logger.error(
+            f"Claude error for inbound_email id={inbound.id}: {e}",
+            exc_info=True,
+        )
         inbound.status = "error"
         db.session.commit()
-        _log_action(inbound, "claude_error", error=str(e))
+        detail = {}
+        if isinstance(e, ClaudeResponseError) and e.raw_response:
+            detail["claude_raw_response"] = e.raw_response[:8000]
+        _log_action(
+            inbound,
+            "claude_error",
+            error=str(e),
+            detail=detail if detail else None,
+        )
+        try:
+            notify_helper_claude_error_to_admin(
+                inbound_id=inbound.id,
+                group_name=group.name,
+                sender_email=sender_user.email,
+                error_message=str(e),
+                raw_response=e.raw_response if isinstance(e, ClaudeResponseError) else None,
+            )
+        except Exception as notify_err:
+            logger.error(
+                "Failed to send Helper Claude error admin alert: %s",
+                notify_err,
+                exc_info=True,
+            )
         return ("", 200)
 
     intent = result.get("intent", "unknown")

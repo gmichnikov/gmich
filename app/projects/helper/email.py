@@ -480,3 +480,65 @@ You can also reply to this email to add a new task.
             f"Failed to send complete-task-failed email to {sender_user.email}: {e}"
         )
         return None
+
+
+def notify_helper_claude_error_to_admin(
+    inbound_id: int,
+    group_name: str,
+    sender_email: str,
+    error_message: str,
+    raw_response: str | None = None,
+):
+    """
+    Email ADMIN_EMAIL when Helper inbound processing fails (Claude/parse/API).
+
+    Skips quietly if ADMIN_EMAIL is unset. Logs failures; does not raise.
+    """
+    admin = os.getenv("ADMIN_EMAIL", "").strip()
+    if not admin:
+        logger.warning("ADMIN_EMAIL not set; skipping Helper Claude error notification")
+        return None
+
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    admin_inbound = f"{base_url}/admin/helper/email-detail"
+    admin_log = f"{base_url}/admin/helper/action-log"
+
+    subject = f"[Helper] Claude error — inbound #{inbound_id}"
+
+    raw_block = ""
+    if raw_response:
+        cap = 6000
+        body = raw_response if len(raw_response) <= cap else raw_response[:cap] + "\n... [truncated]"
+        raw_block = f"\n--- Claude raw response ---\n{body}\n"
+
+    text_content = f"""Helper inbound email processing failed.
+
+Inbound id: {inbound_id}
+Group: {group_name}
+Sender: {sender_email}
+
+Error:
+{error_message}
+{raw_block}
+Admin: {admin_inbound} (find this id in the list)
+Action log: {admin_log}
+"""
+
+    try:
+        send_email(
+            to_email=admin,
+            subject=subject,
+            text_content=text_content,
+            from_name="Helper",
+        )
+        logger.info(
+            "Helper Claude error alert sent to admin for inbound_id=%s", inbound_id
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            "Failed to send Helper Claude error alert for inbound_id=%s: %s",
+            inbound_id,
+            e,
+        )
+        return None
