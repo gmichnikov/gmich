@@ -89,16 +89,23 @@ def index():
 def group_detail(group_id):
     group = _get_member_group_or_404(group_id)
     open_tasks = (
-        HelperTask.query
+        HelperTask.query.options(
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+        )
         .filter_by(group_id=group.id, status="open")
         .order_by(HelperTask.due_date.asc().nullslast(), HelperTask.created_at.asc())
         .all()
     )
     completed_tasks = (
-        HelperTask.query
+        HelperTask.query.options(
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+            joinedload(HelperTask.completer),
+        )
         .filter_by(group_id=group.id, status="complete")
         .order_by(HelperTask.completed_at.desc())
-        .limit(20)
+        .limit(50)
         .all()
     )
     members = [m.user for m in group.members if m.user]

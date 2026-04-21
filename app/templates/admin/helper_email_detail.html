@@ -96,9 +96,11 @@
       padding: 0.75rem 1rem;
       margin: 0;
     }
+    .hed-card-expandable.hed-card-expandable-closed {
+      display: none;
+    }
     .hed-actions-section {
       padding: 0.75rem 1.25rem;
-      display: none;
     }
     .hed-action-row {
       display: flex;
@@ -169,10 +171,12 @@
             <span style="color:#d1d5db;">(no body)</span>
           {% endif %}
         </span>
-        <span class="hed-chevron">▼</span>
+        <span class="hed-chevron" aria-hidden="true">▼</span>
       </div>
 
-      <!-- Email body (collapsible, open by default) -->
+      <!-- Outer: header toggles entire block. Inner: Body <details> only toggles email text. -->
+      <div class="hed-card-expandable">
+      <!-- Email body (inner collapsible — open by default) -->
       <details class="hed-body-details" open>
         <summary class="hed-body-summary">Body</summary>
         <div class="hed-body-inner">
@@ -184,7 +188,7 @@
         </div>
       </details>
 
-      <!-- Actions -->
+      <!-- Actions (task / pipeline log) -->
       <div class="hed-actions-section">
         <div style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.5rem;">Actions ({{ email.action_logs | length }})</div>
         {% if email.action_logs %}
@@ -210,6 +214,7 @@
         {% else %}
           <div class="hed-no-actions">No actions recorded.</div>
         {% endif %}
+      </div>
       </div>
 
     </div>
@@ -240,11 +245,13 @@
 <script>
 function toggleCard(header) {
   const card = header.parentElement;
-  const actions = card.querySelector('.hed-actions-section');
+  const expandable = card.querySelector('.hed-card-expandable');
   const chevron = header.querySelector('.hed-chevron');
-  const expanded = actions.style.display === 'block';
-  actions.style.display = expanded ? 'none' : 'block';
-  chevron.style.transform = expanded ? '' : 'rotate(180deg)';
+  if (!expandable) return;
+  expandable.classList.toggle('hed-card-expandable-closed');
+  const closed = expandable.classList.contains('hed-card-expandable-closed');
+  /* Closed: point chevron sideways; open: down */
+  chevron.style.transform = closed ? 'rotate(-90deg)' : '';
 }
 
 function toggleActionDetail(id, btn) {
