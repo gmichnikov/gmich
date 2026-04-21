@@ -17,11 +17,38 @@
                     <a href="{{ url_for('helper.group_detail', group_id=group.id) }}" class="helper-link">{{ group.name }}</a>
                 </p>
                 <h1 class="helper-title helper-task-detail-h1">{{ task.title }}</h1>
-                <p class="helper-subtitle">
-                    Email <strong>{{ group.inbound_email }}</strong>
-                </p>
             </div>
         </div>
+
+        <section class="helper-section">
+            <h2 class="helper-section-title">Notes</h2>
+            <div class="helper-notes-display" id="notes-display-{{ task.id }}">
+                {% if task.notes %}
+                <p class="helper-task-notes">{{ task.notes }}</p>
+                {% endif %}
+                <button type="button"
+                    class="helper-btn-link"
+                    onclick="showNotesEditor({{ task.id }})">
+                    {{ 'Edit note' if task.notes else 'Add note' }}
+                </button>
+            </div>
+
+            <form method="post"
+                action="{{ url_for('helper.task_notes', task_id=task.id) }}"
+                class="helper-notes-form"
+                id="notes-form-{{ task.id }}"
+                style="display:none;"
+                onsubmit="saveNotes(event, {{ task.id }})">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ detail_url }}">
+                <textarea name="notes" class="helper-notes-input" rows="4">{{ task.notes or '' }}</textarea>
+                <div style="display:flex; gap:0.4rem; margin-top:0.35rem;">
+                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Save</button>
+                    <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary"
+                        onclick="hideNotesEditor({{ task.id }})">Cancel</button>
+                </div>
+            </form>
+        </section>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -119,36 +146,6 @@
             </details>
         </section>
         {% endif %}
-
-        <section class="helper-section">
-            <h2 class="helper-section-title">Notes</h2>
-            <div class="helper-notes-display" id="notes-display-{{ task.id }}">
-                {% if task.notes %}
-                <p class="helper-task-notes">{{ task.notes }}</p>
-                {% endif %}
-                <button type="button"
-                    class="helper-btn-link"
-                    onclick="showNotesEditor({{ task.id }})">
-                    {{ 'Edit note' if task.notes else 'Add note' }}
-                </button>
-            </div>
-
-            <form method="post"
-                action="{{ url_for('helper.task_notes', task_id=task.id) }}"
-                class="helper-notes-form"
-                id="notes-form-{{ task.id }}"
-                style="display:none;"
-                onsubmit="saveNotes(event, {{ task.id }})">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="next" value="{{ detail_url }}">
-                <textarea name="notes" class="helper-notes-input" rows="4">{{ task.notes or '' }}</textarea>
-                <div style="display:flex; gap:0.4rem; margin-top:0.35rem;">
-                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Save</button>
-                    <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary"
-                        onclick="hideNotesEditor({{ task.id }})">Cancel</button>
-                </div>
-            </form>
-        </section>
 
         <section class="helper-section helper-task-detail-actions-section">
             <h2 class="helper-section-title">Actions</h2>

@@ -393,6 +393,7 @@ a.helper-task-title-link:hover {
 }
 
 .helper-task-detail-status-row {
+    margin-top: 1.25rem;
     margin-bottom: 1rem;
 }
 
