@@ -130,6 +130,94 @@ View the full task list: {group_url}
         return None
 
 
+def send_task_logged_completed_confirmation(task, sender_user, group):
+    """
+    Confirm that a task was recorded as already done (created in completed state).
+
+    Args:
+        task: HelperTask (status complete, source + completed_via set to same inbound)
+        sender_user: User who sent the email
+        group: HelperGroup
+    """
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    task_url = f"{base_url}/helper/task/{task.id}"
+    group_address = group.inbound_email
+
+    subject = f"\u2713 Logged: {task.title}"
+
+    text_content = f"""Hi {sender_user.full_name},
+
+Recorded in {group.name} as done:
+
+  {task.title}
+
+(This was not matched to an open task — it is saved to your history as completed.)
+
+View this entry: {task_url}
+Full task list: {group_url}
+
+Reply to this email (or send to {group_address}) to add tasks or report more completed work.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .task-box {{ background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
+    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #15803d; margin: 0 0 8px 0; }}
+    .hint {{ font-size: 0.9rem; color: #4b5563; margin: 0; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi {sender_user.full_name},</p>
+    <p>Recorded in <strong>{group.name}</strong> as done:</p>
+
+    <div class="task-box">
+      <p class="task-title">{task.title}</p>
+      <p class="hint">Not matched to an open task — saved to your history as completed.</p>
+    </div>
+
+    <p>
+      <a href="{task_url}">View this entry &rarr;</a><br>
+      <a href="{group_url}">View the full task list &rarr;</a>
+    </p>
+
+    <div class="footer">
+      <p>Reply to this email (or send to {group_address}) to add tasks or report more completed work.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    try:
+        send_email(
+            to_email=sender_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name=f"Helper ({group.name})",
+            from_email=group_address,
+            reply_to=group_address,
+        )
+        logger.info(
+            f"Logged-completed confirmation sent to {sender_user.email} "
+            f"for task id={task.id} group={group.id}"
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            f"Failed to send logged-completed confirmation to {sender_user.email} "
+            f"for task id={task.id}: {e}"
+        )
+        return None
+
+
 def send_duplicate_task_skipped(existing_task, sender_user, group):
     """
     Tell the sender we did not add a new task because it matches an open task already.

@@ -13,7 +13,7 @@ Pipeline A:
 
 Pipeline B:
   9. Call Claude -> parse intent
-  10. Create helper_task on add_task intent
+  10. Create helper_task on add_task (open, duplicate skip, or logged completed)
 """
 import hashlib
 import hmac
@@ -39,6 +39,7 @@ from app.projects.helper.email import (
     send_duplicate_task_skipped,
     send_task_confirmation,
     send_task_completed_confirmation,
+    send_task_logged_completed_confirmation,
     send_complete_task_failed,
 )
 
@@ -50,6 +51,17 @@ helper_webhook_bp = Blueprint("helper_webhook", __name__)
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _coerce_already_completed(raw) -> bool:
+    """True only when the model explicitly indicates a retrospective completed entry."""
+    if raw is True:
+        return True
+    if raw is False or raw is None:
+        return False
+    if isinstance(raw, str):
+        return raw.strip().lower() in ("true", "1", "yes")
+    return False
+
 
 def _normalize_email(address: str) -> str:
     """Lowercase and strip whitespace from an email address."""
@@ -308,16 +320,18 @@ def mailgun_inbound():
         return ("", 200)
 
     if intent == "add_task":
+        already_completed = _coerce_already_completed(result.get("already_completed"))
+
         open_task_ids = {t["id"] for t in open_tasks}
         dup_raw = result.get("duplicate_of_task_id")
         dup_id = None
-        if dup_raw is not None and dup_raw != "":
+        if not already_completed and dup_raw is not None and dup_raw != "":
             try:
                 dup_id = int(dup_raw)
             except (TypeError, ValueError):
                 dup_id = None
 
-        if dup_id is not None and dup_id in open_task_ids:
+        if not already_completed and dup_id is not None and dup_id in open_task_ids:
             existing = HelperTask.query.get(dup_id)
             if existing and existing.group_id == group.id and existing.status == "open":
                 inbound.status = "processed"
@@ -345,7 +359,7 @@ def mailgun_inbound():
                 f"duplicate_of_task_id={dup_id} invalid or not open for inbound_email "
                 f"id={inbound.id}; creating new task"
             )
-        elif dup_id is not None:
+        elif not already_completed and dup_id is not None:
             logger.warning(
                 f"duplicate_of_task_id={dup_id} not in open_tasks for inbound_email "
                 f"id={inbound.id}; creating new task"
@@ -387,31 +401,59 @@ def mailgun_inbound():
         if assignee_user_id is None and not assignee_email:
             assignee_user_id = sender_user.id
 
-        # Insert task
+        # Insert task (open) or insert as completed (retrospective log)
         try:
-            task = HelperTask(
-                group_id=group.id,
-                title=title,
-                due_date=due_date,
-                notes=notes,
-                assignee_user_id=assignee_user_id,
-                created_by_user_id=sender_user.id,
-                status="open",
-                source_inbound_email_id=inbound.id,
-            )
+            if already_completed:
+                task = HelperTask(
+                    group_id=group.id,
+                    title=title,
+                    due_date=due_date,
+                    notes=notes,
+                    assignee_user_id=assignee_user_id,
+                    created_by_user_id=sender_user.id,
+                    status="complete",
+                    completed_by_user_id=sender_user.id,
+                    completed_at=datetime.utcnow(),
+                    completed_via_inbound_email_id=inbound.id,
+                    source_inbound_email_id=inbound.id,
+                )
+            else:
+                task = HelperTask(
+                    group_id=group.id,
+                    title=title,
+                    due_date=due_date,
+                    notes=notes,
+                    assignee_user_id=assignee_user_id,
+                    created_by_user_id=sender_user.id,
+                    status="open",
+                    source_inbound_email_id=inbound.id,
+                )
             db.session.add(task)
             db.session.flush()
             inbound.status = "processed"
             db.session.commit()
-            _log_action(inbound, "task_created", detail={
-                "task_id": task.id,
-                "title": title,
-                "due_date": due_date_str,
-                "assignee_user_id": assignee_user_id,
-                "claude_response": result,
-            })
-            logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
-            confirmed = send_task_confirmation(task, sender_user, group)
+            if already_completed:
+                _log_action(inbound, "task_logged_completed", detail={
+                    "task_id": task.id,
+                    "title": title,
+                    "due_date": due_date_str,
+                    "assignee_user_id": assignee_user_id,
+                    "claude_response": result,
+                })
+                logger.info(
+                    f"Task id={task.id} logged as completed for inbound_email id={inbound.id}"
+                )
+                confirmed = send_task_logged_completed_confirmation(task, sender_user, group)
+            else:
+                _log_action(inbound, "task_created", detail={
+                    "task_id": task.id,
+                    "title": title,
+                    "due_date": due_date_str,
+                    "assignee_user_id": assignee_user_id,
+                    "claude_response": result,
+                })
+                logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
+                confirmed = send_task_confirmation(task, sender_user, group)
             conf_detail = {
                 "to": sender_user.email,
                 "task_id": task.id,

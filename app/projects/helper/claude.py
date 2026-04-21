@@ -4,12 +4,10 @@ Claude integration for the Helper project.
 Calls Claude with the email subject + body, group member names, and currently
 open tasks, then returns a structured intent dict:
 
-  {"intent": "add_task", "duplicate_of_task_id": null or <id>, "title": "...",
-   "due_date": "YYYY-MM-DD" or null, "assignee_email": "..." or null, "notes": "..." or null}
-  (duplicate_of_task_id: set to an open task's id when the email is asking for the same
-   real-world item as that task; null when adding something genuinely new.)
-  {"intent": "complete_task", "task_id": <int>}
-  {"intent": "unknown"}
+  add_task: title, due_date, assignee_email, notes, duplicate_of_task_id,
+            already_completed (bool; true = record as done in one step, no duplicate check)
+  complete_task: task_id (must match an open task)
+  unknown
 
 On any error (API, timeout, bad JSON), raises an exception so the caller can log it.
 """
@@ -69,9 +67,7 @@ The group members are:
 {members_list}
 
 {open_tasks_section}
-An authorized group member sent the following email. They use this address for two purposes:
-1. To add a new task — including by forwarding emails (e.g. a sign-up link, a bill, an event announcement).
-2. To indicate that one of the open tasks listed above has been completed.
+An authorized group member sent the email below. They may want to: (1) add something to track, (2) mark an **open** task above as done, or (3) **record something already finished** even when it was never on the open list (e.g. "I registered yesterday").
 
 ---
 Subject: {subject}
@@ -80,11 +76,20 @@ Body: {body or '(empty)'}
 
 Emails often have a **footer** after the real message: unsubscribe links, privacy policy, "powered by" branding, or a **physical address belonging to the email vendor** (e.g. SendGrid, Mailgun) for legal/compliance — not the school, venue, or place the user must go. The important details (event location, gym name, school name, times) are almost always in the **main body above that**. Do **not** treat footer-only addresses or boilerplate as the task location unless the main text clearly says to go there.
 
-Respond with ONLY a valid JSON object (no explanation, no markdown) in one of these formats:
+**How to pick an intent** (stop at the first that fits):
+1. **complete_task** — The email clearly refers to finishing **one specific** task from the open list above. You are confident which `task_id` it is.
+2. **add_task with already_completed: true** — The email describes work **already done** (receipt, past-tense confirmation, "I signed up") and you are **not** using step 1 because nothing on the open list matches, or the open list is empty.
+3. **add_task with already_completed: false** — The user wants something **tracked for later** (reminder, forward, "don't forget") or a **new** item that is not yet done. Use this for duplicate detection (next section).
+4. **unknown** — No actionable task content (questions, small talk, unclear).
 
-If the email is asking to add a task (new or possibly a duplicate of an open one):
+If step 2 and 3 both seem possible, prefer **already_completed: true** when the main point is reporting past completed action; prefer **false** when the main point is a future to-do or forward.
+
+**add_task JSON shape** (always include every key; `already_completed` is required):
+
+Normal new or future task (`duplicate_of_task_id` only applies when `already_completed` is false):
 {{
   "intent": "add_task",
+  "already_completed": false,
   "duplicate_of_task_id": null,
   "title": "concise task title",
   "due_date": "YYYY-MM-DD or null",
@@ -92,9 +97,10 @@ If the email is asking to add a task (new or possibly a duplicate of an open one
   "notes": "supplementary context or null"
 }}
 
-If the email is trying to add something that is **the same** as one of the open tasks above (same real errand, event, bill, signup, or obligation — not merely a similar phrase), use the same add_task shape but set duplicate_of_task_id to that task's **id** from the list (integer). You may still fill title/notes for clarity or repeat the existing task title.
+Same real item as an open task (only when `already_completed` is false — message is redundant with an open task):
 {{
   "intent": "add_task",
+  "already_completed": false,
   "duplicate_of_task_id": <integer id from the open task list>,
   "title": "short label or echo of existing task",
   "due_date": null,
@@ -102,28 +108,39 @@ If the email is trying to add something that is **the same** as one of the open 
   "notes": null
 }}
 
-If the email indicates an open task is done (match by content to the open task list above):
+Record something already done when it was not matched as **complete_task** (step 1):
 {{
-  "intent": "complete_task",
-  "task_id": <id integer from the open task list>
+  "intent": "add_task",
+  "already_completed": true,
+  "duplicate_of_task_id": null,
+  "title": "short label for what was done",
+  "due_date": "YYYY-MM-DD or null",
+  "assignee_email": "exact email from the member list above, or null",
+  "notes": "supplementary context or null"
 }}
 
-If the intent is unclear or the message is purely conversational:
+**complete_task** (only from step 1):
+{{
+  "intent": "complete_task",
+  "task_id": <integer id from the open task list>
+}}
+
+**unknown**:
 {{
   "intent": "unknown"
 }}
 
-Rules:
-- For add_task: title should be short and action-oriented (e.g. "Register for lacrosse clinic") when duplicate_of_task_id is null.
-- duplicate_of_task_id: use null when adding a **new** task. Set it to an open task's id only when the message is clearly **redundant** with that task (same thing already tracked). If unsure, prefer null and create a new task.
-- When there are no open tasks, duplicate_of_task_id must always be null.
-- due_date must be a calendar date string (YYYY-MM-DD) or null. No times.
-- assignee_email must exactly match one of the emails in the member list, or be null.
-- If the sender says "me" or "I", they are the assignee — return null for assignee_email (the caller defaults to the sender).
-- notes should capture supplementary detail not in the title: location, price, registration links, event times, deadlines — taken from the **substantive part** of the email, not from vendor/footer blocks (see above). Keep concise. Null if nothing useful to add.
-- For complete_task: only use this if you are confident the email refers to one of the open tasks. task_id must be an id from the open task list above. If you cannot confidently match, return unknown.
-- If the email could create a new task AND complete an existing one, prefer add_task.
-- Do not invent tasks. If the message is a question, conversational reply, or contains no actionable content, return unknown.
+Field rules:
+- **already_completed**: boolean. If true, **duplicate_of_task_id must be null** (retrospective entries are never de-duplicated against open tasks).
+- **duplicate_of_task_id** (when already_completed is false): null for a genuinely new task. Set to an open task's id only when the message is clearly **redundant** with that task (same real errand, bill, signup). If unsure, use null. If there are no open tasks, always null.
+- **title**: Short and action-oriented for to-dos; for already_completed, label what was accomplished.
+- **due_date**: YYYY-MM-DD or null. No times.
+- **assignee_email**: Must exactly match a member email, or null. If the sender says "me" or "I", use null (the system defaults to the sender).
+- **notes**: Extra detail from the **substantive** body (not vendor/footer). Null if nothing useful.
+
+Other:
+- If one email both finishes an open task **and** adds a distinct new item, prefer **add_task** (we only return one JSON object).
+- Do not invent tasks. If the message is purely conversational, return unknown.
 """
 
 
@@ -148,7 +165,7 @@ def parse_email_for_task(
 
     response = client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=384,
+        max_tokens=448,
         messages=[{"role": "user", "content": prompt}],
     )
 
