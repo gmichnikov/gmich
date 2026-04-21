@@ -65,8 +65,8 @@
                             <th class="helper-table-col-assigned">Assigned</th>
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
-                            <th class="helper-table-col-action">Done</th>
-                            <th class="helper-table-col-delete">Delete</th>
+                            <th class="helper-table-col-action" scope="col"></th>
+                            <th class="helper-table-col-delete" scope="col"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,7 +103,7 @@
                             <td class="helper-table-col-action">
                                 <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}" class="helper-inline-form">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Done</button>
+                                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Mark Done</button>
                                 </form>
                             </td>
                             <td class="helper-table-col-delete">
@@ -137,8 +137,8 @@
                             <th class="helper-table-col-assigned">Assigned</th>
                             <th class="helper-table-col-added">Added</th>
                             <th class="helper-table-col-notes">Notes</th>
-                            <th class="helper-table-col-action">Reopen</th>
-                            <th class="helper-table-col-delete">Delete</th>
+                            <th class="helper-table-col-action" scope="col"></th>
+                            <th class="helper-table-col-delete" scope="col"></th>
                         </tr>
                     </thead>
                     <tbody>

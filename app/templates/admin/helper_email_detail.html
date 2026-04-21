@@ -57,6 +57,10 @@
       white-space: nowrap;
     }
     .hed-chevron { margin-left: auto; color: #9ca3af; font-size: 0.85rem; transition: transform 0.2s; }
+    /* Top-level card collapsed by default: point chevron sideways */
+    .hed-card:has(.hed-card-expandable-closed) .hed-chevron {
+      transform: rotate(-90deg);
+    }
     .hed-body-details {
       border-bottom: 1px solid #f3f4f6;
     }
@@ -174,9 +178,9 @@
         <span class="hed-chevron" aria-hidden="true">▼</span>
       </div>
 
-      <!-- Outer: header toggles entire block. Inner: Body <details> only toggles email text. -->
-      <div class="hed-card-expandable">
-      <!-- Email body (inner collapsible — open by default) -->
+      <!-- Outer: header toggles entire block (starts collapsed). Inner: Body <details> open by default when expanded. -->
+      <div class="hed-card-expandable hed-card-expandable-closed">
+      <!-- Email body (inner collapsible — open by default so it shows as soon as the card is opened) -->
       <details class="hed-body-details" open>
         <summary class="hed-body-summary">Body</summary>
         <div class="hed-body-inner">
