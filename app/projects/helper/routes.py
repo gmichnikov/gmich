@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy.orm import joinedload
 
 from app import db
 from app.projects.helper.models import HelperGroup, HelperGroupMember, HelperTask
@@ -26,6 +27,14 @@ def _get_member_group_or_404(group_id):
     if not membership:
         abort(404)
     return group
+
+
+def _redirect_after_task_post(task):
+    """Redirect to ?next= safe internal path, or group task list."""
+    next_path = (request.form.get("next") or "").strip()
+    if next_path.startswith("/helper/") and not next_path.startswith("//"):
+        return redirect(next_path)
+    return redirect(url_for("helper.group_detail", group_id=task.group_id))
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +112,35 @@ def group_detail(group_id):
 
 
 # ---------------------------------------------------------------------------
+# Task detail
+# ---------------------------------------------------------------------------
+
+@helper_bp.route("/task/<int:task_id>")
+@login_required
+def task_detail(task_id):
+    task = (
+        HelperTask.query.options(
+            joinedload(HelperTask.group),
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+            joinedload(HelperTask.completer),
+            joinedload(HelperTask.source_inbound_email),
+            joinedload(HelperTask.completed_via_inbound_email),
+        )
+        .get_or_404(task_id)
+    )
+    _get_member_group_or_404(task.group_id)
+    log_project_visit("helper", f"Helper — {task.title[:40]}")
+    detail_url = url_for("helper.task_detail", task_id=task.id)
+    return render_template(
+        "helper/task_detail.html",
+        task=task,
+        group=task.group,
+        detail_url=detail_url,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Complete a task
 # ---------------------------------------------------------------------------
 
@@ -116,7 +154,7 @@ def task_complete(task_id):
     task.completed_at = datetime.utcnow()
     task.completed_via_inbound_email_id = None
     db.session.commit()
-    return redirect(url_for("helper.group_detail", group_id=task.group_id))
+    return _redirect_after_task_post(task)
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +171,7 @@ def task_reopen(task_id):
     task.completed_at = None
     task.completed_via_inbound_email_id = None
     db.session.commit()
-    return redirect(url_for("helper.group_detail", group_id=task.group_id))
+    return _redirect_after_task_post(task)
 
 
 # ---------------------------------------------------------------------------
@@ -164,4 +202,4 @@ def task_notes(task_id):
     db.session.commit()
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"ok": True, "notes": task.notes or ""})
-    return redirect(url_for("helper.group_detail", group_id=task.group_id))
+    return _redirect_after_task_post(task)

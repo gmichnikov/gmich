@@ -35,7 +35,7 @@
                 {% for task in open_tasks %}
                 <li class="helper-task-item helper-task-item-full">
                     <div class="helper-task-main">
-                        <span class="helper-task-title">{{ task.title }}</span>
+                        <a href="{{ url_for('helper.task_detail', task_id=task.id) }}" class="helper-task-title helper-task-title-link">{{ task.title }}</a>
                         <div class="helper-task-meta">
                             {% if task.due_date %}
                             <span class="helper-task-due">Due {{ task.due_date.strftime('%b %-d, %Y') }}</span>
@@ -102,7 +102,7 @@
                     <div class="helper-task-main">
                         <div class="helper-task-done-heading">
                             <span class="helper-task-done-check" title="Completed" aria-label="Completed">✓</span>
-                            <span class="helper-task-title">{{ task.title }}</span>
+                            <a href="{{ url_for('helper.task_detail', task_id=task.id) }}" class="helper-task-title helper-task-title-link helper-task-title-done-link">{{ task.title }}</a>
                         </div>
                         <div class="helper-task-meta">
                             <span class="helper-task-created">

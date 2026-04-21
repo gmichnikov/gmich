@@ -27,6 +27,7 @@ def send_task_confirmation(task, sender_user, group):
     """
     base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
     group_url = f"{base_url}/helper/group/{group.id}"
+    task_url = f"{base_url}/helper/task/{task.id}"
     group_address = group.inbound_email
 
     subject = f"\u2713 Task added: {task.title}"
@@ -61,6 +62,7 @@ Your task has been added to {group.name}:
   {task.title}
 {details_text}{notes_text}
 
+View this task: {task_url}
 View the full task list: {group_url}
 
 {reply_hint}
@@ -93,7 +95,10 @@ View the full task list: {group_url}
       {notes_html}
     </div>
 
-    <p><a href="{group_url}">View the full task list &rarr;</a></p>
+    <p>
+      <a href="{task_url}">View this task &rarr;</a><br>
+      <a href="{group_url}">View the full task list &rarr;</a>
+    </p>
 
     <div class="footer">
       <p>{reply_hint}</p>
@@ -136,6 +141,7 @@ def send_task_completed_confirmation(task, sender_user, group):
     """
     base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
     group_url = f"{base_url}/helper/group/{group.id}"
+    task_url = f"{base_url}/helper/task/{task.id}"
     group_address = group.inbound_email
 
     subject = f"\u2713 Marked complete: {task.title}"
@@ -146,6 +152,7 @@ Got it — marked as complete:
 
   {task.title}
 
+View this task: {task_url}
 View the full task list: {group_url}
 
 Reply to this email (or send to {group_address}) to add more tasks or complete others.
@@ -172,7 +179,10 @@ Reply to this email (or send to {group_address}) to add more tasks or complete o
       <p class="task-title">{task.title}</p>
     </div>
 
-    <p><a href="{group_url}">View the full task list &rarr;</a></p>
+    <p>
+      <a href="{task_url}">View this task &rarr;</a><br>
+      <a href="{group_url}">View the full task list &rarr;</a>
+    </p>
 
     <div class="footer">
       <p>Reply to this email (or send to {group_address}) to add more tasks or complete others.</p>

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} — Helper{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('helper.static', filename='helper.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="helper-page">
+    <div class="helper-container">
+
+        <div class="helper-header">
+            <div>
+                <a href="{{ url_for('helper.index') }}" class="helper-back">← All Groups</a>
+                <p class="helper-task-detail-breadcrumb">
+                    <a href="{{ url_for('helper.group_detail', group_id=group.id) }}" class="helper-link">{{ group.name }}</a>
+                </p>
+                <h1 class="helper-title helper-task-detail-h1">{{ task.title }}</h1>
+                <p class="helper-subtitle">
+                    Email <strong>{{ group.inbound_email }}</strong>
+                </p>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="helper-flash helper-flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="helper-task-detail-status-row">
+            {% if task.status == 'complete' %}
+            <span class="helper-status-badge helper-status-badge-done">Complete</span>
+            {% else %}
+            <span class="helper-status-badge helper-status-badge-open">Open</span>
+            {% endif %}
+        </div>
+
+        <dl class="helper-task-detail-meta">
+            {% if task.due_date %}
+            <div class="helper-task-detail-meta-row">
+                <dt>Due</dt>
+                <dd>{{ task.due_date.strftime('%B %-d, %Y') }}</dd>
+            </div>
+            {% endif %}
+            <div class="helper-task-detail-meta-row">
+                <dt>Assigned to</dt>
+                <dd>{% if task.assignee %}{{ task.assignee.full_name }}{% else %}<span class="helper-task-detail-muted">Unassigned</span>{% endif %}</dd>
+            </div>
+            <div class="helper-task-detail-meta-row">
+                <dt>Created</dt>
+                <dd>{{ task.created_at.strftime('%b %-d, %Y %I:%M %p') }}{% if task.creator %} by {{ task.creator.full_name }}{% endif %}</dd>
+            </div>
+            <div class="helper-task-detail-meta-row">
+                <dt>Updated</dt>
+                <dd>{{ task.updated_at.strftime('%b %-d, %Y %I:%M %p') }}</dd>
+            </div>
+            {% if task.status == 'complete' and task.completed_at %}
+            <div class="helper-task-detail-meta-row">
+                <dt>Completed</dt>
+                <dd>
+                    {{ task.completed_at.strftime('%b %-d, %Y %I:%M %p') }}
+                    {% if task.completer %} by {{ task.completer.full_name }}{% endif %}
+                </dd>
+            </div>
+            {% endif %}
+        </dl>
+
+        {% if task.source_inbound_email %}
+        <section class="helper-section">
+            <h2 class="helper-section-title">Source email</h2>
+            <div class="helper-email-block">
+                <p class="helper-email-line"><strong>Subject:</strong> {{ task.source_inbound_email.subject or '(no subject)' }}</p>
+                <p class="helper-email-line"><strong>From:</strong> {{ task.source_inbound_email.sender_raw }}</p>
+                <p class="helper-email-line"><strong>Received:</strong> {{ task.source_inbound_email.created_at.strftime('%b %-d, %Y %I:%M %p') }}</p>
+                {% if task.source_inbound_email.body_text %}
+                <pre class="helper-email-body">{{ task.source_inbound_email.body_text }}</pre>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if task.status == 'complete' and task.completed_via_inbound_email %}
+        <section class="helper-section">
+            <h2 class="helper-section-title">Completion email</h2>
+            <div class="helper-email-block">
+                {% set em = task.completed_via_inbound_email %}
+                <p class="helper-email-line"><strong>Subject:</strong> {{ em.subject or '(no subject)' }}</p>
+                <p class="helper-email-line"><strong>From:</strong> {{ em.sender_raw }}</p>
+                <p class="helper-email-line"><strong>Received:</strong> {{ em.created_at.strftime('%b %-d, %Y %I:%M %p') }}</p>
+                {% if em.body_text %}
+                <pre class="helper-email-body">{{ em.body_text }}</pre>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="helper-section">
+            <h2 class="helper-section-title">Notes</h2>
+            <div class="helper-notes-display" id="notes-display-{{ task.id }}">
+                {% if task.notes %}
+                <p class="helper-task-notes">{{ task.notes }}</p>
+                {% endif %}
+                <button type="button"
+                    class="helper-btn-link"
+                    onclick="showNotesEditor({{ task.id }})">
+                    {{ 'Edit note' if task.notes else 'Add note' }}
+                </button>
+            </div>
+
+            <form method="post"
+                action="{{ url_for('helper.task_notes', task_id=task.id) }}"
+                class="helper-notes-form"
+                id="notes-form-{{ task.id }}"
+                style="display:none;"
+                onsubmit="saveNotes(event, {{ task.id }})">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ detail_url }}">
+                <textarea name="notes" class="helper-notes-input" rows="4">{{ task.notes or '' }}</textarea>
+                <div style="display:flex; gap:0.4rem; margin-top:0.35rem;">
+                    <button type="submit" class="helper-btn helper-btn-sm helper-btn-primary">Save</button>
+                    <button type="button" class="helper-btn helper-btn-sm helper-btn-secondary"
+                        onclick="hideNotesEditor({{ task.id }})">Cancel</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="helper-section helper-task-detail-actions-section">
+            <h2 class="helper-section-title">Actions</h2>
+            <div class="helper-task-actions">
+                {% if task.status == 'open' %}
+                <form method="post" action="{{ url_for('helper.task_complete', task_id=task.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="{{ detail_url }}">
+                    <button type="submit" class="helper-btn helper-btn-primary">Mark as Done</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('helper.task_reopen', task_id=task.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="{{ detail_url }}">
+                    <button type="submit" class="helper-btn helper-btn-secondary">Reopen</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('helper.task_delete', task_id=task.id) }}" onsubmit="return confirm('Delete this task?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="helper-btn helper-btn-danger">Delete</button>
+                </form>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function showNotesEditor(taskId) {
+    document.getElementById('notes-display-' + taskId).style.display = 'none';
+    const form = document.getElementById('notes-form-' + taskId);
+    form.style.display = 'block';
+    form.querySelector('textarea').focus();
+}
+
+function hideNotesEditor(taskId) {
+    document.getElementById('notes-display-' + taskId).style.display = '';
+    document.getElementById('notes-form-' + taskId).style.display = 'none';
+}
+
+function saveNotes(event, taskId) {
+    event.preventDefault();
+    const form = document.getElementById('notes-form-' + taskId);
+    const textarea = form.querySelector('textarea');
+    const saveBtn = form.querySelector('button[type="submit"]');
+    const notes = textarea.value.trim();
+
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+
+    const body = new FormData();
+    body.append('notes', notes);
+    body.append('csrf_token', form.querySelector('input[name="csrf_token"]').value);
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) throw new Error('Server error');
+
+        const display = document.getElementById('notes-display-' + taskId);
+        const existingNote = display.querySelector('.helper-task-notes');
+        const editBtn = display.querySelector('button');
+
+        if (data.notes) {
+            if (existingNote) {
+                existingNote.textContent = data.notes;
+            } else {
+                const p = document.createElement('p');
+                p.className = 'helper-task-notes';
+                p.textContent = data.notes;
+                display.insertBefore(p, editBtn);
+            }
+            editBtn.textContent = 'Edit note';
+        } else {
+            if (existingNote) existingNote.remove();
+            editBtn.textContent = 'Add note';
+        }
+
+        textarea.value = data.notes;
+        hideNotesEditor(taskId);
+    })
+    .catch(() => {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        alert('Could not save note. Please try again.');
+    });
+}
+</script>
+{% endblock %}
