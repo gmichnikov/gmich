@@ -4,8 +4,10 @@ Claude integration for the Helper project.
 Calls Claude with the email subject + body, group member names, and currently
 open tasks, then returns a structured intent dict:
 
-  {"intent": "add_task", "title": "...", "due_date": "YYYY-MM-DD" or null,
-   "assignee_email": "..." or null, "notes": "..." or null}
+  {"intent": "add_task", "duplicate_of_task_id": null or <id>, "title": "...",
+   "due_date": "YYYY-MM-DD" or null, "assignee_email": "..." or null, "notes": "..." or null}
+  (duplicate_of_task_id: set to an open task's id when the email is asking for the same
+   real-world item as that task; null when adding something genuinely new.)
   {"intent": "complete_task", "task_id": <int>}
   {"intent": "unknown"}
 
@@ -80,13 +82,24 @@ Emails often have a **footer** after the real message: unsubscribe links, privac
 
 Respond with ONLY a valid JSON object (no explanation, no markdown) in one of these formats:
 
-If you can extract a new task:
+If the email is asking to add a task (new or possibly a duplicate of an open one):
 {{
   "intent": "add_task",
+  "duplicate_of_task_id": null,
   "title": "concise task title",
   "due_date": "YYYY-MM-DD or null",
   "assignee_email": "exact email from the member list above, or null if unclear/unspecified",
   "notes": "supplementary context or null"
+}}
+
+If the email is trying to add something that is **the same** as one of the open tasks above (same real errand, event, bill, signup, or obligation — not merely a similar phrase), use the same add_task shape but set duplicate_of_task_id to that task's **id** from the list (integer). You may still fill title/notes for clarity or repeat the existing task title.
+{{
+  "intent": "add_task",
+  "duplicate_of_task_id": <integer id from the open task list>,
+  "title": "short label or echo of existing task",
+  "due_date": null,
+  "assignee_email": null,
+  "notes": null
 }}
 
 If the email indicates an open task is done (match by content to the open task list above):
@@ -101,7 +114,9 @@ If the intent is unclear or the message is purely conversational:
 }}
 
 Rules:
-- For add_task: title should be short and action-oriented (e.g. "Register for lacrosse clinic").
+- For add_task: title should be short and action-oriented (e.g. "Register for lacrosse clinic") when duplicate_of_task_id is null.
+- duplicate_of_task_id: use null when adding a **new** task. Set it to an open task's id only when the message is clearly **redundant** with that task (same thing already tracked). If unsure, prefer null and create a new task.
+- When there are no open tasks, duplicate_of_task_id must always be null.
 - due_date must be a calendar date string (YYYY-MM-DD) or null. No times.
 - assignee_email must exactly match one of the emails in the member list, or be null.
 - If the sender says "me" or "I", they are the assignee — return null for assignee_email (the caller defaults to the sender).
@@ -133,7 +148,7 @@ def parse_email_for_task(
 
     response = client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=256,
+        max_tokens=384,
         messages=[{"role": "user", "content": prompt}],
     )
 

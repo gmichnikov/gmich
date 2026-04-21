@@ -130,6 +130,97 @@ View the full task list: {group_url}
         return None
 
 
+def send_duplicate_task_skipped(existing_task, sender_user, group):
+    """
+    Tell the sender we did not add a new task because it matches an open task already.
+
+    Args:
+        existing_task: HelperTask (open, same group)
+        sender_user: User who sent the inbound email
+        group: HelperGroup
+
+    Returns:
+        True on success, None on failure (error is logged)
+    """
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    task_url = f"{base_url}/helper/task/{existing_task.id}"
+    group_address = group.inbound_email
+
+    subject = f"Already on your list: {existing_task.title}"
+
+    text_content = f"""Hi {sender_user.full_name},
+
+This sounds like a task you already have open in {group.name}:
+
+  {existing_task.title}
+
+We did not create a duplicate. You can view or edit it here:
+
+  {task_url}
+
+Full task list: {group_url}
+
+Reply to this email (or send to {group_address}) to add something else or reply \"Done\" to complete a task.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .task-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px; padding: 16px 20px; margin: 20px 0; }}
+    .task-title {{ font-size: 1.1rem; font-weight: bold; color: #1e40af; margin: 0 0 8px 0; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi {sender_user.full_name},</p>
+    <p>This sounds like a task you <strong>already have open</strong> in <strong>{group.name}</strong>:</p>
+
+    <div class="task-box">
+      <p class="task-title">{existing_task.title}</p>
+      <p style="margin:0; font-size:0.9rem; color:#4b5563;">No duplicate was added.</p>
+    </div>
+
+    <p>
+      <a href="{task_url}">View this task &rarr;</a><br>
+      <a href="{group_url}">View the full task list &rarr;</a>
+    </p>
+
+    <div class="footer">
+      <p>Reply to this email (or send to {group_address}) to add something else or mark a task complete.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    try:
+        send_email(
+            to_email=sender_user.email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name=f"Helper ({group.name})",
+            from_email=group_address,
+            reply_to=group_address,
+        )
+        logger.info(
+            f"Duplicate task notice sent to {sender_user.email} "
+            f"for existing task id={existing_task.id} group={group.id}"
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            f"Failed to send duplicate task notice to {sender_user.email} "
+            f"for task id={existing_task.id}: {e}"
+        )
+        return None
+
+
 def send_task_completed_confirmation(task, sender_user, group):
     """
     Notify the sender that their email marked a task as complete.

@@ -36,6 +36,7 @@ from app.projects.helper.models import (
 )
 from app.projects.helper.claude import parse_email_for_task
 from app.projects.helper.email import (
+    send_duplicate_task_skipped,
     send_task_confirmation,
     send_task_completed_confirmation,
     send_complete_task_failed,
@@ -307,6 +308,49 @@ def mailgun_inbound():
         return ("", 200)
 
     if intent == "add_task":
+        open_task_ids = {t["id"] for t in open_tasks}
+        dup_raw = result.get("duplicate_of_task_id")
+        dup_id = None
+        if dup_raw is not None and dup_raw != "":
+            try:
+                dup_id = int(dup_raw)
+            except (TypeError, ValueError):
+                dup_id = None
+
+        if dup_id is not None and dup_id in open_task_ids:
+            existing = HelperTask.query.get(dup_id)
+            if existing and existing.group_id == group.id and existing.status == "open":
+                inbound.status = "processed"
+                db.session.commit()
+                _log_action(
+                    inbound,
+                    "task_duplicate_skipped",
+                    detail={
+                        "existing_task_id": dup_id,
+                        "claude_response": result,
+                    },
+                )
+                notice = send_duplicate_task_skipped(existing, sender_user, group)
+                conf_detail = {
+                    "to": sender_user.email,
+                    "task_id": existing.id,
+                    "title": existing.title,
+                }
+                if notice:
+                    _log_action(inbound, "duplicate_notice_sent", detail=conf_detail)
+                else:
+                    _log_action(inbound, "duplicate_notice_failed", detail=conf_detail)
+                return ("", 200)
+            logger.warning(
+                f"duplicate_of_task_id={dup_id} invalid or not open for inbound_email "
+                f"id={inbound.id}; creating new task"
+            )
+        elif dup_id is not None:
+            logger.warning(
+                f"duplicate_of_task_id={dup_id} not in open_tasks for inbound_email "
+                f"id={inbound.id}; creating new task"
+            )
+
         title = (result.get("title") or "").strip()
         due_date_str = result.get("due_date")
         assignee_email = result.get("assignee_email")
