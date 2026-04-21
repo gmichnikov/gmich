@@ -64,7 +64,7 @@
         {% for row in rows.items %}
         <tr class="hial-row" data-action="{{ row.action_type }}" style="border-bottom:1px solid #f3f4f6; vertical-align:top;">
           <td style="padding:0.55rem 0.9rem; color:#9ca3af; white-space:nowrap;">{{ row.id }}</td>
-          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
+          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">{{ row.created_at|user_local_datetime('%m/%d %H:%M') }}</td>
           <td style="padding:0.55rem 0.9rem; white-space:nowrap;">
             <a href="{{ url_for('admin.helper_inbound_log') }}" style="color:#2563eb; text-decoration:none;">#{{ row.inbound_email_id }}</a>
           </td>

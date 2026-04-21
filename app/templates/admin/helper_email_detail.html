@@ -118,7 +118,7 @@
       <!-- Header row — always visible, click to expand -->
       <div class="hed-card-header" onclick="toggleCard(this)">
         <span class="hed-id">#{{ email.id }}</span>
-        <span class="hed-time">{{ email.created_at.strftime('%m/%d %H:%M') }}</span>
+        <span class="hed-time">{{ email.created_at|user_local_datetime('%m/%d %H:%M') }}</span>
         {{ status_badge(email.status) }}
         <span class="hed-from" title="{{ email.sender_raw }}">{{ email.sender_raw }}</span>
         <span style="color:#9ca3af; font-size:0.8rem;">→</span>
@@ -143,7 +143,7 @@
         {% if email.action_logs %}
           {% for action in email.action_logs | sort(attribute='created_at') %}
           <div class="hed-action-row">
-            <span class="hed-action-time">{{ action.created_at.strftime('%H:%M:%S') }}</span>
+            <span class="hed-action-time">{{ action.created_at|user_local_datetime('%H:%M:%S') }}</span>
             {{ action_badge(action.action_type) }}
             {% if action.detail %}
             <div style="flex:1; min-width:0;">

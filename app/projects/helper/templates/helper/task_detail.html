@@ -43,7 +43,7 @@
             {% if task.due_date %}
             <div class="helper-task-detail-meta-row">
                 <dt>Due</dt>
-                <dd>{{ task.due_date.strftime('%B %-d, %Y') }}</dd>
+                <dd>{{ task.due_date|user_local_date('%B %-d, %Y') }}</dd>
             </div>
             {% endif %}
             <div class="helper-task-detail-meta-row">
@@ -52,17 +52,17 @@
             </div>
             <div class="helper-task-detail-meta-row">
                 <dt>Created</dt>
-                <dd>{{ task.created_at.strftime('%b %-d, %Y %I:%M %p') }}{% if task.creator %} by {{ task.creator.full_name }}{% endif %}</dd>
+                <dd>{{ task.created_at|user_local_datetime }}{% if task.creator %} by {{ task.creator.full_name }}{% endif %}</dd>
             </div>
             <div class="helper-task-detail-meta-row">
                 <dt>Updated</dt>
-                <dd>{{ task.updated_at.strftime('%b %-d, %Y %I:%M %p') }}</dd>
+                <dd>{{ task.updated_at|user_local_datetime }}</dd>
             </div>
             {% if task.status == 'complete' and task.completed_at %}
             <div class="helper-task-detail-meta-row">
                 <dt>Completed</dt>
                 <dd>
-                    {{ task.completed_at.strftime('%b %-d, %Y %I:%M %p') }}
+                    {{ task.completed_at|user_local_datetime }}
                     {% if task.completer %} by {{ task.completer.full_name }}{% endif %}
                 </dd>
             </div>
@@ -71,15 +71,20 @@
 
         {% if task.source_inbound_email %}
         <section class="helper-section">
-            <h2 class="helper-section-title">Source email</h2>
-            <div class="helper-email-block">
-                <p class="helper-email-line"><strong>Subject:</strong> {{ task.source_inbound_email.subject or '(no subject)' }}</p>
-                <p class="helper-email-line"><strong>From:</strong> {{ task.source_inbound_email.sender_raw }}</p>
-                <p class="helper-email-line"><strong>Received:</strong> {{ task.source_inbound_email.created_at.strftime('%b %-d, %Y %I:%M %p') }}</p>
-                {% if task.source_inbound_email.body_text %}
-                <pre class="helper-email-body">{{ task.source_inbound_email.body_text }}</pre>
-                {% endif %}
-            </div>
+            <details class="helper-source-email-details">
+                <summary class="helper-section-title helper-source-email-summary">
+                    <span class="helper-details-chevron" aria-hidden="true"></span>
+                    Source email
+                </summary>
+                <div class="helper-email-block helper-email-block-below-summary">
+                    <p class="helper-email-line"><strong>Subject:</strong> {{ task.source_inbound_email.subject or '(no subject)' }}</p>
+                    <p class="helper-email-line"><strong>From:</strong> {{ task.source_inbound_email.sender_raw }}</p>
+                    <p class="helper-email-line"><strong>Received:</strong> {{ task.source_inbound_email.created_at|user_local_datetime }}</p>
+                    {% if task.source_inbound_email.body_text %}
+                    <pre class="helper-email-body">{{ task.source_inbound_email.body_text }}</pre>
+                    {% endif %}
+                </div>
+            </details>
         </section>
         {% endif %}
 
@@ -90,7 +95,7 @@
                 {% set em = task.completed_via_inbound_email %}
                 <p class="helper-email-line"><strong>Subject:</strong> {{ em.subject or '(no subject)' }}</p>
                 <p class="helper-email-line"><strong>From:</strong> {{ em.sender_raw }}</p>
-                <p class="helper-email-line"><strong>Received:</strong> {{ em.created_at.strftime('%b %-d, %Y %I:%M %p') }}</p>
+                <p class="helper-email-line"><strong>Received:</strong> {{ em.created_at|user_local_datetime }}</p>
                 {% if em.body_text %}
                 <pre class="helper-email-body">{{ em.body_text }}</pre>
                 {% endif %}

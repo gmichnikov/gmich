@@ -444,6 +444,42 @@ a.helper-task-title-link:hover {
     font-style: italic;
 }
 
+/* Collapsible source email (task detail) */
+.helper-source-email-details {
+    margin: 0;
+}
+
+.helper-source-email-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    user-select: none;
+}
+
+.helper-source-email-summary::-webkit-details-marker {
+    display: none;
+}
+
+.helper-details-chevron::before {
+    content: '▶';
+    display: inline-block;
+    font-size: 0.55rem;
+    color: #6b7280;
+    line-height: 1;
+    transition: transform 0.15s ease;
+    transform: rotate(0deg);
+}
+
+.helper-source-email-details[open] .helper-details-chevron::before {
+    transform: rotate(90deg);
+}
+
+.helper-email-block-below-summary {
+    margin-top: 0.75rem;
+}
+
 .helper-email-block {
     background: #fff;
     border: 1px solid #e5e7eb;

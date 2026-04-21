@@ -207,6 +207,32 @@ def create_app():
     def markdown_filter(text):
         return markdown.markdown(text, extensions=["fenced_code", "tables"])
 
+    from app.utils.user_time import format_user_local_datetime, format_user_local_date
+
+    @app.template_filter("user_local_datetime")
+    def user_local_datetime_filter(dt, fmt=None):
+        """Format a UTC naive datetime in the logged-in user's profile timezone."""
+        from flask_login import current_user
+
+        user = current_user if getattr(current_user, "is_authenticated", False) else None
+        if dt is None:
+            return ""
+        if fmt is None:
+            fmt = "%b %-d, %Y %-I:%M %p %Z"
+        return format_user_local_datetime(dt, user, fmt)
+
+    @app.template_filter("user_local_date")
+    def user_local_date_filter(value, fmt=None):
+        """
+        Calendar date: format as-is. Datetime: convert to user's zone, then format date part.
+        """
+        from flask_login import current_user
+
+        user = current_user if getattr(current_user, "is_authenticated", False) else None
+        if fmt is None:
+            fmt = "%b %-d, %Y"
+        return format_user_local_date(value, user, fmt)
+
     # User loader for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):

@@ -38,12 +38,12 @@
                         <a href="{{ url_for('helper.task_detail', task_id=task.id) }}" class="helper-task-title helper-task-title-link">{{ task.title }}</a>
                         <div class="helper-task-meta">
                             {% if task.due_date %}
-                            <span class="helper-task-due">Due {{ task.due_date.strftime('%b %-d, %Y') }}</span>
+                            <span class="helper-task-due">Due {{ task.due_date|user_local_date('%b %-d, %Y') }}</span>
                             {% endif %}
                             {% if task.assignee %}
                             <span class="helper-task-assignee">→ {{ task.assignee.short_name }}</span>
                             {% endif %}
-                            <span class="helper-task-created">Added {{ task.created_at.strftime('%b %-d, %Y') }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}</span>
+                            <span class="helper-task-created">Added {{ task.created_at|user_local_date }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}</span>
                         </div>
 
                         <!-- Notes: show text with Edit link, or "Add note" if empty -->
@@ -106,11 +106,11 @@
                         </div>
                         <div class="helper-task-meta">
                             <span class="helper-task-created">
-                                Added {{ task.created_at.strftime('%b %-d, %Y') }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}
+                                Added {{ task.created_at|user_local_date }}{% if task.creator %} by {{ task.creator.short_name }}{% endif %}
                             </span>
                             {% if task.completed_at %}
                             <span class="helper-task-created">
-                                Done {{ task.completed_at.strftime('%b %-d, %Y') }}{% if task.completer %} by {{ task.completer.short_name }}{% endif %}
+                                Done {{ task.completed_at|user_local_date }}{% if task.completer %} by {{ task.completer.short_name }}{% endif %}
                             </span>
                             {% endif %}
                         </div>

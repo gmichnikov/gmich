@@ -44,7 +44,7 @@
                     <li class="helper-task-item">
                         <span class="helper-task-title">{{ task.title }}</span>
                         {% if task.due_date %}
-                        <span class="helper-task-due">Due {{ task.due_date.strftime('%b %-d') }}</span>
+                        <span class="helper-task-due">Due {{ task.due_date|user_local_date('%b %-d') }}</span>
                         {% endif %}
                         {% if task.assignee %}
                         <span class="helper-task-assignee">{{ task.assignee.short_name }}</span>

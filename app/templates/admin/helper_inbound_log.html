@@ -34,7 +34,7 @@
         {% for row in rows.items %}
         <tr style="border-bottom:1px solid #f3f4f6; vertical-align:top;">
           <td style="padding:0.55rem 0.9rem; color:#9ca3af; white-space:nowrap;">{{ row.id }}</td>
-          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">{{ row.created_at.strftime('%m/%d %H:%M') }}</td>
+          <td style="padding:0.55rem 0.9rem; white-space:nowrap;">{{ row.created_at|user_local_datetime('%m/%d %H:%M') }}</td>
           <td style="padding:0.55rem 0.9rem; white-space:nowrap;">
             <span style="
               padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;
