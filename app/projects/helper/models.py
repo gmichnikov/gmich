@@ -125,6 +125,55 @@ class HelperReminderLog(db.Model):
         return f"<HelperReminderLog {self.id}: {self.action_type} task={self.task_id}>"
 
 
+class HelperEvalRun(db.Model):
+    """One run of the router eval suite (all fixtures for one execution)."""
+
+    __tablename__ = "helper_eval_run"
+
+    id = db.Column(db.Integer, primary_key=True)
+    run_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    model = db.Column(db.String(100), nullable=False)
+    fixture_file = db.Column(db.String(255), nullable=False)
+    total = db.Column(db.Integer, nullable=False, default=0)
+    passed = db.Column(db.Integer, nullable=False, default=0)
+    failed = db.Column(db.Integer, nullable=False, default=0)
+    errored = db.Column(db.Integer, nullable=False, default=0)
+
+    results = db.relationship(
+        "HelperEvalResult", back_populates="run", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (db.Index("ix_helper_eval_run_run_at", "run_at"),)
+
+    def __repr__(self):
+        return f"<HelperEvalRun {self.id}: {self.passed}/{self.total} passed>"
+
+
+class HelperEvalResult(db.Model):
+    """One fixture result within a router eval run."""
+
+    __tablename__ = "helper_eval_result"
+
+    id = db.Column(db.Integer, primary_key=True)
+    run_id = db.Column(db.Integer, db.ForeignKey("helper_eval_run.id"), nullable=False)
+    fixture_id = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    expected_route = db.Column(db.String(50), nullable=False)
+    actual_route = db.Column(db.String(50), nullable=True)
+    passed = db.Column(db.Boolean, nullable=False, default=False)
+    raw_response = db.Column(db.Text, nullable=True)
+    error_message = db.Column(db.Text, nullable=True)
+    latency_ms = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    run = db.relationship("HelperEvalRun", back_populates="results")
+
+    __table_args__ = (db.Index("ix_helper_eval_result_run_id", "run_id"),)
+
+    def __repr__(self):
+        return f"<HelperEvalResult {self.fixture_id}: {'PASS' if self.passed else 'FAIL'}>"
+
+
 class HelperTask(db.Model):
     __tablename__ = "helper_task"
 

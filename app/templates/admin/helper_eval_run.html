@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Eval Run #{{ run.id }}{% endblock %}
+
+{% block content %}
+<div style="background:#f3f4f6; min-height:100vh; margin-top:-1px;">
+<div style="padding:2rem 1.5rem; max-width:1000px; margin:0 auto;">
+
+  <div style="display:flex; align-items:baseline; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <h1 style="margin:0; font-size:1.4rem; font-weight:700;">🧪 Eval Run #{{ run.id }}</h1>
+    <span style="color:#6b7280; font-size:0.9rem;">{{ run.run_at | user_local_datetime('%b %-d, %Y %-I:%M %p') }}</span>
+    <div style="margin-left:auto;">
+      <a href="{{ url_for('admin.helper_evals') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← All Runs</a>
+    </div>
+  </div>
+
+  <style>
+    .evr-summary { background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.07); padding:1.25rem 1.5rem; margin-bottom:1.25rem; display:flex; gap:2rem; flex-wrap:wrap; align-items:center; }
+    .evr-stat { text-align:center; }
+    .evr-stat-num { font-size:1.6rem; font-weight:700; line-height:1; }
+    .evr-stat-label { font-size:0.75rem; color:#6b7280; margin-top:0.25rem; }
+    .evr-table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.07); font-size:0.86rem; }
+    .evr-table th { background:#f9fafb; color:#6b7280; font-size:0.76rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; padding:0.6rem 1rem; text-align:left; border-bottom:1px solid #f3f4f6; }
+    .evr-table td { padding:0.6rem 1rem; border-bottom:1px solid #f9fafb; vertical-align:top; }
+    .evr-table tr:last-child td { border-bottom:none; }
+    .evr-pass { background:#f0fdf4; }
+    .evr-fail { background:#fff7f7; }
+    .evr-badge { padding:0.15rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:600; white-space:nowrap; }
+    .evr-mono { font-family:monospace; font-size:0.78rem; color:#4b5563; }
+    .evr-desc { color:#6b7280; font-size:0.8rem; }
+  </style>
+
+  {% set pct = (run.passed / run.total * 100) | int if run.total > 0 else 0 %}
+
+  <div class="evr-summary">
+    <div class="evr-stat">
+      <div class="evr-stat-num" style="color:{% if pct == 100 %}#15803d{% elif pct >= 80 %}#374151{% else %}#dc2626{% endif %};">{{ pct }}%</div>
+      <div class="evr-stat-label">pass rate</div>
+    </div>
+    <div class="evr-stat">
+      <div class="evr-stat-num">{{ run.total }}</div>
+      <div class="evr-stat-label">fixtures</div>
+    </div>
+    <div class="evr-stat">
+      <div class="evr-stat-num" style="color:#15803d;">{{ run.passed }}</div>
+      <div class="evr-stat-label">passed</div>
+    </div>
+    <div class="evr-stat">
+      <div class="evr-stat-num" style="color:{% if run.failed > 0 %}#dc2626{% else %}#9ca3af{% endif %};">{{ run.failed }}</div>
+      <div class="evr-stat-label">failed</div>
+    </div>
+    <div class="evr-stat">
+      <div class="evr-stat-num" style="color:{% if run.errored > 0 %}#d97706{% else %}#9ca3af{% endif %};">{{ run.errored }}</div>
+      <div class="evr-stat-label">errored</div>
+    </div>
+    <div style="margin-left:auto; text-align:right;">
+      <div class="evr-mono">{{ run.model }}</div>
+      <div class="evr-desc" style="margin-top:0.25rem;">{{ run.fixture_file }}</div>
+    </div>
+  </div>
+
+  {% set results = run.results | sort(attribute='fixture_id') %}
+  {% set failures = results | selectattr('passed', 'false') | list %}
+  {% set passes = results | selectattr('passed', 'true') | list %}
+
+  {% if failures %}
+  <h2 style="font-size:1rem; font-weight:700; color:#dc2626; margin:0 0 0.75rem 0;">Failed & errored ({{ failures | length }})</h2>
+  <table class="evr-table" style="margin-bottom:1.5rem;">
+    <thead>
+      <tr>
+        <th>Fixture</th>
+        <th>Description</th>
+        <th>Expected</th>
+        <th>Actual</th>
+        <th>Latency</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in failures %}
+      <tr class="evr-fail">
+        <td class="evr-mono">{{ r.fixture_id }}</td>
+        <td class="evr-desc">{{ r.description or '—' }}</td>
+        <td><span class="evr-badge" style="background:#dbeafe; color:#1e40af;">{{ r.expected_route }}</span></td>
+        <td>
+          {% if r.error_message %}
+          <span class="evr-badge" style="background:#fef3c7; color:#92400e;">error</span>
+          {% elif r.actual_route %}
+          <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">{{ r.actual_route }}</span>
+          {% else %}
+          <span style="color:#9ca3af;">—</span>
+          {% endif %}
+        </td>
+        <td class="evr-desc" style="white-space:nowrap;">{{ r.latency_ms }}ms</td>
+        <td class="evr-desc" style="max-width:220px; word-break:break-word;">{{ r.error_message or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h2 style="font-size:1rem; font-weight:700; color:#374151; margin:0 0 0.75rem 0;">All results ({{ results | length }})</h2>
+  <table class="evr-table">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Fixture</th>
+        <th>Description</th>
+        <th>Expected</th>
+        <th>Actual</th>
+        <th>Latency</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+      <tr class="{% if r.passed %}evr-pass{% else %}evr-fail{% endif %}">
+        <td>
+          {% if r.passed %}
+          <span class="evr-badge" style="background:#d1fae5; color:#065f46;">PASS</span>
+          {% elif r.error_message %}
+          <span class="evr-badge" style="background:#fef3c7; color:#92400e;">ERR</span>
+          {% else %}
+          <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">FAIL</span>
+          {% endif %}
+        </td>
+        <td class="evr-mono">{{ r.fixture_id }}</td>
+        <td class="evr-desc">{{ r.description or '—' }}</td>
+        <td><span class="evr-badge" style="background:#f3f4f6; color:#374151;">{{ r.expected_route }}</span></td>
+        <td>
+          {% if r.actual_route %}
+          <span class="evr-badge" style="background:{% if r.passed %}#d1fae5; color:#065f46{% else %}#fee2e2; color:#991b1b{% endif %};">{{ r.actual_route }}</span>
+          {% else %}
+          <span style="color:#9ca3af;">—</span>
+          {% endif %}
+        </td>
+        <td class="evr-desc" style="white-space:nowrap;">{{ r.latency_ms }}ms</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+</div>
+{% endblock %}

@@ -259,6 +259,146 @@ def seed_command(user_email, clear):
     )
 
 
+@helper_cli.command("eval-router")
+@click.option(
+    "--fixture-file",
+    default=None,
+    help="Path to fixture JSON file. Defaults to the bundled router_fixtures.json.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Run evals and print results but do not write to the database.",
+)
+@with_appcontext
+def eval_router_command(fixture_file, dry_run):
+    """
+    Run the router eval suite against Claude and record results.
+
+    Each fixture in the JSON file is sent through route_email() and the
+    actual route is compared against expected_route. Results are saved to
+    helper_eval_run / helper_eval_result tables.
+
+    Run: flask helper eval-router
+    """
+    import json
+    import time as time_mod
+    import os
+
+    from app.projects.helper.claude import CLAUDE_MODEL, ClaudeResponseError, route_email
+    from app.projects.helper.models import HelperEvalResult, HelperEvalRun
+
+    if fixture_file is None:
+        fixture_file = os.path.join(
+            os.path.dirname(__file__), "evals", "router_fixtures.json"
+        )
+
+    with open(fixture_file) as f:
+        fixtures = json.load(f)
+
+    # Fake member list — good enough for routing classification
+    fake_members = [
+        ("Greg M.", "greg@example.com"),
+        ("Alex M.", "alex@example.com"),
+    ]
+    fake_sender_tz = "America/New_York"
+
+    click.echo(f"Running {len(fixtures)} router fixtures against {CLAUDE_MODEL}...")
+
+    run = HelperEvalRun(
+        model=CLAUDE_MODEL,
+        fixture_file=os.path.basename(fixture_file),
+        total=len(fixtures),
+    )
+    if not dry_run:
+        db.session.add(run)
+        db.session.flush()
+
+    passed = failed = errored = 0
+    result_rows = []
+
+    for fixture in fixtures:
+        fid = fixture["id"]
+        expected = fixture["expected_route"]
+        subject = fixture.get("subject", "")
+        body = fixture.get("body", "")
+        open_tasks = fixture.get("open_tasks") or []
+
+        t0 = time_mod.monotonic()
+        actual_route = None
+        raw_response = None
+        error_message = None
+
+        try:
+            router_result = route_email(
+                subject=subject,
+                body=body,
+                member_names_emails=fake_members,
+                sender_tz=fake_sender_tz,
+                open_tasks=open_tasks,
+            )
+            actual_route = router_result.get("route", "")
+            raw_response = str(router_result)
+        except ClaudeResponseError as e:
+            error_message = str(e)
+            raw_response = e.raw_response
+            errored += 1
+        except Exception as e:
+            error_message = str(e)
+            errored += 1
+
+        latency_ms = int((time_mod.monotonic() - t0) * 1000)
+        ok = (actual_route == expected) and error_message is None
+
+        if ok:
+            passed += 1
+            status_label = click.style("PASS", fg="green")
+        elif error_message:
+            status_label = click.style("ERR ", fg="red")
+        else:
+            failed += 1
+            status_label = click.style("FAIL", fg="red")
+
+        click.echo(
+            f"  [{status_label}] {fid:<40} expected={expected:<15} actual={actual_route or error_message or '—'} ({latency_ms}ms)"
+        )
+
+        result_rows.append(
+            HelperEvalResult(
+                run_id=run.id if not dry_run else 0,
+                fixture_id=fid,
+                description=fixture.get("description"),
+                expected_route=expected,
+                actual_route=actual_route,
+                passed=ok,
+                raw_response=str(raw_response)[:4000] if raw_response else None,
+                error_message=error_message,
+                latency_ms=latency_ms,
+            )
+        )
+
+    run.passed = passed
+    run.failed = failed
+    run.errored = errored
+
+    if not dry_run:
+        for r in result_rows:
+            r.run_id = run.id
+            db.session.add(r)
+        db.session.commit()
+        click.echo(f"\nResults saved (run id={run.id}).")
+    else:
+        click.echo("\n[dry-run] Results not saved.")
+
+    pass_rate = int(100 * passed / len(fixtures)) if fixtures else 0
+    click.echo(
+        f"\nTotal: {len(fixtures)}  Passed: {passed}  Failed: {failed}  Errored: {errored}  ({pass_rate}%)"
+    )
+
+    if failed or errored:
+        raise SystemExit(1)
+
+
 def _delete_seed_group(group):
     from app.projects.helper.models import (
         HelperActionLog,

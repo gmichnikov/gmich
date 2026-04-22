@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper Router Evals{% endblock %}
+
+{% block content %}
+<div style="background:#f3f4f6; min-height:100vh; margin-top:-1px;">
+<div style="padding:2rem 1.5rem; max-width:900px; margin:0 auto;">
+
+  <div style="display:flex; align-items:baseline; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <h1 style="margin:0; font-size:1.4rem; font-weight:700;">🧪 Router Evals</h1>
+    <span style="color:#6b7280; font-size:0.9rem;">{{ runs.total }} runs</span>
+    <div style="margin-left:auto;">
+      <a href="{{ url_for('admin.helper_admin') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Helper Admin</a>
+    </div>
+  </div>
+
+  <style>
+    .ev-table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.07); font-size:0.87rem; }
+    .ev-table th { background:#f9fafb; color:#6b7280; font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; padding:0.65rem 1rem; text-align:left; border-bottom:1px solid #f3f4f6; }
+    .ev-table td { padding:0.65rem 1rem; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+    .ev-table tr:last-child td { border-bottom:none; }
+    .ev-table tr:hover td { background:#fafafa; }
+    .ev-pass-bar { height:8px; border-radius:4px; background:#e5e7eb; overflow:hidden; min-width:80px; }
+    .ev-pass-bar-fill { height:100%; background:#22c55e; border-radius:4px; }
+    .ev-badge { padding:0.15rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  </style>
+
+  {% if runs.items %}
+  <table class="ev-table">
+    <thead>
+      <tr>
+        <th>Run</th>
+        <th>Date</th>
+        <th>Model</th>
+        <th>Fixtures</th>
+        <th>Pass rate</th>
+        <th>Failed</th>
+        <th>Errored</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs.items %}
+      {% set pct = (run.passed / run.total * 100) | int if run.total > 0 else 0 %}
+      <tr>
+        <td style="color:#9ca3af; font-size:0.8rem;">#{{ run.id }}</td>
+        <td style="white-space:nowrap;">{{ run.run_at | user_local_datetime('%b %-d, %Y %-I:%M %p') }}</td>
+        <td style="font-family:monospace; font-size:0.8rem; color:#4b5563;">{{ run.model }}</td>
+        <td style="text-align:center;">{{ run.total }}</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div class="ev-pass-bar" style="width:80px;">
+              <div class="ev-pass-bar-fill" style="width:{{ pct }}%;{% if pct < 80 %} background:#f59e0b;{% endif %}{% if pct < 60 %} background:#ef4444;{% endif %}"></div>
+            </div>
+            <span style="font-size:0.82rem; color:{% if pct == 100 %}#15803d{% elif pct >= 80 %}#374151{% else %}#dc2626{% endif %}; font-weight:600;">{{ pct }}%</span>
+          </div>
+        </td>
+        <td style="text-align:center;">
+          {% if run.failed > 0 %}
+          <span class="ev-badge" style="background:#fee2e2; color:#991b1b;">{{ run.failed }}</span>
+          {% else %}
+          <span style="color:#9ca3af;">0</span>
+          {% endif %}
+        </td>
+        <td style="text-align:center;">
+          {% if run.errored > 0 %}
+          <span class="ev-badge" style="background:#fef3c7; color:#92400e;">{{ run.errored }}</span>
+          {% else %}
+          <span style="color:#9ca3af;">0</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('admin.helper_eval_run', run_id=run.id) }}" style="font-size:0.82rem; color:#2563eb; text-decoration:none;">Details →</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if runs.pages > 1 %}
+  <div style="margin-top:1.25rem; display:flex; gap:0.5rem; justify-content:center; align-items:center;">
+    {% if runs.has_prev %}
+    <a href="{{ url_for('admin.helper_evals', page=runs.prev_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Prev</a>
+    {% endif %}
+    <span style="color:#6b7280; font-size:0.85rem;">Page {{ runs.page }} of {{ runs.pages }}</span>
+    {% if runs.has_next %}
+    <a href="{{ url_for('admin.helper_evals', page=runs.next_num) }}" style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="background:white; border-radius:12px; padding:2rem; text-align:center; color:#9ca3af; box-shadow:0 2px 10px rgba(0,0,0,0.07);">
+    No eval runs yet. Run <code style="background:#f3f4f6; padding:0.1rem 0.4rem; border-radius:3px;">flask helper eval-router</code> to get started.
+  </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

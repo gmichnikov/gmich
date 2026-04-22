@@ -647,6 +647,31 @@ def helper_action_log():
     return render_template("admin/helper_action_log.html", rows=rows)
 
 
+@admin_bp.route("/helper/evals")
+@login_required
+@admin_required
+def helper_evals():
+    """Router eval run history."""
+    from app.projects.helper.models import HelperEvalRun
+    page = request.args.get("page", 1, type=int)
+    runs = (
+        HelperEvalRun.query
+        .order_by(HelperEvalRun.run_at.desc())
+        .paginate(page=page, per_page=30, error_out=False)
+    )
+    return render_template("admin/helper_evals.html", runs=runs)
+
+
+@admin_bp.route("/helper/evals/<int:run_id>")
+@login_required
+@admin_required
+def helper_eval_run(run_id):
+    """Detail view for a single eval run."""
+    from app.projects.helper.models import HelperEvalRun
+    run = HelperEvalRun.query.get_or_404(run_id)
+    return render_template("admin/helper_eval_run.html", run=run)
+
+
 @admin_bp.route("/helper/email-detail")
 @login_required
 @admin_required
