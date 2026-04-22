@@ -747,6 +747,67 @@ Reply to {group_address} to add tasks or send updates.
         return None
 
 
+def notify_eval_summary_to_admin(
+    run_id: int,
+    model: str,
+    total: int,
+    passed: int,
+    failed: int,
+    errored: int,
+    failed_fixtures: list[dict],
+):
+    """
+    Email ADMIN_EMAIL a summary of a router eval run.
+
+    Always sent (pass or fail) so the daily run acts as a heartbeat.
+    Skips quietly if ADMIN_EMAIL is unset. Logs failures; does not raise.
+
+    failed_fixtures: list of dicts with keys fixture_id, expected_route, actual_route, error_message.
+    """
+    admin = os.getenv("ADMIN_EMAIL", "").strip()
+    if not admin:
+        logger.warning("ADMIN_EMAIL not set; skipping eval summary notification")
+        return None
+
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    run_url = f"{base_url}/admin/helper/evals/{run_id}"
+    pct = int(100 * passed / total) if total else 0
+
+    if failed or errored:
+        subject = f"[Helper Eval] {passed}/{total} passed ({pct}%) — {failed + errored} failure{'s' if failed + errored != 1 else ''}"
+    else:
+        subject = f"[Helper Eval] All {total} passed ✓"
+
+    failures_block = ""
+    if failed_fixtures:
+        lines = []
+        for fx in failed_fixtures:
+            actual = fx.get("actual_route") or fx.get("error_message") or "—"
+            lines.append(f"  • {fx['fixture_id']}: expected {fx['expected_route']}, got {actual}")
+        failures_block = "\nFailed:\n" + "\n".join(lines) + "\n"
+
+    text_content = f"""Router eval run complete.
+
+Run #{run_id} · {model}
+Total: {total}  Passed: {passed}  Failed: {failed}  Errored: {errored}  ({pct}%)
+{failures_block}
+View results: {run_url}
+"""
+
+    try:
+        send_email(
+            to_email=admin,
+            subject=subject,
+            text_content=text_content,
+            from_name="Helper",
+        )
+        logger.info("Eval summary sent to admin for run_id=%s", run_id)
+        return True
+    except Exception as e:
+        logger.error("Failed to send eval summary for run_id=%s: %s", run_id, e)
+        return None
+
+
 def notify_helper_claude_error_to_admin(
     inbound_id: int,
     group_name: str,

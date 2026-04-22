@@ -259,6 +259,16 @@
       "expected_route": "complete_task"
     },
     {
+      "id": "add-reminder-against-existing-task",
+      "description": "Asking for a reminder about an existing open task — should be add_task not complete_task",
+      "subject": "Remind me about the camp registration on Wednesday at 9am",
+      "body": "",
+      "open_tasks": [
+        {"id": 115, "title": "Register for summer camp", "notes": "Deadline April 30, fee $350"}
+      ],
+      "expected_route": "add_task"
+    },
+    {
       "id": "complete-fwd-receipt-electric-matches-task",
       "description": "Forwarded electric bill payment receipt matching an open task",
       "subject": "Fwd: Payment confirmation – Springfield Electric",

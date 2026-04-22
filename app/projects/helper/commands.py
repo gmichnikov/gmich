@@ -394,6 +394,28 @@ def eval_router_command(fixture_file, dry_run):
             db.session.add(r)
         db.session.commit()
         click.echo(f"\nResults saved (run id={run.id}).")
+
+        # Send summary email to admin
+        from app.projects.helper.email import notify_eval_summary_to_admin
+        failed_fixtures = [
+            {
+                "fixture_id": r.fixture_id,
+                "expected_route": r.expected_route,
+                "actual_route": r.actual_route,
+                "error_message": r.error_message,
+            }
+            for r in result_rows
+            if not r.passed
+        ]
+        notify_eval_summary_to_admin(
+            run_id=run.id,
+            model=CLAUDE_MODEL,
+            total=len(fixtures),
+            passed=passed,
+            failed=failed,
+            errored=errored,
+            failed_fixtures=failed_fixtures,
+        )
     else:
         click.echo("\n[dry-run] Results not saved.")
 
