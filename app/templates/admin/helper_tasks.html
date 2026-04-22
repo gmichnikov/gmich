@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Helper — Tasks (admin){% endblock %}
+
+{% block content %}
+<div style="background:#f3f4f6; min-height:100vh; margin-top:-1px;">
+<div style="padding:2rem 1.5rem; max-width:1280px; margin:0 auto;">
+
+  <div style="display:flex; align-items:baseline; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+    <h1 style="margin:0; font-size:1.4rem; font-weight:700;">📌 Helper tasks</h1>
+    <span style="color:#6b7280; font-size:0.9rem;">{{ rows.total }} total — audit by task (reminders, people, inbound links)</span>
+    <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{{ url_for('admin.helper_email_detail') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Email detail</a>
+      <a href="{{ url_for('admin.helper_action_log') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">Action log</a>
+      <a href="{{ url_for('admin.helper_admin') }}" style="padding:0.35rem 0.9rem; background:#f3f4f6; color:#374151; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Helper Admin</a>
+    </div>
+  </div>
+
+  <form method="get" action="{{ url_for('admin.helper_tasks') }}"
+    style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end; margin-bottom:1.25rem; background:white; padding:1rem 1.25rem; border-radius:10px; box-shadow:0 1px 8px rgba(0,0,0,0.06);">
+    <div>
+      <label for="f-status" style="display:block; font-size:0.78rem; color:#6b7280; margin-bottom:0.25rem;">Status</label>
+      <select id="f-status" name="status" style="padding:0.45rem 0.6rem; border-radius:6px; border:1px solid #d1d5db; font-size:0.88rem;">
+        <option value="" {% if not filter_status %}selected{% endif %}>All</option>
+        <option value="open" {% if filter_status == 'open' %}selected{% endif %}>Open</option>
+        <option value="complete" {% if filter_status == 'complete' %}selected{% endif %}>Complete</option>
+      </select>
+    </div>
+    <div>
+      <label for="f-group" style="display:block; font-size:0.78rem; color:#6b7280; margin-bottom:0.25rem;">Group</label>
+      <select id="f-group" name="group_id" style="padding:0.45rem 0.6rem; border-radius:6px; border:1px solid #d1d5db; font-size:0.88rem; min-width:12rem;">
+        <option value="">All groups</option>
+        {% for g in groups %}
+        <option value="{{ g.id }}" {% if filter_group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" style="padding:0.45rem 1rem; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:0.88rem; cursor:pointer;">Apply</button>
+    {% if filter_status or filter_group_id %}
+    <a href="{{ url_for('admin.helper_tasks') }}" style="font-size:0.85rem; color:#6b7280; align-self:center;">Clear filters</a>
+    {% endif %}
+  </form>
+
+  {% if rows.items %}
+  <div style="overflow-x:auto; background:white; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+    <table style="width:100%; border-collapse:collapse; font-size:0.84rem;">
+      <thead>
+        <tr style="border-bottom:2px solid #e5e7eb; background:#f9fafb; text-align:left;">
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">ID</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Title</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Group</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Status</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Due</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Assignee</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Updated</th>
+          <th style="padding:0.6rem 0.85rem; color:#6b7280;">Reminder</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in rows.items %}
+        <tr style="border-bottom:1px solid #f3f4f6; vertical-align:top;">
+          <td style="padding:0.55rem 0.85rem; color:#9ca3af; white-space:nowrap;">{{ t.id }}</td>
+          <td style="padding:0.55rem 0.85rem; max-width:280px;">
+            <a href="{{ url_for('admin.helper_task_detail', task_id=t.id) }}" style="color:#1d4ed8; font-weight:600; text-decoration:none;">{{ t.title[:80] }}{% if t.title|length > 80 %}…{% endif %}</a>
+            <div style="margin-top:0.25rem;">
+              <a href="{{ url_for('helper.task_detail', task_id=t.id) }}" style="font-size:0.76rem; color:#6b7280;">Member view →</a>
+            </div>
+          </td>
+          <td style="padding:0.55rem 0.85rem; white-space:nowrap;">{{ t.group.name if t.group else '—' }}</td>
+          <td style="padding:0.55rem 0.85rem;">
+            <span style="padding:0.12rem 0.45rem; border-radius:4px; font-size:0.75rem; font-weight:600;
+              background:{% if t.status == 'open' %}#dbeafe{% else %}#e5e7eb{% endif %};
+              color:{% if t.status == 'open' %}#1e40af{% else %}#374151{% endif %};">{{ t.status }}</span>
+          </td>
+          <td style="padding:0.55rem 0.85rem; white-space:nowrap;">{% if t.due_date %}{{ t.due_date.isoformat() }}{% else %}—{% endif %}</td>
+          <td style="padding:0.55rem 0.85rem;">{{ t.assignee.full_name if t.assignee else '—' }}</td>
+          <td style="padding:0.55rem 0.85rem; white-space:nowrap; color:#4b5563;">{{ t.updated_at|user_local_datetime('%m/%d %H:%M') }}</td>
+          <td style="padding:0.55rem 0.85rem; font-size:0.8rem; color:#4b5563;">
+            {% if t.reminder_at %}
+              {% if t.reminder_sent_at %}<span title="Sent">✓ sent</span>{% else %}⏱ pending{% endif %}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem; display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+    {% if prev_url %}
+    <a href="{{ prev_url }}"
+      style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">← Prev</a>
+    {% endif %}
+    <span style="color:#6b7280; font-size:0.85rem;">Page {{ rows.page }} of {{ rows.pages or 1 }}</span>
+    {% if next_url %}
+    <a href="{{ next_url }}"
+      style="padding:0.4rem 1rem; background:#3b82f6; color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">Next →</a>
+    {% endif %}
+  </div>
+  {% else %}
+  <p style="color:#6b7280;">No tasks match these filters.</p>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

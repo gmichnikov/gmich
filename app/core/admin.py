@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.models import User, LogEntry, db
@@ -657,3 +659,116 @@ def helper_email_detail():
         .paginate(page=page, per_page=25, error_out=False)
     )
     return render_template("admin/helper_email_detail.html", rows=rows)
+
+
+# ---------------------------------------------------------------------------
+# Helper — Task audit (core unit: one row per task)
+# ---------------------------------------------------------------------------
+
+
+@admin_bp.route("/helper/tasks")
+@login_required
+@admin_required
+def helper_tasks():
+    """Paginated task list for admin audit (reminders, provenance, people)."""
+    from sqlalchemy.orm import joinedload
+
+    from app.projects.helper.models import HelperGroup, HelperTask
+
+    page = request.args.get("page", 1, type=int)
+    status = (request.args.get("status") or "").strip().lower()
+    group_id = request.args.get("group_id", type=int)
+
+    q = HelperTask.query.options(
+        joinedload(HelperTask.group),
+        joinedload(HelperTask.assignee),
+        joinedload(HelperTask.creator),
+    )
+    if status in ("open", "complete"):
+        q = q.filter(HelperTask.status == status)
+    if group_id:
+        q = q.filter(HelperTask.group_id == group_id)
+
+    rows = q.order_by(HelperTask.updated_at.desc()).paginate(
+        page=page, per_page=40, error_out=False
+    )
+    groups = HelperGroup.query.order_by(HelperGroup.name).all()
+
+    def _tasks_page_url(p: int) -> str:
+        args = {"page": p}
+        if status in ("open", "complete"):
+            args["status"] = status
+        if group_id:
+            args["group_id"] = group_id
+        return url_for("admin.helper_tasks") + "?" + urlencode(args)
+
+    prev_url = _tasks_page_url(rows.prev_num) if rows.has_prev else None
+    next_url = _tasks_page_url(rows.next_num) if rows.has_next else None
+
+    return render_template(
+        "admin/helper_tasks.html",
+        rows=rows,
+        groups=groups,
+        filter_status=status,
+        filter_group_id=group_id,
+        prev_url=prev_url,
+        next_url=next_url,
+    )
+
+
+@admin_bp.route("/helper/tasks/<int:task_id>")
+@login_required
+@admin_required
+def helper_task_detail(task_id):
+    """Single-task audit: fields, reminders, inbound provenance, action logs."""
+    from sqlalchemy.orm import joinedload
+
+    from app.projects.helper.models import HelperActionLog, HelperTask
+
+    task = (
+        HelperTask.query.options(
+            joinedload(HelperTask.group),
+            joinedload(HelperTask.assignee),
+            joinedload(HelperTask.creator),
+            joinedload(HelperTask.completer),
+            joinedload(HelperTask.source_inbound_email),
+            joinedload(HelperTask.completed_via_inbound_email),
+            joinedload(HelperTask.reminder_logs),
+        )
+        .filter_by(id=task_id)
+        .first_or_404()
+    )
+
+    reminder_logs = sorted(
+        task.reminder_logs or [],
+        key=lambda r: r.created_at,
+    )
+
+    source_actions = []
+    if task.source_inbound_email_id:
+        source_actions = (
+            HelperActionLog.query.filter_by(
+                inbound_email_id=task.source_inbound_email_id
+            )
+            .order_by(HelperActionLog.created_at.asc())
+            .limit(80)
+            .all()
+        )
+
+    completion_actions = []
+    cid = task.completed_via_inbound_email_id
+    if cid and cid != task.source_inbound_email_id:
+        completion_actions = (
+            HelperActionLog.query.filter_by(inbound_email_id=cid)
+            .order_by(HelperActionLog.created_at.asc())
+            .limit(80)
+            .all()
+        )
+
+    return render_template(
+        "admin/helper_task_detail.html",
+        task=task,
+        reminder_logs=reminder_logs,
+        source_actions=source_actions,
+        completion_actions=completion_actions,
+    )
