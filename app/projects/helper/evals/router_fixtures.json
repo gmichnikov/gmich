@@ -259,6 +259,16 @@
       "expected_route": "complete_task"
     },
     {
+      "id": "add-i-need-to-future-tense-with-open-task",
+      "description": "'I need to do X' is future tense — should be add_task even when a matching open task exists",
+      "subject": "I need to Do pomptonian",
+      "body": "",
+      "open_tasks": [
+        {"id": 116, "title": "Do pomptonian tonight", "notes": null}
+      ],
+      "expected_route": "add_task"
+    },
+    {
       "id": "add-reminder-against-existing-task",
       "description": "Asking for a reminder about an existing open task — should be add_task not complete_task",
       "subject": "Remind me about the camp registration on Wednesday at 9am",

@@ -157,7 +157,7 @@ Body: {body or '(empty)'}
 ---
 
 Classify this email into exactly one of:
-- **complete_task** — The email is clearly about finishing a task that is **already on the open list above**, and you can confidently identify which one. If the open task list is empty, never use complete_task.
+- **complete_task** — The email is clearly about finishing a task that is **already on the open list above**, and you can confidently identify which one. The language must indicate the work is **already done** ("done", "finished", "completed", "I did X", "✓"). If the open task list is empty, never use complete_task. Never use complete_task for future-tense language ("I need to", "I should", "remind me to", "don't forget to").
 - **add_task** — Use this for anything where the sender wants something recorded, tracked, or logged. This includes:
   - Adding a new future to-do ("don't forget to call the dentist", "Alex needs to pick up the prescription")
   - Reporting something already done ("I signed up", "I paid the bill", "mark that I ate Cheetos today", "Alex picked up the dry cleaning")
@@ -315,7 +315,7 @@ Emails often have a footer after the real message: unsubscribe links, privacy po
 
 Determine:
 1. **already_completed**: true if the email describes work already done (receipt, past-tense confirmation, "I signed up yesterday"). False if it's something to track for the future.
-2. **duplicate_of_task_id**: If already_completed is false and the email is clearly redundant with an existing open task (same real errand), set this to that task's id. Otherwise null. If already_completed is true, always null.
+2. **duplicate_of_task_id**: If already_completed is false and the email refers to the same real-world errand as an existing open task, set this to that task's id. Match loosely — ignore differences in tense, wording, or time qualifiers ("tonight", "today", "this week"). "I need to do X", "Don't forget X", "Reminder: X" should all match an open task titled "Do X tonight" if it's clearly the same thing. If unsure, prefer setting duplicate_of_task_id over creating a new task. If already_completed is true, always null.
 3. All task fields below.
 
 Return a JSON object with all of these keys:
@@ -332,7 +332,7 @@ Return a JSON object with all of these keys:
 
 Field rules:
 - **already_completed**: boolean, required.
-- **duplicate_of_task_id**: null unless clearly redundant with an open task and already_completed is false.
+- **duplicate_of_task_id**: match loosely on the same real-world errand — ignore wording differences, tense, and time qualifiers. When in doubt between creating a new task and flagging a duplicate, prefer the duplicate.
 - **title**: short and action-oriented for to-dos; for already_completed, label what was accomplished.
 - **due_date**: YYYY-MM-DD or null. Date only, no times.
 - **assignee_email**: must exactly match a member email, or null. If the sender says "me" or "I", use null (the system defaults to the sender).
