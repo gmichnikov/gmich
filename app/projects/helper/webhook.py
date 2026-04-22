@@ -11,9 +11,10 @@ Pipeline A:
   7. Resolve sender -> User + membership check
   8. Check for empty content
 
-Pipeline B:
-  9. Call Claude -> parse intent
-  10. Create helper_task on add_task (open, duplicate skip, or logged completed)
+Pipeline B (three-stage LLM):
+  9.  Router call -> route: complete_task | add_task | unknown
+  10. Specialist call -> extracted fields
+  11. Apply side effects (DB writes, confirmation emails)
 """
 import hashlib
 import hmac
@@ -34,8 +35,17 @@ from app.projects.helper.models import (
     HelperInboundEmail,
     HelperTask,
 )
-from app.projects.helper.claude import ClaudeResponseError, parse_email_for_task
-from app.projects.helper.reminder_logic import clear_task_reminders, sync_reminder_with_due_date
+from app.projects.helper.claude import (
+    ClaudeResponseError,
+    route_email,
+    run_complete_task_specialist,
+    run_add_task_specialist,
+)
+from app.projects.helper.reminder_logic import (
+    clear_task_reminders,
+    parse_reminder_at_iso,
+    sync_reminder_with_due_date,
+)
 from app.projects.helper.email import (
     notify_helper_claude_error_to_admin,
     send_duplicate_task_skipped,
@@ -66,7 +76,6 @@ def _coerce_already_completed(raw) -> bool:
 
 
 def _normalize_email(address: str) -> str:
-    """Lowercase and strip whitespace from an email address."""
     return address.strip().lower()
 
 
@@ -86,7 +95,6 @@ def _compute_idempotency_key(form: dict) -> str:
     except Exception:
         pass
 
-    # Fallback
     parts = "|".join([
         form.get("sender", ""),
         form.get("recipient", ""),
@@ -97,10 +105,6 @@ def _compute_idempotency_key(form: dict) -> str:
 
 
 def _verify_mailgun_signature(form: dict) -> bool:
-    """
-    Verify Mailgun webhook signature per Mailgun docs.
-    Requires MAILGUN_WEBHOOK_SIGNING_KEY env var.
-    """
     signing_key = os.getenv("MAILGUN_WEBHOOK_SIGNING_KEY", "")
     if not signing_key:
         logger.error("MAILGUN_WEBHOOK_SIGNING_KEY is not set — cannot verify signature")
@@ -113,7 +117,6 @@ def _verify_mailgun_signature(form: dict) -> bool:
     if not all([token, timestamp, signature]):
         return False
 
-    # Reject stale timestamps (> 5 minutes skew)
     try:
         if abs(time.time() - int(timestamp)) > 300:
             logger.warning("Mailgun webhook timestamp is too old or too far in the future")
@@ -140,6 +143,311 @@ def _log_action(inbound_email: HelperInboundEmail, action_type: str, detail: dic
     )
     db.session.add(log)
     db.session.commit()
+
+
+def _handle_claude_error(inbound, group, sender_user, e, stage: str):
+    """Log a Claude error, set inbound status, send admin alert."""
+    logger.error(
+        "Claude error (stage=%s) for inbound_email id=%s: %s",
+        stage, inbound.id, e,
+        exc_info=True,
+    )
+    inbound.status = "error"
+    db.session.commit()
+    detail = {"stage": stage}
+    if isinstance(e, ClaudeResponseError) and e.raw_response:
+        detail["claude_raw_response"] = e.raw_response[:8000]
+    _log_action(inbound, "claude_error", error=str(e), detail=detail)
+    try:
+        notify_helper_claude_error_to_admin(
+            inbound_id=inbound.id,
+            group_name=group.name,
+            sender_email=sender_user.email,
+            error_message=f"[{stage}] {e}",
+            raw_response=e.raw_response if isinstance(e, ClaudeResponseError) else None,
+        )
+    except Exception as notify_err:
+        logger.error("Failed to send Helper Claude error admin alert: %s", notify_err, exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# Intent handlers
+# ---------------------------------------------------------------------------
+
+def _handle_complete_task(
+    inbound, group, sender_user, open_tasks, open_tasks_db,
+    subject, body_text, member_names_emails, sender_tz,
+):
+    """Stage 2a: run complete-task specialist and apply side effects."""
+    try:
+        specialist_result = run_complete_task_specialist(
+            subject=subject,
+            body=body_text,
+            member_names_emails=member_names_emails,
+            sender_tz=sender_tz,
+            open_tasks=open_tasks,
+        )
+    except Exception as e:
+        _handle_claude_error(inbound, group, sender_user, e, stage="complete_task_specialist")
+        return
+
+    _log_action(inbound, "specialist_complete_task_result", detail={"specialist_response": specialist_result})
+
+    task_id = specialist_result.get("task_id")
+    open_task_ids = {t["id"] for t in open_tasks}
+
+    if not task_id or task_id not in open_task_ids:
+        logger.warning(
+            "Complete-task specialist returned invalid task_id=%s for inbound_email id=%s",
+            task_id, inbound.id,
+        )
+        inbound.status = "processed"
+        db.session.commit()
+        invalid_task = HelperTask.query.get(task_id) if task_id else None
+        _log_action(inbound, "complete_task_invalid_id", detail={
+            "task_id": task_id,
+            "title": invalid_task.title if invalid_task else None,
+            "specialist_response": specialist_result,
+        })
+        send_complete_task_failed(open_tasks_db, sender_user, group)
+        return
+
+    task = HelperTask.query.get(task_id)
+    if not task or task.status != "open":
+        logger.warning(
+            "Complete-task specialist: task id=%s not found or already closed for inbound_email id=%s",
+            task_id, inbound.id,
+        )
+        inbound.status = "processed"
+        db.session.commit()
+        stale_task = HelperTask.query.get(task_id)
+        _log_action(inbound, "complete_task_not_found", detail={
+            "task_id": task_id,
+            "title": stale_task.title if stale_task else None,
+            "specialist_response": specialist_result,
+        })
+        send_complete_task_failed(open_tasks_db, sender_user, group)
+        return
+
+    try:
+        task.status = "complete"
+        task.completed_by_user_id = sender_user.id
+        task.completed_at = datetime.utcnow()
+        task.completed_via_inbound_email_id = inbound.id
+        clear_task_reminders(task)
+        inbound.status = "processed"
+        db.session.commit()
+        _log_action(inbound, "task_completed", detail={
+            "task_id": task.id,
+            "title": task.title,
+            "specialist_response": specialist_result,
+        })
+        logger.info("Task id=%s completed via email for inbound_email id=%s", task.id, inbound.id)
+        send_task_completed_confirmation(task, sender_user, group)
+    except Exception as e:
+        db.session.rollback()
+        logger.error(
+            "Task complete failed for task id=%s inbound_email id=%s: %s",
+            task_id, inbound.id, e,
+        )
+        inbound.status = "error"
+        db.session.commit()
+        err_task = HelperTask.query.get(task_id) if task_id else None
+        _log_action(inbound, "complete_task_error", error=str(e), detail={
+            "task_id": task_id,
+            "title": err_task.title if err_task else None,
+        })
+
+
+def _handle_add_task(
+    inbound, group, sender_user, open_tasks, open_tasks_db,
+    subject, body_text, member_names_emails, sender_tz,
+):
+    """Stage 2b: run add-task specialist and apply side effects."""
+    try:
+        specialist_result = run_add_task_specialist(
+            subject=subject,
+            body=body_text,
+            member_names_emails=member_names_emails,
+            sender_tz=sender_tz,
+            open_tasks=open_tasks,
+        )
+    except Exception as e:
+        _handle_claude_error(inbound, group, sender_user, e, stage="add_task_specialist")
+        return
+
+    _log_action(inbound, "specialist_add_task_result", detail={"specialist_response": specialist_result})
+
+    already_completed = _coerce_already_completed(specialist_result.get("already_completed"))
+
+    # Duplicate detection
+    open_task_ids = {t["id"] for t in open_tasks}
+    dup_raw = specialist_result.get("duplicate_of_task_id")
+    dup_id = None
+    if not already_completed and dup_raw is not None and dup_raw != "":
+        try:
+            dup_id = int(dup_raw)
+        except (TypeError, ValueError):
+            dup_id = None
+
+    if not already_completed and dup_id is not None and dup_id in open_task_ids:
+        existing = HelperTask.query.get(dup_id)
+        if existing and existing.group_id == group.id and existing.status == "open":
+            inbound.status = "processed"
+            db.session.commit()
+            _log_action(inbound, "task_duplicate_skipped", detail={
+                "existing_task_id": dup_id,
+                "specialist_response": specialist_result,
+            })
+            notice = send_duplicate_task_skipped(existing, sender_user, group)
+            conf_detail = {"to": sender_user.email, "task_id": existing.id, "title": existing.title}
+            if notice:
+                _log_action(inbound, "duplicate_notice_sent", detail=conf_detail)
+            else:
+                _log_action(inbound, "duplicate_notice_failed", detail=conf_detail)
+            return
+        logger.warning(
+            "duplicate_of_task_id=%s invalid or not open for inbound_email id=%s; creating new task",
+            dup_id, inbound.id,
+        )
+    elif not already_completed and dup_id is not None:
+        logger.warning(
+            "duplicate_of_task_id=%s not in open_tasks for inbound_email id=%s; creating new task",
+            dup_id, inbound.id,
+        )
+
+    title = (specialist_result.get("title") or "").strip()
+    due_date_str = specialist_result.get("due_date")
+    assignee_email = specialist_result.get("assignee_email")
+    notes = (specialist_result.get("notes") or "").strip() or None
+    reminder_at_raw = specialist_result.get("reminder_at")
+
+    if not title:
+        inbound.status = "error"
+        db.session.commit()
+        _log_action(inbound, "claude_error", error="add_task specialist missing title", detail={"specialist_response": specialist_result})
+        return
+
+    # Parse due_date
+    due_date = None
+    if due_date_str:
+        try:
+            from datetime import date
+            due_date = date.fromisoformat(due_date_str)
+        except (ValueError, TypeError):
+            logger.warning("Could not parse due_date '%s' for inbound_email id=%s", due_date_str, inbound.id)
+
+    # Resolve assignee
+    assignee_user_id = None
+    if assignee_email:
+        matched = next(
+            (m.user for m in group.members if m.user and m.user.email.lower() == assignee_email.lower()),
+            None,
+        )
+        if matched:
+            assignee_user_id = matched.id
+        else:
+            logger.info("Specialist assignee '%s' not found in group; leaving unset", assignee_email)
+    if assignee_user_id is None and not assignee_email:
+        assignee_user_id = sender_user.id
+
+    # Parse explicit reminder_at from specialist (§13)
+    explicit_reminder_at = None
+    if reminder_at_raw and not already_completed:
+        explicit_reminder_at = parse_reminder_at_iso(reminder_at_raw)
+        if explicit_reminder_at is None:
+            logger.warning(
+                "Could not parse reminder_at '%s' from specialist for inbound_email id=%s; ignoring",
+                reminder_at_raw, inbound.id,
+            )
+        elif explicit_reminder_at <= datetime.utcnow():
+            logger.warning(
+                "Specialist reminder_at '%s' is not in the future for inbound_email id=%s; ignoring",
+                reminder_at_raw, inbound.id,
+            )
+            explicit_reminder_at = None
+
+    try:
+        if already_completed:
+            task = HelperTask(
+                group_id=group.id,
+                title=title,
+                due_date=due_date,
+                notes=notes,
+                assignee_user_id=assignee_user_id,
+                created_by_user_id=sender_user.id,
+                status="complete",
+                completed_by_user_id=sender_user.id,
+                completed_at=datetime.utcnow(),
+                completed_via_inbound_email_id=inbound.id,
+                source_inbound_email_id=inbound.id,
+            )
+        else:
+            task = HelperTask(
+                group_id=group.id,
+                title=title,
+                due_date=due_date,
+                notes=notes,
+                assignee_user_id=assignee_user_id,
+                created_by_user_id=sender_user.id,
+                status="open",
+                source_inbound_email_id=inbound.id,
+            )
+
+        db.session.add(task)
+        db.session.flush()
+
+        if not already_completed:
+            # §13 precedence: explicit reminder_at wins over sync_reminder_with_due_date
+            if explicit_reminder_at is not None:
+                task.reminder_at = explicit_reminder_at
+                task.reminder_sent_at = None
+                logger.info(
+                    "Explicit reminder_at=%s set for task id=%s from inbound_email id=%s",
+                    explicit_reminder_at, task.id, inbound.id,
+                )
+            else:
+                sync_reminder_with_due_date(task)
+
+        inbound.status = "processed"
+        db.session.commit()
+
+        reminder_detail = {"reminder_at_raw": reminder_at_raw, "reminder_at_applied": str(explicit_reminder_at) if explicit_reminder_at else None}
+
+        if already_completed:
+            _log_action(inbound, "task_logged_completed", detail={
+                "task_id": task.id,
+                "title": title,
+                "due_date": due_date_str,
+                "assignee_user_id": assignee_user_id,
+                "specialist_response": specialist_result,
+            })
+            logger.info("Task id=%s logged as completed for inbound_email id=%s", task.id, inbound.id)
+            confirmed = send_task_logged_completed_confirmation(task, sender_user, group)
+        else:
+            _log_action(inbound, "task_created", detail={
+                "task_id": task.id,
+                "title": title,
+                "due_date": due_date_str,
+                "assignee_user_id": assignee_user_id,
+                "reminder": reminder_detail,
+                "specialist_response": specialist_result,
+            })
+            logger.info("Task id=%s created for inbound_email id=%s", task.id, inbound.id)
+            confirmed = send_task_confirmation(task, sender_user, group)
+
+        conf_detail = {"to": sender_user.email, "task_id": task.id, "title": task.title}
+        if confirmed:
+            _log_action(inbound, "confirmation_sent", detail=conf_detail)
+        else:
+            _log_action(inbound, "confirmation_failed", detail=conf_detail)
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Task insert failed for inbound_email id=%s: %s", inbound.id, e)
+        inbound.status = "error"
+        db.session.commit()
+        _log_action(inbound, "task_insert_error", error=str(e), detail={"title": title})
 
 
 # ---------------------------------------------------------------------------
@@ -169,11 +477,11 @@ def mailgun_inbound():
     idempotency_key = _compute_idempotency_key(form)
 
     # ------------------------------------------------------------------
-    # Step 3 — Duplicate check (before inserting a new row)
+    # Step 3 — Duplicate check
     # ------------------------------------------------------------------
     existing = HelperInboundEmail.query.filter_by(idempotency_key=idempotency_key).first()
     if existing:
-        logger.info(f"Duplicate inbound email, idempotency_key={idempotency_key}")
+        logger.info("Duplicate inbound email, idempotency_key=%s", idempotency_key)
         if existing.status != "duplicate":
             existing.status = "duplicate"
             db.session.commit()
@@ -181,7 +489,7 @@ def mailgun_inbound():
         return ("", 200)
 
     # ------------------------------------------------------------------
-    # Step 4 — Insert inbound row early (captures every POST for audit)
+    # Step 4 — Insert inbound row
     # ------------------------------------------------------------------
     inbound = HelperInboundEmail(
         idempotency_key=idempotency_key,
@@ -199,7 +507,7 @@ def mailgun_inbound():
     # Step 5 — Verify Mailgun signature
     # ------------------------------------------------------------------
     if not _verify_mailgun_signature(form):
-        logger.warning(f"Invalid Mailgun signature for inbound_email id={inbound.id}")
+        logger.warning("Invalid Mailgun signature for inbound_email id=%s", inbound.id)
         inbound.status = "signature_invalid"
         inbound.signature_valid = False
         db.session.commit()
@@ -217,7 +525,7 @@ def mailgun_inbound():
     ).first()
 
     if not group:
-        logger.info(f"Unknown recipient: {recipient_normalized}")
+        logger.info("Unknown recipient: %s", recipient_normalized)
         inbound.status = "unknown_recipient"
         db.session.commit()
         _log_action(inbound, "unknown_recipient", detail={"recipient": recipient_normalized})
@@ -234,7 +542,7 @@ def mailgun_inbound():
     ).first()
 
     if not sender_user:
-        logger.info(f"Unknown sender user: {sender_normalized}")
+        logger.info("Unknown sender user: %s", sender_normalized)
         inbound.status = "sender_not_allowed"
         db.session.commit()
         _log_action(inbound, "sender_unknown_user", detail={"sender": sender_raw})
@@ -246,7 +554,7 @@ def mailgun_inbound():
     ).first()
 
     if not membership:
-        logger.info(f"Sender {sender_normalized} is not a member of group {group.id}")
+        logger.info("Sender %s is not a member of group %s", sender_normalized, group.id)
         inbound.status = "sender_not_allowed"
         inbound.sender_user_id = sender_user.id
         db.session.commit()
@@ -260,30 +568,29 @@ def mailgun_inbound():
     # Step 8 — Empty content check
     # ------------------------------------------------------------------
     if not subject and not body_text:
-        logger.info(f"Empty content for inbound_email id={inbound.id}")
+        logger.info("Empty content for inbound_email id=%s", inbound.id)
         inbound.status = "empty_content"
         db.session.commit()
         _log_action(inbound, "empty_content")
         return ("", 200)
 
     # ------------------------------------------------------------------
-    # Pipeline B — Claude + task creation
+    # Pipeline B — Three-stage LLM pipeline
     # ------------------------------------------------------------------
     inbound.status = "pending_llm"
     db.session.commit()
     logger.info(
-        f"Inbound email id={inbound.id} accepted for group={group.id}, "
-        f"sender_user={sender_user.id}, calling Claude"
+        "Inbound email id=%s accepted for group=%s, sender_user=%s — starting router",
+        inbound.id, group.id, sender_user.id,
     )
 
-    # Build member list for Claude prompt
     member_names_emails = [
         (m.user.full_name, m.user.email)
         for m in group.members
         if m.user is not None
     ]
+    sender_tz = sender_user.time_zone or "UTC"
 
-    # Fetch open tasks for this group to pass as context
     open_tasks_db = (
         HelperTask.query
         .filter_by(group_id=group.id, status="open")
@@ -295,295 +602,51 @@ def mailgun_inbound():
         for t in open_tasks_db
     ]
 
-    # Step 9 — Call Claude
+    # ------------------------------------------------------------------
+    # Step 9 — Router call
+    # ------------------------------------------------------------------
     try:
-        result = parse_email_for_task(
+        router_result = route_email(
             subject=subject,
             body=body_text,
             member_names_emails=member_names_emails,
-            sender_tz=sender_user.time_zone or "UTC",
+            sender_tz=sender_tz,
             open_tasks=open_tasks,
         )
     except Exception as e:
-        logger.error(
-            f"Claude error for inbound_email id={inbound.id}: {e}",
-            exc_info=True,
-        )
-        inbound.status = "error"
-        db.session.commit()
-        detail = {}
-        if isinstance(e, ClaudeResponseError) and e.raw_response:
-            detail["claude_raw_response"] = e.raw_response[:8000]
-        _log_action(
-            inbound,
-            "claude_error",
-            error=str(e),
-            detail=detail if detail else None,
-        )
-        try:
-            notify_helper_claude_error_to_admin(
-                inbound_id=inbound.id,
-                group_name=group.name,
-                sender_email=sender_user.email,
-                error_message=str(e),
-                raw_response=e.raw_response if isinstance(e, ClaudeResponseError) else None,
-            )
-        except Exception as notify_err:
-            logger.error(
-                "Failed to send Helper Claude error admin alert: %s",
-                notify_err,
-                exc_info=True,
-            )
+        _handle_claude_error(inbound, group, sender_user, e, stage="router")
         return ("", 200)
 
-    intent = result.get("intent", "unknown")
+    route = router_result.get("route", "unknown")
+    _log_action(inbound, "router_result", detail={"route": route, "router_response": router_result})
+    logger.info("Router classified inbound_email id=%s as route=%s", inbound.id, route)
 
-    # Step 10 — Handle intent
-    if intent == "unknown":
+    # ------------------------------------------------------------------
+    # Step 10/11 — Dispatch to specialist + apply side effects
+    # ------------------------------------------------------------------
+    if route == "unknown":
         inbound.status = "processed"
         db.session.commit()
-        _log_action(inbound, "unknown_intent", detail={"claude_response": result})
-        logger.info(f"Claude returned unknown intent for inbound_email id={inbound.id}")
+        logger.info("Router returned unknown for inbound_email id=%s", inbound.id)
         return ("", 200)
 
-    if intent == "add_task":
-        already_completed = _coerce_already_completed(result.get("already_completed"))
-
-        open_task_ids = {t["id"] for t in open_tasks}
-        dup_raw = result.get("duplicate_of_task_id")
-        dup_id = None
-        if not already_completed and dup_raw is not None and dup_raw != "":
-            try:
-                dup_id = int(dup_raw)
-            except (TypeError, ValueError):
-                dup_id = None
-
-        if not already_completed and dup_id is not None and dup_id in open_task_ids:
-            existing = HelperTask.query.get(dup_id)
-            if existing and existing.group_id == group.id and existing.status == "open":
-                inbound.status = "processed"
-                db.session.commit()
-                _log_action(
-                    inbound,
-                    "task_duplicate_skipped",
-                    detail={
-                        "existing_task_id": dup_id,
-                        "claude_response": result,
-                    },
-                )
-                notice = send_duplicate_task_skipped(existing, sender_user, group)
-                conf_detail = {
-                    "to": sender_user.email,
-                    "task_id": existing.id,
-                    "title": existing.title,
-                }
-                if notice:
-                    _log_action(inbound, "duplicate_notice_sent", detail=conf_detail)
-                else:
-                    _log_action(inbound, "duplicate_notice_failed", detail=conf_detail)
-                return ("", 200)
-            logger.warning(
-                f"duplicate_of_task_id={dup_id} invalid or not open for inbound_email "
-                f"id={inbound.id}; creating new task"
-            )
-        elif not already_completed and dup_id is not None:
-            logger.warning(
-                f"duplicate_of_task_id={dup_id} not in open_tasks for inbound_email "
-                f"id={inbound.id}; creating new task"
-            )
-
-        title = (result.get("title") or "").strip()
-        due_date_str = result.get("due_date")
-        assignee_email = result.get("assignee_email")
-
-        if not title:
-            inbound.status = "error"
-            db.session.commit()
-            _log_action(inbound, "claude_error", error="add_task intent missing title", detail={"claude_response": result})
-            return ("", 200)
-
-        notes = (result.get("notes") or "").strip() or None
-
-        # Parse due_date
-        due_date = None
-        if due_date_str:
-            try:
-                from datetime import date
-                due_date = date.fromisoformat(due_date_str)
-            except (ValueError, TypeError):
-                logger.warning(f"Could not parse due_date '{due_date_str}' for inbound_email id={inbound.id}")
-
-        # Resolve assignee — match by email against group members; default to sender
-        assignee_user_id = None
-        if assignee_email:
-            matched = next(
-                (m.user for m in group.members if m.user and m.user.email.lower() == assignee_email.lower()),
-                None,
-            )
-            if matched:
-                assignee_user_id = matched.id
-            else:
-                logger.info(f"Claude assignee '{assignee_email}' not found in group; leaving unset")
-        # If no assignee specified by Claude, default to sender
-        if assignee_user_id is None and not assignee_email:
-            assignee_user_id = sender_user.id
-
-        # Insert task (open) or insert as completed (retrospective log)
-        try:
-            if already_completed:
-                task = HelperTask(
-                    group_id=group.id,
-                    title=title,
-                    due_date=due_date,
-                    notes=notes,
-                    assignee_user_id=assignee_user_id,
-                    created_by_user_id=sender_user.id,
-                    status="complete",
-                    completed_by_user_id=sender_user.id,
-                    completed_at=datetime.utcnow(),
-                    completed_via_inbound_email_id=inbound.id,
-                    source_inbound_email_id=inbound.id,
-                )
-            else:
-                task = HelperTask(
-                    group_id=group.id,
-                    title=title,
-                    due_date=due_date,
-                    notes=notes,
-                    assignee_user_id=assignee_user_id,
-                    created_by_user_id=sender_user.id,
-                    status="open",
-                    source_inbound_email_id=inbound.id,
-                )
-            db.session.add(task)
-            db.session.flush()
-            if not already_completed:
-                sync_reminder_with_due_date(task)
-            inbound.status = "processed"
-            db.session.commit()
-            if already_completed:
-                _log_action(inbound, "task_logged_completed", detail={
-                    "task_id": task.id,
-                    "title": title,
-                    "due_date": due_date_str,
-                    "assignee_user_id": assignee_user_id,
-                    "claude_response": result,
-                })
-                logger.info(
-                    f"Task id={task.id} logged as completed for inbound_email id={inbound.id}"
-                )
-                confirmed = send_task_logged_completed_confirmation(task, sender_user, group)
-            else:
-                _log_action(inbound, "task_created", detail={
-                    "task_id": task.id,
-                    "title": title,
-                    "due_date": due_date_str,
-                    "assignee_user_id": assignee_user_id,
-                    "claude_response": result,
-                })
-                logger.info(f"Task id={task.id} created for inbound_email id={inbound.id}")
-                confirmed = send_task_confirmation(task, sender_user, group)
-            conf_detail = {
-                "to": sender_user.email,
-                "task_id": task.id,
-                "title": task.title,
-            }
-            if confirmed:
-                _log_action(inbound, "confirmation_sent", detail=conf_detail)
-            else:
-                _log_action(inbound, "confirmation_failed", detail=conf_detail)
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Task insert failed for inbound_email id={inbound.id}: {e}")
-            inbound.status = "error"
-            db.session.commit()
-            _log_action(
-                inbound,
-                "task_insert_error",
-                error=str(e),
-                detail={"title": title},
-            )
-
+    if route == "complete_task":
+        _handle_complete_task(
+            inbound, group, sender_user, open_tasks, open_tasks_db,
+            subject, body_text, member_names_emails, sender_tz,
+        )
         return ("", 200)
 
-    if intent == "complete_task":
-        task_id = result.get("task_id")
-
-        # Validate task_id is in the open tasks we sent Claude
-        open_task_ids = {t["id"] for t in open_tasks}
-        if not task_id or task_id not in open_task_ids:
-            logger.warning(
-                f"Claude returned complete_task with invalid task_id={task_id} "
-                f"for inbound_email id={inbound.id}"
-            )
-            inbound.status = "processed"
-            db.session.commit()
-            invalid_task = HelperTask.query.get(task_id) if task_id else None
-            _log_action(inbound, "complete_task_invalid_id", detail={
-                "task_id": task_id,
-                "title": invalid_task.title if invalid_task else None,
-                "claude_response": result,
-            })
-            send_complete_task_failed(open_tasks_db, sender_user, group)
-            return ("", 200)
-
-        task = HelperTask.query.get(task_id)
-        if not task or task.status != "open":
-            logger.warning(
-                f"Claude returned complete_task but task id={task_id} "
-                f"not found or already closed for inbound_email id={inbound.id}"
-            )
-            inbound.status = "processed"
-            db.session.commit()
-            stale_task = HelperTask.query.get(task_id)
-            _log_action(inbound, "complete_task_not_found", detail={
-                "task_id": task_id,
-                "title": stale_task.title if stale_task else None,
-                "claude_response": result,
-            })
-            send_complete_task_failed(open_tasks_db, sender_user, group)
-            return ("", 200)
-
-        try:
-            task.status = "complete"
-            task.completed_by_user_id = sender_user.id
-            task.completed_at = datetime.utcnow()
-            task.completed_via_inbound_email_id = inbound.id
-            clear_task_reminders(task)
-            inbound.status = "processed"
-            db.session.commit()
-            _log_action(inbound, "task_completed", detail={
-                "task_id": task.id,
-                "title": task.title,
-                "claude_response": result,
-            })
-            logger.info(
-                f"Task id={task.id} completed via email for inbound_email id={inbound.id}"
-            )
-            send_task_completed_confirmation(task, sender_user, group)
-        except Exception as e:
-            db.session.rollback()
-            logger.error(
-                f"Task complete failed for task id={task_id} "
-                f"inbound_email id={inbound.id}: {e}"
-            )
-            inbound.status = "error"
-            db.session.commit()
-            err_task = HelperTask.query.get(task_id) if task_id else None
-            _log_action(
-                inbound,
-                "complete_task_error",
-                error=str(e),
-                detail={
-                    "task_id": task_id,
-                    "title": err_task.title if err_task else None,
-                },
-            )
-
+    if route == "add_task":
+        _handle_add_task(
+            inbound, group, sender_user, open_tasks, open_tasks_db,
+            subject, body_text, member_names_emails, sender_tz,
+        )
         return ("", 200)
 
-    # Unknown intent value from Claude
+    # Unexpected route value — treat as unknown
+    logger.warning("Unexpected route value '%s' for inbound_email id=%s", route, inbound.id)
     inbound.status = "processed"
     db.session.commit()
-    _log_action(inbound, "unknown_intent", detail={"claude_response": result})
+    _log_action(inbound, "unknown_intent", detail={"router_response": router_result})
     return ("", 200)

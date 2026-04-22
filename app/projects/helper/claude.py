@@ -1,20 +1,17 @@
 """
 Claude integration for the Helper project.
 
-Calls Claude with the email subject + body, group member names, and currently
-open tasks, then returns a structured intent dict:
+Three-stage pipeline:
+  1. route_email()       — classifies intent: complete_task / add_task / unknown
+  2. run_complete_task_specialist() — given route=complete_task, resolves which open task_id
+  3. run_add_task_specialist()      — given route=add_task, extracts all new-task fields
 
-  add_task: title, due_date, assignee_email, notes, duplicate_of_task_id,
-            already_completed (bool; true = record as done in one step, no duplicate check)
-  complete_task: task_id (must match an open task)
-  unknown
-
-On any error (API, timeout, bad JSON), raises an exception so the caller can log it.
+Each function raises ClaudeResponseError on API error, timeout, or unparseable JSON.
 """
 import json
 import logging
 import os
-from datetime import date
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 from anthropic import Anthropic
@@ -26,9 +23,9 @@ CLAUDE_MODEL = "claude-haiku-4-5"
 
 class ClaudeResponseError(ValueError):
     """
-    Claude returned text we could not parse into a valid intent dict.
+    Claude returned text we could not parse into a valid response dict.
 
-    ``raw_response`` is set when the API succeeded but JSON/intent validation failed,
+    ``raw_response`` is set when the API succeeded but JSON/validation failed,
     so operators can inspect what the model returned.
     """
 
@@ -37,8 +34,11 @@ class ClaudeResponseError(ValueError):
         self.raw_response = raw_response
 
 
+# ---------------------------------------------------------------------------
+# Shared parsing utilities
+# ---------------------------------------------------------------------------
+
 def _log_malformed_claude_response(reason: str, text: str) -> None:
-    """Log the full model output (truncated) for debugging and support."""
     max_len = 8000
     if len(text) > max_len:
         snippet = text[:max_len] + "\n... [truncated]"
@@ -47,12 +47,12 @@ def _log_malformed_claude_response(reason: str, text: str) -> None:
     logger.error("Malformed Claude response (%s). Full raw:\n%s", reason, snippet)
 
 
-def _parse_intent_json(raw: str) -> dict:
+def _parse_json_response(raw: str) -> dict:
     """
     Parse the first JSON object from Claude's reply.
 
     The model sometimes outputs valid JSON followed by extra text or a second
-    object; ``json.loads`` then fails with "Extra data: line N column M".
+    object; json.loads then fails. We use raw_decode to grab just the first object.
     """
     text = raw.strip()
     if text.startswith("```"):
@@ -84,133 +84,93 @@ def _parse_intent_json(raw: str) -> dict:
         _log_malformed_claude_response(
             f"JSON root must be an object, got {type(result).__name__}", text
         )
-        raise ValueError(
-            f"Claude JSON root must be an object, got {type(result).__name__}"
-        )
+        raise ValueError(f"Claude JSON root must be an object, got {type(result).__name__}")
     return result
 
 
-def _build_prompt(
+def _call_claude(prompt: str, max_tokens: int = 512) -> str:
+    """Make a single Claude API call and return the raw text response."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY is not set")
+    client = Anthropic(api_key=api_key)
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    raw = response.content[0].text.strip()
+    logger.info("Claude raw response: %s", raw)
+    return raw
+
+
+def _today_for_tz(sender_tz: str) -> date:
+    try:
+        tz = ZoneInfo(sender_tz)
+        return datetime.now(tz).date()
+    except Exception:
+        return date.today()
+
+
+def _members_block(member_names_emails: list[tuple[str, str]]) -> str:
+    return "\n".join(f"- {name} ({email})" for name, email in member_names_emails)
+
+
+def _open_tasks_block(open_tasks: list[dict]) -> str:
+    if not open_tasks:
+        return "There are no open tasks in this group currently."
+    lines = "\n".join(
+        f"- [id={t['id']}] \"{t['title']}\""
+        + (f" — {t['notes']}" if t.get("notes") else "")
+        for t in open_tasks
+    )
+    return f"The following tasks are currently open in this group:\n{lines}"
+
+
+# ---------------------------------------------------------------------------
+# Stage 1: Router
+# ---------------------------------------------------------------------------
+
+def _build_router_prompt(
     subject: str,
     body: str,
     member_names_emails: list[tuple[str, str]],
     sender_tz: str,
     open_tasks: list[dict],
 ) -> str:
-    """
-    Build the Claude prompt.
-    member_names_emails: list of (full_name, email) tuples for all group members.
-    sender_tz: IANA timezone string for the sender (e.g. 'America/New_York').
-    open_tasks: list of dicts with keys id, title, notes (may be empty list).
-    """
-    today = date.today()
-    try:
-        tz = ZoneInfo(sender_tz)
-        from datetime import datetime
-        today = datetime.now(tz).date()
-    except Exception:
-        pass
+    today = _today_for_tz(sender_tz)
+    members = _members_block(member_names_emails)
+    tasks = _open_tasks_block(open_tasks)
 
-    members_list = "\n".join(f"- {name} ({email})" for name, email in member_names_emails)
+    return f"""You are a routing assistant for a family task tracker. Your only job is to classify the intent of an inbound email into one of three categories. Do not extract fields — just classify.
 
-    if open_tasks:
-        tasks_lines = "\n".join(
-            f"- [id={t['id']}] \"{t['title']}\""
-            + (f" — {t['notes']}" if t.get("notes") else "")
-            for t in open_tasks
-        )
-        open_tasks_section = f"""The following tasks are currently open in this group:
-{tasks_lines}
-"""
-    else:
-        open_tasks_section = "There are no open tasks in this group currently.\n"
-
-    return f"""You are a task-parsing assistant for a family task tracker.
-
-Today's date is {today.isoformat()} (use this to resolve relative dates like "tomorrow" or "Friday").
+Today's date is {today.isoformat()} (sender's local date).
 
 The group members are:
-{members_list}
+{members}
 
-{open_tasks_section}
-An authorized group member sent the email below. They may want to: (1) add something to track, (2) mark an **open** task above as done, or (3) **record something already finished** even when it was never on the open list (e.g. "I registered yesterday").
+{tasks}
 
 ---
 Subject: {subject}
 Body: {body or '(empty)'}
 ---
 
-Emails often have a **footer** after the real message: unsubscribe links, privacy policy, "powered by" branding, or a **physical address belonging to the email vendor** (e.g. SendGrid, Mailgun) for legal/compliance — not the school, venue, or place the user must go. The important details (event location, gym name, school name, times) are almost always in the **main body above that**. Do **not** treat footer-only addresses or boilerplate as the task location unless the main text clearly says to go there.
+Classify this email into exactly one of:
+- **complete_task** — The email is clearly about finishing a specific task that is already on the open list above.
+- **add_task** — The email is adding something new to track, reporting something already done, or forwarding a reminder for a future to-do. Use this even if there's a possible duplicate.
+- **unknown** — No actionable task content (questions, small talk, completely unclear).
 
-**How to pick an intent** (stop at the first that fits):
-1. **complete_task** — The email clearly refers to finishing **one specific** task from the open list above. You are confident which `task_id` it is.
-2. **add_task with already_completed: true** — The email describes work **already done** (receipt, past-tense confirmation, "I signed up") and you are **not** using step 1 because nothing on the open list matches, or the open list is empty.
-3. **add_task with already_completed: false** — The user wants something **tracked for later** (reminder, forward, "don't forget") or a **new** item that is not yet done. Use this for duplicate detection (next section).
-4. **unknown** — No actionable task content (questions, small talk, unclear).
-
-If step 2 and 3 both seem possible, prefer **already_completed: true** when the main point is reporting past completed action; prefer **false** when the main point is a future to-do or forward.
-
-**add_task JSON shape** (always include every key; `already_completed` is required):
-
-Normal new or future task (`duplicate_of_task_id` only applies when `already_completed` is false):
-{{
-  "intent": "add_task",
-  "already_completed": false,
-  "duplicate_of_task_id": null,
-  "title": "concise task title",
-  "due_date": "YYYY-MM-DD or null",
-  "assignee_email": "exact email from the member list above, or null if unclear/unspecified",
-  "notes": "supplementary context or null"
-}}
-
-Same real item as an open task (only when `already_completed` is false — message is redundant with an open task):
-{{
-  "intent": "add_task",
-  "already_completed": false,
-  "duplicate_of_task_id": <integer id from the open task list>,
-  "title": "short label or echo of existing task",
-  "due_date": null,
-  "assignee_email": null,
-  "notes": null
-}}
-
-Record something already done when it was not matched as **complete_task** (step 1):
-{{
-  "intent": "add_task",
-  "already_completed": true,
-  "duplicate_of_task_id": null,
-  "title": "short label for what was done",
-  "due_date": "YYYY-MM-DD or null",
-  "assignee_email": "exact email from the member list above, or null",
-  "notes": "supplementary context or null"
-}}
-
-**complete_task** (only from step 1):
-{{
-  "intent": "complete_task",
-  "task_id": <integer id from the open task list>
-}}
-
-**unknown**:
-{{
-  "intent": "unknown"
-}}
-
-Field rules:
-- **already_completed**: boolean. If true, **duplicate_of_task_id must be null** (retrospective entries are never de-duplicated against open tasks).
-- **duplicate_of_task_id** (when already_completed is false): null for a genuinely new task. Set to an open task's id only when the message is clearly **redundant** with that task (same real errand, bill, signup). If unsure, use null. If there are no open tasks, always null.
-- **title**: Short and action-oriented for to-dos; for already_completed, label what was accomplished.
-- **due_date**: YYYY-MM-DD or null. No times.
-- **assignee_email**: Must exactly match a member email, or null. If the sender says "me" or "I", use null (the system defaults to the sender).
-- **notes**: Extra detail from the **substantive** body (not vendor/footer). Null if nothing useful.
-
-Other:
-- If one email both finishes an open task **and** adds a distinct new item, prefer **add_task** (we only return one JSON object).
-- Do not invent tasks. If the message is purely conversational, return unknown.
+Return only a JSON object:
+{{"route": "complete_task"}}
+or
+{{"route": "add_task"}}
+or
+{{"route": "unknown"}}
 """
 
 
-def parse_email_for_task(
+def route_email(
     subject: str,
     body: str,
     member_names_emails: list[tuple[str, str]],
@@ -218,36 +178,184 @@ def parse_email_for_task(
     open_tasks: list[dict] = None,
 ) -> dict:
     """
-    Call Claude and return a parsed intent dict.
-    open_tasks: list of dicts with keys id, title, notes — the group's current open tasks.
-    Raises on API error, timeout, or unparseable JSON.
+    Stage 1: Classify the email intent.
+    Returns dict with key 'route': 'complete_task' | 'add_task' | 'unknown'.
+    Raises ClaudeResponseError on API error or unparseable response.
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY is not set")
-
-    client = Anthropic(api_key=api_key)
-    prompt = _build_prompt(subject, body, member_names_emails, sender_tz, open_tasks or [])
-
-    response = client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=448,
-        messages=[{"role": "user", "content": prompt}],
+    prompt = _build_router_prompt(
+        subject, body, member_names_emails, sender_tz, open_tasks or []
     )
-
-    raw = response.content[0].text.strip()
-    logger.info(f"Claude raw response: {raw}")
-
+    raw = _call_claude(prompt, max_tokens=64)
     try:
-        result = _parse_intent_json(raw)
+        result = _parse_json_response(raw)
     except ValueError as e:
         raise ClaudeResponseError(str(e), raw_response=raw) from e
 
-    if "intent" not in result:
-        _log_malformed_claude_response("missing 'intent' key", raw)
+    route = result.get("route", "")
+    if route not in ("complete_task", "add_task", "unknown"):
+        _log_malformed_claude_response(f"unexpected route value: {route!r}", raw)
         raise ClaudeResponseError(
-            "Claude response missing 'intent' key",
-            raw_response=raw,
+            f"Router returned unexpected route: {route!r}", raw_response=raw
+        )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Stage 2a: Complete-task specialist
+# ---------------------------------------------------------------------------
+
+def _build_complete_task_prompt(
+    subject: str,
+    body: str,
+    member_names_emails: list[tuple[str, str]],
+    sender_tz: str,
+    open_tasks: list[dict],
+) -> str:
+    today = _today_for_tz(sender_tz)
+    members = _members_block(member_names_emails)
+    tasks = _open_tasks_block(open_tasks)
+
+    return f"""You are a task-completion assistant for a family task tracker. An inbound email has already been classified as a request to complete an open task. Your job is to identify exactly which open task the email refers to.
+
+Today's date is {today.isoformat()}.
+
+The group members are:
+{members}
+
+{tasks}
+
+---
+Subject: {subject}
+Body: {body or '(empty)'}
+---
+
+Identify which open task the sender is marking as done. Return the task_id of the matching task.
+
+If you can confidently match the email to one specific open task, return:
+{{"task_id": <integer id from the open task list>}}
+
+If you cannot confidently identify which task is meant, return:
+{{"task_id": null}}
+"""
+
+
+def run_complete_task_specialist(
+    subject: str,
+    body: str,
+    member_names_emails: list[tuple[str, str]],
+    sender_tz: str = "UTC",
+    open_tasks: list[dict] = None,
+) -> dict:
+    """
+    Stage 2a: Given route=complete_task, resolve which open task to complete.
+    Returns dict with key 'task_id': int or None.
+    Raises ClaudeResponseError on API error or unparseable response.
+    """
+    prompt = _build_complete_task_prompt(
+        subject, body, member_names_emails, sender_tz, open_tasks or []
+    )
+    raw = _call_claude(prompt, max_tokens=64)
+    try:
+        result = _parse_json_response(raw)
+    except ValueError as e:
+        raise ClaudeResponseError(str(e), raw_response=raw) from e
+
+    if "task_id" not in result:
+        _log_malformed_claude_response("missing 'task_id' key", raw)
+        raise ClaudeResponseError(
+            "Complete-task specialist response missing 'task_id'", raw_response=raw
+        )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Stage 2b: Add-task specialist
+# ---------------------------------------------------------------------------
+
+def _build_add_task_prompt(
+    subject: str,
+    body: str,
+    member_names_emails: list[tuple[str, str]],
+    sender_tz: str,
+    open_tasks: list[dict],
+) -> str:
+    today = _today_for_tz(sender_tz)
+    members = _members_block(member_names_emails)
+    tasks = _open_tasks_block(open_tasks)
+
+    return f"""You are a task-extraction assistant for a family task tracker. An inbound email has already been classified as adding a task (new, forwarded, or reporting something already done). Your job is to extract all relevant fields.
+
+Today's date is {today.isoformat()} (use this to resolve relative dates like "tomorrow" or "Friday").
+The sender's timezone is {sender_tz} (use this to interpret relative reminder times like "Thursday at 3pm").
+
+The group members are:
+{members}
+
+{tasks}
+
+---
+Subject: {subject}
+Body: {body or '(empty)'}
+---
+
+Emails often have a footer after the real message: unsubscribe links, privacy policy, "powered by" branding, or a physical address belonging to the email vendor — not the school, venue, or place the user must go. The important details are almost always in the main body. Do not treat footer-only addresses or boilerplate as the task location.
+
+Determine:
+1. **already_completed**: true if the email describes work already done (receipt, past-tense confirmation, "I signed up yesterday"). False if it's something to track for the future.
+2. **duplicate_of_task_id**: If already_completed is false and the email is clearly redundant with an existing open task (same real errand), set this to that task's id. Otherwise null. If already_completed is true, always null.
+3. All task fields below.
+
+Return a JSON object with all of these keys:
+
+{{
+  "already_completed": true or false,
+  "duplicate_of_task_id": null or <integer id from open task list>,
+  "title": "concise task title or label for what was done",
+  "due_date": "YYYY-MM-DD or null",
+  "assignee_email": "exact email from the member list, or null if unclear/unspecified",
+  "notes": "supplementary context from the main body, or null",
+  "reminder_at": "ISO-8601 datetime string with timezone offset (e.g. 2026-04-25T15:00:00-04:00) if the sender explicitly requests a reminder at a specific time, otherwise null"
+}}
+
+Field rules:
+- **already_completed**: boolean, required.
+- **duplicate_of_task_id**: null unless clearly redundant with an open task and already_completed is false.
+- **title**: short and action-oriented for to-dos; for already_completed, label what was accomplished.
+- **due_date**: YYYY-MM-DD or null. Date only, no times.
+- **assignee_email**: must exactly match a member email, or null. If the sender says "me" or "I", use null (the system defaults to the sender).
+- **notes**: extra detail from the substantive body only. Null if nothing useful.
+- **reminder_at**: only set if the sender explicitly asks to be reminded at a specific time (e.g. "remind me Thursday at 3pm", "ping me next Friday morning"). Use the sender's timezone ({sender_tz}) to interpret relative times, and include the timezone offset in the ISO string. Null if no explicit reminder time is mentioned.
+"""
+
+
+def run_add_task_specialist(
+    subject: str,
+    body: str,
+    member_names_emails: list[tuple[str, str]],
+    sender_tz: str = "UTC",
+    open_tasks: list[dict] = None,
+) -> dict:
+    """
+    Stage 2b: Given route=add_task, extract all new-task fields.
+    Returns dict with keys: already_completed, duplicate_of_task_id, title,
+    due_date, assignee_email, notes, reminder_at.
+    Raises ClaudeResponseError on API error or unparseable response.
+    """
+    prompt = _build_add_task_prompt(
+        subject, body, member_names_emails, sender_tz, open_tasks or []
+    )
+    raw = _call_claude(prompt, max_tokens=512)
+    try:
+        result = _parse_json_response(raw)
+    except ValueError as e:
+        raise ClaudeResponseError(str(e), raw_response=raw) from e
+
+    if "title" not in result:
+        _log_malformed_claude_response("missing 'title' key", raw)
+        raise ClaudeResponseError(
+            "Add-task specialist response missing 'title'", raw_response=raw
         )
 
     return result
