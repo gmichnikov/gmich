@@ -808,6 +808,200 @@ View results: {run_url}
         return None
 
 
+def send_daily_digest(group, members, added_tasks, completed_tasks, overdue_tasks):
+    """
+    Send a daily activity digest to all members of a group.
+
+    From/Reply-To: group inbound address (so replies add tasks).
+    To: all group members (BCC-style via individual sends).
+
+    Args:
+        group: HelperGroup
+        members: list of User — all group members to send to
+        added_tasks: list of HelperTask created (open) in last 24h
+        completed_tasks: list of HelperTask completed in last 24h
+        overdue_tasks: list of HelperTask that are open and past due date as of today
+    """
+    if not members:
+        return None
+
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    group_url = f"{base_url}/helper/group/{group.id}"
+    group_address = group.inbound_email
+
+    subject = f"Helper daily digest — {group.name}"
+
+    def _fmt(d):
+        return d.strftime("%B %-d") if d else None
+
+    # --- Plain text sections ---
+    sections_text = []
+
+    if added_tasks:
+        lines = []
+        for t in added_tasks:
+            due = f", due {_fmt(t.due_date)}" if t.due_date else ""
+            assignee = f", assigned to {t.assignee.full_name}" if t.assignee else ""
+            added_by = f" (added by {t.creator.full_name})" if t.creator else ""
+            lines.append(f"  • {t.title}{due}{assignee}{added_by}")
+        sections_text.append("Added:\n" + "\n".join(lines))
+
+    if completed_tasks:
+        lines = []
+        for t in completed_tasks:
+            who = f" — {t.completer.full_name}" if t.completer else ""
+            due = f", was due {_fmt(t.due_date)}" if t.due_date else ""
+            lines.append(f"  • {t.title}{who}{due}")
+        sections_text.append("Completed:\n" + "\n".join(lines))
+
+    if overdue_tasks:
+        lines = []
+        for t in overdue_tasks:
+            due = f", was due {_fmt(t.due_date)}"
+            assignee = f" — {t.assignee.full_name}" if t.assignee else ""
+            lines.append(f"  • {t.title}{due}{assignee}")
+        sections_text.append("Overdue:\n" + "\n".join(lines))
+
+    if not sections_text:
+        return None
+
+    body_text = "\n\n".join(sections_text)
+
+    # --- HTML sections ---
+    def _task_meta_html(bits):
+        return f'<span style="font-size:0.85rem; color:#6b7280;">{" · ".join(bits)}</span>' if bits else ""
+
+    def _task_list_html(items_html):
+        return f'<ul style="list-style:none; margin:0.5rem 0 0 0; padding:0;">{"".join(items_html)}</ul>'
+
+    html_sections = []
+
+    if added_tasks:
+        items = []
+        for t in added_tasks:
+            bits = []
+            if t.due_date:
+                bits.append(f"Due {_fmt(t.due_date)}")
+            if t.assignee:
+                bits.append(f"Assigned to {t.assignee.full_name}")
+            if t.creator:
+                bits.append(f"Added by {t.creator.full_name}")
+            task_url = f"{base_url}/helper/task/{t.id}"
+            items.append(
+                f'<li style="padding:0.4rem 0; border-bottom:1px solid #f3f4f6;">'
+                f'<a href="{task_url}" style="color:#15803d; font-weight:600; text-decoration:none;">{html_module.escape(t.title)}</a>'
+                f'<br>{_task_meta_html(bits)}</li>'
+            )
+        html_sections.append(
+            f'<div style="margin-bottom:1.25rem;">'
+            f'<p style="margin:0 0 0.25rem 0; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#15803d;">Added</p>'
+            f'{_task_list_html(items)}</div>'
+        )
+
+    if completed_tasks:
+        items = []
+        for t in completed_tasks:
+            bits = []
+            if t.completer:
+                bits.append(f"Completed by {t.completer.full_name}")
+            if t.due_date:
+                bits.append(f"Was due {_fmt(t.due_date)}")
+            task_url = f"{base_url}/helper/task/{t.id}"
+            items.append(
+                f'<li style="padding:0.4rem 0; border-bottom:1px solid #f3f4f6;">'
+                f'<a href="{task_url}" style="color:#1e40af; font-weight:600; text-decoration:none; text-decoration-line:line-through; text-decoration-color:#93c5fd;">{html_module.escape(t.title)}</a>'
+                f'<br>{_task_meta_html(bits)}</li>'
+            )
+        html_sections.append(
+            f'<div style="margin-bottom:1.25rem;">'
+            f'<p style="margin:0 0 0.25rem 0; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#1e40af;">Completed</p>'
+            f'{_task_list_html(items)}</div>'
+        )
+
+    if overdue_tasks:
+        items = []
+        for t in overdue_tasks:
+            bits = [f"Was due {_fmt(t.due_date)}"]
+            if t.assignee:
+                bits.append(t.assignee.full_name)
+            task_url = f"{base_url}/helper/task/{t.id}"
+            items.append(
+                f'<li style="padding:0.4rem 0; border-bottom:1px solid #f3f4f6;">'
+                f'<a href="{task_url}" style="color:#b45309; font-weight:600; text-decoration:none;">{html_module.escape(t.title)}</a>'
+                f'<br>{_task_meta_html(bits)}</li>'
+            )
+        html_sections.append(
+            f'<div style="margin-bottom:1.25rem;">'
+            f'<p style="margin:0 0 0.25rem 0; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#b45309;">Overdue</p>'
+            f'{_task_list_html(items)}</div>'
+        )
+
+    html_body = "".join(html_sections)
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 560px; margin: 0 auto; padding: 24px; }}
+    .digest-box {{ background: white; border-radius: 8px; border: 1px solid #e5e7eb; padding: 20px 24px; margin: 16px 0; }}
+    .footer {{ margin-top: 28px; font-size: 0.82rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }}
+    a {{ color: #2563eb; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p style="margin:0 0 0.5rem 0; font-size:0.82rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Daily digest</p>
+    <h2 style="margin:0 0 1rem 0; font-size:1.2rem; font-weight:700;">{html_module.escape(group.name)}</h2>
+
+    <div class="digest-box">
+      {html_body}
+    </div>
+
+    <p><a href="{group_url}">View full task list →</a></p>
+
+    <div class="footer">
+      <p>Reply to this email or send to {group_address} to add tasks or mark something complete.</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    sent = 0
+    failed = 0
+    for member in members:
+        text_content = f"""Daily digest — {group.name}
+
+{body_text}
+
+Full task list: {group_url}
+
+Reply to this email or send to {group_address} to add tasks or mark something complete.
+"""
+        try:
+            send_email(
+                to_email=member.email,
+                subject=subject,
+                text_content=text_content,
+                html_content=html_content,
+                from_name=f"Helper ({group.name})",
+                from_email=group_address,
+                reply_to=group_address,
+            )
+            sent += 1
+        except Exception as e:
+            logger.error(
+                "Failed to send daily digest to %s for group=%s: %s",
+                member.email, group.id, e,
+            )
+            failed += 1
+
+    logger.info(
+        "Daily digest for group=%s: sent=%d failed=%d", group.id, sent, failed
+    )
+    return {"sent": sent, "failed": failed}
+
+
 def notify_helper_claude_error_to_admin(
     inbound_id: int,
     group_name: str,

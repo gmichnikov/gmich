@@ -43,6 +43,111 @@ def send_reminders_command(limit):
     )
 
 
+@helper_cli.command("send-digest")
+@click.option(
+    "--group-id",
+    default=None,
+    type=int,
+    help="Only send digest for this group (default: all groups).",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print what would be sent without sending emails.",
+)
+@with_appcontext
+def send_digest_command(group_id, dry_run):
+    """
+    Send daily activity digest emails to all Helper group members.
+
+    Covers the last 24 hours: tasks added, tasks completed, overdue tasks.
+    Skips groups with no activity. Run via Heroku Scheduler daily.
+
+    Run: flask helper send-digest
+    """
+    from datetime import date, timedelta
+
+    from app.projects.helper.email import send_daily_digest
+    from app.projects.helper.models import HelperGroup, HelperTask
+
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    today = date.today()
+
+    if group_id:
+        groups = [HelperGroup.query.get(group_id)]
+        groups = [g for g in groups if g]
+    else:
+        groups = HelperGroup.query.order_by(HelperGroup.id).all()
+
+    total_sent = 0
+    total_skipped = 0
+
+    for group in groups:
+        members = [m.user for m in group.members if m.user]
+        if not members:
+            continue
+
+        added_tasks = (
+            HelperTask.query
+            .filter_by(group_id=group.id, status="open")
+            .filter(HelperTask.created_at >= cutoff)
+            .order_by(HelperTask.created_at.asc())
+            .all()
+        )
+
+        completed_tasks = (
+            HelperTask.query
+            .filter_by(group_id=group.id, status="complete")
+            .filter(HelperTask.completed_at >= cutoff)
+            .order_by(HelperTask.completed_at.asc())
+            .all()
+        )
+
+        overdue_tasks = (
+            HelperTask.query
+            .filter_by(group_id=group.id, status="open")
+            .filter(HelperTask.due_date < today)
+            .order_by(HelperTask.due_date.asc())
+            .all()
+        )
+
+        has_activity = added_tasks or completed_tasks or overdue_tasks
+
+        if not has_activity:
+            click.echo(f"  Group {group.id} ({group.name}): no activity, skipping")
+            total_skipped += 1
+            continue
+
+        if dry_run:
+            click.echo(f"\n  [dry-run] Group {group.id} ({group.name}) — would send to {len(members)} member(s)")
+            if added_tasks:
+                click.echo(f"    Added ({len(added_tasks)}): " + ", ".join(t.title for t in added_tasks))
+            if completed_tasks:
+                click.echo(f"    Completed ({len(completed_tasks)}): " + ", ".join(t.title for t in completed_tasks))
+            if overdue_tasks:
+                click.echo(f"    Overdue ({len(overdue_tasks)}): " + ", ".join(t.title for t in overdue_tasks))
+            continue
+
+        result = send_daily_digest(
+            group=group,
+            members=members,
+            added_tasks=added_tasks,
+            completed_tasks=completed_tasks,
+            overdue_tasks=overdue_tasks,
+        )
+        if result:
+            click.echo(
+                f"  Group {group.id} ({group.name}): sent={result['sent']} failed={result['failed']}"
+            )
+            total_sent += result["sent"]
+        else:
+            click.echo(f"  Group {group.id} ({group.name}): skipped (no content)")
+            total_skipped += 1
+
+    if not dry_run:
+        click.echo(f"\nDigest complete. emails_sent={total_sent} groups_skipped={total_skipped}")
+
+
 def _seed_inbound_email(domain: str, group_id: int, user_id: int, **kwargs) -> str:
     """Insert one inbound row + optional action log; return idempotency key used."""
     from app.projects.helper.models import HelperActionLog, HelperInboundEmail
