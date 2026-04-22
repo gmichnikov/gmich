@@ -157,9 +157,15 @@ Body: {body or '(empty)'}
 ---
 
 Classify this email into exactly one of:
-- **complete_task** — The email is clearly about finishing a specific task that is already on the open list above.
-- **add_task** — The email is adding something new to track, reporting something already done, or forwarding a reminder for a future to-do. Use this even if there's a possible duplicate.
-- **unknown** — No actionable task content (questions, small talk, completely unclear).
+- **complete_task** — The email is clearly about finishing a specific task that is already on the open list above. The sender is marking something from that list as done.
+- **add_task** — Use this for anything where the sender wants something recorded, tracked, or logged. This includes:
+  - Adding a new future to-do ("don't forget to call the dentist")
+  - Reporting something already done ("I signed up", "I paid the bill", "mark that I ate Cheetos today", "I already did X")
+  - Forwarding a confirmation or receipt
+  - Anything action-oriented that doesn't match a specific open task above
+- **unknown** — Only use this if the email has no recordable content at all: pure questions, small talk, or completely unintelligible messages.
+
+When in doubt between **add_task** and **unknown**, prefer **add_task**.
 
 Return only a JSON object:
 {{"route": "complete_task"}}
