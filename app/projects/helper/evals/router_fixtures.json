@@ -1,231 +1,339 @@
-[
-  {
-    "id": "add-simple-future",
-    "description": "Simple future to-do typed directly",
-    "subject": "Don't forget to call the dentist Friday",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-with-assignee",
-    "description": "Task with implicit assignee",
-    "subject": "Remind Alex to pick up the dry cleaning",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-with-due-date",
-    "description": "Task with explicit deadline",
-    "subject": "Register for summer camp by April 30",
-    "body": "The deadline is April 30th. Here is the link: https://example.com/register",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-past-tense-log",
-    "description": "Past-tense log entry typed directly",
-    "subject": "Mark that I ate Cheetos today",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-i-already-did",
-    "description": "Explicit already-done report",
-    "subject": "I paid the water bill",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-i-signed-up",
-    "description": "Signed up for something — past tense",
-    "subject": "Just signed up for the 5k",
-    "body": "Registered this morning. Confirmation number 12345.",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-with-reminder-request",
-    "description": "New task with explicit reminder time",
-    "subject": "Remind me Thursday at 3pm to call the accountant",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-fwd-deadline",
-    "description": "Forwarded email containing a deadline the user needs to act on",
-    "subject": "Fwd: Summer camp registration closes Friday",
-    "body": "---------- Forwarded message ---------\nFrom: Camp Sunshine <noreply@campsunshine.org>\nDate: Mon, Apr 21, 2026\nSubject: Summer camp registration closes Friday\nTo: greg@example.com\n\nDear Parent,\n\nJust a reminder that online registration for Summer 2026 closes this Friday, April 25th. Space is limited.\n\nRegister at: campsunshine.org/register\n\nFee: $350 due at registration.\n\n---\nCamp Sunshine · 123 Camp Rd, Lake Placid NY 12946\nUnsubscribe | Privacy Policy",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-fwd-bill-due",
-    "description": "Forwarded bill that needs to be paid",
-    "subject": "Fwd: Your bill is ready – City Water Dept",
-    "body": "---------- Forwarded message ---------\nFrom: City Water <billing@citywater.gov>\nDate: Tue, Apr 22, 2026\nSubject: Your bill is ready\nTo: greg@example.com\n\nYour water bill for April is $74.20 and is due by May 5, 2026.\n\nPay online at: citywater.gov/pay\n\n---\nCity Water Department · 456 Municipal Blvd, Springfield\nTo unsubscribe from billing notices, visit your account settings.",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-fwd-school-permission-slip",
-    "description": "Forwarded school email with an action required",
-    "subject": "Fwd: Permission slip due Thursday – Field trip to museum",
-    "body": "---------- Forwarded message ---------\nFrom: Jefferson Elementary <no-reply@jefferson.edu>\nDate: Mon, Apr 20, 2026\nSubject: Permission slip due Thursday\nTo: greg@example.com\n\nDear Families,\n\nPlease return the signed permission slip for the science museum field trip by Thursday, April 24th. You may also sign digitally at parent.jefferson.edu.\n\nThe trip is Friday April 25th. Students should bring a bag lunch.\n\n---\nJefferson Elementary School · 789 School St, Springfield\nPowered by SchoolMessenger",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-fwd-receipt-no-open-task",
-    "description": "Forwarded payment receipt with no matching open task — should log as done",
-    "subject": "Fwd: Payment received – Springfield Electric",
-    "body": "---------- Forwarded message ---------\nFrom: Springfield Electric <noreply@springfieldelec.com>\nDate: Wed, Apr 23, 2026\nSubject: Payment received\nTo: greg@example.com\n\nThank you! We received your payment of $142.50 for account #98765.\n\nPayment date: April 23, 2026\nNext bill due: May 20, 2026\n\n---\nSpringfield Electric · 321 Power Ave\nManage your account | Unsubscribe",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "add-fwd-booking-confirmation-no-task",
-    "description": "Forwarded hotel booking confirmation, no open task to match",
-    "subject": "Fwd: Your reservation is confirmed – Marriott DC",
-    "body": "---------- Forwarded message ---------\nFrom: Marriott Reservations <reservations@marriott.com>\nDate: Thu, Apr 24, 2026\nSubject: Your reservation is confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour reservation at Marriott Washington DC is confirmed.\n\nConfirmation #: DCMAR20260512\nCheck-in: May 12, 2026\nCheck-out: May 14, 2026\nRoom: King Standard\nTotal: $389.00\n\nManage your reservation: marriott.com/reservations\n\n---\nMarriott International · Bethesda, MD\nUnsubscribe | Privacy",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "complete-clear-name-match",
-    "description": "Clear completion of a named open task",
-    "subject": "Done with the dentist",
-    "body": "",
-    "open_tasks": [
-      {"id": 101, "title": "Schedule dentist appointment", "notes": null}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-loose-match",
-    "description": "Completion with slightly different wording than the task title",
-    "subject": "Finished the camp registration",
-    "body": "",
-    "open_tasks": [
-      {"id": 102, "title": "Register for summer camp", "notes": "Deadline April 30"}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-done-alone-one-task",
-    "description": "Just 'Done' with exactly one open task",
-    "subject": "Done",
-    "body": "",
-    "open_tasks": [
-      {"id": 103, "title": "Return library books", "notes": "3 books on kitchen counter"}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-checkmark",
-    "description": "Emoji/symbol reply indicating done",
-    "subject": "✓",
-    "body": "done!",
-    "open_tasks": [
-      {"id": 104, "title": "Pay water bill", "notes": null}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-fwd-receipt-matches-task",
-    "description": "Forwarded payment receipt that matches an open 'pay the bill' task",
-    "subject": "Fwd: Payment received – City Water Dept",
-    "body": "---------- Forwarded message ---------\nFrom: City Water <billing@citywater.gov>\nDate: Wed, Apr 23, 2026\nSubject: Payment received\nTo: greg@example.com\n\nThank you! We received your payment of $74.20 for account #55123.\n\nPayment date: April 23, 2026\n\n---\nCity Water Department · 456 Municipal Blvd",
-    "open_tasks": [
-      {"id": 105, "title": "Pay the water bill", "notes": "Due May 5"}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-fwd-camp-registration-confirmed",
-    "description": "Forwarded registration confirmation that matches an open 'register for camp' task",
-    "subject": "Fwd: Summer Camp Registration Confirmed",
-    "body": "---------- Forwarded message ---------\nFrom: Camp Sunshine <noreply@campsunshine.org>\nDate: Thu, Apr 24, 2026\nSubject: Summer Camp Registration Confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour registration for Summer 2026 is confirmed!\n\nCamper name: Emma M.\nSession: July 7 – July 18\nConfirmation #: CS2026-4421\nTotal paid: $350.00\n\nSee you this summer!\n\n---\nCamp Sunshine · 123 Camp Rd, Lake Placid NY\nUnsubscribe | Privacy Policy",
-    "open_tasks": [
-      {"id": 106, "title": "Register for summer camp", "notes": "Deadline April 30, fee $350"}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-fwd-appointment-confirmed",
-    "description": "Forwarded appointment confirmation matching an open scheduling task",
-    "subject": "Fwd: Appointment Confirmed – Dr. Smith",
-    "body": "---------- Forwarded message ---------\nFrom: Dr. Smith's Office <appointments@drsmith.com>\nDate: Tue, Apr 22, 2026\nSubject: Appointment Confirmed\nTo: greg@example.com\n\nYour appointment has been confirmed.\n\nPatient: Greg M.\nDate: May 8, 2026 at 10:00 AM\nProvider: Dr. Sarah Smith, DDS\nLocation: 555 Dental Way, Suite 3\n\nPlease arrive 10 minutes early.\n\n---\nDr. Smith Dental · 555 Dental Way\nTo cancel or reschedule call (555) 123-4567",
-    "open_tasks": [
-      {"id": 107, "title": "Schedule dentist cleanings", "notes": null}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "complete-fwd-hotel-booked-matches-task",
-    "description": "Forwarded hotel confirmation matching an open 'book hotel' task",
-    "subject": "Fwd: Your reservation is confirmed – Marriott DC",
-    "body": "---------- Forwarded message ---------\nFrom: Marriott Reservations <reservations@marriott.com>\nDate: Thu, Apr 24, 2026\nSubject: Your reservation is confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour reservation at Marriott Washington DC is confirmed.\n\nConfirmation #: DCMAR20260512\nCheck-in: May 12, 2026\nCheck-out: May 14, 2026\nTotal: $389.00\n\n---\nMarriott International · Bethesda, MD",
-    "open_tasks": [
-      {"id": 108, "title": "Book hotel for DC trip", "notes": "Conference May 12-14"}
-    ],
-    "expected_route": "complete_task"
-  },
-  {
-    "id": "unknown-pure-question",
-    "description": "Pure question with no task content",
-    "subject": "What time is the game?",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "unknown"
-  },
-  {
-    "id": "unknown-small-talk",
-    "description": "Casual greeting with no actionable content",
-    "subject": "Hey how are you doing",
-    "body": "Hope you're having a great week!",
-    "open_tasks": [],
-    "expected_route": "unknown"
-  },
-  {
-    "id": "unknown-marketing-email",
-    "description": "Forwarded marketing/promotional email with no task",
-    "subject": "Fwd: 🎉 50% off this weekend only!",
-    "body": "---------- Forwarded message ---------\nFrom: Shop Newsletter <deals@shopexample.com>\nDate: Fri, Apr 18, 2026\nSubject: 🎉 50% off this weekend only!\nTo: greg@example.com\n\nHey there!\n\nThis weekend only — take 50% off everything in our store with code SAVE50.\n\nShop now: shopexample.com\n\n---\nShopExample Inc. · 999 Commerce Blvd, Austin TX\nUnsubscribe from promotional emails",
-    "open_tasks": [],
-    "expected_route": "unknown"
-  },
-  {
-    "id": "edge-done-no-open-tasks",
-    "description": "'Done' with no open tasks — nothing to complete, should be add_task (log it)",
-    "subject": "Done",
-    "body": "",
-    "open_tasks": [],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "edge-done-unrelated-open-tasks",
-    "description": "'Done with the thing' but open tasks are completely unrelated — should be add_task",
-    "subject": "Done with the thing",
-    "body": "",
-    "open_tasks": [
-      {"id": 109, "title": "Register for summer camp", "notes": null},
-      {"id": 110, "title": "Pay water bill", "notes": null}
-    ],
-    "expected_route": "add_task"
-  },
-  {
-    "id": "edge-multi-intent",
-    "description": "Email mentions completing one thing and adding another — should pick a route, not fail",
-    "subject": "I paid the bill and also remind me to call the accountant",
-    "body": "",
-    "open_tasks": [
-      {"id": 111, "title": "Pay the electric bill", "notes": null}
-    ],
-    "expected_route": "add_task"
-  }
-]
+{
+  "fixtures": [
+    {
+      "id": "add-simple-future",
+      "description": "Simple future to-do typed directly",
+      "subject": "Don't forget to call the dentist Friday",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-with-assignee",
+      "description": "Task with implicit assignee",
+      "subject": "Remind Alex to pick up the dry cleaning",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-with-due-date",
+      "description": "Task with explicit deadline",
+      "subject": "Register for summer camp by April 30",
+      "body": "The deadline is April 30th. Here is the link: https://example.com/register",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-past-tense-log",
+      "description": "Past-tense log entry typed directly",
+      "subject": "Mark that I ate Cheetos today",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-i-already-did",
+      "description": "Explicit already-done report",
+      "subject": "I paid the water bill",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-i-signed-up",
+      "description": "Signed up for something — past tense",
+      "subject": "Just signed up for the 5k",
+      "body": "Registered this morning. Confirmation number 12345.",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-with-reminder-request",
+      "description": "New task with explicit reminder time",
+      "subject": "Remind me Thursday at 3pm to call the accountant",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-deadline",
+      "description": "Forwarded email containing a deadline the user needs to act on",
+      "subject": "Fwd: Summer camp registration closes Friday",
+      "body": "---------- Forwarded message ---------\nFrom: Camp Sunshine <noreply@campsunshine.org>\nDate: Mon, Apr 21, 2026\nSubject: Summer camp registration closes Friday\nTo: greg@example.com\n\nDear Parent,\n\nJust a reminder that online registration for Summer 2026 closes this Friday, April 25th. Space is limited.\n\nRegister at: campsunshine.org/register\n\nFee: $350 due at registration.\n\n---\nCamp Sunshine · 123 Camp Rd, Lake Placid NY 12946\nUnsubscribe | Privacy Policy",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-bill-due",
+      "description": "Forwarded bill that needs to be paid",
+      "subject": "Fwd: Your bill is ready – City Water Dept",
+      "body": "---------- Forwarded message ---------\nFrom: City Water <billing@citywater.gov>\nDate: Tue, Apr 22, 2026\nSubject: Your bill is ready\nTo: greg@example.com\n\nYour water bill for April is $74.20 and is due by May 5, 2026.\n\nPay online at: citywater.gov/pay\n\n---\nCity Water Department · 456 Municipal Blvd, Springfield\nTo unsubscribe from billing notices, visit your account settings.",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-school-permission-slip",
+      "description": "Forwarded school email with an action required",
+      "subject": "Fwd: Permission slip due Thursday – Field trip to museum",
+      "body": "---------- Forwarded message ---------\nFrom: Jefferson Elementary <no-reply@jefferson.edu>\nDate: Mon, Apr 20, 2026\nSubject: Permission slip due Thursday\nTo: greg@example.com\n\nDear Families,\n\nPlease return the signed permission slip for the science museum field trip by Thursday, April 24th. You may also sign digitally at parent.jefferson.edu.\n\nThe trip is Friday April 25th. Students should bring a bag lunch.\n\n---\nJefferson Elementary School · 789 School St, Springfield\nPowered by SchoolMessenger",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-receipt-no-open-task",
+      "description": "Forwarded payment receipt with no matching open task — should log as done",
+      "subject": "Fwd: Payment received – Springfield Electric",
+      "body": "---------- Forwarded message ---------\nFrom: Springfield Electric <noreply@springfieldelec.com>\nDate: Wed, Apr 23, 2026\nSubject: Payment received\nTo: greg@example.com\n\nThank you! We received your payment of $142.50 for account #98765.\n\nPayment date: April 23, 2026\nNext bill due: May 20, 2026\n\n---\nSpringfield Electric · 321 Power Ave\nManage your account | Unsubscribe",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-booking-confirmation-no-task",
+      "description": "Forwarded hotel booking confirmation, no open task to match",
+      "subject": "Fwd: Your reservation is confirmed – Marriott DC",
+      "body": "---------- Forwarded message ---------\nFrom: Marriott Reservations <reservations@marriott.com>\nDate: Thu, Apr 24, 2026\nSubject: Your reservation is confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour reservation at Marriott Washington DC is confirmed.\n\nConfirmation #: DCMAR20260512\nCheck-in: May 12, 2026\nCheck-out: May 14, 2026\nRoom: King Standard\nTotal: $389.00\n\nManage your reservation: marriott.com/reservations\n\n---\nMarriott International · Bethesda, MD\nUnsubscribe | Privacy",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "complete-clear-name-match",
+      "description": "Clear completion of a named open task",
+      "subject": "Done with the dentist",
+      "body": "",
+      "open_tasks": [
+        {"id": 101, "title": "Schedule dentist appointment", "notes": null}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-loose-match",
+      "description": "Completion with slightly different wording than the task title",
+      "subject": "Finished the camp registration",
+      "body": "",
+      "open_tasks": [
+        {"id": 102, "title": "Register for summer camp", "notes": "Deadline April 30"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-done-alone-one-task",
+      "description": "Just 'Done' with exactly one open task",
+      "subject": "Done",
+      "body": "",
+      "open_tasks": [
+        {"id": 103, "title": "Return library books", "notes": "3 books on kitchen counter"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-checkmark",
+      "description": "Emoji/symbol reply indicating done",
+      "subject": "✓",
+      "body": "done!",
+      "open_tasks": [
+        {"id": 104, "title": "Pay water bill", "notes": null}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-fwd-receipt-matches-task",
+      "description": "Forwarded payment receipt that matches an open 'pay the bill' task",
+      "subject": "Fwd: Payment received – City Water Dept",
+      "body": "---------- Forwarded message ---------\nFrom: City Water <billing@citywater.gov>\nDate: Wed, Apr 23, 2026\nSubject: Payment received\nTo: greg@example.com\n\nThank you! We received your payment of $74.20 for account #55123.\n\nPayment date: April 23, 2026\n\n---\nCity Water Department · 456 Municipal Blvd",
+      "open_tasks": [
+        {"id": 105, "title": "Pay the water bill", "notes": "Due May 5"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-fwd-camp-registration-confirmed",
+      "description": "Forwarded registration confirmation that matches an open 'register for camp' task",
+      "subject": "Fwd: Summer Camp Registration Confirmed",
+      "body": "---------- Forwarded message ---------\nFrom: Camp Sunshine <noreply@campsunshine.org>\nDate: Thu, Apr 24, 2026\nSubject: Summer Camp Registration Confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour registration for Summer 2026 is confirmed!\n\nCamper name: Emma M.\nSession: July 7 – July 18\nConfirmation #: CS2026-4421\nTotal paid: $350.00\n\nSee you this summer!\n\n---\nCamp Sunshine · 123 Camp Rd, Lake Placid NY\nUnsubscribe | Privacy Policy",
+      "open_tasks": [
+        {"id": 106, "title": "Register for summer camp", "notes": "Deadline April 30, fee $350"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-fwd-hotel-booked-matches-task",
+      "description": "Forwarded hotel confirmation matching an open 'book hotel' task",
+      "subject": "Fwd: Your reservation is confirmed – Marriott DC",
+      "body": "---------- Forwarded message ---------\nFrom: Marriott Reservations <reservations@marriott.com>\nDate: Thu, Apr 24, 2026\nSubject: Your reservation is confirmed\nTo: greg@example.com\n\nDear Greg,\n\nYour reservation at Marriott Washington DC is confirmed.\n\nConfirmation #: DCMAR20260512\nCheck-in: May 12, 2026\nCheck-out: May 14, 2026\nTotal: $389.00\n\n---\nMarriott International · Bethesda, MD",
+      "open_tasks": [
+        {"id": 108, "title": "Book hotel for DC trip", "notes": "Conference May 12-14"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "unknown-pure-question",
+      "description": "Pure question with no task content",
+      "subject": "What time is the game?",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "unknown"
+    },
+    {
+      "id": "unknown-small-talk",
+      "description": "Casual greeting with no actionable content",
+      "subject": "Hey how are you doing",
+      "body": "Hope you're having a great week!",
+      "open_tasks": [],
+      "expected_route": "unknown"
+    },
+    {
+      "id": "unknown-marketing-email",
+      "description": "Forwarded marketing/promotional email with no task",
+      "subject": "Fwd: 🎉 50% off this weekend only!",
+      "body": "---------- Forwarded message ---------\nFrom: Shop Newsletter <deals@shopexample.com>\nDate: Fri, Apr 18, 2026\nSubject: 🎉 50% off this weekend only!\nTo: greg@example.com\n\nHey there!\n\nThis weekend only — take 50% off everything in our store with code SAVE50.\n\nShop now: shopexample.com\n\n---\nShopExample Inc. · 999 Commerce Blvd, Austin TX\nUnsubscribe from promotional emails",
+      "open_tasks": [],
+      "expected_route": "unknown"
+    },
+    {
+      "id": "add-fwd-appointment-confirmed-no-task",
+      "description": "Forwarded appointment confirmation with no matching open task — should log as add_task",
+      "subject": "Fwd: Appointment Confirmed – Dr. Smith",
+      "body": "---------- Forwarded message ---------\nFrom: Dr. Smith's Office <appointments@drsmith.com>\nDate: Tue, Apr 22, 2026\nSubject: Appointment Confirmed\nTo: greg@example.com\n\nYour appointment has been confirmed.\n\nPatient: Greg M.\nDate: May 8, 2026 at 10:00 AM\nProvider: Dr. Sarah Smith, DDS\nLocation: 555 Dental Way, Suite 3\n\nPlease arrive 10 minutes early.\n\n---\nDr. Smith Dental · 555 Dental Way\nTo cancel or reschedule call (555) 123-4567",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-assign-to-alex",
+      "description": "Typed task explicitly assigned to a named group member",
+      "subject": "Alex needs to pick up the prescription today",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-remind-alex",
+      "description": "Asking to remind a named group member about something",
+      "subject": "Remind Alex to call the insurance company before Friday",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-doctor-upcoming",
+      "description": "Forwarded upcoming appointment reminder — future action to track, not a completion",
+      "subject": "Fwd: Appointment Reminder – Dr. Patel tomorrow at 2pm",
+      "body": "---------- Forwarded message ---------\nFrom: Springfield Medical <reminders@springfieldmedical.com>\nDate: Mon, Apr 21, 2026\nSubject: Appointment Reminder\nTo: greg@example.com\n\nThis is a reminder that you have an appointment tomorrow:\n\nPatient: Greg M.\nDate: Tuesday, April 22, 2026 at 2:00 PM\nProvider: Dr. Patel\nLocation: 200 Health Blvd, Suite 5\n\nPlease arrive 15 minutes early and bring your insurance card.\n\n---\nSpringfield Medical Group · 200 Health Blvd\nTo cancel call (555) 987-6543",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-fwd-last-chance",
+      "description": "Forwarded last-chance deadline email",
+      "subject": "Fwd: Last chance to enroll – deadline tonight",
+      "body": "---------- Forwarded message ---------\nFrom: Springfield Little League <info@springfieldlittleleague.org>\nDate: Fri, Apr 18, 2026\nSubject: Last chance to enroll – deadline tonight\nTo: greg@example.com\n\nThis is your last chance to sign up your child for the Spring 2026 season. Registration closes tonight at midnight.\n\nSign up at: springfieldlittleleague.org/register\n\nFee: $120 per player\n\n---\nSpringfield Little League · PO Box 42, Springfield",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "add-typed-alex-did-something",
+      "description": "Reporting that another group member completed something",
+      "subject": "Alex picked up the dry cleaning",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "complete-alex-finished-open-task",
+      "description": "Reporting that Alex completed a task that is on the open list",
+      "subject": "Alex picked up the dry cleaning",
+      "body": "",
+      "open_tasks": [
+        {"id": 112, "title": "Pick up dry cleaning", "notes": null}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-typed-explicit-completion",
+      "description": "Clear explicit completion of a named open task with full sentence",
+      "subject": "I signed the permission slip",
+      "body": "",
+      "open_tasks": [
+        {"id": 113, "title": "Sign field trip permission slip", "notes": "Due Thursday"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-fwd-receipt-electric-matches-task",
+      "description": "Forwarded electric bill payment receipt matching an open task",
+      "subject": "Fwd: Payment confirmation – Springfield Electric",
+      "body": "---------- Forwarded message ---------\nFrom: Springfield Electric <noreply@springfieldelec.com>\nDate: Wed, Apr 23, 2026\nSubject: Payment confirmation\nTo: greg@example.com\n\nThank you for your payment of $142.50.\n\nAccount: #98765\nPayment date: April 23, 2026\n\n---\nSpringfield Electric · 321 Power Ave",
+      "open_tasks": [
+        {"id": 114, "title": "Pay electric bill", "notes": "Due April 25"}
+      ],
+      "expected_route": "complete_task"
+    }
+  ],
+  "retired": [
+    {
+      "id": "complete-done-alone-one-task",
+      "retired_reason": "Bare 'Done' with no other context is too ambiguous and unrealistic as a standalone email. Real completions either reference the task by name or are forwarded confirmations.",
+      "description": "Just 'Done' with exactly one open task",
+      "subject": "Done",
+      "body": "",
+      "open_tasks": [
+        {"id": 103, "title": "Return library books", "notes": "3 books on kitchen counter"}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "edge-done-no-open-tasks",
+      "retired_reason": "Bare 'Done' with no context is too unrealistic. Removed in favor of more concrete real-world fixtures.",
+      "description": "'Done' with no open tasks",
+      "subject": "Done",
+      "body": "",
+      "open_tasks": [],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "edge-done-unrelated-open-tasks",
+      "retired_reason": "'Done with the thing' with no specifics is too contrived. Removed in favor of realistic completions that name the task.",
+      "description": "'Done with the thing' where open tasks are completely unrelated",
+      "subject": "Done with the thing",
+      "body": "",
+      "open_tasks": [
+        {"id": 109, "title": "Register for summer camp", "notes": null},
+        {"id": 110, "title": "Pay water bill", "notes": null}
+      ],
+      "expected_route": "add_task"
+    },
+    {
+      "id": "edge-multi-intent",
+      "retired_reason": "Contrived multi-intent case. Removed in favor of more realistic fixtures.",
+      "description": "Email completes an open task AND mentions a new to-do",
+      "subject": "I paid the bill and also remind me to call the accountant",
+      "body": "",
+      "open_tasks": [
+        {"id": 111, "title": "Pay the electric bill", "notes": null}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "complete-fwd-appointment-confirmed",
+      "retired_reason": "Router consistently returns add_task for this case — the link between 'appointment confirmed' and 'schedule dentist cleanings' is too indirect for reliable routing. Changed to add_task expectation and promoted to active fixtures as add-fwd-appointment-confirmed-no-task.",
+      "description": "Forwarded appointment confirmation matching an open scheduling task",
+      "subject": "Fwd: Appointment Confirmed – Dr. Smith",
+      "body": "---------- Forwarded message ---------\nFrom: Dr. Smith's Office <appointments@drsmith.com>\nDate: Tue, Apr 22, 2026\nSubject: Appointment Confirmed\nTo: greg@example.com\n\nYour appointment has been confirmed.\n\nPatient: Greg M.\nDate: May 8, 2026 at 10:00 AM\nProvider: Dr. Sarah Smith, DDS\nLocation: 555 Dental Way, Suite 3\n\nPlease arrive 10 minutes early.\n\n---\nDr. Smith Dental · 555 Dental Way\nTo cancel or reschedule call (555) 123-4567",
+      "open_tasks": [
+        {"id": 107, "title": "Schedule dentist cleanings", "notes": null}
+      ],
+      "expected_route": "complete_task"
+    },
+    {
+      "id": "edge-multi-intent-v1",
+      "retired_reason": "Original expected add_task but complete_task is more correct — when there's a clear matching open task, completing it is the right primary action.",
+      "description": "Email mentions completing one thing and adding another — should pick a route, not fail",
+      "subject": "I paid the bill and also remind me to call the accountant",
+      "body": "",
+      "open_tasks": [
+        {"id": 111, "title": "Pay the electric bill", "notes": null}
+      ],
+      "expected_route": "add_task"
+    }
+  ]
+}

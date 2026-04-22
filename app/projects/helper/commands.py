@@ -294,7 +294,13 @@ def eval_router_command(fixture_file, dry_run):
         )
 
     with open(fixture_file) as f:
-        fixtures = json.load(f)
+        data = json.load(f)
+
+    # Support both old flat array format and new {fixtures, retired} format
+    if isinstance(data, list):
+        fixtures = data
+    else:
+        fixtures = data.get("fixtures", [])
 
     # Fake member list — good enough for routing classification
     fake_members = [
@@ -336,9 +342,10 @@ def eval_router_command(fixture_file, dry_run):
                 member_names_emails=fake_members,
                 sender_tz=fake_sender_tz,
                 open_tasks=open_tasks,
+                return_raw=True,
             )
             actual_route = router_result.get("route", "")
-            raw_response = str(router_result)
+            raw_response = router_result.pop("_raw_response", None)
         except ClaudeResponseError as e:
             error_message = str(e)
             raw_response = e.raw_response

@@ -667,9 +667,29 @@ def helper_evals():
 @admin_required
 def helper_eval_run(run_id):
     """Detail view for a single eval run."""
+    import json
+    import os
     from app.projects.helper.models import HelperEvalRun
     run = HelperEvalRun.query.get_or_404(run_id)
-    return render_template("admin/helper_eval_run.html", run=run)
+
+    # Load fixture context (active + retired) keyed by fixture_id
+    fixture_context = {}
+    fixture_file = os.path.join(
+        os.path.dirname(__file__), "..", "projects", "helper", "evals", "router_fixtures.json"
+    )
+    try:
+        with open(os.path.abspath(fixture_file)) as f:
+            data = json.load(f)
+        all_fixtures = []
+        if isinstance(data, list):
+            all_fixtures = data
+        else:
+            all_fixtures = data.get("fixtures", []) + data.get("retired", [])
+        fixture_context = {fx["id"]: fx for fx in all_fixtures}
+    except Exception:
+        pass
+
+    return render_template("admin/helper_eval_run.html", run=run, fixture_context=fixture_context)
 
 
 @admin_bp.route("/helper/email-detail")

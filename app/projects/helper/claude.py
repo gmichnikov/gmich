@@ -157,12 +157,12 @@ Body: {body or '(empty)'}
 ---
 
 Classify this email into exactly one of:
-- **complete_task** — The email is clearly about finishing a specific task that is already on the open list above. The sender is marking something from that list as done.
+- **complete_task** — The email is clearly about finishing a task that is **already on the open list above**, and you can confidently identify which one. If the open task list is empty, never use complete_task.
 - **add_task** — Use this for anything where the sender wants something recorded, tracked, or logged. This includes:
-  - Adding a new future to-do ("don't forget to call the dentist")
-  - Reporting something already done ("I signed up", "I paid the bill", "mark that I ate Cheetos today", "I already did X")
-  - Forwarding a confirmation or receipt
-  - Anything action-oriented that doesn't match a specific open task above
+  - Adding a new future to-do ("don't forget to call the dentist", "Alex needs to pick up the prescription")
+  - Reporting something already done ("I signed up", "I paid the bill", "mark that I ate Cheetos today", "Alex picked up the dry cleaning")
+  - Forwarding a confirmation, receipt, or upcoming appointment
+  - Anything action-oriented where no open task clearly matches
 - **unknown** — Only use this if the email has no recordable content at all: pure questions, small talk, or completely unintelligible messages.
 
 When in doubt between **add_task** and **unknown**, prefer **add_task**.
@@ -182,10 +182,13 @@ def route_email(
     member_names_emails: list[tuple[str, str]],
     sender_tz: str = "UTC",
     open_tasks: list[dict] = None,
+    *,
+    return_raw: bool = False,
 ) -> dict:
     """
     Stage 1: Classify the email intent.
     Returns dict with key 'route': 'complete_task' | 'add_task' | 'unknown'.
+    If return_raw=True, also includes '_raw_response' key with the raw Claude text.
     Raises ClaudeResponseError on API error or unparseable response.
     """
     prompt = _build_router_prompt(
@@ -204,6 +207,8 @@ def route_email(
             f"Router returned unexpected route: {route!r}", raw_response=raw
         )
 
+    if return_raw:
+        result["_raw_response"] = raw
     return result
 
 

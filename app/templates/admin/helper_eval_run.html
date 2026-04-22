@@ -19,15 +19,20 @@
     .evr-stat { text-align:center; }
     .evr-stat-num { font-size:1.6rem; font-weight:700; line-height:1; }
     .evr-stat-label { font-size:0.75rem; color:#6b7280; margin-top:0.25rem; }
-    .evr-table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.07); font-size:0.86rem; }
-    .evr-table th { background:#f9fafb; color:#6b7280; font-size:0.76rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; padding:0.6rem 1rem; text-align:left; border-bottom:1px solid #f3f4f6; }
-    .evr-table td { padding:0.6rem 1rem; border-bottom:1px solid #f9fafb; vertical-align:top; }
-    .evr-table tr:last-child td { border-bottom:none; }
-    .evr-pass { background:#f0fdf4; }
-    .evr-fail { background:#fff7f7; }
+    .evr-card { background:white; border-radius:10px; box-shadow:0 1px 6px rgba(0,0,0,0.06); margin-bottom:0.75rem; overflow:hidden; }
+    .evr-card-header { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; cursor:pointer; user-select:none; flex-wrap:wrap; }
+    .evr-card-header .evr-mono, .evr-card-header .evr-desc { user-select:text; }
+    .evr-card-header:hover { background:#fafafa; }
+    .evr-card-body { display:none; border-top:1px solid #f3f4f6; padding:1rem; }
+    .evr-card-body.open { display:block; }
     .evr-badge { padding:0.15rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:600; white-space:nowrap; }
     .evr-mono { font-family:monospace; font-size:0.78rem; color:#4b5563; }
     .evr-desc { color:#6b7280; font-size:0.8rem; }
+    .evr-label { font-size:0.72rem; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.25rem; }
+    .evr-field { font-size:0.84rem; color:#374151; background:#f9fafb; border-radius:6px; padding:0.5rem 0.75rem; white-space:pre-wrap; word-break:break-word; margin-bottom:0.75rem; }
+    .evr-pass-bg { background:#f0fdf4; }
+    .evr-fail-bg { background:#fff7f7; }
+    .evr-section-title { font-size:1rem; font-weight:700; color:#374151; margin:0 0 0.75rem 0; }
   </style>
 
   {% set pct = (run.passed / run.total * 100) | int if run.total > 0 else 0 %}
@@ -64,81 +69,112 @@
   {% set passes = results | selectattr('passed', 'true') | list %}
 
   {% if failures %}
-  <h2 style="font-size:1rem; font-weight:700; color:#dc2626; margin:0 0 0.75rem 0;">Failed & errored ({{ failures | length }})</h2>
-  <table class="evr-table" style="margin-bottom:1.5rem;">
-    <thead>
-      <tr>
-        <th>Fixture</th>
-        <th>Description</th>
-        <th>Expected</th>
-        <th>Actual</th>
-        <th>Latency</th>
-        <th>Error</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in failures %}
-      <tr class="evr-fail">
-        <td class="evr-mono">{{ r.fixture_id }}</td>
-        <td class="evr-desc">{{ r.description or '—' }}</td>
-        <td><span class="evr-badge" style="background:#dbeafe; color:#1e40af;">{{ r.expected_route }}</span></td>
-        <td>
-          {% if r.error_message %}
-          <span class="evr-badge" style="background:#fef3c7; color:#92400e;">error</span>
-          {% elif r.actual_route %}
-          <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">{{ r.actual_route }}</span>
-          {% else %}
-          <span style="color:#9ca3af;">—</span>
-          {% endif %}
-        </td>
-        <td class="evr-desc" style="white-space:nowrap;">{{ r.latency_ms }}ms</td>
-        <td class="evr-desc" style="max-width:220px; word-break:break-word;">{{ r.error_message or '—' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <h2 class="evr-section-title" style="color:#dc2626;">Failed &amp; errored ({{ failures | length }})</h2>
+  {% for r in failures %}
+    {% set fx = fixture_context.get(r.fixture_id, {}) %}
+    <div class="evr-card evr-fail-bg">
+      <div class="evr-card-header" onclick="toggleEvr(this)">
+        {% if r.error_message %}
+        <span class="evr-badge" style="background:#fef3c7; color:#92400e;">ERR</span>
+        {% else %}
+        <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">FAIL</span>
+        {% endif %}
+        <span class="evr-mono" style="font-weight:600;">{{ r.fixture_id }}</span>
+        <span class="evr-desc">{{ r.description or fx.get('description', '') }}</span>
+        <span style="margin-left:auto; display:flex; gap:0.5rem; align-items:center;">
+          <span class="evr-badge" style="background:#dbeafe; color:#1e40af;">expected: {{ r.expected_route }}</span>
+          <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">got: {{ r.actual_route or r.error_message or '—' }}</span>
+          <span style="color:#9ca3af; font-size:0.8rem;">{{ r.latency_ms }}ms</span>
+          <span style="color:#9ca3af; font-size:0.75rem;">▼</span>
+        </span>
+      </div>
+      <div class="evr-card-body">
+        {% if fx %}
+        <div class="evr-label">Subject</div>
+        <div class="evr-field">{{ fx.get('subject') or '(empty)' }}</div>
+        {% if fx.get('body') %}
+        <div class="evr-label">Body</div>
+        <div class="evr-field" style="max-height:12rem; overflow:auto;">{{ fx.get('body') }}</div>
+        {% endif %}
+        {% if fx.get('open_tasks') %}
+        <div class="evr-label">Open tasks passed to router</div>
+        <div class="evr-field">{% for t in fx.get('open_tasks') %}[id={{ t.id }}] {{ t.title }}{% if t.notes %} — {{ t.notes }}{% endif %}
+{% endfor %}</div>
+        {% endif %}
+        {% endif %}
+        {% if r.raw_response %}
+        <div class="evr-label">Claude raw response</div>
+        <div class="evr-field evr-mono">{{ r.raw_response }}</div>
+        {% endif %}
+        {% if r.error_message %}
+        <div class="evr-label">Error</div>
+        <div class="evr-field" style="color:#dc2626;">{{ r.error_message }}</div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+  <div style="margin-bottom:1.5rem;"></div>
   {% endif %}
 
-  <h2 style="font-size:1rem; font-weight:700; color:#374151; margin:0 0 0.75rem 0;">All results ({{ results | length }})</h2>
-  <table class="evr-table">
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Fixture</th>
-        <th>Description</th>
-        <th>Expected</th>
-        <th>Actual</th>
-        <th>Latency</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in results %}
-      <tr class="{% if r.passed %}evr-pass{% else %}evr-fail{% endif %}">
-        <td>
-          {% if r.passed %}
-          <span class="evr-badge" style="background:#d1fae5; color:#065f46;">PASS</span>
-          {% elif r.error_message %}
-          <span class="evr-badge" style="background:#fef3c7; color:#92400e;">ERR</span>
-          {% else %}
-          <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">FAIL</span>
-          {% endif %}
-        </td>
-        <td class="evr-mono">{{ r.fixture_id }}</td>
-        <td class="evr-desc">{{ r.description or '—' }}</td>
-        <td><span class="evr-badge" style="background:#f3f4f6; color:#374151;">{{ r.expected_route }}</span></td>
-        <td>
+  <h2 class="evr-section-title">All results ({{ results | length }})</h2>
+  {% for r in results %}
+    {% set fx = fixture_context.get(r.fixture_id, {}) %}
+    <div class="evr-card {% if r.passed %}evr-pass-bg{% else %}evr-fail-bg{% endif %}">
+      <div class="evr-card-header" onclick="toggleEvr(this)">
+        {% if r.passed %}
+        <span class="evr-badge" style="background:#d1fae5; color:#065f46;">PASS</span>
+        {% elif r.error_message %}
+        <span class="evr-badge" style="background:#fef3c7; color:#92400e;">ERR</span>
+        {% else %}
+        <span class="evr-badge" style="background:#fee2e2; color:#991b1b;">FAIL</span>
+        {% endif %}
+        <span class="evr-mono" style="font-weight:600;">{{ r.fixture_id }}</span>
+        <span class="evr-desc">{{ r.description or fx.get('description', '') }}</span>
+        <span style="margin-left:auto; display:flex; gap:0.5rem; align-items:center;">
+          <span class="evr-badge" style="background:#f3f4f6; color:#374151;">{{ r.expected_route }}</span>
           {% if r.actual_route %}
           <span class="evr-badge" style="background:{% if r.passed %}#d1fae5; color:#065f46{% else %}#fee2e2; color:#991b1b{% endif %};">{{ r.actual_route }}</span>
-          {% else %}
-          <span style="color:#9ca3af;">—</span>
           {% endif %}
-        </td>
-        <td class="evr-desc" style="white-space:nowrap;">{{ r.latency_ms }}ms</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <span style="color:#9ca3af; font-size:0.8rem;">{{ r.latency_ms }}ms</span>
+          <span style="color:#9ca3af; font-size:0.75rem;">▼</span>
+        </span>
+      </div>
+      <div class="evr-card-body">
+        {% if fx %}
+        <div class="evr-label">Subject</div>
+        <div class="evr-field">{{ fx.get('subject') or '(empty)' }}</div>
+        {% if fx.get('body') %}
+        <div class="evr-label">Body</div>
+        <div class="evr-field" style="max-height:12rem; overflow:auto;">{{ fx.get('body') }}</div>
+        {% endif %}
+        {% if fx.get('open_tasks') %}
+        <div class="evr-label">Open tasks passed to router</div>
+        <div class="evr-field">{% for t in fx.get('open_tasks') %}[id={{ t.id }}] {{ t.title }}{% if t.notes %} — {{ t.notes }}{% endif %}
+{% endfor %}</div>
+        {% endif %}
+        {% endif %}
+        {% if r.raw_response %}
+        <div class="evr-label">Claude raw response</div>
+        <div class="evr-field evr-mono">{{ r.raw_response }}</div>
+        {% endif %}
+        {% if r.error_message %}
+        <div class="evr-label">Error</div>
+        <div class="evr-field" style="color:#dc2626;">{{ r.error_message }}</div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
 
 </div>
 </div>
+
+<script>
+function toggleEvr(header) {
+  const body = header.nextElementSibling;
+  if (!body) return;
+  body.classList.toggle('open');
+  const chevron = header.querySelector('span[style*="▼"]');
+  if (chevron) chevron.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+</script>
 {% endblock %}
