@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Email Settings{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('daily_email.static', filename='daily_email.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="de-page">
+  <div class="de-container">
+
+    <header class="de-page-header">
+      <a href="{{ url_for('daily_email.index') }}" class="de-back-link">&larr; Daily Email</a>
+      <h1 class="de-page-title">Settings</h1>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="de-alert de-alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Master settings form -->
+    <form method="POST" action="{{ url_for('daily_email.settings_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="de-card">
+        <div class="de-card-header">Digest</div>
+        <div class="de-card-body">
+
+          <div class="de-field">
+            <label class="de-toggle-label">
+              <input type="checkbox" name="digest_enabled" class="de-toggle-input"
+                     {% if profile.digest_enabled %}checked{% endif %}>
+              <span class="de-toggle-text">Enable daily digest</span>
+            </label>
+          </div>
+
+          <div class="de-field">
+            <label class="de-label" for="send_hour_local">Send time</label>
+            <select name="send_hour_local" id="send_hour_local" class="de-select">
+              {% for h in hours %}
+              <option value="{{ h }}" {% if h == profile.send_hour_local %}selected{% endif %}>
+                {{ "%02d:00"|format(h) }}
+              </option>
+              {% endfor %}
+            </select>
+            <p class="de-field-hint">
+              Times shown in <strong>{{ current_user.time_zone or 'UTC' }}</strong>.
+              Email may arrive within about one hour after this time.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="de-card">
+        <div class="de-card-header">Modules</div>
+        <div class="de-card-body de-module-toggles">
+
+          <label class="de-toggle-label">
+            <input type="checkbox" name="include_weather" class="de-toggle-input"
+                   {% if profile.include_weather %}checked{% endif %}>
+            <span class="de-toggle-text">&#9729; Weather</span>
+          </label>
+
+          <label class="de-toggle-label de-toggle-coming-soon">
+            <input type="checkbox" name="include_stocks" class="de-toggle-input"
+                   {% if profile.include_stocks %}checked{% endif %} disabled>
+            <span class="de-toggle-text">&#x1F4C8; Stocks <em class="de-coming-soon">(coming soon)</em></span>
+          </label>
+
+          <label class="de-toggle-label de-toggle-coming-soon">
+            <input type="checkbox" name="include_sports" class="de-toggle-input"
+                   {% if profile.include_sports %}checked{% endif %} disabled>
+            <span class="de-toggle-text">&#x1F3C0; Sports Scores <em class="de-coming-soon">(coming soon)</em></span>
+          </label>
+
+          <label class="de-toggle-label de-toggle-coming-soon">
+            <input type="checkbox" name="include_jobs" class="de-toggle-input"
+                   {% if profile.include_jobs %}checked{% endif %} disabled>
+            <span class="de-toggle-text">&#x1F4BC; Job Listings <em class="de-coming-soon">(coming soon)</em></span>
+          </label>
+
+        </div>
+      </div>
+
+      <div class="de-form-actions">
+        <button type="submit" class="de-btn de-btn-primary">Save Settings</button>
+        <a href="{{ url_for('daily_email.index') }}" class="de-btn de-btn-ghost">Cancel</a>
+      </div>
+
+    </form>
+
+    <!-- Weather locations section -->
+    <div class="de-card" id="weather-locations">
+      <div class="de-card-header">&#9729; Weather Locations</div>
+      <div class="de-card-body">
+
+        {% if locations %}
+        <ul class="de-location-list">
+          {% for loc in locations %}
+          <li class="de-location-item">
+            <span class="de-location-name">{{ loc.display_label }}</span>
+            <span class="de-location-coords">{{ "%.2f"|format(loc.lat) }}, {{ "%.2f"|format(loc.lon) }}</span>
+            <form method="POST"
+                  action="{{ url_for('daily_email.weather_delete', loc_id=loc.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Remove {{ loc.display_label }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="de-btn-inline-danger">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="de-empty-hint">No locations added yet.</p>
+        {% endif %}
+
+        {% if locations|length < max_weather %}
+        <form method="POST" action="{{ url_for('daily_email.weather_add') }}" class="de-inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="location_query" class="de-input" placeholder="City name or ZIP (e.g. Denver, CO)" required>
+          <button type="submit" class="de-btn de-btn-secondary">Add Location</button>
+        </form>
+        <p class="de-field-hint">Up to {{ max_weather }} locations. Geocoded once and stored.</p>
+        {% else %}
+        <p class="de-field-hint">Maximum of {{ max_weather }} locations reached.</p>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

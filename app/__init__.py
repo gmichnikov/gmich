@@ -265,6 +265,7 @@ def create_app():
         init_app as init_sports_schedules_commands,
     )
     from app.projects.helper.commands import init_app as init_helper_commands
+    from app.projects.daily_email.commands import init_app as init_daily_email_commands
 
     init_better_signups_commands(app)
     init_betfake_commands(app)
@@ -272,6 +273,7 @@ def create_app():
     init_reminders_commands(app)
     init_sports_schedules_commands(app)
     init_helper_commands(app)
+    init_daily_email_commands(app)
 
     # App-level 404 handler — catches 404s from any blueprint (travel_log, notes, etc.)
     @app.errorhandler(404)

@@ -7,16 +7,84 @@
 {% endblock %}
 
 {% block content %}
-<div class="dailyemail-page">
-    <div class="dailyemail-container">
-        <header class="dailyemail-header">
-            <h1 class="dailyemail-title">Daily Email</h1>
-        </header>
+<div class="de-page">
+  <div class="de-container">
 
-        <p class="dailyemail-intro">
-            A future daily digest email tailored to what you care about, using APIs and web search.
-            The data model and features are not defined yet—this page is a logged-in placeholder for the project shell.
-        </p>
+    <header class="de-page-header">
+      <h1 class="de-page-title">&#x1F4EC; Daily Email</h1>
+      <p class="de-page-subtitle">A personalized morning digest delivered to your inbox.</p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="de-alert de-alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Status card -->
+    <div class="de-card">
+      <div class="de-card-header">Digest Status</div>
+      <div class="de-card-body">
+        <div class="de-status-row">
+          <span class="de-status-label">Status</span>
+          <span class="de-status-value {% if profile.digest_enabled %}de-status-on{% else %}de-status-off{% endif %}">
+            {% if profile.digest_enabled %}Enabled{% else %}Disabled{% endif %}
+          </span>
+        </div>
+        {% if profile.digest_enabled %}
+        <div class="de-status-row">
+          <span class="de-status-label">Send time</span>
+          <span class="de-status-value">
+            {{ "%02d:00"|format(profile.send_hour_local) }}
+            ({{ current_user.time_zone or 'UTC' }})
+            &mdash; <em>may arrive within ~1 hour of this time</em>
+          </span>
+        </div>
+        {% endif %}
+        <div class="de-status-row">
+          <span class="de-status-label">Credits</span>
+          <span class="de-status-value {% if credits == 0 %}de-status-off{% endif %}">
+            {{ credits }}{% if credits == 0 %} &mdash; no sends until credits are added{% endif %}
+          </span>
+        </div>
+        {% if last_send %}
+        <div class="de-status-row">
+          <span class="de-status-label">Last sent</span>
+          <span class="de-status-value">{{ last_send.sent_at | user_local_datetime }}</span>
+        </div>
+        {% endif %}
+
+        <div class="de-status-modules">
+          <span class="de-status-label">Modules</span>
+          <span class="de-module-badges">
+            <span class="de-badge {% if profile.include_weather %}de-badge-on{% else %}de-badge-off{% endif %}">&#9729; Weather</span>
+            <span class="de-badge {% if profile.include_stocks %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F4C8; Stocks</span>
+            <span class="de-badge {% if profile.include_sports %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F3C0; Sports</span>
+            <span class="de-badge {% if profile.include_jobs %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F4BC; Jobs</span>
+          </span>
+        </div>
+      </div>
     </div>
+
+    <!-- Actions -->
+    <div class="de-actions">
+      <a href="{{ url_for('daily_email.settings') }}" class="de-btn de-btn-primary">Configure Settings</a>
+      {% if profile.include_weather and locations %}
+      <form method="POST" action="{{ url_for('daily_email.preview') }}" target="_blank" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="de-btn de-btn-secondary">Preview Email</button>
+      </form>
+      {% endif %}
+      {% if current_user.is_admin %}
+      <form method="POST" action="{{ url_for('daily_email.send_now') }}"
+            style="display:inline;"
+            onsubmit="return confirm('Send digest to {{ current_user.email }} now? Costs 1 credit.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="de-btn de-btn-admin-send">Send Now</button>
+      </form>
+      {% endif %}
+    </div>
+
+  </div>
 </div>
 {% endblock %}
