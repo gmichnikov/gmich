@@ -120,7 +120,8 @@
   min-height: 36px;
 }
 .de-btn-primary  { background: #1a1a2e; color: #fff; }
-.de-btn-primary:hover { background: #2d2d50; color: #fff; }
+.de-btn-primary:hover:not(:disabled) { background: #2d2d50; color: #fff; }
+.de-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 .de-btn-secondary { background: #fff; color: #1a1a2e; border: 1px solid #1a1a2e; }
 .de-btn-secondary:hover { background: #f0f0f0; }
 .de-btn-ghost { background: transparent; color: #666; border: 1px solid #ccc; }
@@ -235,6 +236,10 @@
 
 /* ── Empty hint ── */
 .de-empty-hint { color: #aaa; font-size: 14px; font-style: italic; margin: 0 0 12px; }
+
+/* ── Inline form feedback ── */
+.de-inline-error   { color: #c0392b; font-size: 13px; margin: 6px 0 0; font-weight: 600; }
+.de-inline-success { color: #1a7d3f; font-size: 13px; margin: 6px 0 0; font-weight: 600; }
 
 /* ── Responsive ── */
 @media (max-width: 480px) {

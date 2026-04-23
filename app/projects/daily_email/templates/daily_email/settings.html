@@ -22,7 +22,7 @@
     {% endwith %}
 
     <!-- Master settings form -->
-    <form method="POST" action="{{ url_for('daily_email.settings_save') }}">
+    <form method="POST" action="{{ url_for('daily_email.settings_save') }}" id="de-settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div class="de-card">
@@ -65,10 +65,10 @@
             <span class="de-toggle-text">&#9729; Weather</span>
           </label>
 
-          <label class="de-toggle-label de-toggle-coming-soon">
+          <label class="de-toggle-label">
             <input type="checkbox" name="include_stocks" class="de-toggle-input"
-                   {% if profile.include_stocks %}checked{% endif %} disabled>
-            <span class="de-toggle-text">&#x1F4C8; Stocks <em class="de-coming-soon">(coming soon)</em></span>
+                   {% if profile.include_stocks %}checked{% endif %}>
+            <span class="de-toggle-text">&#x1F4C8; Stocks</span>
           </label>
 
           <label class="de-toggle-label de-toggle-coming-soon">
@@ -87,7 +87,7 @@
       </div>
 
       <div class="de-form-actions">
-        <button type="submit" class="de-btn de-btn-primary">Save Settings</button>
+        <button type="submit" class="de-btn de-btn-primary" id="de-settings-save-btn" disabled>Save Settings</button>
         <a href="{{ url_for('daily_email.index') }}" class="de-btn de-btn-ghost">Cancel</a>
       </div>
 
@@ -132,6 +132,104 @@
       </div>
     </div>
 
+    <!-- Stock tickers section -->
+    <div class="de-card" id="stock-tickers">
+      <div class="de-card-header">&#x1F4C8; Stock Tickers</div>
+      <div class="de-card-body">
+
+        {% if stock_tickers %}
+        <ul class="de-location-list">
+          {% for ticker in stock_tickers %}
+          <li class="de-location-item">
+            <span class="de-location-name">{{ ticker.symbol }}</span>
+            <form method="POST"
+                  action="{{ url_for('daily_email.stocks_delete', ticker_id=ticker.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Remove {{ ticker.symbol }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="de-btn-inline-danger">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="de-empty-hint">No tickers added yet.</p>
+        {% endif %}
+
+        {% if stock_tickers|length < max_stocks %}
+        <form method="POST" action="{{ url_for('daily_email.stocks_add') }}" class="de-inline-form"
+              id="stocks-add-form" onsubmit="deDisableOnSubmit(this)">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="symbol" id="stocks-symbol-input" class="de-input"
+                 placeholder="e.g. AAPL, MSFT, SPY" maxlength="20"
+                 style="text-transform:uppercase;" required>
+          <button type="submit" class="de-btn de-btn-secondary" id="stocks-add-btn">Add Ticker</button>
+        </form>
+        {% if stocks_error %}
+        <p class="de-inline-error">{{ stocks_error }}</p>
+        {% elif stocks_added %}
+        <p class="de-inline-success">{{ stocks_added }} added.</p>
+        {% endif %}
+        <p class="de-field-hint">Up to {{ max_stocks }} tickers. Data from Yahoo Finance; unofficial, may be delayed. Validation may take a few seconds.</p>
+        {% else %}
+        <p class="de-field-hint">Maximum of {{ max_stocks }} tickers reached.</p>
+        {% endif %}
+
+      </div>
+    </div>
+
   </div>
 </div>
+
+{% block scripts %}
+<script>
+function deDisableOnSubmit(form) {
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Validating…';
+  }
+}
+
+// Save Settings: only enabled when digest / hour / module toggles differ from saved values
+function deSettingsSnapshot(form) {
+  if (!form) return '';
+  const cb = function (name) {
+    const el = form.querySelector('[name="' + name + '"]');
+    return el && el.checked ? '1' : '0';
+  };
+  const hour = form.querySelector('#send_hour_local');
+  return [
+    cb('digest_enabled'),
+    hour ? hour.value : '',
+    cb('include_weather'),
+    cb('include_stocks'),
+  ].join('|');
+}
+
+function deUpdateSettingsSaveState() {
+  const form = document.getElementById('de-settings-form');
+  const btn = document.getElementById('de-settings-save-btn');
+  if (!form || !btn) return;
+  const initial = form.getAttribute('data-de-initial-snapshot');
+  const current = deSettingsSnapshot(form);
+  btn.disabled = current === initial;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('de-settings-form');
+  if (form) {
+    form.setAttribute('data-de-initial-snapshot', deSettingsSnapshot(form));
+    form.addEventListener('change', deUpdateSettingsSaveState);
+    form.addEventListener('input', deUpdateSettingsSaveState);
+    deUpdateSettingsSaveState();
+  }
+
+  const feedback = document.querySelector('.de-inline-error, .de-inline-success');
+  if (feedback) {
+    feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+</script>
+{% endblock %}
 {% endblock %}

@@ -204,7 +204,13 @@ def _fetch_modules_parallel(user, profile) -> dict:
 
     # Stocks, sports, jobs placeholders — modules added in later phases
     if profile.include_stocks:
-        tasks["stocks"] = (_not_implemented_yet, ["stocks"])
+        from app.projects.daily_email.modules.stocks import render_stocks_section
+        stock_tickers = list(
+            user.daily_email_stock_tickers.order_by(
+                _stock_sort_order_col()
+            ).all()
+        )
+        tasks["stocks"] = (render_stocks_section, [stock_tickers])
     if profile.include_sports:
         tasks["sports"] = (_not_implemented_yet, ["sports"])
     if profile.include_jobs:
@@ -235,6 +241,11 @@ def _not_implemented_yet(_key) -> None:
 def _weather_sort_order_col():
     from app.projects.daily_email.models import DailyEmailWeatherLocation
     return DailyEmailWeatherLocation.sort_order
+
+
+def _stock_sort_order_col():
+    from app.projects.daily_email.models import DailyEmailStockTicker
+    return DailyEmailStockTicker.sort_order
 
 
 def _claim_send_log(user_id: int, local_date: date):

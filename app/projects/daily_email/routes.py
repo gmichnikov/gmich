@@ -77,12 +77,21 @@ def settings():
         .order_by(_weather_sort_col())
         .all()
     )
+    stock_tickers = list(
+        current_user.daily_email_stock_tickers
+        .order_by(_stock_sort_col())
+        .all()
+    )
     return render_template(
         "daily_email/settings.html",
         profile=profile,
         locations=locations,
         max_weather=MAX_WEATHER_LOCATIONS,
+        stock_tickers=stock_tickers,
+        max_stocks=MAX_STOCK_TICKERS,
         hours=list(range(24)),
+        stocks_error=request.args.get("stocks_error"),
+        stocks_added=request.args.get("stocks_added"),
     )
 
 
@@ -182,15 +191,74 @@ def preview():
         .all()
     )
 
+    from app.projects.daily_email.modules.stocks import render_stocks_section
+    stock_tickers = list(
+        current_user.daily_email_stock_tickers
+        .order_by(_stock_sort_col())
+        .all()
+    )
+
     module_results = {
         "weather": render_weather_section(locations, user_timezone=current_user.time_zone or "UTC") if profile.include_weather and locations else None,
-        "stocks": None,
+        "stocks": render_stocks_section(stock_tickers) if profile.include_stocks and stock_tickers else None,
         "sports": None,
         "jobs": None,
     }
 
     html = build_digest_html(current_user, profile, module_results)
     return Response(html, mimetype="text/html")
+
+
+# ---------------------------------------------------------------------------
+# Stock tickers
+# ---------------------------------------------------------------------------
+
+MAX_STOCK_TICKERS = 10
+
+
+@daily_email_bp.route("/settings/stocks/add", methods=["POST"])
+@login_required
+def stocks_add():
+    from app.projects.daily_email.models import DailyEmailStockTicker
+    from app.projects.daily_email.modules.stocks import validate_ticker
+
+    symbol = request.form.get("symbol", "").strip().upper()
+    if not symbol:
+        return redirect(url_for("daily_email.settings", stocks_error="Please enter a ticker symbol."))
+
+    existing_count = current_user.daily_email_stock_tickers.count()
+    if existing_count >= MAX_STOCK_TICKERS:
+        return redirect(url_for("daily_email.settings", stocks_error=f"You can save up to {MAX_STOCK_TICKERS} tickers."))
+
+    already = current_user.daily_email_stock_tickers.filter_by(symbol=symbol).first()
+    if already:
+        return redirect(url_for("daily_email.settings", stocks_error=f"{symbol} is already in your list."))
+
+    if not validate_ticker(symbol):
+        return redirect(url_for("daily_email.settings", stocks_error=f"\u201c{symbol}\u201d doesn\u2019t appear to be a valid ticker."))
+
+    ticker = DailyEmailStockTicker(
+        user_id=current_user.id,
+        symbol=symbol,
+        sort_order=existing_count,
+    )
+    db.session.add(ticker)
+    db.session.commit()
+    return redirect(url_for("daily_email.settings", stocks_added=symbol))
+
+
+@daily_email_bp.route("/settings/stocks/delete/<int:ticker_id>", methods=["POST"])
+@login_required
+def stocks_delete(ticker_id):
+    from app.projects.daily_email.models import DailyEmailStockTicker
+
+    ticker = DailyEmailStockTicker.query.filter_by(
+        id=ticker_id, user_id=current_user.id
+    ).first_or_404()
+    db.session.delete(ticker)
+    db.session.commit()
+    flash(f"Removed {ticker.symbol}.", "success")
+    return redirect(url_for("daily_email.settings"))
 
 
 # ---------------------------------------------------------------------------
@@ -224,3 +292,8 @@ def send_now():
 def _weather_sort_col():
     from app.projects.daily_email.models import DailyEmailWeatherLocation
     return DailyEmailWeatherLocation.sort_order
+
+
+def _stock_sort_col():
+    from app.projects.daily_email.models import DailyEmailStockTicker
+    return DailyEmailStockTicker.sort_order
