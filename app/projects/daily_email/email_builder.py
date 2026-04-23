@@ -59,65 +59,76 @@ def build_digest_html(user, profile, module_results: dict) -> str:
     ):
         sections_html = _nothing_loaded_card(settings_url)
 
+    pre = f"Weather, updates, and more for {date_str}."
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
 <title>Morning Digest</title>
 <style>
   body {{
     margin: 0; padding: 0;
-    background-color: #f4f4f4;
-    font-family: Arial, Helvetica, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    background-color: #e9ebf0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 15px;
-    color: #222;
+    line-height: 1.5;
+    color: #1f2933;
+  }}
+  .de-email-preheader {{
+    display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #e9ebf0; opacity: 0;
   }}
   .de-email-wrap {{
     max-width: 600px;
     margin: 0 auto;
     background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }}
   .de-email-header {{
-    background-color: #1a1a2e;
+    background: linear-gradient(165deg, #1a1a2e 0%, #16213e 100%);
     color: #ffffff;
-    padding: 28px 24px 20px;
+    padding: 28px 24px 22px;
     text-align: center;
   }}
   .de-email-header h1 {{
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
   }}
   .de-email-header p {{
     margin: 0;
     font-size: 13px;
-    color: #aab0c6;
+    color: #b8bfd4;
   }}
   .de-email-body {{
-    padding: 16px 20px;
+    padding: 20px 22px 8px;
   }}
   .de-module {{
-    margin-bottom: 20px;
-    border: 1px solid #e8e8e8;
-    border-radius: 6px;
+    margin-bottom: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
     overflow: hidden;
+    background: #fff;
   }}
   .de-module-header {{
-    background-color: #f0f2f5;
-    padding: 10px 14px;
+    background: linear-gradient(180deg, #f3f4f6 0%, #eef0f3 100%);
+    padding: 11px 16px;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #444;
-    border-bottom: 1px solid #e0e0e0;
+    letter-spacing: 0.55px;
+    color: #3d4852;
+    border-bottom: 1px solid #e0e3e7;
   }}
   .de-module-weather {{}}
   .de-module-location {{
-    padding: 12px 14px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f2f5;
   }}
   .de-module-location:last-child {{ border-bottom: none; }}
   .de-module-location-name {{
@@ -133,7 +144,7 @@ def build_digest_html(user, profile, module_results: dict) -> str:
   }}
   .de-weather-condition {{ font-weight: 600; }}
   .de-weather-range {{ color: #555; }}
-  .de-weather-precip {{ color: #3a7dc9; }}
+  .de-weather-precip {{ color: #2563eb; }}
   .de-weather-week {{
     width: 100%;
     border-collapse: collapse;
@@ -150,30 +161,34 @@ def build_digest_html(user, profile, module_results: dict) -> str:
   .de-weather-day-cond {{ color: #777; margin: 2px 0; }}
   .de-weather-day-range {{ font-weight: 600; color: #333; }}
   .de-error-card {{
-    padding: 14px;
-    background-color: #fffbf0;
-    color: #888;
+    padding: 14px 16px;
+    background-color: #fffbeb;
+    color: #6b5b2b;
     font-size: 13px;
-    font-style: italic;
-    border-left: 3px solid #f0c040;
+    line-height: 1.45;
+    border-left: 3px solid #e5a50a;
   }}
   .de-nothing-loaded {{
-    padding: 24px;
+    padding: 24px 16px 28px;
     text-align: center;
-    color: #888;
+    color: #5c6770;
+    font-size: 14px;
+    line-height: 1.5;
   }}
-  .de-nothing-loaded a {{ color: #3a7dc9; }}
+  .de-nothing-loaded a {{ color: #2563eb; }}
   .de-email-footer {{
-    padding: 16px 20px;
+    padding: 18px 22px 24px;
     border-top: 1px solid #e8e8e8;
     font-size: 12px;
-    color: #999;
+    line-height: 1.5;
+    color: #7b8794;
     text-align: center;
   }}
-  .de-email-footer a {{ color: #3a7dc9; text-decoration: none; }}
+  .de-email-footer a {{ color: #2563eb; text-decoration: none; font-weight: 500; }}
 </style>
 </head>
 <body>
+<div class="de-email-preheader">{pre}</div>
 <div class="de-email-wrap">
   <div class="de-email-header">
     <h1>Good morning &#9728;</h1>
@@ -184,8 +199,8 @@ def build_digest_html(user, profile, module_results: dict) -> str:
   </div>
   <div class="de-email-footer">
     <a href="{settings_url}">Manage your digest preferences</a>
-    &nbsp;&bull;&nbsp;
-    You're receiving this because you opted in to the daily digest.
+    <br><br>
+    <span style="color:#9aa5b1;">You are receiving this because you opted in to the daily digest.</span>
   </div>
 </div>
 </body>
@@ -193,10 +208,12 @@ def build_digest_html(user, profile, module_results: dict) -> str:
 
 
 def _error_card(label: str) -> str:
+    # `label` is e.g. "&#9729; Weather" or "&#x1F3C0; Sports Scores" (icon entity + name).
+    display = label.split(None, 1)[-1] if " " in (label or "") else (label or "this section")
     return (
         f'<div class="de-module">'
         f'<div class="de-module-header">{label}</div>'
-        f'<div class="de-error-card">{label.split(None, 1)[-1]} temporarily unavailable.</div>'
+        f'<div class="de-error-card">We couldn’t load {display} right now. It may be back in the next send.</div>'
         f"</div>"
     )
 

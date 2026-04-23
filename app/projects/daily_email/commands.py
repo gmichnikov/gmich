@@ -1,6 +1,7 @@
 """Flask CLI commands for the Daily Email project."""
 
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
@@ -36,7 +37,7 @@ def send_command():
     Intended to run once per hour via Heroku Scheduler.
     """
     from app.projects.daily_email.models import DailyEmailProfile, DailyEmailSendLog
-    from app.models import User
+    from app.models import LogEntry, User
 
     profiles = (
         DailyEmailProfile.query
@@ -58,11 +59,14 @@ def send_command():
             skipped_hour += 1
             continue
 
-        already_sent = DailyEmailSendLog.query.filter_by(
-            user_id=user.id,
-            digest_local_date=local_date,
-        ).first()
-        if already_sent:
+        already_ok = (
+            DailyEmailSendLog.query.filter_by(
+                user_id=user.id,
+                digest_local_date=local_date,
+                status="sent",
+            ).first()
+        )
+        if already_ok:
             skipped_sent += 1
             continue
 
@@ -82,6 +86,19 @@ def send_command():
         f"{skipped_sent} already sent today, {skipped_credits} skipped (no credits), "
         f"{skipped_hour} not due this hour."
     )
+    db.session.add(
+        LogEntry(
+            actor_id=None,
+            project="daily_email",
+            category="Batch send",
+            description=(
+                f"sent={sent} failed={failed} already_sent_today={skipped_sent} "
+                f"no_credits={skipped_credits} not_due_this_hour={skipped_hour} "
+                f"digest_profiles={len(profiles)}"
+            ),
+        )
+    )
+    db.session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -127,24 +144,28 @@ def send_test_command(user_id):
 
 def _build_and_send(user, profile, local_date: date | None, is_test: bool = False) -> bool:
     """
-    Fetch all enabled modules in parallel, build the HTML digest, send via Mailgun.
-    On success: deduct 1 credit and (unless test) insert send log row.
-    Returns True on success, False on failure.
+    Fetch enabled modules, build HTML, send via Mailgun.
+    Scheduled sends claim a ``pending`` log row first; credit is decremented only after
+    ``send_email`` succeeds. Test sends skip the log and still cost one credit on success.
     """
+    from app.models import LogEntry
     from app.projects.daily_email.email_builder import build_digest_html, build_subject
     from app.utils.email_service import send_email
 
-    module_results = _fetch_modules_parallel(user, profile)
-
+    t_all = time.perf_counter()
+    module_results, module_ms, fetch_ms = _fetch_modules_parallel(user, profile)
+    t_build = time.perf_counter()
     subject = build_subject(user)
     html = build_digest_html(user, profile, module_results)
+    build_ms = (time.perf_counter() - t_build) * 1000.0
 
     plain = (
         f"Your morning digest is ready. View it in an HTML-capable email client.\n\n"
         f"Manage preferences: {_settings_url()}"
     )
 
-    # Claim a send log row before calling Mailgun (idempotency for scheduled sends)
+    # Idempotency: claim a 'pending' row before Mailgun. Another worker's claim fails → skip.
+    # Credit is only decremented after Mailgun succeeds (2xx from send_email).
     log_row = None
     if not is_test and local_date is not None:
         log_row = _claim_send_log(user.id, local_date)
@@ -155,6 +176,19 @@ def _build_and_send(user, profile, local_date: date | None, is_test: bool = Fals
             )
             return False
 
+    db.session.refresh(user)
+    if (user.credits or 0) < 1:
+        logger.warning(
+            "daily_email: credits exhausted after fetch user=%s is_test=%s",
+            user.id, is_test,
+        )
+        if log_row:
+            log_row.status = "no_credits"
+            log_row.error_summary = "credits<1 at send (race or refund)"
+            db.session.commit()
+        return False
+
+    t_send = time.perf_counter()
     try:
         send_email(
             to_email=user.email,
@@ -168,11 +202,23 @@ def _build_and_send(user, profile, local_date: date | None, is_test: bool = Fals
         if log_row:
             log_row.status = "failed"
             log_row.error_summary = str(exc)[:500]
-            db.session.commit()
+        err_text = str(exc)[:500] if exc is not None else "unknown"
+        db.session.add(
+            LogEntry(
+                actor_id=user.id,
+                project="daily_email",
+                category="Send failed",
+                description=f"{'Test send; ' if is_test else ''}Mailgun: {err_text}",
+            )
+        )
+        db.session.commit()
         return False
+    else:
+        send_ms = (time.perf_counter() - t_send) * 1000.0
 
-    # Success — deduct credit and finalize log
-    user.credits = (user.credits or 0) - 1
+    # Success — deduct credit and finalize log (not before Mailgun returns)
+    new_c = (user.credits or 0) - 1
+    user.credits = max(0, new_c)
     if log_row:
         log_row.status = "sent"
         log_row.sent_at = datetime.utcnow()
@@ -180,18 +226,29 @@ def _build_and_send(user, profile, local_date: date | None, is_test: bool = Fals
             k for k, v in module_results.items() if v
         )
     db.session.commit()
-    logger.info("daily_email: sent digest to user=%s", user.id)
+    total_ms = (time.perf_counter() - t_all) * 1000.0
+    logger.info(
+        "daily_email: sent user=%s fetch_ms=%.1f modules=%s build_html_ms=%.1f "
+        "send_ms=%.1f total_ms=%.1f",
+        user.id,
+        fetch_ms,
+        module_ms,
+        build_ms,
+        send_ms,
+        total_ms,
+    )
     return True
 
 
-def _fetch_modules_parallel(user, profile) -> dict:
+def _fetch_modules_parallel(user, profile) -> tuple[dict, dict[str, float], float]:
     """
     Fetch all enabled modules concurrently.
-    Returns dict with keys weather/stocks/sports/jobs; value is HTML, ``""`` (omit), or None (error).
+    Returns (module_results, per_module_ms, total_fetch_wall_ms).
+    module_results: keys weather/stocks/sports/jobs; values HTML, ``""``, or None.
     """
     from app.projects.daily_email.modules.weather import render_weather_section
 
-    tasks = {}
+    tasks: dict = {}
 
     if profile.include_weather:
         locations = list(
@@ -228,21 +285,37 @@ def _fetch_modules_parallel(user, profile) -> dict:
         )
         tasks["jobs"] = (render_jobs_section, [job_watches])
 
-    results = {}
+    module_ms: dict[str, float] = {}
+    results: dict = {}
+    t0 = time.perf_counter()
+
+    def _run_module(key, fn, args):
+        t_m = time.perf_counter()
+        return key, fn(*args), (time.perf_counter() - t_m) * 1000.0
+
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {
-            executor.submit(fn, *args): key
+            executor.submit(_run_module, key, fn, args): key
             for key, (fn, args) in tasks.items()
         }
         for future in as_completed(futures):
             key = futures[future]
             try:
-                results[key] = future.result()
+                mkey, value, ms = future.result()
+                results[mkey] = value
+                module_ms[mkey] = round(ms, 1)
             except Exception as exc:
-                logger.error("daily_email: module %s raised: %s", key, exc)
+                logger.error("daily_email: module %s raised: %s", key, exc, exc_info=True)
                 results[key] = None
+                module_ms[key] = 0.0
 
-    return results
+    fetch_ms = (time.perf_counter() - t0) * 1000.0
+    if tasks:
+        logger.info(
+            "daily_email: module_fetch user=%s total_ms=%.1f per_module=%s",
+            user.id, fetch_ms, module_ms,
+        )
+    return results, module_ms, fetch_ms
 
 
 def _weather_sort_order_col():
@@ -267,10 +340,27 @@ def _job_watch_sort_order_col():
 
 def _claim_send_log(user_id: int, local_date: date):
     """
-    Insert a 'pending' send log row. Returns the row on success, None on conflict.
-    Uses a savepoint so the outer transaction is not poisoned on IntegrityError.
+    Ensure a 'pending' row for this (user, date) so we only charge credit after send.
+
+    If a row already exists and status is *not* 'sent' (e.g. failed, no_credits, stuck
+    pending), remove it and insert fresh pending so a later run or credit fix can retry.
+    A row with status 'sent' means the digest for that day was already delivered: returns None.
     """
     from app.projects.daily_email.models import DailyEmailSendLog
+
+    existing = (
+        DailyEmailSendLog.query.filter_by(
+            user_id=user_id,
+            digest_local_date=local_date,
+        ).first()
+    )
+    if existing and existing.status == "sent":
+        return None
+    if existing and existing.status == "pending":
+        return None
+    if existing and existing.status in ("failed", "no_credits"):
+        db.session.delete(existing)
+        db.session.flush()
 
     row = DailyEmailSendLog(
         user_id=user_id,

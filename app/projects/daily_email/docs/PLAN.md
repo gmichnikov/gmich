@@ -95,19 +95,19 @@ This plan follows the PRD phases but breaks them into small, testable chunks.
 
 **Manual Testing 5.2:** (user to run)
 
-- [ ] Add multiple boards (mix Ashby + Greenhouse) — all listed, digest shows subsections
-- [ ] Invalid board — error message, not saved
-- [ ] Per-board filter — subset or omit when no matches
-- [ ] Remove one watch — list updates; digest matches
-- [ ] `include_jobs` off — no jobs block
+- [x] Add multiple boards (mix Ashby + Greenhouse) — all listed, digest shows subsections
+- [x] Invalid board — error message, not saved
+- [x] Per-board filter — subset or omit when no matches
+- [x] Remove one watch — list updates; digest matches
+- [x] `include_jobs` off — no jobs block
 
 ---
 
-## Phase 6: Full Integration + Polish
+## Phase 6: Full Integration + Polish ✅
 
-- [ ] All 4 modules + timing logs
-- [ ] Idempotency / credits edge cases
-- [ ] Email HTML polish in `email_builder.py`
+- [x] All 4 modules + **timing logs** (`INFO` lines: per-module ms, fetch wall time, HTML build ms, Mailgun ms, total; on success)
+- [x] **Idempotency / credits:** only skip scheduled send when a log row for that local **date** is already **`sent`**; refresh `user` before send; if credits go to 0 after fetch, set log `no_credits` and do not send; `failed` / `no_credits` rows can be **retried** (replaced on next claim); do not delete `pending` rows; credit decremented only after Mailgun returns
+- [x] **Email HTML polish** in `email_builder.py` (preheader, font stack, header gradient, card radius/shadow, error + footer copy, `color-scheme: light`)
 
 ---
 
