@@ -58,6 +58,8 @@
           <span class="de-status-label">Modules</span>
           <span class="de-module-badges">
             <span class="de-badge {% if profile.include_weather %}de-badge-on{% else %}de-badge-off{% endif %}">&#9729; Weather</span>
+            <span class="de-badge {% if profile.include_reminders %}de-badge-on{% else %}de-badge-off{% endif %}">&#9200; Reminders</span>
+            <span class="de-badge {% if profile.include_helper_tasks %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F9F0; Helper</span>
             <span class="de-badge {% if profile.include_stocks %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F4C8; Stocks</span>
             <span class="de-badge {% if profile.include_sports %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F3C0; Sports</span>
             <span class="de-badge {% if profile.include_jobs %}de-badge-on{% else %}de-badge-off{% endif %}">&#x1F4BC; Jobs</span>
@@ -69,7 +71,7 @@
     <!-- Actions -->
     <div class="de-actions">
       <a href="{{ url_for('daily_email.settings') }}" class="de-btn de-btn-primary">Configure Settings</a>
-      {% if (profile.include_weather and locations) or (profile.include_stocks and stock_tickers) or (profile.include_sports and sports_watches) or (profile.include_jobs and job_watches) %}
+      {% if (profile.include_weather and locations) or (profile.include_stocks and stock_tickers) or (profile.include_sports and sports_watches) or (profile.include_jobs and job_watches) or profile.include_reminders or profile.include_helper_tasks %}
       <form method="POST" action="{{ url_for('daily_email.preview') }}" target="_blank" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="de-btn de-btn-secondary">Preview Email</button>

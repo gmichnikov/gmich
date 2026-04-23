@@ -244,9 +244,26 @@ def _fetch_modules_parallel(user, profile) -> tuple[dict, dict[str, float], floa
     """
     Fetch all enabled modules concurrently.
     Returns (module_results, per_module_ms, total_fetch_wall_ms).
-    module_results: keys weather/stocks/sports/jobs; values HTML, ``""``, or None.
+    module_results: keys weather/reminders/helper/stocks/sports/jobs; values HTML, ``""``, or None.
     """
+    from app.projects.daily_email.modules.digest_reminders import (
+        query_upcoming_reminders_for_digest,
+        render_reminders_section,
+    )
     from app.projects.daily_email.modules.weather import render_weather_section
+
+    rem_list: list = []
+    if profile.include_reminders:
+        rem_list = query_upcoming_reminders_for_digest(user)
+
+    h_dated: list = []
+    h_no: list = []
+    if profile.include_helper_tasks:
+        from app.projects.daily_email.modules.digest_helper import (
+            query_helper_tasks_for_digest,
+        )
+
+        h_dated, h_no = query_helper_tasks_for_digest(user)
 
     tasks: dict = {}
 
@@ -258,6 +275,14 @@ def _fetch_modules_parallel(user, profile) -> tuple[dict, dict[str, float], floa
         )
         tz = user.time_zone or "UTC"
         tasks["weather"] = (render_weather_section, [locations, tz])
+
+    if profile.include_reminders:
+        tasks["reminders"] = (render_reminders_section, [user, rem_list])
+
+    if profile.include_helper_tasks:
+        from app.projects.daily_email.modules.digest_helper import render_helper_section
+
+        tasks["helper"] = (render_helper_section, [user, h_dated, h_no])
 
     if profile.include_stocks:
         from app.projects.daily_email.modules.stocks import render_stocks_section

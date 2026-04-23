@@ -15,7 +15,7 @@ def build_digest_html(user, profile, module_results: dict) -> str:
     """
     Assemble the full HTML email.
 
-    module_results keys: "weather", "stocks", "sports", "jobs"
+    module_results keys: "weather", "reminders", "helper", "stocks", "sports", "jobs"
     Each value is: HTML (rendered card), "" (module omits, no error), or
     None (fetch failed; shows error card for that module). Toggle off omits
     the module.
@@ -30,6 +30,8 @@ def build_digest_html(user, profile, module_results: dict) -> str:
 
     module_order = [
         ("weather", profile.include_weather, "&#9729; Weather"),
+        ("reminders", profile.include_reminders, "&#9200; Reminders"),
+        ("helper", profile.include_helper_tasks, "&#x1F9F0; Helper"),
         ("stocks", profile.include_stocks, "&#x1F4C8; Stocks"),
         ("sports", profile.include_sports, "&#x1F3C0; Sports Scores"),
         ("jobs", profile.include_jobs, "&#x1F4BC; Job Listings"),

@@ -63,7 +63,6 @@ def index():
         .order_by(_job_watch_sort_col())
         .all()
     )
-
     return render_template(
         "daily_email/index.html",
         profile=profile,
@@ -144,6 +143,8 @@ def settings_save():
     profile.include_stocks = request.form.get("include_stocks") == "on"
     profile.include_sports = request.form.get("include_sports") == "on"
     profile.include_jobs = request.form.get("include_jobs") == "on"
+    profile.include_reminders = request.form.get("include_reminders") == "on"
+    profile.include_helper_tasks = request.form.get("include_helper_tasks") == "on"
     profile.updated_at = datetime.utcnow()
 
     db.session.commit()
@@ -223,6 +224,14 @@ def preview():
     from app.projects.daily_email.modules.stocks import render_stocks_section
     from app.projects.daily_email.modules.sports import render_sports_section
     from app.projects.daily_email.modules.jobs import render_jobs_section
+    from app.projects.daily_email.modules.digest_helper import (
+        query_helper_tasks_for_digest,
+        render_helper_section,
+    )
+    from app.projects.daily_email.modules.digest_reminders import (
+        query_upcoming_reminders_for_digest,
+        render_reminders_section,
+    )
 
     stock_tickers = list(
         current_user.daily_email_stock_tickers
@@ -240,8 +249,20 @@ def preview():
         .all()
     )
     tz = current_user.time_zone or "UTC"
+    rem_list = (
+        query_upcoming_reminders_for_digest(current_user)
+        if profile.include_reminders
+        else []
+    )
+    h_dated, h_no = (
+        query_helper_tasks_for_digest(current_user) if profile.include_helper_tasks else ([], [])
+    )
     module_results = {
         "weather": render_weather_section(locations, user_timezone=tz) if profile.include_weather and locations else None,
+        "reminders": render_reminders_section(current_user, rem_list) if profile.include_reminders else None,
+        "helper": (
+            render_helper_section(current_user, h_dated, h_no) if profile.include_helper_tasks else None
+        ),
         "stocks": render_stocks_section(stock_tickers) if profile.include_stocks and stock_tickers else None,
         "sports": render_sports_section(sports_watches, user_timezone=tz) if profile.include_sports else None,
         "jobs": render_jobs_section(job_watches) if profile.include_jobs else None,

@@ -66,6 +66,18 @@
           </label>
 
           <label class="de-toggle-label">
+            <input type="checkbox" name="include_reminders" class="de-toggle-input"
+                   {% if profile.include_reminders %}checked{% endif %}>
+            <span class="de-toggle-text">&#9200; Reminders (app, next 24h)</span>
+          </label>
+
+          <label class="de-toggle-label">
+            <input type="checkbox" name="include_helper_tasks" class="de-toggle-input"
+                   {% if profile.include_helper_tasks %}checked{% endif %}>
+            <span class="de-toggle-text">&#x1F9F0; Helper (open tasks assigned to you)</span>
+          </label>
+
+          <label class="de-toggle-label">
             <input type="checkbox" name="include_stocks" class="de-toggle-input"
                    {% if profile.include_stocks %}checked{% endif %}>
             <span class="de-toggle-text">&#x1F4C8; Stocks</span>
@@ -321,6 +333,8 @@ function deSettingsSnapshot(form) {
     cb('digest_enabled'),
     hour ? hour.value : '',
     cb('include_weather'),
+    cb('include_reminders'),
+    cb('include_helper_tasks'),
     cb('include_stocks'),
     cb('include_sports'),
     cb('include_jobs'),

@@ -14,6 +14,8 @@ class DailyEmailProfile(db.Model):
     include_stocks = db.Column(db.Boolean, nullable=False, default=True)
     include_sports = db.Column(db.Boolean, nullable=False, default=True)
     include_jobs = db.Column(db.Boolean, nullable=False, default=True)
+    include_reminders = db.Column(db.Boolean, nullable=False, default=True)
+    include_helper_tasks = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
