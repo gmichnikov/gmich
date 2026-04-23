@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, Response
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify
 from flask_login import login_required, current_user
 from app.core.admin import admin_required
 
@@ -17,6 +17,7 @@ daily_email_bp = Blueprint(
 )
 
 MAX_WEATHER_LOCATIONS = 3
+MAX_SPORTS_WATCHES = 10
 
 
 def _get_or_create_profile():
@@ -54,12 +55,16 @@ def index():
         .order_by(_weather_sort_col())
         .all()
     )
+    stock_tickers = list(current_user.daily_email_stock_tickers.limit(1).all())
+    sports_watches = list(current_user.daily_email_sports_watches.limit(1).all())
 
     return render_template(
         "daily_email/index.html",
         profile=profile,
         last_send=last_send,
         locations=locations,
+        stock_tickers=stock_tickers,
+        sports_watches=sports_watches,
         credits=current_user.credits or 0,
     )
 
@@ -82,6 +87,11 @@ def settings():
         .order_by(_stock_sort_col())
         .all()
     )
+    sports_watches = list(
+        current_user.daily_email_sports_watches
+        .order_by(_sports_sort_col())
+        .all()
+    )
     return render_template(
         "daily_email/settings.html",
         profile=profile,
@@ -89,9 +99,12 @@ def settings():
         max_weather=MAX_WEATHER_LOCATIONS,
         stock_tickers=stock_tickers,
         max_stocks=MAX_STOCK_TICKERS,
+        sports_watches=sports_watches,
+        max_sports=MAX_SPORTS_WATCHES,
         hours=list(range(24)),
         stocks_error=request.args.get("stocks_error"),
         stocks_added=request.args.get("stocks_added"),
+        sports_error=request.args.get("sports_error"),
     )
 
 
@@ -114,6 +127,7 @@ def settings_save():
     profile.include_weather = request.form.get("include_weather") == "on"
     profile.include_stocks = request.form.get("include_stocks") == "on"
     profile.include_sports = request.form.get("include_sports") == "on"
+    # include_jobs is "coming soon" in UI: submitted via hidden field only
     profile.include_jobs = request.form.get("include_jobs") == "on"
     profile.updated_at = datetime.utcnow()
 
@@ -192,21 +206,112 @@ def preview():
     )
 
     from app.projects.daily_email.modules.stocks import render_stocks_section
+    from app.projects.daily_email.modules.sports import render_sports_section
     stock_tickers = list(
         current_user.daily_email_stock_tickers
         .order_by(_stock_sort_col())
         .all()
     )
-
+    sports_watches = list(
+        current_user.daily_email_sports_watches
+        .order_by(_sports_sort_col())
+        .all()
+    )
+    tz = current_user.time_zone or "UTC"
     module_results = {
-        "weather": render_weather_section(locations, user_timezone=current_user.time_zone or "UTC") if profile.include_weather and locations else None,
+        "weather": render_weather_section(locations, user_timezone=tz) if profile.include_weather and locations else None,
         "stocks": render_stocks_section(stock_tickers) if profile.include_stocks and stock_tickers else None,
-        "sports": None,
+        "sports": render_sports_section(sports_watches, user_timezone=tz) if profile.include_sports else None,
         "jobs": None,
     }
 
     html = build_digest_html(current_user, profile, module_results)
     return Response(html, mimetype="text/html")
+
+
+# ---------------------------------------------------------------------------
+# Sports watches
+# ---------------------------------------------------------------------------
+
+
+@daily_email_bp.route("/settings/sports/teams")
+@login_required
+def sports_teams():
+    from app.projects.daily_email.modules.sports import SUPPORTED_LEAGUE_CODES
+    from app.projects.sports_schedule_admin.core.espn_client import ESPNClient
+
+    league = (request.args.get("league") or "").upper().strip()
+    if league not in SUPPORTED_LEAGUE_CODES:
+        return jsonify({"error": "Invalid league", "teams": []}), 400
+    client = ESPNClient()
+    raw = client.fetch_teams(league)
+    teams = [
+        {
+            "id": str(t["espn_team_id"]),
+            "name": t.get("name") or "",
+            "abbr": t.get("abbreviation") or "",
+        }
+        for t in raw
+        if t.get("espn_team_id") is not None
+    ]
+    teams.sort(key=lambda x: (x.get("name") or "").lower())
+    return jsonify({"teams": teams})
+
+
+@daily_email_bp.route("/settings/sports/add", methods=["POST"])
+@login_required
+def sports_add():
+    from app.projects.daily_email.models import DailyEmailSportsWatch
+    from app.projects.daily_email.modules.sports import SUPPORTED_LEAGUE_CODES
+
+    league_code = (request.form.get("league_code") or "").upper().strip()
+    team_id = (request.form.get("espn_team_id") or "").strip()
+    display_name = (request.form.get("team_display_name") or "").strip()
+
+    if league_code not in SUPPORTED_LEAGUE_CODES or not team_id or not display_name:
+        return redirect(
+            url_for("daily_email.settings", sports_error="League, team, and name are all required.")
+        )
+
+    n = current_user.daily_email_sports_watches.count()
+    if n >= MAX_SPORTS_WATCHES:
+        return redirect(
+            url_for("daily_email.settings", sports_error=f"Maximum {MAX_SPORTS_WATCHES} team watches allowed.")
+        )
+
+    dup = (
+        current_user.daily_email_sports_watches
+        .filter_by(league_code=league_code, espn_team_id=team_id)
+        .first()
+    )
+    if dup:
+        return redirect(
+            url_for("daily_email.settings", sports_error=f"That team is already on your list.")
+        )
+
+    row = DailyEmailSportsWatch(
+        user_id=current_user.id,
+        league_code=league_code,
+        espn_team_id=team_id,
+        team_display_name=display_name,
+        sort_order=n,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return redirect(url_for("daily_email.settings", sports_added="sports"))
+
+
+@daily_email_bp.route("/settings/sports/delete/<int:watch_id>", methods=["POST"])
+@login_required
+def sports_delete(watch_id):
+    from app.projects.daily_email.models import DailyEmailSportsWatch
+
+    w = DailyEmailSportsWatch.query.filter_by(
+        id=watch_id, user_id=current_user.id
+    ).first_or_404()
+    db.session.delete(w)
+    db.session.commit()
+    return redirect(url_for("daily_email.settings"))
 
 
 # ---------------------------------------------------------------------------
@@ -297,3 +402,8 @@ def _weather_sort_col():
 def _stock_sort_col():
     from app.projects.daily_email.models import DailyEmailStockTicker
     return DailyEmailStockTicker.sort_order
+
+
+def _sports_sort_col():
+    from app.projects.daily_email.models import DailyEmailSportsWatch
+    return DailyEmailSportsWatch.sort_order

@@ -212,7 +212,13 @@ def _fetch_modules_parallel(user, profile) -> dict:
         )
         tasks["stocks"] = (render_stocks_section, [stock_tickers])
     if profile.include_sports:
-        tasks["sports"] = (_not_implemented_yet, ["sports"])
+        from app.projects.daily_email.modules.sports import render_sports_section
+        sports_watches = list(
+            user.daily_email_sports_watches.order_by(
+                _sports_sort_order_col()
+            ).all()
+        )
+        tasks["sports"] = (render_sports_section, [sports_watches, user.time_zone or "UTC"])
     if profile.include_jobs:
         tasks["jobs"] = (_not_implemented_yet, ["jobs"])
 
@@ -246,6 +252,11 @@ def _weather_sort_order_col():
 def _stock_sort_order_col():
     from app.projects.daily_email.models import DailyEmailStockTicker
     return DailyEmailStockTicker.sort_order
+
+
+def _sports_sort_order_col():
+    from app.projects.daily_email.models import DailyEmailSportsWatch
+    return DailyEmailSportsWatch.sort_order
 
 
 def _claim_send_log(user_id: int, local_date: date):

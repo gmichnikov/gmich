@@ -24,6 +24,7 @@
     <!-- Master settings form -->
     <form method="POST" action="{{ url_for('daily_email.settings_save') }}" id="de-settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="include_jobs" value="{% if profile.include_jobs %}on{% endif %}">
 
       <div class="de-card">
         <div class="de-card-header">Digest</div>
@@ -71,15 +72,15 @@
             <span class="de-toggle-text">&#x1F4C8; Stocks</span>
           </label>
 
-          <label class="de-toggle-label de-toggle-coming-soon">
+          <label class="de-toggle-label">
             <input type="checkbox" name="include_sports" class="de-toggle-input"
-                   {% if profile.include_sports %}checked{% endif %} disabled>
-            <span class="de-toggle-text">&#x1F3C0; Sports Scores <em class="de-coming-soon">(coming soon)</em></span>
+                   {% if profile.include_sports %}checked{% endif %}>
+            <span class="de-toggle-text">&#x1F3C0; Sports Scores</span>
           </label>
 
           <label class="de-toggle-label de-toggle-coming-soon">
-            <input type="checkbox" name="include_jobs" class="de-toggle-input"
-                   {% if profile.include_jobs %}checked{% endif %} disabled>
+            <input type="checkbox" class="de-toggle-input" disabled
+                   {% if profile.include_jobs %}checked{% endif %}>
             <span class="de-toggle-text">&#x1F4BC; Job Listings <em class="de-coming-soon">(coming soon)</em></span>
           </label>
 
@@ -178,6 +179,61 @@
       </div>
     </div>
 
+    <!-- Sports team watches -->
+    <div class="de-card" id="sports-watches">
+      <div class="de-card-header">&#x1F3C0; Sports (NFL, NBA, MLB, NHL)</div>
+      <div class="de-card-body">
+
+        {% if sports_watches %}
+        <ul class="de-location-list">
+          {% for w in sports_watches %}
+          <li class="de-location-item">
+            <span class="de-location-name">{{ w.league_code }} &mdash; {{ w.team_display_name }}</span>
+            <form method="POST"
+                  action="{{ url_for('daily_email.sports_delete', watch_id=w.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Remove {{ w.team_display_name }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="de-btn-inline-danger">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="de-empty-hint">No teams yet. Choose a league, load teams, then add.</p>
+        {% endif %}
+
+        {% if sports_watches|length < max_sports %}
+        <form method="POST" action="{{ url_for('daily_email.sports_add') }}"
+              class="de-inline-form de-sports-add-form" id="sports-add-form"
+              onsubmit="deDisableOnSubmit(this)">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="de-sr-only" for="sports-league">League</label>
+          <select name="league_code" id="sports-league" class="de-select" required>
+            <option value="">League</option>
+            <option value="NFL">NFL</option>
+            <option value="NBA">NBA</option>
+            <option value="MLB">MLB</option>
+            <option value="NHL">NHL</option>
+          </select>
+          <label class="de-sr-only" for="sports-team">Team</label>
+          <select name="espn_team_id" id="sports-team" class="de-select" required disabled>
+            <option value="">Select league first</option>
+          </select>
+          <input type="hidden" name="team_display_name" id="sports-team-disp" value="">
+          <button type="submit" class="de-btn de-btn-secondary" id="sports-add-btn">Add Team</button>
+        </form>
+        {% if sports_error %}
+        <p class="de-inline-error" id="sports-add-feedback">{{ sports_error }}</p>
+        {% endif %}
+        <p class="de-field-hint">Up to {{ max_sports }} teams. Scores for games yesterday and today in your timezone.</p>
+        {% else %}
+        <p class="de-field-hint">Maximum of {{ max_sports }} teams reached.</p>
+        {% endif %}
+
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -204,6 +260,7 @@ function deSettingsSnapshot(form) {
     hour ? hour.value : '',
     cb('include_weather'),
     cb('include_stocks'),
+    cb('include_sports'),
   ].join('|');
 }
 
@@ -225,9 +282,46 @@ document.addEventListener('DOMContentLoaded', function () {
     deUpdateSettingsSaveState();
   }
 
-  const feedback = document.querySelector('.de-inline-error, .de-inline-success');
+  const sportsFb = document.getElementById('sports-add-feedback');
+  const stocksFb = document.querySelector('#stock-tickers .de-inline-error, #stock-tickers .de-inline-success');
+  const feedback = sportsFb || stocksFb || document.querySelector('.de-inline-error, .de-inline-success');
   if (feedback) {
     feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  const leagueSel = document.getElementById('sports-league');
+  const teamSel = document.getElementById('sports-team');
+  const teamDisp = document.getElementById('sports-team-disp');
+  if (leagueSel && teamSel) {
+    leagueSel.addEventListener('change', async function () {
+      const league = this.value;
+      teamDisp.value = '';
+      if (!league) {
+        teamSel.innerHTML = '<option value="">Select league first</option>';
+        teamSel.disabled = true;
+        return;
+      }
+      teamSel.innerHTML = '<option value="">Loading…</option>';
+      teamSel.disabled = true;
+      try {
+        const r = await fetch('{{ url_for("daily_email.sports_teams") }}?league=' + encodeURIComponent(league));
+        const j = await r.json();
+        const teams = j.teams || [];
+        const opts = ['<option value="">— Team —</option>'];
+        for (const t of teams) {
+          const label = (t.abbr || '') + ' — ' + (t.name || '');
+          opts.push('<option value="' + t.id + '" data-name="' + (t.name || '').replace(/"/g, '&quot;') + '">' + label + '</option>');
+        }
+        teamSel.innerHTML = opts.join('');
+        teamSel.disabled = false;
+      } catch (e) {
+        teamSel.innerHTML = '<option value="">Failed to load</option>';
+      }
+    });
+    teamSel.addEventListener('change', function () {
+      const opt = this.options[this.selectedIndex];
+      teamDisp.value = opt && opt.getAttribute('data-name') ? opt.getAttribute('data-name') : '';
+    });
   }
 });
 </script>
