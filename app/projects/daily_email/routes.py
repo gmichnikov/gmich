@@ -18,6 +18,7 @@ daily_email_bp = Blueprint(
 
 MAX_WEATHER_LOCATIONS = 3
 MAX_SPORTS_WATCHES = 10
+MAX_JOB_WATCHES = 12
 
 
 def _get_or_create_profile():
@@ -57,6 +58,11 @@ def index():
     )
     stock_tickers = list(current_user.daily_email_stock_tickers.limit(1).all())
     sports_watches = list(current_user.daily_email_sports_watches.limit(1).all())
+    job_watches = list(
+        current_user.daily_email_job_watches
+        .order_by(_job_watch_sort_col())
+        .all()
+    )
 
     return render_template(
         "daily_email/index.html",
@@ -65,6 +71,7 @@ def index():
         locations=locations,
         stock_tickers=stock_tickers,
         sports_watches=sports_watches,
+        job_watches=job_watches,
         credits=current_user.credits or 0,
     )
 
@@ -92,6 +99,11 @@ def settings():
         .order_by(_sports_sort_col())
         .all()
     )
+    job_watches = list(
+        current_user.daily_email_job_watches
+        .order_by(_job_watch_sort_col())
+        .all()
+    )
     return render_template(
         "daily_email/settings.html",
         profile=profile,
@@ -101,10 +113,14 @@ def settings():
         max_stocks=MAX_STOCK_TICKERS,
         sports_watches=sports_watches,
         max_sports=MAX_SPORTS_WATCHES,
+        job_watches=job_watches,
+        max_jobs=MAX_JOB_WATCHES,
         hours=list(range(24)),
         stocks_error=request.args.get("stocks_error"),
         stocks_added=request.args.get("stocks_added"),
         sports_error=request.args.get("sports_error"),
+        jobs_error=request.args.get("jobs_error"),
+        jobs_added=request.args.get("jobs_added"),
     )
 
 
@@ -127,7 +143,6 @@ def settings_save():
     profile.include_weather = request.form.get("include_weather") == "on"
     profile.include_stocks = request.form.get("include_stocks") == "on"
     profile.include_sports = request.form.get("include_sports") == "on"
-    # include_jobs is "coming soon" in UI: submitted via hidden field only
     profile.include_jobs = request.form.get("include_jobs") == "on"
     profile.updated_at = datetime.utcnow()
 
@@ -207,6 +222,8 @@ def preview():
 
     from app.projects.daily_email.modules.stocks import render_stocks_section
     from app.projects.daily_email.modules.sports import render_sports_section
+    from app.projects.daily_email.modules.jobs import render_jobs_section
+
     stock_tickers = list(
         current_user.daily_email_stock_tickers
         .order_by(_stock_sort_col())
@@ -217,12 +234,17 @@ def preview():
         .order_by(_sports_sort_col())
         .all()
     )
+    job_watches = list(
+        current_user.daily_email_job_watches
+        .order_by(_job_watch_sort_col())
+        .all()
+    )
     tz = current_user.time_zone or "UTC"
     module_results = {
         "weather": render_weather_section(locations, user_timezone=tz) if profile.include_weather and locations else None,
         "stocks": render_stocks_section(stock_tickers) if profile.include_stocks and stock_tickers else None,
         "sports": render_sports_section(sports_watches, user_timezone=tz) if profile.include_sports else None,
-        "jobs": None,
+        "jobs": render_jobs_section(job_watches) if profile.include_jobs else None,
     }
 
     html = build_digest_html(current_user, profile, module_results)
@@ -307,6 +329,91 @@ def sports_delete(watch_id):
     from app.projects.daily_email.models import DailyEmailSportsWatch
 
     w = DailyEmailSportsWatch.query.filter_by(
+        id=watch_id, user_id=current_user.id
+    ).first_or_404()
+    db.session.delete(w)
+    db.session.commit()
+    return redirect(url_for("daily_email.settings"))
+
+
+# ---------------------------------------------------------------------------
+# Job boards (Ashby, Greenhouse)
+# ---------------------------------------------------------------------------
+
+
+@daily_email_bp.route("/settings/jobs/add", methods=["POST"])
+@login_required
+def jobs_add():
+    from app.projects.daily_email.models import DailyEmailJobWatch
+    from app.projects.daily_email.modules.jobs import (
+        ALLOWED_ATS,
+        ATS_ASHBY,
+        parse_board_token_for_ats,
+        validate_and_fetch,
+    )
+
+    ats = (request.form.get("job_ats") or "").strip().lower()
+    if ats not in ALLOWED_ATS:
+        return redirect(
+            url_for("daily_email.settings", jobs_error="Choose Ashby or Greenhouse.")
+        )
+    raw = (request.form.get("job_board_input") or "").strip()
+    filter_phrase = (request.form.get("job_filter_phrase") or "").strip()[:100] or None
+    token = parse_board_token_for_ats(ats, raw)
+    if not token:
+        if ats == ATS_ASHBY:
+            msg = (
+                "Enter an Ashby company slug or job board URL (e.g. acme or "
+                "https://jobs.ashbyhq.com/acme)."
+            )
+        else:
+            msg = (
+                "Enter a Greenhouse board token or URL (e.g. yourcompany or "
+                "https://boards.greenhouse.io/yourcompany)."
+            )
+        return redirect(url_for("daily_email.settings", jobs_error=msg))
+    token = token.lower()
+
+    n = current_user.daily_email_job_watches.count()
+    if n >= MAX_JOB_WATCHES:
+        return redirect(
+            url_for(
+                "daily_email.settings",
+                jobs_error=f"You can save up to {MAX_JOB_WATCHES} job boards.",
+            )
+        )
+    if (
+        current_user.daily_email_job_watches.filter_by(ats=ats, board_token=token).first()
+    ):
+        return redirect(
+            url_for("daily_email.settings", jobs_error="That board is already on your list.")
+        )
+    if validate_and_fetch(ats, token, None) is None:
+        return redirect(
+            url_for(
+                "daily_email.settings",
+                jobs_error="Could not load that job board. Check the URL or token and try again.",
+            )
+        )
+
+    row = DailyEmailJobWatch(
+        user_id=current_user.id,
+        ats=ats,
+        board_token=token,
+        filter_phrase=filter_phrase,
+        sort_order=n,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return redirect(url_for("daily_email.settings", jobs_added="1"))
+
+
+@daily_email_bp.route("/settings/jobs/delete/<int:watch_id>", methods=["POST"])
+@login_required
+def jobs_delete(watch_id):
+    from app.projects.daily_email.models import DailyEmailJobWatch
+
+    w = DailyEmailJobWatch.query.filter_by(
         id=watch_id, user_id=current_user.id
     ).first_or_404()
     db.session.delete(w)
@@ -407,3 +514,8 @@ def _stock_sort_col():
 def _sports_sort_col():
     from app.projects.daily_email.models import DailyEmailSportsWatch
     return DailyEmailSportsWatch.sort_order
+
+
+def _job_watch_sort_col():
+    from app.projects.daily_email.models import DailyEmailJobWatch
+    return DailyEmailJobWatch.sort_order

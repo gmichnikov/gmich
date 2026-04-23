@@ -16,9 +16,9 @@ def build_digest_html(user, profile, module_results: dict) -> str:
     Assemble the full HTML email.
 
     module_results keys: "weather", "stocks", "sports", "jobs"
-    Each value is an HTML string (rendered card) or None (fetch failed).
-    Module is omitted entirely if its toggle is off; shows error card if
-    toggle is on but result is None.
+    Each value is: HTML (rendered card), "" (module omits, no error), or
+    None (fetch failed; shows error card for that module). Toggle off omits
+    the module.
     """
     user_tz = ZoneInfo(user.time_zone or "UTC")
     now_local = datetime.now(user_tz)
@@ -41,14 +41,21 @@ def build_digest_html(user, profile, module_results: dict) -> str:
         if not enabled:
             continue
         result = module_results.get(key)
-        if result:
+        if result is None:
+            sections_html += _error_card(label)
+        elif result == "":
+            # Module chose to omit (e.g. Ashby: zero matches after filter)
+            pass
+        else:
             sections_html += result
             enabled_count += 1
-        else:
-            sections_html += _error_card(label)
 
-    if enabled_count == 0 and not any(
-        module_results.get(k) for k, e, _ in module_order if e
+    if (
+        not sections_html
+        and enabled_count == 0
+        and not any(
+            module_results.get(k) for k, e, _ in module_order if e
+        )
     ):
         sections_html = _nothing_loaded_card(settings_url)
 

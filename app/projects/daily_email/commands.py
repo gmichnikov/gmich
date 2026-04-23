@@ -177,7 +177,7 @@ def _build_and_send(user, profile, local_date: date | None, is_test: bool = Fals
         log_row.status = "sent"
         log_row.sent_at = datetime.utcnow()
         log_row.modules_included = ",".join(
-            k for k, v in module_results.items() if v is not None
+            k for k, v in module_results.items() if v
         )
     db.session.commit()
     logger.info("daily_email: sent digest to user=%s", user.id)
@@ -187,7 +187,7 @@ def _build_and_send(user, profile, local_date: date | None, is_test: bool = Fals
 def _fetch_modules_parallel(user, profile) -> dict:
     """
     Fetch all enabled modules concurrently.
-    Returns dict with keys weather/stocks/sports/jobs; value is HTML string or None.
+    Returns dict with keys weather/stocks/sports/jobs; value is HTML, ``""`` (omit), or None (error).
     """
     from app.projects.daily_email.modules.weather import render_weather_section
 
@@ -202,7 +202,6 @@ def _fetch_modules_parallel(user, profile) -> dict:
         tz = user.time_zone or "UTC"
         tasks["weather"] = (render_weather_section, [locations, tz])
 
-    # Stocks, sports, jobs placeholders — modules added in later phases
     if profile.include_stocks:
         from app.projects.daily_email.modules.stocks import render_stocks_section
         stock_tickers = list(
@@ -220,7 +219,14 @@ def _fetch_modules_parallel(user, profile) -> dict:
         )
         tasks["sports"] = (render_sports_section, [sports_watches, user.time_zone or "UTC"])
     if profile.include_jobs:
-        tasks["jobs"] = (_not_implemented_yet, ["jobs"])
+        from app.projects.daily_email.modules.jobs import render_jobs_section
+
+        job_watches = list(
+            user.daily_email_job_watches.order_by(
+                _job_watch_sort_order_col()
+            ).all()
+        )
+        tasks["jobs"] = (render_jobs_section, [job_watches])
 
     results = {}
     with ThreadPoolExecutor(max_workers=4) as executor:
@@ -239,11 +245,6 @@ def _fetch_modules_parallel(user, profile) -> dict:
     return results
 
 
-def _not_implemented_yet(_key) -> None:
-    """Placeholder until the module is built in a later phase."""
-    return None
-
-
 def _weather_sort_order_col():
     from app.projects.daily_email.models import DailyEmailWeatherLocation
     return DailyEmailWeatherLocation.sort_order
@@ -257,6 +258,11 @@ def _stock_sort_order_col():
 def _sports_sort_order_col():
     from app.projects.daily_email.models import DailyEmailSportsWatch
     return DailyEmailSportsWatch.sort_order
+
+
+def _job_watch_sort_order_col():
+    from app.projects.daily_email.models import DailyEmailJobWatch
+    return DailyEmailJobWatch.sort_order
 
 
 def _claim_send_log(user_id: int, local_date: date):

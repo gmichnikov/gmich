@@ -24,7 +24,6 @@
     <!-- Master settings form -->
     <form method="POST" action="{{ url_for('daily_email.settings_save') }}" id="de-settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="include_jobs" value="{% if profile.include_jobs %}on{% endif %}">
 
       <div class="de-card">
         <div class="de-card-header">Digest</div>
@@ -78,10 +77,10 @@
             <span class="de-toggle-text">&#x1F3C0; Sports Scores</span>
           </label>
 
-          <label class="de-toggle-label de-toggle-coming-soon">
-            <input type="checkbox" class="de-toggle-input" disabled
+          <label class="de-toggle-label">
+            <input type="checkbox" name="include_jobs" class="de-toggle-input"
                    {% if profile.include_jobs %}checked{% endif %}>
-            <span class="de-toggle-text">&#x1F4BC; Job Listings <em class="de-coming-soon">(coming soon)</em></span>
+            <span class="de-toggle-text">&#x1F4BC; Job Listings (ATS)</span>
           </label>
 
         </div>
@@ -234,6 +233,69 @@
       </div>
     </div>
 
+    <!-- Job boards (Ashby, Greenhouse) -->
+    <div class="de-card" id="de-job-boards">
+      <div class="de-card-header">&#x1F4BC; Job Listings (ATS)</div>
+      <div class="de-card-body">
+        {% if job_watches %}
+        <ul class="de-location-list de-job-watch-list">
+          {% for w in job_watches %}
+          <li class="de-location-item de-job-watch-item">
+            <span class="de-location-name">
+              {% if w.ats == 'ashby' %}Ashby{% else %}Greenhouse{% endif %}
+              &mdash; <strong>{{ w.board_token }}</strong>
+              {% if w.filter_phrase %}
+              <span class="de-field-hint" style="display:block;margin-top:2px;">Filter: &ldquo;{{ w.filter_phrase }}&rdquo;</span>
+              {% endif %}
+            </span>
+            <form method="POST"
+                  action="{{ url_for('daily_email.jobs_delete', watch_id=w.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Remove this job board?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="de-btn-inline-danger">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="de-empty-hint">No job boards yet. Add Ashby and/or Greenhouse public boards below.</p>
+        {% endif %}
+
+        {% if job_watches|length < max_jobs %}
+        <form method="POST" action="{{ url_for('daily_email.jobs_add') }}" id="jobs-add-form" onsubmit="deDisableOnSubmit(this)">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="de-field">
+            <label class="de-label" for="job-ats">ATS</label>
+            <select name="job_ats" id="job-ats" class="de-select" required>
+              <option value="ashby">Ashby</option>
+              <option value="greenhouse">Greenhouse</option>
+            </select>
+          </div>
+          <div class="de-field">
+            <label class="de-label" for="job-board-input">Board URL or token</label>
+            <input type="text" name="job_board_input" id="job-board-input" class="de-input"
+                   placeholder="Ashby: company or jobs.ashbyhq.com/… — Greenhouse: company or boards.greenhouse.io/…" maxlength="500" required>
+          </div>
+          <div class="de-field">
+            <label class="de-label" for="job-filter">Filter phrase (optional)</label>
+            <input type="text" name="job_filter_phrase" id="job-filter" class="de-input"
+                   placeholder="Matches job title or department" maxlength="100">
+            <p class="de-field-hint">Up to {{ max_jobs }} boards. Up to 12 listings per board in the email. Validation may take a few seconds.</p>
+          </div>
+          <button type="submit" class="de-btn de-btn-secondary" id="jobs-add-btn">Add job board</button>
+        </form>
+        {% if jobs_error %}
+        <p class="de-inline-error" id="jobs-add-feedback">{{ jobs_error }}</p>
+        {% elif jobs_added %}
+        <p class="de-inline-success" id="jobs-add-feedback">Job board added.</p>
+        {% endif %}
+        {% else %}
+        <p class="de-field-hint">Maximum of {{ max_jobs }} job boards reached.</p>
+        {% endif %}
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -261,6 +323,7 @@ function deSettingsSnapshot(form) {
     cb('include_weather'),
     cb('include_stocks'),
     cb('include_sports'),
+    cb('include_jobs'),
   ].join('|');
 }
 
@@ -284,7 +347,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const sportsFb = document.getElementById('sports-add-feedback');
   const stocksFb = document.querySelector('#stock-tickers .de-inline-error, #stock-tickers .de-inline-success');
-  const feedback = sportsFb || stocksFb || document.querySelector('.de-inline-error, .de-inline-success');
+  const jobsFb = document.querySelector('#de-job-boards .de-inline-error, #de-job-boards .de-inline-success');
+  const feedback = sportsFb || stocksFb || jobsFb || document.querySelector('.de-inline-error, .de-inline-success');
   if (feedback) {
     feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }

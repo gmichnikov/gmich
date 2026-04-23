@@ -69,7 +69,7 @@
     <!-- Actions -->
     <div class="de-actions">
       <a href="{{ url_for('daily_email.settings') }}" class="de-btn de-btn-primary">Configure Settings</a>
-      {% if (profile.include_weather and locations) or (profile.include_stocks and stock_tickers) or (profile.include_sports and sports_watches) %}
+      {% if (profile.include_weather and locations) or (profile.include_stocks and stock_tickers) or (profile.include_sports and sports_watches) or (profile.include_jobs and job_watches) %}
       <form method="POST" action="{{ url_for('daily_email.preview') }}" target="_blank" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="de-btn de-btn-secondary">Preview Email</button>

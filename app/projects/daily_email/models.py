@@ -95,22 +95,41 @@ class DailyEmailSportsWatch(db.Model):
         )
 
 
-class DailyEmailJobsConfig(db.Model):
-    __tablename__ = "daily_email_jobs_config"
+class DailyEmailJobWatch(db.Model):
+    """
+    One public job board to include in the digest. Multiple rows per user.
+    ats: 'ashby' | 'greenhouse' (see app.projects.daily_email.modules.jobs.ALLOWED_ATS).
+    board_token: Ashby company slug or Greenhouse board token (public API id).
+    """
+
+    __tablename__ = "daily_email_job_watch"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, unique=True)
-    ashby_slug = db.Column(db.String(255), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    ats = db.Column(db.String(20), nullable=False)
+    board_token = db.Column(db.String(255), nullable=False)
     filter_phrase = db.Column(db.String(100), nullable=True)
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    user = db.relationship("User", backref=db.backref("daily_email_jobs_config", uselist=False))
+    user = db.relationship(
+        "User", backref=db.backref("daily_email_job_watches", lazy="dynamic")
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id", "ats", "board_token", name="uix_daily_email_job_watch_user_ats_token"
+        ),
+        db.Index("ix_daily_email_job_watch_user_id", "user_id"),
+    )
 
     def __repr__(self):
-        return f"<DailyEmailJobsConfig user_id={self.user_id} slug={self.ashby_slug!r}>"
+        return (
+            f"<DailyEmailJobWatch user_id={self.user_id} ats={self.ats!r} token={self.board_token!r}>"
+        )
 
 
 class DailyEmailSendLog(db.Model):

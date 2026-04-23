@@ -67,32 +67,39 @@ This plan follows the PRD phases but breaks them into small, testable chunks.
 - [x] `POST /daily-email/settings/sports/add` — max 10 watches, dedupe league+team
 - [x] `POST /daily-email/settings/sports/delete/<id>` — remove watch
 - [x] Settings: league dropdown → load teams → pick team → Add; list with Remove
-- [x] `include_sports` toggle live; `include_jobs` via hidden field (coming soon) so save doesn’t clear DB flags
-- [x] Save Settings snapshot JS includes `include_sports`
-- [x] Dashboard Preview button if weather locations **or** stock tickers **or** sports watches exist (when that module is on)
+- [x] `include_sports` toggle live; `include_jobs` was a hidden “coming soon” field (superseded in Phase 5 by a real toggle)
+- [x] Save Settings snapshot JS includes `include_sports` (and `include_jobs` as of Phase 5)
+- [x] Dashboard Preview button if weather locations **or** stock tickers **or** sports watches **or** a saved Ashby board exist (when that module is on)
 
-**Manual Testing 4.2:**
+**Manual Testing 4.2:** (user to confirm)
 
-- [ ] Add NBA + a team — saved, listed
-- [ ] Add 11th watch — error redirect
-- [ ] Preview — scores card (or “no games” / “add teams” as appropriate)
-- [ ] Send Now / scheduled send — includes sports when enabled
-- [ ] Turn off sports module — no sports card in preview
+- [x] Add NBA + a team — saved, listed
+- [x] Add 11th watch — error redirect
+- [x] Preview — scores card (or “no games” / “add teams” as appropriate)
+- [x] Send Now / scheduled send — includes sports when enabled
+- [x] Turn off sports module — no sports card in preview
 
 ---
 
-## Phase 5: Ashby Jobs Module
+## Phase 5: Job boards (multi-ATS) ✅
 
-### 5.1 Jobs Fetch
+### 5.1 Jobs fetch ✅
 
-- [ ] Create `app/projects/daily_email/modules/jobs.py` (slug/URL parse, fetch, render)
+- [x] `app/projects/daily_email/modules/jobs.py` — **Ashby** and **Greenhouse** public APIs; parse URL or token; optional title/department filter; up to 12 rows per board; `render_jobs_section` takes a **list** of watches
+- [x] `DailyEmailJobWatch` model: `ats` + `board_token` + `filter_phrase` + `sort_order` (many per user; unique on user + ats + token)
 
-### 5.2 Jobs Settings UI
+### 5.2 Settings UI ✅
 
-- [ ] Routes: save, clear, optional inline test
-- [ ] Enable `include_jobs` toggle (remove hidden-only hack or merge with real toggle)
+- [x] `POST .../settings/jobs/add` and `POST .../settings/jobs/delete/<id>` (live fetch validates on add)
+- [x] `include_jobs` toggle; dashboard preview when `include_jobs` and at least one watch
 
-**Manual Testing 5.2:** (unchanged from prior plan)
+**Manual Testing 5.2:** (user to run)
+
+- [ ] Add multiple boards (mix Ashby + Greenhouse) — all listed, digest shows subsections
+- [ ] Invalid board — error message, not saved
+- [ ] Per-board filter — subset or omit when no matches
+- [ ] Remove one watch — list updates; digest matches
+- [ ] `include_jobs` off — no jobs block
 
 ---
 
@@ -108,7 +115,7 @@ This plan follows the PRD phases but breaks them into small, testable chunks.
 
 - [x] All 6 DB models created and migrated
 - [x] Weather, stocks, sports modules + settings
-- [ ] Ashby jobs module + settings
+- [x] Job boards (Ashby + Greenhouse) + list settings
 - [x] Email builder, send command, preview, admin Send Now
 - [x] Parallel module fetch in `commands.py`
 - [ ] Full 4-module send test on production
@@ -121,8 +128,7 @@ This plan follows the PRD phases but breaks them into small, testable chunks.
 - [ ] Headlines (NewsAPI)
 - [ ] Local events (Ticketmaster / Eventbrite)
 - [ ] Google Calendar (per-user OAuth, later phase)
-- [ ] Additional job boards (Greenhouse, Lever)
-- [ ] Multiple Ashby boards per user
+- [ ] Additional job boards (Lever, etc.): add `ats` value, parser, and fetcher in `modules/jobs.py` + template option
 - [ ] AQI toggle on weather
 - [ ] Plain-text multipart email
 - [ ] Per-module "last fetched" timestamps in dashboard

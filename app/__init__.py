@@ -203,7 +203,7 @@ def create_app():
         DailyEmailWeatherLocation,
         DailyEmailStockTicker,
         DailyEmailSportsWatch,
-        DailyEmailJobsConfig,
+        DailyEmailJobWatch,
         DailyEmailSendLog,
     )
 
