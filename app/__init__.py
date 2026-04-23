@@ -198,6 +198,14 @@ def create_app():
         TlogEntryPhoto,
     )
     from app.projects.sports_scores.models import ScoresFetchLog, ScoresGame
+    from app.projects.daily_email.models import (
+        DailyEmailProfile,
+        DailyEmailWeatherLocation,
+        DailyEmailStockTicker,
+        DailyEmailSportsWatch,
+        DailyEmailJobsConfig,
+        DailyEmailSendLog,
+    )
 
     # Inject PostHog API key into all templates
     @app.context_processor
