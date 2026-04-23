@@ -92,6 +92,7 @@ def create_app():
     from app.projects.reminders.routes import reminders_bp
     from app.projects.helper.routes import helper_bp
     from app.projects.helper.webhook import helper_webhook_bp
+    from app.projects.daily_email.routes import daily_email_bp
     from app.projects.travel_log.routes import travel_log_bp
     from app.projects.docs_demo.routes import docs_demo_bp
     from app.projects.mcp.routes import mcp_bp
@@ -132,6 +133,7 @@ def create_app():
     app.register_blueprint(reminders_bp)
     app.register_blueprint(helper_bp)
     app.register_blueprint(helper_webhook_bp)
+    app.register_blueprint(daily_email_bp)
     app.register_blueprint(travel_log_bp)
     app.register_blueprint(docs_demo_bp, url_prefix="/docs-demo")
     app.register_blueprint(mcp_bp, url_prefix="/mcp")

@@ -432,6 +432,17 @@ PROJECTS = [
         "icon": "🧰",
         "order": 22,
     },
+    {
+        "id": "daily_email",
+        "name": "Daily Email",
+        "description": "Daily digest email — project shell (model TBD)",
+        "url": "/daily-email",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "📬",
+        "order": 23,
+    },
 ]
 
 

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Email{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('daily_email.static', filename='daily_email.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dailyemail-page">
+    <div class="dailyemail-container">
+        <header class="dailyemail-header">
+            <h1 class="dailyemail-title">Daily Email</h1>
+        </header>
+
+        <p class="dailyemail-intro">
+            A future daily digest email tailored to what you care about, using APIs and web search.
+            The data model and features are not defined yet—this page is a logged-in placeholder for the project shell.
+        </p>
+    </div>
+</div>
+{% endblock %}

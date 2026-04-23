@@ -1,0 +1,38 @@
+/* Daily Email — all classes prefixed with dailyemail- */
+
+:root {
+    --dailyemail-bg: #f8fafc;
+    --dailyemail-text: #1f2937;
+    --dailyemail-text-secondary: #6b7280;
+}
+
+.dailyemail-page {
+    background: var(--dailyemail-bg);
+    min-height: 100vh;
+    margin: -20px -20px 0 -20px;
+    padding: 20px;
+}
+
+.dailyemail-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+
+.dailyemail-header {
+    margin-bottom: 12px;
+}
+
+.dailyemail-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--dailyemail-text);
+}
+
+.dailyemail-intro {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--dailyemail-text-secondary);
+}
