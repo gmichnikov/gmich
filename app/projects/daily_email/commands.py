@@ -199,7 +199,8 @@ def _fetch_modules_parallel(user, profile) -> dict:
                 _weather_sort_order_col()
             ).all()
         )
-        tasks["weather"] = (render_weather_section, [locations])
+        tz = user.time_zone or "UTC"
+        tasks["weather"] = (render_weather_section, [locations, tz])
 
     # Stocks, sports, jobs placeholders — modules added in later phases
     if profile.include_stocks:

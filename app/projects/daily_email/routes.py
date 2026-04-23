@@ -183,7 +183,7 @@ def preview():
     )
 
     module_results = {
-        "weather": render_weather_section(locations) if profile.include_weather and locations else None,
+        "weather": render_weather_section(locations, user_timezone=current_user.time_zone or "UTC") if profile.include_weather and locations else None,
         "stocks": None,
         "sports": None,
         "jobs": None,
