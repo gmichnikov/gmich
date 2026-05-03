@@ -66,3 +66,27 @@ class SportsScheduleScheduledDigestQuery(db.Model):
     __table_args__ = (
         db.UniqueConstraint("digest_id", "saved_query_id", name="uq_digest_saved_query"),
     )
+
+
+class SportsScheduleZipCode(db.Model):
+    __tablename__ = "ss_zip_codes"
+
+    zip = db.Column(db.String(10), primary_key=True)
+    city = db.Column(db.String(100), nullable=False)
+    state_id = db.Column(db.String(2), nullable=False)
+    lat = db.Column(db.Float, nullable=False)
+    lon = db.Column(db.Float, nullable=False)
+
+
+class SportsScheduleGeocodeCache(db.Model):
+    __tablename__ = "ss_geocode_cache"
+
+    id = db.Column(db.Integer, primary_key=True)
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(2), nullable=False)
+    lat = db.Column(db.Float, nullable=True)
+    lon = db.Column(db.Float, nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("city", "state", name="uq_ss_geocode_cache_city_state"),
+    )

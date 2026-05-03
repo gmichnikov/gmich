@@ -1,6 +1,7 @@
 """
 Flask CLI commands for Sports Schedules.
 """
+import csv
 import json
 import logging
 import os
@@ -213,3 +214,60 @@ def send_digests_command():
     if any(skipped_reasons.values()):
         parts.append(f"skipped: {sum(skipped_reasons.values())} ({dict((k, v) for k, v in skipped_reasons.items() if v)})")
     click.echo(", ".join(parts))
+
+
+@sports_schedules_cli.command("import-zips")
+@click.argument("filepath", type=click.Path(exists=True))
+@with_appcontext
+def import_zips_command(filepath):
+    """
+    Import simplemaps uszips.csv into the ss_zip_codes table.
+    Usage: flask sports_schedules import-zips /path/to/uszips.csv
+    """
+    from app.projects.sports_schedules.models import SportsScheduleZipCode
+
+    inserted = 0
+    skipped = 0
+    batch_size = 500
+
+    with open(filepath, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        batch = []
+        for row in reader:
+            try:
+                lat = float(row["lat"])
+                lon = float(row["lng"])
+            except (ValueError, KeyError):
+                skipped += 1
+                continue
+
+            zip_val = row.get("zip", "").strip()
+            city = row.get("city", "").strip()
+            state_id = row.get("state_id", "").strip()
+
+            if not zip_val or not state_id:
+                skipped += 1
+                continue
+
+            batch.append(
+                SportsScheduleZipCode(
+                    zip=zip_val,
+                    city=city,
+                    state_id=state_id,
+                    lat=lat,
+                    lon=lon,
+                )
+            )
+
+            if len(batch) >= batch_size:
+                db.session.bulk_save_objects(batch)
+                db.session.commit()
+                inserted += len(batch)
+                batch = []
+
+        if batch:
+            db.session.bulk_save_objects(batch)
+            db.session.commit()
+            inserted += len(batch)
+
+    click.echo(f"Done: {inserted} zip codes imported, {skipped} rows skipped.")
