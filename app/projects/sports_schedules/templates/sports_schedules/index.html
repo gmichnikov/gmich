@@ -1665,6 +1665,12 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
         var arr = Array.isArray(filters[col]) ? filters[col] : [];
         if (arr[0]) params.set('either_team_1', arr[0]);
         if (arr[1]) params.set('either_team_2', arr[1]);
+      } else if (col === 'near') {
+        var near = filters[col] || {};
+        if (near.zip && near.radius) {
+          params.set('zip_code', near.zip);
+          params.set('radius_miles', near.radius);
+        }
       } else if (Array.isArray(filters[col])) {
         params.set(col, filters[col].join(','));
       } else if (filters[col]) {
@@ -1754,6 +1760,9 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       var v = params.get(col);
       if (v) config.filters[col] = v.trim();
     });
+    var zip = params.get('zip_code');
+    var radius = params.get('radius_miles');
+    if (zip && radius) config.filters.near = { zip: zip, radius: radius };
     return config;
   }
 
