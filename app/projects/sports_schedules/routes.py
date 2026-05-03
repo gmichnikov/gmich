@@ -23,6 +23,11 @@ from app.projects.sports_schedules.core.constants import (
 )
 from app.projects.sports_schedules.core.nl_prompt import build_nl_prompt
 from app.projects.sports_schedules.core.nl_service import call_nl_llm
+from app.projects.sports_schedules.core.geocode import (
+    filter_rows_by_distance,
+    nearby_states,
+    zip_to_coords,
+)
 from app.projects.sports_schedules.core.query_builder import build_sql
 from app.projects.sports_schedules.core.sample_queries import SAMPLE_QUERIES, config_to_params
 from app.projects.sports_schedules.models import (
@@ -80,6 +85,8 @@ def _parse_query_params():
         "limit": args.get("limit", 500, type=int),
         "sort_column": args.get("sort_column", ""),
         "sort_dir": args.get("sort_dir", "asc"),
+        "zip_code": args.get("zip_code", "").strip(),
+        "radius_miles": args.get("radius_miles", type=float),
     }
 
 
@@ -116,6 +123,46 @@ def index():
 def api_query():
     """Execute query against DoltHub. Returns {rows, sql} or {error}."""
     params = _parse_query_params()
+
+    zip_code = params.pop("zip_code", "")
+    radius_miles = params.pop("radius_miles", None)
+    distance_filter_active = False
+    user_coords = None
+
+    if zip_code and radius_miles and radius_miles > 0:
+        user_coords = zip_to_coords(zip_code)
+        if user_coords is None:
+            return jsonify({"error": f"Zip code '{zip_code}' not found."}), 400
+
+        states = nearby_states(user_coords[0], user_coords[1], radius_miles)
+
+        if not states:
+            return jsonify({"rows": [], "sql": "", "distance_filtered": True})
+
+        # If user also set a home_state filter, intersect rather than replace
+        user_states = params["filters"].get("home_state", [])
+        if user_states:
+            states = [s for s in states if s in set(user_states)]
+            if not states:
+                return jsonify({"rows": [], "sql": "", "distance_filtered": True})
+
+        params["filters"]["home_state"] = states
+        params["include_international"] = True
+        distance_filter_active = True
+
+    # Ensure home_city and home_state are in the SELECT when distance filtering,
+    # so filter_rows_by_distance has the data it needs. Track any we add so we
+    # can strip them from the final rows if the user didn't request them.
+    extra_dims = []
+    if distance_filter_active and not params.get("count"):
+        raw_dims = params.get("dimensions", "")
+        dims_list = [d.strip() for d in raw_dims.split(",") if d.strip()] if isinstance(raw_dims, str) else list(raw_dims or [])
+        for col in ("home_city", "home_state"):
+            if col not in dims_list:
+                dims_list.append(col)
+                extra_dims.append(col)
+        params["dimensions"] = ",".join(dims_list)
+
     sql, err = build_sql(params)
     if err:
         return jsonify({"error": err}), 400
@@ -127,6 +174,14 @@ def api_query():
         return jsonify({"error": "Unable to load data. Please try again."}), 500
 
     rows = result.get("rows", [])
+
+    # Python-side distance filter — skipped in count mode since rows are aggregates
+    if distance_filter_active and user_coords and not params.get("count"):
+        rows = filter_rows_by_distance(rows, user_coords[0], user_coords[1], radius_miles)
+
+    # Strip any dimensions we added just for geocoding that the user didn't request
+    if extra_dims:
+        rows = [{k: v for k, v in row.items() if k not in extra_dims} for row in rows]
 
     db.session.add(LogEntry(
         actor_id=current_user.id if current_user.is_authenticated else None,
@@ -140,9 +195,10 @@ def api_query():
     posthog_client.capture("sports_query_run", distinct_id=distinct_id, properties={
         "row_count": len(rows),
         "authenticated": current_user.is_authenticated,
+        "distance_filtered": distance_filter_active,
     })
 
-    return jsonify({"rows": rows, "sql": sql})
+    return jsonify({"rows": rows, "sql": sql, "distance_filtered": distance_filter_active})
 
 
 @sports_schedules_bp.route("/api/saved-queries", methods=["GET"])

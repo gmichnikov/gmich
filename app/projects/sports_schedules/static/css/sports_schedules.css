@@ -1163,6 +1163,26 @@
   color: #6c757d;
 }
 
+.ss-filter-near-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ss-near-attribution {
+  font-size: 0.72rem;
+  color: #adb5bd;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ss-near-attribution:hover {
+  color: #6c757d;
+  text-decoration: underline;
+}
+
 /* Legacy dimension-item (used in Options) */
 .ss-dimension-item {
   display: flex;

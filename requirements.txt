@@ -16,6 +16,7 @@ google-genai==1.60.0
 deprecated
 google-cloud-storage>=3.0.0
 pydantic
+geopy==2.4.1
 greenlet
 gunicorn==21.2.0
 importlib-metadata==6.8.0

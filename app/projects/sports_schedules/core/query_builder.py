@@ -199,11 +199,17 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             date_start_dt = anchor
             date_end_dt = anchor + timedelta(days=n - 1)
 
+    include_international = bool(params.get("include_international"))
+
     # --- Build WHERE ---
     conditions = []
     for col, vals in low_filters.items():
         placeholders = ", ".join(f"'{v.replace(chr(39), chr(39)+chr(39))}'" for v in vals)
-        conditions.append(f"`{col}` IN ({placeholders})")
+        # When distance filtering is active, also include events with no state (international venues)
+        if col == "home_state" and include_international:
+            conditions.append(f"(`{col}` IN ({placeholders}) OR `{col}` IS NULL OR `{col}` = '')")
+        else:
+            conditions.append(f"`{col}` IN ({placeholders})")
     for col, vals in high_filters.items():
         or_parts = [f"LOWER(`{col}`) LIKE LOWER('%{v}%')" for v in vals]
         conditions.append("(" + " OR ".join(or_parts) + ")")

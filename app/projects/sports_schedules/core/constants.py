@@ -58,11 +58,11 @@ LOW_CARDINALITY_OPTIONS = {
 # --- Field order for sidebar and filter bar (consistent UI order) ---
 FIELD_ORDER = [
     "day", "date", "time", "road_team", "home_team", "either_team",
-    "home_city", "home_state", "location", "league", "sport", "level",
+    "home_city", "home_state", "near", "location", "league", "sport", "level",
 ]
 
 # Fields that can only be used as filters (no dimension)
-FILTER_ONLY_FIELDS = ["either_team"]
+FILTER_ONLY_FIELDS = ["either_team", "near"]
 
 # High-cardinality contains filters: multi-input (OR across values)
 HIGH_CARDINALITY_FILTERS = ["home_team", "road_team", "location", "home_city"]
@@ -91,4 +91,5 @@ DIMENSION_LABELS = {
     "location": "Location",
     "home_city": "City",
     "home_state": "State",
+    "near": "Near",
 }

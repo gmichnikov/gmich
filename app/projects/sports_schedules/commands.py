@@ -271,3 +271,50 @@ def import_zips_command(filepath):
             inserted += len(batch)
 
     click.echo(f"Done: {inserted} zip codes imported, {skipped} rows skipped.")
+
+
+@sports_schedules_cli.command("warm-geocache")
+@with_appcontext
+def warm_geocache_command():
+    """
+    Pre-populate ss_geocode_cache with all distinct city/state pairs from DoltHub.
+    Safe to run multiple times — skips pairs already cached.
+    Usage: flask sports_schedules warm-geocache
+    """
+    from app.core.dolthub_client import DoltHubClient
+    from app.projects.sports_schedules.core.geocode import citystate_to_coords
+    from app.projects.sports_schedules.models import SportsScheduleGeocodeCache
+
+    result = DoltHubClient().execute_sql(
+        "SELECT DISTINCT home_city, home_state FROM `combined-schedule` "
+        "WHERE home_city IS NOT NULL AND home_city != ''"
+    )
+    if "error" in result:
+        click.echo(f"Error querying DoltHub: {result['error']}")
+        return
+
+    pairs = [
+        (r.get("home_city", "").strip(), r.get("home_state", "").strip())
+        for r in result.get("rows", [])
+        if r.get("home_city", "").strip()
+    ]
+
+    already_cached = {
+        (r.city, r.state)
+        for r in SportsScheduleGeocodeCache.query.all()
+    }
+
+    to_geocode = [p for p in pairs if p not in already_cached]
+    click.echo(f"Found {len(pairs)} distinct city/state pairs, {len(to_geocode)} not yet cached.")
+
+    geocoded = 0
+    failed = 0
+    for city, state in to_geocode:
+        coords = citystate_to_coords(city, state)
+        if coords:
+            geocoded += 1
+        else:
+            failed += 1
+        click.echo(f"  {'OK' if coords else 'MISS'} {city!r}, {state!r}")
+
+    click.echo(f"Done: {geocoded} geocoded, {failed} misses (stored as null coords).")
