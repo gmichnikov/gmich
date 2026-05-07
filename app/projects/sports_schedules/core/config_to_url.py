@@ -59,6 +59,14 @@ def config_to_url_params(
         qdict["sort_column"] = params["sort_column"]
     qdict["sort_dir"] = params.get("sort_dir") or "asc"
 
+    near = (config.get("filters") or {}).get("near")
+    if isinstance(near, dict):
+        z = str(near.get("zip") or "").strip()
+        r = near.get("radius")
+        if z and r is not None and str(r).strip():
+            qdict["zip_code"] = z
+            qdict["radius_miles"] = str(r).strip()
+
     query_string = urllib.parse.urlencode(qdict, doseq=False)
 
     if base_url:

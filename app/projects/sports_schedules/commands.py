@@ -16,15 +16,77 @@ from app import db
 logger = logging.getLogger(__name__)
 
 
+def _digest_query_result(sq, anchor_ymd: str, base_url: str, dolt):
+    """Run one saved query for a digest email; matches /api/query distance behavior."""
+    from app.projects.sports_schedules.core.config_to_url import config_to_url_params
+    from app.projects.sports_schedules.core.distance_prepare import (
+        apply_post_sql_distance,
+        prepare_distance_filter,
+    )
+    from app.projects.sports_schedules.core.query_builder import build_sql
+    from app.projects.sports_schedules.core.sample_queries import config_to_params
+
+    config = json.loads(sq.config) if isinstance(sq.config, str) else sq.config
+    params = config_to_params(config, anchor_date=anchor_ymd)
+    params["limit"] = 25
+    url = config_to_url_params(config, base_url, anchor_date=anchor_ymd)
+
+    dpr = prepare_distance_filter(params)
+    if dpr.error:
+        return {
+            "name": sq.name,
+            "rows": [],
+            "count": params.get("count", False),
+            "url": url,
+            "error": dpr.error,
+        }
+    if dpr.early_empty:
+        return {
+            "name": sq.name,
+            "rows": [],
+            "count": params.get("count", False),
+            "url": url,
+            "error": None,
+        }
+
+    sql, err = build_sql(params)
+    if err:
+        return {
+            "name": sq.name,
+            "rows": [],
+            "count": params.get("count", False),
+            "url": url,
+            "error": err,
+        }
+
+    result = dolt.execute_sql(sql)
+    if "error" in result:
+        return {
+            "name": sq.name,
+            "rows": [],
+            "count": params.get("count", False),
+            "url": url,
+            "error": result["error"],
+        }
+
+    rows = result.get("rows", [])
+    rows = apply_post_sql_distance(rows, params, dpr)
+    rows = rows[:25]
+    return {
+        "name": sq.name,
+        "rows": rows,
+        "count": params.get("count", False),
+        "url": url,
+        "error": None,
+    }
+
+
 def send_digest_immediately(digest):
     """
     Send a digest email immediately, bypassing Thursday/hour checks.
     Used for admin testing. Returns (success: bool, error: str | None).
     """
     from app.core.dolthub_client import DoltHubClient
-    from app.projects.sports_schedules.core.config_to_url import config_to_url_params
-    from app.projects.sports_schedules.core.query_builder import build_sql
-    from app.projects.sports_schedules.core.sample_queries import config_to_params
     from app.projects.sports_schedules.email import send_digest_email
 
     base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
@@ -50,21 +112,7 @@ def send_digest_immediately(digest):
     query_results = []
     dolt = DoltHubClient()
     for dq in valid_dqs:
-        sq = dq.saved_query
-        config = json.loads(sq.config) if isinstance(sq.config, str) else sq.config
-        params = config_to_params(config, anchor_date=anchor_ymd)
-        params["limit"] = 25
-        url = config_to_url_params(config, base_url, anchor_date=anchor_ymd)
-        sql, err = build_sql(params)
-        if err:
-            query_results.append({"name": sq.name, "rows": [], "count": False, "url": url, "error": err})
-            continue
-        result = dolt.execute_sql(sql)
-        if "error" in result:
-            query_results.append({"name": sq.name, "rows": [], "count": params.get("count", False), "url": url, "error": result["error"]})
-            continue
-        rows = result.get("rows", [])[:25]
-        query_results.append({"name": sq.name, "rows": rows, "count": params.get("count", False), "url": url, "error": None})
+        query_results.append(_digest_query_result(dq.saved_query, anchor_ymd, base_url, dolt))
 
     if not query_results:
         return False, "No query results"
@@ -101,9 +149,6 @@ def send_digests_command():
     Intended to run hourly via Heroku/Render cron.
     """
     from app.core.dolthub_client import DoltHubClient
-    from app.projects.sports_schedules.core.config_to_url import config_to_url_params
-    from app.projects.sports_schedules.core.query_builder import build_sql
-    from app.projects.sports_schedules.core.sample_queries import config_to_params
     from app.projects.sports_schedules.email import send_digest_email
     from app.projects.sports_schedules.models import (
         SportsScheduleScheduledDigest,
@@ -175,25 +220,9 @@ def send_digests_command():
         dolt = DoltHubClient()
 
         for dq in valid_dqs:
-            sq = dq.saved_query
-            config = json.loads(sq.config) if isinstance(sq.config, str) else sq.config
-            params = config_to_params(config, anchor_date=thursday_ymd)
-            params["limit"] = 25
-
-            url = config_to_url_params(config, base_url, anchor_date=thursday_ymd)
-
-            sql, err = build_sql(params)
-            if err:
-                query_results.append({"name": sq.name, "rows": [], "count": False, "url": url, "error": err})
-                continue
-
-            result = dolt.execute_sql(sql)
-            if "error" in result:
-                query_results.append({"name": sq.name, "rows": [], "count": params.get("count", False), "url": url, "error": result["error"]})
-                continue
-
-            rows = result.get("rows", [])[:25]
-            query_results.append({"name": sq.name, "rows": rows, "count": params.get("count", False), "url": url, "error": None})
+            query_results.append(
+                _digest_query_result(dq.saved_query, thursday_ymd, base_url, dolt)
+            )
 
         if not query_results:
             continue
