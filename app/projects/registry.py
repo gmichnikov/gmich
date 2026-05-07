@@ -443,6 +443,17 @@ PROJECTS = [
         "icon": "📬",
         "order": 23,
     },
+    {
+        "id": "kids_ai",
+        "name": "Kids AI",
+        "description": "Kid-focused AI experience — login required; database schema TBD",
+        "url": "/kids-ai",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🧒",
+        "order": 24,
+    },
 ]
 
 

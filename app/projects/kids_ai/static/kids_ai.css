@@ -1,0 +1,51 @@
+/* Prefixed with kids-ai- to avoid collisions across hub projects */
+
+.kids-ai-page {
+    padding: 1.5rem 1rem 3rem;
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.kids-ai-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.kids-ai-header {
+    margin-bottom: 0.25rem;
+}
+
+.kids-ai-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.kids-ai-intro {
+    margin: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.kids-ai-section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+}
+
+.kids-ai-placeholder {
+    padding: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.kids-ai-placeholder-text {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #495057;
+}

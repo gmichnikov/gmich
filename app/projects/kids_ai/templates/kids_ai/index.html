@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Kids AI{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <h1 class="kids-ai-title">Kids AI</h1>
+            <p class="kids-ai-intro">Logged-in shell for a kid-focused AI experience. Data models and tables are not defined yet.</p>
+        </header>
+
+        <section class="kids-ai-placeholder" aria-labelledby="kids-ai-placeholder-heading">
+            <h2 id="kids-ai-placeholder-heading" class="kids-ai-section-title">Coming next</h2>
+            <p class="kids-ai-placeholder-text">Add SQLAlchemy models and migrations here once the schema is clear.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
