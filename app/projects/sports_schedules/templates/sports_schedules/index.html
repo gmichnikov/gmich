@@ -1857,12 +1857,34 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     var msg = name ? 'Delete "' + name + '"? This cannot be undone.' : 'Delete this saved query? This cannot be undone.';
     if (!confirm(msg)) return;
     var meta = document.querySelector('meta[name="csrf-token"]');
-    var headers = { 'Content-Type': 'application/json' };
-    if (meta) headers['X-CSRFToken'] = meta.getAttribute('content');
-    fetch('/sports-schedules/api/saved-queries/' + id, { method: 'DELETE', headers: headers, credentials: 'same-origin' })
-      .then(function(r) {
-        if (r.status === 204 && el) el.remove();
+    /* No Content-Type — DELETE has no JSON body; Flask / proxies can choke on Content-Type + empty body. */
+    var headers = {};
+    if (meta && meta.getAttribute('content')) {
+      var tok = meta.getAttribute('content');
+      headers['X-CSRFToken'] = tok;
+      headers['X-CSRF-Token'] = tok;
+    }
+    fetch('/sports-schedules/api/saved-queries/' + encodeURIComponent(String(id)), {
+      method: 'DELETE',
+      headers: headers,
+      credentials: 'same-origin'
+    }).then(function(r) {
+      if (r.ok) {
+        if (el) el.remove();
+        ssFetchAndRenderSavedQueries();
+        return;
+      }
+      return r.text().then(function(t) {
+        var hint = '';
+        try {
+          var j = JSON.parse(t);
+          hint = j.error || '';
+        } catch (ignore) {}
+        window.alert(hint ? ('Could not delete: ' + hint) : ('Could not delete saved query (HTTP ' + r.status + ').'));
       });
+    }).catch(function() {
+      window.alert('Could not delete saved query (network error). Try refreshing.');
+    });
   }
 
   function ssShowSaveButton() {

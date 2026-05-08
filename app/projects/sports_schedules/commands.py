@@ -26,9 +26,11 @@ def _digest_query_result(sq, anchor_ymd: str, base_url: str, dolt):
     from app.projects.sports_schedules.core.query_builder import build_sql
     from app.projects.sports_schedules.core.sample_queries import config_to_params
 
+    DIGEST_ROWS_IN_EMAIL = 25
+    SQL_CANDIDATE_CAP = 500
+
     config = json.loads(sq.config) if isinstance(sq.config, str) else sq.config
     params = config_to_params(config, anchor_date=anchor_ymd)
-    params["limit"] = 25
     url = config_to_url_params(config, base_url, anchor_date=anchor_ymd)
 
     dpr = prepare_distance_filter(params)
@@ -48,6 +50,13 @@ def _digest_query_result(sq, anchor_ymd: str, base_url: str, dolt):
             "url": url,
             "error": None,
         }
+
+    # Distance runs in Python after SQL; only N SQL rows enter the funnel. Match the
+    # interactive UI candidate pool so the digest isn’t artificially sparse.
+    if dpr.distance_filter_active and not params.get("count"):
+        params["limit"] = SQL_CANDIDATE_CAP
+    else:
+        params["limit"] = DIGEST_ROWS_IN_EMAIL
 
     sql, err = build_sql(params)
     if err:
@@ -71,7 +80,7 @@ def _digest_query_result(sq, anchor_ymd: str, base_url: str, dolt):
 
     rows = result.get("rows", [])
     rows = apply_post_sql_distance(rows, params, dpr)
-    rows = rows[:25]
+    rows = rows[:DIGEST_ROWS_IN_EMAIL]
     return {
         "name": sq.name,
         "rows": rows,
