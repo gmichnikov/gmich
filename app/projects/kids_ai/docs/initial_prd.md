@@ -54,13 +54,19 @@ All users are regular hub accounts. The following roles are Kids AI-specific des
 
 A given account can only hold one Kids AI role. An account that is a parent cannot also be a child, and vice versa.
 
+Adult users added to Kids AI retain full hub access — Kids AI simply appears as an additional project on their hub homepage. Only child accounts have hub access restricted.
+
 ---
 
 ## Hub Access for Child Accounts
 
-By default, a child account is restricted to the Kids AI project when signed into the hub — the homepage shows only Kids AI. The parent can grant full hub access, which allows the child to use all other projects as a normal user.
+The moment an admin creates a parent-child pairing, the child account **immediately loses full hub access** — the hub homepage shows only a message like *"Your account is being set up. Check back soon."* Kids AI itself is also unavailable until the parent activates it.
 
-**Hub access is a separate parent-controlled toggle** from Kids AI activation. Both are off by default and require explicit parent action.
+The parent is not emailed — the admin notifies them offline. However, the next time the parent logs into the hub (any page), they see a **prominent banner** prompting them to activate Kids AI for their child. They do not need to know to navigate to `/kids-ai` first.
+
+Once the parent activates Kids AI, the child can access Kids AI. Full hub access remains off unless the parent separately enables it.
+
+**Hub access is a separate parent-controlled toggle** from Kids AI activation. Both require explicit parent action.
 
 | Setting                | Default | Effect when enabled                                              |
 | ---------------------- | ------- | ---------------------------------------------------------------- |
@@ -88,7 +94,8 @@ When the parent enables full hub access, they are explicitly informed: *"Your ch
 
 **Parent Controls**
 
-- After an admin creates a parent-child pairing, the parent must log in and explicitly enable Kids AI for each associated child. Kids AI is off by default until the parent activates it. This activation event is the COPPA consent moment and must be logged (who enabled, timestamp, which child account).
+- After an admin creates a parent-child pairing, the child account is immediately restricted (hub access removed, Kids AI not yet available). The admin notifies the parent offline. The next time the parent logs into the hub, a banner prompts them to activate Kids AI for their child.
+- The parent must explicitly activate Kids AI for each associated child. **Age tier is required at activation time** — the parent must select it before activation completes. This activation event is the COPPA consent moment and must be logged (who enabled, timestamp, which child account, age tier selected).
 - Parents can separately enable full hub access for each child. This is a second logged consent event.
 - Parents can disable Kids AI or hub access for any child at any time. Disabling Kids AI does not delete conversations — the 30-day retention window still applies and parents can manually delete if desired.
 - Parents can set the child's age range, which affects the system prompt and content calibration
@@ -126,11 +133,13 @@ The system prompt is hardcoded in v1. A DB-backed admin-editable prompt with ver
 
 The post-response moderation call (Pass 2) does double duty: in addition to checking for flags, it generates a plain-language running summary of the conversation so far. This summary is stored in the database alongside the moderation result and updated after every exchange.
 
-A daily Heroku Scheduler job reads the latest stored summary for each active child conversation and emails it to the parent. No additional AI calls are made at summary time.
+A daily Heroku Scheduler job reads the latest stored summary for each child's conversations updated in the past 24 hours and sends **one digest email per parent** covering all their linked children. No additional AI calls are made at summary time.
 
-- Example summary: *"Today Maya asked about volcanoes for a school project, practiced multiplication, and asked what happens when people die. The assistant responded age-appropriately to the last topic."*
-- Summaries are delivered by email via Mailgun
-- Raw conversation logs are also accessible to parents on demand via the parent dashboard
+The email contains a brief summary snippet per conversation and a single link to the parent dashboard, where the parent can see full details and drill into any individual conversation.
+
+- Example summary snippet: *"Maya — 2 conversations yesterday. Asked about volcanoes for a school project, practiced multiplication, and asked what happens when people die. The assistant responded age-appropriately to the last topic."*
+- Delivered by email via Mailgun; one email per parent per day regardless of how many children or conversations
+- Raw conversation logs are accessible to parents on demand via the parent dashboard
 - **Children are explicitly informed** that their conversations are summarized for their parent. This is a firm product decision, not a configurable option.
 
 ---
@@ -160,21 +169,28 @@ The moment the primary AI response is shown to the child, a background review is
 - The parent receives an immediate email alert
 - The conversation is flagged in the database
 
-The child may experience this as seeing a response and then immediately being redirected — this is acceptable in v1.
+The child may experience this as seeing a response and then immediately being redirected — this is acceptable in v1. The mechanism: after rendering the primary AI response, the child's UI polls a lightweight status endpoint. If the conversation has been locked (by Pass 2 completing), the UI redirects to `/kids-ai/` and shows the warning. The polling interval should be short (e.g., 1–2 seconds) and stop once a non-locked status is confirmed or a lock is detected.
 
 **Dual-Model Moderation Rationale**
 
 Two moderation calls are made per pass using different models from different providers (e.g., Claude + GPT-4o). Either model flagging is sufficient to trigger the full response — the union, not the intersection. Both models receive the same prompt. This approach reduces blind spots any single model might have and makes the system more robust to model-specific failure modes.
 
-**Moderation Prompt**
+**Moderation Prompts**
 
-The moderation prompt instructs the model to review the conversation and return:
+Pass 1 and Pass 2 use different prompts because their context differs.
 
+**Pass 1 prompt** instructs the model to return:
 1. A binary flag (yes/no)
 2. A brief plain-English explanation of the concern, if flagged (used in the parent email)
-3. A plain-language running summary of the conversation so far (stored for the daily email job)
 
-The explanation is free-form, not chosen from a fixed list. The prompt enumerates the risk dimensions the model is looking for and asks for a concise, parent-readable reason if any are detected.
+Pass 1 runs before the primary AI has responded, so there is no new exchange to summarize yet.
+
+**Pass 2 prompt** instructs the model to return:
+1. A binary flag (yes/no)
+2. A brief plain-English explanation of the concern, if flagged (used in the parent email)
+3. A plain-language running summary of the full conversation so far, including the latest exchange (stored for the daily email job)
+
+All explanations are free-form, not chosen from a fixed list. Both prompts enumerate the same risk dimensions and ask for a concise, parent-readable reason if any are detected.
 
 **Risk Dimensions Scored**
 
@@ -224,23 +240,27 @@ The email does not quote the child's message verbatim. The free-form description
 
 ---
 
-### 6. Multi-Model Support
+### 6. Model Selection
 
-Multiple AI providers are used directly (Anthropic, OpenAI, Google), consistent with how other projects in the hub call AI APIs. LiteLLM may be used as an abstraction layer but is not required.
+In v1, a single primary model is chosen and hardcoded for the child's conversation. No per-child or per-parent model selection is available. The moderation passes use two different hardcoded models from different providers (e.g., Claude for Model A, GPT-4o for Model B) — this is also fixed in v1.
 
-**Initially Supported Models**
-
-- Claude (Anthropic) — recommended default for Kids AI given built-in safety behaviors
-- GPT-4o (OpenAI)
-- Gemini (Google)
-
-All AI calls — primary conversation, pre-response moderation, and post-response moderation — use the same provider API pattern.
+Model configurability is deferred to v2.
 
 ---
 
 ### 7. Credits
 
-Sending a message costs the user 1 credit, deducted from the standard hub credit balance. Moderation calls (Pass 1 and Pass 2) do not cost additional credits — they are covered by the single credit charged for the message. Credit deduction happens after Pass 1 clears (i.e., no credit is charged if a message is blocked at Pass 1).
+Sending a message costs 1 credit, deducted from the **child's own** hub credit balance. Moderation calls (Pass 1 and Pass 2) do not cost additional credits. Credit deduction happens after Pass 1 clears — no credit is charged if a message is blocked at Pass 1.
+
+If a child has no credits, they cannot send messages. Credits must be added to the child's account by an admin (same mechanism as any other hub account).
+
+---
+
+### 8. Conversations
+
+A conversation is a named unit of chat history. A child starts a new conversation explicitly (a "New conversation" button on the Kids AI home page). There is no automatic timeout or session-based splitting. A child can have multiple conversations in a day; each is stored and summarized independently. Locked conversations are permanently closed — the child must start a new one.
+
+Adult user conversations follow the same model but without moderation or locking. Adult user conversations are stored with a `modified_at` timestamp and subject to the same 30-day retention policy as child conversations.
 
 ---
 
@@ -291,10 +311,12 @@ Sending a message costs the user 1 credit, deducted from the standard hub credit
 9. **Parent dashboard actions:** Parents can view conversations, toggle Kids AI and hub access, and delete conversations. No other actions in v1.
 10. **Email content:** Free-form model-generated description of the concern + link to app. No verbatim message quoting. No rate limiting on flag emails in v1.
 11. **Moderation models:** Same prompt given to both models. Full conversation history passed to each. Either flagging triggers action.
-12. **Credits:** 1 credit per message sent by the user. Deducted after Pass 1 clears. Moderation calls are free.
-13. **Summarization:** Generated by the Pass 2 moderation call (dual-purpose). Stored in DB. Daily job emails the latest stored summary — no AI calls at summary time.
-14. **Hub access for children:** Off by default. Parent can grant full hub access as a separate toggle. Both activation events are logged for COPPA.
-15. **LiteLLM:** Optional. Multiple AI providers are used; abstraction layer may be added but is not required.
+12. **Credits:** 1 credit per message, deducted from the child's own credit balance after Pass 1 clears. No credit charged if blocked at Pass 1. Moderation calls are free. No credits for adult users' messages (same 1-credit rule applies to all users).
+13. **Summarization:** Generated by the Pass 2 moderation call (dual-purpose). Stored in DB. Daily job sends one digest email per parent — no AI calls at summary time.
+14. **Hub access for children:** Restricted immediately on pairing creation. Parent can grant full hub access as a separate toggle. Both activation events are logged for COPPA. Adult users retain full hub access.
+15. **Model selection:** Single hardcoded primary model in v1. Moderation uses two hardcoded models from different providers. No per-user or per-child model selection in v1.
+16. **Age tier:** Required at activation time. Parent must select before activation completes. Logged as part of the consent event.
+17. **Conversations:** Started explicitly by the child (no auto-split). Multiple conversations per day are allowed. 30-day retention applies to both child and adult user conversations.
 
 ---
 
