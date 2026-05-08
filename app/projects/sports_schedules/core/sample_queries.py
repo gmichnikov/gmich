@@ -1,6 +1,7 @@
 """
 Sample queries for Sports Schedules. Everyone sees these regardless of login state.
 """
+import copy
 from datetime import datetime, timedelta
 
 SAMPLE_QUERIES = [
@@ -62,9 +63,19 @@ def config_to_params(config: dict, anchor_date: str | None = None) -> dict:
     anchor_date on next_n etc.—otherwise results stay stuck on the save date.
     """
     anchor = anchor_date or datetime.utcnow().strftime("%Y-%m-%d")
+    # Deep copy so prepare_distance_filter (digest / API) can mutate filters without
+    # aliasing stored config dicts from JSON, and duplicates do not leak references.
+    filters = copy.deepcopy(config.get("filters") or {})
+    if "near" not in filters:
+        tn = config.get("near")
+        if isinstance(tn, dict):
+            zp = tn.get("zip")
+            rd = tn.get("radius")
+            if zp is not None and rd is not None and str(zp).strip():
+                filters["near"] = copy.deepcopy(tn)
     params = {
         "dimensions": config.get("dimensions") or "",
-        "filters": config.get("filters") or {},
+        "filters": filters,
         "date_mode": config.get("date_mode") or "",
         "date_exact": config.get("date_exact") or "",
         "date_start": config.get("date_start") or "",

@@ -59,7 +59,8 @@ def config_to_url_params(
         qdict["sort_column"] = params["sort_column"]
     qdict["sort_dir"] = params.get("sort_dir") or "asc"
 
-    near = (config.get("filters") or {}).get("near")
+    # Resolved filters (includes top-level config["near"] merged by config_to_params)
+    near = (params.get("filters") or {}).get("near")
     if isinstance(near, dict):
         z = str(near.get("zip") or "").strip()
         r = near.get("radius")

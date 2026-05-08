@@ -965,6 +965,22 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
       }
     });
 
+    /* Zip + radius whenever both inputs have values — matches user intent even if they
+       forget to toggle the Near Filter checkbox before Save/Send digest. Keeps URLs and
+       POST body consistent after a Run. */
+    (function ssAttachNearZipFromInputs() {
+      var zipEl = document.getElementById('ss-filter-near-zip');
+      var radEl = document.getElementById('ss-filter-near-radius');
+      var zip = zipEl ? zipEl.value.trim() : '';
+      var radius = radEl ? radEl.value : '';
+      if (zip && radius) {
+        params.set('zip_code', zip);
+        params.set('radius_miles', radius);
+        var ncb = document.getElementById('ss-filter-cb-near');
+        if (ncb) ncb.checked = true;
+      }
+    })();
+
     return params;
   }
 
