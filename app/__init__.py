@@ -210,6 +210,12 @@ def create_app():
         DailyEmailJobWatch,
         DailyEmailSendLog,
     )
+    from app.projects.camps.models import (
+        Camp,
+        CampSession,
+        CampTagCategory,
+        CampTag,
+    )
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():
