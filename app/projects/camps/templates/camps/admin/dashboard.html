@@ -8,7 +8,10 @@
 
 {% block content %}
 <div class="camps-page">
-    <h1 class="camps-heading">Camps Admin Dashboard</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 class="camps-heading" style="margin: 0;">Camps Admin Dashboard</h1>
+        <a href="{{ url_for('camps.index') }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.4rem 0.8rem;">View Public Site</a>
+    </div>
     
     <div class="camps-admin-actions">
         <a href="{{ url_for('camps.add_camp') }}" class="camps-btn camps-btn-primary">Add New Camp</a>
@@ -19,38 +22,46 @@
     <section class="camps-admin-section">
         <h2 class="camps-card-title">Camps</h2>
         {% if camps %}
-        <table class="camps-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>City</th>
-                    <th>Tags</th>
-                    <th>Sessions</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for camp in camps %}
-                <tr>
-                    <td>{{ camp.name }}</td>
-                    <td>{{ camp.city }}, {{ camp.state }}</td>
-                    <td>
-                        {% for tag in camp.tags %}
-                        <span class="camps-tag-badge">{{ tag.name }}</span>
-                        {% endfor %}
-                    </td>
-                    <td>{{ camp.sessions|length }}</td>
-                    <td>
-                        <a href="{{ url_for('camps.edit_camp', camp_id=camp.id) }}" class="camps-btn camps-btn-secondary">Edit</a>
-                        <form action="{{ url_for('camps.delete_camp', camp_id=camp.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this camp and all its sessions?');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="camps-btn camps-btn-danger">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="camps-table-wrapper">
+            <table class="camps-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>City</th>
+                        <th>Tags</th>
+                        <th>Sessions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for camp in camps %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('camps.camp_detail', camp_id=camp.id) }}" class="camps-admin-camp-link" target="_blank">
+                                {{ camp.name }}
+                            </a>
+                        </td>
+                        <td>{{ camp.city }}, {{ camp.state }}</td>
+                        <td>
+                            {% for tag in camp.tags %}
+                            <a href="{{ url_for('camps.index', **{'tag_' ~ tag.category_id: tag.id}) }}" class="camps-tag-badge camps-tag-link" target="_blank">{{ tag.name }}</a>
+                            {% endfor %}
+                        </td>
+                        <td>{{ camp.sessions|length }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                <a href="{{ url_for('camps.edit_camp', camp_id=camp.id) }}" class="camps-btn camps-btn-secondary">Edit</a>
+                                <form action="{{ url_for('camps.delete_camp', camp_id=camp.id) }}" method="POST" style="display:inline-block; margin:0;" onsubmit="return confirm('Are you sure you want to delete this camp and all its sessions?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="camps-btn camps-btn-danger">Del</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <p class="camps-muted">No camps found.</p>
         {% endif %}
@@ -65,7 +76,7 @@
                 <strong>{{ cat.name }}:</strong>
                 {% if cat.tags %}
                     {% for tag in cat.tags %}
-                    <span class="camps-tag-badge">{{ tag.name }}</span>
+                    <a href="{{ url_for('camps.index', **{'tag_' ~ tag.category_id: tag.id}) }}" class="camps-tag-badge camps-tag-link" target="_blank">{{ tag.name }}</a>
                     {% endfor %}
                 {% else %}
                     <span class="camps-muted">No tags</span>

@@ -76,9 +76,14 @@ def add_camp():
     form = CampForm()
     # Populate tag choices grouped by category
     tags = CampTag.query.join(CampTagCategory).order_by(CampTagCategory.name, CampTag.name).all()
-    form.tags.choices = [(t.id, f"{t.category.name}: {t.name}") for t in tags]
+    form.tag_ids.choices = [(t.id, f"{t.category.name}: {t.name}") for t in tags]
     
     if form.validate_on_submit():
+        # Check for potential duplicate (same name and city)
+        existing = Camp.query.filter_by(name=form.name.data, city=form.city.data).first()
+        if existing:
+            flash(f"Warning: A camp named '{form.name.data}' already exists in {form.city.data}.", "warning")
+            
         camp = Camp(
             name=form.name.data,
             website_url=form.website_url.data,
@@ -89,8 +94,8 @@ def add_camp():
             state=form.state.data,
             zip=form.zip.data
         )
-        if form.tags.data:
-            selected_tags = CampTag.query.filter(CampTag.id.in_(form.tags.data)).all()
+        if form.tag_ids.data:
+            selected_tags = CampTag.query.filter(CampTag.id.in_(form.tag_ids.data)).all()
             camp.tags = selected_tags
             
         db.session.add(camp)
@@ -121,15 +126,15 @@ def edit_camp(camp_id):
     camp = Camp.query.get_or_404(camp_id)
     form = CampForm(obj=camp)
     tags = CampTag.query.join(CampTagCategory).order_by(CampTagCategory.name, CampTag.name).all()
-    form.tags.choices = [(t.id, f"{t.category.name}: {t.name}") for t in tags]
+    form.tag_ids.choices = [(t.id, f"{t.category.name}: {t.name}") for t in tags]
     
     if request.method == "GET":
-        form.tags.data = [t.id for t in camp.tags]
+        form.tag_ids.data = [t.id for t in camp.tags]
         
     if form.validate_on_submit():
         form.populate_obj(camp)
-        if form.tags.data:
-            selected_tags = CampTag.query.filter(CampTag.id.in_(form.tags.data)).all()
+        if form.tag_ids.data:
+            selected_tags = CampTag.query.filter(CampTag.id.in_(form.tag_ids.data)).all()
             camp.tags = selected_tags
         else:
             camp.tags = []

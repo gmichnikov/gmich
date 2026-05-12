@@ -140,43 +140,45 @@
             <div class="camps-results-grid">
                 {% for camp in camps %}
                 <a href="{{ url_for('camps.camp_detail', camp_id=camp.id) }}" class="camps-directory-card">
-                    <div class="camps-card-name">{{ camp.name }}</div>
-                    <div class="camps-card-location">{{ camp.city }}, {{ camp.state }}</div>
-                    
-                    <div class="camps-card-tags">
-                        {% for tag in camp.tags %}
-                        <span class="camps-tag-badge">{{ tag.name }}</span>
-                        {% endfor %}
+                    <div class="camps-card-header">
+                        <div class="camps-card-name">{{ camp.name }}</div>
+                        <div class="camps-card-location">{{ camp.city }}, {{ camp.state }}</div>
                     </div>
-
-                    <div style="font-size: 0.875rem; color: #4b5563; margin-bottom: 0.5rem;">
+                    
+                    <div class="camps-card-body">
                         {% if camp.sessions %}
-                            <div style="margin-bottom: 0.25rem;"><strong>{{ camp.sessions|length }}</strong> session{{ 's' if camp.sessions|length != 1 }}</div>
+                            <div class="camps-card-info-item">
+                                <strong>{{ camp.sessions|length }}</strong> session{{ 's' if camp.sessions|length != 1 }} • {{ camp.formatted_date_range }}
+                            </div>
                             
-                            {% set age_range = camp.common_age_range %}
-                            {% if age_range %}
-                                <div style="margin-bottom: 0.25rem;">Ages {{ age_range[0] or '?' }}-{{ age_range[1] or '?' }}</div>
-                            {% endif %}
-                            
-                            {% set grade_range = camp.common_grade_range %}
-                            {% if grade_range %}
-                                <div style="margin-bottom: 0.25rem;">
-                                    Grades {{ grade_range[0] if grade_range[0] != -1 else 'Pre-K' if grade_range[0] == -1 else 'K' if grade_range[0] == 0 else grade_range[0] }}-{{ grade_range[1] }}
-                                </div>
-                            {% endif %}
+                            <div class="camps-card-info-row">
+                                {% set age_range = camp.common_age_range %}
+                                {% if age_range %}
+                                    <span>Ages {{ age_range[0] or '?' }}-{{ age_range[1] or '?' }}</span>
+                                {% endif %}
+                                
+                                {% set grade_range = camp.common_grade_range %}
+                                {% if grade_range %}
+                                    {% if age_range %} • {% endif %}
+                                    <span>
+                                        Grades {{ grade_range[0] if grade_range[0] != -1 else 'Pre-K' if grade_range[0] == -1 else 'K' if grade_range[0] == 0 else grade_range[0] }}-{{ grade_range[1] }}
+                                    </span>
+                                {% endif %}
+                            </div>
                             
                             {% set price = camp.common_price %}
                             {% if price %}
-                                <div><strong>${{ "%.2f"|format(price) }}</strong></div>
+                                <div class="camps-card-price"><strong>${{ price|round|int }}</strong></div>
                             {% endif %}
                         {% endif %}
                     </div>
 
                     <div class="camps-card-footer">
-                        <div class="camps-card-dates">
-                            {{ camp.formatted_date_range }}
+                        <div class="camps-card-tags">
+                            {% for tag in camp.tags %}
+                            <span class="camps-tag-badge">{{ tag.name }}</span>
+                            {% endfor %}
                         </div>
-                        <div style="font-weight: 600; color: #667eea;">View Details →</div>
                     </div>
                 </a>
                 {% endfor %}

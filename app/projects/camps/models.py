@@ -87,6 +87,19 @@ class Camp(db.Model):
             # Fallback to month range like "Jun - Aug"
             return f"{first_s.start_date.strftime('%b')} - {last_s.end_date.strftime('%b')}"
 
+    @property
+    def google_maps_url(self):
+        if not self.address:
+            # Fallback to city/state if no specific address
+            query = f"{self.city}, {self.state}"
+        else:
+            query = f"{self.address}, {self.city}, {self.state}"
+            if self.zip:
+                query += f" {self.zip}"
+        
+        import urllib.parse
+        return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(query)}"
+
     def __repr__(self):
         return f"<Camp {self.name}>"
 
@@ -142,6 +155,12 @@ class CampTag(db.Model):
     name = db.Column(db.String(100), nullable=False)
 
     __table_args__ = (db.UniqueConstraint("category_id", "name", name="uix_category_tag_name"),)
+
+    @db.validates("name")
+    def validate_name(self, key, name):
+        if name:
+            return name.lower().strip()
+        return name
 
     def __repr__(self):
         return f"<CampTag {self.name} ({self.category.name})>"

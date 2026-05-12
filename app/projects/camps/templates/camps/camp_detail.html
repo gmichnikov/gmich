@@ -84,7 +84,12 @@
 
     <div class="camps-detail-header">
         <h1 class="camps-heading" style="font-size: 2.25rem; margin-bottom: 0.5rem;">{{ camp.name }}</h1>
-        <div style="color: #6b7280; font-size: 1.1rem;">{{ camp.city }}, {{ camp.state }}</div>
+        <div style="color: #6b7280; font-size: 1.1rem;">
+            <a href="{{ camp.google_maps_url }}" target="_blank" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {{ camp.city }}, {{ camp.state }}
+            </a>
+        </div>
         
         <div class="camps-card-tags" style="margin-top: 1rem;">
             {% for tag in camp.tags %}
@@ -95,7 +100,7 @@
 
     <div class="camps-detail-grid">
         <div class="camps-main-content">
-            <h2 class="camps-card-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Available Sessions</h2>
+            <h2 class="camps-card-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Sessions</h2>
             
             {% if sessions %}
                 {% for session in sessions %}
@@ -142,7 +147,7 @@
                 {% if camp.website_url %}
                 <div class="camps-contact-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                    <a href="{{ camp.website_url }}" target="_blank" style="color: #667eea; word-break: break-all;">Visit Website</a>
+                    <a href="{{ camp.website_url }}" target="_blank" style="color: #667eea; word-break: break-all; text-decoration: none;">Visit Website</a>
                 </div>
                 {% endif %}
 
@@ -163,7 +168,9 @@
                 {% if camp.address %}
                 <div class="camps-contact-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    <span>{{ camp.address }}<br>{{ camp.city }}, {{ camp.state }} {{ camp.zip or '' }}</span>
+                    <a href="{{ camp.google_maps_url }}" target="_blank" style="color: #667eea; text-decoration: none;">
+                        {{ camp.address }}<br>{{ camp.city }}, {{ camp.state }} {{ camp.zip or '' }}
+                    </a>
                 </div>
                 {% endif %}
             </div>

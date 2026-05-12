@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, DateField, DecimalField, IntegerField, SubmitField, TimeField
-from wtforms.validators import DataRequired, URL, Email, Optional, Length, NumberRange
+from wtforms.validators import DataRequired, URL, Email, Optional, Length, NumberRange, Regexp
 
 class CampTagCategoryForm(FlaskForm):
     name = StringField("Category Name", validators=[DataRequired(), Length(max=100)])
@@ -8,7 +8,11 @@ class CampTagCategoryForm(FlaskForm):
 
 class CampTagForm(FlaskForm):
     category_id = SelectField("Category", coerce=int, validators=[DataRequired()])
-    name = StringField("Tag Name", validators=[DataRequired(), Length(max=100)])
+    name = StringField("Tag Name", validators=[
+        DataRequired(), 
+        Length(max=100),
+        Regexp(r'^[a-z0-9\s&\-/]+$', message="Tags must be lowercase and can only contain letters, numbers, spaces, and symbols like & - /")
+    ])
     submit = SubmitField("Save Tag")
 
 class CampForm(FlaskForm):
@@ -20,7 +24,7 @@ class CampForm(FlaskForm):
     city = StringField("City", validators=[DataRequired(), Length(max=100)])
     state = StringField("State", validators=[DataRequired(), Length(min=2, max=2)], default="NJ")
     zip = StringField("Zip Code", validators=[Optional(), Length(max=20)])
-    tags = SelectMultipleField("Tags", coerce=int)
+    tag_ids = SelectMultipleField("Tags", coerce=int)
     submit = SubmitField("Save Camp")
 
 class CampSessionForm(FlaskForm):

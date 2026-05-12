@@ -66,8 +66,8 @@
             </div>
             
             <div class="camps-form-group">
-                {{ form.tags.label(class="camps-form-label") }}
-                {{ form.tags(class="camps-form-select", size=5) }}
+                {{ form.tag_ids.label(class="camps-form-label") }}
+                {{ form.tag_ids(class="camps-form-select", size=5) }}
                 <small class="camps-muted">Cmd+Click to multi-select.</small>
             </div>
             
@@ -120,6 +120,7 @@
                 </div>
                 {% endif %}
 
+        <div class="camps-table-wrapper">
             <table class="camps-table">
                 <thead>
                     <tr>
@@ -187,7 +188,8 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
+        </div>
+        {% else %}
             <p class="camps-muted">No sessions found for this camp.</p>
             {% endif %}
         </div>
