@@ -1,0 +1,40 @@
+/* Prefixed classes: camps-* */
+.camps-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.camps-heading {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.camps-intro {
+  color: var(--text-muted, #5c6370);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.camps-card {
+  border: 1px solid var(--border-color, #dfe2e8);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.camps-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.camps-muted {
+  font-size: 0.875rem;
+  color: var(--text-muted, #5c6370);
+  margin: 0;
+}
+
+.camps-empty {
+  margin: 0;
+}

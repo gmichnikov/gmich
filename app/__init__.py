@@ -98,6 +98,7 @@ def create_app():
     from app.projects.docs_demo.routes import docs_demo_bp
     from app.projects.mcp.routes import mcp_bp
     from app.projects.sports_scores.routes import sports_scores_bp
+    from app.projects.camps.routes import camps_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -140,6 +141,7 @@ def create_app():
     app.register_blueprint(docs_demo_bp, url_prefix="/docs-demo")
     app.register_blueprint(mcp_bp, url_prefix="/mcp")
     app.register_blueprint(sports_scores_bp)
+    app.register_blueprint(camps_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
@@ -208,7 +210,6 @@ def create_app():
         DailyEmailJobWatch,
         DailyEmailSendLog,
     )
-
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():

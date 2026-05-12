@@ -454,6 +454,17 @@ PROJECTS = [
         "icon": "🧒",
         "order": 24,
     },
+    {
+        "id": "camps",
+        "name": "Camps",
+        "description": "Camp-related tools and listings — public, no login",
+        "url": "/camps",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "⛺",
+        "order": 25,
+    },
 ]
 
 

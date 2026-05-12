@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Camps{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+  <h1 class="camps-heading">Camps</h1>
+  <p class="camps-intro">
+    Project skeleton — public, no login. Add models and migrations when you are ready.
+  </p>
+
+  <div class="camps-card">
+    <h2 class="camps-card-title">Next steps</h2>
+    <p class="camps-muted camps-empty">
+      Define SQLAlchemy models, then run <code>flask db migrate</code> and <code>flask db upgrade</code>.
+    </p>
+  </div>
+</div>
+{% endblock %}
