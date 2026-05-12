@@ -1,13 +1,15 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required
 from app import db
 from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTag
-from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm
+from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm, ImportCampForm
 from app.projects.camps.weeks import get_summer_2026_mondays
 from app.projects.camps.filters import apply_filters
 from app.core.admin import admin_required
 from app.utils.logging import log_project_visit
 from datetime import datetime, date, time
+import json
+import decimal
 
 camps_bp = Blueprint(
     "camps",
@@ -184,6 +186,174 @@ def delete_camp(camp_id):
     db.session.commit()
     flash(f"Camp '{name}' deleted.")
     return redirect(url_for("camps.admin_dashboard"))
+
+@camps_bp.route("/admin/camp/<int:camp_id>/export")
+@login_required
+@admin_required
+def export_camp(camp_id):
+    camp = Camp.query.get_or_404(camp_id)
+    
+    data = {
+        "name": camp.name,
+        "website_url": camp.website_url,
+        "email": camp.email,
+        "phone": camp.phone,
+        "address": camp.address,
+        "city": camp.city,
+        "state": camp.state,
+        "zip": camp.zip,
+        "tags": [{"category": t.category.name, "name": t.name} for t in camp.tags],
+        "sessions": []
+    }
+    
+    for s in camp.sessions:
+        session_data = {
+            "name": s.name,
+            "start_date": s.start_date.isoformat(),
+            "end_date": s.end_date.isoformat(),
+            "start_time": s.start_time,
+            "end_time": s.end_time,
+            "age_min": s.age_min,
+            "age_max": s.age_max,
+            "grade_min": s.grade_min,
+            "grade_max": s.grade_max,
+            "price": float(s.price) if s.price else None
+        }
+        data["sessions"].append(session_data)
+        
+    return jsonify(data)
+
+@camps_bp.route("/admin/camp/import", methods=["GET", "POST"])
+@login_required
+@admin_required
+def import_camp():
+    form = ImportCampForm()
+    preview_data = None
+    
+    if form.validate_on_submit():
+        try:
+            data = json.loads(form.json_data.data)
+            camps_to_import = [data] if isinstance(data, dict) else data
+            
+            if not isinstance(camps_to_import, list):
+                flash("Invalid JSON format. Expected an object or a list of objects.", "error")
+                return render_template("camps/admin/import_form.html", form=form, title="Import Camp")
+
+            is_confirmed = form.confirmed.data == "true"
+            results = []
+            
+            for camp_data in camps_to_import:
+                camp_result = {
+                    "name": camp_data.get("name", "Unknown"),
+                    "city": camp_data.get("city", "Unknown"),
+                    "status": "new",
+                    "sessions_count": len(camp_data.get("sessions", [])),
+                    "tags": [],
+                    "errors": []
+                }
+
+                if not camp_data.get("name") or not camp_data.get("city"):
+                    camp_result["status"] = "error"
+                    camp_result["errors"].append("Missing name or city")
+                    results.append(camp_result)
+                    continue
+
+                existing = Camp.query.filter_by(name=camp_data["name"], city=camp_data["city"]).first()
+                if existing:
+                    camp_result["status"] = "skipped"
+                    camp_result["errors"].append("Already exists")
+                    results.append(camp_result)
+                    continue
+
+                # Analyze tags
+                if "tags" in camp_data and isinstance(camp_data["tags"], list):
+                    for tag_info in camp_data["tags"]:
+                        cat_name = tag_info.get("category")
+                        tag_name = tag_info.get("name")
+                        if cat_name and tag_name:
+                            category = CampTagCategory.query.filter_by(name=cat_name).first()
+                            tag = None
+                            if category:
+                                tag = CampTag.query.filter_by(category_id=category.id, name=tag_name.lower().strip()).first()
+                            
+                            camp_result["tags"].append({
+                                "category": cat_name,
+                                "name": tag_name,
+                                "is_new_category": category is None,
+                                "is_new_tag": tag is None
+                            })
+
+                if is_confirmed:
+                    # Actual Import Logic
+                    camp = Camp(
+                        name=camp_data.get("name"),
+                        website_url=camp_data.get("website_url"),
+                        email=camp_data.get("email"),
+                        phone=camp_data.get("phone"),
+                        address=camp_data.get("address"),
+                        city=camp_data.get("city"),
+                        state=camp_data.get("state", "NJ"),
+                        zip=camp_data.get("zip")
+                    )
+
+                    # Tags
+                    for t_info in camp_result["tags"]:
+                        category = CampTagCategory.query.filter_by(name=t_info["category"]).first()
+                        if not category:
+                            category = CampTagCategory(name=t_info["category"])
+                            db.session.add(category)
+                            db.session.flush()
+                        
+                        tag = CampTag.query.filter_by(category_id=category.id, name=t_info["name"].lower().strip()).first()
+                        if not tag:
+                            tag = CampTag(category_id=category.id, name=t_info["name"])
+                            db.session.add(tag)
+                            db.session.flush()
+                        
+                        if tag not in camp.tags:
+                            camp.tags.append(tag)
+
+                    db.session.add(camp)
+                    db.session.flush()
+
+                    # Sessions
+                    for s_data in camp_data.get("sessions", []):
+                        try:
+                            session = CampSession(
+                                camp_id=camp.id,
+                                name=s_data.get("name"),
+                                start_date=date.fromisoformat(s_data["start_date"]),
+                                end_date=date.fromisoformat(s_data["end_date"]),
+                                start_time=s_data.get("start_time"),
+                                end_time=s_data.get("end_time"),
+                                age_min=s_data.get("age_min"),
+                                age_max=s_data.get("age_max"),
+                                grade_min=s_data.get("grade_min"),
+                                grade_max=s_data.get("grade_max"),
+                                price=decimal.Decimal(str(s_data["price"])) if s_data.get("price") is not None else None
+                            )
+                            db.session.add(session)
+                        except Exception as e:
+                            camp_result["errors"].append(f"Session error: {str(e)}")
+
+                results.append(camp_result)
+
+            if is_confirmed:
+                db.session.commit()
+                imported = len([r for r in results if r["status"] == "new"])
+                flash(f"Successfully imported {imported} camp(s).")
+                return redirect(url_for("camps.admin_dashboard"))
+            else:
+                preview_data = results
+                flash("Preview generated. Please review and confirm below.", "info")
+
+        except json.JSONDecodeError:
+            flash("Invalid JSON format.", "error")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "error")
+
+    return render_template("camps/admin/import_form.html", form=form, title="Import Camp", preview_data=preview_data)
 
 # Session CRUD
 @camps_bp.route("/admin/camp/<int:camp_id>/session/add", methods=["GET", "POST"])

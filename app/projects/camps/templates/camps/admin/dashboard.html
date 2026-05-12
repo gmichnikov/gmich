@@ -15,6 +15,7 @@
     
     <div class="camps-admin-actions">
         <a href="{{ url_for('camps.add_camp') }}" class="camps-btn camps-btn-primary">Add New Camp</a>
+        <a href="{{ url_for('camps.import_camp') }}" class="camps-btn camps-btn-secondary">Import Camp</a>
         <a href="{{ url_for('camps.add_category') }}" class="camps-btn camps-btn-secondary">Add Tag Category</a>
         <a href="{{ url_for('camps.add_tag') }}" class="camps-btn camps-btn-secondary">Add Tag</a>
     </div>
@@ -51,6 +52,7 @@
                         <td>
                             <div style="display: flex; gap: 0.25rem; align-items: center;">
                                 <a href="{{ url_for('camps.edit_camp', camp_id=camp.id) }}" class="camps-btn camps-btn-secondary">Edit</a>
+                                <button type="button" class="camps-btn camps-btn-secondary export-btn" data-url="{{ url_for('camps.export_camp', camp_id=camp.id) }}">Export</button>
                                 <form action="{{ url_for('camps.delete_camp', camp_id=camp.id) }}" method="POST" style="display:inline-block; margin:0;" onsubmit="return confirm('Are you sure you want to delete this camp and all its sessions?');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="camps-btn camps-btn-danger">Del</button>
@@ -89,4 +91,42 @@
         {% endif %}
     </section>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Export functionality
+        const exportButtons = document.querySelectorAll('.export-btn');
+        exportButtons.forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const url = this.getAttribute('data-url');
+                const originalText = this.textContent;
+                
+                try {
+                    this.textContent = '...';
+                    this.disabled = true;
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Export failed');
+                    
+                    const data = await response.json();
+                    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+                    
+                    this.textContent = 'Copied!';
+                    this.classList.replace('camps-btn-secondary', 'camps-btn-primary');
+                    
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.classList.replace('camps-btn-primary', 'camps-btn-secondary');
+                        this.disabled = false;
+                    }, 2000);
+                } catch (err) {
+                    console.error('Export error:', err);
+                    alert('Failed to export camp data to clipboard.');
+                    this.textContent = originalText;
+                    this.disabled = false;
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

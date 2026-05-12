@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <div style="margin-bottom: 1.5rem;">
+        <span class="camps-heading-sub">Admin</span>
+        <h1 class="camps-heading" style="margin: 0;">Import Camp</h1>
+    </div>
+    
+    <div class="camps-card">
+        <p style="margin-bottom: 1.5rem;">Paste the JSON representation of a camp (or a list of camps) below to import them into the database. The system will check for duplicates based on name and city.</p>
+        
+        <form method="POST" id="importForm">
+            {{ form.hidden_tag() }}
+            {{ form.confirmed(id="confirmedField", type="hidden") }}
+            
+            <div class="camps-form-group">
+                {{ form.json_data.label(class="camps-form-label") }}
+                {{ form.json_data(class="camps-form-input", style="font-family: monospace; font-size: 0.875rem;") }}
+                {% for error in form.json_data.errors %}
+                <span style="color: var(--camps-danger); font-size: 0.875rem;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="camps-admin-actions" style="margin-top: 1.5rem; margin-bottom: 0;">
+                <button type="submit" class="camps-btn camps-btn-primary" id="previewBtn">Preview Import</button>
+                <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    {% if preview_data %}
+    <div class="camps-card" style="margin-top: 2rem; border-color: var(--camps-primary);">
+        <h2 class="camps-card-title">Import Preview</h2>
+        <div class="camps-table-wrapper">
+            <table class="camps-table">
+                <thead>
+                    <tr>
+                        <th>Camp</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in preview_data %}
+                    <tr class="status-{{ item.status }}">
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.city }}</td>
+                        <td>
+                            {% if item.status == 'new' %}
+                                <span style="color: green; font-weight: bold;">NEW</span>
+                            {% elif item.status == 'skipped' %}
+                                <span style="color: orange;">Skipped</span>
+                            {% else %}
+                                <span style="color: red;">Error</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.875rem;">
+                                {{ item.sessions_count }} sessions<br>
+                                {% for tag in item.tags %}
+                                    <span class="camps-tag-badge" style="{% if tag.is_new_tag %}border: 1px dashed var(--camps-primary);{% endif %}">
+                                        {{ tag.category }}: {{ tag.name }}
+                                        {% if tag.is_new_tag %}(new){% endif %}
+                                    </span>
+                                {% endfor %}
+                                {% if item.errors %}
+                                    <div style="color: red; margin-top: 0.25rem;">
+                                        {% for err in item.errors %}• {{ err }}<br>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if preview_data|selectattr('status', 'equalto', 'new')|list|length > 0 %}
+        <div style="margin-top: 2rem; padding: 1rem; background: #e7f3ff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Ready to import <strong>{{ preview_data|selectattr('status', 'equalto', 'new')|list|length }}</strong> new camp(s).</span>
+            <button type="button" class="camps-btn camps-btn-primary" id="confirmBtn">Confirm & Import Now</button>
+        </div>
+        {% else %}
+        <div style="margin-top: 2rem; padding: 1rem; background: #fff3cd; border-radius: 8px;">
+            No new camps found to import.
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('confirmBtn')?.addEventListener('click', function() {
+            document.getElementById('confirmedField').value = 'true';
+            document.getElementById('importForm').submit();
+        });
+        
+        // If user edits JSON, reset confirmation
+        document.querySelector('textarea').addEventListener('input', function() {
+            document.getElementById('confirmedField').value = 'false';
+        });
+    </script>
+    {% endif %}
+
+    <div class="camps-card" style="margin-top: 2rem; background-color: #f8f9fa;">
+        <h3 style="margin-top: 0; font-size: 1rem;">Expected Format Example</h3>
+        <pre style="font-size: 0.75rem; background: #eee; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+{
+  "name": "Summer Science Camp",
+  "city": "Maplewood",
+  "state": "NJ",
+  "website_url": "https://example.com",
+  "tags": [
+    { "category": "Type", "name": "Day Camp" }
+  ],
+  "sessions": [
+    {
+      "name": "Week 1",
+      "start_date": "2026-07-06",
+      "end_date": "2026-07-10",
+      "price": 450.00
+    }
+  ]
+}
+        </pre>
+    </div>
+</div>
+{% endblock %}

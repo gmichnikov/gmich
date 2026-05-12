@@ -43,3 +43,8 @@ class CampSessionForm(FlaskForm):
     additional_weeks = SelectMultipleField("Also add for these weeks (Summer 2026)", coerce=str)
     
     submit = SubmitField("Save Session")
+
+class ImportCampForm(FlaskForm):
+    json_data = TextAreaField("Camp JSON", validators=[DataRequired()], render_kw={"rows": 15, "placeholder": "Paste camp JSON here..."})
+    confirmed = StringField("Confirmed", default="false")
+    submit = SubmitField("Preview Import")
