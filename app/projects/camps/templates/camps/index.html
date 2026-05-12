@@ -1,23 +1,244 @@
 {% extends "base.html" %}
 
-{% block title %}Camps{% endblock %}
+{% block title %}Summer Camps 2026{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="camps-page">
-  <h1 class="camps-heading">Camps</h1>
-  <p class="camps-intro">
-    Project skeleton — public, no login. Add models and migrations when you are ready.
-  </p>
+<div class="camps-page" style="max-width: 1200px;">
+    <div style="margin-bottom: 2rem;">
+        <h1 class="camps-heading">Summer Camps 2026</h1>
+    </div>
 
-  <div class="camps-card">
-    <h2 class="camps-card-title">Next steps</h2>
-    <p class="camps-muted camps-empty">
-      Define SQLAlchemy models, then run <code>flask db migrate</code> and <code>flask db upgrade</code>.
-    </p>
-  </div>
+    <div class="camps-directory">
+        <!-- Top Filters -->
+        <header class="camps-top-filters">
+            <form id="filterForm" method="GET" action="{{ url_for('camps.index') }}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; width: 100%; align-items: center;">
+                
+                <!-- Town Dropdown -->
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.getlist('town') %}active{% endif %}">
+                        Town {% if request.args.getlist('town') %}({{ request.args.getlist('town')|length }}){% endif %}
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content">
+                        <span class="camps-filter-section-title">Select Towns</span>
+                        <ul class="camps-filter-list">
+                            {% for town in towns %}
+                            <li class="camps-filter-item">
+                                <input type="checkbox" name="town" value="{{ town }}" id="town_{{ loop.index }}" 
+                                       {% if town in request.args.getlist('town') %}checked{% endif %}>
+                                <label for="town_{{ loop.index }}">{{ town }}</label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weeks Dropdown -->
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.getlist('week') %}active{% endif %}">
+                        Weeks {% if request.args.getlist('week') %}({{ request.args.getlist('week')|length }}){% endif %}
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content">
+                        <span class="camps-filter-section-title">Select Weeks</span>
+                        <ul class="camps-filter-list">
+                            {% for monday in summer_mondays %}
+                            {% set m_str = monday.isoformat() %}
+                        <li class="camps-filter-item">
+                            <input type="checkbox" name="week" value="{{ m_str }}" id="week_{{ loop.index }}"
+                                   {% if m_str in request.args.getlist('week') %}checked{% endif %}>
+                            <label for="week_{{ loop.index }}">Week of {{ monday.strftime('%b %-d') }}</label>
+                        </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tag Categories -->
+                {% for cat in tag_categories %}
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.getlist('tag_' ~ cat.id) %}active{% endif %}">
+                        {{ cat.name }} {% if request.args.getlist('tag_' ~ cat.id) %}({{ request.args.getlist('tag_' ~ cat.id)|length }}){% endif %}
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content">
+                        <span class="camps-filter-section-title">Select {{ cat.name }}</span>
+                        <ul class="camps-filter-list">
+                            {% for tag in cat.tags %}
+                            <li class="camps-filter-item">
+                                <input type="checkbox" name="tag_{{ cat.id }}" value="{{ tag.id }}" id="tag_{{ tag.id }}"
+                                       {% if tag.id|string in request.args.getlist('tag_' ~ cat.id) %}checked{% endif %}>
+                                <label for="tag_{{ tag.id }}">{{ tag.name }}</label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Age/Grade Dropdown -->
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.get('age_min') or request.args.get('age_max') or request.args.get('grade_min') or request.args.get('grade_max') %}active{% endif %}">
+                        Age/Grade
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content" style="min-width: 280px;">
+                        <div style="margin-bottom: 1.25rem;">
+                            <span class="camps-filter-section-title">Age Range</span>
+                            <div class="camps-range-inputs">
+                                <input type="number" name="age_min" placeholder="Min" value="{{ request.args.get('age_min', '') }}">
+                                <span>-</span>
+                                <input type="number" name="age_max" placeholder="Max" value="{{ request.args.get('age_max', '') }}">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="camps-filter-section-title">Grade Range</span>
+                            <div class="camps-range-inputs">
+                                <input type="number" name="grade_min" placeholder="Min" value="{{ request.args.get('grade_min', '') }}">
+                                <span>-</span>
+                                <input type="number" name="grade_max" placeholder="Max" value="{{ request.args.get('grade_max', '') }}">
+                            </div>
+                            <small class="camps-muted" style="display: block; margin-top: 0.4rem; font-size: 0.75rem;">-1=Pre-K, 0=K, 1-12=Grades</small>
+                        </div>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+                    {% if request.args %}
+                    <a href="{{ url_for('camps.index') }}" class="camps-muted" style="text-decoration: none; font-size: 0.875rem;">Clear All</a>
+                    {% endif %}
+                    <span class="camps-muted" style="font-size: 0.875rem; border-left: 1px solid #e5e7eb; padding-left: 0.75rem; margin-left: 0.25rem;">
+                        <strong>{{ camps|length }}</strong> found
+                    </span>
+                </div>
+            </form>
+        </header>
+
+        <!-- Results -->
+        <main class="camps-results">
+            {% if camps %}
+            <div class="camps-results-grid">
+                {% for camp in camps %}
+                <a href="{{ url_for('camps.camp_detail', camp_id=camp.id) }}" class="camps-directory-card">
+                    <div class="camps-card-name">{{ camp.name }}</div>
+                    <div class="camps-card-location">{{ camp.city }}, {{ camp.state }}</div>
+                    
+                    <div class="camps-card-tags">
+                        {% for tag in camp.tags %}
+                        <span class="camps-tag-badge">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <div style="font-size: 0.875rem; color: #4b5563; margin-bottom: 0.5rem;">
+                        {% if camp.sessions %}
+                            <div style="margin-bottom: 0.25rem;"><strong>{{ camp.sessions|length }}</strong> session{{ 's' if camp.sessions|length != 1 }}</div>
+                            
+                            {% set age_range = camp.common_age_range %}
+                            {% if age_range %}
+                                <div style="margin-bottom: 0.25rem;">Ages {{ age_range[0] or '?' }}-{{ age_range[1] or '?' }}</div>
+                            {% endif %}
+                            
+                            {% set grade_range = camp.common_grade_range %}
+                            {% if grade_range %}
+                                <div style="margin-bottom: 0.25rem;">
+                                    Grades {{ grade_range[0] if grade_range[0] != -1 else 'Pre-K' if grade_range[0] == -1 else 'K' if grade_range[0] == 0 else grade_range[0] }}-{{ grade_range[1] }}
+                                </div>
+                            {% endif %}
+                            
+                            {% set price = camp.common_price %}
+                            {% if price %}
+                                <div><strong>${{ "%.2f"|format(price) }}</strong></div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="camps-card-footer">
+                        <div class="camps-card-dates">
+                            {{ camp.formatted_date_range }}
+                        </div>
+                        <div style="font-weight: 600; color: #667eea;">View Details →</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="camps-card" style="text-align: center; padding: 3rem;">
+                <p class="camps-muted">No camps match your current filters.</p>
+                <a href="{{ url_for('camps.index') }}" class="camps-btn camps-btn-primary" style="margin-top: 1rem; height: auto; padding: 0.5rem 1rem;">Clear Filters</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdowns = document.querySelectorAll('.camps-filter-dropdown');
+        
+        dropdowns.forEach(dropdown => {
+            const trigger = dropdown.querySelector('.camps-filter-dropdown-trigger');
+            const content = dropdown.querySelector('.camps-filter-dropdown-content');
+            
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // Close other dropdowns
+                dropdowns.forEach(other => {
+                    if (other !== dropdown) {
+                        other.querySelector('.camps-filter-dropdown-content').classList.remove('show');
+                    }
+                });
+                
+                content.classList.toggle('show');
+            });
+            
+            content.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Handle Reset button
+            const resetBtn = content.querySelector('.camps-filter-reset');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    // Clear checkboxes
+                    content.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        cb.checked = false;
+                    });
+                    // Clear number inputs
+                    content.querySelectorAll('input[type="number"]').forEach(input => {
+                        input.value = '';
+                    });
+                    // Submit the form
+                    dropdown.closest('form').submit();
+                });
+            }
+        });
+        
+        document.addEventListener('click', function() {
+            dropdowns.forEach(dropdown => {
+                dropdown.querySelector('.camps-filter-dropdown-content').classList.remove('show');
+            });
+        });
+    });
+</script>
 {% endblock %}

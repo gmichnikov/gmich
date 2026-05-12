@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}{{ camp.name }} - Summer Camps 2026{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+<style>
+    .camps-detail-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1.5rem;
+    }
+    
+    .camps-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2.5rem;
+    }
+    
+    .camps-contact-info {
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .camps-contact-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: block;
+        color: #111827;
+    }
+    
+    .camps-contact-item {
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .camps-session-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.2s;
+    }
+    
+    .camps-session-card:hover {
+        border-color: #667eea;
+    }
+    
+    .camps-session-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem;
+    }
+    
+    .camps-session-meta {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .camps-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="camps-page" style="max-width: 1000px;">
+    <nav style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('camps.index') }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.4rem 0.8rem;">← Back to Directory</a>
+    </nav>
+
+    <div class="camps-detail-header">
+        <h1 class="camps-heading" style="font-size: 2.25rem; margin-bottom: 0.5rem;">{{ camp.name }}</h1>
+        <div style="color: #6b7280; font-size: 1.1rem;">{{ camp.city }}, {{ camp.state }}</div>
+        
+        <div class="camps-card-tags" style="margin-top: 1rem;">
+            {% for tag in camp.tags %}
+            <span class="camps-tag-badge" style="padding: 0.3rem 0.75rem; font-size: 0.85rem;">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="camps-detail-grid">
+        <div class="camps-main-content">
+            <h2 class="camps-card-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Available Sessions</h2>
+            
+            {% if sessions %}
+                {% for session in sessions %}
+                <a href="{{ url_for('camps.session_detail', session_id=session.id) }}" class="camps-session-card">
+                    <div class="camps-session-info">
+                        <h3>{{ session.name or "Summer Session" }}</h3>
+                        <div class="camps-session-meta">
+                            {{ session.start_date.strftime('%b %-d') }} - {{ session.end_date.strftime('%b %-d, %Y') }}
+                            {% if session.formatted_start_time %}
+                            • {{ session.formatted_start_time }} - {{ session.formatted_end_time or '?' }}
+                            {% endif %}
+                        </div>
+                        <div class="camps-session-meta" style="margin-top: 0.25rem;">
+                            {% if session.age_min or session.age_max %}
+                            Ages {{ session.age_min or '?' }}-{{ session.age_max or '?' }}
+                            {% endif %}
+                            {% if session.grade_min is not none or session.grade_max is not none %}
+                            {% if session.age_min or session.age_max %} • {% endif %}
+                            Grades {{ session.grade_min if session.grade_min != -1 else 'Pre-K' if session.grade_min == -1 else 'K' if session.grade_min == 0 else session.grade_min }}-{{ session.grade_max }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">
+                            {% if session.price %}
+                            ${{ "%.2f"|format(session.price) }}
+                            {% else %}
+                            Contact for price
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #667eea; font-weight: 600;">Details →</div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <p class="camps-muted">No sessions currently listed for this camp.</p>
+            {% endif %}
+        </div>
+
+        <aside class="camps-sidebar">
+            <div class="camps-contact-info">
+                <span class="camps-contact-title">Contact & Location</span>
+                
+                {% if camp.website_url %}
+                <div class="camps-contact-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <a href="{{ camp.website_url }}" target="_blank" style="color: #667eea; word-break: break-all;">Visit Website</a>
+                </div>
+                {% endif %}
+
+                {% if camp.email %}
+                <div class="camps-contact-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    <a href="mailto:{{ camp.email }}" style="color: #667eea; word-break: break-all;">{{ camp.email }}</a>
+                </div>
+                {% endif %}
+
+                {% if camp.phone %}
+                <div class="camps-contact-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.74 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    <span>{{ camp.phone }}</span>
+                </div>
+                {% endif %}
+
+                {% if camp.address %}
+                <div class="camps-contact-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ camp.address }}<br>{{ camp.city }}, {{ camp.state }} {{ camp.zip or '' }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

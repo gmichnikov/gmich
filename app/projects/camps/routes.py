@@ -4,6 +4,7 @@ from app import db
 from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTag
 from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm
 from app.projects.camps.weeks import get_summer_2026_mondays
+from app.projects.camps.filters import apply_filters
 from app.core.admin import admin_required
 from app.utils.logging import log_project_visit
 from datetime import datetime, date, time
@@ -22,9 +23,40 @@ camps_bp = Blueprint(
 @camps_bp.route("/")
 def index():
     log_project_visit("camps", "Camps")
-    # v1 public directory logic will go here in Phase 3
-    camps = Camp.query.order_by(Camp.name).all()
-    return render_template("camps/index.html", camps=camps)
+    
+    # Get all camps for initial query
+    query = Camp.query
+    
+    # Apply filters from query params
+    query = apply_filters(query, request.args)
+    
+    # Default sort: A-Z by name
+    camps = query.order_by(Camp.name).all()
+    
+    # Data for filter sidebar
+    towns = db.session.query(Camp.city).distinct().order_by(Camp.city).all()
+    towns = [t[0] for t in towns]
+    
+    summer_mondays = get_summer_2026_mondays()
+    tag_categories = CampTagCategory.query.order_by(CampTagCategory.name).all()
+    
+    return render_template("camps/index.html", 
+                           camps=camps, 
+                           towns=towns, 
+                           summer_mondays=summer_mondays,
+                           tag_categories=tag_categories)
+
+@camps_bp.route("/camp/<int:camp_id>")
+def camp_detail(camp_id):
+    camp = Camp.query.get_or_404(camp_id)
+    # Order sessions by start_date, then name, then id
+    sessions = sorted(camp.sessions, key=lambda s: (s.start_date, s.name or "", s.id))
+    return render_template("camps/camp_detail.html", camp=camp, sessions=sessions)
+
+@camps_bp.route("/session/<int:session_id>")
+def session_detail(session_id):
+    session = CampSession.query.get_or_404(session_id)
+    return render_template("camps/session_detail.html", session=session)
 
 # --- Admin Routes ---
 
@@ -113,7 +145,7 @@ def edit_camp(camp_id):
     
     if sessions:
         first = sessions[0]
-        fields_to_check = ['name', 'start_time', 'end_time', 'age_min', 'age_max', 'grade_min', 'grade_max', 'price']
+        fields_to_check = ['name', 'formatted_start_time', 'formatted_end_time', 'age_min', 'age_max', 'grade_min', 'grade_max', 'price']
         
         # Initialize common fields with first session
         for field in fields_to_check:
@@ -158,15 +190,15 @@ def add_session(camp_id):
     
     # Populate summer weeks
     summer_mondays = get_summer_2026_mondays()
-    form.additional_weeks.choices = [(m.isoformat(), f"Week of {m.strftime('%b %d')}") for m in summer_mondays]
+    form.additional_weeks.choices = [(m.isoformat(), f"Week of {m.strftime('%b %-d')}") for m in summer_mondays]
     
     if form.validate_on_submit():
         if form.start_date.data > form.end_date.data:
             flash("Error: Start date must be before or on end date.", "error")
         else:
             # Format times for DB
-            start_time_str = form.start_time.data.strftime('%I:%M%p').lower() if form.start_time.data else None
-            end_time_str = form.end_time.data.strftime('%I:%M%p').lower() if form.end_time.data else None
+            start_time_str = form.start_time.data.strftime('%-I:%M%p').lower() if form.start_time.data else None
+            end_time_str = form.end_time.data.strftime('%-I:%M%p').lower() if form.end_time.data else None
             
             # Create primary session
             primary_session = CampSession(
@@ -235,8 +267,8 @@ def edit_session(session_id):
         else:
             form.populate_obj(session)
             # Re-format times for DB
-            session.start_time = form.start_time.data.strftime('%I:%M%p').lower() if form.start_time.data else None
-            session.end_time = form.end_time.data.strftime('%I:%M%p').lower() if form.end_time.data else None
+            session.start_time = form.start_time.data.strftime('%-I:%M%p').lower() if form.start_time.data else None
+            session.end_time = form.end_time.data.strftime('%-I:%M%p').lower() if form.end_time.data else None
             db.session.commit()
             flash("Session updated.")
             return redirect(url_for("camps.edit_camp", camp_id=session.camp_id))

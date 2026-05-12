@@ -26,6 +26,67 @@ class Camp(db.Model):
     sessions = db.relationship("CampSession", backref="camp", cascade="all, delete-orphan")
     tags = db.relationship("CampTag", secondary=camps_camp_tag, backref=db.backref("camps", lazy="dynamic"))
 
+    @property
+    def common_age_range(self):
+        if not self.sessions:
+            return None
+        first = self.sessions[0]
+        for s in self.sessions[1:]:
+            if s.age_min != first.age_min or s.age_max != first.age_max:
+                return None
+        if first.age_min is None and first.age_max is None:
+            return None
+        return (first.age_min, first.age_max)
+
+    @property
+    def common_grade_range(self):
+        if not self.sessions:
+            return None
+        first = self.sessions[0]
+        for s in self.sessions[1:]:
+            if s.grade_min != first.grade_min or s.grade_max != first.grade_max:
+                return None
+        if first.grade_min is None and first.grade_max is None:
+            return None
+        return (first.grade_min, first.grade_max)
+
+    @property
+    def common_price(self):
+        if not self.sessions:
+            return None
+        first = self.sessions[0]
+        for s in self.sessions[1:]:
+            if s.price != first.price:
+                return None
+        return first.price
+
+    @property
+    def formatted_date_range(self):
+        if not self.sessions:
+            return "No sessions"
+        
+        sorted_sessions = sorted(self.sessions, key=lambda s: s.start_date)
+        
+        # Check for contiguity: gap between sessions <= 4 days (to allow for weekends + holidays)
+        is_contiguous = True
+        for i in range(len(sorted_sessions) - 1):
+            s1 = sorted_sessions[i]
+            s2 = sorted_sessions[i+1]
+            gap = (s2.start_date - s1.end_date).days
+            if gap > 4:
+                is_contiguous = False
+                break
+        
+        first_s = sorted_sessions[0]
+        last_s = sorted_sessions[-1]
+        
+        if is_contiguous:
+            # Format like "Jun 15 - Jul 24"
+            return f"{first_s.start_date.strftime('%b %-d')} - {last_s.end_date.strftime('%b %-d')}"
+        else:
+            # Fallback to month range like "Jun - Aug"
+            return f"{first_s.start_date.strftime('%b')} - {last_s.end_date.strftime('%b')}"
+
     def __repr__(self):
         return f"<Camp {self.name}>"
 
@@ -48,6 +109,18 @@ class CampSession(db.Model):
 
     def __repr__(self):
         return f"<CampSession {self.name} ({self.camp.name})>"
+
+    @property
+    def formatted_start_time(self):
+        if not self.start_time:
+            return None
+        return self.start_time.lstrip('0')
+
+    @property
+    def formatted_end_time(self):
+        if not self.end_time:
+            return None
+        return self.end_time.lstrip('0')
 
 class CampTagCategory(db.Model):
     __tablename__ = "camps_tag_category"

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.name or "Session" }} - {{ session.camp.name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+<style>
+    .camps-session-header {
+        margin-bottom: 2rem;
+    }
+    
+    .camps-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .camps-info-box {
+        background: #f9fafb;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .camps-info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .camps-info-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #111827;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="camps-page" style="max-width: 800px;">
+    <nav style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('camps.camp_detail', camp_id=session.camp_id) }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.4rem 0.8rem;">← Back to {{ session.camp.name }}</a>
+    </nav>
+
+    <div class="camps-session-header">
+        <span class="camps-heading-sub">Session Detail</span>
+        <h1 class="camps-heading" style="font-size: 2rem; margin-bottom: 0.25rem;">{{ session.name or "Summer Session" }}</h1>
+        <div style="font-size: 1.1rem; color: #6b7280;">at <a href="{{ url_for('camps.camp_detail', camp_id=session.camp_id) }}" style="color: #667eea; text-decoration: none; font-weight: 600;">{{ session.camp.name }}</a></div>
+    </div>
+
+    <div class="camps-info-grid">
+        <div class="camps-info-box">
+            <span class="camps-info-label">Dates</span>
+            <div class="camps-info-value">{{ session.start_date.strftime('%b %-d') }} - {{ session.end_date.strftime('%b %-d, %Y') }}</div>
+        </div>
+
+        {% if session.formatted_start_time %}
+        <div class="camps-info-box">
+            <span class="camps-info-label">Daily Schedule</span>
+            <div class="camps-info-value">{{ session.formatted_start_time }} - {{ session.formatted_end_time or '?' }}</div>
+        </div>
+        {% endif %}
+
+        <div class="camps-info-box">
+            <span class="camps-info-label">Price</span>
+            <div class="camps-info-value">
+                {% if session.price %}
+                ${{ "%.2f"|format(session.price) }}
+                {% else %}
+                Contact for price
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="camps-info-grid">
+        {% if session.age_min is not none or session.age_max is not none %}
+        <div class="camps-info-box">
+            <span class="camps-info-label">Ages</span>
+            <div class="camps-info-value">{{ session.age_min or '?' }}-{{ session.age_max or '?' }} years old</div>
+        </div>
+        {% endif %}
+
+        {% if session.grade_min is not none or session.grade_max is not none %}
+        <div class="camps-info-box">
+            <span class="camps-info-label">Grades</span>
+            <div class="camps-info-value">
+                {{ session.grade_min if session.grade_min != -1 else 'Pre-K' if session.grade_min == -1 else 'K' if session.grade_min == 0 else session.grade_min }}
+                to
+                {{ session.grade_max if session.grade_max != -1 else 'Pre-K' if session.grade_max == -1 else 'K' if session.grade_max == 0 else session.grade_max }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="camps-card" style="margin-top: 2rem; text-align: center; padding: 2rem;">
+        <h3 class="camps-card-title" style="margin-bottom: 1rem;">Interested in this session?</h3>
+        <p class="camps-muted" style="margin-bottom: 1.5rem;">Visit the {{ session.camp.name }} website for registration and more information.</p>
+        {% if session.camp.website_url %}
+        <a href="{{ session.camp.website_url }}" target="_blank" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.75rem 1.5rem; font-size: 1rem;">Visit Official Website</a>
+        {% else %}
+        <p style="font-weight: 600;">Contact the camp directly for details.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

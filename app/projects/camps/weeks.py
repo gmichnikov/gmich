@@ -6,8 +6,8 @@ def get_summer_2026_mondays():
     Typically June 22 through August 31.
     """
     mondays = []
-    # Start: Monday, June 22, 2026
-    current = date(2026, 6, 22)
+    # Start: Monday, June 15, 2026
+    current = date(2026, 6, 15)
     # End: Monday, August 31, 2026
     end_date = date(2026, 8, 31)
     

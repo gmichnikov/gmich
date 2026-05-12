@@ -101,10 +101,10 @@
                         <div><strong>Name:</strong> {{ common_fields['name'] }}</div>
                         {% endif %}
                         
-                        {% if 'start_time' in common_fields and common_fields['start_time'] %}
-                        <div><strong>Time:</strong> {{ common_fields['start_time'] }} - {{ common_fields['end_time'] or '?' }}</div>
-                        {% endif %}
-                        
+                    {% if 'formatted_start_time' in common_fields and common_fields['formatted_start_time'] %}
+                    <div><strong>Time:</strong> {{ common_fields['formatted_start_time'] }} - {{ common_fields['formatted_end_time'] or '?' }}</div>
+                    {% endif %}
+
                         {% if 'age_min' in common_fields and (common_fields['age_min'] is not none or common_fields['age_max'] is not none) %}
                         <div><strong>Ages:</strong> {{ common_fields['age_min'] or '?' }}-{{ common_fields['age_max'] or '?' }}</div>
                         {% endif %}
@@ -140,17 +140,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for session in camp.sessions|sort(attribute='start_date') %}
-                    <tr>
-                        <td>{{ session.start_date.strftime('%b %d') }} - {{ session.end_date.strftime('%b %d, %Y') }}</td>
-                        
-                        {% if 'name' in varying_fields %}
+                {% for session in camp.sessions|sort(attribute='start_date') %}
+                <tr>
+                    <td>{{ session.start_date.strftime('%b %-d') }} - {{ session.end_date.strftime('%b %-d, %Y') }}</td>
+                    
+                    {% if 'name' in varying_fields %}
                         <td>{{ session.name or "-" }}</td>
                         {% endif %}
                         
-                        {% if 'start_time' in varying_fields or 'end_time' in varying_fields %}
-                        <td>{{ session.start_time or "?" }} - {{ session.end_time or "?" }}</td>
-                        {% endif %}
+                    {% if 'formatted_start_time' in varying_fields or 'formatted_end_time' in varying_fields %}
+                    <td>{{ session.formatted_start_time or "?" }} - {{ session.formatted_end_time or "?" }}</td>
+                    {% endif %}
                         
                         {% if 'age_min' in varying_fields or 'age_max' in varying_fields or 'grade_min' in varying_fields or 'grade_max' in varying_fields %}
                         <td>
