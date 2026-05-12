@@ -1,0 +1,148 @@
+# Camps — Implementation Plan
+
+Build order and smoke checks for v1.**Behavior** lives in **[prd_v1.md](./prd_v1.md)**; column-level schema in **[initial_thoughts.md](./initial_thoughts.md)**. When something conflicts, tweak the PRD or the code—not “whatever felt right Tuesday.”**
+
+You run **`flask db migrate`** and **`flask db upgrade`**. Pause after **each phase** and run **Manual checks** before moving on.
+
+---
+
+## Repo conventions
+
+- SQL tables prefixed **`camps_*`**, Python models named **`Camp`**, **`CampSession`**, etc.
+- Templates use **`camps-*`** CSS classes so we don’t stampede other hub projects.
+- Register the blueprint and **import every Camps model** from **`app/__init__.py`** so Flask‑Migrate picks them up.
+
+---
+
+## Roadmap
+
+| Phase | Deliverable | Main PRD refs |
+| ----- | ----------- | ------------- |
+| **1** | Models + migration (`Camp`, `CampSession`, `CampTagCategory`, `CampTag`, junction) | **`initial_thoughts`**, PRD §2 |
+| **2** | Admin at **`/camps/admin/`** — seed **Camp type**, tags, camps, sessions, tagging camps | §4, §8, §11 |
+| **3** | Public **`GET /camps`** — filters, cards, alphabetical sort | §6, §7.1, §7.3 |
+| **4** | **`/camps/camp/<id>`**, **`/camps/session/<id>`** | §2, §7.2 |
+| **5** | 404 / empty polish, **`price`** when NULL, optional QA | — |
+
+Deferred for now:** LLM-assisted entry (**PRD Phase 2** path), SEO slash URLs for filters, multi-year directories, explicit “brand” entity across towns.**
+
+---
+
+## Where code probably lives
+
+| Piece | Purpose |
+| ----- | ------- |
+| `models.py` | DB |
+| `weeks.py` | Hard-coded **Summer 2026** Monday list + `(Mon→Sun inclusive)` overlap helper vs session dates |
+| `filters.py` | Turn query string → SQLAlchemy query (**prd_v1.md §6** rules) |
+| `routes*.py`, `forms.py` | Views + WTForms |
+
+Query **parameter names** are still open (**PRD §12**—pick when wiring URLs). Weeks in the URL can use each Monday’s ISO date **`YYYY-MM-DD`** (**`initial_thoughts`**).
+
+Templates:** `templates/camps/`**, **`templates/camps/admin/`**; stylesheet **`static/css/camps.css`.
+
+---
+
+## Don’t forget (hub glue)
+
+**After models land**
+
+- Delete **`Camp`** ⇒ cascade/remove **sessions** and **camp↔tag** rows (**PRD** “hard delete” intent). Decide what happens deleting a **`CampTag`** still in use (**restrict** vs strip junction rows only).
+
+**During admin / public routes**
+
+- All **`/camps/admin/...`** views:** **`@login_required`** + **`@admin_required`** (**PRD §4**)**. Use normal POST forms (global CSRF).
+- **`GET /camps`** (public)**:** **`log_project_visit('camps', …)`** like sibling projects.**
+
+---
+
+## Phase 1 — Models & migration
+
+Match **`initial_thoughts`** (grades **`−1`**…**`12`**, **`city`/`state`** required at validation).
+
+**Manual checks**
+
+1. **`flask db migrate`** → skim FKs/uniques..
+2. **`flask db upgrade`**
+3. **`flask shell`** — create toy camp + session + tag.
+
+---
+
+## Phase 2 — Admin
+
+Admins-only.**Suggested build order:**
+
+1. Categories & tags (minimal CRUD)**.
+2. Ensure **Camp type** exists on deploy — migration **`INSERT`**, small CLI command, empty-state onboarding, whichever you prefer; **PRD §8** assumes tags aren’t blocked on day one**.
+3. Camp CRUD with **many-to-many** tag picker.
+4. Nested session CRUD, enforce **`start_date` ≤ `end_date`**.
+
+**Manual checks**
+
+- Tag a camp Soccer + STEM; create **two** camps in **different towns** sharing tags (**multi-location PRD §11`).
+- Hard-delete camp → orphaned sessions/links should be impossible.
+
+---
+
+## Phase 3 — Directory & filters
+
+### Weeks helper
+
+Enumerate **NJ-ish Summer 2026** Mondays.** UI label:** **Week of \<that Monday\>**; overlap compares **full Mon–Sun** vs each session **`start_date` … `end_date`** (**§6.3`).**
+
+### Filter engine (`filters.py`)
+
+Implement **§6** in plain engineering terms:**
+
+- Blank query ⇒ **everything** (**§6** intro).
+- **Town**, **chosen weeks**, **tag bundle**, **age/grade bundle** behave like knobs that **stack with AND** when more than one is active.
+- **Tags:** selections inside one category are **OR**; when you someday add another category with active picks, category-level results **AND** together. Outside that, geography/week/age knobs still intersect with tags normally (**§6.1** narration).
+- **Ages vs grades:** if the parent supplies spans for **both**, a camp passes if **any session** clears the age overlap **or** **any session** clears the grade overlap—they need not be the same row (**§6.2**). Use integer inclusive overlap (**`max(lows) ≤ min(highs)`**). Sessions missing ages (or grades) ignore **that half** of the filter (**§6.2** sparse-null note).
+- **Weeks:** OR across selected Mondays (**§6.3`).
+- **Towns:** options = **distinct **`camp.city`** values** (**§6.4**)**. **NJ** assumptions can default state in admin/UI rather than exposing state as a knob today.**
+
+### Listing markup
+
+Cards touch **§7.1**: name, town/state, badges, optional date teaser, link **`/camps/camp/<id>`**.** Sort **§7.3`: A→Z on camp name (case normalization your call)**
+
+**Manual checks (logged out)**
+
+- Real **`GET /camps`** (no placeholder blobs left through end of Phase **4**)**.
+- Try several facet combos (town + multiple weeks OR + tag OR + ages + ages+grades together) vs hand-picked fixtures.
+
+---
+
+## Phase 4 — Detail pages
+
+- **`GET /camps/camp/<id>`** — contact + **all** sessions ordered **`start_date`**, then **`name`**, **`id`** (**§7.2`).
+- **`GET /camps/session/<id>`** — session info + upstream link.**
+
+**Manual checks**
+
+- Anonymous OK; scramble session dates locally to confirm ordering.
+
+---
+
+## Phase 5 — Hardening
+
+- Graceful **`404`** s.
+- Decide **`price`** UX when **`NULL`**.
+- Optional dup warning **(name+city)**.
+- Tiny tests for overlap math if worthwhile.**
+
+---
+
+## Parked intentionally
+
+Refer back to **`prd_v1.md`**:** LLM bulk imports, prettier SEO paths, season-year carousel, deluxe tag rename UX, brand rollup tables.**
+
+---
+
+## PRD § → build phase (cheat sheet)
+
+| PRD slice | Mostly |
+| --------- | ------ |
+| §6 filters | Phase **3** |
+| §7 listing / sort | Phase **3** |
+| §7.2 ordering | Phase **4** |
+| §8 admin | Phase **2** |

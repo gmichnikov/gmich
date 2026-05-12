@@ -1,5 +1,7 @@
 # Summer Camp Aggregator — Product Planning Notes
 
+Product framing and **[prd_v1.md](./prd_v1.md)** + **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** carry phased delivery detail.
+
 ## The Problem
 
 Parents have no good way to find a comprehensive list of summer camps near them. Existing platforms like ActivityHero only show camps that have opted in to their marketplace, leaving out the majority of camps — especially well-established ones that fill via word of mouth and have no incentive to pay for listings. The Google Flights equivalent for summer camps does not exist.

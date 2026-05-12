@@ -2,7 +2,9 @@
 
 **Status:** Draft  
 **Last Updated:** May 2026  
-**Depends on:** [initial_thoughts.md](./initial_thoughts.md) — canonical table fields
+**Depends on:** [initial_thoughts.md](./initial_thoughts.md) — canonical table fields  
+
+**Implementation:** [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) — phased build + manual checkpoints
 
 ---
 
