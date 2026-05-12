@@ -3,12 +3,18 @@
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 .camps-heading {
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0 0 0.75rem;
+  color: #333;
 }
 
 .camps-intro {
@@ -37,4 +43,197 @@
 
 .camps-empty {
   margin: 0;
+}
+
+/* Admin Styles */
+.camps-admin-actions {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.camps-admin-actions .camps-btn {
+  padding: 0 1rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  min-width: auto;
+}
+
+/* Ensure forms in tables don't add spacing */
+.camps-table form {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.camps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  height: 2rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  min-width: 3.2rem;
+  text-align: center;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.camps-btn-primary {
+  background-color: #667eea;
+  color: white;
+}
+
+.camps-btn-secondary {
+  background-color: #f0f2f5;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.camps-btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.camps-btn-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.camps-btn-danger:hover {
+  background-color: #fecaca;
+}
+
+.camps-admin-section {
+  margin-bottom: 3rem;
+}
+
+.camps-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.camps-table th, .camps-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.camps-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.camps-tag-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.camps-form-group {
+  margin-bottom: 1rem;
+}
+
+.camps-form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.camps-form-row > .camps-form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.camps-form-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.camps-form-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.camps-form-select {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  height: auto;
+  font-size: 0.9rem;
+}
+
+/* Collapsible styles */
+.camps-collapsible-trigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
+  color: #667eea;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.camps-collapsible-trigger:hover {
+  text-decoration: underline;
+}
+
+.camps-collapsible-content {
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.2s;
+  opacity: 1;
+  margin-bottom: 1.5rem;
+}
+
+.camps-collapsible-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+.camps-collapsible-icon {
+  transition: transform 0.2s;
+}
+
+.camps-collapsible-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.camps-heading-sub {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.camps-session-list {
+  margin-top: 1rem;
+  padding-left: 1.5rem;
+}
+
+.camps-session-item {
+  margin-bottom: 0.5rem;
 }

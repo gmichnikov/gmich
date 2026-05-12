@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <h1 class="camps-heading">{{ title }}</h1>
+    <p class="camps-intro">For camp: <strong>{{ camp.name }}</strong></p>
+    
+    <form method="POST" class="camps-card">
+        {{ form.hidden_tag() }}
+        
+        <div class="camps-form-group">
+            {{ form.name.label(class="camps-form-label") }}
+            {{ form.name(class="camps-form-input", placeholder="e.g. Session 1, Robotics Week") }}
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.start_date.label(class="camps-form-label") }}
+                {{ form.start_date(class="camps-form-input", type="date") }}
+            </div>
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.end_date.label(class="camps-form-label") }}
+                {{ form.end_date(class="camps-form-input", type="date") }}
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.start_time.label(class="camps-form-label") }}
+                {{ form.start_time(class="camps-form-input", type="time") }}
+            </div>
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.end_time.label(class="camps-form-label") }}
+                {{ form.end_time(class="camps-form-input", type="time") }}
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.age_min.label(class="camps-form-label") }}
+                {{ form.age_min(class="camps-form-input", type="number") }}
+            </div>
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.age_max.label(class="camps-form-label") }}
+                {{ form.age_max(class="camps-form-input", type="number") }}
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.grade_min.label(class="camps-form-label") }}
+                {{ form.grade_min(class="camps-form-input", type="number") }}
+                <small class="camps-muted">-1=Pre-K, 0=K, 1-12=Grades</small>
+            </div>
+            <div class="camps-form-group" style="flex: 1;">
+                {{ form.grade_max.label(class="camps-form-label") }}
+                {{ form.grade_max(class="camps-form-input", type="number") }}
+            </div>
+        </div>
+        
+        <div class="camps-form-group">
+            {{ form.price.label(class="camps-form-label") }}
+            {{ form.price(class="camps-form-input", type="number", step="0.01") }}
+        </div>
+        
+        {% if form.additional_weeks %}
+        <div class="camps-form-group" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <h3 class="camps-card-title">Bulk Add (Optional)</h3>
+            <p class="camps-muted" style="margin-bottom: 0.5rem;">Select additional weeks to create sessions with the same details (duration will be preserved):</p>
+            {{ form.additional_weeks(class="camps-form-select", size=10) }}
+            <small class="camps-muted">Hold Ctrl/Cmd to select multiple weeks.</small>
+        </div>
+        {% endif %}
+        
+        <div class="camps-admin-actions" style="margin-top: 2rem;">
+            {{ form.submit(class="camps-btn camps-btn-primary") }}
+            <a href="{{ url_for('camps.edit_camp', camp_id=camp.id) }}" class="camps-btn camps-btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

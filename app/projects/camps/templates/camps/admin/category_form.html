@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <h1 class="camps-heading">{{ title }}</h1>
+    
+    <form method="POST" class="camps-card">
+        {{ form.hidden_tag() }}
+        
+        <div class="camps-form-group">
+            {{ form.name.label(class="camps-form-label") }}
+            {{ form.name(class="camps-form-input") }}
+        </div>
+        
+        <div class="camps-admin-actions" style="margin-top: 2rem;">
+            {{ form.submit(class="camps-btn camps-btn-primary") }}
+            <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <div style="margin-bottom: 1.5rem;">
+        <span class="camps-heading-sub">{{ "Edit Camp" if camp else "Add Camp" }}</span>
+        <h1 class="camps-heading" style="margin: 0;">{{ camp.name if camp else "New Camp" }}</h1>
+    </div>
+    
+    <div id="campDetailsCollapsible">
+        <div class="camps-collapsible-trigger" data-target="collapsibleContent">
+            <svg class="camps-collapsible-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <path d="M6 8L2 4h8z"/>
+            </svg>
+            <span>Camp Details</span>
+        </div>
+
+        <form method="POST" class="camps-card camps-collapsible-content" id="collapsibleContent">
+            {{ form.hidden_tag() }}
+            
+            <div class="camps-form-row">
+                <div class="camps-form-group" style="flex: 2;">
+                    {{ form.name.label(class="camps-form-label") }}
+                    {{ form.name(class="camps-form-input") }}
+                </div>
+                <div class="camps-form-group" style="flex: 3;">
+                    {{ form.website_url.label(class="camps-form-label") }}
+                    {{ form.website_url(class="camps-form-input", placeholder="https://...") }}
+                </div>
+            </div>
+            
+            <div class="camps-form-row">
+                <div class="camps-form-group">
+                    {{ form.email.label(class="camps-form-label") }}
+                    {{ form.email(class="camps-form-input") }}
+                </div>
+                <div class="camps-form-group">
+                    {{ form.phone.label(class="camps-form-label") }}
+                    {{ form.phone(class="camps-form-input") }}
+                </div>
+            </div>
+            
+            <div class="camps-form-row">
+                <div class="camps-form-group" style="flex: 3;">
+                    {{ form.address.label(class="camps-form-label") }}
+                    {{ form.address(class="camps-form-input") }}
+                </div>
+                <div class="camps-form-group" style="flex: 2;">
+                    {{ form.city.label(class="camps-form-label") }}
+                    {{ form.city(class="camps-form-input") }}
+                </div>
+                <div class="camps-form-group" style="flex: 1;">
+                    {{ form.state.label(class="camps-form-label") }}
+                    {{ form.state(class="camps-form-input") }}
+                </div>
+                <div class="camps-form-group" style="flex: 1;">
+                    {{ form.zip.label(class="camps-form-label") }}
+                    {{ form.zip(class="camps-form-input") }}
+                </div>
+            </div>
+            
+            <div class="camps-form-group">
+                {{ form.tags.label(class="camps-form-label") }}
+                {{ form.tags(class="camps-form-select", size=5) }}
+                <small class="camps-muted">Cmd+Click to multi-select.</small>
+            </div>
+            
+            <div class="camps-admin-actions" style="margin-top: 1.5rem; margin-bottom: 0;">
+                {{ form.submit(class="camps-btn camps-btn-primary") }}
+                <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    {% if camp %}
+    <section class="camps-admin-section">
+        <div class="camps-collapsible-trigger" data-target="sessionsContent">
+            <svg class="camps-collapsible-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <path d="M6 8L2 4h8z"/>
+            </svg>
+            <span>Sessions</span>
+        </div>
+
+        <div id="sessionsContent" class="camps-collapsible-content">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                <a href="{{ url_for('camps.add_session', camp_id=camp.id) }}" class="camps-btn camps-btn-primary">Add Session</a>
+            </div>
+            
+            {% if camp.sessions %}
+                {% if common_fields %}
+                <div class="camps-card" style="margin-bottom: 1.5rem; background-color: #f8f9fa; border-style: dashed; padding: 0.75rem 1rem;">
+                    <p class="camps-muted" style="font-weight: 600; margin-bottom: 0.4rem; font-size: 0.75rem; text-transform: uppercase;">Common to all sessions</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.875rem;">
+                        {% if 'name' in common_fields and common_fields['name'] %}
+                        <div><strong>Name:</strong> {{ common_fields['name'] }}</div>
+                        {% endif %}
+                        
+                        {% if 'start_time' in common_fields and common_fields['start_time'] %}
+                        <div><strong>Time:</strong> {{ common_fields['start_time'] }} - {{ common_fields['end_time'] or '?' }}</div>
+                        {% endif %}
+                        
+                        {% if 'age_min' in common_fields and (common_fields['age_min'] is not none or common_fields['age_max'] is not none) %}
+                        <div><strong>Ages:</strong> {{ common_fields['age_min'] or '?' }}-{{ common_fields['age_max'] or '?' }}</div>
+                        {% endif %}
+                        
+                        {% if 'grade_min' in common_fields and (common_fields['grade_min'] is not none or common_fields['grade_max'] is not none) %}
+                        <div><strong>Grades:</strong> {{ common_fields['grade_min'] if common_fields['grade_min'] != -1 else 'Pre-K' if common_fields['grade_min'] == -1 else 'K' if common_fields['grade_min'] == 0 else common_fields['grade_min'] }}-{{ common_fields['grade_max'] }}</div>
+                        {% endif %}
+                        
+                        {% if 'price' in common_fields and common_fields['price'] %}
+                        <div><strong>Price:</strong> ${{ "%.2f"|format(common_fields['price']) }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+            <table class="camps-table">
+                <thead>
+                    <tr>
+                        <th>Dates</th>
+                        {% if 'name' in varying_fields %}
+                        <th>Name</th>
+                        {% endif %}
+                        {% if 'start_time' in varying_fields or 'end_time' in varying_fields %}
+                        <th>Time</th>
+                        {% endif %}
+                        {% if 'age_min' in varying_fields or 'age_max' in varying_fields or 'grade_min' in varying_fields or 'grade_max' in varying_fields %}
+                        <th>Ages/Grades</th>
+                        {% endif %}
+                        {% if 'price' in varying_fields %}
+                        <th>Price</th>
+                        {% endif %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in camp.sessions|sort(attribute='start_date') %}
+                    <tr>
+                        <td>{{ session.start_date.strftime('%b %d') }} - {{ session.end_date.strftime('%b %d, %Y') }}</td>
+                        
+                        {% if 'name' in varying_fields %}
+                        <td>{{ session.name or "-" }}</td>
+                        {% endif %}
+                        
+                        {% if 'start_time' in varying_fields or 'end_time' in varying_fields %}
+                        <td>{{ session.start_time or "?" }} - {{ session.end_time or "?" }}</td>
+                        {% endif %}
+                        
+                        {% if 'age_min' in varying_fields or 'age_max' in varying_fields or 'grade_min' in varying_fields or 'grade_max' in varying_fields %}
+                        <td>
+                            {% if session.age_min is not none or session.age_max is not none %}
+                            Ages: {{ session.age_min or '?' }}-{{ session.age_max or '?' }}<br>
+                            {% endif %}
+                            {% if session.grade_min is not none or session.grade_max is not none %}
+                            Grades: {{ session.grade_min if session.grade_min != -1 else 'Pre-K' if session.grade_min == -1 else 'K' if session.grade_min == 0 else session.grade_min }}-{{ session.grade_max }}
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        
+                        {% if 'price' in varying_fields %}
+                        <td>
+                            {% if session.price %}
+                            ${{ "%.2f"|format(session.price) }}
+                            {% else %}
+                            Contact for price
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        
+                        <td>
+                            <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                <a href="{{ url_for('camps.edit_session', session_id=session.id) }}" class="camps-btn camps-btn-secondary">Edit</a>
+                                <a href="{{ url_for('camps.duplicate_session', session_id=session.id) }}" class="camps-btn camps-btn-secondary" title="Clone">Dup</a>
+                                <form action="{{ url_for('camps.delete_session', session_id=session.id) }}" method="POST" style="display:inline-block; margin:0;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="camps-btn camps-btn-danger">Del</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="camps-muted">No sessions found for this camp.</p>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const triggers = document.querySelectorAll('.camps-collapsible-trigger');
+        
+        triggers.forEach(trigger => {
+            trigger.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const icon = this.querySelector('.camps-collapsible-icon');
+                
+                content.classList.toggle('collapsed');
+                icon.classList.toggle('collapsed');
+            });
+        });
+    });
+</script>
+{% endblock %}

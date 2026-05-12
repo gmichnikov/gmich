@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Camps Admin Dashboard{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <h1 class="camps-heading">Camps Admin Dashboard</h1>
+    
+    <div class="camps-admin-actions">
+        <a href="{{ url_for('camps.add_camp') }}" class="camps-btn camps-btn-primary">Add New Camp</a>
+        <a href="{{ url_for('camps.add_category') }}" class="camps-btn camps-btn-secondary">Add Tag Category</a>
+        <a href="{{ url_for('camps.add_tag') }}" class="camps-btn camps-btn-secondary">Add Tag</a>
+    </div>
+
+    <section class="camps-admin-section">
+        <h2 class="camps-card-title">Camps</h2>
+        {% if camps %}
+        <table class="camps-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Tags</th>
+                    <th>Sessions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for camp in camps %}
+                <tr>
+                    <td>{{ camp.name }}</td>
+                    <td>{{ camp.city }}, {{ camp.state }}</td>
+                    <td>
+                        {% for tag in camp.tags %}
+                        <span class="camps-tag-badge">{{ tag.name }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ camp.sessions|length }}</td>
+                    <td>
+                        <a href="{{ url_for('camps.edit_camp', camp_id=camp.id) }}" class="camps-btn camps-btn-secondary">Edit</a>
+                        <form action="{{ url_for('camps.delete_camp', camp_id=camp.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this camp and all its sessions?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="camps-btn camps-btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="camps-muted">No camps found.</p>
+        {% endif %}
+    </section>
+
+    <section class="camps-admin-section">
+        <h2 class="camps-card-title">Tag Categories & Tags</h2>
+        {% if tag_categories %}
+        <ul class="camps-session-list">
+            {% for cat in tag_categories %}
+            <li class="camps-session-item">
+                <strong>{{ cat.name }}:</strong>
+                {% if cat.tags %}
+                    {% for tag in cat.tags %}
+                    <span class="camps-tag-badge">{{ tag.name }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="camps-muted">No tags</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="camps-muted">No tag categories found.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
