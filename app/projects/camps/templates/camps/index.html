@@ -123,6 +123,43 @@
                     </div>
                 </div>
 
+                <!-- Time -->
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.get('start_before') or request.args.get('end_after') %}active{% endif %}">
+                        Time
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content" style="min-width: 280px;">
+                        <div style="margin-bottom: 1.25rem;">
+                            <span class="camps-filter-section-title">Starts at or before</span>
+                            <select name="start_before" class="camps-form-input" style="width: 100%; margin-top: 0.5rem; box-sizing: border-box;">
+                                <option value="">Any</option>
+                                <option value="8" {% if request.args.get('start_before') == '8' %}selected{% endif %}>8:00 AM</option>
+                                <option value="830" {% if request.args.get('start_before') == '830' %}selected{% endif %}>8:30 AM</option>
+                                <option value="9" {% if request.args.get('start_before') == '9' %}selected{% endif %}>9:00 AM</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="camps-filter-section-title">Ends at or after</span>
+                            <select name="end_after" class="camps-form-input" style="width: 100%; margin-top: 0.5rem; box-sizing: border-box;">
+                                <option value="">Any</option>
+                                <option value="2" {% if request.args.get('end_after') == '2' %}selected{% endif %}>2:00 PM</option>
+                                <option value="230" {% if request.args.get('end_after') == '230' %}selected{% endif %}>2:30 PM</option>
+                                <option value="3" {% if request.args.get('end_after') == '3' %}selected{% endif %}>3:00 PM</option>
+                                <option value="330" {% if request.args.get('end_after') == '330' %}selected{% endif %}>3:30 PM</option>
+                                <option value="4" {% if request.args.get('end_after') == '4' %}selected{% endif %}>4:00 PM</option>
+                                <option value="430" {% if request.args.get('end_after') == '430' %}selected{% endif %}>4:30 PM</option>
+                                <option value="5" {% if request.args.get('end_after') == '5' %}selected{% endif %}>5:00 PM</option>
+                            </select>
+                        </div>
+                        <small class="camps-muted" style="display: block; margin-top: 0.75rem; font-size: 0.75rem;">When both are set, at least one session must match both.</small>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
                     {% if request.args %}
                     <a href="{{ url_for('camps.index') }}" class="camps-muted" style="text-decoration: none; font-size: 0.875rem;">Clear All</a>
@@ -150,6 +187,11 @@
                             <div class="camps-card-info-item">
                                 <strong>{{ camp.sessions|length }}</strong> session{{ 's' if camp.sessions|length != 1 }} • {{ camp.formatted_date_range }}
                             </div>
+                            {% if camp.most_common_session_time_display %}
+                            <div class="camps-card-info-item camps-muted" style="font-size: 0.9em;">
+                                {{ camp.most_common_session_time_display }}
+                            </div>
+                            {% endif %}
                             
                             <div class="camps-card-info-row">
                                 {% set age_range = camp.common_age_range %}
@@ -229,6 +271,10 @@
                     // Clear number inputs
                     content.querySelectorAll('input[type="number"]').forEach(input => {
                         input.value = '';
+                    });
+                    // Clear selects (e.g. Time filter)
+                    content.querySelectorAll('select').forEach(sel => {
+                        sel.selectedIndex = 0;
                     });
                     // Submit the form
                     dropdown.closest('form').submit();

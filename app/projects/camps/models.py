@@ -1,5 +1,22 @@
 from app import db
-from datetime import datetime
+from collections import Counter
+from datetime import datetime, time
+from typing import Optional
+
+from sqlalchemy import Time
+
+
+def _format_camp_clock_12h(t: Optional[time]) -> Optional[str]:
+    """Human-readable clock like 9:00am / 3:30pm (matches previous string style)."""
+    if t is None:
+        return None
+    hour = t.hour
+    minute = t.minute
+    h12 = hour % 12 or 12
+    suffix = "am" if hour < 12 else "pm"
+    if minute:
+        return f"{h12}:{minute:02d}{suffix}"
+    return f"{h12}{suffix}"
 
 # Junction table for Camp and CampTag
 camps_camp_tag = db.Table(
@@ -61,6 +78,37 @@ class Camp(db.Model):
         return first.price
 
     @property
+    def most_common_session_time_display(self):
+        """
+        Typical daily hours: the most frequent (start_time, end_time) pair among
+        sessions that have at least one time set. Ties break lexicographically
+        on the raw strings for stable display.
+        """
+        if not self.sessions:
+            return None
+        pairs = [
+            (s.start_time, s.end_time)
+            for s in self.sessions
+            if s.start_time or s.end_time
+        ]
+        if not pairs:
+            return None
+        counts = Counter(pairs)
+        best_count = max(counts.values())
+        winners = [p for p, c in counts.items() if c == best_count]
+        start_raw, end_raw = min(winners, key=lambda p: (p[0] or time.min, p[1] or time.min))
+
+        fs = _format_camp_clock_12h(start_raw)
+        fe = _format_camp_clock_12h(end_raw)
+        if fs and fe:
+            return f"{fs} – {fe}"
+        if fs:
+            return f"{fs} – ?"
+        if fe:
+            return f"? – {fe}"
+        return None
+
+    @property
     def formatted_date_range(self):
         if not self.sessions:
             return "No sessions"
@@ -111,8 +159,8 @@ class CampSession(db.Model):
     name = db.Column(db.String(255))
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.String(50))
-    end_time = db.Column(db.String(50))
+    start_time = db.Column(Time, nullable=True)
+    end_time = db.Column(Time, nullable=True)
     age_min = db.Column(db.Integer)
     age_max = db.Column(db.Integer)
     grade_min = db.Column(db.Integer)
@@ -125,15 +173,11 @@ class CampSession(db.Model):
 
     @property
     def formatted_start_time(self):
-        if not self.start_time:
-            return None
-        return self.start_time.lstrip('0')
+        return _format_camp_clock_12h(self.start_time)
 
     @property
     def formatted_end_time(self):
-        if not self.end_time:
-            return None
-        return self.end_time.lstrip('0')
+        return _format_camp_clock_12h(self.end_time)
 
 class CampTagCategory(db.Model):
     __tablename__ = "camps_tag_category"

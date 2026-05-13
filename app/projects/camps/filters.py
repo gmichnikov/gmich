@@ -1,5 +1,10 @@
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, or_, func, false
 from app.projects.camps.models import Camp, CampSession, CampTag, CampTagCategory, camps_camp_tag
+from app.projects.camps.session_times import (
+    END_AFTER_OPTIONS,
+    START_BEFORE_OPTIONS,
+    session_matches_time_filters,
+)
 from datetime import date, timedelta
 
 def apply_filters(query, params):
@@ -80,5 +85,28 @@ def apply_filters(query, params):
         
         if week_conditions:
             query = query.filter(Camp.sessions.any(or_(*week_conditions)))
+
+    # 5. Time filter (same session must meet start-before and/or end-after when both set)
+    start_key = params.get("start_before")
+    end_key = params.get("end_after")
+    sb_mins = START_BEFORE_OPTIONS.get(start_key) if start_key else None
+    ea_mins = END_AFTER_OPTIONS.get(end_key) if end_key else None
+
+    if sb_mins is not None or ea_mins is not None:
+        session_query = CampSession.query
+        if sb_mins is not None:
+            session_query = session_query.filter(CampSession.start_time.isnot(None))
+        if ea_mins is not None:
+            session_query = session_query.filter(CampSession.end_time.isnot(None))
+
+        matching_camp_ids = {
+            s.camp_id
+            for s in session_query.all()
+            if session_matches_time_filters(s, sb_mins, ea_mins)
+        }
+        if not matching_camp_ids:
+            query = query.filter(false())
+        else:
+            query = query.filter(Camp.id.in_(matching_camp_ids))
 
     return query

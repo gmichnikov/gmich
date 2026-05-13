@@ -50,11 +50,6 @@
         align-items: center;
         text-decoration: none;
         color: inherit;
-        transition: border-color 0.2s;
-    }
-    
-    .camps-session-card:hover {
-        border-color: #667eea;
     }
     
     .camps-session-info h3 {
@@ -104,7 +99,7 @@
             
             {% if sessions %}
                 {% for session in sessions %}
-                <a href="{{ url_for('camps.session_detail', session_id=session.id) }}" class="camps-session-card">
+                <div class="camps-session-card">
                     <div class="camps-session-info">
                         <h3>{{ session.name or "Summer Session" }}</h3>
                         <div class="camps-session-meta">
@@ -124,16 +119,15 @@
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">
+                        <div style="font-weight: 600; color: #111827;">
                             {% if session.price %}
                             ${{ "%.2f"|format(session.price) }}
                             {% else %}
                             Contact for price
                             {% endif %}
                         </div>
-                        <div style="font-size: 0.75rem; color: #667eea; font-weight: 600;">Details →</div>
                     </div>
-                </a>
+                </div>
                 {% endfor %}
             {% else %}
                 <p class="camps-muted">No sessions currently listed for this camp.</p>

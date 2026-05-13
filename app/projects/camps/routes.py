@@ -5,9 +5,10 @@ from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTa
 from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm, ImportCampForm
 from app.projects.camps.weeks import get_summer_2026_mondays
 from app.projects.camps.filters import apply_filters
+from app.projects.camps.session_times import parse_time_from_import
 from app.core.admin import admin_required
 from app.utils.logging import log_project_visit
-from datetime import datetime, date, time
+from datetime import date
 import json
 import decimal
 
@@ -107,20 +108,6 @@ def add_camp():
         
     return render_template("camps/admin/camp_form.html", form=form, title="Add Camp")
 
-def parse_time_string(time_str):
-    if not time_str:
-        return None
-    try:
-        # Try common formats
-        for fmt in ('%I:%M%p', '%I:%M %p', '%H:%M'):
-            try:
-                return datetime.strptime(time_str.strip().upper(), fmt).time()
-            except ValueError:
-                continue
-    except Exception:
-        pass
-    return None
-
 @camps_bp.route("/admin/camp/<int:camp_id>/edit", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -211,8 +198,8 @@ def export_camp(camp_id):
             "name": s.name,
             "start_date": s.start_date.isoformat(),
             "end_date": s.end_date.isoformat(),
-            "start_time": s.start_time,
-            "end_time": s.end_time,
+            "start_time": s.start_time.isoformat() if s.start_time else None,
+            "end_time": s.end_time.isoformat() if s.end_time else None,
             "age_min": s.age_min,
             "age_max": s.age_max,
             "grade_min": s.grade_min,
@@ -324,8 +311,8 @@ def import_camp():
                                 name=s_data.get("name"),
                                 start_date=date.fromisoformat(s_data["start_date"]),
                                 end_date=date.fromisoformat(s_data["end_date"]),
-                                start_time=s_data.get("start_time"),
-                                end_time=s_data.get("end_time"),
+                                start_time=parse_time_from_import(s_data.get("start_time")),
+                                end_time=parse_time_from_import(s_data.get("end_time")),
                                 age_min=s_data.get("age_min"),
                                 age_max=s_data.get("age_max"),
                                 grade_min=s_data.get("grade_min"),
@@ -371,9 +358,9 @@ def add_session(camp_id):
         if form.start_date.data > form.end_date.data:
             flash("Error: Start date must be before or on end date.", "error")
         else:
-            # Format times for DB
-            start_time_str = form.start_time.data.strftime('%-I:%M%p').lower() if form.start_time.data else None
-            end_time_str = form.end_time.data.strftime('%-I:%M%p').lower() if form.end_time.data else None
+            # Store as TIME (datetime.time)
+            start_time_val = form.start_time.data if form.start_time.data else None
+            end_time_val = form.end_time.data if form.end_time.data else None
             
             # Create primary session
             primary_session = CampSession(
@@ -381,8 +368,8 @@ def add_session(camp_id):
                 name=form.name.data,
                 start_date=form.start_date.data,
                 end_date=form.end_date.data,
-                start_time=start_time_str,
-                end_time=end_time_str,
+                start_time=start_time_val,
+                end_time=end_time_val,
                 age_min=form.age_min.data,
                 age_max=form.age_max.data,
                 grade_min=form.grade_min.data,
@@ -406,8 +393,8 @@ def add_session(camp_id):
                         name=form.name.data,
                         start_date=monday_date,
                         end_date=monday_date + duration,
-                        start_time=start_time_str,
-                        end_time=end_time_str,
+                        start_time=start_time_val,
+                        end_time=end_time_val,
                         age_min=form.age_min.data,
                         age_max=form.age_max.data,
                         grade_min=form.grade_min.data,
@@ -433,17 +420,16 @@ def edit_session(session_id):
     del form.additional_weeks
     
     if request.method == "GET":
-        form.start_time.data = parse_time_string(session.start_time)
-        form.end_time.data = parse_time_string(session.end_time)
+        form.start_time.data = session.start_time
+        form.end_time.data = session.end_time
     
     if form.validate_on_submit():
         if form.start_date.data > form.end_date.data:
             flash("Error: Start date must be before or on end date.", "error")
         else:
             form.populate_obj(session)
-            # Re-format times for DB
-            session.start_time = form.start_time.data.strftime('%-I:%M%p').lower() if form.start_time.data else None
-            session.end_time = form.end_time.data.strftime('%-I:%M%p').lower() if form.end_time.data else None
+            session.start_time = form.start_time.data if form.start_time.data else None
+            session.end_time = form.end_time.data if form.end_time.data else None
             db.session.commit()
             flash("Session updated.")
             return redirect(url_for("camps.edit_camp", camp_id=session.camp_id))
