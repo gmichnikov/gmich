@@ -1,5 +1,9 @@
 from collections import defaultdict
 from sqlalchemy import and_, or_, func, false
+from app.projects.camps.age_grade_bridge import (
+    session_matches_age_filter,
+    session_matches_grade_filter,
+)
 from app.projects.camps.models import Camp, CampSession, CampTag, CampTagCategory, camps_camp_tag
 from app.projects.camps.session_schedule import typical_inclusive_days
 from app.projects.camps.session_times import (
@@ -28,44 +32,34 @@ def apply_filters(query, params):
             # Camp must have at least one of these tags
             query = query.filter(Camp.tags.any(CampTag.id.in_(tag_ids)))
 
-    # 3. Age and Grade Filters (Union Rule)
-    # A camp qualifies if ANY of its sessions match (Age OR Grade)
-    age_min = params.get('age_min', type=int)
-    age_max = params.get('age_max', type=int)
-    grade_min = params.get('grade_min', type=int)
-    grade_max = params.get('grade_max', type=int)
+    # 3. Age and Grade filters
+    # Union across facets: if both age and grade params are set, a session qualifies if it
+    # matches EITHER facet (same as before).
+    # Within each facet, we match direct ranges and bridge to the other field when missing
+    # (approximate mapping in age_grade_bridge.py).
+    age_min = params.get("age_min", type=int)
+    age_max = params.get("age_max", type=int)
+    grade_min = params.get("grade_min", type=int)
+    grade_max = params.get("grade_max", type=int)
 
-    if any(v is not None for v in [age_min, age_max, grade_min, grade_max]):
-        session_filters = []
-        
-        # Age overlap logic: max(low1, low2) <= min(high1, high2)
-        # Here: max(session.age_min, filter_age_min) <= min(session.age_max, filter_age_max)
-        if age_min is not None or age_max is not None:
-            f_min = age_min if age_min is not None else 0
-            f_max = age_max if age_max is not None else 100
-            
-            age_cond = and_(
-                CampSession.age_min.isnot(None),
-                CampSession.age_max.isnot(None),
-                func.greatest(CampSession.age_min, f_min) <= func.least(CampSession.age_max, f_max)
-            )
-            session_filters.append(age_cond)
-            
-        # Grade overlap logic
-        if grade_min is not None or grade_max is not None:
-            f_min = grade_min if grade_min is not None else -1
-            f_max = grade_max if grade_max is not None else 12
-            
-            grade_cond = and_(
-                CampSession.grade_min.isnot(None),
-                CampSession.grade_max.isnot(None),
-                func.greatest(CampSession.grade_min, f_min) <= func.least(CampSession.grade_max, f_max)
-            )
-            session_filters.append(grade_cond)
-            
-        if session_filters:
-            # Union rule: session matches Age OR Grade
-            query = query.filter(Camp.sessions.any(or_(*session_filters)))
+    has_age_facet = age_min is not None or age_max is not None
+    has_grade_facet = grade_min is not None or grade_max is not None
+
+    if has_age_facet or has_grade_facet:
+
+        def session_ok(s):
+            parts = []
+            if has_age_facet:
+                parts.append(session_matches_age_filter(s, age_min, age_max))
+            if has_grade_facet:
+                parts.append(session_matches_grade_filter(s, grade_min, grade_max))
+            return any(parts)
+
+        matching_ids = {s.camp_id for s in CampSession.query.all() if session_ok(s)}
+        if not matching_ids:
+            query = query.filter(false())
+        else:
+            query = query.filter(Camp.id.in_(matching_ids))
 
     # 4. Week Filter (OR within facet)
     week_mondays = params.getlist('week')
