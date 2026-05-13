@@ -160,6 +160,29 @@
                     </div>
                 </div>
 
+                <!-- Typical days per session (Mon–Fri vs Mon–Thu style blocks) -->
+                <div class="camps-filter-dropdown">
+                    <button type="button" class="camps-filter-dropdown-trigger {% if request.args.get('week_days') %}active{% endif %}">
+                        Week length
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 7L2 3h6z"/></svg>
+                    </button>
+                    <div class="camps-filter-dropdown-content" style="min-width: 260px;">
+                        <div>
+                            <span class="camps-filter-section-title">Typical session length</span>
+                            <small class="camps-muted" style="display: block; margin-top: 0.25rem; margin-bottom: 0.5rem; font-size: 0.75rem;">Uses the most common block length (inclusive days). Usually 5 (Mon–Fri) or 4 (e.g. Mon–Thu).</small>
+                            <select name="week_days" class="camps-form-input" style="width: 100%; box-sizing: border-box;">
+                                <option value="">Any</option>
+                                <option value="5" {% if request.args.get('week_days') == '5' %}selected{% endif %}>5-day blocks</option>
+                                <option value="4" {% if request.args.get('week_days') == '4' %}selected{% endif %}>4-day blocks</option>
+                            </select>
+                        </div>
+                        <div class="camps-filter-actions">
+                            <button type="button" class="camps-btn camps-btn-secondary camps-filter-reset" style="height: auto; padding: 0.4rem 0.8rem;">Reset</button>
+                            <button type="submit" class="camps-btn camps-btn-primary" style="height: auto; padding: 0.4rem 0.8rem;">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
                     {% if request.args %}
                     <a href="{{ url_for('camps.index') }}" class="camps-muted" style="text-decoration: none; font-size: 0.875rem;">Clear All</a>
@@ -187,9 +210,11 @@
                             <div class="camps-card-info-item">
                                 <strong>{{ camp.sessions|length }}</strong> session{{ 's' if camp.sessions|length != 1 }} • {{ camp.formatted_date_range }}
                             </div>
-                            {% if camp.most_common_session_time_display %}
+                            {% if camp.most_common_session_time_display or camp.typical_week_schedule_short %}
                             <div class="camps-card-info-item camps-muted" style="font-size: 0.9em;">
-                                {{ camp.most_common_session_time_display }}
+                                {%- if camp.most_common_session_time_display -%}{{ camp.most_common_session_time_display }}{%- endif -%}
+                                {%- if camp.most_common_session_time_display and camp.typical_week_schedule_short %} · {% endif -%}
+                                {%- if camp.typical_week_schedule_short -%}{{ camp.typical_week_schedule_short }}{%- endif -%}
                             </div>
                             {% endif %}
                             

@@ -1,5 +1,7 @@
+from collections import defaultdict
 from sqlalchemy import and_, or_, func, false
 from app.projects.camps.models import Camp, CampSession, CampTag, CampTagCategory, camps_camp_tag
+from app.projects.camps.session_schedule import typical_inclusive_days
 from app.projects.camps.session_times import (
     END_AFTER_OPTIONS,
     START_BEFORE_OPTIONS,
@@ -103,6 +105,23 @@ def apply_filters(query, params):
             s.camp_id
             for s in session_query.all()
             if session_matches_time_filters(s, sb_mins, ea_mins)
+        }
+        if not matching_camp_ids:
+            query = query.filter(false())
+        else:
+            query = query.filter(Camp.id.in_(matching_camp_ids))
+
+    # 6. Typical days per session block (mode of inclusive day count; 4 = e.g. Mon–Thu, 5 = Mon–Fri)
+    week_days = params.get("week_days")
+    if week_days in ("4", "5"):
+        target = int(week_days)
+        by_camp = defaultdict(list)
+        for s in CampSession.query.all():
+            by_camp[s.camp_id].append(s)
+        matching_camp_ids = {
+            cid
+            for cid, sessions in by_camp.items()
+            if typical_inclusive_days(sessions) == target
         }
         if not matching_camp_ids:
             query = query.filter(false())

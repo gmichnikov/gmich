@@ -5,6 +5,11 @@ from typing import Optional
 
 from sqlalchemy import Time
 
+from app.projects.camps.session_schedule import (
+    typical_inclusive_days,
+    typical_week_schedule_label,
+)
+
 
 def _format_camp_clock_12h(t: Optional[time]) -> Optional[str]:
     """Human-readable clock like 9:00am / 3:30pm (matches previous string style)."""
@@ -109,6 +114,16 @@ class Camp(db.Model):
         return None
 
     @property
+    def typical_session_calendar_days(self):
+        """Mode of inclusive calendar days per session (4 ≈ Mon–Thu, 5 ≈ Mon–Fri)."""
+        return typical_inclusive_days(self.sessions)
+
+    @property
+    def typical_week_schedule_short(self):
+        """Short label for directory cards, e.g. '4-day weeks'."""
+        return typical_week_schedule_label(self.typical_session_calendar_days)
+
+    @property
     def formatted_date_range(self):
         if not self.sessions:
             return "No sessions"
@@ -127,13 +142,15 @@ class Camp(db.Model):
         
         first_s = sorted_sessions[0]
         last_s = sorted_sessions[-1]
-        
+
+        # Always show the true overall window (first start → last end).
+        span = (
+            f"{first_s.start_date.strftime('%b %-d')} - {last_s.end_date.strftime('%b %-d')}"
+        )
         if is_contiguous:
-            # Format like "Jun 15 - Jul 24"
-            return f"{first_s.start_date.strftime('%b %-d')} - {last_s.end_date.strftime('%b %-d')}"
-        else:
-            # Fallback to month range like "Jun - Aug"
-            return f"{first_s.start_date.strftime('%b')} - {last_s.end_date.strftime('%b')}"
+            return span
+        # Gaps e.g. holiday week off: still show exact span, hint that weeks are spaced out.
+        return f"{span} · not every week"
 
     @property
     def google_maps_url(self):
