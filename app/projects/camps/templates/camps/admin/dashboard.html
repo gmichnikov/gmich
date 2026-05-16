@@ -15,6 +15,8 @@
     
     <div class="camps-admin-actions">
         <a href="{{ url_for('camps.add_camp') }}" class="camps-btn camps-btn-primary">Add New Camp</a>
+        <button type="button" class="camps-btn camps-btn-secondary camps-export-all-btn" data-url="{{ url_for('camps.export_all_camps') }}">Copy all camps</button>
+        <a href="{{ url_for('camps.export_all_camps', download='1') }}" class="camps-btn camps-btn-secondary">Download all (JSON)</a>
         <a href="{{ url_for('camps.import_camp') }}" class="camps-btn camps-btn-secondary">Import Camp</a>
         <a href="{{ url_for('camps.add_category') }}" class="camps-btn camps-btn-secondary">Add Tag Category</a>
         <a href="{{ url_for('camps.add_tag') }}" class="camps-btn camps-btn-secondary">Add Tag</a>
@@ -141,6 +143,33 @@
                 } catch (err) {
                     console.error('Export error:', err);
                     alert('Failed to export camp data to clipboard.');
+                    this.textContent = originalText;
+                    this.disabled = false;
+                }
+            });
+        });
+
+        document.querySelectorAll('.camps-export-all-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const url = this.getAttribute('data-url');
+                const originalText = this.textContent;
+                try {
+                    this.textContent = '...';
+                    this.disabled = true;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Export failed');
+                    const data = await response.json();
+                    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+                    this.textContent = 'Copied all!';
+                    this.classList.replace('camps-btn-secondary', 'camps-btn-primary');
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.classList.replace('camps-btn-primary', 'camps-btn-secondary');
+                        this.disabled = false;
+                    }, 2000);
+                } catch (err) {
+                    console.error('Bulk export error:', err);
+                    alert('Failed to copy all camps to clipboard.');
                     this.textContent = originalText;
                     this.disabled = false;
                 }

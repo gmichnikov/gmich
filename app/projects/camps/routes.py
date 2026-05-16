@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response
 from flask_login import login_required
 from sqlalchemy import delete
 from app import db
@@ -22,6 +22,43 @@ camps_bp = Blueprint(
     static_url_path="/camps/static",
     url_prefix="/camps",
 )
+
+
+def _serialize_camp_for_export(camp):
+    """Shape matches bulk/single import (list of camp objects)."""
+    data = {
+        "name": camp.name,
+        "website_url": camp.website_url,
+        "email": camp.email,
+        "phone": camp.phone,
+        "address": camp.address,
+        "city": camp.city,
+        "state": camp.state,
+        "zip": camp.zip,
+        "tags": [{"category": t.category.name, "name": t.name} for t in camp.tags],
+        "sessions": [],
+    }
+    sessions_sorted = sorted(
+        camp.sessions,
+        key=lambda s: (s.start_date, s.name or "", s.id),
+    )
+    for s in sessions_sorted:
+        data["sessions"].append(
+            {
+                "name": s.name,
+                "start_date": s.start_date.isoformat(),
+                "end_date": s.end_date.isoformat(),
+                "start_time": s.start_time.isoformat() if s.start_time else None,
+                "end_time": s.end_time.isoformat() if s.end_time else None,
+                "age_min": s.age_min,
+                "age_max": s.age_max,
+                "grade_min": s.grade_min,
+                "grade_max": s.grade_max,
+                "price": float(s.price) if s.price else None,
+            }
+        )
+    return data
+
 
 # --- Public Routes ---
 
@@ -181,36 +218,25 @@ def delete_camp(camp_id):
 @admin_required
 def export_camp(camp_id):
     camp = Camp.query.get_or_404(camp_id)
-    
-    data = {
-        "name": camp.name,
-        "website_url": camp.website_url,
-        "email": camp.email,
-        "phone": camp.phone,
-        "address": camp.address,
-        "city": camp.city,
-        "state": camp.state,
-        "zip": camp.zip,
-        "tags": [{"category": t.category.name, "name": t.name} for t in camp.tags],
-        "sessions": []
-    }
-    
-    for s in camp.sessions:
-        session_data = {
-            "name": s.name,
-            "start_date": s.start_date.isoformat(),
-            "end_date": s.end_date.isoformat(),
-            "start_time": s.start_time.isoformat() if s.start_time else None,
-            "end_time": s.end_time.isoformat() if s.end_time else None,
-            "age_min": s.age_min,
-            "age_max": s.age_max,
-            "grade_min": s.grade_min,
-            "grade_max": s.grade_max,
-            "price": float(s.price) if s.price else None
-        }
-        data["sessions"].append(session_data)
-        
+    return jsonify(_serialize_camp_for_export(camp))
+
+
+@camps_bp.route("/admin/camps/export-all")
+@login_required
+@admin_required
+def export_all_camps():
+    camps = Camp.query.order_by(Camp.name).all()
+    data = [_serialize_camp_for_export(c) for c in camps]
+    if request.args.get("download") == "1":
+        return Response(
+            json.dumps(data, indent=2, ensure_ascii=False),
+            mimetype="application/json; charset=utf-8",
+            headers={
+                "Content-Disposition": "attachment; filename=camps-export.json",
+            },
+        )
     return jsonify(data)
+
 
 @camps_bp.route("/admin/camp/import", methods=["GET", "POST"])
 @login_required

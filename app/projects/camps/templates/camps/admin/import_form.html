@@ -14,7 +14,7 @@
     </div>
     
     <div class="camps-card">
-        <p style="margin-bottom: 1.5rem;">Paste the JSON representation of a camp (or a list of camps) below to import them into the database. The system will check for duplicates based on name and city.</p>
+        <p style="margin-bottom: 1.5rem;">Paste the JSON representation of a camp or a <strong>JSON array of camps</strong> (same shape as the admin dashboard’s “Copy all camps” / single-camp Export). Duplicates are skipped when name and city already exist.</p>
         
         <form method="POST" id="importForm">
             {{ form.hidden_tag() }}
