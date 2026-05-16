@@ -2,17 +2,36 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, DateField, DecimalField, IntegerField, SubmitField, TimeField
 from wtforms.validators import DataRequired, URL, Email, Optional, Length, NumberRange, Regexp
 
+_CAMP_TAG_NAME_RE = r"^[a-z0-9\s&\-/]+$"
+
+
 class CampTagCategoryForm(FlaskForm):
-    name = StringField("Category Name", validators=[DataRequired(), Length(max=100)])
+    name = StringField(
+        "Category Name",
+        validators=[
+            DataRequired(),
+            Length(max=100),
+            Regexp(
+                _CAMP_TAG_NAME_RE,
+                message="Use lowercase only; letters, numbers, spaces, and & - /",
+            ),
+        ],
+    )
     submit = SubmitField("Save Category")
 
 class CampTagForm(FlaskForm):
     category_id = SelectField("Category", coerce=int, validators=[DataRequired()])
-    name = StringField("Tag Name", validators=[
-        DataRequired(), 
-        Length(max=100),
-        Regexp(r'^[a-z0-9\s&\-/]+$', message="Tags must be lowercase and can only contain letters, numbers, spaces, and symbols like & - /")
-    ])
+    name = StringField(
+        "Tag Name",
+        validators=[
+            DataRequired(),
+            Length(max=100),
+            Regexp(
+                _CAMP_TAG_NAME_RE,
+                message="Use lowercase only; letters, numbers, spaces, and & - /",
+            ),
+        ],
+    )
     submit = SubmitField("Save Tag")
 
 class CampForm(FlaskForm):

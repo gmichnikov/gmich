@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Tags for LLM prompt{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('camps.static', filename='css/camps.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="camps-page">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.4rem 0.8rem;">← Admin dashboard</a>
+    </div>
+    <h1 class="camps-heading">Tags for LLM prompt</h1>
+    <p class="camps-muted" style="max-width: 720px;">Copy a block into your prompt’s allowlist. Categories and tag names are lowercase as stored in the database.</p>
+
+    <section class="camps-admin-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 class="camps-card-title" style="margin: 0;">Readable list</h2>
+            <button type="button" class="camps-btn camps-btn-primary copy-block" data-target="readable" style="height: auto;">Copy</button>
+        </div>
+        <textarea id="readable" class="camps-form-input" readonly rows="18" style="width: 100%; max-width: 900px; box-sizing: border-box; font-family: monospace; font-size: 0.85rem;">{{ text_block }}</textarea>
+    </section>
+
+    <section class="camps-admin-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 class="camps-card-title" style="margin: 0;">JSON: categories with tag lists</h2>
+            <button type="button" class="camps-btn camps-btn-primary copy-block" data-target="json-cats" style="height: auto;">Copy</button>
+        </div>
+        <textarea id="json-cats" class="camps-form-input" readonly rows="14" style="width: 100%; max-width: 900px; box-sizing: border-box; font-family: monospace; font-size: 0.85rem;">{{ json_block }}</textarea>
+    </section>
+
+    <section class="camps-admin-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 class="camps-card-title" style="margin: 0;">JSON: flat <code>tags</code> array (import shape)</h2>
+            <button type="button" class="camps-btn camps-btn-primary copy-block" data-target="json-flat" style="height: auto;">Copy</button>
+        </div>
+        <p class="camps-muted" style="font-size: 0.875rem;">Each object is one <code>{"category":"…","name":"…"}</code> line for camp JSON.</p>
+        <textarea id="json-flat" class="camps-form-input" readonly rows="14" style="width: 100%; max-width: 900px; box-sizing: border-box; font-family: monospace; font-size: 0.85rem;">{{ json_tags_flat }}</textarea>
+    </section>
+</div>
+
+<script>
+document.querySelectorAll('.copy-block').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-target');
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.select();
+        el.setSelectionRange(0, el.value.length);
+        navigator.clipboard.writeText(el.value).then(function() {
+            var t = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = t; }, 1500);
+        });
+    });
+});
+</script>
+{% endblock %}

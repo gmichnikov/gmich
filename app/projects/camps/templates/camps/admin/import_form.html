@@ -64,7 +64,14 @@
                         </td>
                         <td>
                             <div style="font-size: 0.875rem;">
-                                {{ item.sessions_count }} sessions<br>
+                                {{ item.sessions_count }} session{{ 's' if item.sessions_count != 1 else '' }}<br>
+                                {% if item.session_consensus_lines %}
+                                <div style="margin: 0.35rem 0 0.25rem; color: #374151;">
+                                    {% for line in item.session_consensus_lines %}
+                                    <div>{{ line }}</div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                                 {% for tag in item.tags %}
                                     <span class="camps-tag-badge" style="{% if tag.is_new_tag %}border: 1px dashed var(--camps-primary);{% endif %}">
                                         {{ tag.category }}: {{ tag.name }}

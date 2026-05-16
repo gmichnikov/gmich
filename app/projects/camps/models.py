@@ -205,6 +205,12 @@ class CampTagCategory(db.Model):
     # Relationships
     tags = db.relationship("CampTag", backref="category", cascade="all, delete-orphan")
 
+    @db.validates("name")
+    def validate_name(self, key, name):
+        if name:
+            return name.lower().strip()
+        return name
+
     def __repr__(self):
         return f"<CampTagCategory {self.name}>"
 

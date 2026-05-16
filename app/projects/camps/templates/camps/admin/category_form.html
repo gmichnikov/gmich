@@ -13,6 +13,8 @@
     <form method="POST" class="camps-card">
         {{ form.hidden_tag() }}
         
+        <p class="camps-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Category names are stored <strong>lowercase</strong> (letters, numbers, spaces, <code>&</code> <code>-</code> <code>/</code>).</p>
+
         <div class="camps-form-group">
             {{ form.name.label(class="camps-form-label") }}
             {{ form.name(class="camps-form-input") }}
@@ -23,5 +25,16 @@
             <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary">Cancel</a>
         </div>
     </form>
+
+    {% if category %}
+    <div class="camps-card" style="margin-top: 2rem; border-color: #fecaca;">
+        <h2 class="camps-card-title" style="color: #b91c1c;">Delete category</h2>
+        <p class="camps-muted">Removes this category, <strong>all its tags</strong>, and unlinks those tags from every camp.</p>
+        <form method="POST" action="{{ url_for('camps.delete_category', category_id=category.id) }}" onsubmit="return confirm('Delete this category and ALL tags under it? Camps will lose those tags.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="camps-btn camps-btn-danger">Delete category</button>
+        </form>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -18,6 +18,7 @@
         <a href="{{ url_for('camps.import_camp') }}" class="camps-btn camps-btn-secondary">Import Camp</a>
         <a href="{{ url_for('camps.add_category') }}" class="camps-btn camps-btn-secondary">Add Tag Category</a>
         <a href="{{ url_for('camps.add_tag') }}" class="camps-btn camps-btn-secondary">Add Tag</a>
+        <a href="{{ url_for('camps.tags_prompt_export') }}" class="camps-btn camps-btn-secondary">Tags for LLM prompt</a>
     </div>
 
     <section class="camps-admin-section">
@@ -75,13 +76,31 @@
         <ul class="camps-session-list">
             {% for cat in tag_categories %}
             <li class="camps-session-item">
-                <strong>{{ cat.name }}:</strong>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-bottom: 0.35rem;">
+                    <strong>{{ cat.name }}</strong>
+                    <span style="display: inline-flex; gap: 0.25rem; align-items: center;">
+                        <a href="{{ url_for('camps.edit_category', category_id=cat.id) }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Edit</a>
+                        <form action="{{ url_for('camps.delete_category', category_id=cat.id) }}" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('Delete this category and ALL tags under it? Camps will lose those tags.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="camps-btn camps-btn-danger" style="height: auto; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Del</button>
+                        </form>
+                    </span>
+                </div>
                 {% if cat.tags %}
-                    {% for tag in cat.tags %}
-                    <a href="{{ url_for('camps.index', **{'tag_' ~ tag.category_id: tag.id}) }}" class="camps-tag-badge camps-tag-link" target="_blank">{{ tag.name }}</a>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+                    {% for tag in cat.tags|sort(attribute='name') %}
+                    <span class="camps-tag-badge" style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <a href="{{ url_for('camps.index', **{'tag_' ~ tag.category_id: tag.id}) }}" class="camps-tag-link" target="_blank">{{ tag.name }}</a>
+                        <a href="{{ url_for('camps.edit_tag', tag_id=tag.id) }}" class="camps-btn camps-btn-secondary" style="height: auto; padding: 0.1rem 0.35rem; font-size: 0.7rem;">edit</a>
+                        <form action="{{ url_for('camps.delete_tag', tag_id=tag.id) }}" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('Delete this tag from all camps?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="camps-btn camps-btn-danger" style="height: auto; padding: 0.1rem 0.35rem; font-size: 0.7rem;">×</button>
+                        </form>
+                    </span>
                     {% endfor %}
+                </div>
                 {% else %}
-                    <span class="camps-muted">No tags</span>
+                <span class="camps-muted">No tags</span>
                 {% endif %}
             </li>
             {% endfor %}

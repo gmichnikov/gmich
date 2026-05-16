@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required
+from sqlalchemy import delete
 from app import db
-from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTag
+from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTag, camps_camp_tag
 from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm, ImportCampForm
+from app.projects.camps.import_preview import consensus_session_summary_lines
 from app.projects.camps.weeks import get_summer_2026_mondays
 from app.projects.camps.filters import apply_filters
 from app.projects.camps.session_times import parse_time_from_import
@@ -236,7 +238,10 @@ def import_camp():
                     "status": "new",
                     "sessions_count": len(camp_data.get("sessions", [])),
                     "tags": [],
-                    "errors": []
+                    "errors": [],
+                    "session_consensus_lines": consensus_session_summary_lines(
+                        camp_data.get("sessions") or []
+                    ),
                 }
 
                 if not camp_data.get("name") or not camp_data.get("city"):
@@ -500,3 +505,143 @@ def add_tag():
         flash(f"Tag '{tag.name}' added.")
         return redirect(url_for("camps.admin_dashboard"))
     return render_template("camps/admin/tag_form.html", form=form, title="Add Tag")
+
+
+def _clear_camps_using_tag(tag_id: int) -> None:
+    db.session.execute(delete(camps_camp_tag).where(camps_camp_tag.c.tag_id == tag_id))
+
+
+@camps_bp.route("/admin/category/<int:category_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def edit_category(category_id):
+    category = CampTagCategory.query.get_or_404(category_id)
+    form = CampTagCategoryForm(obj=category)
+    if form.validate_on_submit():
+        normalized = form.name.data.lower().strip()
+        conflict = CampTagCategory.query.filter(
+            CampTagCategory.name == normalized,
+            CampTagCategory.id != category.id,
+        ).first()
+        if conflict:
+            flash(f"Another category already uses the name '{normalized}'.", "error")
+        else:
+            category.name = normalized
+            db.session.commit()
+            flash("Category updated.")
+            return redirect(url_for("camps.admin_dashboard"))
+    return render_template(
+        "camps/admin/category_form.html",
+        form=form,
+        title=f"Edit category: {category.name}",
+        category=category,
+    )
+
+
+@camps_bp.route("/admin/category/<int:category_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_category(category_id):
+    category = CampTagCategory.query.get_or_404(category_id)
+    cat_name = category.name
+    tag_ids = [t.id for t in CampTag.query.filter_by(category_id=category.id).all()]
+    for tid in tag_ids:
+        _clear_camps_using_tag(tid)
+    CampTag.query.filter_by(category_id=category.id).delete()
+    db.session.delete(category)
+    db.session.commit()
+    flash(f"Category '{cat_name}' and its tags were removed (camps unlinked).")
+    return redirect(url_for("camps.admin_dashboard"))
+
+
+@camps_bp.route("/admin/tag/<int:tag_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def edit_tag(tag_id):
+    tag = CampTag.query.get_or_404(tag_id)
+    form = CampTagForm(obj=tag)
+    categories = CampTagCategory.query.order_by(CampTagCategory.name).all()
+    form.category_id.choices = [(c.id, c.name) for c in categories]
+
+    if form.validate_on_submit():
+        normalized = form.name.data.lower().strip()
+        conflict = CampTag.query.filter(
+            CampTag.category_id == form.category_id.data,
+            CampTag.name == normalized,
+            CampTag.id != tag.id,
+        ).first()
+        if conflict:
+            flash(
+                f"Tag '{normalized}' already exists in that category.",
+                "error",
+            )
+        else:
+            tag.category_id = form.category_id.data
+            tag.name = normalized
+            db.session.commit()
+            flash("Tag updated.")
+            return redirect(url_for("camps.admin_dashboard"))
+    return render_template(
+        "camps/admin/tag_form.html",
+        form=form,
+        title=f"Edit tag: {tag.name}",
+        tag=tag,
+    )
+
+
+@camps_bp.route("/admin/tag/<int:tag_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_tag(tag_id):
+    tag = CampTag.query.get_or_404(tag_id)
+    nm, cid = tag.name, tag.category_id
+    _clear_camps_using_tag(tag.id)
+    db.session.delete(tag)
+    db.session.commit()
+    flash(f"Tag '{nm}' deleted and removed from all camps.")
+    return redirect(url_for("camps.admin_dashboard"))
+
+
+@camps_bp.route("/admin/tags/prompt-export")
+@login_required
+@admin_required
+def tags_prompt_export():
+    categories = (
+        CampTagCategory.query.order_by(CampTagCategory.name)
+        .all()
+    )
+    lines = [
+        "ALLOWED TAGS — use exact lowercase \"category\" and \"name\" in import JSON.",
+        "",
+    ]
+    json_preview = []
+    for cat in categories:
+        lines.append(f"{cat.name}:")
+        tag_names = sorted(t.name for t in cat.tags)
+        json_preview.append({"category": cat.name, "tags": tag_names})
+        if tag_names:
+            for tn in tag_names:
+                lines.append(f"  - {tn}")
+        else:
+            lines.append("  (no tags yet)")
+        lines.append("")
+    lines.append("Example tag line in camp JSON:")
+    if json_preview and any(x["tags"] for x in json_preview):
+        ex_cat = next(x for x in json_preview if x["tags"])
+        ex_tag = ex_cat["tags"][0]
+        lines.append(
+            f'  {{ "category": "{ex_cat["category"]}", "name": "{ex_tag}" }}'
+        )
+    text_block = "\n".join(lines).rstrip() + "\n"
+    json_block = json.dumps(json_preview, indent=2)
+    flat_tags = []
+    for cat in categories:
+        for tn in sorted(t.name for t in cat.tags):
+            flat_tags.append({"category": cat.name, "name": tn})
+    json_tags_flat = json.dumps(flat_tags, indent=2)
+    return render_template(
+        "camps/admin/tags_prompt_export.html",
+        text_block=text_block,
+        json_block=json_block,
+        json_tags_flat=json_tags_flat,
+    )

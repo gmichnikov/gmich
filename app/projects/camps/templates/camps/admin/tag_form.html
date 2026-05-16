@@ -13,6 +13,8 @@
     <form method="POST" class="camps-card">
         {{ form.hidden_tag() }}
         
+        <p class="camps-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Tag names are stored <strong>lowercase</strong> (same character rules as categories).</p>
+
         <div class="camps-form-group">
             {{ form.category_id.label(class="camps-form-label") }}
             {{ form.category_id(class="camps-form-input") }}
@@ -28,5 +30,16 @@
             <a href="{{ url_for('camps.admin_dashboard') }}" class="camps-btn camps-btn-secondary">Cancel</a>
         </div>
     </form>
+
+    {% if tag %}
+    <div class="camps-card" style="margin-top: 2rem; border-color: #fecaca;">
+        <h2 class="camps-card-title" style="color: #b91c1c;">Delete tag</h2>
+        <p class="camps-muted">Removes this tag from <strong>every camp</strong> that uses it, then deletes the tag.</p>
+        <form method="POST" action="{{ url_for('camps.delete_tag', tag_id=tag.id) }}" onsubmit="return confirm('Delete this tag and remove it from all camps?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="camps-btn camps-btn-danger">Delete tag</button>
+        </form>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
