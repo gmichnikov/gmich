@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response
 from flask_login import login_required
 from sqlalchemy import delete
+from sqlalchemy.orm import selectinload
 from app import db
 from app.projects.camps.models import Camp, CampSession, CampTagCategory, CampTag, camps_camp_tag
 from app.projects.camps.forms import CampForm, CampSessionForm, CampTagCategoryForm, CampTagForm, ImportCampForm
 from app.projects.camps.import_preview import consensus_session_summary_lines
+from app.projects.camps.timeline import build_timeline_grid
 from app.projects.camps.weeks import get_summer_2026_mondays
 from app.projects.camps.filters import apply_filters
 from app.projects.camps.session_times import parse_time_from_import
@@ -13,6 +15,7 @@ from app.utils.logging import log_project_visit
 from datetime import date
 import json
 import decimal
+from urllib.parse import urlencode
 
 camps_bp = Blueprint(
     "camps",
@@ -60,6 +63,25 @@ def _serialize_camp_for_export(camp):
     return data
 
 
+def _camps_index_switch_urls():
+    """Preserve filter query params when switching between cards and timeline."""
+    pairs_cards = []
+    pairs_timeline = []
+    for key in request.args:
+        if key == "view":
+            continue
+        for val in request.args.getlist(key):
+            pairs_cards.append((key, val))
+            pairs_timeline.append((key, val))
+    pairs_timeline.append(("view", "timeline"))
+    base = url_for("camps.index")
+    q_cards = urlencode(pairs_cards)
+    q_timeline = urlencode(pairs_timeline)
+    cards_url = f"{base}?{q_cards}" if q_cards else base
+    timeline_url = f"{base}?{q_timeline}"
+    return cards_url, timeline_url
+
+
 # --- Public Routes ---
 
 @camps_bp.route("/")
@@ -71,7 +93,10 @@ def index():
     
     # Apply filters from query params
     query = apply_filters(query, request.args)
-    
+
+    is_timeline = request.args.get("view") == "timeline"
+    query = query.options(selectinload(Camp.sessions), selectinload(Camp.tags))
+
     # Default sort: A-Z by name
     camps = query.order_by(Camp.name).all()
     
@@ -81,12 +106,37 @@ def index():
     
     summer_mondays = get_summer_2026_mondays()
     tag_categories = CampTagCategory.query.order_by(CampTagCategory.name).all()
+
+    cards_index_url, timeline_index_url = _camps_index_switch_urls()
+    has_active_filters = bool(
+        [k for k in request.args.keys() if k != "view"]
+    )
+    clear_filters_url = (
+        url_for("camps.index", view="timeline")
+        if is_timeline
+        else url_for("camps.index")
+    )
+
+    timeline_weeks = []
+    timeline_rows = []
+    if is_timeline:
+        timeline_weeks, timeline_rows = build_timeline_grid(camps)
     
-    return render_template("camps/index.html", 
-                           camps=camps, 
-                           towns=towns, 
-                           summer_mondays=summer_mondays,
-                           tag_categories=tag_categories)
+    return render_template(
+        "camps/index.html",
+        camps=camps,
+        towns=towns,
+        summer_mondays=summer_mondays,
+        tag_categories=tag_categories,
+        is_timeline=is_timeline,
+        cards_index_url=cards_index_url,
+        timeline_index_url=timeline_index_url,
+        has_active_filters=has_active_filters,
+        clear_filters_url=clear_filters_url,
+        timeline_weeks=timeline_weeks,
+        timeline_rows=timeline_rows,
+    )
+
 
 @camps_bp.route("/camp/<int:camp_id>")
 def camp_detail(camp_id):

@@ -7,16 +7,23 @@
 {% endblock %}
 
 {% block content %}
-<div class="camps-page" style="max-width: 1200px;">
-    <div style="margin-bottom: 2rem;">
-        <h1 class="camps-heading">Summer Camps 2026</h1>
+<div class="camps-page {% if is_timeline %}camps-page--timeline{% endif %}" {% if not is_timeline %}style="max-width: 1200px;"{% endif %}>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+        <h1 class="camps-heading" style="margin: 0;">Summer Camps 2026</h1>
+        <div class="camps-view-switch" role="group" aria-label="Result layout">
+            <a href="{{ cards_index_url }}" class="{% if not is_timeline %}active{% endif %}">Cards</a>
+            <a href="{{ timeline_index_url }}" class="{% if is_timeline %}active{% endif %}">Timeline</a>
+        </div>
     </div>
 
     <div class="camps-directory">
         <!-- Top Filters -->
         <header class="camps-top-filters">
             <form id="filterForm" method="GET" action="{{ url_for('camps.index') }}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; width: 100%; align-items: center;">
-                
+                {% if is_timeline %}
+                <input type="hidden" name="view" value="timeline">
+                {% endif %}
+
                 <!-- Town Dropdown -->
                 <div class="camps-filter-dropdown">
                     <button type="button" class="camps-filter-dropdown-trigger {% if request.args.getlist('town') %}active{% endif %}">
@@ -184,8 +191,8 @@
                 </div>
 
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
-                    {% if request.args %}
-                    <a href="{{ url_for('camps.index') }}" class="camps-muted" style="text-decoration: none; font-size: 0.875rem;">Clear All</a>
+                    {% if has_active_filters %}
+                    <a href="{{ clear_filters_url }}" class="camps-muted" style="text-decoration: none; font-size: 0.875rem;">Clear All</a>
                     {% endif %}
                     <span class="camps-muted" style="font-size: 0.875rem; border-left: 1px solid #e5e7eb; padding-left: 0.75rem; margin-left: 0.25rem;">
                         <strong>{{ camps|length }}</strong> found
@@ -196,6 +203,54 @@
 
         <!-- Results -->
         <main class="camps-results">
+            {% if is_timeline %}
+            {% if camps and timeline_weeks %}
+            <p class="camps-timeline-explain camps-muted"><strong>Full day</strong> (taller bar): more than 4.5 hours per day, or times not listed. <strong>Half day</strong> (shorter bar): 4.5 hours or less per day. Bar width = share of Mon–Fri that week; darker area = days not in session. <strong>Hover a cell</strong> for exact weekdays and hours.</p>
+            <div class="camps-timeline-scroll">
+                <table class="camps-timeline-table">
+                    <thead>
+                        <tr>
+                            <th class="camps-timeline-th-name" scope="col">Camp</th>
+                            {% for w in timeline_weeks %}
+                            <th class="camps-timeline-th-week" scope="col">{{ w.label }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in timeline_rows %}
+                        <tr>
+                            <th class="camps-timeline-td-name" scope="row">
+                                <a href="{{ url_for('camps.camp_detail', camp_id=row.camp.id) }}" class="camps-timeline-camp-link">{{ row.camp.name }}</a>
+                                <span class="camps-timeline-camp-meta">{{ row.camp.city }}, {{ row.camp.state }}</span>
+                            </th>
+                            {% for cell in row.cells %}
+                            <td class="camps-timeline-cell">
+                                {% if cell.active %}
+                                {% set pct = (cell.days / 5 * 100) | round(1) %}
+                                <div class="camps-timeline-cell-inner"
+                                     style="--camps-fill-pct: {{ pct }}%;"
+                                     data-camps-tip="{{ cell.hover_title | e }}">
+                                    <div class="camps-timeline-fill {% if cell.half %}camps-timeline-fill--half camps-timeline-fill--short{% else %}camps-timeline-fill--full{% endif %}" style="width: {{ pct }}%;"></div>
+                                </div>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% elif camps %}
+            <div class="camps-card" style="text-align: center; padding: 2rem;">
+                <p class="camps-muted">No session dates in range to chart.</p>
+            </div>
+            {% else %}
+            <div class="camps-card" style="text-align: center; padding: 3rem;">
+                <p class="camps-muted">No camps match your current filters.</p>
+                <a href="{{ clear_filters_url }}" class="camps-btn camps-btn-primary" style="margin-top: 1rem; height: auto; padding: 0.5rem 1rem;">Clear Filters</a>
+            </div>
+            {% endif %}
+            {% else %}
             {% if camps %}
             <div class="camps-results-grid">
                 {% for camp in camps %}
@@ -253,8 +308,9 @@
             {% else %}
             <div class="camps-card" style="text-align: center; padding: 3rem;">
                 <p class="camps-muted">No camps match your current filters.</p>
-                <a href="{{ url_for('camps.index') }}" class="camps-btn camps-btn-primary" style="margin-top: 1rem; height: auto; padding: 0.5rem 1rem;">Clear Filters</a>
+                <a href="{{ clear_filters_url }}" class="camps-btn camps-btn-primary" style="margin-top: 1rem; height: auto; padding: 0.5rem 1rem;">Clear Filters</a>
             </div>
+            {% endif %}
             {% endif %}
         </main>
     </div>
@@ -312,6 +368,43 @@
                 dropdown.querySelector('.camps-filter-dropdown-content').classList.remove('show');
             });
         });
+
+        /* Timeline schedule cell tooltips (native title is unreliable on nested table cells) */
+        const tipTargets = document.querySelectorAll('[data-camps-tip]');
+        if (tipTargets.length) {
+            const tipEl = document.createElement('div');
+            tipEl.className = 'camps-timeline-floating-tip';
+            tipEl.setAttribute('role', 'tooltip');
+            document.body.appendChild(tipEl);
+
+            function placeTip(target) {
+                const text = target.getAttribute('data-camps-tip');
+                if (!text) return;
+                tipEl.textContent = text;
+                tipEl.classList.add('is-visible');
+                const r = target.getBoundingClientRect();
+                const cx = r.left + r.width / 2;
+                tipEl.style.left = cx + 'px';
+                tipEl.style.top = (r.top - 8) + 'px';
+                requestAnimationFrame(function() {
+                    const tr = tipEl.getBoundingClientRect();
+                    const pad = 8;
+                    let dx = 0;
+                    if (tr.left < pad) dx = pad - tr.left;
+                    if (tr.right > window.innerWidth - pad) dx = window.innerWidth - pad - tr.right;
+                    tipEl.style.left = (cx + dx) + 'px';
+                });
+            }
+
+            function hideTip() {
+                tipEl.classList.remove('is-visible');
+            }
+
+            tipTargets.forEach(function(el) {
+                el.addEventListener('mouseenter', function() { placeTip(el); });
+                el.addEventListener('mouseleave', hideTip);
+            });
+        }
     });
 </script>
 {% endblock %}

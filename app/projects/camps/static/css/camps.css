@@ -10,6 +10,222 @@
   margin-bottom: 2rem;
 }
 
+.camps-page--timeline {
+  max-width: min(72rem, 100%);
+}
+
+.camps-view-switch {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.camps-view-switch a {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: #4b5563;
+  background: #f9fafb;
+  border-right: 1px solid #d1d5db;
+}
+
+.camps-view-switch a:last-child {
+  border-right: none;
+}
+
+.camps-view-switch a:hover {
+  background: #f3f4f6;
+}
+
+.camps-view-switch a.active {
+  background: #667eea;
+  color: #fff;
+}
+
+.camps-timeline-explain {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.camps-timeline-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.camps-timeline-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+}
+
+.camps-timeline-th-name,
+.camps-timeline-td-name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  box-shadow: 4px 0 10px -4px rgba(0, 0, 0, 0.18);
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  vertical-align: middle;
+  max-width: 12.5rem;
+}
+
+.camps-timeline-th-name {
+  z-index: 3;
+  font-size: 0.75rem;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.camps-timeline-td-name {
+  font-weight: 500;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.camps-timeline-camp-link {
+  display: block;
+  color: #111827;
+  text-decoration: none;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.camps-timeline-camp-link:hover {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.camps-timeline-camp-meta {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.camps-timeline-th-week {
+  min-width: 3.1rem;
+  font-size: 0.65rem;
+  text-align: center;
+  vertical-align: bottom;
+  padding: 0.35rem 0.2rem;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: 1.2;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.camps-timeline-cell {
+  border-bottom: 1px solid #f3f4f6;
+  border-left: 1px solid #f3f4f6;
+  padding: 0.2rem 0.25rem;
+  vertical-align: middle;
+  height: 2.85rem;
+  min-width: 3.1rem;
+  background: #fff;
+}
+
+.camps-timeline-cell-inner {
+  --camps-fill-pct: 100%;
+  width: 100%;
+  height: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-start;
+  border-radius: 0.25rem;
+  border: 1px solid #6b7280;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: #6b7280;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      transparent,
+      transparent calc(20% - 1px),
+      rgba(255, 255, 255, 0.22) calc(20% - 1px),
+      rgba(255, 255, 255, 0.22) 20%
+    ),
+    linear-gradient(
+      to right,
+      #d1d5db 0%,
+      #d1d5db var(--camps-fill-pct),
+      #4b5563 var(--camps-fill-pct),
+      #4b5563 100%
+    );
+}
+
+.camps-timeline-cell-inner[data-camps-tip] {
+  cursor: default;
+}
+
+.camps-timeline-floating-tip {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  max-width: min(20rem, calc(100vw - 1rem));
+  padding: 0.5rem 0.7rem;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  border-radius: 0.35rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  margin-top: -6px;
+  white-space: normal;
+  text-align: left;
+}
+
+.camps-timeline-floating-tip.is-visible {
+  display: block;
+}
+
+.camps-timeline-fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 0 0.12rem 0.12rem 0;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.camps-timeline-fill--short {
+  height: 50%;
+}
+
+.camps-timeline-fill--full {
+  background: #4f46e5;
+}
+
+.camps-timeline-fill--half {
+  background: #6366f1;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.22) 3px,
+    rgba(255, 255, 255, 0.22) 5px
+  );
+}
+
 .camps-heading {
   font-size: 1.75rem;
   font-weight: 600;
@@ -549,5 +765,26 @@
   .camps-results-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .camps-page--timeline {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0.5rem;
+  }
+
+  .camps-timeline-th-name,
+  .camps-timeline-td-name {
+    max-width: 9rem;
+  }
+
+  .camps-timeline-th-week {
+    min-width: 2.65rem;
+    font-size: 0.6rem;
+  }
+
+  .camps-timeline-cell {
+    min-width: 2.65rem;
   }
 }
