@@ -704,8 +704,12 @@
         try {
             const response = await fetch("{{ url_for('sports_schedule_admin.get_logs') }}");
             const data = await response.json();
+            if (data.error) {
+                container.innerHTML = '<div class="ssa-alert ssa-alert--danger">Error: ' + data.error + '</div>';
+                return;
+            }
             let html = '<div class="ssa-table-wrap"><table class="ssa-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Description</th></tr></thead><tbody>';
-            if (data.length === 0) {
+            if (!Array.isArray(data) || data.length === 0) {
                 html += '<tr><td colspan="4" class="ssa-empty">No recent activity found.</td></tr>';
             } else {
                 data.forEach(log => {

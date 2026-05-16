@@ -40,6 +40,23 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
+    @login_manager.unauthorized_handler
+    def _unauthorized_sports_schedule_api():
+        """Return JSON for schedule admin API calls instead of HTML login redirect."""
+        from flask import request, jsonify, redirect, url_for
+
+        if request.path.startswith("/sports-schedule-admin/api"):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Sign in required.",
+                    }
+                ),
+                401,
+            )
+        return redirect(url_for(login_manager.login_view, next=request.url))
+
     # Configure Google OAuth
     from app.core.auth import oauth
 

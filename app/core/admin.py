@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
@@ -22,6 +22,16 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_admin:
+            if request.path.startswith("/sports-schedule-admin/api"):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Admin access required.",
+                        }
+                    ),
+                    403,
+                )
             flash("Admin access required.")
             return redirect(url_for("main.index"))
         return f(*args, **kwargs)
