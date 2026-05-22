@@ -437,6 +437,7 @@
     <li><a href="#lifecycle">Game Lifecycle</a></li>
     <li><a href="#data">Data Model Reference</a></li>
     <li><a href="#edge-cases">Edge Cases &amp; Rules Summary</a></li>
+    <li><a href="#ux">UX Details</a></li>
   </ol>
 </nav>
 
@@ -450,7 +451,7 @@
   <ul>
     <li><strong>Mobile-first, always.</strong> This app will be used almost exclusively on phones, in bowling alleys. Every interaction must be thumb-friendly, readable in dim lighting, and fast to use with one hand.</li>
     <li><strong>Simplicity over features.</strong> No animations, no dark/light mode toggle, no handicaps, no player profiles, no history across games.</li>
-    <li><strong>Flexible scoring.</strong> There is no enforced turn order for entry — any scorer can enter a roll for any player at any time. The app shows whose turn it logically is, but does not block other entry.</li>
+    <li><strong>Flexible scoring.</strong> There is no enforced turn order for entry — any scorer can enter the <strong>next roll</strong> for any player (each player's leading-edge frame only). The app shows whose turn it logically is, but does not block other entry.</li>
     <li><strong>Small user base.</strong> Design for reliability and simplicity, not scale. Polling-based sync is fine.</li>
   </ul>
 </section>
@@ -467,14 +468,16 @@
       <ul>
         <li>Create new game button</li>
         <li>Enter code field + Join button</li>
+        <li>Rejoin last game (if available)</li>
       </ul>
     </div>
     <div class="flow-arrow">→</div>
     <div class="screen-box">
       <div class="screen-title">Setup</div>
       <ul>
-        <li>Game code displayed + copy button</li>
-        <li>Add player names</li>
+        <li>Game code displayed + share button</li>
+        <li>Add Player button + name fields</li>
+        <li>Remove player (Setup only)</li>
         <li>Reorder players</li>
         <li>Start Game button</li>
       </ul>
@@ -487,6 +490,7 @@
         <li>Pin input panel</li>
         <li>Whose turn indicator</li>
         <li>Clear frame option</li>
+        <li>Add Player (until frame 2 lock)</li>
         <li>Game code visible + share</li>
         <li>New Game button (with confirmation)</li>
       </ul>
@@ -497,21 +501,30 @@
       <ul>
         <li>Full scorecard (read-only)</li>
         <li>Final scores &amp; winner</li>
-        <li>Game code visible</li>
+        <li>Copy scores as text</li>
+        <li>Game code visible + share</li>
       </ul>
     </div>
   </div>
 
   <div class="callout info">
     <div class="callout-label">Navigation Note</div>
-    When someone opens the app with a 6-digit code (e.g. via a shared link or manual entry), they land directly on the correct screen for that game's current state: Setup if not yet started, Active if in progress, Completed if finished.
+    When someone opens a game — via shared link or by entering the code on Home — they land directly on the correct screen for that game's current state: Setup if not yet started, Active if in progress, Completed if finished.
   </div>
 
   <h3>Joining a Game</h3>
-  <p>From the Home screen, a user enters the 6-digit code and taps Join. If the code is valid, they land on the current state of that game. If the code is invalid or not found, show a clear inline error: <em>"No game found with that code."</em></p>
+  <p>There are two ways to join:</p>
+  <ol>
+    <li><strong>Shared link.</strong> Each game has a canonical URL: <code>/bowling/482031</code> (code in the path). Opening this link lands on the correct screen for that game's state. Setup, Active, and Completed screens include a <strong>Share</strong> button — on phones this opens the native share sheet (Messages, WhatsApp, etc.) with the full absolute URL ready to send; otherwise copy the URL to the clipboard.</li>
+    <li><strong>Home screen.</strong> A user enters the 6-digit code and taps Join. On success, navigate to <code>/bowling/&lt;code&gt;</code>. If the code is invalid or not found, show a clear inline error: <em>"No game found with that code."</em> Do not navigate.</li>
+  </ol>
+  <p>Creating a new game navigates the creator to <code>/bowling/&lt;code&gt;</code> on the Setup screen.</p>
+
+  <h3>Rejoin Last Game</h3>
+  <p>If the user recently visited an in-progress or setup game on this device, the Home screen shows a <strong>Rejoin</strong> link (e.g. <em>Rejoin game 482031</em>). This uses <code>localStorage</code> only — no accounts, no cross-device sync. It helps when someone refreshes the page or navigates to Home by accident. Completed games may still appear here so results are easy to find again.</p>
 
   <h3>Setup Screen — Joining Late</h3>
-  <p>If a second person joins a game that is still on the Setup screen (not yet started), they see the same Setup screen as the creator. Both can add/reorder players. There is no concept of "host" — all scorers are equal.</p>
+  <p>If a second person joins a game that is still on the Setup screen (not yet started), they see the same Setup screen as the creator. Both can add players, reorder them, and tap <strong>Start Game</strong>. There is no concept of "host" — all scorers are equal.</p>
 </section>
 
 <!-- ─────────────────────────────────────────── -->
@@ -523,21 +536,23 @@
 
   <div class="callout">
     <div class="callout-label">Code Generation</div>
-    Codes are 6-digit zero-padded integers (000000–999999), chosen randomly from codes not currently in use. Since games persist forever, "not in use" means no existing game record has that code. With a small user base this space is effectively unlimited.
+    Codes are 6-digit zero-padded integers (000000–999999), chosen randomly from codes not currently assigned to any game. Because games are stored indefinitely and never deleted, codes are <strong>never reused</strong> — once a code is assigned, it belongs to that game permanently. With a small user base the 1,000,000-code space is effectively unlimited for years of use.
   </div>
 
   <h3>Adding Players</h3>
+  <p>Setup uses an explicit <strong>Add Player</strong> button — there is no bulk-add or auto-generated names. Each tap adds a new empty name field to the list. The scorer types a real name for each player.</p>
   <ul>
     <li>Players are defined by a single name string only. No avatars, IDs, or other metadata.</li>
-    <li>Any number of players can be added.</li>
-    <li>Players can be reordered via drag-and-drop (or up/down tap buttons — whichever is more reliable on mobile). Order matters: it determines turn sequence and the "whose turn" logic.</li>
+    <li>Any number of players can be added via repeated <strong>Add Player</strong> taps.</li>
+    <li>Each player row has a <strong>Remove</strong> control (Setup only). At least one player must remain; <strong>Start Game</strong> requires at least one named player.</li>
+    <li>Players can be reordered via drag-and-drop (or up/down tap buttons — whichever is more reliable on mobile). Order matters: it determines turn sequence and the "whose turn" logic. Reordering is only available on the Setup screen — once the game has started, player order is locked.</li>
     <li>Player names are not remembered across games.</li>
     <li>Player names <strong>cannot be edited</strong> once the game has started. All name changes must happen on the Setup screen before "Start Game" is tapped.</li>
-    <li>The Start Game button should only be enabled once at least one player has been added.</li>
+    <li>The Start Game button should only be enabled once at least one player has been added with a non-empty name.</li>
   </ul>
 
   <h3>Sharing the Code from Setup</h3>
-  <p>The game code is generated the moment a game is created — before any players are added. The Setup screen should display it prominently with a one-tap copy button, since this is the natural moment to share it: <em>"Here's our game code, join before we start."</em> The code remains visible and copyable on the Active Game screen as well, for anyone who joins late.</p>
+  <p>The game code is generated the moment a game is created — before any players are added. The Setup screen should display it prominently with a <strong>Share</strong> button. On phones that support it, Share opens the device's native share sheet (Messages, WhatsApp, etc.) with the join URL pre-filled. Otherwise, fall back to copying the full URL (<code>/bowling/482031</code>) to the clipboard. This is the natural moment to share: <em>"Here's our game, join before we start."</em> Share/copy remains available on the Active and Completed screens as well.</p>
 
   <h3>Late Player Addition Lock</h3>
   <p>Once the game has started, players can still be added from the Active Game screen — <strong>until</strong> any player has rolled their first ball of Frame 2. At that point, the player list is locked and the "Add Player" option is hidden/disabled.</p>
@@ -668,7 +683,15 @@
 <section id="input">
   <h2><span class="section-num">05</span> Pin Input UI</h2>
 
-  <p>When a scorer taps on a player's row (or their "current" frame), a pin input panel appears. This is the primary interaction of the app and must be highly optimized for mobile use.</p>
+  <p>When a scorer selects a player's actionable frame, a pin input panel appears. This is the primary interaction of the app and must be highly optimized for mobile use.</p>
+
+  <h3>Active Game Layout (Mobile)</h3>
+  <p>On the Active Game screen, use a two-part layout:</p>
+  <ul>
+    <li><strong>Top:</strong> Horizontally scrollable scorecard for all players.</li>
+    <li><strong>Bottom:</strong> Pin input panel fixed to the viewport (not a modal overlay). It appears when a frame is selected and stays visible while scoring.</li>
+  </ul>
+  <p>The scorecard and input panel share the screen — scorers always see where they are in the game while entering pins.</p>
 
   <h3>Pin Button Grid</h3>
   <p>Display large tap-friendly buttons for each valid pin count. Buttons are arranged in a grid — 6 columns works well. Each button is at minimum 48px tall.</p>
@@ -753,9 +776,28 @@
   </table>
 
   <h3>How Input is Triggered</h3>
-  <p>The pin input panel should make clear which player and which roll is being entered. The suggested UX: tapping a player's current frame on the scorecard opens the input panel with a clear label like <em>"Alice — Frame 5, Roll 1."</em></p>
+  <p>Each player has one <strong>actionable frame</strong> at a time — the frame where the next roll can be entered:</p>
+  <ul>
+    <li>If the player has a frame with partial rolls (in progress), that frame is actionable.</li>
+    <li>If all entered frames are complete and the next frame is empty (e.g. frames 1–4 done, frame 5 blank), frame 5 is actionable.</li>
+    <li>Older completed frames are not actionable — tapping them does nothing.</li>
+  </ul>
+  <p>Tapping a player's actionable frame opens the pin input panel with a clear label like <em>"Alice — Frame 5, Roll 1."</em> Since entry is not enforced in turn order, scorers can tap any player's actionable frame to enter that player's next roll. The input panel validates based on the specific roll context.</p>
+  <p>For the <strong>current turn player</strong>, tapping anywhere on their row also opens input (see <a href="#turn">Turn Indicator</a>). Other players' rows require tapping the actionable frame cell specifically.</p>
 
-  <p>Since entry is not enforced in order, scorers can also tap any player's in-progress frame to enter a roll for them. The input panel validates based on the specific roll context of that player.</p>
+  <h3>Actionable Frame Highlight</h3>
+  <p>Each player's actionable frame must be visually distinct from other empty or completed frames — e.g. a subtle border, background tint, or dot. Frames beyond the leading edge (e.g. frame 6 when frame 5 is next) stay plain until they become actionable. Completed frames stay plain.</p>
+
+  <h3>Multi-Roll Flow</h3>
+  <p>After a roll is saved, if the same player has another roll immediately (second ball of a frame, or extra rolls in frame 10), keep the pin input panel open and update the label for the next roll. Close or switch context only when that player's turn segment is done or the scorer dismisses the panel.</p>
+
+  <h3>Actionable Frame for Clearing</h3>
+  <p>Clear uses the same leading-edge concept with one twist:</p>
+  <ul>
+    <li>If the player has an <strong>in-progress frame</strong> (partial rolls), that frame is clearable.</li>
+    <li>If no frame is in progress (all entered frames are complete, next frame empty), the <strong>most recently completed frame</strong> is clearable — e.g. after finishing frame 4 with frame 5 still blank, frame 4 can be cleared.</li>
+  </ul>
+  <p>This lets scorers enter the next roll on the leading edge, or unwind one frame at a time as a form of correction. See <a href="#correction">Score Correction</a> for the full stack-unwind behavior.</p>
 </section>
 
 <!-- ─────────────────────────────────────────── -->
@@ -775,6 +817,7 @@
 
   <h3>Display</h3>
   <p>The current player's row on the scorecard is marked with a small colored indicator — for example, a left border accent or a small arrow/chevron before their name (as shown in the scorecard example above). No banner or modal — just a subtle row highlight.</p>
+  <p>Tapping <strong>anywhere on the current player's row</strong> (not just the actionable frame cell) opens the pin input panel for that player's next roll. This gives a larger tap target on small screens.</p>
 
   <div class="callout">
     <div class="callout-label">Example</div>
@@ -786,23 +829,23 @@
 <section id="correction">
   <h2><span class="section-num">07</span> Score Correction (Clear Frame)</h2>
 
-  <p>There is no undo button. Instead, scorers can clear a player's current or most recently completed frame and re-enter it. Think of each player's frame history as a stack — only the top of the stack can be cleared.</p>
+  <p>There is no undo button. Instead, scorers can clear a player's actionable frame (see <a href="#input">Pin Input UI</a>) and re-enter it. Think of each player's frame history as a stack — only the top of the stack can be cleared, one frame at a time.</p>
 
   <h3>The Rule</h3>
   <ul>
-    <li>For each player, only their <strong>highest-numbered frame with any rolls entered</strong> can be cleared.</li>
-    <li>Clearing a frame removes all rolls recorded for that frame and resets it to blank.</li>
-    <li>After clearing, the next-highest frame becomes clearable.</li>
+    <li>If the player has an in-progress frame, clear removes all rolls in that frame.</li>
+    <li>If no frame is in progress, clear removes all rolls in the most recently completed frame.</li>
+    <li>After clearing, the next frame down the stack becomes clearable.</li>
     <li>This allows a scorer to "unwind" as many frames as needed, one at a time.</li>
   </ul>
 
   <h3>Example Walkthrough</h3>
   <pre>
 Alice has rolls entered through frame 6 (complete) and one roll in frame 7.
-Her highest-numbered frame with rolls = frame 7.
+Frame 7 is in progress → clearable.
 
 → Scorer clears frame 7. All rolls for frame 7 are removed.
-  Frame 6 is now the highest frame with rolls → it is now clearable.
+  No frame in progress; frame 6 (most recently completed) is now clearable.
 
 → Scorer clears frame 6.
   Frame 5 becomes clearable.
@@ -827,11 +870,16 @@ Her highest-numbered frame with rolls = frame 7.
   <p>Any person who knows the 6-digit code can access and edit the game. There is no concept of host, owner, or permission levels. All scorers are equal editors.</p>
 
   <h3>Sync Strategy — Polling</h3>
-  <p>All connected devices poll the server for the latest game state on a fixed interval. Recommended interval: <strong>every 3–5 seconds</strong>. On each poll, the server returns the full current game state and the client re-renders. No websockets required.</p>
+  <p>All connected devices poll the server for the latest game state on a fixed interval. Recommended interval: <strong>every 3–5 seconds</strong>. On each poll, the server returns the full current game state (including computed scores) and the client re-renders. No websockets required.</p>
+  <p>Additionally, trigger an <strong>immediate poll</strong> after any successful write (roll entry or frame clear) from this device, in addition to the regular interval. This makes the scorer's own updates feel responsive without optimistic UI.</p>
+
+  <h3>Server Authority</h3>
+  <p>The server is the single source of truth. All roll validation, frame rules, and score computation happen server-side on every write. Clients submit roll and clear actions via API; they never compute or persist scores locally. Poll responses include the server-computed scorecard so all devices stay in sync.</p>
 
   <ul>
     <li>Polling should pause or slow down when the app is in the background/screen is off.</li>
     <li>There is no optimistic UI — the client waits for server confirmation before displaying a newly entered roll.</li>
+    <li>After a successful save, show brief feedback (e.g. a subtle flash or checkmark on the roll cell). This confirms the entry landed, especially on slow alley Wi‑Fi.</li>
     <li>If two scorers submit a roll for the same player's same frame simultaneously, last-write-wins is acceptable. The small user base makes this collision extremely unlikely.</li>
   </ul>
 
@@ -839,7 +887,7 @@ Her highest-numbered frame with rolls = frame 7.
   <p>If a poll or submission fails, display a subtle connection status indicator (e.g. a small banner or icon). Do not block the UI. Retry automatically.</p>
 
   <h3>Sharing the Code</h3>
-  <p>The game code is displayed prominently on the Setup screen (primary sharing moment) and remains visible on the Active Game screen for late joiners. Both screens include a one-tap copy button so scorers can easily paste the code into a text message.</p>
+  <p>The join URL (<code>/bowling/&lt;code&gt;</code>) is displayed prominently on the Setup screen (primary sharing moment) and remains visible on the Active and Completed screens. Use the native <strong>Share</strong> button where available (opens the phone's share sheet with the URL); otherwise copy the full URL to the clipboard.</p>
 </section>
 
 <!-- ─────────────────────────────────────────── -->
@@ -855,17 +903,18 @@ Her highest-numbered frame with rolls = frame 7.
   </div>
 
   <h3>Setup → Active</h3>
-  <p>The creator taps "Start Game" on the Setup screen. At least one player must exist. Once started, the game moves to the Active state and scoring begins.</p>
+  <p>Any scorer on the Setup screen can tap <strong>Start Game</strong>. At least one named player must exist. Once started, the game moves to the Active state and scoring begins. Player order and names are locked — no reordering or renaming after this point.</p>
 
   <h3>Active → Complete</h3>
-  <p>The "Mark Complete" button becomes available <strong>only when all players have completed all 10 frames</strong> (i.e., all rolls for all frames are entered, no pending frames remain).</p>
+  <p>The "Mark Complete" button becomes available <strong>only when all players have completed all 10 frames</strong> (i.e., all rolls for all frames are entered, no pending frames remain). When eligible, make the button visually prominent (e.g. pinned near the top or highlighted) so groups don't forget to lock the game — the confirmation step still applies.</p>
   <p>Tapping "Mark Complete" shows a confirmation dialog: <em>"Are you sure? This will lock the game and it cannot be edited again."</em> Two buttons: <strong>Confirm</strong> and <strong>Cancel</strong>. Any scorer with the code can trigger this.</p>
 
   <h3>Completed State</h3>
   <ul>
     <li>The full scorecard is shown in read-only mode — no pin input, no clear options.</li>
     <li>The player(s) with the highest total score are highlighted as winner(s). Ties are possible and should be displayed as such (e.g. "Alice &amp; Bob win").</li>
-    <li>The game code is still displayed (for others to view the result).</li>
+    <li>A <strong>Copy Scores</strong> button copies plain text to the clipboard, e.g. <em>Alice 142 · Bob 138 — Alice wins</em>, for easy pasting into a group chat.</li>
+    <li>The game code and Share/copy link remain displayed (for others to view the result).</li>
     <li>Completed games are stored indefinitely and accessible at any time via the code.</li>
   </ul>
 
@@ -874,7 +923,7 @@ Her highest-numbered frame with rolls = frame 7.
 
   <div class="callout">
     <div class="callout-label">No Expiry</div>
-    Games never expire or get deleted. The 6-digit code space (1,000,000 possible codes) is sufficient for the expected usage volume.
+    Games never expire or get deleted. Codes are never reused. The 1,000,000-code space is sufficient for the expected usage volume.
   </div>
 </section>
 
@@ -908,7 +957,7 @@ Her highest-numbered frame with rolls = frame 7.
   </table>
 
   <h3>Score Computation</h3>
-  <p>Scores are always computed on the fly from the rolls — never stored. The scoring engine must:</p>
+  <p>Scores are always computed on the fly from the rolls — never stored in the database. Computation runs <strong>on the server</strong> whenever game state is read or updated. The scoring engine must:</p>
   <ol>
     <li>Walk frames 1–10 for a player in order.</li>
     <li>For each frame, determine if it is a strike, spare, or open.</li>
@@ -968,20 +1017,93 @@ Her highest-numbered frame with rolls = frame 7.
         <td>Confirmation dialog shown. On confirm, user is sent to Home screen. The existing game is unaffected and remains accessible via its code to anyone who has it.</td>
       </tr>
       <tr>
-        <td>Tapping a completed, locked frame on the scorecard</td>
-        <td>Nothing happens. No input panel opens. Only a player's highest-numbered frame with rolls is tappable for input or clearing.</td>
+        <td>Tapping a non-actionable frame on the scorecard</td>
+        <td>Nothing happens. Only each player's actionable frame (next roll to enter) accepts input. Older completed frames are not tappable.</td>
+      </tr>
+      <tr>
+        <td>Alice finished frames 1–4; frame 5 is blank</td>
+        <td>Frame 5 is actionable for input (enter roll 1). Frame 4 is clearable (most recently completed, nothing in progress).</td>
+      </tr>
+      <tr>
+        <td>Reorder players after game start</td>
+        <td>Not allowed. Reorder controls are hidden/disabled once the game is Active or Complete.</td>
       </tr>
       <tr>
         <td>Scorer joins a completed game</td>
         <td>Read-only scorecard is shown. No input available.</td>
+      </tr>
+      <tr>
+        <td>User refreshes or returns to Home mid-game</td>
+        <td>Home shows Rejoin link for the last visited game code (localStorage on this device only).</td>
+      </tr>
+      <tr>
+        <td>Same player has consecutive rolls (e.g. frame 10)</td>
+        <td>Pin input panel stays open; label updates for the next roll after each successful save.</td>
       </tr>
     </tbody>
   </table>
 
   <div class="callout info" style="margin-top: 28px;">
     <div class="callout-label">Out of Scope</div>
-    The following features are explicitly <strong>not</strong> included in this version: user accounts, player profiles, history across games, handicaps, animations, dark/light mode toggle, perfect game indicator, player randomizer, undo button, player name editing after game start.
+    The following features are explicitly <strong>not</strong> included in this version: user accounts, player profiles, history across games, handicaps, animations, dark/light mode toggle, perfect game indicator, player randomizer, dedicated undo button (frame clear is the correction mechanism), player name editing after game start, player reorder after game start, code-guessing protections or rate limiting, auto-generated player names or bulk-add shortcuts.
   </div>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="ux">
+  <h2><span class="section-num">12</span> UX Details</h2>
+  <p>Small interaction choices that improve the alley experience without adding product complexity:</p>
+  <table class="state">
+    <thead>
+      <tr><th>Detail</th><th>Behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Actionable frame highlight</td>
+        <td>Visual distinction on the one frame that accepts the next roll (see <a href="#input">Pin Input UI</a>).</td>
+      </tr>
+      <tr>
+        <td>Share button</td>
+        <td>Native phone share sheet when supported; copy URL as fallback. Not copy-only.</td>
+      </tr>
+      <tr>
+        <td>Poll on write</td>
+        <td>Immediate refresh after successful roll/clear, plus 3–5s interval polling.</td>
+      </tr>
+      <tr>
+        <td>Save feedback</td>
+        <td>Brief confirmation after server accepts a roll — not optimistic scoring.</td>
+      </tr>
+      <tr>
+        <td>Current player row tap</td>
+        <td>Whole row opens input for that player's actionable frame.</td>
+      </tr>
+      <tr>
+        <td>Multi-roll panel</td>
+        <td>Panel stays open across consecutive rolls for the same player.</td>
+      </tr>
+      <tr>
+        <td>Copy scores</td>
+        <td>Plain-text summary on Completed screen for group chats.</td>
+      </tr>
+      <tr>
+        <td>Rejoin last game</td>
+        <td>Home screen link from localStorage; no accounts.</td>
+      </tr>
+      <tr>
+        <td>Mark Complete prominence</td>
+        <td>Highlighted when eligible; confirmation still required.</td>
+      </tr>
+      <tr>
+        <td>Setup players</td>
+        <td>Explicit Add Player / Remove per row; real names typed by scorers.</td>
+      </tr>
+      <tr>
+        <td>Active layout</td>
+        <td>Scrollable scorecard above, fixed pin input panel below.</td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 
 </body>
