@@ -235,6 +235,11 @@ def create_app():
         CampTagCategory,
         CampTag,
     )
+    from app.projects.bowling.models import (
+        BowlingGame,
+        BowlingPlayer,
+        BowlingRoll,
+    )
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():
