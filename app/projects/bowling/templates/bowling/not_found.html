@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Bowling — Game Not Found{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bowling-page">
+    <div class="bowling-container">
+        <header class="bowling-header">
+            <h1 class="bowling-title">Bowling</h1>
+            <p class="bowling-intro">No game found with that code.</p>
+        </header>
+
+        <p class="bowling-placeholder-text">
+            <a href="{{ url_for('bowling.index') }}">Return to home</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

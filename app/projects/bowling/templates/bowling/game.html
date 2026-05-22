@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Bowling Game {{ code }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bowling-page">
+    <div class="bowling-container">
+        <header class="bowling-header">
+            <h1 class="bowling-title">Bowling</h1>
+            <p class="bowling-intro">Game <strong>{{ code }}</strong> — UI coming in Phase 4–5.</p>
+        </header>
+
+        <section class="bowling-placeholder" aria-labelledby="bowling-game-shell-heading">
+            <h2 id="bowling-game-shell-heading" class="bowling-section-title">Game shell</h2>
+            <p class="bowling-placeholder-text">
+                Poll game state at
+                <code>/bowling/api/games/{{ code }}</code>
+                while building the interactive scorecard.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}
