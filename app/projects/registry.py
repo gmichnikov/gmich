@@ -465,6 +465,17 @@ PROJECTS = [
         "icon": "⛺",
         "order": 25,
     },
+    {
+        "id": "bowling",
+        "name": "Bowling",
+        "description": "Bowling score tracker — public, database-backed (schema TBD)",
+        "url": "/bowling",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🎳",
+        "order": 26,
+    },
 ]
 
 

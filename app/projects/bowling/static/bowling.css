@@ -1,0 +1,51 @@
+/* Prefixed with bowling- to avoid collisions across hub projects */
+
+.bowling-page {
+    padding: 1.5rem 1rem 3rem;
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.bowling-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.bowling-header {
+    margin-bottom: 0.25rem;
+}
+
+.bowling-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.bowling-intro {
+    margin: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.bowling-section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+}
+
+.bowling-placeholder {
+    padding: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.bowling-placeholder-text {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #495057;
+}

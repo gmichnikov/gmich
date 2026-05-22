@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bowling Scorekeeper — Product Requirements</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --ink: #1a1612;
+    --paper: #f5f0e8;
+    --accent: #c0392b;
+    --accent-light: #e8d5d3;
+    --rule: #c8bfb0;
+    --muted: #7a6f62;
+    --code-bg: #eae4d8;
+    --section-bg: #ede8de;
+    --pin-active: #c0392b;
+    --pin-disabled: #c8bfb0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.7;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 560px;
+  }
+
+  /* ── TOC ── */
+  nav.toc {
+    background: var(--section-bg);
+    border-left: 4px solid var(--accent);
+    padding: 24px 28px;
+    margin-bottom: 56px;
+    border-radius: 0 4px 4px 0;
+  }
+  nav.toc .toc-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  nav.toc ol {
+    padding-left: 20px;
+  }
+  nav.toc li {
+    margin-bottom: 4px;
+  }
+  nav.toc a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  nav.toc a:hover { color: var(--accent); }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 56px;
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    border-bottom: 1.5px solid var(--rule);
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 14px; }
+  p:last-child { margin-bottom: 0; }
+
+  ul, ol {
+    padding-left: 22px;
+    margin-bottom: 14px;
+  }
+  li { margin-bottom: 6px; }
+  li:last-child { margin-bottom: 0; }
+
+  strong { font-weight: 500; }
+
+  /* ── Callout boxes ── */
+  .callout {
+    background: var(--section-bg);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14px;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.warning {
+    border-color: #e67e22;
+    background: #fdf3e7;
+  }
+  .callout.info {
+    border-color: #2980b9;
+    background: #eaf3fb;
+  }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  /* ── Code / mono ── */
+  code {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 20px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+  }
+
+  /* ── Scorecard visual ── */
+  .scorecard-wrap {
+    overflow-x: auto;
+    margin: 20px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  table.scorecard {
+    border-collapse: collapse;
+    min-width: 580px;
+    width: 100%;
+    font-size: 13px;
+  }
+  table.scorecard th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid var(--rule);
+    background: var(--section-bg);
+  }
+  table.scorecard td {
+    border: 1px solid var(--rule);
+    vertical-align: top;
+    padding: 0;
+    background: #fff;
+  }
+  table.scorecard td.player-name {
+    padding: 8px 10px;
+    font-weight: 500;
+    font-size: 13px;
+    min-width: 90px;
+    vertical-align: middle;
+    background: var(--section-bg);
+  }
+  table.scorecard td.player-name.current-turn {
+    border-left: 3px solid var(--accent);
+    color: var(--accent);
+  }
+  .frame-cell {
+    display: flex;
+    flex-direction: column;
+    min-width: 52px;
+  }
+  .rolls-row {
+    display: flex;
+    justify-content: flex-end;
+    border-bottom: 1px solid var(--rule);
+    min-height: 22px;
+  }
+  .roll-box {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    border-left: 1px solid var(--rule);
+  }
+  .roll-box.strike { color: var(--accent); font-weight: 500; }
+  .roll-box.spare  { color: #2980b9; font-weight: 500; }
+  .frame-score {
+    text-align: center;
+    padding: 4px 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 26px;
+  }
+  .frame-score.pending { color: var(--muted); font-style: italic; }
+
+  /* Frame 10 gets 3 roll boxes */
+  .frame-10 .rolls-row { justify-content: flex-end; }
+
+  /* ── Pin button grid visual ── */
+  .pin-grid-demo {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-width: 340px;
+    margin: 16px 0;
+  }
+  .pin-btn {
+    height: 52px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    border: 2px solid;
+  }
+  .pin-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .pin-btn.disabled {
+    background: var(--section-bg);
+    border-color: var(--pin-disabled);
+    color: var(--pin-disabled);
+    text-decoration: line-through;
+  }
+  .pin-btn.span2 { grid-column: span 2; }
+
+  /* ── Screen flow diagram ── */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 20px 0;
+    align-items: flex-start;
+  }
+  .screen-box {
+    background: #fff;
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px;
+    min-width: 160px;
+    flex: 1;
+    font-size: 13px;
+  }
+  .screen-box .screen-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .screen-box ul {
+    padding-left: 16px;
+    margin: 0;
+  }
+  .screen-box li { margin-bottom: 4px; font-size: 12px; }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 22px;
+    padding-top: 36px;
+  }
+
+  /* ── State table ── */
+  table.state {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  table.state th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--section-bg);
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+  }
+  table.state td {
+    padding: 8px 12px;
+    border: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  table.state tr:nth-child(even) td { background: var(--section-bg); }
+
+  /* ── Rule summary box ── */
+  .rule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  @media (max-width: 500px) { .rule-grid { grid-template-columns: 1fr; } }
+  .rule-card {
+    background: #fff;
+    border: 1.5px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 13px;
+  }
+  .rule-card .rule-title {
+    font-weight: 500;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  .rule-card .rule-title span {
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  /* ── Lifecycle diagram ── */
+  .lifecycle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .lc-state {
+    background: #fff;
+    border: 1.5px solid var(--rule);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .lc-state.active { border-color: var(--accent); color: var(--accent); }
+  .lc-state.done { border-color: var(--muted); color: var(--muted); }
+  .lc-arrow {
+    font-size: 18px;
+    color: var(--muted);
+    padding: 0 10px;
+    flex-shrink: 0;
+  }
+  .lc-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    body { padding: 32px 16px 64px; }
+    .flow-arrow { display: none; }
+    .flow { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Product Requirements Document</div>
+  <h1>Bowling Scorekeeper</h1>
+  <p class="subtitle">A mobile-first, multi-device collaborative bowling scorecard app. No accounts, no installs — just a code and a game.</p>
+</header>
+
+<nav class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#overview">Overview &amp; Design Philosophy</a></li>
+    <li><a href="#screens">Screen Flow</a></li>
+    <li><a href="#game-setup">Game Setup</a></li>
+    <li><a href="#scoring">Scoring &amp; Bowling Rules</a></li>
+    <li><a href="#input">Pin Input UI</a></li>
+    <li><a href="#turn">Turn Indicator</a></li>
+    <li><a href="#correction">Score Correction (Clear)</a></li>
+    <li><a href="#multiplayer">Multiplayer &amp; Sync</a></li>
+    <li><a href="#lifecycle">Game Lifecycle</a></li>
+    <li><a href="#data">Data Model Reference</a></li>
+    <li><a href="#edge-cases">Edge Cases &amp; Rules Summary</a></li>
+  </ol>
+</nav>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="overview">
+  <h2><span class="section-num">01</span> Overview &amp; Design Philosophy</h2>
+
+  <p>This is a real-time collaborative bowling scorekeeper. A group of people bowling together can share a 6-digit code and all score the game from their own phones simultaneously. There are no user accounts, no login, and no memory of players between games.</p>
+
+  <h3>Core Principles</h3>
+  <ul>
+    <li><strong>Mobile-first, always.</strong> This app will be used almost exclusively on phones, in bowling alleys. Every interaction must be thumb-friendly, readable in dim lighting, and fast to use with one hand.</li>
+    <li><strong>Simplicity over features.</strong> No animations, no dark/light mode toggle, no handicaps, no player profiles, no history across games.</li>
+    <li><strong>Flexible scoring.</strong> There is no enforced turn order for entry — any scorer can enter a roll for any player at any time. The app shows whose turn it logically is, but does not block other entry.</li>
+    <li><strong>Small user base.</strong> Design for reliability and simplicity, not scale. Polling-based sync is fine.</li>
+  </ul>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="screens">
+  <h2><span class="section-num">02</span> Screen Flow</h2>
+
+  <p>There are four primary screens:</p>
+
+  <div class="flow">
+    <div class="screen-box">
+      <div class="screen-title">Home</div>
+      <ul>
+        <li>Create new game button</li>
+        <li>Enter code field + Join button</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="screen-box">
+      <div class="screen-title">Setup</div>
+      <ul>
+        <li>Game code displayed + copy button</li>
+        <li>Add player names</li>
+        <li>Reorder players</li>
+        <li>Start Game button</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="screen-box">
+      <div class="screen-title">Active Game</div>
+      <ul>
+        <li>Scorecard for all players</li>
+        <li>Pin input panel</li>
+        <li>Whose turn indicator</li>
+        <li>Clear frame option</li>
+        <li>Game code visible + share</li>
+        <li>New Game button (with confirmation)</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="screen-box">
+      <div class="screen-title">Completed Game</div>
+      <ul>
+        <li>Full scorecard (read-only)</li>
+        <li>Final scores &amp; winner</li>
+        <li>Game code visible</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-label">Navigation Note</div>
+    When someone opens the app with a 6-digit code (e.g. via a shared link or manual entry), they land directly on the correct screen for that game's current state: Setup if not yet started, Active if in progress, Completed if finished.
+  </div>
+
+  <h3>Joining a Game</h3>
+  <p>From the Home screen, a user enters the 6-digit code and taps Join. If the code is valid, they land on the current state of that game. If the code is invalid or not found, show a clear inline error: <em>"No game found with that code."</em></p>
+
+  <h3>Setup Screen — Joining Late</h3>
+  <p>If a second person joins a game that is still on the Setup screen (not yet started), they see the same Setup screen as the creator. Both can add/reorder players. There is no concept of "host" — all scorers are equal.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="game-setup">
+  <h2><span class="section-num">03</span> Game Setup</h2>
+
+  <h3>Creating a Game</h3>
+  <p>When the creator taps "Create New Game," the server immediately generates a unique 6-digit numeric code (e.g. <code>482031</code>) and creates a game record. The creator is taken to the Setup screen, where the code is shown prominently so it can be shared with other scorers.</p>
+
+  <div class="callout">
+    <div class="callout-label">Code Generation</div>
+    Codes are 6-digit zero-padded integers (000000–999999), chosen randomly from codes not currently in use. Since games persist forever, "not in use" means no existing game record has that code. With a small user base this space is effectively unlimited.
+  </div>
+
+  <h3>Adding Players</h3>
+  <ul>
+    <li>Players are defined by a single name string only. No avatars, IDs, or other metadata.</li>
+    <li>Any number of players can be added.</li>
+    <li>Players can be reordered via drag-and-drop (or up/down tap buttons — whichever is more reliable on mobile). Order matters: it determines turn sequence and the "whose turn" logic.</li>
+    <li>Player names are not remembered across games.</li>
+    <li>Player names <strong>cannot be edited</strong> once the game has started. All name changes must happen on the Setup screen before "Start Game" is tapped.</li>
+    <li>The Start Game button should only be enabled once at least one player has been added.</li>
+  </ul>
+
+  <h3>Sharing the Code from Setup</h3>
+  <p>The game code is generated the moment a game is created — before any players are added. The Setup screen should display it prominently with a one-tap copy button, since this is the natural moment to share it: <em>"Here's our game code, join before we start."</em> The code remains visible and copyable on the Active Game screen as well, for anyone who joins late.</p>
+
+  <h3>Late Player Addition Lock</h3>
+  <p>Once the game has started, players can still be added from the Active Game screen — <strong>until</strong> any player has rolled their first ball of Frame 2. At that point, the player list is locked and the "Add Player" option is hidden/disabled.</p>
+
+  <p>A player added after the game has started simply has blank/zero scores for any frames already played by other players. They begin play with Frame 1 regardless of where others are in the game.</p>
+
+  <div class="callout warning">
+    <div class="callout-label">Important Edge Case</div>
+    The lock condition is: <em>any player's second frame has at least one roll entered.</em> Not "frame 2 is complete," just that the first roll of frame 2 has been recorded for anyone. This prevents adding players who would have a meaningful scoring disadvantage.
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="scoring">
+  <h2><span class="section-num">04</span> Scoring &amp; Bowling Rules</h2>
+
+  <p>Standard 10-pin bowling scoring applies. The scorecard has 10 frames per player. Each frame has a small roll box area (top) and a cumulative score area (bottom).</p>
+
+  <h3>Scorecard Layout</h3>
+
+  <div class="scorecard-wrap">
+    <table class="scorecard">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+          <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="player-name current-turn">▶ Alice</td>
+          <!-- Frame 1: Strike -->
+          <td><div class="frame-cell">
+            <div class="rolls-row"><div class="roll-box strike">X</div></div>
+            <div class="frame-score">20</div>
+          </div></td>
+          <!-- Frame 2: Spare -->
+          <td><div class="frame-cell">
+            <div class="rolls-row"><div class="roll-box">7</div><div class="roll-box spare">/</div></div>
+            <div class="frame-score">37</div>
+          </div></td>
+          <!-- Frame 3: Normal -->
+          <td><div class="frame-cell">
+            <div class="rolls-row"><div class="roll-box">4</div><div class="roll-box">3</div></div>
+            <div class="frame-score">44</div>
+          </div></td>
+          <!-- Frames 4–9: blank -->
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <!-- Frame 10 -->
+          <td><div class="frame-cell frame-10"><div class="rolls-row"><div class="roll-box"></div><div class="roll-box"></div><div class="roll-box"></div></div><div class="frame-score"></div></div></td>
+          <td style="text-align:center; vertical-align:middle; font-family:'DM Mono',monospace; font-weight:500;">44</td>
+        </tr>
+        <tr>
+          <td class="player-name">Bob</td>
+          <td><div class="frame-cell">
+            <div class="rolls-row"><div class="roll-box">6</div><div class="roll-box">2</div></div>
+            <div class="frame-score">8</div>
+          </div></td>
+          <td><div class="frame-cell">
+            <div class="rolls-row"><div class="roll-box strike">X</div></div>
+            <div class="frame-score pending">…</div>
+          </div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell"><div class="rolls-row"></div><div class="frame-score"></div></div></td>
+          <td><div class="frame-cell frame-10"><div class="rolls-row"><div class="roll-box"></div><div class="roll-box"></div><div class="roll-box"></div></div><div class="frame-score"></div></div></td>
+          <td style="text-align:center; vertical-align:middle; font-family:'DM Mono',monospace; font-weight:500;">8</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12px; color: var(--muted); margin-top: 4px;">Note: <span style="color:var(--accent); font-weight:500;">▶</span> marks the current turn. <span style="font-family:'DM Mono',monospace; font-style:italic; color:var(--muted);">…</span> means score is pending bonus rolls. Frame 10 always shows 3 roll boxes.</p>
+
+  <h3>Standard Scoring Rules</h3>
+
+  <div class="rule-grid">
+    <div class="rule-card">
+      <div class="rule-title"><span>Strike</span>All 10 on first roll</div>
+      <p>Display <code>X</code> in the single roll box. Score = 10 + next 2 rolls. Frame score shown as <em>pending</em> until bonus rolls are recorded. Only one roll box used for frames 1–9.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-title"><span>Spare</span>All 10 across both rolls</div>
+      <p>Display <code>/</code> in the second roll box. Score = 10 + next 1 roll. Frame score shown as <em>pending</em> until the bonus roll is recorded.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-title"><span>Open Frame</span>Fewer than 10 pins</div>
+      <p>Score = sum of the two rolls. No bonus. Score is shown immediately after the second roll.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-title"><span>Gutter</span>Zero pins</div>
+      <p>Display <code>–</code> (dash) instead of 0 in the roll box, following standard scorecard convention. The pin input button is labeled <code>0</code> but the scorecard renders it as <code>–</code>.</p>
+    </div>
+  </div>
+
+  <h3>Frame 10 Special Rules</h3>
+  <p>The 10th frame always displays 3 roll boxes. The rules for how many rolls a player actually gets:</p>
+  <ul>
+    <li><strong>Strike on first roll:</strong> Player gets 2 more rolls (3 total).</li>
+    <li><strong>Spare after first two rolls:</strong> Player gets 1 more roll (3 total).</li>
+    <li><strong>Open (no strike or spare):</strong> Player only gets 2 rolls. Third box stays blank/locked.</li>
+  </ul>
+
+  <div class="callout">
+    <div class="callout-label">Frame 10 Scoring Detail</div>
+    The frame 10 score is simply the sum of all rolls taken (2 or 3). There is no additional bonus beyond the extra roll(s) earned. Running total = sum of frames 1–10.
+  </div>
+
+  <h3>Pending Scores</h3>
+  <p>Because rolls can be entered out of order across players, a frame's score may be "pending" — the bonus rolls needed to calculate it haven't been entered yet. Display a visual indicator (e.g. <code>…</code> or a dash) in the frame score area when a score cannot yet be computed. The running cumulative totals for all subsequent frames should also be left blank/pending in this case.</p>
+
+  <h3>Cumulative Score</h3>
+  <p>The rightmost column shows each player's total score — the sum of all completed (non-pending) frames. If any frame is pending, the total should only reflect frames up to and including the last non-pending one.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="input">
+  <h2><span class="section-num">05</span> Pin Input UI</h2>
+
+  <p>When a scorer taps on a player's row (or their "current" frame), a pin input panel appears. This is the primary interaction of the app and must be highly optimized for mobile use.</p>
+
+  <h3>Pin Button Grid</h3>
+  <p>Display large tap-friendly buttons for each valid pin count. Buttons are arranged in a grid — 6 columns works well. Each button is at minimum 48px tall.</p>
+
+  <p>Example: first roll of a frame — all values 0–10 available:</p>
+  <div class="pin-grid-demo">
+    <div class="pin-btn active">0</div>
+    <div class="pin-btn active">1</div>
+    <div class="pin-btn active">2</div>
+    <div class="pin-btn active">3</div>
+    <div class="pin-btn active">4</div>
+    <div class="pin-btn active">5</div>
+    <div class="pin-btn active">6</div>
+    <div class="pin-btn active">7</div>
+    <div class="pin-btn active">8</div>
+    <div class="pin-btn active">9</div>
+    <div class="pin-btn active span2">10 / Strike</div>
+  </div>
+
+  <p>Example: second roll, after knocking down 7 on the first roll — only 0–3 are valid (can't knock more than 3 remaining pins), <strong>except</strong> that the "spare" option (exactly 3, shown as <code>/</code>) is always clearly identified:</p>
+  <div class="pin-grid-demo">
+    <div class="pin-btn active">0</div>
+    <div class="pin-btn active">1</div>
+    <div class="pin-btn active">2</div>
+    <div class="pin-btn active" style="border-color:#2980b9; color:#2980b9;">/ (3)</div>
+    <div class="pin-btn disabled">4</div>
+    <div class="pin-btn disabled">5</div>
+    <div class="pin-btn disabled">6</div>
+    <div class="pin-btn disabled">7</div>
+    <div class="pin-btn disabled">8</div>
+    <div class="pin-btn disabled">9</div>
+    <div class="pin-btn disabled span2">10</div>
+  </div>
+
+  <h3>Validation Rules for Pin Input</h3>
+  <table class="state">
+    <thead>
+      <tr><th>Roll</th><th>Valid Inputs</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Frame 1–9, Roll 1</td>
+        <td>0–10</td>
+        <td>10 = strike, frame ends immediately</td>
+      </tr>
+      <tr>
+        <td>Frame 1–9, Roll 2</td>
+        <td>0 – (10 − roll1)</td>
+        <td>If result = 10 − roll1, it's a spare. Display <code>/</code>.</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 1</td>
+        <td>0–10</td>
+        <td>If strike, proceed to roll 2 with fresh 10 pins</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 2 (after strike)</td>
+        <td>0–10</td>
+        <td>Fresh set of pins. If strike again, roll 3 is also fresh 10.</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 2 (no strike on roll 1)</td>
+        <td>0 – (10 − roll1)</td>
+        <td>If spare, roll 3 gets fresh 10 pins.</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 3 (after spare)</td>
+        <td>0–10</td>
+        <td>Fresh 10 pins.</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 3 (after 2 strikes)</td>
+        <td>0–10</td>
+        <td>Fresh 10 pins.</td>
+      </tr>
+      <tr>
+        <td>Frame 10, Roll 3 (after strike then non-strike)</td>
+        <td>0 – (10 − roll2)</td>
+        <td>Remaining pins from roll 2's set.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>How Input is Triggered</h3>
+  <p>The pin input panel should make clear which player and which roll is being entered. The suggested UX: tapping a player's current frame on the scorecard opens the input panel with a clear label like <em>"Alice — Frame 5, Roll 1."</em></p>
+
+  <p>Since entry is not enforced in order, scorers can also tap any player's in-progress frame to enter a roll for them. The input panel validates based on the specific roll context of that player.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="turn">
+  <h2><span class="section-num">06</span> Turn Indicator</h2>
+
+  <p>The app displays a subtle indicator of whose turn it logically is. This is advisory — it does not block entry for other players.</p>
+
+  <h3>Algorithm</h3>
+  <p>The "current player" is determined as follows:</p>
+  <ol>
+    <li>Count the number of <strong>completed frames</strong> for each player. A frame is complete when all its rolls have been entered (and it is not awaiting input for more rolls in that frame).</li>
+    <li>The current player is the one with the <strong>fewest completed frames</strong>.</li>
+    <li>If multiple players are tied on completed frames, the one with the <strong>lowest position</strong> in the player order wins the tiebreak.</li>
+    <li>Because player positions are always unique, there is always exactly one current player.</li>
+  </ol>
+
+  <h3>Display</h3>
+  <p>The current player's row on the scorecard is marked with a small colored indicator — for example, a left border accent or a small arrow/chevron before their name (as shown in the scorecard example above). No banner or modal — just a subtle row highlight.</p>
+
+  <div class="callout">
+    <div class="callout-label">Example</div>
+    Player order: Alice (1), Bob (2), Carol (3). Alice has completed 4 frames, Bob 5 frames, Carol 4 frames. Fewest is 4 (tied: Alice and Carol). Alice is earlier in order → Alice is shown as current.
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="correction">
+  <h2><span class="section-num">07</span> Score Correction (Clear Frame)</h2>
+
+  <p>There is no undo button. Instead, scorers can clear a player's current or most recently completed frame and re-enter it. Think of each player's frame history as a stack — only the top of the stack can be cleared.</p>
+
+  <h3>The Rule</h3>
+  <ul>
+    <li>For each player, only their <strong>highest-numbered frame with any rolls entered</strong> can be cleared.</li>
+    <li>Clearing a frame removes all rolls recorded for that frame and resets it to blank.</li>
+    <li>After clearing, the next-highest frame becomes clearable.</li>
+    <li>This allows a scorer to "unwind" as many frames as needed, one at a time.</li>
+  </ul>
+
+  <h3>Example Walkthrough</h3>
+  <pre>
+Alice has rolls entered through frame 6 (complete) and one roll in frame 7.
+Her highest-numbered frame with rolls = frame 7.
+
+→ Scorer clears frame 7. All rolls for frame 7 are removed.
+  Frame 6 is now the highest frame with rolls → it is now clearable.
+
+→ Scorer clears frame 6.
+  Frame 5 becomes clearable.
+
+→ And so on back to frame 1.
+  </pre>
+
+  <h3>UI for Clearing</h3>
+  <p>A "Clear Frame" option should be accessible on the player's current frame — for example, a small trash/reset icon on the active frame cell, or a button in the pin input panel that appears when viewing a frame that is clearable. It should be visually distinct but not oversized — this is not a primary action.</p>
+
+  <div class="callout warning">
+    <div class="callout-label">No Confirmation Required</div>
+    Clearing a single frame does not need a confirmation dialog — the player can immediately re-enter scores. The action is easily reversible by re-entering the rolls. Reserve confirmation dialogs for irreversible actions (i.e., marking the game complete).
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="multiplayer">
+  <h2><span class="section-num">08</span> Multiplayer &amp; Sync</h2>
+
+  <h3>Access Model</h3>
+  <p>Any person who knows the 6-digit code can access and edit the game. There is no concept of host, owner, or permission levels. All scorers are equal editors.</p>
+
+  <h3>Sync Strategy — Polling</h3>
+  <p>All connected devices poll the server for the latest game state on a fixed interval. Recommended interval: <strong>every 3–5 seconds</strong>. On each poll, the server returns the full current game state and the client re-renders. No websockets required.</p>
+
+  <ul>
+    <li>Polling should pause or slow down when the app is in the background/screen is off.</li>
+    <li>There is no optimistic UI — the client waits for server confirmation before displaying a newly entered roll.</li>
+    <li>If two scorers submit a roll for the same player's same frame simultaneously, last-write-wins is acceptable. The small user base makes this collision extremely unlikely.</li>
+  </ul>
+
+  <h3>Offline / Error Handling</h3>
+  <p>If a poll or submission fails, display a subtle connection status indicator (e.g. a small banner or icon). Do not block the UI. Retry automatically.</p>
+
+  <h3>Sharing the Code</h3>
+  <p>The game code is displayed prominently on the Setup screen (primary sharing moment) and remains visible on the Active Game screen for late joiners. Both screens include a one-tap copy button so scorers can easily paste the code into a text message.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="lifecycle">
+  <h2><span class="section-num">09</span> Game Lifecycle</h2>
+
+  <div class="lifecycle">
+    <div class="lc-state">Setup<span class="lc-label">Adding players</span></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-state active">Active<span class="lc-label">In progress</span></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-state done">Complete<span class="lc-label">Read-only</span></div>
+  </div>
+
+  <h3>Setup → Active</h3>
+  <p>The creator taps "Start Game" on the Setup screen. At least one player must exist. Once started, the game moves to the Active state and scoring begins.</p>
+
+  <h3>Active → Complete</h3>
+  <p>The "Mark Complete" button becomes available <strong>only when all players have completed all 10 frames</strong> (i.e., all rolls for all frames are entered, no pending frames remain).</p>
+  <p>Tapping "Mark Complete" shows a confirmation dialog: <em>"Are you sure? This will lock the game and it cannot be edited again."</em> Two buttons: <strong>Confirm</strong> and <strong>Cancel</strong>. Any scorer with the code can trigger this.</p>
+
+  <h3>Completed State</h3>
+  <ul>
+    <li>The full scorecard is shown in read-only mode — no pin input, no clear options.</li>
+    <li>The player(s) with the highest total score are highlighted as winner(s). Ties are possible and should be displayed as such (e.g. "Alice &amp; Bob win").</li>
+    <li>The game code is still displayed (for others to view the result).</li>
+    <li>Completed games are stored indefinitely and accessible at any time via the code.</li>
+  </ul>
+
+  <h3>New Game Button</h3>
+  <p>A "New Game" button is available on the Active Game screen. Tapping it shows a confirmation dialog: <em>"Start a new game? This game will remain accessible via its code."</em> Confirming navigates the user to the Home screen. The existing game is unaffected — it remains accessible to anyone with its code.</p>
+
+  <div class="callout">
+    <div class="callout-label">No Expiry</div>
+    Games never expire or get deleted. The 6-digit code space (1,000,000 possible codes) is sufficient for the expected usage volume.
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="data">
+  <h2><span class="section-num">10</span> Data Model Reference</h2>
+
+  <p>This is a logical description of the data — not a schema prescription. Adapt to your stack.</p>
+
+  <table class="state">
+    <thead>
+      <tr><th>Entity</th><th>Fields</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Game</strong></td>
+        <td><code>code</code>, <code>status</code>, <code>created_at</code>, <code>completed_at</code></td>
+        <td>Status: <code>setup</code> | <code>active</code> | <code>complete</code></td>
+      </tr>
+      <tr>
+        <td><strong>Player</strong></td>
+        <td><code>game_code</code>, <code>name</code>, <code>order_index</code></td>
+        <td>Order index determines turn sequence and tiebreak</td>
+      </tr>
+      <tr>
+        <td><strong>Roll</strong></td>
+        <td><code>game_code</code>, <code>player_id</code>, <code>frame</code> (1–10), <code>roll</code> (1–3), <code>pins</code></td>
+        <td>Rolls are stored individually. Score is always computed from rolls, never stored directly.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Score Computation</h3>
+  <p>Scores are always computed on the fly from the rolls — never stored. The scoring engine must:</p>
+  <ol>
+    <li>Walk frames 1–10 for a player in order.</li>
+    <li>For each frame, determine if it is a strike, spare, or open.</li>
+    <li>Look ahead to the next 1–2 rolls (from subsequent frames) to compute bonuses.</li>
+    <li>If lookahead rolls are not yet recorded, mark that frame (and all subsequent) as pending.</li>
+    <li>Return both per-frame scores and a running cumulative total.</li>
+  </ol>
+</section>
+
+<!-- ─────────────────────────────────────────── -->
+<section id="edge-cases">
+  <h2><span class="section-num">11</span> Edge Cases &amp; Rules Summary</h2>
+
+  <table class="state">
+    <thead>
+      <tr><th>Situation</th><th>Expected Behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Strike in frame 10, roll 1</td>
+        <td>Pins reset. Roll 2 allows 0–10. If roll 2 is also a strike, pins reset again for roll 3 (0–10). If roll 2 is not a strike, roll 3 allows 0–(10−roll2).</td>
+      </tr>
+      <tr>
+        <td>Spare in frame 10 (rolls 1+2)</td>
+        <td>Pins reset. Roll 3 allows 0–10.</td>
+      </tr>
+      <tr>
+        <td>Open frame in frame 10</td>
+        <td>Only 2 rolls. Roll 3 is locked/hidden. Frame score = roll1 + roll2.</td>
+      </tr>
+      <tr>
+        <td>Pending score display</td>
+        <td>Frame score cell shows <code>…</code>. Running total stops accumulating at the last confirmed frame.</td>
+      </tr>
+      <tr>
+        <td>Clearing frame with pending bonus</td>
+        <td>If frame N is cleared and frame N−1 was previously pending (waiting on frame N's rolls as bonus), frame N−1 reverts to pending display.</td>
+      </tr>
+      <tr>
+        <td>All 10 frames complete but game not marked complete</td>
+        <td>Game remains editable (via clear + re-entry). "Mark Complete" button is available but not mandatory.</td>
+      </tr>
+      <tr>
+        <td>Single player game</td>
+        <td>Fully supported. Turn indicator always points to that player.</td>
+      </tr>
+      <tr>
+        <td>Invalid code entered on Home screen</td>
+        <td>Show inline error: "No game found with that code." Do not navigate.</td>
+      </tr>
+      <tr>
+        <td>Two scorers submit a roll simultaneously</td>
+        <td>Last-write-wins. Acceptable given small user base.</td>
+      </tr>
+      <tr>
+        <td>Tapping "New Game" during an active game</td>
+        <td>Confirmation dialog shown. On confirm, user is sent to Home screen. The existing game is unaffected and remains accessible via its code to anyone who has it.</td>
+      </tr>
+      <tr>
+        <td>Tapping a completed, locked frame on the scorecard</td>
+        <td>Nothing happens. No input panel opens. Only a player's highest-numbered frame with rolls is tappable for input or clearing.</td>
+      </tr>
+      <tr>
+        <td>Scorer joins a completed game</td>
+        <td>Read-only scorecard is shown. No input available.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout info" style="margin-top: 28px;">
+    <div class="callout-label">Out of Scope</div>
+    The following features are explicitly <strong>not</strong> included in this version: user accounts, player profiles, history across games, handicaps, animations, dark/light mode toggle, perfect game indicator, player randomizer, undo button, player name editing after game start.
+  </div>
+</section>
+
+</body>
+</html>

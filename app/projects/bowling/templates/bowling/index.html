@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Bowling{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bowling-page">
+    <div class="bowling-container">
+        <header class="bowling-header">
+            <h1 class="bowling-title">Bowling</h1>
+            <p class="bowling-intro">Public project shell for bowling tools. Database-backed data models are not defined yet.</p>
+        </header>
+
+        <section class="bowling-placeholder" aria-labelledby="bowling-placeholder-heading">
+            <h2 id="bowling-placeholder-heading" class="bowling-section-title">Coming next</h2>
+            <p class="bowling-placeholder-text">Add SQLAlchemy models and migrations once the schema is clear.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
