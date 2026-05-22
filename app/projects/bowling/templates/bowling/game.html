@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="bowling-page bowling-game-page" id="bowling-game-root" data-code="{{ code }}">
-    <div class="bowling-container">
+    <div class="bowling-container bowling-game-container">
         <header class="bowling-header">
             <h1 class="bowling-title">Bowling</h1>
             <div class="bowling-code-row">
@@ -20,6 +20,25 @@
                 </div>
                 <button type="button" id="bowling-share-btn" class="bowling-btn bowling-btn-secondary">
                     Share
+                </button>
+                <button
+                    type="button"
+                    id="bowling-game-menu-btn"
+                    class="bowling-menu-btn"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="bowling-game-menu"
+                    hidden
+                >
+                    ⋯
+                </button>
+            </div>
+            <div id="bowling-game-menu" class="bowling-game-menu" role="menu" hidden>
+                <button type="button" id="bowling-active-add-player-btn" class="bowling-game-menu-item" role="menuitem" hidden>
+                    Add Player
+                </button>
+                <button type="button" id="bowling-new-game-btn" class="bowling-game-menu-item" role="menuitem">
+                    New Game
                 </button>
             </div>
         </header>
@@ -75,23 +94,96 @@
             </form>
         </dialog>
 
-        <div id="bowling-view-active" class="bowling-view" hidden>
-            <section class="bowling-card">
-                <h2 class="bowling-section-title">Game in progress</h2>
-                <p class="bowling-phase-note">
-                    Scoring UI is coming in the next phase. Share the code so others can join when ready.
-                </p>
-            </section>
+        <div id="bowling-view-active" class="bowling-view bowling-active-view" hidden>
+            <div id="bowling-mark-complete-banner" class="bowling-mark-complete-banner" hidden>
+                <p class="bowling-mark-complete-banner-text">All frames have been scored.</p>
+                <button
+                    type="button"
+                    id="bowling-mark-complete-btn"
+                    class="bowling-btn bowling-btn-primary bowling-btn-block bowling-mark-complete-btn"
+                >
+                    Mark Game Complete
+                </button>
+            </div>
+            <div id="bowling-scorecard-wrap" class="bowling-scorecard-wrap">
+                <div id="bowling-scorecard" class="bowling-scorecard" role="grid" aria-label="Scorecard"></div>
+            </div>
         </div>
 
         <div id="bowling-view-complete" class="bowling-view" hidden>
             <section class="bowling-card">
                 <h2 class="bowling-section-title">Game complete</h2>
-                <p class="bowling-phase-note">
-                    This game is finished and locked. Final scorecard view arrives in a later phase.
-                </p>
+                <p class="bowling-phase-note">Final scores — this game is locked.</p>
+                <button
+                    type="button"
+                    id="bowling-complete-new-game-btn"
+                    class="bowling-btn bowling-btn-primary bowling-btn-block"
+                >
+                    New Game
+                </button>
             </section>
+            <div id="bowling-complete-scorecard-wrap" class="bowling-scorecard-wrap">
+                <div id="bowling-complete-scorecard" class="bowling-scorecard" role="grid" aria-label="Final scorecard"></div>
+            </div>
         </div>
+
+        <div id="bowling-pin-panel" class="bowling-pin-panel" hidden>
+            <div class="bowling-pin-panel-header">
+                <p id="bowling-pin-label" class="bowling-pin-label"></p>
+                <button type="button" id="bowling-pin-dismiss-btn" class="bowling-pin-dismiss" aria-label="Close pin input">
+                    ✕
+                </button>
+            </div>
+            <div id="bowling-pin-grid" class="bowling-pin-grid"></div>
+            <button type="button" id="bowling-clear-frame-btn" class="bowling-btn bowling-clear-frame-btn" hidden>
+                Clear Frame
+            </button>
+            <p id="bowling-save-indicator" class="bowling-save-indicator" hidden aria-live="polite">Saved</p>
+        </div>
+
+        <dialog id="bowling-complete-dialog" class="bowling-dialog" aria-labelledby="bowling-complete-dialog-title">
+            <form method="dialog" class="bowling-dialog-inner">
+                <h2 id="bowling-complete-dialog-title" class="bowling-dialog-title">Mark game complete?</h2>
+                <p class="bowling-dialog-lead">
+                    Are you sure? This will lock the game and it cannot be edited again.
+                </p>
+                <div class="bowling-dialog-actions">
+                    <button type="submit" value="cancel" class="bowling-btn bowling-btn-block">Cancel</button>
+                    <button type="submit" value="confirm" class="bowling-btn bowling-btn-primary bowling-btn-block">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="bowling-new-game-dialog" class="bowling-dialog" aria-labelledby="bowling-new-game-dialog-title">
+            <form method="dialog" class="bowling-dialog-inner">
+                <h2 id="bowling-new-game-dialog-title" class="bowling-dialog-title">Start a new game?</h2>
+                <p class="bowling-dialog-lead">
+                    This game will remain accessible via its code.
+                </p>
+                <div class="bowling-dialog-actions">
+                    <button type="submit" value="cancel" class="bowling-btn bowling-btn-block">Cancel</button>
+                    <button type="submit" value="confirm" class="bowling-btn bowling-btn-primary bowling-btn-block">
+                        Go to Home
+                    </button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="bowling-add-player-dialog" class="bowling-dialog" aria-labelledby="bowling-add-player-dialog-title">
+            <form method="dialog" class="bowling-dialog-inner" id="bowling-add-player-form">
+                <h2 id="bowling-add-player-dialog-title" class="bowling-dialog-title">Add player</h2>
+                <label class="bowling-label" for="bowling-add-player-name">Name</label>
+                <input type="text" id="bowling-add-player-name" class="bowling-input" maxlength="100" required>
+                <div class="bowling-dialog-actions">
+                    <button type="submit" value="cancel" class="bowling-btn bowling-btn-block">Cancel</button>
+                    <button type="submit" value="confirm" class="bowling-btn bowling-btn-primary bowling-btn-block">
+                        Add
+                    </button>
+                </div>
+            </form>
+        </dialog>
 
         <p id="bowling-toast" class="bowling-toast" role="status" aria-live="polite" hidden></p>
     </div>

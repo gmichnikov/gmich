@@ -208,6 +208,31 @@
         var playerList = document.getElementById("bowling-player-list");
         var setupEmpty = document.getElementById("bowling-setup-empty");
 
+        var activeSelection = null;
+        var pinPanelOpen = false;
+        var scoreActionPending = false;
+        var saveIndicatorTimer = null;
+
+        var scorecardEl = document.getElementById("bowling-scorecard");
+        var completeScorecardEl = document.getElementById("bowling-complete-scorecard");
+        var pinPanel = document.getElementById("bowling-pin-panel");
+        var pinLabel = document.getElementById("bowling-pin-label");
+        var pinGrid = document.getElementById("bowling-pin-grid");
+        var pinDismissBtn = document.getElementById("bowling-pin-dismiss-btn");
+        var clearFrameBtn = document.getElementById("bowling-clear-frame-btn");
+        var saveIndicator = document.getElementById("bowling-save-indicator");
+        var activeAddPlayerBtn = document.getElementById("bowling-active-add-player-btn");
+        var newGameBtn = document.getElementById("bowling-new-game-btn");
+        var completeNewGameBtn = document.getElementById("bowling-complete-new-game-btn");
+        var markCompleteBtn = document.getElementById("bowling-mark-complete-btn");
+        var markCompleteBanner = document.getElementById("bowling-mark-complete-banner");
+        var completeDialog = document.getElementById("bowling-complete-dialog");
+        var newGameDialog = document.getElementById("bowling-new-game-dialog");
+        var addPlayerDialog = document.getElementById("bowling-add-player-dialog");
+        var addPlayerNameInput = document.getElementById("bowling-add-player-name");
+        var gameMenuBtn = document.getElementById("bowling-game-menu-btn");
+        var gameMenu = document.getElementById("bowling-game-menu");
+
         if (shareBtn) {
             shareBtn.addEventListener("click", function () {
                 shareGame(code).catch(function (err) {
@@ -435,6 +460,703 @@
             if (completeView) {
                 completeView.hidden = status !== "complete";
             }
+            if (root) {
+                root.classList.toggle("bowling-game-root--active", status === "active");
+                root.classList.toggle("bowling-game-root--complete", status === "complete");
+                root.classList.toggle("bowling-game-root--pin-open", status === "active" && pinPanelOpen);
+            }
+            if (status !== "active") {
+                closePinPanel();
+            }
+            if (root && status !== "active") {
+                root.classList.remove("bowling-game-root--mark-complete");
+            }
+            updateGameMenuVisibility(status);
+        }
+
+        function closeGameMenu() {
+            if (!gameMenu || !gameMenuBtn) {
+                return;
+            }
+            gameMenu.hidden = true;
+            gameMenuBtn.setAttribute("aria-expanded", "false");
+        }
+
+        function toggleGameMenu() {
+            if (!gameMenu || !gameMenuBtn) {
+                return;
+            }
+            var willOpen = gameMenu.hidden;
+            gameMenu.hidden = !willOpen;
+            gameMenuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        }
+
+        function isGameFullyScored(state) {
+            if (!state || state.status !== "active" || !state.mark_complete_eligible) {
+                return false;
+            }
+            var players = state.players || [];
+            for (var i = 0; i < players.length; i += 1) {
+                if (players[i].actionable_frame) {
+                    return false;
+                }
+                if (players[i].scorecard.total === null || players[i].scorecard.total === undefined) {
+                    return false;
+                }
+            }
+            return players.length > 0;
+        }
+
+        function updateGameMenuVisibility(status) {
+            if (gameMenuBtn) {
+                gameMenuBtn.hidden = status !== "active";
+            }
+            if (status !== "active") {
+                closeGameMenu();
+            }
+        }
+
+        function shouldStayOnSameFrame(player, rolledFrame) {
+            if (!player || player.actionable_frame !== rolledFrame) {
+                return false;
+            }
+            var frame = player.scorecard.frames[rolledFrame - 1];
+            if (!frame || frame.complete) {
+                return false;
+            }
+            return !!getNextRollForPlayer(player);
+        }
+
+        function advancePinPanelAfterRoll(data, playerId, rolledFrame) {
+            var updated = getPlayerById(data, playerId);
+            if (updated && shouldStayOnSameFrame(updated, rolledFrame)) {
+                openPinPanelForPlayer(playerId);
+                return;
+            }
+            if (data.current_turn_player_id !== null && data.current_turn_player_id !== undefined) {
+                var turnPlayer = getPlayerById(data, data.current_turn_player_id);
+                if (turnPlayer && turnPlayer.actionable_frame) {
+                    openPinPanelForPlayer(data.current_turn_player_id);
+                } else {
+                    closePinPanel();
+                }
+                return;
+            }
+            closePinPanel();
+        }
+
+        function getPlayerById(state, playerId) {
+            if (!state || !state.players) {
+                return null;
+            }
+            var targetId = Number(playerId);
+            for (var i = 0; i < state.players.length; i += 1) {
+                if (Number(state.players[i].id) === targetId) {
+                    return state.players[i];
+                }
+            }
+            return null;
+        }
+
+        function getNextRollForPlayer(player) {
+            var frameNum = player.actionable_frame;
+            if (!frameNum) {
+                return null;
+            }
+            var frame = player.scorecard.frames[frameNum - 1];
+            if (!frame || frame.complete) {
+                return null;
+            }
+            var rolls = frame.rolls || [];
+            if (frameNum <= 9) {
+                if (rolls.length === 0) {
+                    return 1;
+                }
+                if (rolls[0].display === "X") {
+                    return null;
+                }
+                if (rolls.length === 1) {
+                    return 2;
+                }
+                return null;
+            }
+            if (rolls.length === 0) {
+                return 1;
+            }
+            if (rolls.length === 1) {
+                return 2;
+            }
+            if (rolls.length === 2 && !frame.third_roll_locked) {
+                return 3;
+            }
+            return null;
+        }
+
+        function maxPinsForRoll(player, frameNum, rollNum) {
+            var frame = player.scorecard.frames[frameNum - 1];
+            var rolls = frame.rolls || [];
+            if (frameNum <= 9) {
+                if (rollNum === 1) {
+                    return 10;
+                }
+                var r1 = rolls[0] ? rolls[0].pins : 0;
+                return 10 - r1;
+            }
+            var r1 = rolls[0] ? rolls[0].pins : null;
+            var r2 = rolls[1] ? rolls[1].pins : null;
+            if (rollNum === 1) {
+                return 10;
+            }
+            if (r1 === 10) {
+                if (rollNum === 2) {
+                    return 10;
+                }
+                if (rollNum === 3 && r2 !== null && r2 < 10) {
+                    return 10 - r2;
+                }
+                return 10;
+            }
+            if (rollNum === 2) {
+                return 10 - (r1 || 0);
+            }
+            if (r1 !== null && r1 < 10 && r2 !== null && r1 + r2 === 10) {
+                return 10;
+            }
+            return 10;
+        }
+
+        function formatTotalValue(player) {
+            if (player.scorecard.total === null || player.scorecard.total === undefined) {
+                return "";
+            }
+            return String(player.scorecard.total);
+        }
+
+        function buildRollBoxes(frame, frameNum) {
+            var rolls = frame.rolls || [];
+            var boxes = [];
+            if (frameNum < 10) {
+                if (rolls.length > 0 && rolls[0].display === "X") {
+                    boxes.push({ display: "X", className: "bowling-roll-box bowling-roll-box--strike-only" });
+                    boxes.push({ display: "", className: "bowling-roll-box bowling-roll-box--hidden" });
+                    return boxes;
+                }
+                boxes.push({
+                    display: rolls[0] ? rolls[0].display : "",
+                    className: "bowling-roll-box",
+                });
+                boxes.push({
+                    display: rolls[1] ? rolls[1].display : "",
+                    className: "bowling-roll-box",
+                });
+                return boxes;
+            }
+            boxes.push({
+                display: rolls[0] ? rolls[0].display : "",
+                className: "bowling-roll-box",
+            });
+            boxes.push({
+                display: rolls[1] ? rolls[1].display : "",
+                className: "bowling-roll-box",
+            });
+            if (frame.third_roll_locked && rolls.length < 3) {
+                boxes.push({ display: "", className: "bowling-roll-box bowling-roll-box--locked" });
+            } else {
+                boxes.push({
+                    display: rolls[2] ? rolls[2].display : "",
+                    className: "bowling-roll-box",
+                });
+            }
+            return boxes;
+        }
+
+        function renderScorecardInto(container, state, readOnly) {
+            if (!container) {
+                return;
+            }
+            container.innerHTML = "";
+            var table = document.createElement("div");
+            table.className = "bowling-scorecard-table";
+
+            var head = document.createElement("div");
+            head.className = "bowling-scorecard-head";
+            var nameHead = document.createElement("div");
+            nameHead.className = "bowling-sc-cell bowling-sc-name-head";
+            nameHead.textContent = "Player";
+            head.appendChild(nameHead);
+            for (var f = 1; f <= 10; f += 1) {
+                var frameHead = document.createElement("div");
+                frameHead.className = "bowling-sc-cell bowling-sc-frame-head";
+                frameHead.textContent = String(f);
+                head.appendChild(frameHead);
+            }
+            var totalHead = document.createElement("div");
+            totalHead.className = "bowling-sc-cell bowling-sc-total-head";
+            totalHead.textContent = "Total";
+            head.appendChild(totalHead);
+            table.appendChild(head);
+
+            (state.players || []).forEach(function (player) {
+                var row = document.createElement("div");
+                row.className = "bowling-scorecard-row bowling-player-row";
+                row.dataset.playerId = String(player.id);
+                if (player.id === state.current_turn_player_id) {
+                    row.classList.add("bowling-scorecard-row--turn");
+                }
+
+                var nameCell = document.createElement("div");
+                nameCell.className = "bowling-sc-cell bowling-sc-name";
+                if (player.id === state.current_turn_player_id) {
+                    var marker = document.createElement("span");
+                    marker.className = "bowling-sc-turn-marker";
+                    marker.textContent = "▶";
+                    nameCell.appendChild(marker);
+                }
+                nameCell.appendChild(document.createTextNode(player.name || "Player"));
+                row.appendChild(nameCell);
+
+                player.scorecard.frames.forEach(function (frame) {
+                    var frameCell = document.createElement("div");
+                    frameCell.className = "bowling-sc-cell bowling-frame-cell";
+                    frameCell.dataset.playerId = String(player.id);
+                    frameCell.dataset.frame = String(frame.frame);
+
+                    if (!readOnly && frame.frame === player.actionable_frame && player.actionable_frame) {
+                        if (player.id === state.current_turn_player_id) {
+                            frameCell.classList.add("bowling-frame-cell--actionable-turn");
+                        } else {
+                            frameCell.classList.add("bowling-frame-cell--actionable-other");
+                        }
+                    }
+                    if (!readOnly && frame.frame === player.clearable_frame && player.clearable_frame) {
+                        frameCell.classList.add("bowling-frame-cell--clearable");
+                    }
+
+                    var inner = document.createElement("div");
+                    inner.className = "bowling-frame-cell-inner";
+
+                    var rollsRow = document.createElement("div");
+                    rollsRow.className = "bowling-frame-rolls";
+                    buildRollBoxes(frame, frame.frame).forEach(function (box) {
+                        var rollBox = document.createElement("span");
+                        rollBox.className = box.className;
+                        rollBox.textContent = box.display;
+                        rollsRow.appendChild(rollBox);
+                    });
+
+                    var scoreEl = document.createElement("div");
+                    scoreEl.className = "bowling-frame-score";
+                    if (frame.pending) {
+                        scoreEl.classList.add("bowling-frame-score--pending");
+                        scoreEl.textContent = "…";
+                    } else if (
+                        frame.complete &&
+                        frame.cumulative !== null &&
+                        frame.cumulative !== undefined
+                    ) {
+                        scoreEl.textContent = String(frame.cumulative);
+                    } else {
+                        scoreEl.textContent = "";
+                    }
+
+                    var rollsWrap = document.createElement("div");
+                    rollsWrap.className = "bowling-frame-rolls-wrap";
+                    rollsWrap.appendChild(rollsRow);
+
+                    if (!readOnly && frame.frame === player.clearable_frame && player.clearable_frame) {
+                        var clearBtn = document.createElement("button");
+                        clearBtn.type = "button";
+                        clearBtn.className = "bowling-frame-clear-btn";
+                        clearBtn.setAttribute("aria-label", "Clear frame " + frame.frame);
+                        clearBtn.textContent = "Clear";
+                        clearBtn.addEventListener("click", function (event) {
+                            event.stopPropagation();
+                            requestClearFrame(player.id, frame.frame);
+                        });
+                        rollsWrap.appendChild(clearBtn);
+                    }
+
+                    inner.appendChild(rollsWrap);
+                    inner.appendChild(scoreEl);
+                    frameCell.appendChild(inner);
+
+                    row.appendChild(frameCell);
+                });
+
+                var totalCell = document.createElement("div");
+                totalCell.className = "bowling-sc-cell bowling-sc-total";
+                totalCell.textContent = formatTotalValue(player);
+                row.appendChild(totalCell);
+
+                table.appendChild(row);
+            });
+
+            container.appendChild(table);
+        }
+
+        function showSaveIndicator() {
+            if (!saveIndicator) {
+                return;
+            }
+            saveIndicator.hidden = false;
+            if (saveIndicatorTimer) {
+                clearTimeout(saveIndicatorTimer);
+            }
+            saveIndicatorTimer = setTimeout(function () {
+                saveIndicator.hidden = true;
+            }, 1500);
+        }
+
+        function closePinPanel() {
+            pinPanelOpen = false;
+            activeSelection = null;
+            if (pinPanel) {
+                pinPanel.hidden = true;
+            }
+            if (root) {
+                root.classList.remove("bowling-game-root--pin-open");
+            }
+        }
+
+        function openPinPanelForPlayer(playerId) {
+            if (!gameState || gameState.status !== "active") {
+                return;
+            }
+            var player = getPlayerById(gameState, playerId);
+            if (!player || !player.actionable_frame) {
+                return;
+            }
+            activeSelection = {
+                playerId: player.id,
+                frame: player.actionable_frame,
+            };
+            pinPanelOpen = true;
+            if (pinPanel) {
+                pinPanel.hidden = false;
+            }
+            if (root) {
+                root.classList.add("bowling-game-root--pin-open");
+            }
+            renderPinPanel(gameState);
+        }
+
+        function renderPinPanel(state) {
+            if (!pinPanelOpen || !activeSelection || !pinGrid || !pinLabel) {
+                return;
+            }
+            var player = getPlayerById(state, activeSelection.playerId);
+            if (!player || !player.actionable_frame) {
+                closePinPanel();
+                return;
+            }
+            activeSelection.frame = player.actionable_frame;
+            var frameNum = player.actionable_frame;
+            var rollNum = getNextRollForPlayer(player);
+            if (!rollNum) {
+                closePinPanel();
+                return;
+            }
+
+            pinLabel.textContent =
+                (player.name || "Player") +
+                " — Frame " +
+                frameNum +
+                ", Roll " +
+                rollNum;
+
+            var maxPins = maxPinsForRoll(player, frameNum, rollNum);
+            pinGrid.innerHTML = "";
+            for (var pins = 0; pins <= 10; pins += 1) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                var disabled = pins > maxPins;
+                btn.className = "bowling-pin-btn";
+                if (disabled) {
+                    btn.classList.add("bowling-pin-btn--disabled");
+                    btn.disabled = true;
+                }
+                var label = String(pins);
+                if (rollNum === 1 && pins === 10) {
+                    label = "10 / Strike";
+                    btn.classList.add("bowling-pin-btn--wide");
+                } else if (rollNum === 2 && pins === maxPins && maxPins < 10 && pins > 0) {
+                    label = "/ (" + pins + ")";
+                    btn.classList.add("bowling-pin-btn--spare");
+                } else if (rollNum === 1 && pins === 10 && frameNum === 10) {
+                    btn.classList.add("bowling-pin-btn--wide");
+                }
+                btn.textContent = label;
+                if (!disabled) {
+                    (function (pinCount) {
+                        btn.addEventListener("click", function () {
+                            submitRoll(pinCount);
+                        });
+                    })(pins);
+                }
+                pinGrid.appendChild(btn);
+            }
+
+            if (clearFrameBtn) {
+                var canClear = player.clearable_frame === frameNum;
+                clearFrameBtn.hidden = !canClear;
+            }
+        }
+
+        function submitRoll(pins) {
+            if (!activeSelection || scoreActionPending) {
+                return;
+            }
+            var player = getPlayerById(gameState, activeSelection.playerId);
+            if (!player) {
+                return;
+            }
+            var frameNum = player.actionable_frame;
+            var rollNum = getNextRollForPlayer(player);
+            if (!frameNum || !rollNum) {
+                return;
+            }
+            var rolledFrame = frameNum;
+
+            scoreActionPending = true;
+            apiRequest("POST", "/bowling/api/games/" + code + "/rolls", {
+                player_id: player.id,
+                frame: frameNum,
+                roll: rollNum,
+                pins: pins,
+            })
+                .then(function (data) {
+                    gameState = data;
+                    advancePinPanelAfterRoll(data, player.id, rolledFrame);
+                    renderActiveGame(data);
+                    showSaveIndicator();
+                    return refreshGame();
+                })
+                .catch(function (err) {
+                    showToast(err.message, true);
+                })
+                .finally(function () {
+                    scoreActionPending = false;
+                });
+        }
+
+        function requestClearFrame(playerId, frameNum) {
+            if (scoreActionPending) {
+                return;
+            }
+            var player = getPlayerById(gameState, playerId);
+            if (!player) {
+                return;
+            }
+            var frame = player.scorecard.frames[frameNum - 1];
+            if (frame && frame.complete) {
+                var playerName = player.name || "Player";
+                var confirmed = window.confirm(
+                    "Clear frame " +
+                        frameNum +
+                        " for " +
+                        playerName +
+                        "? All rolls for this frame will be removed and earlier scores may change."
+                );
+                if (!confirmed) {
+                    return;
+                }
+            }
+            clearFrameForPlayer(playerId, frameNum);
+        }
+
+        function clearFrameForPlayer(playerId, frameNum) {
+            if (scoreActionPending) {
+                return;
+            }
+            scoreActionPending = true;
+            apiRequest("POST", "/bowling/api/games/" + code + "/clear", {
+                player_id: playerId,
+                frame: frameNum,
+            })
+                .then(function (data) {
+                    gameState = data;
+                    renderActiveGame(data);
+                    showSaveIndicator();
+                    var updated = getPlayerById(data, playerId);
+                    if (updated && updated.actionable_frame) {
+                        openPinPanelForPlayer(playerId);
+                    } else {
+                        closePinPanel();
+                    }
+                    return refreshGame();
+                })
+                .catch(function (err) {
+                    showToast(err.message, true);
+                })
+                .finally(function () {
+                    scoreActionPending = false;
+                });
+        }
+
+        function handleScorecardClick(event) {
+            if (!gameState || gameState.status !== "active" || scoreActionPending) {
+                return;
+            }
+            var clearBtn = event.target.closest(".bowling-frame-clear-btn");
+            if (clearBtn) {
+                return;
+            }
+            var frameCell = event.target.closest(".bowling-frame-cell");
+            var row = event.target.closest(".bowling-scorecard-row");
+            if (!row) {
+                return;
+            }
+            var playerId = parseInt(row.dataset.playerId, 10);
+            var player = getPlayerById(gameState, playerId);
+            if (!player) {
+                return;
+            }
+
+            if (frameCell) {
+                var frameNum = parseInt(frameCell.dataset.frame, 10);
+                if (frameNum === player.actionable_frame) {
+                    openPinPanelForPlayer(playerId);
+                }
+                return;
+            }
+
+            if (playerId === gameState.current_turn_player_id && player.actionable_frame) {
+                openPinPanelForPlayer(playerId);
+            }
+        }
+
+        function renderActiveGame(state) {
+            updateGameMenuVisibility(state.status);
+            if (activeAddPlayerBtn) {
+                activeAddPlayerBtn.hidden = !state.can_add_player;
+            }
+            var showMarkComplete = isGameFullyScored(state);
+            if (markCompleteBanner) {
+                markCompleteBanner.hidden = !showMarkComplete;
+            }
+            if (root) {
+                root.classList.toggle("bowling-game-root--mark-complete", showMarkComplete);
+            }
+            renderScorecardInto(scorecardEl, state, false);
+            if (pinPanelOpen && activeSelection) {
+                renderPinPanel(state);
+            }
+        }
+
+        function renderCompleteGame(state) {
+            renderScorecardInto(completeScorecardEl, state, true);
+        }
+
+        if (scorecardEl) {
+            scorecardEl.addEventListener("click", handleScorecardClick);
+        }
+        if (gameMenuBtn && gameMenu) {
+            gameMenuBtn.addEventListener("click", function (event) {
+                event.stopPropagation();
+                toggleGameMenu();
+            });
+            document.addEventListener("click", function (event) {
+                if (gameMenu.hidden) {
+                    return;
+                }
+                if (!gameMenu.contains(event.target) && event.target !== gameMenuBtn) {
+                    closeGameMenu();
+                }
+            });
+        }
+        if (pinDismissBtn) {
+            pinDismissBtn.addEventListener("click", closePinPanel);
+        }
+        if (clearFrameBtn) {
+            clearFrameBtn.addEventListener("click", function () {
+                if (!activeSelection) {
+                    return;
+                }
+                requestClearFrame(activeSelection.playerId, activeSelection.frame);
+            });
+        }
+        if (activeAddPlayerBtn) {
+            activeAddPlayerBtn.addEventListener("click", function () {
+                closeGameMenu();
+                if (addPlayerNameInput) {
+                    addPlayerNameInput.value = "";
+                }
+                if (addPlayerDialog) {
+                    addPlayerDialog.showModal();
+                    if (addPlayerNameInput) {
+                        addPlayerNameInput.focus();
+                    }
+                }
+            });
+        }
+        if (addPlayerDialog) {
+            addPlayerDialog.addEventListener("close", function () {
+                if (addPlayerDialog.returnValue !== "confirm") {
+                    return;
+                }
+                var name = addPlayerNameInput ? addPlayerNameInput.value.trim() : "";
+                if (!name) {
+                    showToast("Player name is required.", true);
+                    return;
+                }
+                scoreActionPending = true;
+                apiRequest("POST", "/bowling/api/games/" + code + "/players", { name: name })
+                    .then(function (data) {
+                        gameState = data;
+                        renderActiveGame(data);
+                        showToast("Player added");
+                    })
+                    .catch(function (err) {
+                        showToast(err.message, true);
+                    })
+                    .finally(function () {
+                        scoreActionPending = false;
+                    });
+            });
+        }
+        function openNewGameDialog() {
+            if (newGameDialog) {
+                newGameDialog.showModal();
+            }
+        }
+
+        if (newGameBtn && newGameDialog) {
+            newGameBtn.addEventListener("click", function () {
+                closeGameMenu();
+                openNewGameDialog();
+            });
+            newGameDialog.addEventListener("close", function () {
+                if (newGameDialog.returnValue === "confirm") {
+                    window.location.href = "/bowling/";
+                }
+            });
+        }
+        if (completeNewGameBtn && newGameDialog) {
+            completeNewGameBtn.addEventListener("click", openNewGameDialog);
+        }
+        if (markCompleteBtn && completeDialog) {
+            markCompleteBtn.addEventListener("click", function () {
+                completeDialog.showModal();
+            });
+            completeDialog.addEventListener("close", function () {
+                if (completeDialog.returnValue !== "confirm") {
+                    return;
+                }
+                scoreActionPending = true;
+                apiRequest("POST", "/bowling/api/games/" + code + "/complete")
+                    .then(function (data) {
+                        gameState = data;
+                        closePinPanel();
+                        renderGame(data);
+                        showToast("Game complete");
+                    })
+                    .catch(function (err) {
+                        showToast(err.message, true);
+                    })
+                    .finally(function () {
+                        scoreActionPending = false;
+                    });
+            });
         }
 
         function createPlayerRow(player, index, total) {
@@ -641,11 +1363,15 @@
             setVisibleView(state.status);
             if (state.status === "setup") {
                 renderSetupPlayers(state);
+            } else if (state.status === "active") {
+                renderActiveGame(state);
+            } else if (state.status === "complete") {
+                renderCompleteGame(state);
             }
         }
 
         function refreshGame() {
-            if (pendingSave) {
+            if (pendingSave || scoreActionPending) {
                 return Promise.resolve();
             }
             var skipPlayerMerge =
@@ -663,8 +1389,10 @@
                     }
                     if (data.status === "setup" && !skipPlayerMerge) {
                         renderSetupPlayers(data);
-                    } else if (data.status !== "setup") {
-                        setVisibleView(data.status);
+                    } else if (data.status === "active") {
+                        renderActiveGame(data);
+                    } else if (data.status === "complete") {
+                        renderCompleteGame(data);
                     }
                 })
                 .catch(function (err) {

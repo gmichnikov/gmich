@@ -22,6 +22,7 @@
 
 .bowling-header {
     margin-bottom: 0.25rem;
+    position: relative;
 }
 
 .bowling-title {
@@ -181,6 +182,64 @@
     justify-content: space-between;
     gap: 0.75rem;
     flex-wrap: wrap;
+    position: relative;
+}
+
+.bowling-menu-btn {
+    min-width: 2.5rem;
+    width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 10px;
+    background: #fff;
+    color: #475569;
+    font-size: 1.25rem;
+    line-height: 1;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.bowling-game-menu {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: 0;
+    z-index: 12;
+    min-width: 10.5rem;
+    padding: 0.35rem;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.bowling-game-menu[hidden] {
+    display: none !important;
+}
+
+.bowling-game-menu-item {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.5rem 0.65rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bowling-game-menu-item:hover,
+.bowling-game-menu-item:focus-visible {
+    background: #f1f5f9;
+    outline: none;
+}
+
+.bowling-game-menu-item[hidden] {
+    display: none !important;
 }
 
 .bowling-code-display {
@@ -254,7 +313,7 @@
 }
 
 .bowling-phase-note {
-    margin: 0;
+    margin: 0 0 0.85rem;
     font-size: 0.95rem;
     line-height: 1.5;
     color: #475569;
@@ -380,6 +439,410 @@
     flex-direction: column;
     gap: 0.55rem;
     margin-top: 0.25rem;
+}
+
+/* ── Active game layout ── */
+.bowling-game-container {
+    position: relative;
+}
+
+.bowling-game-page.bowling-game-root--active {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    border-radius: 0;
+}
+
+.bowling-game-page.bowling-game-root--active .bowling-header {
+    padding: 0 1rem;
+}
+
+.bowling-game-page.bowling-game-root--complete {
+    max-width: none;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 0;
+}
+
+.bowling-game-page.bowling-game-root--complete .bowling-header,
+.bowling-game-page.bowling-game-root--complete #bowling-view-complete {
+    max-width: 72rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.bowling-game-page.bowling-game-root--complete .bowling-header {
+    padding: 0 1rem;
+}
+
+.bowling-game-page.bowling-game-root--complete #bowling-view-complete {
+    padding: 0 1rem 1.5rem;
+    box-sizing: border-box;
+}
+
+.bowling-game-page.bowling-game-root--complete .bowling-scorecard-wrap {
+    max-height: none;
+    overflow-y: visible;
+    padding: 0;
+}
+
+.bowling-active-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-height: 0;
+}
+
+.bowling-mark-complete-banner {
+    margin: 0 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18);
+}
+
+.bowling-mark-complete-banner[hidden] {
+    display: none !important;
+}
+
+.bowling-mark-complete-banner-text {
+    margin: 0 0 0.65rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #065f46;
+    text-align: center;
+}
+
+.bowling-mark-complete-btn {
+    min-height: 52px;
+    font-size: 1.05rem;
+    background: #059669;
+    border-color: #059669;
+}
+
+.bowling-mark-complete-btn:not(:disabled):active {
+    background: #047857;
+    border-color: #047857;
+}
+
+.bowling-game-root--mark-complete.bowling-game-root--pin-open .bowling-scorecard-wrap {
+    max-height: min(32vh, 17rem);
+}
+
+.bowling-scorecard-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 0.5rem;
+    max-height: min(52vh, 28rem);
+}
+
+.bowling-game-root--pin-open .bowling-scorecard-wrap {
+    max-height: min(38vh, 20rem);
+    padding-bottom: 0.25rem;
+}
+
+.bowling-scorecard {
+    min-width: max-content;
+    padding: 0 0.75rem 0.5rem;
+}
+
+.bowling-scorecard-table {
+    display: table;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.78rem;
+}
+
+.bowling-scorecard-head,
+.bowling-scorecard-row {
+    display: table-row;
+}
+
+.bowling-sc-cell {
+    display: table-cell;
+    vertical-align: middle;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #fff;
+}
+
+.bowling-scorecard-head .bowling-sc-cell {
+    background: #f1f5f9;
+    font-weight: 700;
+    text-align: center;
+    padding: 0.35rem 0.25rem;
+    color: #475569;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.bowling-sc-name-head,
+.bowling-sc-name {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 5.5rem;
+    max-width: 7rem;
+    padding: 0.35rem 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    background: #fff;
+    box-shadow: 2px 0 4px rgba(15, 23, 42, 0.06);
+}
+
+.bowling-scorecard-head .bowling-sc-name-head {
+    z-index: 4;
+    background: #f1f5f9;
+}
+
+.bowling-sc-frame-head {
+    min-width: 2.65rem;
+}
+
+.bowling-sc-total-head,
+.bowling-sc-total {
+    min-width: 2.5rem;
+    text-align: center;
+    font-weight: 700;
+    padding: 0.35rem 0.3rem;
+}
+
+.bowling-scorecard-row--turn .bowling-sc-name {
+    border-left: 3px solid #2563eb;
+    padding-left: 0.35rem;
+}
+
+.bowling-sc-turn-marker {
+    color: #2563eb;
+    margin-right: 0.15rem;
+}
+
+.bowling-frame-cell {
+    min-width: 2.65rem;
+    padding: 0;
+    text-align: center;
+    vertical-align: top;
+    position: relative;
+}
+
+.bowling-frame-cell-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 2.6rem;
+}
+
+.bowling-frame-rolls-wrap {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 1.15rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    padding-top: 0.85rem;
+}
+
+.bowling-frame-rolls {
+    display: flex;
+    justify-content: center;
+    gap: 1px;
+    min-height: 1.15rem;
+}
+
+.bowling-roll-box {
+    flex: 1;
+    min-width: 0.85rem;
+    font-size: 0.72rem;
+    line-height: 1.15rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.bowling-roll-box--strike-only {
+    flex: 2;
+}
+
+.bowling-roll-box--hidden {
+    visibility: hidden;
+}
+
+.bowling-roll-box--locked {
+    display: none;
+}
+
+.bowling-frame-score {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    color: #0f172a;
+    padding: 0.1rem 0;
+}
+
+.bowling-frame-score--pending {
+    color: #94a3b8;
+}
+
+.bowling-frame-cell--actionable-turn {
+    background: #eff6ff;
+    box-shadow: inset 0 0 0 2px #2563eb;
+    cursor: pointer;
+}
+
+.bowling-frame-cell--actionable-turn .bowling-frame-cell-inner {
+    cursor: pointer;
+}
+
+.bowling-frame-cell--actionable-other {
+    background: #f8fafc;
+    box-shadow: inset 0 0 0 1px rgba(100, 116, 139, 0.3);
+    cursor: pointer;
+}
+
+.bowling-frame-cell--actionable-other .bowling-frame-cell-inner {
+    cursor: pointer;
+}
+
+.bowling-frame-cell--clearable .bowling-frame-clear-btn {
+    display: block;
+}
+
+.bowling-frame-clear-btn {
+    display: none;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    left: auto;
+    padding: 0 0.2rem;
+    min-height: auto;
+    height: auto;
+    border: none;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.06);
+    color: #64748b;
+    font-size: 0.58rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.bowling-frame-clear-btn:active {
+    background: rgba(180, 35, 24, 0.12);
+    color: #b42318;
+}
+
+.bowling-scorecard-row--turn {
+    cursor: pointer;
+}
+
+/* ── Pin input panel ── */
+.bowling-pin-panel {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: min(100%, 36rem);
+    padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0));
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.12);
+    z-index: 30;
+}
+
+.bowling-pin-panel[hidden] {
+    display: none !important;
+}
+
+.bowling-pin-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+
+.bowling-pin-label {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+}
+
+.bowling-pin-dismiss {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.06);
+    color: #475569;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.bowling-pin-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 0.55rem;
+}
+
+.bowling-pin-btn {
+    min-height: 48px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 10px;
+    background: #fff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.bowling-pin-btn--wide {
+    grid-column: span 2;
+}
+
+.bowling-pin-btn--spare {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.bowling-pin-btn:disabled,
+.bowling-pin-btn--disabled {
+    opacity: 0.35;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.bowling-pin-btn:not(:disabled):active {
+    transform: scale(0.97);
+}
+
+.bowling-clear-frame-btn {
+    width: 100%;
+    min-height: 44px;
+    color: #b42318;
+    border-color: rgba(180, 35, 24, 0.25);
+    background: #fff;
+}
+
+.bowling-save-indicator {
+    margin: 0.35rem 0 0;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #16a34a;
+}
+
+.bowling-save-indicator[hidden] {
+    display: none !important;
 }
 
 @media (prefers-color-scheme: dark) {
