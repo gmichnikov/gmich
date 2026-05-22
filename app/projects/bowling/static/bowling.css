@@ -319,6 +319,158 @@
     color: #475569;
 }
 
+.bowling-connection-status {
+    margin: 0 1rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.bowling-connection-status[hidden] {
+    display: none !important;
+}
+
+.bowling-complete-hero {
+    margin: 0 0 1rem;
+    padding: 1.35rem 1.15rem 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    background: linear-gradient(135deg, #ecfdf5 0%, #bbf7d0 45%, #6ee7b7 100%);
+    border: 2px solid #10b981;
+    box-shadow: 0 8px 28px rgba(16, 185, 129, 0.22);
+}
+
+.bowling-complete-hero-eyebrow {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #047857;
+}
+
+.bowling-complete-hero-label {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #065f46;
+}
+
+.bowling-complete-hero-names {
+    margin: 0.2rem 0 0;
+    font-size: clamp(1.85rem, 7vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.12;
+    color: #064e3b;
+    word-break: break-word;
+}
+
+.bowling-complete-hero-score {
+    margin: 0.45rem 0 0;
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #059669;
+    font-variant-numeric: tabular-nums;
+}
+
+.bowling-complete-hero-score:empty {
+    display: none;
+}
+
+.bowling-complete-standings {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.bowling-complete-standing {
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    gap: 0.65rem;
+    align-items: center;
+    padding: 0.7rem 0.85rem;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.bowling-complete-standing--winner {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+}
+
+.bowling-complete-standing-rank {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #64748b;
+    text-align: center;
+}
+
+.bowling-complete-standing--winner .bowling-complete-standing-rank {
+    color: #059669;
+}
+
+.bowling-complete-standing-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bowling-complete-standing--winner .bowling-complete-standing-name {
+    color: #065f46;
+}
+
+.bowling-complete-standing-total {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #334155;
+    font-variant-numeric: tabular-nums;
+}
+
+.bowling-complete-standing--winner .bowling-complete-standing-total {
+    color: #047857;
+}
+
+.bowling-complete-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 480px) {
+    .bowling-complete-actions {
+        flex-direction: row;
+    }
+
+    .bowling-complete-actions .bowling-btn {
+        flex: 1;
+    }
+}
+
+.bowling-scorecard-row--winner .bowling-sc-name,
+.bowling-scorecard-row--winner .bowling-sc-total {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.bowling-scorecard-row--winner .bowling-sc-name {
+    box-shadow: inset 3px 0 0 #10b981;
+}
+
 .bowling-toast {
     position: fixed;
     left: 50%;

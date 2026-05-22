@@ -5,7 +5,8 @@
     "use strict";
 
     var STORAGE_KEY = "bowling_last_code";
-    var POLL_MS = 4000;
+    var POLL_MS_VISIBLE = 4000;
+    var POLL_MS_HIDDEN = 30000;
     var CODE_PATTERN = /^\d{6}$/;
 
     var toastTimer = null;
@@ -94,13 +95,96 @@
     }
 
     function copyGameUrl(url) {
+        return copyTextToClipboard(url, "Link copied");
+    }
+
+    function copyTextToClipboard(text, successMessage) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            return navigator.clipboard.writeText(url).then(function () {
-                showToast("Link copied");
+            return navigator.clipboard.writeText(text).then(function () {
+                showToast(successMessage || "Copied");
             });
         }
-        showToast(url);
+        showToast(text);
         return Promise.resolve();
+    }
+
+    function getWinners(state) {
+        var players = state.players || [];
+        var maxTotal = null;
+        players.forEach(function (player) {
+            var total = player.scorecard && player.scorecard.total;
+            if (total !== null && total !== undefined) {
+                if (maxTotal === null || total > maxTotal) {
+                    maxTotal = total;
+                }
+            }
+        });
+        if (maxTotal === null) {
+            return [];
+        }
+        return players.filter(function (player) {
+            var total = player.scorecard && player.scorecard.total;
+            return total === maxTotal;
+        });
+    }
+
+    function formatWinnerNames(winners) {
+        if (!winners.length) {
+            return "";
+        }
+        var names = winners.map(function (player) {
+            return player.name || "Player";
+        });
+        if (names.length === 1) {
+            return names[0];
+        }
+        if (names.length === 2) {
+            return names[0] + " & " + names[1];
+        }
+        return names.slice(0, -1).join(", ") + " & " + names[names.length - 1];
+    }
+
+    function getFinalStandings(state) {
+        return (state.players || []).slice().sort(function (a, b) {
+            var totalA = a.scorecard && a.scorecard.total;
+            var totalB = b.scorecard && b.scorecard.total;
+            var scoreA = totalA !== null && totalA !== undefined ? totalA : -1;
+            var scoreB = totalB !== null && totalB !== undefined ? totalB : -1;
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA;
+            }
+            return a.order_index - b.order_index;
+        });
+    }
+
+    function formatWinnerMessage(winners) {
+        if (!winners.length) {
+            return "";
+        }
+        var names = winners.map(function (player) {
+            return player.name || "Player";
+        });
+        if (names.length === 1) {
+            return names[0] + " wins";
+        }
+        if (names.length === 2) {
+            return names[0] + " & " + names[1] + " win";
+        }
+        return names.slice(0, -1).join(", ") + " & " + names[names.length - 1] + " win";
+    }
+
+    function buildCopyScoresText(state) {
+        var parts = (state.players || []).map(function (player) {
+            var total = player.scorecard && player.scorecard.total;
+            var totalText = total !== null && total !== undefined ? String(total) : "";
+            return (player.name || "Player") + " " + totalText;
+        });
+        var text = parts.join(" · ");
+        var winnerMsg = formatWinnerMessage(getWinners(state));
+        if (winnerMsg) {
+            text += " — " + winnerMsg;
+        }
+        return text;
     }
 
     function normalizeCode(value) {
@@ -224,6 +308,8 @@
         var activeAddPlayerBtn = document.getElementById("bowling-active-add-player-btn");
         var newGameBtn = document.getElementById("bowling-new-game-btn");
         var completeNewGameBtn = document.getElementById("bowling-complete-new-game-btn");
+        var copyScoresBtn = document.getElementById("bowling-copy-scores-btn");
+        var connectionStatusEl = document.getElementById("bowling-connection-status");
         var markCompleteBtn = document.getElementById("bowling-mark-complete-btn");
         var markCompleteBanner = document.getElementById("bowling-mark-complete-banner");
         var completeDialog = document.getElementById("bowling-complete-dialog");
@@ -237,6 +323,44 @@
             shareBtn.addEventListener("click", function () {
                 shareGame(code).catch(function (err) {
                     showToast(err.message || "Could not share", true);
+                });
+            });
+        }
+
+        function setConnectionOk() {
+            if (connectionStatusEl) {
+                connectionStatusEl.hidden = true;
+            }
+        }
+
+        function setConnectionError() {
+            if (connectionStatusEl) {
+                connectionStatusEl.hidden = false;
+            }
+        }
+
+        function startPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+            }
+            var interval = document.hidden ? POLL_MS_HIDDEN : POLL_MS_VISIBLE;
+            pollTimer = setInterval(refreshGame, interval);
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        if (copyScoresBtn) {
+            copyScoresBtn.addEventListener("click", function () {
+                if (!gameState) {
+                    return;
+                }
+                copyTextToClipboard(buildCopyScoresText(gameState), "Scores copied").catch(function () {
+                    showToast("Could not copy scores", true);
                 });
             });
         }
@@ -670,10 +794,11 @@
             return boxes;
         }
 
-        function renderScorecardInto(container, state, readOnly) {
+        function renderScorecardInto(container, state, readOnly, winnerIds) {
             if (!container) {
                 return;
             }
+            winnerIds = winnerIds || {};
             container.innerHTML = "";
             var table = document.createElement("div");
             table.className = "bowling-scorecard-table";
@@ -702,6 +827,9 @@
                 row.dataset.playerId = String(player.id);
                 if (player.id === state.current_turn_player_id) {
                     row.classList.add("bowling-scorecard-row--turn");
+                }
+                if (winnerIds[player.id]) {
+                    row.classList.add("bowling-scorecard-row--winner");
                 }
 
                 var nameCell = document.createElement("div");
@@ -929,13 +1057,15 @@
                     advancePinPanelAfterRoll(data, player.id, rolledFrame);
                     renderActiveGame(data);
                     showSaveIndicator();
-                    return refreshGame();
+                    setConnectionOk();
                 })
                 .catch(function (err) {
                     showToast(err.message, true);
+                    setConnectionError();
                 })
                 .finally(function () {
                     scoreActionPending = false;
+                    refreshGame();
                 });
         }
 
@@ -977,19 +1107,21 @@
                     gameState = data;
                     renderActiveGame(data);
                     showSaveIndicator();
+                    setConnectionOk();
                     var updated = getPlayerById(data, playerId);
                     if (updated && updated.actionable_frame) {
                         openPinPanelForPlayer(playerId);
                     } else {
                         closePinPanel();
                     }
-                    return refreshGame();
                 })
                 .catch(function (err) {
                     showToast(err.message, true);
+                    setConnectionError();
                 })
                 .finally(function () {
                     scoreActionPending = false;
+                    refreshGame();
                 });
         }
 
@@ -1044,7 +1176,71 @@
         }
 
         function renderCompleteGame(state) {
-            renderScorecardInto(completeScorecardEl, state, true);
+            var winners = getWinners(state);
+            var winnerIds = {};
+            winners.forEach(function (player) {
+                winnerIds[player.id] = true;
+            });
+
+            var labelEl = document.getElementById("bowling-complete-winner-label");
+            var namesEl = document.getElementById("bowling-complete-winner-names");
+            var scoreEl = document.getElementById("bowling-complete-winner-score");
+            var standingsEl = document.getElementById("bowling-complete-standings");
+
+            if (namesEl && scoreEl) {
+                if (winners.length) {
+                    namesEl.textContent = formatWinnerNames(winners);
+                    var winningScore = winners[0].scorecard && winners[0].scorecard.total;
+                    if (winningScore !== null && winningScore !== undefined) {
+                        scoreEl.textContent =
+                            winners.length > 1 ? winningScore + " each" : String(winningScore);
+                    } else {
+                        scoreEl.textContent = "";
+                    }
+                    if (labelEl) {
+                        labelEl.textContent = winners.length > 1 ? "Winners" : "Winner";
+                        labelEl.hidden = false;
+                    }
+                } else {
+                    namesEl.textContent = "Final scores";
+                    scoreEl.textContent = "";
+                    if (labelEl) {
+                        labelEl.hidden = true;
+                    }
+                }
+            }
+
+            if (standingsEl) {
+                standingsEl.innerHTML = "";
+                getFinalStandings(state).forEach(function (player, index) {
+                    var item = document.createElement("li");
+                    item.className = "bowling-complete-standing";
+                    if (winnerIds[player.id]) {
+                        item.classList.add("bowling-complete-standing--winner");
+                    }
+
+                    var rank = document.createElement("span");
+                    rank.className = "bowling-complete-standing-rank";
+                    rank.textContent = String(index + 1);
+
+                    var name = document.createElement("span");
+                    name.className = "bowling-complete-standing-name";
+                    name.textContent = player.name || "Player";
+
+                    var total = document.createElement("span");
+                    total.className = "bowling-complete-standing-total";
+                    var playerTotal = player.scorecard && player.scorecard.total;
+                    total.textContent =
+                        playerTotal !== null && playerTotal !== undefined ? String(playerTotal) : "—";
+
+                    item.appendChild(rank);
+                    item.appendChild(name);
+                    item.appendChild(total);
+                    standingsEl.appendChild(item);
+                });
+            }
+
+            renderScorecardInto(completeScorecardEl, state, true, winnerIds);
         }
 
         if (scorecardEl) {
@@ -1382,6 +1578,7 @@
 
             return apiRequest("GET", "/bowling/api/games/" + code)
                 .then(function (data) {
+                    setConnectionOk();
                     gameState = data;
                     if (data.status !== previousStatus) {
                         renderGame(data);
@@ -1395,19 +1592,26 @@
                         renderCompleteGame(data);
                     }
                 })
-                .catch(function (err) {
-                    showToast(err.message, true);
+                .catch(function () {
+                    setConnectionError();
                 });
         }
 
         refreshGame().then(function () {
-            pollTimer = setInterval(refreshGame, POLL_MS);
+            startPolling();
+        });
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+                startPolling();
+                return;
+            }
+            refreshGame();
+            startPolling();
         });
 
         window.addEventListener("beforeunload", function () {
-            if (pollTimer) {
-                clearInterval(pollTimer);
-            }
+            stopPolling();
         });
     }
 

@@ -43,6 +43,10 @@
             </div>
         </header>
 
+        <p id="bowling-connection-status" class="bowling-connection-status" role="status" aria-live="polite" hidden>
+            Connection issue — retrying…
+        </p>
+
         <div id="bowling-view-setup" class="bowling-view" hidden>
             <section class="bowling-card" aria-labelledby="bowling-setup-players-heading">
                 <h2 id="bowling-setup-players-heading" class="bowling-section-title">Players</h2>
@@ -111,17 +115,32 @@
         </div>
 
         <div id="bowling-view-complete" class="bowling-view" hidden>
-            <section class="bowling-card">
-                <h2 class="bowling-section-title">Game complete</h2>
-                <p class="bowling-phase-note">Final scores — this game is locked.</p>
+            <section id="bowling-complete-hero" class="bowling-complete-hero" aria-live="polite">
+                <p class="bowling-complete-hero-eyebrow">Game complete</p>
+                <p id="bowling-complete-winner-label" class="bowling-complete-hero-label">Winner</p>
+                <h2 id="bowling-complete-winner-names" class="bowling-complete-hero-names"></h2>
+                <p id="bowling-complete-winner-score" class="bowling-complete-hero-score"></p>
+            </section>
+
+            <ol id="bowling-complete-standings" class="bowling-complete-standings" aria-label="Final standings"></ol>
+
+            <div class="bowling-complete-actions">
+                <button
+                    type="button"
+                    id="bowling-copy-scores-btn"
+                    class="bowling-btn bowling-btn-primary bowling-btn-block"
+                >
+                    Copy Scores
+                </button>
                 <button
                     type="button"
                     id="bowling-complete-new-game-btn"
-                    class="bowling-btn bowling-btn-primary bowling-btn-block"
+                    class="bowling-btn bowling-btn-secondary bowling-btn-block"
                 >
                     New Game
                 </button>
-            </section>
+            </div>
+
             <div id="bowling-complete-scorecard-wrap" class="bowling-scorecard-wrap">
                 <div id="bowling-complete-scorecard" class="bowling-scorecard" role="grid" aria-label="Final scorecard"></div>
             </div>
