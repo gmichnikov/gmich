@@ -69,7 +69,7 @@ def add_player(game: BowlingGame, name: str) -> BowlingPlayer:
         raise BowlingApiError("Players cannot be added at this point in the game.")
 
     cleaned = (name or "").strip()
-    if not cleaned:
+    if not cleaned and game.status != BowlingGame.STATUS_SETUP:
         raise BowlingApiError("Player name is required.")
 
     next_order = max((player.order_index for player in game.players), default=-1) + 1
@@ -86,7 +86,7 @@ def update_player_name(game: BowlingGame, player_id: int, name: str) -> BowlingP
 
     player = _get_player(game, player_id)
     cleaned = (name or "").strip()
-    if not cleaned:
+    if not cleaned and game.status != BowlingGame.STATUS_SETUP:
         raise BowlingApiError("Player name is required.")
 
     player.name = cleaned

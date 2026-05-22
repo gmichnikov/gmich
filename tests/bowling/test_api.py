@@ -214,6 +214,17 @@ class BowlingApiTestCase(unittest.TestCase):
         self.assertEqual(blocked.status_code, 400)
         self.assertIn("complete", blocked.get_json()["error"])
 
+    def test_add_empty_player_during_setup(self):
+        create = self.client.post("/bowling/api/games")
+        code = create.get_json()["code"]
+
+        response = self.client.post(
+            f"/bowling/api/games/{code}/players",
+            json={"name": ""},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["players"][0]["name"], "")
+
     def test_add_player_mid_active_before_lock(self):
         code, player_ids = self._create_game_with_players(("Alice",))
         self.client.post(f"/bowling/api/games/{code}/start")

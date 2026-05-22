@@ -2,7 +2,9 @@
 
 {% block title %}Bowling — Game Not Found{% endblock %}
 
-{% block head %}
+{% block viewport_extra %}, viewport-fit=cover{% endblock %}
+
+{% block styles %}
 <link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
 {% endblock %}
 
@@ -14,8 +16,8 @@
             <p class="bowling-intro">No game found with that code.</p>
         </header>
 
-        <p class="bowling-placeholder-text">
-            <a href="{{ url_for('bowling.index') }}">Return to home</a>
+        <p class="bowling-help">
+            <a href="{{ url_for('bowling.index') }}" class="bowling-link">Return to home</a>
         </p>
     </div>
 </div>

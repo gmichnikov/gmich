@@ -1,15 +1,23 @@
 /* Prefixed with bowling- to avoid collisions across hub projects */
 
 .bowling-page {
-    padding: 1.5rem 1rem 3rem;
-    max-width: 42rem;
+    padding: 1.25rem 1rem calc(2rem + env(safe-area-inset-bottom, 0));
+    max-width: 32rem;
     margin: 0 auto;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.14);
+    color: #1e293b;
+}
+
+.bowling-game-page {
+    max-width: 36rem;
 }
 
 .bowling-container {
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.25rem;
 }
 
 .bowling-header {
@@ -21,11 +29,12 @@
     font-weight: 700;
     margin: 0 0 0.5rem;
     letter-spacing: -0.02em;
+    color: #0f172a;
 }
 
 .bowling-intro {
     margin: 0;
-    color: var(--bs-secondary-color, #6c757d);
+    color: #334155;
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -36,16 +45,364 @@
     margin: 0 0 0.75rem;
 }
 
-.bowling-placeholder {
-    padding: 1.25rem;
+.bowling-help {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #475569;
+}
+
+.bowling-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.bowling-link:hover {
+    text-decoration: underline;
+}
+
+.bowling-card {
+    padding: 1.15rem;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--bs-tertiary-bg, #f8f9fa);
 }
 
-.bowling-placeholder-text {
+.bowling-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    background: #fff;
+    color: #212529;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.bowling-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.bowling-btn:not(:disabled):active {
+    transform: scale(0.98);
+}
+
+.bowling-btn-primary {
+    background: #212529;
+    border-color: #212529;
+    color: #fff;
+}
+
+.bowling-btn-secondary {
+    background: #fff;
+}
+
+.bowling-btn-block {
+    width: 100%;
+}
+
+.bowling-btn-icon {
+    min-width: 48px;
+    width: 48px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.bowling-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.bowling-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    background: #fff;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.bowling-input:focus {
+    outline: 2px solid #212529;
+    outline-offset: 1px;
+}
+
+.bowling-input-code {
+    font-size: 1.35rem;
+    letter-spacing: 0.18em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.bowling-join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.bowling-error {
+    margin: 0;
+    color: #b42318;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bowling-rejoin-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.bowling-rejoin-link:hover {
+    text-decoration: underline;
+}
+
+.bowling-code-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.bowling-code-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.bowling-code-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.bowling-code {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+}
+
+.bowling-view[hidden] {
+    display: none !important;
+}
+
+.bowling-player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.bowling-player-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.bowling-player-order {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.bowling-player-name-input {
+    min-height: 48px;
+}
+
+.bowling-player-remove {
+    min-height: 48px;
+    padding: 0 0.85rem;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #b42318;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bowling-player-remove:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.bowling-setup-empty {
+    margin-top: -0.35rem;
+}
+
+.bowling-phase-note {
     margin: 0;
     font-size: 0.95rem;
     line-height: 1.5;
-    color: #495057;
+    color: #475569;
+}
+
+.bowling-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    transform: translateX(-50%);
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    background: rgba(33, 37, 41, 0.92);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.bowling-toast[hidden] {
+    display: none !important;
+}
+
+.bowling-toast.bowling-toast-error {
+    background: rgba(180, 35, 24, 0.94);
+}
+
+.bowling-dialog {
+    width: min(100% - 2rem, 22rem);
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22);
+}
+
+.bowling-dialog::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.bowling-dialog-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.25rem;
+    margin: 0;
+}
+
+.bowling-dialog-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.bowling-dialog-lead {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: #334155;
+}
+
+.bowling-dialog-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: #475569;
+}
+
+.bowling-dialog-list li {
+    margin-bottom: 0.2rem;
+}
+
+.bowling-dialog-note {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: #64748b;
+}
+
+.bowling-dialog-roster {
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bowling-dialog-roster-label {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.bowling-dialog-players {
+    margin: 0;
+    padding-left: 1.15rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #0f172a;
+}
+
+.bowling-dialog-warning {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: #b45309;
+    font-weight: 500;
+}
+
+.bowling-dialog-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-top: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .bowling-card {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .bowling-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: inherit;
+    }
+
+    .bowling-btn-primary {
+        background: #f8f9fa;
+        border-color: #f8f9fa;
+        color: #212529;
+    }
+
+    .bowling-input {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: inherit;
+    }
 }

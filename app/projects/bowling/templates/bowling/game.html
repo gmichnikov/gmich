@@ -2,26 +2,102 @@
 
 {% block title %}Bowling Game {{ code }}{% endblock %}
 
-{% block head %}
+{% block viewport_extra %}, viewport-fit=cover{% endblock %}
+
+{% block styles %}
 <link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="bowling-page">
+<div class="bowling-page bowling-game-page" id="bowling-game-root" data-code="{{ code }}">
     <div class="bowling-container">
         <header class="bowling-header">
             <h1 class="bowling-title">Bowling</h1>
-            <p class="bowling-intro">Game <strong>{{ code }}</strong> — UI coming in Phase 4–5.</p>
+            <div class="bowling-code-row">
+                <div class="bowling-code-display">
+                    <span class="bowling-code-label">Game code</span>
+                    <span id="bowling-game-code" class="bowling-code">{{ code }}</span>
+                </div>
+                <button type="button" id="bowling-share-btn" class="bowling-btn bowling-btn-secondary">
+                    Share
+                </button>
+            </div>
         </header>
 
-        <section class="bowling-placeholder" aria-labelledby="bowling-game-shell-heading">
-            <h2 id="bowling-game-shell-heading" class="bowling-section-title">Game shell</h2>
-            <p class="bowling-placeholder-text">
-                Poll game state at
-                <code>/bowling/api/games/{{ code }}</code>
-                while building the interactive scorecard.
-            </p>
-        </section>
+        <div id="bowling-view-setup" class="bowling-view" hidden>
+            <section class="bowling-card" aria-labelledby="bowling-setup-players-heading">
+                <h2 id="bowling-setup-players-heading" class="bowling-section-title">Players</h2>
+                <p class="bowling-help">Add everyone who is bowling. Order sets turn sequence.</p>
+                <div id="bowling-player-list" class="bowling-player-list" role="list"></div>
+                <p id="bowling-setup-empty" class="bowling-help bowling-setup-empty" hidden>
+                    Tap <strong>Add Player</strong> to add the first bowler.
+                </p>
+                <button type="button" id="bowling-add-player-btn" class="bowling-btn bowling-btn-block">
+                    Add Player
+                </button>
+            </section>
+
+            <button
+                type="button"
+                id="bowling-start-btn"
+                class="bowling-btn bowling-btn-primary bowling-btn-block"
+                disabled
+            >
+                Start Game
+            </button>
+        </div>
+
+        <dialog id="bowling-start-dialog" class="bowling-dialog" aria-labelledby="bowling-start-dialog-title">
+            <form method="dialog" class="bowling-dialog-inner">
+                <h2 id="bowling-start-dialog-title" class="bowling-dialog-title">Start game?</h2>
+                <p class="bowling-dialog-lead">
+                    Scoring begins once you confirm. Check names and order first — these cannot be changed afterward:
+                </p>
+                <ul class="bowling-dialog-list">
+                    <li>Player names</li>
+                    <li>Player order (turn sequence)</li>
+                    <li>Removing players</li>
+                </ul>
+                <p class="bowling-dialog-note">
+                    You can still add a late bowler until someone rolls in frame 2.
+                </p>
+                <div class="bowling-dialog-roster" id="bowling-start-dialog-roster" hidden>
+                    <p class="bowling-dialog-roster-label">Ready to score</p>
+                    <ol id="bowling-start-dialog-players" class="bowling-dialog-players"></ol>
+                </div>
+                <p id="bowling-start-dialog-warning" class="bowling-dialog-warning" hidden></p>
+                <div class="bowling-dialog-actions">
+                    <button type="submit" value="cancel" class="bowling-btn bowling-btn-block">Cancel</button>
+                    <button type="submit" value="confirm" class="bowling-btn bowling-btn-primary bowling-btn-block">
+                        Start Game
+                    </button>
+                </div>
+            </form>
+        </dialog>
+
+        <div id="bowling-view-active" class="bowling-view" hidden>
+            <section class="bowling-card">
+                <h2 class="bowling-section-title">Game in progress</h2>
+                <p class="bowling-phase-note">
+                    Scoring UI is coming in the next phase. Share the code so others can join when ready.
+                </p>
+            </section>
+        </div>
+
+        <div id="bowling-view-complete" class="bowling-view" hidden>
+            <section class="bowling-card">
+                <h2 class="bowling-section-title">Game complete</h2>
+                <p class="bowling-phase-note">
+                    This game is finished and locked. Final scorecard view arrives in a later phase.
+                </p>
+            </section>
+        </div>
+
+        <p id="bowling-toast" class="bowling-toast" role="status" aria-live="polite" hidden></p>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('bowling.static', filename='bowling.js') }}" defer></script>
 {% endblock %}

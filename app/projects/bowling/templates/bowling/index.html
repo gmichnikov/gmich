@@ -2,22 +2,55 @@
 
 {% block title %}Bowling{% endblock %}
 
+{% block viewport_extra %}, viewport-fit=cover{% endblock %}
+
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('bowling.static', filename='bowling.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="bowling-page">
+<div class="bowling-page" id="bowling-home">
     <div class="bowling-container">
         <header class="bowling-header">
             <h1 class="bowling-title">Bowling</h1>
-            <p class="bowling-intro">Public project shell for bowling tools. Database-backed data models are not defined yet.</p>
+            <p class="bowling-intro">Score a game together from your phones — no accounts, just a code.</p>
         </header>
 
-        <section class="bowling-placeholder" aria-labelledby="bowling-placeholder-heading">
-            <h2 id="bowling-placeholder-heading" class="bowling-section-title">Coming next</h2>
-            <p class="bowling-placeholder-text">Add SQLAlchemy models and migrations once the schema is clear.</p>
+        <section class="bowling-card" aria-labelledby="bowling-home-create-heading">
+            <h2 id="bowling-home-create-heading" class="bowling-section-title">New game</h2>
+            <button type="button" id="bowling-create-btn" class="bowling-btn bowling-btn-primary bowling-btn-block">
+                Create New Game
+            </button>
+        </section>
+
+        <section class="bowling-card" aria-labelledby="bowling-home-join-heading">
+            <h2 id="bowling-home-join-heading" class="bowling-section-title">Join a game</h2>
+            <form id="bowling-join-form" class="bowling-join-form" novalidate>
+                <label class="bowling-label" for="bowling-join-code">6-digit code</label>
+                <input
+                    type="text"
+                    id="bowling-join-code"
+                    class="bowling-input bowling-input-code"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    maxlength="6"
+                    pattern="\d{6}"
+                    placeholder="482031"
+                    aria-describedby="bowling-join-error"
+                >
+                <p id="bowling-join-error" class="bowling-error" hidden role="alert"></p>
+                <button type="submit" class="bowling-btn bowling-btn-primary bowling-btn-block">Join</button>
+            </form>
+        </section>
+
+        <section id="bowling-rejoin-section" class="bowling-card bowling-rejoin" hidden>
+            <h2 class="bowling-section-title">Continue</h2>
+            <a id="bowling-rejoin-link" class="bowling-rejoin-link" href="#"></a>
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('bowling.static', filename='bowling.js') }}" defer></script>
 {% endblock %}
