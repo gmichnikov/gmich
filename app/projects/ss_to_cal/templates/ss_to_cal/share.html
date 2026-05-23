@@ -8,6 +8,10 @@
     <p class="sstc-intro">Check the details below, then add to Google Calendar.</p>
 </header>
 
+<section id="sstc-low-confidence-banner" class="sstc-flash sstc-flash-warn" role="status" hidden>
+    The image was hard to read — please check all fields carefully.
+</section>
+
 {% if info_message %}
 <section class="sstc-flash sstc-flash-info" role="status">
     {{ info_message }}
@@ -21,40 +25,61 @@
 {% endif %}
 
 <form id="sstc-review-form" class="sstc-review-form" novalidate>
-    <div class="sstc-field">
-        <label class="sstc-label" for="sstc-title">Title</label>
+    <div class="sstc-field" id="sstc-field-title" data-field="title">
+        <div class="sstc-label-row">
+            <label class="sstc-label" for="sstc-title">Title</label>
+            <span class="sstc-field-tag" id="sstc-tag-title" hidden></span>
+        </div>
         <input class="sstc-input" id="sstc-title" name="title" type="text" autocomplete="off">
     </div>
 
-    <div class="sstc-field">
-        <label class="sstc-label" for="sstc-date">Date</label>
+    <div class="sstc-field" id="sstc-field-date" data-field="date">
+        <div class="sstc-label-row">
+            <label class="sstc-label" for="sstc-date">Date</label>
+            <span class="sstc-field-tag" id="sstc-tag-date" hidden></span>
+        </div>
         <input class="sstc-input" id="sstc-date" name="date" type="date">
     </div>
 
     <div class="sstc-field-row">
-        <div class="sstc-field">
-            <label class="sstc-label" for="sstc-start-time">Start time</label>
+        <div class="sstc-field" id="sstc-field-startTime" data-field="startTime">
+            <div class="sstc-label-row">
+                <label class="sstc-label" for="sstc-start-time">Start time</label>
+                <span class="sstc-field-tag" id="sstc-tag-startTime" hidden></span>
+            </div>
             <input class="sstc-input" id="sstc-start-time" name="startTime" type="time">
             <p class="sstc-field-hint">Leave blank for all-day event.</p>
         </div>
-        <div class="sstc-field">
-            <label class="sstc-label" for="sstc-end-time">End time</label>
+        <div class="sstc-field" id="sstc-field-endTime" data-field="endTime">
+            <div class="sstc-label-row">
+                <label class="sstc-label" for="sstc-end-time">End time</label>
+                <span class="sstc-field-tag" id="sstc-tag-endTime" hidden></span>
+            </div>
             <input class="sstc-input" id="sstc-end-time" name="endTime" type="time">
         </div>
     </div>
 
-    <div class="sstc-field">
-        <label class="sstc-label" for="sstc-location">Location</label>
+    <div class="sstc-field" id="sstc-field-location" data-field="location">
+        <div class="sstc-label-row">
+            <label class="sstc-label" for="sstc-location">Location</label>
+            <span class="sstc-field-tag" id="sstc-tag-location" hidden></span>
+        </div>
         <input class="sstc-input" id="sstc-location" name="location" type="text" autocomplete="off">
     </div>
 
-    <div class="sstc-field">
-        <label class="sstc-label" for="sstc-description">Description</label>
+    <div class="sstc-field" id="sstc-field-description" data-field="description">
+        <div class="sstc-label-row">
+            <label class="sstc-label" for="sstc-description">Description</label>
+            <span class="sstc-field-tag" id="sstc-tag-description" hidden></span>
+        </div>
         <textarea class="sstc-input sstc-textarea" id="sstc-description" name="description" rows="3"></textarea>
     </div>
 
-    <div class="sstc-field">
-        <label class="sstc-label" for="sstc-timezone">Timezone</label>
+    <div class="sstc-field" id="sstc-field-timezone" data-field="timezone">
+        <div class="sstc-label-row">
+            <label class="sstc-label" for="sstc-timezone">Timezone</label>
+            <span class="sstc-field-tag" id="sstc-tag-timezone" hidden></span>
+        </div>
         <input class="sstc-input" id="sstc-timezone" name="timezone" type="text" autocomplete="off">
     </div>
 

@@ -1,6 +1,25 @@
 (function () {
   "use strict";
 
+  var FIELD_MAP = {
+    title: "sstc-title",
+    date: "sstc-date",
+    startTime: "sstc-start-time",
+    endTime: "sstc-end-time",
+    location: "sstc-location",
+    description: "sstc-description",
+    timezone: "sstc-timezone",
+  };
+
+  var REQUIRED_FIELDS = ["title", "date"];
+  var OPTIONAL_FIELDS = ["startTime", "endTime", "location", "description", "timezone"];
+
+  var shareState = {
+    confidence: null,
+    modelTimezone: null,
+    deviceTimezone: "",
+  };
+
   function isStandalone() {
     return (
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -55,6 +74,86 @@
       });
   }
 
+  function deviceTimezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function fieldValue(key) {
+    var el = document.getElementById(FIELD_MAP[key]);
+    if (!el) {
+      return "";
+    }
+    return (el.value || "").trim();
+  }
+
+  function isUncertainConfidence() {
+    return shareState.confidence === "medium" || shareState.confidence === "low";
+  }
+
+  function setFieldTag(key, text) {
+    var tag = document.getElementById("sstc-tag-" + key);
+    var wrapper = document.getElementById("sstc-field-" + key);
+    if (!tag || !wrapper) {
+      return;
+    }
+
+    if (text) {
+      tag.textContent = text;
+      tag.hidden = false;
+      wrapper.classList.add("sstc-field-amber");
+    } else {
+      tag.textContent = "";
+      tag.hidden = true;
+      wrapper.classList.remove("sstc-field-amber");
+    }
+  }
+
+  function updateFormUi() {
+    var lowBanner = document.getElementById("sstc-low-confidence-banner");
+    if (lowBanner) {
+      lowBanner.hidden = shareState.confidence !== "low";
+    }
+
+    REQUIRED_FIELDS.forEach(function (key) {
+      if (!fieldValue(key)) {
+        setFieldTag(key, "Required");
+      } else {
+        setFieldTag(key, null);
+      }
+    });
+
+    OPTIONAL_FIELDS.forEach(function (key) {
+      var verify = false;
+
+      if (key === "timezone") {
+        var tz = fieldValue("timezone");
+        if (
+          tz &&
+          shareState.deviceTimezone &&
+          tz !== shareState.deviceTimezone
+        ) {
+          verify = true;
+        }
+      }
+
+      if (isUncertainConfidence()) {
+        verify = true;
+      }
+
+      setFieldTag(key, verify ? "Please verify" : null);
+    });
+
+    var calendarBtn = document.getElementById("sstc-calendar-btn");
+    if (calendarBtn) {
+      var ready = fieldValue("title") && fieldValue("date");
+      calendarBtn.disabled = !ready;
+    }
+  }
+
   function initShareForm() {
     var dataEl = document.getElementById("sstc-extraction-data");
     if (!dataEl) {
@@ -69,22 +168,16 @@
       return;
     }
 
-    console.log("SS to Cal parsed extraction:", extraction);
+    shareState.confidence = extraction.confidence || null;
+    shareState.modelTimezone = extraction.timezone || null;
+    shareState.deviceTimezone = deviceTimezone();
 
-    var fields = {
-      title: "sstc-title",
-      date: "sstc-date",
-      startTime: "sstc-start-time",
-      endTime: "sstc-end-time",
-      location: "sstc-location",
-      description: "sstc-description",
-      timezone: "sstc-timezone",
-    };
+    console.log("SS to Cal parsed extraction:", extraction);
 
     var fillReport = [];
 
-    Object.keys(fields).forEach(function (key) {
-      var el = document.getElementById(fields[key]);
+    Object.keys(FIELD_MAP).forEach(function (key) {
+      var el = document.getElementById(FIELD_MAP[key]);
       var parsedValue = extraction[key];
       var report = {
         field: key,
@@ -118,16 +211,30 @@
     });
 
     var tzInput = document.getElementById("sstc-timezone");
-    if (tzInput && !tzInput.value) {
-      try {
-        tzInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      } catch (e) {
-        /* ignore */
-      }
+    if (tzInput && !tzInput.value && shareState.deviceTimezone) {
+      tzInput.value = shareState.deviceTimezone;
     }
 
     console.log("SS to Cal form fill report:", fillReport);
     renderFillDebug(fillReport);
+    updateFormUi();
+
+    var form = document.getElementById("sstc-review-form");
+    if (form) {
+      form.addEventListener("input", updateFormUi);
+      form.addEventListener("change", updateFormUi);
+    }
+
+    var calendarBtn = document.getElementById("sstc-calendar-btn");
+    if (calendarBtn) {
+      calendarBtn.addEventListener("click", function () {
+        if (calendarBtn.disabled) {
+          return;
+        }
+        /* Phase 5 — Google Calendar URL builder */
+        console.log("SS to Cal: calendar button clicked (Phase 5 not wired yet)");
+      });
+    }
   }
 
   function renderFillDebug(fillReport) {

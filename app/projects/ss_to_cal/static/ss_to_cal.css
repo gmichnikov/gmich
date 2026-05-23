@@ -180,6 +180,37 @@
     border: 1px solid #bbf7d0;
 }
 
+.sstc-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.sstc-field-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #b45309;
+    white-space: nowrap;
+}
+
+.sstc-field-amber .sstc-input {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.sstc-field-amber .sstc-label {
+    color: #92400e;
+}
+
+.sstc-flash-warn {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
 .sstc-flash-info {
     background: #eff6ff;
     color: #1d4ed8;
