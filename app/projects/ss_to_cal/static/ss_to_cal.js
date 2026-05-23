@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var SSTC_JS_VERSION = "2026-05-22-cal-debug-2";
+  var SSTC_JS_VERSION = "2026-05-22-cal-debug-3";
   var CLIENT_LOG_URL = "/ss-to-cal/client-log";
 
   var FIELD_MAP = {
@@ -131,33 +131,6 @@
       el.textContent = message;
       el.classList.toggle("sstc-sw-status-error", !!isError);
     }
-  }
-
-  function updateOfflineBanner(show) {
-    var banner = document.getElementById("sstc-offline-banner");
-    if (!banner) {
-      return;
-    }
-    banner.hidden = !show;
-  }
-
-  function initOfflineUi() {
-    // Do not trust navigator.onLine on load — it often reads false while online.
-    // Only show the banner after a live "offline" event in this session.
-    updateOfflineBanner(false);
-
-    window.addEventListener("online", function () {
-      sstcLog("network_online", "browser online event", {
-        navigatorOnLine: navigator.onLine,
-      });
-      updateOfflineBanner(false);
-    });
-    window.addEventListener("offline", function () {
-      sstcLog("network_offline", "browser offline event", {
-        navigatorOnLine: navigator.onLine,
-      }, "warn");
-      updateOfflineBanner(true);
-    });
   }
 
   function initErrorRecovery() {
@@ -511,10 +484,6 @@
     });
   }
 
-  function initOfflineFormUi() {
-    window.addEventListener("online", updateFormUi);
-  }
-
   registerServiceWorker();
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -528,10 +497,8 @@
     });
 
     initStandaloneUi();
-    initOfflineUi();
     initErrorRecovery();
     initCalendarButton();
     initShareForm();
-    initOfflineFormUi();
   });
 })();
