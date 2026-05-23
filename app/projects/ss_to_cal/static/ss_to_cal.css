@@ -180,6 +180,12 @@
     border: 1px solid #bbf7d0;
 }
 
+.sstc-flash-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
 .sstc-flash-error {
     background: #fef2f2;
     color: #b91c1c;

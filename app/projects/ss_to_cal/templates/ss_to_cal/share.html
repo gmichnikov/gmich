@@ -8,9 +8,9 @@
     <p class="sstc-intro">Check the details below, then add to Google Calendar.</p>
 </header>
 
-{% if image_received %}
-<section class="sstc-flash sstc-flash-success" role="status">
-    Screenshot received. Extraction is not wired yet — fields are empty for now.
+{% if info_message %}
+<section class="sstc-flash sstc-flash-info" role="status">
+    {{ info_message }}
 </section>
 {% endif %}
 
