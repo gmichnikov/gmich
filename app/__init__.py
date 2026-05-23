@@ -117,6 +117,7 @@ def create_app():
     from app.projects.sports_scores.routes import sports_scores_bp
     from app.projects.camps.routes import camps_bp
     from app.projects.bowling.routes import bowling_bp
+    from app.projects.ss_to_cal.routes import ss_to_cal_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -161,6 +162,7 @@ def create_app():
     app.register_blueprint(sports_scores_bp)
     app.register_blueprint(camps_bp)
     app.register_blueprint(bowling_bp)
+    app.register_blueprint(ss_to_cal_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

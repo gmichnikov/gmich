@@ -476,6 +476,17 @@ PROJECTS = [
         "icon": "🎳",
         "order": 26,
     },
+    {
+        "id": "ss_to_cal",
+        "name": "SS to Cal",
+        "description": "Screenshot to Google Calendar — Android PWA with Claude extraction",
+        "url": "/ss-to-cal",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "📆",
+        "order": 27,
+    },
 ]
 
 

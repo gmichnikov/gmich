@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — SS to Cal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f2ec;
+    --accent: #d4500a;
+    --accent-light: #f0ddd3;
+    --muted: #6b6660;
+    --rule: #d6d1c8;
+    --code-bg: #1c1a17;
+    --code-text: #e8e2d9;
+    --tag-bg: #e8e2d9;
+    --warn: #92580a;
+    --warn-bg: #fef3e2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 48px 0 32px;
+  }
+
+  .header-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+  }
+
+  .doc-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(42px, 6vw, 68px);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .header-meta {
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 2;
+  }
+
+  .status-badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  .toc {
+    border-bottom: 1px solid var(--rule);
+    padding: 32px 0;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .toc a {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.15s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc-num { color: var(--accent); margin-right: 4px; }
+
+  section {
+    padding: 56px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 40px 0 14px;
+  }
+
+  p { margin-bottom: 16px; color: #2a2825; }
+  p:last-child { margin-bottom: 0; }
+
+  .summary-box {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 32px 40px;
+    margin: 32px 0;
+    border-radius: 4px;
+  }
+
+  .summary-box p {
+    color: #c8c2b8;
+    font-size: 17px;
+    line-height: 1.65;
+    margin-bottom: 0;
+  }
+
+  .summary-box strong { color: var(--paper); }
+
+  /* Flow */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 32px 0; }
+
+  .flow-step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 0 20px;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child) .step-line {
+    position: absolute;
+    left: 23px;
+    top: 40px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--rule);
+  }
+
+  .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    background: var(--paper);
+    position: relative;
+    z-index: 1;
+  }
+
+  .flow-step.accent .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .step-content { padding: 12px 0 40px; }
+  .step-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+  .step-desc { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 0; }
+
+  /* Req grid */
+  .req-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .req-card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 24px;
+  }
+
+  .req-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .req-card p { font-size: 15px; color: #2a2825; margin: 0; line-height: 1.55; }
+
+  /* Spec rows */
+  .spec-row {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    padding: 16px 0;
+    align-items: start;
+  }
+
+  .spec-row:last-child { border-bottom: 1px solid var(--rule); }
+
+  .spec-key {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    padding-top: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  .spec-val { font-size: 15px; color: #2a2825; line-height: 1.6; }
+
+  .spec-val code, .req-card code, .step-desc code, p code {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--tag-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    padding: 28px 32px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+  }
+
+  .code-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .hl { color: #f0a06a; }
+  .hl2 { color: #7ec8a0; }
+  .hl3 { color: #a8c4e8; }
+  .cm { color: #6b6660; }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--tag-bg);
+    color: var(--muted);
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin: 2px 3px 2px 0;
+  }
+
+  .tag.accent { background: var(--accent-light); color: var(--accent); }
+
+  /* Notes */
+  .scope-note {
+    border-left: 3px solid var(--accent);
+    padding: 14px 20px;
+    background: var(--accent-light);
+    border-radius: 0 4px 4px 0;
+    margin: 24px 0;
+  }
+
+  .scope-note p { color: #5a2800; font-size: 15px; margin: 0; }
+
+  .warn-note {
+    border-left: 3px solid var(--warn);
+    padding: 14px 20px;
+    background: var(--warn-bg);
+    border-radius: 0 4px 4px 0;
+    margin: 24px 0;
+  }
+
+  .warn-note p { color: #5a3400; font-size: 15px; margin: 0; }
+
+  /* Screenshot types table */
+  .screenshot-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+
+  .screenshot-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 8px 16px 8px 0;
+    border-bottom: 1px solid var(--rule);
+    font-weight: 500;
+  }
+
+  .screenshot-table td {
+    padding: 12px 16px 12px 0;
+    border-bottom: 1px solid var(--rule);
+    color: #2a2825;
+    vertical-align: top;
+  }
+
+  .screenshot-table tr:last-child td { border-bottom: none; }
+
+  .difficulty {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .difficulty.easy { background: #e4f2e4; color: #2a5e2a; }
+  .difficulty.medium { background: var(--warn-bg); color: var(--warn); }
+  .difficulty.hard { background: #fce8e8; color: #8b2020; }
+
+  /* Error states table */
+  .error-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+
+  .error-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 8px 16px 8px 0;
+    border-bottom: 2px solid var(--rule);
+    font-weight: 500;
+  }
+
+  .error-table td {
+    padding: 14px 16px 14px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: #2a2825;
+  }
+
+  .error-table tr:last-child td { border-bottom: none; }
+
+  .error-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Install steps */
+  .install-steps {
+    counter-reset: install;
+    margin: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .install-step {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 14px 20px;
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+
+  .install-step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    padding-top: 2px;
+  }
+
+  .install-step p { margin: 0; font-size: 15px; color: #2a2825; }
+
+  /* Success criteria */
+  .success-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .success-card {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px;
+    background: white;
+  }
+
+  .success-card-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .success-card p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  footer {
+    padding: 40px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer span {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 640px) {
+    .header-inner { grid-template-columns: 1fr; }
+    .header-meta { text-align: left; }
+    .container { padding: 0 24px; }
+    .req-grid, .success-grid { grid-template-columns: 1fr; }
+    .spec-row { grid-template-columns: 1fr; gap: 4px; }
+    .spec-key { color: var(--accent); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="doc-label">Product Requirements Document</div>
+      <h1>SS to <em>Cal</em></h1>
+      <p style="margin-top:16px;color:var(--muted);font-size:17px;max-width:520px;">A lightweight Android PWA that turns any screenshot into a Google Calendar event in under 10 seconds.</p>
+    </div>
+    <div class="header-meta">
+      Version 1.3<br>
+      May 2026<br>
+      Status<br>
+      <span class="status-badge">DRAFT</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <nav class="toc">
+    <a href="#overview"><span class="toc-num">01</span>Overview</a>
+    <a href="#problem"><span class="toc-num">02</span>Problem</a>
+    <a href="#flow"><span class="toc-num">03</span>User flow</a>
+    <a href="#missing-fields"><span class="toc-num">04</span>Missing fields</a>
+    <a href="#requirements"><span class="toc-num">05</span>Requirements</a>
+    <a href="#errors"><span class="toc-num">06</span>Error states</a>
+    <a href="#tech"><span class="toc-num">07</span>Technical spec</a>
+    <a href="#screenshot-types"><span class="toc-num">08</span>Screenshot types</a>
+    <a href="#calendar"><span class="toc-num">09</span>Calendar integration</a>
+    <a href="#install"><span class="toc-num">10</span>Install flow</a>
+    <a href="#success"><span class="toc-num">11</span>Success criteria</a>
+    <a href="#scope"><span class="toc-num">12</span>Scope</a>
+  </nav>
+
+  <!-- 01 Overview -->
+  <section id="overview">
+    <div class="section-label">01 — Overview</div>
+    <h2>What we're building</h2>
+
+    <div class="summary-box">
+      <p><strong>SS to Cal</strong> is a <strong>personal Android PWA</strong> that registers in the system share sheet. Take a screenshot of anything with event info — an email, a WhatsApp message, an Instagram post, a flyer — share it to SS to Cal, verify the extracted details, and add it to Google Calendar. <strong>No typing. No switching apps. No missed events.</strong></p>
+    </div>
+
+    <p>SS to Cal is one project (<code>ss_to_cal</code>) within a larger Flask web app (the hub), already live on Heroku over HTTPS. It is registered in the hub project registry at <code>/ss-to-cal</code>. A vision-model API call happens server-side — API keys are never exposed to the browser. Android shares an image via the Web Share Target API; Flask receives the multipart POST, extracts event details, and returns a review form page.</p>
+  </section>
+
+  <!-- 02 Problem -->
+  <section id="problem">
+    <div class="section-label">02 — Problem</div>
+    <h2>The friction we're eliminating</h2>
+
+    <p>Events arrive everywhere — a WhatsApp message, a restaurant confirmation email, an Instagram story, a Meetup screenshot. Getting them into a calendar today means reading the screenshot and manually typing title, date, time, and location into a calendar app, usually while switching between apps and losing context. Things get missed.</p>
+
+    <p>The goal is to reduce the entire flow to: <strong>screenshot → share → verify → done</strong>, using the Android share sheet pattern users already know.</p>
+  </section>
+
+  <!-- 03 User Flow -->
+  <section id="flow">
+    <div class="section-label">03 — User flow</div>
+    <h2>Step by step</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-line"></div>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Take a screenshot</div>
+          <p class="step-desc">Screenshot anything containing event info — an email, chat message, social post, flyer, or web page.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-line"></div>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Share to SS to Cal</div>
+          <p class="step-desc">Tap Share. SS to Cal appears in the Android share sheet (after the PWA is installed to the home screen). Tapping it POSTs the image directly to <code>/ss-to-cal/share</code> — no copying, no manual uploading.</p>
+        </div>
+      </div>
+      <div class="flow-step accent">
+        <div class="step-line"></div>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">AI extracts what it can find</div>
+          <p class="step-desc">Flask receives the image from the share POST, resizes it server-side, and sends it to a vision model with a structured extraction prompt. The model returns a JSON object with whatever it can confidently identify. Fields it cannot determine are returned as <code>null</code> — it never guesses or invents values. This takes 2–4 seconds on LTE.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-line"></div>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Review & complete</div>
+          <p class="step-desc">A form opens pre-filled with everything the model found. Missing or uncertain fields are highlighted in amber and labelled "Required" or "Please verify." The user fills in any gaps. The "Add to Google Calendar" button is disabled until title and date are both present. Timezone defaults to the device's local timezone and can be changed.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Add to Google Calendar</div>
+          <p class="step-desc">One button opens Google Calendar in the browser with all fields pre-populated. The user taps Save. Done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 Missing fields -->
+  <section id="missing-fields">
+    <div class="section-label">04 — Missing fields behavior</div>
+    <h2>When the screenshot is incomplete</h2>
+
+    <p>This is a core design principle: <strong>SS to Cal never assumes. It always asks.</strong> If information isn't clearly present in the screenshot, the user must supply it — the app does not fill in defaults silently or make educated guesses about dates and times.</p>
+
+    <div class="warn-note">
+      <p>The model is instructed explicitly: if you are not confident about a value, return <code style="background:rgba(0,0,0,0.08);">null</code>. Never infer. Never guess. A null field is always better than a wrong field.</p>
+    </div>
+
+    <h3>Field-by-field behavior</h3>
+    <table class="screenshot-table">
+      <thead>
+        <tr>
+          <th style="width:140px">Field</th>
+          <th style="width:100px">Required?</th>
+          <th>If missing or null</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Title</strong></td>
+          <td>Yes</td>
+          <td>Field highlighted amber, labelled "Required." Add to Calendar button stays disabled until filled.</td>
+        </tr>
+        <tr>
+          <td><strong>Date</strong></td>
+          <td>Yes</td>
+          <td>Field highlighted amber, labelled "Required." Add to Calendar button stays disabled until filled.</td>
+        </tr>
+        <tr>
+          <td><strong>Start time</strong></td>
+          <td>No</td>
+          <td>Field is empty with a "Leave blank for all-day event" hint. User can enter a time or leave it blank — blank means all-day.</td>
+        </tr>
+        <tr>
+          <td><strong>End time</strong></td>
+          <td>No</td>
+          <td>Empty, optional. If a start time is set but no end time, Google Calendar will default to a 1-hour event.</td>
+        </tr>
+        <tr>
+          <td><strong>Location</strong></td>
+          <td>No</td>
+          <td>Empty, optional. No prompt shown.</td>
+        </tr>
+        <tr>
+          <td><strong>Description</strong></td>
+          <td>No</td>
+          <td>Empty, optional. No prompt shown.</td>
+        </tr>
+        <tr>
+          <td><strong>Timezone</strong></td>
+          <td>No</td>
+          <td>Defaults to device's local timezone. Always visible. If the model detected a different timezone, it is pre-filled and highlighted amber with "Please verify."</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>The review form always opens — even if every field is null. The user is never shown a "couldn't find anything" dead end. They simply fill in what's missing.</p>
+
+    <h3>Confidence indicator</h3>
+    <p>The model also returns an overall <code>confidence</code> value (<code>high</code>, <code>medium</code>, or <code>low</code>). When confidence is <code>low</code>, a banner is shown at the top of the review form: <em>"The image was hard to read — please check all fields carefully."</em> Individual fields with medium or low confidence are marked "Please verify" regardless of whether they are null.</p>
+  </section>
+
+  <!-- 05 Requirements -->
+  <section id="requirements">
+    <div class="section-label">05 — Requirements</div>
+    <h2>What the app must do</h2>
+
+    <h3>Functional requirements</h3>
+    <div class="req-grid">
+      <div class="req-card">
+        <div class="req-card-label">FR-01</div>
+        <p>Register as a share target in the Android share sheet, accepting <code>image/*</code> files via the Web Share Target API.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-02</div>
+        <p>Send the received image to a vision-capable LLM and parse a structured JSON event object from the response. Never display raw API output to the user.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-03</div>
+        <p>Always open the review form after extraction, regardless of how many fields were found. Never show a dead-end error screen for incomplete extractions.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-04</div>
+        <p>Highlight null and low-confidence fields in amber. Required fields (title, date) show a "Required" label. Others show "Please verify." All fields must be editable.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-05</div>
+        <p>Disable the "Add to Google Calendar" button until both title and date are filled in. Enable it immediately once both are present.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-06</div>
+        <p>Generate a valid Google Calendar URL from the confirmed event data and open it in the browser. Support all-day events (no time) and timed events.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-07</div>
+        <p>Show a timezone field on every review form. Default to the device's local timezone. User can change it before submitting.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">FR-08 — Authentication</div>
+        <p>Access to SS to Cal routes is gated by the hub's existing authentication (Google OAuth / Flask-Login). No separate signup or onboarding. The PWA shell and share route require a logged-in session. Manifest and service worker are served without auth.</p>
+      </div>
+    </div>
+
+    <h3>Non-functional requirements</h3>
+    <div class="req-grid">
+      <div class="req-card">
+        <div class="req-card-label">NFR-01 — Speed</div>
+        <p>Extraction result appears within 5 seconds on LTE. On share-target POST, Android sends the full image — Flask resizes/compresses server-side (max 1600px longest edge) before calling the vision model. No database; screenshots are not stored after extraction.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">NFR-02 — Privacy</div>
+        <p>Screenshots are sent to the Flask backend and then to the vision API. They are not stored after extraction completes. API keys live server-side as Heroku environment variables and are never exposed to the client.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">NFR-03 — Offline</div>
+        <p>App shell (HTML, CSS, JS) loads offline via service worker. Extraction requires connectivity. A clear error is shown when offline.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">NFR-04 — Installability</div>
+        <p>Meets PWA installability criteria in Android Chrome. Runs as a standalone app (no browser chrome) when launched from the home screen.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Error states -->
+  <section id="errors">
+    <div class="section-label">06 — Error states</div>
+    <h2>What happens when things go wrong</h2>
+
+    <p>All errors are shown inline in the UI — never as browser <code>alert()</code> dialogs. Every error state includes a clear message and a recoverable action (retry, go back, or open settings).</p>
+
+    <table class="error-table">
+      <thead>
+        <tr>
+          <th style="width:160px">Condition</th>
+          <th style="width:220px">Message shown</th>
+          <th>Recovery action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="error-code">OFFLINE</span></td>
+          <td>"You're offline. Connect to the internet and try again."</td>
+          <td>User must re-share the screenshot once online. (Share-target POST cannot be retried with the same image held in memory.)</td>
+        </tr>
+        <tr>
+          <td><span class="error-code">NOT_LOGGED_IN</span></td>
+          <td>"Please log in, then share the screenshot again."</td>
+          <td>Show a dedicated page (HTTP 200) — do not redirect to login, which would drop the multipart POST body. User logs in via the hub, then re-shares from the gallery.</td>
+        </tr>
+        <tr>
+          <td><span class="error-code">API_ERROR</span></td>
+          <td>"Couldn't reach the extraction service. Try again."</td>
+          <td>Retry button.</td>
+        </tr>
+        <tr>
+          <td><span class="error-code">PARSE_FAILED</span></td>
+          <td>"The AI returned an unexpected response. Try again."</td>
+          <td>Retry button. The raw response is logged to console for debugging.</td>
+        </tr>
+        <tr>
+          <td><span class="error-code">NO_EVENT_FOUND</span></td>
+          <td>"No event details were found in this image. You can fill in the details manually."</td>
+          <td>Opens the review form with all fields empty. User fills everything in manually.</td>
+        </tr>
+        <tr>
+          <td><span class="error-code">IMAGE_TOO_LARGE</span></td>
+          <td>"The image couldn't be processed. Try a clearer screenshot."</td>
+          <td>Go back button. Happens if server-side resize/decode fails unexpectedly.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 07 Technical spec -->
+  <section id="tech">
+    <div class="section-label">07 — Technical spec</div>
+    <h2>How it's built</h2>
+
+    <div class="spec-row">
+      <div class="spec-key">Hub project</div>
+      <div class="spec-val">Blueprint <code>ss_to_cal</code> at <code>/ss-to-cal</code>. Listed in <code>app/projects/registry.py</code> with <code>auth_required: true</code>. Static assets under <code>/ss-to-cal/static/</code>. CSS classes prefixed <code>sstc-</code> to avoid collisions with other hub projects.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Type</div>
+      <div class="spec-val">One blueprint/project within the existing Flask hub. Front-end is a PWA with a web manifest and service worker served by Flask. No database models in v1.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Hosting</div>
+      <div class="spec-val">Existing Heroku deployment, already on HTTPS. No new infrastructure needed.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">AI model (v1)</div>
+      <div class="spec-val"><code>gemini-3-flash-preview</code> via Google Gemini API (<code>google.genai</code> client). Same pattern as <code>sports_schedules</code> and <code>docs_demo</code>.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Fallback model</div>
+      <div class="spec-val"><code>claude-sonnet-4-6</code> via Anthropic Messages API — switch only if Gemini misses the section-08 accuracy bar (see Model selection below).</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">API keys</div>
+      <div class="spec-val">Primary: <code>GOOGLE_API_KEY</code> (already used elsewhere in the hub). Fallback: <code>ANTHROPIC_API_KEY</code>. Never sent to the client.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Share target</div>
+      <div class="spec-val"><code>manifest.webmanifest</code> declares <code>share_target</code> with <code>method: POST</code>, <code>enctype: multipart/form-data</code>, accepting <code>image/*</code>. Android POSTs to <code>/ss-to-cal/share</code>. PWA <code>scope</code> is <code>/ss-to-cal/</code> so the installed app stays within this project.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Share handoff</div>
+      <div class="spec-val">The share POST goes directly to Flask — no Cache API relay, no separate JSON API in v1. Flask reads the image, calls the vision model server-side, and returns an HTML review form with extracted fields embedded (e.g. as JSON in the page). The user edits and opens Google Calendar via a client-built URL.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Image encoding</div>
+      <div class="spec-val">Android sends the full image in the share POST. Flask resizes to max 1600px on the longest edge, then sends to the vision API. Screenshots are not persisted after extraction completes.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Authentication</div>
+      <div class="spec-val"><code>GET /ss-to-cal/</code> and <code>POST /ss-to-cal/share</code> require a logged-in hub session. <code>/ss-to-cal/share</code> is CSRF-exempt (Android share POST has no CSRF token). Unauthenticated share POSTs return a login prompt page (200), not a redirect. User must log in during PWA install and keep an active session when sharing.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Framework</div>
+      <div class="spec-val">Flask (Python) back-end. Vanilla HTML/CSS/JS front-end. No JS framework or build step.</div>
+    </div>
+
+    <h3>Model selection</h3>
+    <p>Default to <strong>Gemini 3 Flash</strong> for v1. It is already used in this hub, fast enough for the &lt;5s target, and cheap at personal-use volume (~$0.003/call). Switch to <strong>Claude Sonnet 4.6</strong> only if manual testing on section-08 screenshot types fails the success criteria — especially invented dates/times or missed title+date on WhatsApp or flyer screenshots.</p>
+
+    <table class="screenshot-table">
+      <thead>
+        <tr>
+          <th style="width:180px">Role</th>
+          <th style="width:220px">Model ID</th>
+          <th>When to use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Default (v1)</strong></td>
+          <td><code>gemini-3-flash-preview</code></td>
+          <td>Ship with this. Reuse <code>google.genai.Client</code> + <code>GOOGLE_API_KEY</code> from existing hub projects.</td>
+        </tr>
+        <tr>
+          <td><strong>Quality fallback</strong></td>
+          <td><code>claude-sonnet-4-6</code></td>
+          <td>If Gemini invents dates, misses casual phrasing (&ldquo;next Friday&rdquo;), or falls below 8/10 on section-08 fixtures. Uses <code>ANTHROPIC_API_KEY</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Budget fallback</strong></td>
+          <td><code>gemini-2.5-flash-lite</code></td>
+          <td>Only if cost ever matters at scale; not expected for personal use.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="scope-note">
+      <p>Model choice is validated empirically on real screenshots (section 08), not benchmark tables. Prompt quality and server-side resize matter as much as the model.</p>
+    </div>
+
+    <h3>Extraction system prompt (verbatim)</h3>
+    <div class="code-label">Sent as the system message on every extraction API call</div>
+    <pre><span class="hl2">You are an event extraction assistant. Your job is to extract</span>
+<span class="hl2">calendar event details from screenshots.</span>
+
+<span class="hl2">Rules you must follow without exception:</span>
+<span class="cm">- Respond ONLY with a single valid JSON object. No explanation,</span>
+<span class="cm">  no preamble, no markdown, no code fences.</span>
+<span class="cm">- If you are not confident about a value, return null for that field.</span>
+<span class="cm">- NEVER guess, infer, or fabricate dates, times, or locations.</span>
+<span class="cm">- A null field is always preferable to a wrong field.</span>
+<span class="cm">- If the image contains no identifiable event, return:</span>
+<span class="cm">  {"error": "no_event_found"}</span>
+<span class="cm">- Dates must be ISO 8601: YYYY-MM-DD</span>
+<span class="cm">- Times must be 24-hour HH:MM format</span>
+<span class="cm">- Timezone must be an IANA timezone name, e.g. "America/New_York"</span></pre>
+
+    <h3>Extraction JSON schema</h3>
+    <div class="code-label">Shape the model returns on success</div>
+    <pre>{
+  <span class="hl">"title"</span>:       <span class="hl2">"string"</span> <span class="cm">| null,   // Event name</span>
+  <span class="hl">"date"</span>:        <span class="hl2">"YYYY-MM-DD"</span> <span class="cm">| null,</span>
+  <span class="hl">"startTime"</span>:   <span class="hl2">"HH:MM"</span> <span class="cm">| null,    // null = user chooses all-day or enters time</span>
+  <span class="hl">"endTime"</span>:     <span class="hl2">"HH:MM"</span> <span class="cm">| null,</span>
+  <span class="hl">"location"</span>:    <span class="hl2">"string"</span> <span class="cm">| null,</span>
+  <span class="hl">"description"</span>: <span class="hl2">"string"</span> <span class="cm">| null,</span>
+  <span class="hl">"timezone"</span>:    <span class="hl2">"string"</span> <span class="cm">| null,    // IANA name, e.g. "America/New_York"</span>
+  <span class="hl">"confidence"</span>:  <span class="hl3">"high"</span> <span class="cm">| "medium" | "low"</span>
+}</pre>
+
+    <p>Required fields are <code>title</code> and <code>date</code>. All others are optional. The review form surfaces any null or uncertain field to the user before the calendar button is enabled.</p>
+
+    <h3>Web app manifest</h3>
+    <div class="code-label">manifest.webmanifest — served at /ss-to-cal/manifest.webmanifest</div>
+    <pre>{
+  <span class="hl">"name"</span>:           <span class="hl2">"SS to Cal"</span>,
+  <span class="hl">"short_name"</span>:     <span class="hl2">"SS to Cal"</span>,
+  <span class="hl">"start_url"</span>:      <span class="hl2">"/ss-to-cal/"</span>,
+  <span class="hl">"scope"</span>:          <span class="hl2">"/ss-to-cal/"</span>,
+  <span class="hl">"display"</span>:        <span class="hl2">"standalone"</span>,
+  <span class="hl">"background_color"</span>: <span class="hl2">"#f5f2ec"</span>,
+  <span class="hl">"theme_color"</span>:    <span class="hl2">"#d4500a"</span>,
+  <span class="hl">"icons"</span>: [
+    { <span class="hl">"src"</span>: <span class="hl2">"/ss-to-cal/static/icons/icon-192.png"</span>, <span class="hl">"sizes"</span>: <span class="hl2">"192x192"</span>, <span class="hl">"type"</span>: <span class="hl2">"image/png"</span> },
+    { <span class="hl">"src"</span>: <span class="hl2">"/ss-to-cal/static/icons/icon-512.png"</span>, <span class="hl">"sizes"</span>: <span class="hl2">"512x512"</span>, <span class="hl">"type"</span>: <span class="hl2">"image/png"</span> }
+  ],
+  <span class="hl">"share_target"</span>: {
+    <span class="hl">"action"</span>:   <span class="hl2">"/ss-to-cal/share"</span>,
+    <span class="hl">"method"</span>:   <span class="hl2">"POST"</span>,
+    <span class="hl">"enctype"</span>:  <span class="hl2">"multipart/form-data"</span>,
+    <span class="hl">"params"</span>: {
+      <span class="hl">"files"</span>: [{ <span class="hl">"name"</span>: <span class="hl2">"image"</span>, <span class="hl">"accept"</span>: [<span class="hl2">"image/*"</span>] }]
+    }
+  }
+}</pre>
+
+    <h3>Flask routes</h3>
+    <table class="screenshot-table">
+      <thead>
+        <tr>
+          <th style="width:100px">Method</th>
+          <th style="width:280px">Route</th>
+          <th>Auth</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>GET</code></td>
+          <td><code>/ss-to-cal/</code></td>
+          <td>Yes</td>
+          <td>PWA shell. Install instructions in browser tab; short "share a screenshot" copy when running standalone.</td>
+        </tr>
+        <tr>
+          <td><code>GET</code></td>
+          <td><code>/ss-to-cal/manifest.webmanifest</code></td>
+          <td>No</td>
+          <td>Web app manifest (share_target, icons, scope).</td>
+        </tr>
+        <tr>
+          <td><code>GET</code></td>
+          <td><code>/ss-to-cal/sw.js</code></td>
+          <td>No</td>
+          <td>Service worker — caches app shell (HTML/CSS/JS) for offline loading. Extraction still requires network.</td>
+        </tr>
+        <tr>
+          <td><code>POST</code></td>
+          <td><code>/ss-to-cal/share</code></td>
+          <td>Yes (CSRF-exempt)</td>
+          <td>Share target. Receives multipart image from Android, calls vision model, returns review form HTML.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Server modules (planned)</h3>
+    <div class="spec-row">
+      <div class="spec-key">routes.py</div>
+      <div class="spec-val">Blueprint routes above.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">extraction.py</div>
+      <div class="spec-val">Vision-model call + JSON parse. Default: Gemini via <code>GOOGLE_API_KEY</code>. Optional fallback: Anthropic via <code>ANTHROPIC_API_KEY</code>. Does not reuse the Helper text-only Claude pipeline.</div>
+    </div>
+  </section>
+
+  <!-- 08 Screenshot types -->
+  <section id="screenshot-types">
+    <div class="section-label">08 — Screenshot types</div>
+    <h2>What the app needs to handle</h2>
+
+    <p>The model should be tested against each of these categories. Difficulty is based on how structured and text-rich the content is — dense text with clear labels is easiest; image-heavy content with informal date phrasing is hardest.</p>
+
+    <table class="screenshot-table">
+      <thead>
+        <tr>
+          <th style="width:180px">Source type</th>
+          <th style="width:110px">Difficulty</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Confirmation email</td>
+          <td><span class="difficulty easy">Easy</span></td>
+          <td>Structured text, explicit date/time fields, usually unambiguous.</td>
+        </tr>
+        <tr>
+          <td>Calendar invite (email)</td>
+          <td><span class="difficulty easy">Easy</span></td>
+          <td>Highly structured. Title, time, location usually labeled.</td>
+        </tr>
+        <tr>
+          <td>WhatsApp / iMessage</td>
+          <td><span class="difficulty medium">Medium</span></td>
+          <td>Casual date language ("next Friday", "this weekend"). Timezone rarely mentioned.</td>
+        </tr>
+        <tr>
+          <td>Eventbrite / Meetup page</td>
+          <td><span class="difficulty easy">Easy</span></td>
+          <td>Structured event pages with clear fields. Strong signal.</td>
+        </tr>
+        <tr>
+          <td>Instagram / Facebook event</td>
+          <td><span class="difficulty medium">Medium</span></td>
+          <td>Date formatting varies. Location sometimes missing or informal.</td>
+        </tr>
+        <tr>
+          <td>Event flyer (image-heavy)</td>
+          <td><span class="difficulty hard">Hard</span></td>
+          <td>Dates embedded in graphics, creative typography, no semantic structure. Model may return low confidence.</td>
+        </tr>
+        <tr>
+          <td>Restaurant / venue website</td>
+          <td><span class="difficulty medium">Medium</span></td>
+          <td>Usually has address and hours but event-specific info may be sparse.</td>
+        </tr>
+        <tr>
+          <td>Screenshot of a ticket (PDF/image)</td>
+          <td><span class="difficulty medium">Medium</span></td>
+          <td>Structured but compressed layout. Barcodes and noise may affect model focus.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn-note">
+      <p>For "hard" screenshot types, the model is expected to return <code>confidence: "low"</code> and null for uncertain fields rather than guessing. The user fills in what's missing.</p>
+    </div>
+  </section>
+
+  <!-- 09 Calendar -->
+  <section id="calendar">
+    <div class="section-label">09 — Calendar integration</div>
+    <h2>Google Calendar — no API required</h2>
+
+    <p>SS to Cal opens Google Calendar's new event form via a URL redirect, with all confirmed fields pre-populated. No Google OAuth or Calendar API credentials needed. The user sees a pre-filled form in Google Calendar and taps Save.</p>
+
+    <h3>URL structure</h3>
+    <div class="code-label">Constructed client-side from the verified form data</div>
+    <pre><span class="hl2">https://calendar.google.com/calendar/render</span>
+  ?<span class="hl">action</span>=TEMPLATE
+  &<span class="hl">text</span>=<span class="hl3">Event+Title</span>
+  &<span class="hl">dates</span>=<span class="hl3">20260601T140000Z/20260601T150000Z</span>
+  &<span class="hl">details</span>=<span class="hl3">Description+here</span>
+  &<span class="hl">location</span>=<span class="hl3">123+Main+St</span></pre>
+
+    <p>All values are URL-encoded from the verified form fields. Times are converted to UTC before encoding using the timezone the user confirmed. All-day events (no time set) use the date-only format: <code>YYYYMMDD/YYYYMMDD</code> with the end date set to the day after the start date (as Google Calendar requires).</p>
+
+    <div class="scope-note">
+      <p>V1 is Google Calendar only. Other calendar targets (Outlook, .ics) are out of scope.</p>
+    </div>
+  </section>
+
+  <!-- 10 Install flow -->
+  <section id="install">
+    <div class="section-label">10 — Install flow</div>
+    <h2>Getting SS to Cal into the share sheet</h2>
+
+    <p>The share sheet registration only works once the PWA is installed to the home screen. This is a one-time setup. The app should surface these instructions on first load if it detects it is running in a browser tab rather than as a standalone PWA.</p>
+
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="install-step-num">1</div>
+        <p>Open <code>/ss-to-cal/</code> in <strong>Chrome on Android</strong>. (Other Android browsers may not support the Web Share Target API.)</p>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">2</div>
+        <p>Log in with the hub's Google OAuth if prompted.</p>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">3</div>
+        <p>Tap the <strong>three-dot menu</strong> in Chrome's top-right corner.</p>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">4</div>
+        <p>Tap <strong>"Add to Home Screen"</strong> and confirm. SS to Cal installs as a standalone app.</p>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">5</div>
+        <p><strong>Test the share sheet:</strong> take any screenshot, tap Share, and confirm SS to Cal appears in the list. If it doesn't appear, try restarting Chrome.</p>
+      </div>
+    </div>
+
+    <p>The app detects whether it is running as an installed PWA (<code>display-mode: standalone</code>) or in a browser tab. In a browser tab, it shows the install instructions above instead of the normal UI, since share sheet integration won't work.</p>
+  </section>
+
+  <!-- 11 Success criteria -->
+  <section id="success">
+    <div class="section-label">11 — Success criteria</div>
+    <h2>How we know it's working</h2>
+
+    <p>V1 is considered done when all of the following hold in manual testing across the screenshot types listed in section 08.</p>
+
+    <div class="success-grid">
+      <div class="success-card">
+        <div class="success-card-num">8/10</div>
+        <p>Correctly extracts title and date from 8 out of 10 representative screenshots without user correction.</p>
+      </div>
+      <div class="success-card">
+        <div class="success-card-num">&lt;5s</div>
+        <p>Extraction result — whether successful or an error state — appears within 5 seconds on LTE.</p>
+      </div>
+      <div class="success-card">
+        <div class="success-card-num">0</div>
+        <p>Zero instances of the model inventing a date or time that wasn't present in the screenshot.</p>
+      </div>
+    </div>
+
+    <div class="req-grid" style="margin-top:12px;">
+      <div class="req-card">
+        <div class="req-card-label">Functional</div>
+        <p>The share sheet integration works: sharing a screenshot to SS to Cal opens the review form with extracted data.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">Functional</div>
+        <p>The Google Calendar URL correctly pre-fills all confirmed fields including timezone conversion.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">Functional</div>
+        <p>Every error state (no key, offline, API failure, no event found) shows a clear message with a recovery action.</p>
+      </div>
+      <div class="req-card">
+        <div class="req-card-label">UX</div>
+        <p>The "Add to Calendar" button never enables with an empty title or date. Amber highlights correctly identify all null fields.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 Scope -->
+  <section id="scope">
+    <div class="section-label">12 — Scope & non-goals</div>
+    <h2>What's in and what's out</h2>
+
+    <div class="scope-note">
+      <p>This is a personal tool for one user. Deliberate minimalism is a feature, not a limitation. Add nothing to V1 that isn't listed below.</p>
+    </div>
+
+    <div class="scope-note">
+      <p>Uses the hub's existing login — not a separate user system. No email, no event history, no database in v1.</p>
+    </div>
+
+    <h3>In scope — v1</h3>
+    <span class="tag accent">Android PWA</span>
+    <span class="tag accent">Chrome share sheet</span>
+    <span class="tag accent">Vision LLM extraction</span>
+    <span class="tag accent">Missing field prompting</span>
+    <span class="tag accent">Review & edit form</span>
+    <span class="tag accent">Google Calendar URL</span>
+    <span class="tag accent">Timezone handling</span>
+    <span class="tag accent">Hub authentication</span>
+    <span class="tag accent">Offline app shell</span>
+    <span class="tag accent">All error states</span>
+
+    <h3>Explicitly out of scope</h3>
+    <span class="tag">Outlook / .ics export</span>
+    <span class="tag">iOS / Safari</span>
+    <span class="tag">Calendar API OAuth</span>
+    <span class="tag">Event history / storage</span>
+    <span class="tag">Separate signup / user accounts</span>
+    <span class="tag">Multi-event extraction</span>
+    <span class="tag">Recurring events</span>
+    <span class="tag">Email / notifications</span>
+    <span class="tag">Analytics</span>
+
+    <h3>Open questions</h3>
+    <div class="req-grid" style="margin-top:16px;">
+      <div class="req-card">
+        <div class="req-card-label">OQ-01</div>
+        <p>When a screenshot contains multiple events (e.g. a weekly schedule), V1 extracts only the most prominent one. Should the UI note this? Deferred for now.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>SS to Cal — PRD v1.3</span>
+    <span>May 2026 · Draft</span>
+  </footer>
+
+</div>
+</body>
+</html>

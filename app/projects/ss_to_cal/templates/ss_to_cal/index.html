@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}SS to Cal{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('ss_to_cal.static', filename='ss_to_cal.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sstc-page">
+    <div class="sstc-container">
+
+        <header class="sstc-header">
+            <h1 class="sstc-title">SS to Cal</h1>
+            <p class="sstc-intro">Screenshot → share → verify → Google Calendar. Android PWA shell — no database models yet.</p>
+        </header>
+
+        <section class="sstc-placeholder" aria-labelledby="sstc-next-heading">
+            <h2 id="sstc-next-heading" class="sstc-section-title">Coming next</h2>
+            <p class="sstc-placeholder-text">PWA manifest, share-target route, Claude vision extraction, and review form. See <code>docs/prd.html</code>.</p>
+        </section>
+
+    </div>
+</div>
+{% endblock %}
