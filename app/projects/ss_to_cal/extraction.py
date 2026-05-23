@@ -1,5 +1,6 @@
 """Vision-model extraction for SS to Cal."""
 
+import base64
 import logging
 import os
 import re
