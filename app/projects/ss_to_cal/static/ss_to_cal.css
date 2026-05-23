@@ -271,6 +271,69 @@
     cursor: not-allowed;
 }
 
+.sstc-debug {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    background: #fafafa;
+    font-size: 0.85rem;
+}
+
+.sstc-debug-summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #374151;
+}
+
+.sstc-debug-meta {
+    margin: 0.75rem 0;
+}
+
+.sstc-debug-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.2rem 0;
+}
+
+.sstc-debug-row dt {
+    margin: 0;
+    color: #6b7280;
+}
+
+.sstc-debug-row dd {
+    margin: 0;
+    text-align: right;
+}
+
+.sstc-debug-label {
+    margin: 0.5rem 0 0.25rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.sstc-debug-json {
+    margin: 0;
+    padding: 0.65rem;
+    border-radius: 8px;
+    background: #1f2937;
+    color: #e5e7eb;
+    overflow-x: auto;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.sstc-debug-fill {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: #374151;
+}
+
+.sstc-debug-fill-warn {
+    color: #b45309;
+}
+
 .sstc-placeholder {
     padding: 1.25rem;
     border: 1px dashed rgba(0, 0, 0, 0.12);

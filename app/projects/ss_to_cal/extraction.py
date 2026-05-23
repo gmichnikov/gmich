@@ -1,7 +1,5 @@
 """Vision-model extraction for SS to Cal."""
 
-import base64
-import json
 import logging
 import os
 import re
@@ -221,11 +219,57 @@ def parse_json_from_llm(raw: str) -> dict:
     return result
 
 
+# Model sometimes uses snake_case keys.
+_FIELD_ALIASES = {
+    "start_time": "startTime",
+    "end_time": "endTime",
+}
+
+
+def _coerce_parsed_fields(parsed: dict) -> dict:
+    coerced = dict(parsed)
+    for alias, canonical in _FIELD_ALIASES.items():
+        if alias in coerced and coerced.get(canonical) is None:
+            coerced[canonical] = coerced[alias]
+    return coerced
+
+
+def _normalize_date(value: str) -> str | None:
+    value = value.strip()
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return value
+    return value or None
+
+
+def _normalize_time(value: str) -> str | None:
+    value = value.strip()
+    if not value:
+        return None
+
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})(?::(\d{2}))?", value)
+    if match:
+        hour = int(match.group(1))
+        minute = match.group(2)
+        if 0 <= hour <= 23:
+            return f"{hour:02d}:{minute}"
+
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})\s*(AM|PM)", value, re.IGNORECASE)
+    if match:
+        hour = int(match.group(1)) % 12
+        if match.group(3).upper() == "PM":
+            hour += 12
+        return f"{hour:02d}:{match.group(2)}"
+
+    return value
+
+
 def normalize_extraction(parsed: dict | None) -> dict:
     """Map model output to form field dict; unknown keys dropped."""
     empty = {key: None for key in EXTRACTION_KEYS}
     if not parsed:
         return empty
+
+    parsed = _coerce_parsed_fields(parsed)
 
     if parsed.get("error") == "no_event_found":
         return empty
@@ -240,11 +284,25 @@ def normalize_extraction(parsed: dict | None) -> dict:
             continue
         if isinstance(value, str):
             value = value.strip()
-            empty[key] = value or None
+            if not value:
+                continue
+            if key == "date":
+                empty[key] = _normalize_date(value)
+            elif key in ("startTime", "endTime"):
+                empty[key] = _normalize_time(value)
+            else:
+                empty[key] = value
         else:
             empty[key] = value
 
     return empty
+
+
+def extraction_field_summary(extraction: dict) -> str:
+    """Compact summary for logs — field names only, no values."""
+    keys = ("title", "date", "startTime", "endTime", "location", "description", "timezone")
+    populated = [key for key in keys if extraction.get(key)]
+    return ",".join(populated) if populated else "none"
 
 
 def is_no_event_found(parsed: dict) -> bool:

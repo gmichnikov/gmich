@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -10,6 +11,7 @@ from app.projects.ss_to_cal.extraction import (
     ExtractionParseError,
     count_fields_populated,
     extract_event_from_image,
+    extraction_field_summary,
     is_no_event_found,
     normalize_extraction,
 )
@@ -158,6 +160,10 @@ def share():
         )
 
     extraction = normalize_extraction(parsed)
+    current_app.logger.info(
+        "SS to Cal extraction parsed: %s",
+        json.dumps(extraction, ensure_ascii=True),
+    )
     return _render_share(
         extraction=extraction,
         started=started,
@@ -198,12 +204,24 @@ def _render_share(
         image_height=image_height,
         error_code=error_code,
         api_latency_ms=api_meta.get("api_latency_ms"),
+        field_summary=extraction_field_summary(extraction),
     )
+
+    extraction_meta = {
+        "outcome": outcome,
+        "model": api_meta.get("model"),
+        "latency_ms": latency_ms,
+        "api_latency_ms": api_meta.get("api_latency_ms"),
+        "fields_populated": count_fields_populated(extraction),
+        "field_summary": extraction_field_summary(extraction),
+        "confidence": extraction.get("confidence"),
+    }
 
     return (
         render_template(
             "ss_to_cal/share.html",
             extraction=extraction,
+            extraction_meta=extraction_meta,
             error_message=error_message,
             info_message=info_message,
         ),

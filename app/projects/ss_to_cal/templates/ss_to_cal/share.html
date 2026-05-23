@@ -63,6 +63,44 @@
     </button>
 </form>
 
+{% if extraction_meta %}
+<details class="sstc-debug" id="sstc-debug-panel">
+    <summary class="sstc-debug-summary">Parsed extraction (debug)</summary>
+    <dl class="sstc-debug-meta">
+        {% if extraction_meta.model %}
+        <div class="sstc-debug-row">
+            <dt>Model</dt>
+            <dd>{{ extraction_meta.model }}</dd>
+        </div>
+        {% endif %}
+        <div class="sstc-debug-row">
+            <dt>Outcome</dt>
+            <dd><code>{{ extraction_meta.outcome }}</code></dd>
+        </div>
+        {% if extraction_meta.latency_ms is not none %}
+        <div class="sstc-debug-row">
+            <dt>Latency</dt>
+            <dd>{{ extraction_meta.latency_ms }} ms{% if extraction_meta.api_latency_ms %} (API {{ extraction_meta.api_latency_ms }} ms){% endif %}</dd>
+        </div>
+        {% endif %}
+        {% if extraction_meta.confidence %}
+        <div class="sstc-debug-row">
+            <dt>Confidence</dt>
+            <dd>{{ extraction_meta.confidence }}</dd>
+        </div>
+        {% endif %}
+        <div class="sstc-debug-row">
+            <dt>Fields parsed</dt>
+            <dd><code>{{ extraction_meta.field_summary or "none" }}</code></dd>
+        </div>
+    </dl>
+    <p class="sstc-debug-label">JSON sent to form</p>
+    <pre class="sstc-debug-json" id="sstc-debug-json">{{ extraction | tojson(indent=2) }}</pre>
+    <p class="sstc-debug-label">Form fill status</p>
+    <ul class="sstc-debug-fill" id="sstc-debug-fill"></ul>
+</details>
+{% endif %}
+
 <script id="sstc-extraction-data" type="application/json">{{ extraction | tojson }}</script>
 {% endblock %}
 

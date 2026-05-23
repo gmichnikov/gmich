@@ -36,6 +36,7 @@ def log_share_extraction(
     image_height: int | None = None,
     error_code: str | None = None,
     api_latency_ms: int | None = None,
+    field_summary: str | None = None,
 ) -> None:
     parts = [f"Extraction → outcome={outcome}", f"latency_ms={latency_ms}"]
     if model:
@@ -49,6 +50,8 @@ def log_share_extraction(
         parts.append(f"confidence={confidence}")
     if fields_populated:
         parts.append(f"fields_populated={fields_populated}")
+    if field_summary:
+        parts.append(f"fields={field_summary}")
     if image_width and image_height:
         parts.append(f"image={image_width}x{image_height}")
     if error_code:

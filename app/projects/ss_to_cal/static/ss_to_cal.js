@@ -69,6 +69,8 @@
       return;
     }
 
+    console.log("SS to Cal parsed extraction:", extraction);
+
     var fields = {
       title: "sstc-title",
       date: "sstc-date",
@@ -79,11 +81,40 @@
       timezone: "sstc-timezone",
     };
 
+    var fillReport = [];
+
     Object.keys(fields).forEach(function (key) {
       var el = document.getElementById(fields[key]);
-      if (el && extraction[key]) {
-        el.value = extraction[key];
+      var parsedValue = extraction[key];
+      var report = {
+        field: key,
+        parsed: parsedValue == null ? null : String(parsedValue),
+        applied: null,
+        note: "",
+      };
+
+      if (!el) {
+        report.note = "input missing";
+        fillReport.push(report);
+        return;
       }
+
+      if (parsedValue == null || parsedValue === "") {
+        report.note = "empty in JSON";
+        fillReport.push(report);
+        return;
+      }
+
+      el.value = String(parsedValue);
+      report.applied = el.value || null;
+
+      if (!el.value) {
+        report.note = "browser rejected value for input type";
+      } else if (el.value !== String(parsedValue)) {
+        report.note = "browser normalized value";
+      }
+
+      fillReport.push(report);
     });
 
     var tzInput = document.getElementById("sstc-timezone");
@@ -94,6 +125,29 @@
         /* ignore */
       }
     }
+
+    console.log("SS to Cal form fill report:", fillReport);
+    renderFillDebug(fillReport);
+  }
+
+  function renderFillDebug(fillReport) {
+    var list = document.getElementById("sstc-debug-fill");
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = "";
+    fillReport.forEach(function (item) {
+      var li = document.createElement("li");
+      var parsed = item.parsed == null ? "null" : item.parsed;
+      var applied = item.applied == null ? "null" : item.applied;
+      var extra = item.note ? " — " + item.note : "";
+      li.textContent = item.field + ": parsed=" + parsed + ", in form=" + applied + extra;
+      if (item.note && item.note.indexOf("rejected") !== -1) {
+        li.className = "sstc-debug-fill-warn";
+      }
+      list.appendChild(li);
+    });
   }
 
   registerServiceWorker();
