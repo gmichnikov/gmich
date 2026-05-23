@@ -1,4 +1,5 @@
 {% extends "ss_to_cal/share_base.html" %}
+{% from "ss_to_cal/_error_banner.html" import sstc_error_banner %}
 
 {% block title %}Review event — SS to Cal{% endblock %}
 
@@ -7,6 +8,11 @@
     <h1 class="sstc-title">Review event</h1>
     <p class="sstc-intro">Check the details below, then add to Google Calendar.</p>
 </header>
+
+<section id="sstc-offline-banner" class="sstc-flash sstc-flash-error sstc-error-banner" role="alert" hidden>
+    <p class="sstc-error-message">You're offline. Connect to the internet and try again.</p>
+    <p class="sstc-hint sstc-error-hint">Once you're back online, share the screenshot again from your gallery.</p>
+</section>
 
 <section id="sstc-low-confidence-banner" class="sstc-flash sstc-flash-warn" role="status" hidden>
     The image was hard to read — please check all fields carefully.
@@ -18,11 +24,7 @@
 </section>
 {% endif %}
 
-{% if error_message %}
-<section class="sstc-flash sstc-flash-error" role="alert">
-    {{ error_message }}
-</section>
-{% endif %}
+{{ sstc_error_banner(error_code, error_message, error_recovery) }}
 
 <form id="sstc-review-form" class="sstc-review-form" novalidate>
     <div class="sstc-field" id="sstc-field-title" data-field="title">
@@ -73,7 +75,7 @@
     </button>
 </form>
 
-{% if extraction_meta %}
+{% if show_debug and extraction_meta %}
 <details class="sstc-debug" id="sstc-debug-panel">
     <summary class="sstc-debug-summary">Parsed extraction (debug)</summary>
     <dl class="sstc-debug-meta">
@@ -87,6 +89,12 @@
             <dt>Outcome</dt>
             <dd><code>{{ extraction_meta.outcome }}</code></dd>
         </div>
+        {% if extraction_meta.error_code %}
+        <div class="sstc-debug-row">
+            <dt>Error code</dt>
+            <dd><code>{{ extraction_meta.error_code }}</code></dd>
+        </div>
+        {% endif %}
         {% if extraction_meta.latency_ms is not none %}
         <div class="sstc-debug-row">
             <dt>Latency</dt>
@@ -112,6 +120,9 @@
 {% endif %}
 
 <script id="sstc-extraction-data" type="application/json">{{ extraction | tojson }}</script>
+{% if extraction_meta and extraction_meta.error_code %}
+<script id="sstc-error-data" type="application/json">{{ {"error_code": extraction_meta.error_code} | tojson }}</script>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}

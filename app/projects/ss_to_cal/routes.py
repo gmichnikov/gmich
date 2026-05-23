@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, render_template, request, send_from_di
 from flask_login import current_user, login_required
 
 from app import csrf
+from app.projects.ss_to_cal.error_states import error_display
 from app.projects.ss_to_cal.extraction import (
     ExtractionApiError,
     ExtractionParseError,
@@ -64,23 +65,21 @@ def share():
     if image_error:
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message=image_error,
             started=started,
             actor_id=actor_id,
             outcome="image_error",
-            error_code="IMAGE_INVALID",
+            error_code=image_error,
         )
 
     try:
         jpeg_bytes, image_width, image_height = prepare_image_for_api(image_file)
-    except ImageProcessingError as exc:
+    except ImageProcessingError:
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message=str(exc),
             started=started,
             actor_id=actor_id,
             outcome="image_error",
-            error_code="IMAGE_INVALID",
+            error_code="IMAGE_TOO_LARGE",
         )
     finally:
         image_file.close()
@@ -92,14 +91,8 @@ def share():
         )
     except ExtractionApiError as exc:
         current_app.logger.error("SS to Cal extraction API error: %s", exc)
-        user_message = (
-            "Vision extraction is unavailable right now. Please try again in a moment."
-            if "API_KEY" in str(exc)
-            else "Could not analyze the screenshot. Please try sharing it again."
-        )
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message=user_message,
             started=started,
             actor_id=actor_id,
             outcome="api_error",
@@ -111,7 +104,6 @@ def share():
         current_app.logger.exception("SS to Cal extraction parse failed")
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message="Could not read the extraction result. Please try sharing the screenshot again.",
             started=started,
             actor_id=actor_id,
             outcome="parse_failed",
@@ -123,7 +115,6 @@ def share():
         current_app.logger.error("SS to Cal extraction timed out")
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message="Extraction took too long. Please try again on a stronger connection.",
             started=started,
             actor_id=actor_id,
             outcome="timeout",
@@ -135,7 +126,6 @@ def share():
         current_app.logger.exception("SS to Cal extraction failed")
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            error_message="Could not analyze the screenshot. Please try sharing it again.",
             started=started,
             actor_id=actor_id,
             outcome="api_error",
@@ -149,7 +139,6 @@ def share():
     if is_no_event_found(parsed):
         return _render_share(
             extraction=EMPTY_EXTRACTION,
-            info_message="No event details were found in that image. Fill in the fields below or share a different screenshot.",
             started=started,
             actor_id=actor_id,
             outcome="no_event_found",
@@ -181,8 +170,6 @@ def _render_share(
     started,
     actor_id,
     outcome,
-    error_message=None,
-    info_message=None,
     error_code=None,
     api_meta=None,
     image_width=None,
@@ -190,6 +177,14 @@ def _render_share(
 ):
     latency_ms = int((time.monotonic() - started) * 1000)
     api_meta = api_meta or {}
+
+    display = error_display(error_code)
+    error_message = display["message"] if display else None
+    error_recovery = display["recovery"] if display else None
+    info_message = error_message if display and display["level"] == "info" else None
+    if info_message:
+        error_message = None
+        error_recovery = None
 
     log_share_extraction(
         actor_id=actor_id,
@@ -215,7 +210,10 @@ def _render_share(
         "fields_populated": count_fields_populated(extraction),
         "field_summary": extraction_field_summary(extraction),
         "confidence": extraction.get("confidence"),
+        "error_code": error_code,
     }
+
+    show_debug = current_app.debug or os.getenv("SSTC_DEBUG") == "1"
 
     return (
         render_template(
@@ -223,31 +221,34 @@ def _render_share(
             extraction=extraction,
             extraction_meta=extraction_meta,
             error_message=error_message,
+            error_code=error_code,
+            error_recovery=error_recovery,
             info_message=info_message,
+            show_debug=show_debug,
         ),
         200,
     )
 
 
 def _read_shared_image():
-    """Return (file, error_message). Exactly one of the tuple values is set."""
+    """Return (file, error_code). Exactly one of the tuple values is set."""
     image_file = request.files.get("image")
     if not image_file or not image_file.filename:
-        return None, "No image was shared. Try sharing a screenshot again."
+        return None, "IMAGE_MISSING"
 
     image_file.seek(0, os.SEEK_END)
     size = image_file.tell()
     image_file.seek(0)
 
     if size == 0:
-        return None, "The shared image was empty. Try sharing a screenshot again."
+        return None, "IMAGE_MISSING"
 
     if size > MAX_UPLOAD_BYTES:
-        return None, "That image is too large. Try sharing a smaller screenshot."
+        return None, "IMAGE_TOO_LARGE"
 
     mime = (image_file.mimetype or "").lower()
     if mime and not mime.startswith("image/"):
-        return None, "Shared file must be an image. Try sharing a screenshot again."
+        return None, "IMAGE_TOO_LARGE"
 
     return image_file, None
 

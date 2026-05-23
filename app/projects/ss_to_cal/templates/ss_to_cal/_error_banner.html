@@ -1,0 +1,21 @@
+{% macro sstc_error_banner(error_code, error_message, error_recovery) %}
+{% if error_code and error_message %}
+<section
+    class="sstc-flash {% if error_code == 'NO_EVENT_FOUND' %}sstc-flash-info{% else %}sstc-flash-error{% endif %} sstc-error-banner"
+    role="{% if error_code == 'NO_EVENT_FOUND' %}status{% else %}alert{% endif %}"
+    data-error-code="{{ error_code }}"
+>
+    <p class="sstc-error-message">{{ error_message }}</p>
+    {% if error_recovery == 'reshare' %}
+    <p class="sstc-error-recovery">
+        <a class="sstc-btn sstc-btn-secondary" href="{{ url_for('ss_to_cal.index') }}">Open SS to Cal</a>
+    </p>
+    <p class="sstc-hint sstc-error-hint">Go back to your gallery, tap <strong>Share</strong>, and choose <strong>SS to Cal</strong> again.</p>
+    {% elif error_recovery == 'go_back' %}
+    <p class="sstc-error-recovery">
+        <button type="button" class="sstc-btn sstc-btn-secondary" id="sstc-go-back-btn">Go back</button>
+    </p>
+    {% endif %}
+</section>
+{% endif %}
+{% endmacro %}

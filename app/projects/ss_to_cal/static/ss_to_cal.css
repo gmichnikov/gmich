@@ -223,6 +223,24 @@
     border: 1px solid #fecaca;
 }
 
+.sstc-error-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.sstc-error-message {
+    margin: 0;
+}
+
+.sstc-error-recovery {
+    margin: 0;
+}
+
+.sstc-error-hint {
+    margin: 0;
+}
+
 .sstc-share-body {
     margin: 0;
     background: var(--bs-body-bg, #fff);

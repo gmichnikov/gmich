@@ -15,42 +15,29 @@
 
         <header class="sstc-header">
             <h1 class="sstc-title">SS to Cal</h1>
-            <p class="sstc-intro">Screenshot → share → verify → Google Calendar.</p>
+            <p class="sstc-intro">Share a screenshot → verify the details → add to Google Calendar.</p>
         </header>
+
+        <section id="sstc-offline-banner" class="sstc-flash sstc-flash-error sstc-error-banner" role="alert" hidden>
+            <p class="sstc-error-message">You're offline. Connect to the internet and try again.</p>
+            <p class="sstc-hint sstc-error-hint">Sharing screenshots requires a connection. The app shell may still load offline, but extraction needs the network.</p>
+        </section>
 
         <section id="sstc-install-panel" class="sstc-card" aria-labelledby="sstc-install-heading">
             <h2 id="sstc-install-heading" class="sstc-section-title">Install on Android</h2>
-            <p class="sstc-hint">Share sheet integration only works after SS to Cal is installed to your home screen.</p>
+            <p class="sstc-hint">SS to Cal must be installed to your home screen before it appears in the share sheet.</p>
             <ol class="sstc-install-steps">
-                <li>Open this page in <strong>Chrome on Android</strong>.</li>
-                <li>Log in with Google if prompted.</li>
-                <li>Tap the <strong>three-dot menu</strong> → <strong>Add to Home Screen</strong>.</li>
-                <li>Confirm the install. SS to Cal opens standalone (no URL bar).</li>
-                <li>Test: take a screenshot, tap <strong>Share</strong>, and look for <strong>SS to Cal</strong> in the list. Restart Chrome once if it does not appear.</li>
+                <li>Open this page in <strong>Chrome on Android</strong> and log in with Google.</li>
+                <li>Tap the <strong>three-dot menu</strong> → <strong>Add to Home screen</strong> → confirm.</li>
+                <li>Open SS to Cal from your home screen (standalone — no URL bar).</li>
+                <li>Take a screenshot, tap <strong>Share</strong>, and choose <strong>SS to Cal</strong>.</li>
+                <li>If SS to Cal does not appear in the share list, force-close Chrome and try again.</li>
             </ol>
         </section>
 
         <section id="sstc-ready-panel" class="sstc-card sstc-card-accent" hidden aria-labelledby="sstc-ready-heading">
             <h2 id="sstc-ready-heading" class="sstc-section-title">Ready to use</h2>
             <p class="sstc-ready-text">Take a screenshot of anything with event info, tap <strong>Share</strong>, choose <strong>SS to Cal</strong>, verify the details, and add to Google Calendar.</p>
-        </section>
-
-        <section class="sstc-card sstc-card-muted" aria-labelledby="sstc-status-heading">
-            <h2 id="sstc-status-heading" class="sstc-section-title">PWA status</h2>
-            <dl class="sstc-status-list">
-                <div class="sstc-status-row">
-                    <dt>Manifest</dt>
-                    <dd><code>/ss-to-cal/manifest.webmanifest</code></dd>
-                </div>
-                <div class="sstc-status-row">
-                    <dt>Service worker</dt>
-                    <dd id="sstc-sw-status" class="sstc-sw-status">Checking…</dd>
-                </div>
-                <div class="sstc-status-row">
-                    <dt>Share target</dt>
-                    <dd><code>POST /ss-to-cal/share</code></dd>
-                </div>
-            </dl>
         </section>
 
     </div>

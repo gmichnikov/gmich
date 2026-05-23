@@ -47,6 +47,49 @@
     }
   }
 
+  function isOnline() {
+    return typeof navigator.onLine === "boolean" ? navigator.onLine : true;
+  }
+
+  function updateOfflineBanner() {
+    var banner = document.getElementById("sstc-offline-banner");
+    if (!banner) {
+      return;
+    }
+    banner.hidden = isOnline();
+  }
+
+  function initOfflineUi() {
+    updateOfflineBanner();
+    window.addEventListener("online", updateOfflineBanner);
+    window.addEventListener("offline", updateOfflineBanner);
+  }
+
+  function initErrorRecovery() {
+    var goBackBtn = document.getElementById("sstc-go-back-btn");
+    if (goBackBtn) {
+      goBackBtn.addEventListener("click", function () {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = "/ss-to-cal/";
+        }
+      });
+    }
+
+    var errorDataEl = document.getElementById("sstc-error-data");
+    if (errorDataEl) {
+      try {
+        var errorData = JSON.parse(errorDataEl.textContent || "{}");
+        if (errorData.error_code === "PARSE_FAILED") {
+          console.warn("SS to Cal: PARSE_FAILED — check server logs for the raw model response");
+        }
+      } catch (err) {
+        console.warn("SS to Cal: invalid error JSON", err);
+      }
+    }
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) {
       setSwStatus("Service workers not supported in this browser.", true);
@@ -70,21 +113,70 @@
       });
   }
 
-  /** Device timezone — used when building Google Calendar URLs (Phase 5). */
-  function deviceTimezone() {
-    try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    } catch (e) {
-      return "";
-    }
-  }
-
   function fieldValue(key) {
     var el = document.getElementById(FIELD_MAP[key]);
     if (!el) {
       return "";
     }
     return (el.value || "").trim();
+  }
+
+  /** Google Calendar "floating" stamp — no timezone; Google uses the user's TZ. */
+  function formatGoogleFloatingStamp(dateStr, timeStr) {
+    var dp = dateStr.split("-");
+    var tp = timeStr.split(":");
+    if (dp.length !== 3 || tp.length < 2) {
+      return null;
+    }
+    var y = dp[0];
+    var m = dp[1];
+    var d = dp[2];
+    var hh = tp[0];
+    var mm = tp[1];
+    if (!/^\d{4}$/.test(y) || !/^\d{2}$/.test(m) || !/^\d{2}$/.test(d)) {
+      return null;
+    }
+    if (!/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mm)) {
+      return null;
+    }
+    return y + m + d + "T" + hh + mm + "00";
+  }
+
+  function isEndAfterStart() {
+    var startTime = fieldValue("startTime");
+    var endTime = fieldValue("endTime");
+    if (!startTime || !endTime) {
+      return true;
+    }
+    return endTime > startTime;
+  }
+
+  function buildGoogleCalendarUrl() {
+    var title = fieldValue("title");
+    var dateStr = fieldValue("date");
+    var startTime = fieldValue("startTime");
+    var endTime = fieldValue("endTime");
+    var location = fieldValue("location");
+    var description = fieldValue("description");
+
+    var startStamp = formatGoogleFloatingStamp(dateStr, startTime);
+    var endStamp = formatGoogleFloatingStamp(dateStr, endTime);
+    if (!startStamp || !endStamp) {
+      return null;
+    }
+
+    var params = new URLSearchParams();
+    params.set("action", "TEMPLATE");
+    params.set("text", title);
+    params.set("dates", startStamp + "/" + endStamp);
+    if (description) {
+      params.set("details", description);
+    }
+    if (location) {
+      params.set("location", location);
+    }
+
+    return "https://calendar.google.com/calendar/render?" + params.toString();
   }
 
   function setFieldTag(key, text) {
@@ -112,14 +204,27 @@
     }
 
     REQUIRED_FIELDS.forEach(function (key) {
-      setFieldTag(key, fieldValue(key) ? null : "Required");
+      if (key === "endTime") {
+        if (!fieldValue(key)) {
+          setFieldTag(key, "Required");
+        } else if (!isEndAfterStart()) {
+          setFieldTag(key, "Must be after start");
+        } else {
+          setFieldTag(key, null);
+        }
+      } else {
+        setFieldTag(key, fieldValue(key) ? null : "Required");
+      }
     });
 
     var calendarBtn = document.getElementById("sstc-calendar-btn");
     if (calendarBtn) {
-      var ready = REQUIRED_FIELDS.every(function (key) {
-        return fieldValue(key);
-      });
+      var ready =
+        isOnline() &&
+        REQUIRED_FIELDS.every(function (key) {
+          return fieldValue(key);
+        }) &&
+        isEndAfterStart();
       calendarBtn.disabled = !ready;
     }
   }
@@ -141,7 +246,6 @@
     shareState.confidence = extraction.confidence || null;
 
     console.log("SS to Cal parsed extraction:", extraction);
-    console.log("SS to Cal device timezone:", deviceTimezone());
 
     var fillReport = [];
 
@@ -204,8 +308,16 @@
         if (calendarBtn.disabled) {
           return;
         }
-        /* Phase 5 — Google Calendar URL uses deviceTimezone() */
-        console.log("SS to Cal: calendar button clicked (Phase 5 not wired yet)");
+        var url = buildGoogleCalendarUrl();
+        if (!url) {
+          console.error("SS to Cal: failed to build Google Calendar URL");
+          return;
+        }
+        console.log("SS to Cal: opening Google Calendar", url);
+        var opened = window.open(url, "_blank");
+        if (!opened) {
+          window.location.href = url;
+        }
       });
     }
   }
@@ -230,10 +342,18 @@
     });
   }
 
+  function initOfflineFormUi() {
+    window.addEventListener("online", updateFormUi);
+    window.addEventListener("offline", updateFormUi);
+  }
+
   registerServiceWorker();
 
   document.addEventListener("DOMContentLoaded", function () {
     initStandaloneUi();
+    initOfflineUi();
+    initErrorRecovery();
     initShareForm();
+    initOfflineFormUi();
   });
 })();
