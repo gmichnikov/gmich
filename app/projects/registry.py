@@ -479,7 +479,7 @@ PROJECTS = [
     {
         "id": "ss_to_cal",
         "name": "SS to Cal",
-        "description": "Screenshot to Google Calendar — Android PWA with Gemini extraction",
+        "description": "Screenshot to Google Calendar — Android PWA",
         "url": "/ss-to-cal",
         "auth_required": True,
         "status": "active",

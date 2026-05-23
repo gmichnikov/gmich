@@ -92,7 +92,7 @@ def share():
         current_app.logger.error("SS to Cal extraction API error: %s", exc)
         user_message = (
             "Vision extraction is unavailable right now. Please try again in a moment."
-            if "GOOGLE_API_KEY" in str(exc)
+            if "API_KEY" in str(exc)
             else "Could not analyze the screenshot. Please try sharing it again."
         )
         return _render_share(

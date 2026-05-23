@@ -1,5 +1,6 @@
-"""Gemini vision extraction for SS to Cal."""
+"""Vision-model extraction for SS to Cal."""
 
+import base64
 import json
 import logging
 import os
@@ -7,19 +8,20 @@ import re
 import signal
 import time
 from contextlib import contextmanager
+from datetime import date
 
 from google.genai import types
 from posthog import Posthog
+from posthog.ai.anthropic import Anthropic as PostHogAnthropicClient
 from posthog.ai.gemini import Client as PostHogGeminiClient
 
 logger = logging.getLogger(__name__)
 
 _posthog = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", sync_mode=True)
 
-MODEL = "gemini-3-flash-preview"
+DEFAULT_MODEL = os.getenv("SSTC_EXTRACTION_MODEL", "claude-sonnet-4-6")
 MAX_OUTPUT_TOKENS = 1024
-TIMEOUT_SECONDS = 30
-USER_MESSAGE = "Extract event details from this screenshot."
+TIMEOUT_SECONDS = 45
 
 SYSTEM_PROMPT = """You are an event extraction assistant. Your job is to extract
 calendar event details from screenshots.
@@ -35,7 +37,7 @@ Rules you must follow without exception:
 - Dates must be ISO 8601: YYYY-MM-DD
 - Times must be 24-hour HH:MM format
 - Timezone must be an IANA timezone name, e.g. "America/New_York"
-"""
+- Use today's date (provided in the user message) to resolve relative phrases like "next Friday"."""
 
 EXTRACTION_KEYS = (
     "title",
@@ -74,12 +76,76 @@ def _timeout_context(seconds: int):
         yield
 
 
+def _user_message() -> str:
+    return (
+        f"Extract event details from this screenshot. "
+        f"Today's date is {date.today().isoformat()} for resolving relative dates."
+    )
+
+
 def extract_event_from_image(jpeg_bytes: bytes, *, distinct_id: str) -> tuple[dict, dict]:
     """
-    Call Gemini vision on JPEG bytes.
-    Returns (extraction_dict, metadata) where metadata includes token counts and api_latency_ms.
-    Raises ExtractionApiError, ExtractionParseError, or TimeoutError.
+    Call vision model on JPEG bytes.
+    Returns (parsed_dict, metadata) with token counts and api_latency_ms.
     """
+    model = DEFAULT_MODEL
+    if model.startswith("claude"):
+        return _extract_with_claude(jpeg_bytes, distinct_id=distinct_id, model=model)
+    if model.startswith("gemini"):
+        return _extract_with_gemini(jpeg_bytes, distinct_id=distinct_id, model=model)
+    raise ExtractionApiError(f"Unsupported SSTC_EXTRACTION_MODEL: {model}")
+
+
+def _extract_with_claude(jpeg_bytes: bytes, *, distinct_id: str, model: str) -> tuple[dict, dict]:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ExtractionApiError("ANTHROPIC_API_KEY environment variable is not set")
+
+    client = PostHogAnthropicClient(api_key=api_key, posthog_client=_posthog)
+    api_started = time.monotonic()
+    image_b64 = base64.standard_b64encode(jpeg_bytes).decode("ascii")
+
+    with _timeout_context(TIMEOUT_SECONDS):
+        response = client.messages.create(
+            model=model,
+            max_tokens=MAX_OUTPUT_TOKENS,
+            system=SYSTEM_PROMPT,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": image_b64,
+                            },
+                        },
+                        {"type": "text", "text": _user_message()},
+                    ],
+                }
+            ],
+            posthog_distinct_id=distinct_id,
+            posthog_properties={"project": "ss_to_cal"},
+        )
+
+    api_latency_ms = int((time.monotonic() - api_started) * 1000)
+    text = _anthropic_text(response)
+    if not text:
+        raise ExtractionApiError("Vision model returned an empty response")
+
+    parsed = parse_json_from_llm(text)
+    metadata = {
+        "model": model,
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+        "api_latency_ms": api_latency_ms,
+    }
+    return parsed, metadata
+
+
+def _extract_with_gemini(jpeg_bytes: bytes, *, distinct_id: str, model: str) -> tuple[dict, dict]:
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise ExtractionApiError("GOOGLE_API_KEY environment variable is not set")
@@ -89,13 +155,13 @@ def extract_event_from_image(jpeg_bytes: bytes, *, distinct_id: str) -> tuple[di
 
     with _timeout_context(TIMEOUT_SECONDS):
         response = client.models.generate_content(
-            model=MODEL,
+            model=model,
             contents=[
                 types.Content(
                     role="user",
                     parts=[
                         types.Part.from_bytes(data=jpeg_bytes, mime_type="image/jpeg"),
-                        types.Part.from_text(text=USER_MESSAGE),
+                        types.Part.from_text(text=_user_message()),
                     ],
                 )
             ],
@@ -115,12 +181,20 @@ def extract_event_from_image(jpeg_bytes: bytes, *, distinct_id: str) -> tuple[di
     parsed = parse_json_from_llm(text)
     usage = response.usage_metadata
     metadata = {
-        "model": MODEL,
+        "model": model,
         "input_tokens": (usage.prompt_token_count or 0) if usage else 0,
         "output_tokens": (usage.candidates_token_count or 0) if usage else 0,
         "api_latency_ms": api_latency_ms,
     }
     return parsed, metadata
+
+
+def _anthropic_text(response) -> str:
+    parts = []
+    for block in response.content:
+        if getattr(block, "type", None) == "text":
+            parts.append(block.text)
+    return "\n".join(parts).strip()
 
 
 def parse_json_from_llm(raw: str) -> dict:
