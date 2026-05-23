@@ -1,0 +1,19 @@
+{% extends "ss_to_cal/share_base.html" %}
+
+{% block title %}Log in — SS to Cal{% endblock %}
+
+{% block content %}
+<header class="sstc-header">
+    <h1 class="sstc-title">SS to Cal</h1>
+</header>
+
+<section class="sstc-card sstc-card-accent" aria-labelledby="sstc-login-heading">
+    <h2 id="sstc-login-heading" class="sstc-section-title">Please log in</h2>
+    <p class="sstc-ready-text">Please log in, then share the screenshot again.</p>
+    <p class="sstc-hint">Your screenshot was not saved. After logging in, go back to the gallery and tap Share → SS to Cal again.</p>
+    <p class="sstc-share-actions">
+        <a class="sstc-btn sstc-btn-primary" href="{{ url_for('auth.login_google', next=url_for('ss_to_cal.index')) }}">Log in with Google</a>
+        <a class="sstc-btn sstc-btn-secondary" href="{{ url_for('ss_to_cal.index') }}">Open SS to Cal</a>
+    </p>
+</section>
+{% endblock %}

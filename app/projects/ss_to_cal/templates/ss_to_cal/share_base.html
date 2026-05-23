@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d4500a">
+    <title>{% block title %}SS to Cal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('ss_to_cal.static', filename='ss_to_cal.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="sstc-share-body">
+    <div class="sstc-page sstc-share-page">
+        <div class="sstc-container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

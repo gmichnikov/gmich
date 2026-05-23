@@ -1,0 +1,71 @@
+{% extends "ss_to_cal/share_base.html" %}
+
+{% block title %}Review event — SS to Cal{% endblock %}
+
+{% block content %}
+<header class="sstc-header">
+    <h1 class="sstc-title">Review event</h1>
+    <p class="sstc-intro">Check the details below, then add to Google Calendar.</p>
+</header>
+
+{% if image_received %}
+<section class="sstc-flash sstc-flash-success" role="status">
+    Screenshot received. Extraction is not wired yet — fields are empty for now.
+</section>
+{% endif %}
+
+{% if error_message %}
+<section class="sstc-flash sstc-flash-error" role="alert">
+    {{ error_message }}
+</section>
+{% endif %}
+
+<form id="sstc-review-form" class="sstc-review-form" novalidate>
+    <div class="sstc-field">
+        <label class="sstc-label" for="sstc-title">Title</label>
+        <input class="sstc-input" id="sstc-title" name="title" type="text" autocomplete="off">
+    </div>
+
+    <div class="sstc-field">
+        <label class="sstc-label" for="sstc-date">Date</label>
+        <input class="sstc-input" id="sstc-date" name="date" type="date">
+    </div>
+
+    <div class="sstc-field-row">
+        <div class="sstc-field">
+            <label class="sstc-label" for="sstc-start-time">Start time</label>
+            <input class="sstc-input" id="sstc-start-time" name="startTime" type="time">
+            <p class="sstc-field-hint">Leave blank for all-day event.</p>
+        </div>
+        <div class="sstc-field">
+            <label class="sstc-label" for="sstc-end-time">End time</label>
+            <input class="sstc-input" id="sstc-end-time" name="endTime" type="time">
+        </div>
+    </div>
+
+    <div class="sstc-field">
+        <label class="sstc-label" for="sstc-location">Location</label>
+        <input class="sstc-input" id="sstc-location" name="location" type="text" autocomplete="off">
+    </div>
+
+    <div class="sstc-field">
+        <label class="sstc-label" for="sstc-description">Description</label>
+        <textarea class="sstc-input sstc-textarea" id="sstc-description" name="description" rows="3"></textarea>
+    </div>
+
+    <div class="sstc-field">
+        <label class="sstc-label" for="sstc-timezone">Timezone</label>
+        <input class="sstc-input" id="sstc-timezone" name="timezone" type="text" autocomplete="off">
+    </div>
+
+    <button type="button" id="sstc-calendar-btn" class="sstc-btn sstc-btn-primary sstc-btn-block" disabled>
+        Add to Google Calendar
+    </button>
+</form>
+
+<script id="sstc-extraction-data" type="application/json">{{ extraction | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('ss_to_cal.static', filename='ss_to_cal.js') }}"></script>
+{% endblock %}

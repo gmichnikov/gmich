@@ -55,9 +55,51 @@
       });
   }
 
+  function initShareForm() {
+    var dataEl = document.getElementById("sstc-extraction-data");
+    if (!dataEl) {
+      return;
+    }
+
+    var extraction = {};
+    try {
+      extraction = JSON.parse(dataEl.textContent || "{}");
+    } catch (err) {
+      console.warn("SS to Cal: invalid extraction JSON", err);
+      return;
+    }
+
+    var fields = {
+      title: "sstc-title",
+      date: "sstc-date",
+      startTime: "sstc-start-time",
+      endTime: "sstc-end-time",
+      location: "sstc-location",
+      description: "sstc-description",
+      timezone: "sstc-timezone",
+    };
+
+    Object.keys(fields).forEach(function (key) {
+      var el = document.getElementById(fields[key]);
+      if (el && extraction[key]) {
+        el.value = extraction[key];
+      }
+    });
+
+    var tzInput = document.getElementById("sstc-timezone");
+    if (tzInput && !tzInput.value) {
+      try {
+        tzInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
   registerServiceWorker();
 
   document.addEventListener("DOMContentLoaded", function () {
     initStandaloneUi();
+    initShareForm();
   });
 })();
