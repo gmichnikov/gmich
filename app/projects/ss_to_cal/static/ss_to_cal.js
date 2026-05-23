@@ -8,16 +8,12 @@
     endTime: "sstc-end-time",
     location: "sstc-location",
     description: "sstc-description",
-    timezone: "sstc-timezone",
   };
 
-  var REQUIRED_FIELDS = ["title", "date"];
-  var OPTIONAL_FIELDS = ["startTime", "endTime", "location", "description", "timezone"];
+  var REQUIRED_FIELDS = ["title", "date", "startTime", "endTime"];
 
   var shareState = {
     confidence: null,
-    modelTimezone: null,
-    deviceTimezone: "",
   };
 
   function isStandalone() {
@@ -74,6 +70,7 @@
       });
   }
 
+  /** Device timezone — used when building Google Calendar URLs (Phase 5). */
   function deviceTimezone() {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
@@ -88,10 +85,6 @@
       return "";
     }
     return (el.value || "").trim();
-  }
-
-  function isUncertainConfidence() {
-    return shareState.confidence === "medium" || shareState.confidence === "low";
   }
 
   function setFieldTag(key, text) {
@@ -119,37 +112,14 @@
     }
 
     REQUIRED_FIELDS.forEach(function (key) {
-      if (!fieldValue(key)) {
-        setFieldTag(key, "Required");
-      } else {
-        setFieldTag(key, null);
-      }
-    });
-
-    OPTIONAL_FIELDS.forEach(function (key) {
-      var verify = false;
-
-      if (key === "timezone") {
-        var tz = fieldValue("timezone");
-        if (
-          tz &&
-          shareState.deviceTimezone &&
-          tz !== shareState.deviceTimezone
-        ) {
-          verify = true;
-        }
-      }
-
-      if (isUncertainConfidence()) {
-        verify = true;
-      }
-
-      setFieldTag(key, verify ? "Please verify" : null);
+      setFieldTag(key, fieldValue(key) ? null : "Required");
     });
 
     var calendarBtn = document.getElementById("sstc-calendar-btn");
     if (calendarBtn) {
-      var ready = fieldValue("title") && fieldValue("date");
+      var ready = REQUIRED_FIELDS.every(function (key) {
+        return fieldValue(key);
+      });
       calendarBtn.disabled = !ready;
     }
   }
@@ -169,10 +139,9 @@
     }
 
     shareState.confidence = extraction.confidence || null;
-    shareState.modelTimezone = extraction.timezone || null;
-    shareState.deviceTimezone = deviceTimezone();
 
     console.log("SS to Cal parsed extraction:", extraction);
+    console.log("SS to Cal device timezone:", deviceTimezone());
 
     var fillReport = [];
 
@@ -210,9 +179,13 @@
       fillReport.push(report);
     });
 
-    var tzInput = document.getElementById("sstc-timezone");
-    if (tzInput && !tzInput.value && shareState.deviceTimezone) {
-      tzInput.value = shareState.deviceTimezone;
+    if (extraction.timezone) {
+      fillReport.push({
+        field: "timezone",
+        parsed: String(extraction.timezone),
+        applied: null,
+        note: "not shown in form — calendar uses device TZ",
+      });
     }
 
     console.log("SS to Cal form fill report:", fillReport);
@@ -231,7 +204,7 @@
         if (calendarBtn.disabled) {
           return;
         }
-        /* Phase 5 — Google Calendar URL builder */
+        /* Phase 5 — Google Calendar URL uses deviceTimezone() */
         console.log("SS to Cal: calendar button clicked (Phase 5 not wired yet)");
       });
     }
