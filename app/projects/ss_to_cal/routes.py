@@ -253,25 +253,6 @@ def _read_shared_image():
     return image_file, None
 
 
-@ss_to_cal_bp.route("/client-log", methods=["POST"])
-@csrf.exempt
-@login_required
-def client_log():
-    payload = request.get_json(silent=True) or {}
-    event = str(payload.get("event", "unknown"))[:80]
-    detail = str(payload.get("detail", ""))[:500]
-    data = payload.get("data")
-    data_str = json.dumps(data, ensure_ascii=True)[:1000] if data is not None else ""
-    current_app.logger.info(
-        "SS to Cal client event=%s user=%s detail=%s data=%s",
-        event,
-        current_user.id,
-        detail,
-        data_str,
-    )
-    return "", 204
-
-
 @ss_to_cal_bp.route("/manifest.webmanifest")
 def manifest():
     return send_from_directory(

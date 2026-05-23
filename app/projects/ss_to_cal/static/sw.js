@@ -1,5 +1,5 @@
 /* SS to Cal — cache app shell only; extraction/share always uses network */
-const CACHE_NAME = "ss-to-cal-shell-v6";
+const CACHE_NAME = "ss-to-cal-shell-v7";
 const SHELL_ASSETS = [
   "/ss-to-cal/manifest.webmanifest",
   "/ss-to-cal/static/ss_to_cal.css",

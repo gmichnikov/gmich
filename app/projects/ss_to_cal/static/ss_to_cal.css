@@ -383,41 +383,19 @@
     color: #b45309;
 }
 
-.sstc-activity-log {
+.sstc-error-details {
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background: #f9fafb;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
 }
 
-.sstc-activity-log-summary {
+.sstc-error-details-summary {
     cursor: pointer;
     font-weight: 600;
     color: #374151;
-}
-
-.sstc-activity-log-list {
-    margin: 0.65rem 0 0;
-    padding-left: 1.1rem;
-    color: #374151;
-    max-height: 14rem;
-    overflow-y: auto;
-}
-
-.sstc-activity-log-list li {
-    margin-bottom: 0.35rem;
-    line-height: 1.35;
-    word-break: break-word;
-}
-
-.sstc-activity-log-list li.sstc-activity-log-warn {
-    color: #b45309;
-}
-
-.sstc-activity-log-list li.sstc-activity-log-error {
-    color: #b91c1c;
 }
 
 .sstc-placeholder {

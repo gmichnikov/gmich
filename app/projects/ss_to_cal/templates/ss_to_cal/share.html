@@ -71,15 +71,39 @@
     <p id="sstc-calendar-status" class="sstc-flash sstc-flash-info" role="status" hidden></p>
 </form>
 
-<details class="sstc-activity-log" id="sstc-activity-log-panel" open>
-    <summary class="sstc-activity-log-summary">Activity log</summary>
-    <p class="sstc-hint">Client-side steps for debugging. Also sent to Heroku as <code>SS to Cal client</code>.</p>
-    <ol class="sstc-activity-log-list" id="sstc-activity-log"></ol>
+{% if extraction_meta and extraction_meta.outcome != 'success' %}
+<details class="sstc-error-details">
+    <summary class="sstc-error-details-summary">Technical details</summary>
+    <dl class="sstc-debug-meta">
+        <div class="sstc-debug-row">
+            <dt>Outcome</dt>
+            <dd><code>{{ extraction_meta.outcome }}</code></dd>
+        </div>
+        {% if extraction_meta.error_code %}
+        <div class="sstc-debug-row">
+            <dt>Error code</dt>
+            <dd><code>{{ extraction_meta.error_code }}</code></dd>
+        </div>
+        {% endif %}
+        {% if extraction_meta.model %}
+        <div class="sstc-debug-row">
+            <dt>Model</dt>
+            <dd>{{ extraction_meta.model }}</dd>
+        </div>
+        {% endif %}
+        {% if extraction_meta.latency_ms is not none %}
+        <div class="sstc-debug-row">
+            <dt>Latency</dt>
+            <dd>{{ extraction_meta.latency_ms }} ms</dd>
+        </div>
+        {% endif %}
+    </dl>
 </details>
+{% endif %}
 
 {% if show_debug and extraction_meta %}
 <details class="sstc-debug" id="sstc-debug-panel">
-    <summary class="sstc-debug-summary">Parsed extraction (debug)</summary>
+    <summary class="sstc-debug-summary">Extraction debug</summary>
     <dl class="sstc-debug-meta">
         {% if extraction_meta.model %}
         <div class="sstc-debug-row">
@@ -122,16 +146,6 @@
 {% endif %}
 
 <script id="sstc-extraction-data" type="application/json">{{ extraction | tojson }}</script>
-{% if extraction_meta %}
-<script id="sstc-page-meta" type="application/json">{{ {
-    "outcome": extraction_meta.outcome,
-    "error_code": extraction_meta.error_code,
-    "latency_ms": extraction_meta.latency_ms
-} | tojson }}</script>
-{% endif %}
-{% if extraction_meta and extraction_meta.error_code %}
-<script id="sstc-error-data" type="application/json">{{ {"error_code": extraction_meta.error_code} | tojson }}</script>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
