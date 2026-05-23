@@ -710,6 +710,10 @@
         <div class="req-card-label">NFR-04 — Installability</div>
         <p>Meets PWA installability criteria in Android Chrome. Runs as a standalone app (no browser chrome) when launched from the home screen.</p>
       </div>
+      <div class="req-card">
+        <div class="req-card-label">NFR-05 — Observability</div>
+        <p>Each authenticated share/extraction is logged to the hub activity log (<code>LogEntry</code>) and to PostHog. Logs include outcome, latency, token usage, and model id. PostHog AI observability (via <code>posthog.ai.gemini</code>) tracks LLM cost. No screenshot content or extracted PII in log descriptions — only metadata (outcome, timing, token counts, confidence).</p>
+      </div>
     </div>
   </section>
 
@@ -809,6 +813,18 @@
       <div class="spec-val"><code>GET /ss-to-cal/</code> and <code>POST /ss-to-cal/share</code> require a logged-in hub session. <code>/ss-to-cal/share</code> is CSRF-exempt (Android share POST has no CSRF token). Unauthenticated share POSTs return a login prompt page (200), not a redirect. User must log in during PWA install and keep an active session when sharing.</div>
     </div>
     <div class="spec-row">
+      <div class="spec-key">Vision client</div>
+      <div class="spec-val"><code>posthog.ai.gemini.Client</code> wrapping <code>GOOGLE_API_KEY</code> (same pattern as <code>sports_schedules</code> NL service). Sends <code>posthog_distinct_id</code> and <code>posthog_properties={"project": "ss_to_cal"}</code> so PostHog records latency, tokens, and cost per call. Plain <code>google.genai.Client</code> is acceptable only if PostHog is unavailable.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Activity logging</div>
+      <div class="spec-val">Every <code>POST /ss-to-cal/share</code> writes a hub <code>LogEntry</code> (<code>project=ss_to_cal</code>). Authenticated extractions use category <code>Extraction</code>; unauthenticated share attempts use category <code>Share</code> with outcome <code>not_logged_in</code>. Description includes outcome, <code>latency_ms</code>, model id, token counts, and confidence when available — never raw model output or screenshot content.</div>
+    </div>
+    <div class="spec-row">
+      <div class="spec-key">Analytics event</div>
+      <div class="spec-val">PostHog event <code>ss_to_cal_extraction</code> on each authenticated extraction attempt, with properties: <code>outcome</code>, <code>latency_ms</code>, <code>model</code>, <code>input_tokens</code>, <code>output_tokens</code>, <code>confidence</code>, <code>fields_populated</code>, <code>image_width</code>, <code>image_height</code>, <code>error_code</code> (when applicable).</div>
+    </div>
+    <div class="spec-row">
       <div class="spec-key">Framework</div>
       <div class="spec-val">Flask (Python) back-end. Vanilla HTML/CSS/JS front-end. No JS framework or build step.</div>
     </div>
@@ -828,7 +844,7 @@
         <tr>
           <td><strong>Default (v1)</strong></td>
           <td><code>gemini-3-flash-preview</code></td>
-          <td>Ship with this. Reuse <code>google.genai.Client</code> + <code>GOOGLE_API_KEY</code> from existing hub projects.</td>
+          <td>Ship with this. Use <code>posthog.ai.gemini.Client</code> + <code>GOOGLE_API_KEY</code> (same as <code>sports_schedules</code>). PostHog AI observability records cost per call.</td>
         </tr>
         <tr>
           <td><strong>Quality fallback</strong></td>
