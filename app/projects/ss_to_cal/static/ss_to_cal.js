@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var SSTC_JS_VERSION = "2026-05-22-cal-debug-1";
+  var SSTC_JS_VERSION = "2026-05-22-cal-debug-2";
   var CLIENT_LOG_URL = "/ss-to-cal/client-log";
 
   var FIELD_MAP = {
@@ -91,9 +91,6 @@
 
   function calendarNotReadyReasons() {
     var reasons = [];
-    if (!isOnline()) {
-      reasons.push("offline");
-    }
     REQUIRED_FIELDS.forEach(function (key) {
       if (!fieldValue(key)) {
         reasons.push("missing_" + key);
@@ -136,27 +133,30 @@
     }
   }
 
-  function isOnline() {
-    return typeof navigator.onLine === "boolean" ? navigator.onLine : true;
-  }
-
-  function updateOfflineBanner() {
+  function updateOfflineBanner(show) {
     var banner = document.getElementById("sstc-offline-banner");
     if (!banner) {
       return;
     }
-    banner.hidden = isOnline();
+    banner.hidden = !show;
   }
 
   function initOfflineUi() {
-    updateOfflineBanner();
+    // Do not trust navigator.onLine on load — it often reads false while online.
+    // Only show the banner after a live "offline" event in this session.
+    updateOfflineBanner(false);
+
     window.addEventListener("online", function () {
-      sstcLog("network_online");
-      updateOfflineBanner();
+      sstcLog("network_online", "browser online event", {
+        navigatorOnLine: navigator.onLine,
+      });
+      updateOfflineBanner(false);
     });
     window.addEventListener("offline", function () {
-      sstcLog("network_offline", null, null, "warn");
-      updateOfflineBanner();
+      sstcLog("network_offline", "browser offline event", {
+        navigatorOnLine: navigator.onLine,
+      }, "warn");
+      updateOfflineBanner(true);
     });
   }
 
@@ -392,11 +392,9 @@
     var calendarBtn = document.getElementById("sstc-calendar-btn");
     if (calendarBtn) {
       var ready =
-        isOnline() &&
         REQUIRED_FIELDS.every(function (key) {
           return fieldValue(key);
-        }) &&
-        isEndAfterStart();
+        }) && isEndAfterStart();
       calendarBtn.disabled = !ready;
 
       if (shareState.calendarReady !== ready) {
@@ -515,7 +513,6 @@
 
   function initOfflineFormUi() {
     window.addEventListener("online", updateFormUi);
-    window.addEventListener("offline", updateFormUi);
   }
 
   registerServiceWorker();
@@ -525,7 +522,7 @@
     sstcLog("page_boot", "DOM ready", {
       jsVersion: SSTC_JS_VERSION,
       standalone: isStandalone(),
-      online: isOnline(),
+      navigatorOnLine: navigator.onLine,
       pageMeta: pageMeta,
       userAgent: navigator.userAgent,
     });
