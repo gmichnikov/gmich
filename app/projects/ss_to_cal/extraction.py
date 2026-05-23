@@ -30,14 +30,30 @@ Rules you must follow without exception:
 - Respond ONLY with a single valid JSON object. No explanation,
   no preamble, no markdown, no code fences.
 - If you are not confident about a value, return null for that field.
-- NEVER guess, infer, or fabricate dates, times, or locations.
+- NEVER guess, infer, or fabricate dates, start times, or locations.
 - A null field is always preferable to a wrong field.
 - If the image contains no identifiable event, return:
   {"error": "no_event_found"}
 - Dates must be ISO 8601: YYYY-MM-DD
 - Times must be 24-hour HH:MM format
 - Timezone must be an IANA timezone name, e.g. "America/New_York"
-- Use today's date (provided in the user message) to resolve relative phrases like "next Friday"."""
+- Use today's date (provided in the user message) to resolve relative phrases like "next Friday".
+
+End time inference (the ONLY exception to "never infer"):
+- If startTime is clearly shown in the screenshot but endTime is NOT shown, infer a
+  reasonable endTime from the event type and title. endTime must stay on the same date as startTime.
+- Do NOT infer startTime, date, or location — only endTime, and only when startTime is present.
+- Typical durations from startTime:
+  - Professional sports (soccer, football, basketball, hockey, baseball): 2.5 hours
+  - Youth / amateur sports: 1.5 hours
+  - Meeting, appointment, class: 1 hour
+  - Movie: 2.5 hours
+  - Concert, theater, live show: 2.5 hours
+  - Dinner, restaurant reservation: 2 hours
+  - Party, social gathering: 3 hours
+  - Conference talk / workshop: 1.5 hours
+- If endTime is inferred (not read from the screenshot), set confidence to "medium"
+  unless the screenshot is otherwise ambiguous."""
 
 EXTRACTION_KEYS = (
     "title",

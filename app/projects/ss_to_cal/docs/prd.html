@@ -872,13 +872,21 @@
 <span class="cm">- Respond ONLY with a single valid JSON object. No explanation,</span>
 <span class="cm">  no preamble, no markdown, no code fences.</span>
 <span class="cm">- If you are not confident about a value, return null for that field.</span>
-<span class="cm">- NEVER guess, infer, or fabricate dates, times, or locations.</span>
+<span class="cm">- NEVER guess, infer, or fabricate dates, start times, or locations.</span>
 <span class="cm">- A null field is always preferable to a wrong field.</span>
 <span class="cm">- If the image contains no identifiable event, return:</span>
 <span class="cm">  {"error": "no_event_found"}</span>
 <span class="cm">- Dates must be ISO 8601: YYYY-MM-DD</span>
 <span class="cm">- Times must be 24-hour HH:MM format</span>
-<span class="cm">- Timezone must be an IANA timezone name, e.g. "America/New_York"</span></pre>
+<span class="cm">- Timezone must be an IANA timezone name, e.g. "America/New_York"</span>
+<span class="cm">- Use today's date (provided in the user message) to resolve relative phrases like "next Friday".</span>
+
+<span class="hl2">End time inference (the ONLY exception to "never infer"):</span>
+<span class="cm">- If startTime is clearly shown but endTime is NOT, infer a reasonable endTime from event type/title.</span>
+<span class="cm">- endTime stays on the same date as startTime. Do NOT infer startTime, date, or location.</span>
+<span class="cm">- Typical durations: pro sports 2.5h, youth sports 1.5h, meeting 1h, movie/concert 2.5h,</span>
+<span class="cm">  dinner 2h, party 3h, talk/workshop 1.5h.</span>
+<span class="cm">- If endTime is inferred, set confidence to "medium".</span></pre>
 
     <h3>Extraction JSON schema</h3>
     <div class="code-label">Shape the model returns on success</div>
