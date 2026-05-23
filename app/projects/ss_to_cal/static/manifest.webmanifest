@@ -1,0 +1,34 @@
+{
+  "name": "SS to Cal",
+  "short_name": "SS to Cal",
+  "start_url": "/ss-to-cal/",
+  "scope": "/ss-to-cal/",
+  "display": "standalone",
+  "background_color": "#f5f2ec",
+  "theme_color": "#d4500a",
+  "icons": [
+    {
+      "src": "/ss-to-cal/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/ss-to-cal/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "share_target": {
+    "action": "/ss-to-cal/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
+}

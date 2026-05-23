@@ -37,6 +37,31 @@
     margin: 0 0 0.75rem;
 }
 
+.sstc-card-accent {
+    border-color: rgba(212, 80, 10, 0.25);
+    background: #fef7f2;
+}
+
+.sstc-ready-text {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.sstc-install-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.sstc-install-steps li {
+    padding-left: 0.15rem;
+}
+
 .sstc-card {
     padding: 1.25rem;
     border: 1px solid rgba(0, 0, 0, 0.08);
@@ -76,6 +101,18 @@
 
 .sstc-status-off {
     color: #6c757d;
+}
+
+.sstc-sw-status {
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: right;
+    max-width: 14rem;
+    line-height: 1.35;
+}
+
+.sstc-sw-status-error {
+    color: #b91c1c;
 }
 
 .sstc-form {
