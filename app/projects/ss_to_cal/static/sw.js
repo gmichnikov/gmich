@@ -1,5 +1,5 @@
 /* SS to Cal — cache app shell only; extraction/share always uses network */
-const CACHE_NAME = "ss-to-cal-shell-v2";
+const CACHE_NAME = "ss-to-cal-shell-v4";
 const SHELL_ASSETS = [
   "/ss-to-cal/manifest.webmanifest",
   "/ss-to-cal/static/ss_to_cal.css",
@@ -34,6 +34,14 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+function cacheShellResponse(request, response) {
+  if (response.ok) {
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -51,16 +59,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/ss-to-cal/sw.js"
   ) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        const network = fetch(event.request).then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        });
-        return cached || network;
-      })
+      fetch(event.request)
+        .then((response) => cacheShellResponse(event.request, response))
+        .catch(() => caches.match(event.request))
     );
   }
 });

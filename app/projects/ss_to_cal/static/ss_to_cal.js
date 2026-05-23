@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  var SSTC_JS_VERSION = "2026-05-22-cal-debug-1";
+  var CLIENT_LOG_URL = "/ss-to-cal/client-log";
+
   var FIELD_MAP = {
     title: "sstc-title",
     date: "sstc-date",
@@ -14,7 +17,93 @@
 
   var shareState = {
     confidence: null,
+    calendarReady: null,
   };
+
+  function formatLogData(data) {
+    if (data == null) {
+      return "";
+    }
+    try {
+      return JSON.stringify(data);
+    } catch (err) {
+      return String(data);
+    }
+  }
+
+  function sstcLog(event, detail, data, level) {
+    var timestamp = new Date().toLocaleTimeString();
+    var line = timestamp + " " + event;
+    if (detail) {
+      line += " — " + detail;
+    }
+    var dataStr = formatLogData(data);
+    if (dataStr) {
+      line += " " + dataStr;
+    }
+
+    console.log("SS to Cal:", line);
+
+    var list = document.getElementById("sstc-activity-log");
+    if (list) {
+      var item = document.createElement("li");
+      item.textContent = line;
+      if (level === "warn") {
+        item.className = "sstc-activity-log-warn";
+      } else if (level === "error") {
+        item.className = "sstc-activity-log-error";
+      }
+      list.appendChild(item);
+      if (list.children.length > 40) {
+        list.removeChild(list.firstChild);
+      }
+      list.scrollTop = list.scrollHeight;
+    }
+
+    if (!navigator.sendBeacon) {
+      return;
+    }
+    try {
+      navigator.sendBeacon(
+        CLIENT_LOG_URL,
+        new Blob(
+          [JSON.stringify({ event: event, detail: detail || "", data: data || null })],
+          { type: "application/json" }
+        )
+      );
+    } catch (err) {
+      console.warn("SS to Cal: client log beacon failed", err);
+    }
+  }
+
+  function readPageMeta() {
+    var metaEl = document.getElementById("sstc-page-meta");
+    if (!metaEl) {
+      return null;
+    }
+    try {
+      return JSON.parse(metaEl.textContent || "{}");
+    } catch (err) {
+      sstcLog("page_meta_parse_failed", err.message, null, "warn");
+      return null;
+    }
+  }
+
+  function calendarNotReadyReasons() {
+    var reasons = [];
+    if (!isOnline()) {
+      reasons.push("offline");
+    }
+    REQUIRED_FIELDS.forEach(function (key) {
+      if (!fieldValue(key)) {
+        reasons.push("missing_" + key);
+      }
+    });
+    if (fieldValue("startTime") && fieldValue("endTime") && !isEndAfterStart()) {
+      reasons.push("end_before_start");
+    }
+    return reasons;
+  }
 
   function isStandalone() {
     return (
@@ -61,8 +150,14 @@
 
   function initOfflineUi() {
     updateOfflineBanner();
-    window.addEventListener("online", updateOfflineBanner);
-    window.addEventListener("offline", updateOfflineBanner);
+    window.addEventListener("online", function () {
+      sstcLog("network_online");
+      updateOfflineBanner();
+    });
+    window.addEventListener("offline", function () {
+      sstcLog("network_offline", null, null, "warn");
+      updateOfflineBanner();
+    });
   }
 
   function initErrorRecovery() {
@@ -104,11 +199,11 @@
     navigator.serviceWorker
       .register("/ss-to-cal/sw.js", { scope: "/ss-to-cal/" })
       .then(function (registration) {
-        console.log("SS to Cal service worker registered:", registration.scope);
+        sstcLog("service_worker_registered", registration.scope);
         setSwStatus("Service worker registered (" + registration.scope + ").");
       })
       .catch(function (err) {
-        console.error("SS to Cal service worker registration failed:", err);
+        sstcLog("service_worker_failed", err.message, null, "error");
         setSwStatus("Service worker failed: " + err.message, true);
       });
   }
@@ -133,12 +228,16 @@
     var d = dp[2];
     var hh = tp[0];
     var mm = tp[1];
-    if (!/^\d{4}$/.test(y) || !/^\d{2}$/.test(m) || !/^\d{2}$/.test(d)) {
+    if (!/^\d{4}$/.test(y) || !/^\d{1,2}$/.test(m) || !/^\d{1,2}$/.test(d)) {
       return null;
     }
-    if (!/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mm)) {
+    if (!/^\d{1,2}$/.test(hh) || !/^\d{1,2}$/.test(mm)) {
       return null;
     }
+    m = m.padStart(2, "0");
+    d = d.padStart(2, "0");
+    hh = hh.padStart(2, "0");
+    mm = mm.padStart(2, "0");
     return y + m + d + "T" + hh + mm + "00";
   }
 
@@ -149,6 +248,79 @@
       return true;
     }
     return endTime > startTime;
+  }
+
+  function openGoogleCalendar(url) {
+    var standalone = isStandalone();
+    sstcLog(
+      "calendar_navigate",
+      standalone ? "location.assign (standalone PWA)" : "window.open with fallback",
+      { url: url, standalone: standalone }
+    );
+
+    if (standalone) {
+      window.location.assign(url);
+      return;
+    }
+
+    var opened = window.open(url, "_blank", "noopener,noreferrer");
+    sstcLog("calendar_window_open", opened ? "returned window" : "blocked/null", { opened: !!opened });
+    if (!opened) {
+      window.location.assign(url);
+    }
+  }
+
+  function showCalendarStatus(message, isError) {
+    var el = document.getElementById("sstc-calendar-status");
+    if (!el) {
+      return;
+    }
+    el.textContent = message;
+    el.hidden = false;
+    el.classList.toggle("sstc-flash-error", !!isError);
+    el.classList.toggle("sstc-flash-info", !isError);
+  }
+
+  function initCalendarButton() {
+    var calendarBtn = document.getElementById("sstc-calendar-btn");
+    if (!calendarBtn) {
+      sstcLog("calendar_button_missing", "sstc-calendar-btn not found", null, "error");
+      return;
+    }
+    if (calendarBtn.dataset.sstcBound === "1") {
+      sstcLog("calendar_button_already_bound", "skipping duplicate listener");
+      return;
+    }
+    calendarBtn.dataset.sstcBound = "1";
+    sstcLog("calendar_button_bound", "click listener attached");
+
+    calendarBtn.addEventListener("click", function () {
+      sstcLog("calendar_click", calendarBtn.disabled ? "ignored — button disabled" : "processing", {
+        disabled: calendarBtn.disabled,
+        reasons: calendarNotReadyReasons(),
+      });
+
+      if (calendarBtn.disabled) {
+        return;
+      }
+
+      var url = buildGoogleCalendarUrl();
+      if (!url) {
+        var fields = {
+          title: fieldValue("title"),
+          date: fieldValue("date"),
+          startTime: fieldValue("startTime"),
+          endTime: fieldValue("endTime"),
+        };
+        showCalendarStatus("Could not build the calendar link. Check date and times.", true);
+        sstcLog("calendar_url_build_failed", "formatGoogleFloatingStamp returned null", fields, "error");
+        return;
+      }
+
+      showCalendarStatus("Opening Google Calendar…", false);
+      sstcLog("calendar_url_built", "navigating", { url: url });
+      openGoogleCalendar(url);
+    });
   }
 
   function buildGoogleCalendarUrl() {
@@ -226,12 +398,24 @@
         }) &&
         isEndAfterStart();
       calendarBtn.disabled = !ready;
+
+      if (shareState.calendarReady !== ready) {
+        shareState.calendarReady = ready;
+        if (ready) {
+          sstcLog("calendar_button_enabled", "all required fields present");
+        } else {
+          sstcLog("calendar_button_disabled", "not ready", {
+            reasons: calendarNotReadyReasons(),
+          }, "warn");
+        }
+      }
     }
   }
 
   function initShareForm() {
     var dataEl = document.getElementById("sstc-extraction-data");
     if (!dataEl) {
+      sstcLog("share_form_missing", "sstc-extraction-data not found", null, "warn");
       return;
     }
 
@@ -239,13 +423,17 @@
     try {
       extraction = JSON.parse(dataEl.textContent || "{}");
     } catch (err) {
-      console.warn("SS to Cal: invalid extraction JSON", err);
+      sstcLog("extraction_json_invalid", err.message, null, "error");
       return;
     }
 
     shareState.confidence = extraction.confidence || null;
-
-    console.log("SS to Cal parsed extraction:", extraction);
+    sstcLog("extraction_loaded", "form prefill starting", {
+      confidence: extraction.confidence,
+      fields: Object.keys(extraction).filter(function (key) {
+        return extraction[key] != null && extraction[key] !== "";
+      }),
+    });
 
     var fillReport = [];
 
@@ -295,30 +483,13 @@
     console.log("SS to Cal form fill report:", fillReport);
     renderFillDebug(fillReport);
     updateFormUi();
+    initCalendarButton();
+    sstcLog("share_form_ready", "prefill complete", { fillReport: fillReport });
 
     var form = document.getElementById("sstc-review-form");
     if (form) {
       form.addEventListener("input", updateFormUi);
       form.addEventListener("change", updateFormUi);
-    }
-
-    var calendarBtn = document.getElementById("sstc-calendar-btn");
-    if (calendarBtn) {
-      calendarBtn.addEventListener("click", function () {
-        if (calendarBtn.disabled) {
-          return;
-        }
-        var url = buildGoogleCalendarUrl();
-        if (!url) {
-          console.error("SS to Cal: failed to build Google Calendar URL");
-          return;
-        }
-        console.log("SS to Cal: opening Google Calendar", url);
-        var opened = window.open(url, "_blank");
-        if (!opened) {
-          window.location.href = url;
-        }
-      });
     }
   }
 
@@ -350,9 +521,19 @@
   registerServiceWorker();
 
   document.addEventListener("DOMContentLoaded", function () {
+    var pageMeta = readPageMeta();
+    sstcLog("page_boot", "DOM ready", {
+      jsVersion: SSTC_JS_VERSION,
+      standalone: isStandalone(),
+      online: isOnline(),
+      pageMeta: pageMeta,
+      userAgent: navigator.userAgent,
+    });
+
     initStandaloneUi();
     initOfflineUi();
     initErrorRecovery();
+    initCalendarButton();
     initShareForm();
     initOfflineFormUi();
   });
