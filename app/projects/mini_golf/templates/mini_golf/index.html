@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Mini Golf Scorer{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('mini_golf.static', filename='mini_golf.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="mgolf-page">
+    <h1 class="mgolf-title">Mini Golf Scorer</h1>
+    <p class="mgolf-subtitle">6 players · 18 holes — enter names and strokes</p>
+
+    <div class="mgolf-scroll">
+        <table class="mgolf-table">
+            <thead>
+                <tr>
+                    <th class="mgolf-hole-col">Hole</th>
+                    {% for p in range(1, 7) %}
+                    <th>
+                        <input
+                            type="text"
+                            class="mgolf-name-input"
+                            name="player_{{ p }}_name"
+                            placeholder="Player {{ p }}"
+                            aria-label="Player {{ p }} name"
+                        >
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for hole in range(1, 19) %}
+                <tr>
+                    <td class="mgolf-hole-col">{{ hole }}</td>
+                    {% for p in range(1, 7) %}
+                    <td>
+                        <input
+                            type="number"
+                            class="mgolf-score-input"
+                            name="hole_{{ hole }}_player_{{ p }}"
+                            min="1"
+                            max="99"
+                            inputmode="numeric"
+                            aria-label="Hole {{ hole }}, player {{ p }}"
+                        >
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

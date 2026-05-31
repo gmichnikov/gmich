@@ -188,6 +188,17 @@ PROJECTS = [
         "order": 606,
     },
     {
+        "id": "mini_golf",
+        "name": "Mini Golf Scorer",
+        "description": "Simple scorecard for 6 players, 18 holes",
+        "url": "/mini-golf",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "game_night_tools",
+        "order": 607,
+    },
+    {
         "id": "coding_bootcamp",
         "name": "Coding Bootcamp",
         "description": "Things I made while I was at App Academy in 2016",
