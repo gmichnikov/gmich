@@ -214,7 +214,107 @@
         favoritesLoaded: false,
     };
 
+    var SPELL_SUGGESTION_LIMIT = 6;
+    var commonWords = [];
+    var commonWordMatchKeys = [];
+    var commonWordsLoadPromise = null;
+
     var els = {};
+
+    function normalizeMatchKey(text) {
+        return text.toLowerCase().replace(/[''`´]/g, "").replace(/\./g, "");
+    }
+
+    function getCurrentWordPrefix() {
+        var lastSpace = state.letterBuffer.lastIndexOf(" ");
+        return state.letterBuffer.slice(lastSpace + 1);
+    }
+
+    function buildSpellSuggestions() {
+        var prefix = getCurrentWordPrefix();
+        if (prefix.length < 1 || commonWords.length === 0) {
+            return [];
+        }
+
+        var prefixKey = normalizeMatchKey(prefix);
+        var results = [];
+
+        for (var i = 0; i < commonWords.length; i++) {
+            if (commonWordMatchKeys[i].indexOf(prefixKey) === 0) {
+                results.push(commonWords[i]);
+                if (results.length >= SPELL_SUGGESTION_LIMIT) {
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    function ensureCommonWordsLoaded() {
+        if (commonWordsLoadPromise) {
+            return commonWordsLoadPromise;
+        }
+
+        var url = window.SPEAKER_COMMON_WORDS_URL;
+        if (!url) {
+            return Promise.resolve();
+        }
+
+        commonWordsLoadPromise = fetch(url)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("Failed to load common words");
+                }
+                return response.json();
+            })
+            .then(function (words) {
+                if (!Array.isArray(words)) {
+                    return;
+                }
+                commonWords = words;
+                commonWordMatchKeys = words.map(normalizeMatchKey);
+            })
+            .catch(function () {
+                commonWords = [];
+                commonWordMatchKeys = [];
+            });
+
+        return commonWordsLoadPromise;
+    }
+
+    function applySpellSuggestion(word) {
+        state.letterBuffer = "";
+        addWord(word);
+        renderLetterBuffer();
+    }
+
+    function renderSpellSuggestions() {
+        if (!els.spellSuggestions || !els.spellSuggestionsList) {
+            return;
+        }
+
+        var suggestions = buildSpellSuggestions();
+        var list = els.spellSuggestionsList;
+        list.innerHTML = "";
+
+        if (suggestions.length === 0) {
+            els.spellSuggestions.classList.add("speaker-hidden");
+            return;
+        }
+
+        els.spellSuggestions.classList.remove("speaker-hidden");
+        suggestions.forEach(function (word) {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "speaker-chip speaker-chip--spell";
+            btn.textContent = word;
+            btn.addEventListener("click", function () {
+                applySpellSuggestion(word);
+            });
+            list.appendChild(btn);
+        });
+    }
 
     function $(id) {
         return document.getElementById(id);
@@ -456,6 +556,8 @@
             els.letterBuffer.textContent = state.letterBuffer;
             els.letterBuffer.classList.remove("speaker-spell-buffer--empty");
         }
+
+        renderSpellSuggestions();
     }
 
     function renderSpeakMode() {
@@ -559,6 +661,9 @@
             state.letterBuffer = "";
             renderLetterBuffer();
             openModal("keyboard");
+            ensureCommonWordsLoaded().then(function () {
+                renderSpellSuggestions();
+            });
         });
         els.btnSettings.addEventListener("click", function () {
             openModal("settings");
@@ -639,6 +744,8 @@
             favoritesList: $("speaker-favorites-list"),
             coreGrid: $("speaker-core-grid"),
             letterBuffer: $("speaker-letter-buffer"),
+            spellSuggestions: $("speaker-spell-suggestions"),
+            spellSuggestionsList: $("speaker-spell-suggestions-list"),
             letterGrid: $("speaker-letter-grid"),
             btnLetterSpace: $("speaker-btn-letter-space"),
             btnLetterBackspace: $("speaker-btn-letter-backspace"),

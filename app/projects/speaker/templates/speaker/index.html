@@ -69,6 +69,9 @@
       </div>
       <p class="speaker-modal-desc">Tap letters to spell, then Add word to put it in your sentence.</p>
       <div class="speaker-spell-buffer" id="speaker-letter-buffer" aria-live="polite">...</div>
+      <div class="speaker-spell-suggestions speaker-hidden" id="speaker-spell-suggestions">
+        <div class="speaker-chip-row" id="speaker-spell-suggestions-list"></div>
+      </div>
       <div class="speaker-letter-grid" id="speaker-letter-grid"></div>
       <div class="speaker-spell-actions">
         <button type="button" class="speaker-spell-btn speaker-spell-btn--space" id="speaker-btn-letter-space">Space</button>
@@ -125,5 +128,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+  window.SPEAKER_COMMON_WORDS_URL = "{{ url_for('speaker.api_common_words') }}";
+</script>
 <script src="{{ url_for('speaker.static', filename='speaker/app.js') }}" defer></script>
 {% endblock %}

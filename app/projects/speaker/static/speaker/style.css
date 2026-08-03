@@ -308,7 +308,7 @@
     min-height: 56px;
     border-radius: 1rem;
     padding: 0.75rem 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     background: #f5f7f8;
     border: 2px solid #c7d1d8;
     display: flex;
@@ -320,6 +320,18 @@
 
 .speaker-spell-buffer--empty {
     color: #8a97a0;
+}
+
+.speaker-spell-suggestions {
+    min-height: 2.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.speaker-chip--spell {
+    background: #e8f0fe;
+    color: #1e4a8a;
+    border: 2px solid #c5d7fb;
+    font-size: 1.0625rem;
 }
 
 .speaker-letter-grid {
