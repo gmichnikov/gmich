@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Speaker{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('speaker.static', filename='speaker/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="speaker-root" id="speaker-root"></div>
+{% endblock %}
+
+{% block scripts %}
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script
+  type="text/babel"
+  data-presets="react"
+  src="{{ url_for('speaker.static', filename='speaker/App.jsx') }}"
+></script>
+{% endblock %}

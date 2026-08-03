@@ -498,6 +498,17 @@ PROJECTS = [
         "icon": "📆",
         "order": 27,
     },
+    {
+        "id": "speaker",
+        "name": "Speaker",
+        "description": "Speaker — public, no login, no database",
+        "url": "/speaker",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🔊",
+        "order": 28,
+    },
 ]
 
 
