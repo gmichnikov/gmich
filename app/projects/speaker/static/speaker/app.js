@@ -854,6 +854,7 @@
         renderLetterBuffer();
         render();
         bindEvents();
+        updateBodyScrollLock();
         ensureCommonWordsLoaded();
     }
 
