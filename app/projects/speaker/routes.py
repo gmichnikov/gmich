@@ -13,6 +13,6 @@ speaker_bp = Blueprint(
 
 @speaker_bp.route("/")
 def index():
-    """Speaker — client-side React app, no login or database."""
+    """Speaker — client-side AAC board, no login or database."""
     log_project_visit("speaker", "Speaker")
     return render_template("speaker/index.html")

@@ -501,7 +501,7 @@ PROJECTS = [
     {
         "id": "speaker",
         "name": "Speaker",
-        "description": "Speaker — public, no login, no database",
+        "description": "AAC word board — tap words and phrases to speak aloud",
         "url": "/speaker",
         "auth_required": False,
         "status": "active",

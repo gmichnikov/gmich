@@ -1,6 +1,527 @@
-/* Speaker — use speaker- prefix for all classes */
+/* speaker — prefixed to avoid collisions with other hub projects */
 
-.speaker-root {
+.speaker-hidden {
+    display: none !important;
+}
+
+.speaker-app {
+    margin: -40px -20px;
+    padding: 0;
+    box-sizing: border-box;
+    min-height: min(92vh, calc(100vh - 5.25rem));
+    min-height: min(92dvh, calc(100dvh - 5.25rem));
+    display: flex;
+    flex-direction: column;
+    background: #eef2f5;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Top bar ---- */
+
+.speaker-top-bar {
+    background: #ffffff;
+    border-bottom: 2px solid #d7dee3;
+    padding: 1rem 1rem 0.75rem;
+}
+
+.speaker-sentence-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.speaker-sentence-display {
+    flex: 1;
+    min-height: 64px;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f5f7f8;
+    border: 2px solid #c7d1d8;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.speaker-sentence-placeholder {
+    color: #8a97a0;
+    font-size: 1.25rem;
+}
+
+.speaker-sentence-word {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.speaker-icon-btn,
+.speaker-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid #c7d1d8;
+    background: #ffffff;
+    border-radius: 1rem;
+    cursor: pointer;
+    color: #3f4a52;
+    touch-action: manipulation;
+}
+
+.speaker-icon-btn {
+    width: 56px;
+    height: 56px;
+}
+
+.speaker-icon-btn:hover,
+.speaker-action-btn:hover,
+.speaker-icon-btn:focus-visible,
+.speaker-action-btn:focus-visible {
+    border-color: #94a3b8;
+    outline: none;
+}
+
+.speaker-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.speaker-icon--sm {
+    width: 20px;
+    height: 20px;
+}
+
+.speaker-icon--filled {
+    width: 26px;
+    height: 26px;
+}
+
+.speaker-action-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.speaker-speak-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 64px;
+    border: none;
+    border-radius: 1rem;
+    background: #e8734a;
+    color: #ffffff;
+    font-size: 1.375rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.speaker-speak-btn:disabled {
+    background: #f3d9cd;
+    opacity: 0.6;
+    cursor: default;
+}
+
+.speaker-action-btn {
+    width: 72px;
+    height: 64px;
+}
+
+/* ---- Prediction & favorite strips ---- */
+
+.speaker-predictions,
+.speaker-favorites {
+    padding: 0.5rem 1rem;
+}
+
+.speaker-predictions {
+    min-height: 64px;
+    background: #fdf6e3;
+    border-bottom: 2px solid #f0e4b8;
+}
+
+.speaker-favorites {
+    background: #e9f3ef;
+    border-bottom: 2px solid #cfe6dc;
+}
+
+.speaker-predictions-empty {
+    font-size: 0.875rem;
+    color: #b3a15c;
+    padding-top: 0.375rem;
+}
+
+.speaker-strip-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #8a7433;
+    margin-bottom: 0.25rem;
+}
+
+.speaker-strip-label--green {
+    color: #2f6b52;
+}
+
+.speaker-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.speaker-chip {
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    border: 2px solid transparent;
+}
+
+.speaker-chip--prediction {
+    background: #f5de9a;
+    color: #5c4a12;
+    border-color: #e8cb6e;
+}
+
+.speaker-chip--favorite {
+    background: #ffffff;
+    color: #215a40;
+    border-color: #a9d6c2;
+}
+
+/* ---- Core vocabulary grid ---- */
+
+.speaker-core {
+    flex: 1;
+    padding: 1rem;
+}
+
+.speaker-core-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.speaker-word-btn {
+    min-height: 84px;
+    border-radius: 1rem;
+    border: 2px solid #c7d1d8;
+    background: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    touch-action: manipulation;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.speaker-word-btn:hover,
+.speaker-word-btn:focus-visible {
+    border-color: #94a3b8;
+    outline: none;
+}
+
+/* ---- Modals ---- */
+
+.speaker-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.speaker-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.speaker-modal-panel {
+    position: relative;
+    z-index: 1;
     width: 100%;
-    min-height: 60vh;
+    max-width: 28rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.speaker-modal-panel--wide {
+    max-width: 32rem;
+    max-height: 85vh;
+}
+
+.speaker-modal-panel--narrow {
+    max-width: 24rem;
+    max-height: none;
+    overflow-y: visible;
+}
+
+.speaker-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.speaker-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.speaker-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #3f4a52;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.speaker-modal-desc {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: #6b7680;
+}
+
+/* ---- Keyboard modal ---- */
+
+.speaker-spell-buffer {
+    min-height: 56px;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #f5f7f8;
+    border: 2px solid #c7d1d8;
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.speaker-spell-buffer--empty {
+    color: #8a97a0;
+}
+
+.speaker-letter-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.speaker-letter-btn {
+    min-height: 52px;
+    border-radius: 0.75rem;
+    border: 2px solid #c7d1d8;
+    background: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.speaker-spell-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.speaker-spell-btn {
+    height: 56px;
+    border-radius: 0.75rem;
+    border: 2px solid #c7d1d8;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.speaker-spell-btn--space {
+    flex: 1;
+    background: #f5f7f8;
+    color: #1f2937;
+}
+
+.speaker-spell-btn--icon {
+    width: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #3f4a52;
+}
+
+.speaker-spell-btn--add {
+    flex: 1;
+    border-color: #e8734a;
+    background: #e8734a;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.speaker-spell-btn--add:disabled {
+    background: #f3d9cd;
+    border-color: #f3d9cd;
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* ---- Phrases modal ---- */
+
+.speaker-phrase-category {
+    margin-bottom: 1.25rem;
+}
+
+.speaker-phrase-category-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #8a97a0;
+    margin-bottom: 0.5rem;
+}
+
+.speaker-phrase-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.speaker-phrase-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid #c7d1d8;
+    background: #f5f7f8;
+    overflow: hidden;
+}
+
+.speaker-phrase-text-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.speaker-phrase-star-btn {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #b7c0c7;
+    touch-action: manipulation;
+}
+
+.speaker-phrase-star-btn--active {
+    color: #e8a23a;
+}
+
+.speaker-star-icon {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.speaker-phrase-star-btn--active .speaker-star-icon {
+    fill: currentColor;
+}
+
+/* ---- Settings modal ---- */
+
+.speaker-settings-group {
+    margin-bottom: 1.5rem;
+}
+
+.speaker-settings-group:last-child {
+    margin-bottom: 0;
+}
+
+.speaker-settings-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.speaker-volume {
+    width: 100%;
+}
+
+.speaker-settings-heading {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.speaker-mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.speaker-mode-btn {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    background: #f5f7f8;
+    color: #1f2937;
+    border: 2px solid #c7d1d8;
+}
+
+.speaker-mode-btn--active {
+    background: #e8734a;
+    color: #ffffff;
+    border-color: #e8734a;
+}
+
+@media (max-width: 480px) {
+    .speaker-core-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .speaker-letter-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
 }
