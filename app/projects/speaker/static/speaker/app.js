@@ -7,6 +7,7 @@
     var STORAGE_FAVORITES = "speaker_favorite_phrase_ids";
     var STORAGE_VOLUME = "speaker_volume";
     var STORAGE_SPEAK_MODE = "speaker_speak_mode";
+    var STORAGE_COMMON_WORDS = "speaker_common_words_v1";
 
     var PHRASE_GROUPS = [
         {
@@ -256,9 +257,18 @@
             return commonWordsLoadPromise;
         }
 
+        var cached = loadStorage(STORAGE_COMMON_WORDS, null);
+        if (Array.isArray(cached) && cached.length > 0) {
+            commonWords = cached;
+            commonWordMatchKeys = cached.map(normalizeMatchKey);
+            commonWordsLoadPromise = Promise.resolve();
+            return commonWordsLoadPromise;
+        }
+
         var url = window.SPEAKER_COMMON_WORDS_URL;
         if (!url) {
-            return Promise.resolve();
+            commonWordsLoadPromise = Promise.resolve();
+            return commonWordsLoadPromise;
         }
 
         commonWordsLoadPromise = fetch(url)
@@ -274,6 +284,7 @@
                 }
                 commonWords = words;
                 commonWordMatchKeys = words.map(normalizeMatchKey);
+                saveStorage(STORAGE_COMMON_WORDS, words);
             })
             .catch(function () {
                 commonWords = [];
@@ -500,11 +511,21 @@
         saveStorage(STORAGE_FAVORITES, state.favorites);
     }
 
+    function updateBodyScrollLock() {
+        var names = ["keyboard", "phrases", "settings"];
+        var anyOpen = names.some(function (name) {
+            var modal = $("speaker-modal-" + name);
+            return modal && !modal.classList.contains("speaker-hidden");
+        });
+        document.body.classList.toggle("speaker-body-locked", anyOpen);
+    }
+
     function openModal(name) {
         var modal = $("speaker-modal-" + name);
         if (modal) {
             modal.classList.remove("speaker-hidden");
         }
+        updateBodyScrollLock();
     }
 
     function closeModal(name) {
@@ -512,6 +533,7 @@
         if (modal) {
             modal.classList.add("speaker-hidden");
         }
+        updateBodyScrollLock();
     }
 
     function renderSentence() {
@@ -804,6 +826,7 @@
         renderLetterBuffer();
         render();
         bindEvents();
+        ensureCommonWordsLoaded();
     }
 
     if (document.readyState === "loading") {
