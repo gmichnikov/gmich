@@ -8,6 +8,7 @@
     var STORAGE_VOLUME = "speaker_volume";
     var STORAGE_SPEAK_MODE = "speaker_speak_mode";
     var STORAGE_COMMON_WORDS = "speaker_common_words_v1";
+    var STORAGE_SHOW_FAVORITES = "speaker_show_favorites_strip";
 
     var PHRASE_GROUPS = [
         {
@@ -213,6 +214,7 @@
         letterBuffer: "",
         favorites: DEFAULT_FAVORITES.slice(),
         favoritesLoaded: false,
+        showFavoritesStrip: false,
     };
 
     var SPELL_SUGGESTION_LIMIT = 6;
@@ -590,7 +592,7 @@
         var list = els.favoritesList;
         list.innerHTML = "";
 
-        if (favoritePhrases.length === 0) {
+        if (favoritePhrases.length === 0 || !state.showFavoritesStrip) {
             els.favoritesSection.classList.add("speaker-hidden");
             return;
         }
@@ -627,6 +629,11 @@
         var immediate = state.speakMode === "immediate";
         els.modeImmediate.classList.toggle("speaker-mode-btn--active", immediate);
         els.modeSubmit.classList.toggle("speaker-mode-btn--active", !immediate);
+    }
+
+    function renderFavoritesStripSetting() {
+        els.favoritesShow.classList.toggle("speaker-mode-btn--active", state.showFavoritesStrip);
+        els.favoritesHide.classList.toggle("speaker-mode-btn--active", !state.showFavoritesStrip);
     }
 
     function renderPhrasesModal() {
@@ -756,6 +763,19 @@
             saveStorage(STORAGE_SPEAK_MODE, state.speakMode);
         });
 
+        els.favoritesShow.addEventListener("click", function () {
+            state.showFavoritesStrip = true;
+            renderFavoritesStripSetting();
+            renderFavoritesStrip();
+            saveStorage(STORAGE_SHOW_FAVORITES, state.showFavoritesStrip);
+        });
+        els.favoritesHide.addEventListener("click", function () {
+            state.showFavoritesStrip = false;
+            renderFavoritesStripSetting();
+            renderFavoritesStrip();
+            saveStorage(STORAGE_SHOW_FAVORITES, state.showFavoritesStrip);
+        });
+
         document.querySelectorAll("[data-speaker-close]").forEach(function (el) {
             el.addEventListener("click", function () {
                 closeModal(el.getAttribute("data-speaker-close"));
@@ -787,8 +807,14 @@
             state.speakMode = savedMode;
         }
 
+        var savedShowFavorites = loadStorage(STORAGE_SHOW_FAVORITES, null);
+        if (typeof savedShowFavorites === "boolean") {
+            state.showFavoritesStrip = savedShowFavorites;
+        }
+
         state.favoritesLoaded = true;
         renderSpeakMode();
+        renderFavoritesStripSetting();
     }
 
     function init() {
@@ -817,6 +843,8 @@
             volumeInput: $("speaker-volume"),
             modeImmediate: $("speaker-mode-immediate"),
             modeSubmit: $("speaker-mode-submit"),
+            favoritesShow: $("speaker-favorites-show"),
+            favoritesHide: $("speaker-favorites-hide"),
         };
 
         loadSettings();
