@@ -320,6 +320,56 @@
         return document.getElementById(id);
     }
 
+    var PLEASE_WORD = "please";
+
+    function wordsMatchPrefix(pLower, pStart, sentenceLower, sStart) {
+        var si = sStart;
+        var pi = pStart;
+        while (si < sentenceLower.length) {
+            if (pi >= pLower.length) {
+                return false;
+            }
+            if (pLower[pi] !== sentenceLower[si]) {
+                return false;
+            }
+            pi += 1;
+            si += 1;
+        }
+        return true;
+    }
+
+    /** Next-word candidates for one phrase; please is optional on either side. */
+    function nextWordsForPhrase(phrase, sentenceLower) {
+        var pLower = phrase.map(function (w) {
+            return w.toLowerCase();
+        });
+        var phraseHasPlease = pLower.length > 0 && pLower[0] === PLEASE_WORD;
+        var sentenceHasPlease = sentenceLower.length > 0 && sentenceLower[0] === PLEASE_WORD;
+        var candidates = [];
+
+        function tryMatch(pStart, sStart) {
+            if (!wordsMatchPrefix(pLower, pStart, sentenceLower, sStart)) {
+                return;
+            }
+            var nextIndex = pStart + (sentenceLower.length - sStart);
+            if (nextIndex < phrase.length) {
+                candidates.push(phrase[nextIndex]);
+            }
+        }
+
+        tryMatch(0, 0);
+
+        if (phraseHasPlease) {
+            tryMatch(1, 0);
+        }
+
+        if (sentenceHasPlease && !phraseHasPlease) {
+            tryMatch(0, 1);
+        }
+
+        return candidates;
+    }
+
     function buildPredictions(sentence) {
         var lower = sentence.map(function (w) {
             return w.toLowerCase();
@@ -327,23 +377,14 @@
         var counts = new Map();
 
         PHRASES.forEach(function (phrase) {
-            var pLower = phrase.map(function (w) {
-                return w.toLowerCase();
-            });
-            if (pLower.length <= lower.length) {
-                return;
-            }
-            var matches = true;
-            for (var i = 0; i < lower.length; i++) {
-                if (pLower[i] !== lower[i]) {
-                    matches = false;
-                    break;
+            var seenForPhrase = {};
+            nextWordsForPhrase(phrase, lower).forEach(function (word) {
+                if (seenForPhrase[word]) {
+                    return;
                 }
-            }
-            if (matches) {
-                var nextWord = phrase[lower.length];
-                counts.set(nextWord, (counts.get(nextWord) || 0) + 1);
-            }
+                seenForPhrase[word] = true;
+                counts.set(word, (counts.get(word) || 0) + 1);
+            });
         });
 
         return Array.from(counts.entries())
