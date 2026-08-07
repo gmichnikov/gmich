@@ -76,6 +76,12 @@
                 "I am done",
                 "I am hungry",
                 "I am thirsty",
+                "More",
+                "Less",
+                "I want more",
+                "I want less",
+                "Give me more",
+                "Give me less",
                 "Please give me more",
             ],
         },
@@ -449,6 +455,7 @@
             ? ('Add "' + resolveTypedWord(state.wordPrefix) + '"')
             : "Add word";
 
+        els.wordGrid.classList.toggle("speaker-word-grid--core", !hasPrefix);
         els.wordGrid.innerHTML = "";
         if (words.length === 0) {
             els.wordEmpty.classList.remove("speaker-hidden");
@@ -486,6 +493,8 @@
     }
 
     var PLEASE_WORD = "please";
+    var PREDICTION_PINNED = ["More", "Less"];
+    var PREDICTION_LIMIT = 10;
 
     function wordsMatchPrefix(pLower, pStart, sentenceLower, sStart) {
         var si = sStart;
@@ -540,26 +549,52 @@
             return w.toLowerCase();
         });
         var counts = new Map();
+        var labels = new Map();
+
+        PREDICTION_PINNED.forEach(function (pinned) {
+            labels.set(normalizeWordKey(pinned), pinned);
+        });
 
         PHRASES.forEach(function (phrase) {
             var seenForPhrase = {};
             nextWordsForPhrase(phrase, lower).forEach(function (word) {
-                if (seenForPhrase[word]) {
+                var key = normalizeWordKey(word);
+                if (seenForPhrase[key]) {
                     return;
                 }
-                seenForPhrase[word] = true;
-                counts.set(word, (counts.get(word) || 0) + 1);
+                seenForPhrase[key] = true;
+                counts.set(key, (counts.get(key) || 0) + 1);
+                if (!labels.has(key)) {
+                    labels.set(key, word);
+                }
             });
         });
 
-        return Array.from(counts.entries())
+        var pinned = [];
+        var pinnedKeys = {};
+        if (sentence.length === 0) {
+            PREDICTION_PINNED.forEach(function (word) {
+                var key = normalizeWordKey(word);
+                if (!counts.has(key)) {
+                    return;
+                }
+                pinned.push(labels.get(key));
+                pinnedKeys[key] = true;
+            });
+        }
+
+        var rest = Array.from(counts.entries())
             .sort(function (a, b) {
                 return b[1] - a[1];
             })
             .map(function (entry) {
-                return entry[0];
+                return labels.get(entry[0]);
             })
-            .slice(0, 6);
+            .filter(function (word) {
+                return !pinnedKeys[normalizeWordKey(word)];
+            });
+
+        return pinned.concat(rest).slice(0, PREDICTION_LIMIT);
     }
 
     function speak(text) {
