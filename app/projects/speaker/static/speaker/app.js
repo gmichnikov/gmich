@@ -570,31 +570,14 @@
             });
         });
 
-        var pinned = [];
-        var pinnedKeys = {};
-        if (sentence.length === 0) {
-            PREDICTION_PINNED.forEach(function (word) {
-                var key = normalizeWordKey(word);
-                if (!counts.has(key)) {
-                    return;
-                }
-                pinned.push(labels.get(key));
-                pinnedKeys[key] = true;
-            });
-        }
-
-        var rest = Array.from(counts.entries())
+        return Array.from(counts.keys())
+            .map(function (key) {
+                return labels.get(key);
+            })
             .sort(function (a, b) {
-                return b[1] - a[1];
+                return a.localeCompare(b, undefined, { sensitivity: "base" });
             })
-            .map(function (entry) {
-                return labels.get(entry[0]);
-            })
-            .filter(function (word) {
-                return !pinnedKeys[normalizeWordKey(word)];
-            });
-
-        return pinned.concat(rest).slice(0, PREDICTION_LIMIT);
+            .slice(0, PREDICTION_LIMIT);
     }
 
     function speak(text) {
@@ -604,7 +587,7 @@
         window.speechSynthesis.cancel();
         var utter = new SpeechSynthesisUtterance(text);
         utter.volume = state.volume;
-        utter.rate = 0.95;
+        utter.rate = 0.5;
         window.speechSynthesis.speak(utter);
     }
 
@@ -713,7 +696,7 @@
         if (state.sentence.length === 0) {
             var placeholder = document.createElement("span");
             placeholder.className = "speaker-sentence-placeholder";
-            placeholder.textContent = "Tap words to build a sentence...";
+            placeholder.textContent = "Tap words below…";
             container.appendChild(placeholder);
         } else {
             state.sentence.forEach(function (word) {
