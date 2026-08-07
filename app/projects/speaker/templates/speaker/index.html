@@ -18,9 +18,6 @@
       <button type="button" class="speaker-icon-btn" id="speaker-btn-phrases" aria-label="Common phrases">
         <svg class="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
       </button>
-      <button type="button" class="speaker-icon-btn" id="speaker-btn-keyboard" aria-label="Spell a word">
-        <svg class="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg>
-      </button>
       <button type="button" class="speaker-icon-btn" id="speaker-btn-settings" aria-label="Settings">
         <svg class="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -55,34 +52,20 @@
   </section>
 
   <section class="speaker-core">
-    <div class="speaker-core-grid" id="speaker-core-grid"></div>
-  </section>
-  </div>
-
-  <!-- Spell a word -->
-  <div class="speaker-modal speaker-hidden" id="speaker-modal-keyboard" role="dialog" aria-modal="true" aria-labelledby="speaker-keyboard-title">
-    <div class="speaker-modal-backdrop" data-speaker-close="keyboard"></div>
-    <div class="speaker-modal-panel speaker-modal-panel--wide">
-      <div class="speaker-modal-header">
-        <h2 class="speaker-modal-title" id="speaker-keyboard-title">Spell a word</h2>
-        <button type="button" class="speaker-modal-close" data-speaker-close="keyboard" aria-label="Close keyboard">
-          <svg class="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div class="speaker-letter-row" id="speaker-letter-row"></div>
+    <div class="speaker-prefix-bar">
+      <div class="speaker-prefix-group">
+        <div class="speaker-prefix-display speaker-prefix-display--empty" id="speaker-prefix-display" aria-live="polite">Tap letters to filter words</div>
+        <button type="button" class="speaker-prefix-btn speaker-prefix-btn--icon" id="speaker-prefix-backspace" aria-label="Delete last letter" disabled>
+          <svg class="speaker-icon speaker-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
         </button>
       </div>
-      <p class="speaker-modal-desc">Tap letters to spell, then Add word to put it in your sentence.</p>
-      <div class="speaker-spell-buffer" id="speaker-letter-buffer" aria-live="polite">...</div>
-      <div class="speaker-spell-suggestions speaker-hidden" id="speaker-spell-suggestions">
-        <div class="speaker-chip-row" id="speaker-spell-suggestions-list"></div>
-      </div>
-      <div class="speaker-letter-grid" id="speaker-letter-grid"></div>
-      <div class="speaker-spell-actions">
-        <button type="button" class="speaker-spell-btn speaker-spell-btn--space" id="speaker-btn-letter-space">Space</button>
-        <button type="button" class="speaker-spell-btn speaker-spell-btn--icon" id="speaker-btn-letter-backspace" aria-label="Delete last letter">
-          <svg class="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
-        </button>
-        <button type="button" class="speaker-spell-btn speaker-spell-btn--add" id="speaker-btn-add-word" disabled>Add word</button>
-      </div>
+      <button type="button" class="speaker-prefix-btn" id="speaker-prefix-clear" disabled>Clear</button>
+      <button type="button" class="speaker-prefix-btn speaker-prefix-btn--add" id="speaker-prefix-add" disabled>Add word</button>
     </div>
+    <p class="speaker-word-empty speaker-hidden" id="speaker-word-empty">No matching words — try fewer letters or tap Add word</p>
+    <div class="speaker-word-grid" id="speaker-word-grid"></div>
+  </section>
   </div>
 
   <!-- Common phrases -->

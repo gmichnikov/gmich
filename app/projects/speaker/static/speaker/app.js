@@ -7,7 +7,7 @@
     var STORAGE_FAVORITES = "speaker_favorite_phrase_ids";
     var STORAGE_VOLUME = "speaker_volume";
     var STORAGE_SPEAK_MODE = "speaker_speak_mode";
-    var STORAGE_COMMON_WORDS = "speaker_common_words_v1";
+    var STORAGE_COMMON_WORDS = "speaker_common_words_v4";
     var STORAGE_SHOW_FAVORITES = "speaker_show_favorites_strip";
 
     var PHRASE_GROUPS = [
@@ -27,6 +27,7 @@
                 "Bring the wheelchair",
                 "Bring the walker",
                 "Bring me to the table",
+                "Bring me scissors",
                 "I want to go to bed",
                 "I want to nap",
             ],
@@ -38,6 +39,12 @@
                 "I am warm",
                 "Please give me a jacket",
                 "Please give me a sweater",
+                "Give me my sweater",
+                "Give me my jacket",
+                "Help me put the jacket on",
+                "Help me take the jacket off",
+                "Help me put the sweater on",
+                "Help me take the sweater off",
                 "This is too hot",
                 "This is too cold",
                 "I need my sweater",
@@ -57,6 +64,11 @@
                 "I want coffee",
                 "I want tea",
                 "I want juice",
+                "Give me some juice",
+                "Give me some tea",
+                "Give me a cookie",
+                "Give me lunch",
+                "Make some coffee",
                 "I am full",
                 "I don't want to eat",
                 "My mouth is dry",
@@ -71,6 +83,8 @@
             category: "Health & body",
             phrases: [
                 "Is it time for my medicine?",
+                "Give me sinomed",
+                "Give me medicine",
                 "I need my glasses",
                 "I need my hearing aids",
                 "I feel dizzy",
@@ -130,6 +144,7 @@
                 "Never mind",
                 "I changed my mind",
                 "Let's try again",
+                "Thank you",
                 "What did you do in school today?",
             ],
         },
@@ -152,10 +167,15 @@
             phrases: [
                 "What time is it?",
                 "When is my appointment?",
+                "When is my next PT appointment",
                 "Is it raining?",
+                "Is it going to rain",
+                "Is it going to rain today",
                 "Is it sunny?",
                 "What is the temperature?",
+                "What is the temperature today",
                 "What is the weather today?",
+                "What is the thermostat set to?",
             ],
         },
     ];
@@ -200,7 +220,7 @@
         "Feel", "Give", "Go", "Help",
         "I", "Is", "It", "Me",
         "More", "My", "Need", "No",
-        "Please", "Thank you", "That", "The",
+        "Please", "Thank", "Thank you", "That", "The",
         "To", "Too", "Turn", "Wait",
         "Want", "What", "Yes", "You",
     ].sort(function (a, b) {
@@ -211,41 +231,122 @@
         sentence: [],
         volume: 0.85,
         speakMode: "submit",
-        letterBuffer: "",
+        wordPrefix: "",
         favorites: DEFAULT_FAVORITES.slice(),
         favoritesLoaded: false,
         showFavoritesStrip: false,
     };
 
-    var SPELL_SUGGESTION_LIMIT = 6;
+    var WORD_FILTER_LIMIT = 50;
     var commonWords = [];
-    var commonWordMatchKeys = [];
+    var mergedWords = [];
     var commonWordsLoadPromise = null;
 
     var els = {};
 
+    function stripApostrophes(text) {
+        return text.replace(/[''`´]/g, "");
+    }
+
     function normalizeMatchKey(text) {
-        return text.toLowerCase().replace(/[''`´]/g, "").replace(/\./g, "");
+        return stripApostrophes(text.toLowerCase()).replace(/\./g, "");
     }
 
-    function getCurrentWordPrefix() {
-        var lastSpace = state.letterBuffer.lastIndexOf(" ");
-        return state.letterBuffer.slice(lastSpace + 1);
+    /** Match key for a sentence/phrase word (handles dont = don't). */
+    function normalizeWordKey(word) {
+        return normalizeMatchKey(stripPunct(word));
     }
 
-    function buildSpellSuggestions() {
-        var prefix = getCurrentWordPrefix();
-        if (prefix.length < 1 || commonWords.length === 0) {
-            return [];
+    /**
+     * Apostrophe-stripped keys → preferred display form.
+     * Omits ambiguous pairs (were/we're) — pick those from the word list instead.
+     */
+    var CONTRACTION_FORMS = {
+        dont: "don't",
+        cant: "can't",
+        wont: "won't",
+        im: "I'm",
+        ive: "I've",
+        ill: "I'll",
+        id: "I'd",
+        youre: "you're",
+        theyre: "they're",
+        hes: "he's",
+        shes: "she's",
+        isnt: "isn't",
+        arent: "aren't",
+        wasnt: "wasn't",
+        werent: "weren't",
+        didnt: "didn't",
+        thats: "that's",
+        whats: "what's",
+        whos: "who's",
+        lets: "let's",
+    };
+
+    function resolveTypedWord(prefix) {
+        var key = normalizeMatchKey(prefix);
+        if (CONTRACTION_FORMS[key]) {
+            return CONTRACTION_FORMS[key];
         }
 
-        var prefixKey = normalizeMatchKey(prefix);
+        var source = mergedWords.length > 0 ? mergedWords : CORE_WORDS.slice();
+        var matches = source.filter(function (w) {
+            return normalizeMatchKey(w) === key;
+        });
+
+        if (matches.length === 1) {
+            return matches[0];
+        }
+        if (matches.length > 1) {
+            var contractions = matches.filter(function (w) {
+                return /[''`´]/.test(w);
+            });
+            if (contractions.length === 1) {
+                return contractions[0];
+            }
+            return matches[0];
+        }
+
+        return prefix;
+    }
+
+    function rebuildMergedWords() {
+        var seen = {};
+        mergedWords = [];
+
+        CORE_WORDS.forEach(function (word) {
+            var key = normalizeMatchKey(word);
+            if (seen[key]) {
+                return;
+            }
+            seen[key] = true;
+            mergedWords.push(word);
+        });
+
+        commonWords.forEach(function (word) {
+            var key = normalizeMatchKey(word);
+            if (seen[key]) {
+                return;
+            }
+            seen[key] = true;
+            mergedWords.push(word);
+        });
+    }
+
+    function getVisibleWords() {
+        if (!state.wordPrefix) {
+            return CORE_WORDS.slice();
+        }
+
+        var prefixKey = normalizeMatchKey(state.wordPrefix);
+        var source = mergedWords.length > 0 ? mergedWords : CORE_WORDS.slice();
         var results = [];
 
-        for (var i = 0; i < commonWords.length; i++) {
-            if (commonWordMatchKeys[i].indexOf(prefixKey) === 0) {
-                results.push(commonWords[i]);
-                if (results.length >= SPELL_SUGGESTION_LIMIT) {
+        for (var i = 0; i < source.length; i++) {
+            if (normalizeMatchKey(source[i]).indexOf(prefixKey) === 0) {
+                results.push(source[i]);
+                if (results.length >= WORD_FILTER_LIMIT) {
                     break;
                 }
             }
@@ -262,7 +363,7 @@
         var cached = loadStorage(STORAGE_COMMON_WORDS, null);
         if (Array.isArray(cached) && cached.length > 0) {
             commonWords = cached;
-            commonWordMatchKeys = cached.map(normalizeMatchKey);
+            rebuildMergedWords();
             commonWordsLoadPromise = Promise.resolve();
             return commonWordsLoadPromise;
         }
@@ -285,47 +386,98 @@
                     return;
                 }
                 commonWords = words;
-                commonWordMatchKeys = words.map(normalizeMatchKey);
                 saveStorage(STORAGE_COMMON_WORDS, words);
+                rebuildMergedWords();
             })
             .catch(function () {
                 commonWords = [];
-                commonWordMatchKeys = [];
+                mergedWords = CORE_WORDS.slice();
             });
 
         return commonWordsLoadPromise;
     }
 
-    function applySpellSuggestion(word) {
-        state.letterBuffer = "";
-        addWord(word);
-        renderLetterBuffer();
+    function resetWordPicker() {
+        state.wordPrefix = "";
+        renderWordPicker();
     }
 
-    function renderSpellSuggestions() {
-        if (!els.spellSuggestions || !els.spellSuggestionsList) {
+    function selectWordFromPicker(word) {
+        addWord(word);
+        resetWordPicker();
+    }
+
+    function commitPrefixAsWord() {
+        var word = state.wordPrefix.trim();
+        if (word.length === 0) {
             return;
         }
+        addWord(resolveTypedWord(word));
+        resetWordPicker();
+    }
 
-        var suggestions = buildSpellSuggestions();
-        var list = els.spellSuggestionsList;
-        list.innerHTML = "";
+    function appendFilterLetter(letter) {
+        state.wordPrefix += letter;
+        renderWordPicker();
+    }
 
-        if (suggestions.length === 0) {
-            els.spellSuggestions.classList.add("speaker-hidden");
-            return;
+    function backspaceFilterLetter() {
+        state.wordPrefix = state.wordPrefix.slice(0, -1);
+        renderWordPicker();
+    }
+
+    function clearFilterPrefix() {
+        resetWordPicker();
+    }
+
+    function renderWordPicker() {
+        var hasPrefix = state.wordPrefix.length > 0;
+        var words = getVisibleWords();
+
+        if (hasPrefix) {
+            els.prefixDisplay.textContent = state.wordPrefix;
+            els.prefixDisplay.classList.remove("speaker-prefix-display--empty");
+        } else {
+            els.prefixDisplay.textContent = "Tap letters to filter words";
+            els.prefixDisplay.classList.add("speaker-prefix-display--empty");
         }
 
-        els.spellSuggestions.classList.remove("speaker-hidden");
-        suggestions.forEach(function (word) {
+        els.prefixBackspace.disabled = !hasPrefix;
+        els.prefixClear.disabled = !hasPrefix;
+        els.prefixAdd.disabled = !hasPrefix;
+        els.prefixAdd.textContent = hasPrefix
+            ? ('Add "' + resolveTypedWord(state.wordPrefix) + '"')
+            : "Add word";
+
+        els.wordGrid.innerHTML = "";
+        if (words.length === 0) {
+            els.wordEmpty.classList.remove("speaker-hidden");
+        } else {
+            els.wordEmpty.classList.add("speaker-hidden");
+            words.forEach(function (word) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "speaker-word-btn";
+                btn.textContent = word;
+                btn.addEventListener("click", function () {
+                    selectWordFromPicker(word);
+                });
+                els.wordGrid.appendChild(btn);
+            });
+        }
+    }
+
+    function buildLetterRow() {
+        var row = els.letterRow;
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(function (letter) {
             var btn = document.createElement("button");
             btn.type = "button";
-            btn.className = "speaker-chip speaker-chip--spell";
-            btn.textContent = word;
+            btn.className = "speaker-filter-letter";
+            btn.textContent = letter;
             btn.addEventListener("click", function () {
-                applySpellSuggestion(word);
+                appendFilterLetter(letter);
             });
-            list.appendChild(btn);
+            row.appendChild(btn);
         });
     }
 
@@ -342,7 +494,7 @@
             if (pi >= pLower.length) {
                 return false;
             }
-            if (pLower[pi] !== sentenceLower[si]) {
+            if (normalizeWordKey(pLower[pi]) !== normalizeWordKey(sentenceLower[si])) {
                 return false;
             }
             pi += 1;
@@ -467,25 +619,6 @@
         render();
     }
 
-    function addLetter(letter) {
-        state.letterBuffer += letter;
-        renderLetterBuffer();
-    }
-
-    function backspaceLetter() {
-        state.letterBuffer = state.letterBuffer.slice(0, -1);
-        renderLetterBuffer();
-    }
-
-    function commitSpelledWord() {
-        var word = state.letterBuffer.trim();
-        if (word.length > 0) {
-            addWord(word);
-        }
-        state.letterBuffer = "";
-        renderLetterBuffer();
-    }
-
     function loadStorage(key, fallback) {
         try {
             var raw = localStorage.getItem(key);
@@ -514,7 +647,7 @@
     }
 
     function updateBodyScrollLock() {
-        var names = ["keyboard", "phrases", "settings"];
+        var names = ["phrases", "settings"];
         var anyOpen = names.some(function (name) {
             var modal = $("speaker-modal-" + name);
             return modal && !modal.classList.contains("speaker-hidden");
@@ -610,21 +743,6 @@
         });
     }
 
-    function renderLetterBuffer() {
-        var trimmed = state.letterBuffer.trim();
-        els.addWordBtn.disabled = trimmed.length === 0;
-
-        if (state.letterBuffer.length === 0) {
-            els.letterBuffer.textContent = "...";
-            els.letterBuffer.classList.add("speaker-spell-buffer--empty");
-        } else {
-            els.letterBuffer.textContent = state.letterBuffer;
-            els.letterBuffer.classList.remove("speaker-spell-buffer--empty");
-        }
-
-        renderSpellSuggestions();
-    }
-
     function renderSpeakMode() {
         var immediate = state.speakMode === "immediate";
         els.modeImmediate.classList.toggle("speaker-mode-btn--active", immediate);
@@ -695,45 +813,9 @@
         renderFavoritesStrip();
     }
 
-    function buildCoreGrid() {
-        var grid = els.coreGrid;
-        CORE_WORDS.forEach(function (word) {
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "speaker-word-btn";
-            btn.textContent = word;
-            btn.addEventListener("click", function () {
-                addWord(word);
-            });
-            grid.appendChild(btn);
-        });
-    }
-
-    function buildLetterGrid() {
-        var grid = els.letterGrid;
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(function (letter) {
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "speaker-letter-btn";
-            btn.textContent = letter;
-            btn.addEventListener("click", function () {
-                addLetter(letter);
-            });
-            grid.appendChild(btn);
-        });
-    }
-
     function bindEvents() {
         els.btnPhrases.addEventListener("click", function () {
             openModal("phrases");
-        });
-        els.btnKeyboard.addEventListener("click", function () {
-            state.letterBuffer = "";
-            renderLetterBuffer();
-            openModal("keyboard");
-            ensureCommonWordsLoaded().then(function () {
-                renderSpellSuggestions();
-            });
         });
         els.btnSettings.addEventListener("click", function () {
             openModal("settings");
@@ -741,11 +823,10 @@
         els.speakBtn.addEventListener("click", speakSentence);
         els.btnBackspace.addEventListener("click", backspace);
         els.btnClear.addEventListener("click", clearAll);
-        els.btnLetterSpace.addEventListener("click", function () {
-            addLetter(" ");
-        });
-        els.btnLetterBackspace.addEventListener("click", backspaceLetter);
-        els.addWordBtn.addEventListener("click", commitSpelledWord);
+
+        els.prefixBackspace.addEventListener("click", backspaceFilterLetter);
+        els.prefixClear.addEventListener("click", clearFilterPrefix);
+        els.prefixAdd.addEventListener("click", commitPrefixAsWord);
 
         els.volumeInput.addEventListener("input", function () {
             state.volume = parseFloat(els.volumeInput.value);
@@ -822,7 +903,6 @@
             sentenceDisplay: $("speaker-sentence-display"),
             speakBtn: $("speaker-btn-speak"),
             btnPhrases: $("speaker-btn-phrases"),
-            btnKeyboard: $("speaker-btn-keyboard"),
             btnSettings: $("speaker-btn-settings"),
             btnBackspace: $("speaker-btn-backspace"),
             btnClear: $("speaker-btn-clear"),
@@ -831,14 +911,13 @@
             predictionsList: $("speaker-predictions-list"),
             favoritesSection: $("speaker-favorites"),
             favoritesList: $("speaker-favorites-list"),
-            coreGrid: $("speaker-core-grid"),
-            letterBuffer: $("speaker-letter-buffer"),
-            spellSuggestions: $("speaker-spell-suggestions"),
-            spellSuggestionsList: $("speaker-spell-suggestions-list"),
-            letterGrid: $("speaker-letter-grid"),
-            btnLetterSpace: $("speaker-btn-letter-space"),
-            btnLetterBackspace: $("speaker-btn-letter-backspace"),
-            addWordBtn: $("speaker-btn-add-word"),
+            letterRow: $("speaker-letter-row"),
+            prefixDisplay: $("speaker-prefix-display"),
+            prefixBackspace: $("speaker-prefix-backspace"),
+            prefixClear: $("speaker-prefix-clear"),
+            prefixAdd: $("speaker-prefix-add"),
+            wordGrid: $("speaker-word-grid"),
+            wordEmpty: $("speaker-word-empty"),
             phrasesBody: $("speaker-phrases-body"),
             volumeInput: $("speaker-volume"),
             modeImmediate: $("speaker-mode-immediate"),
@@ -848,14 +927,15 @@
         };
 
         loadSettings();
-        buildCoreGrid();
-        buildLetterGrid();
+        buildLetterRow();
         renderPhrasesModal();
-        renderLetterBuffer();
+        renderWordPicker();
         render();
         bindEvents();
         updateBodyScrollLock();
-        ensureCommonWordsLoaded();
+        ensureCommonWordsLoaded().then(function () {
+            renderWordPicker();
+        });
     }
 
     if (document.readyState === "loading") {

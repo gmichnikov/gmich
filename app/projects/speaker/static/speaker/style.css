@@ -221,32 +221,131 @@ body.speaker-body-locked .speaker-scroll {
     border-color: #a9d6c2;
 }
 
-/* ---- Core vocabulary grid ---- */
+/* ---- Word picker (letters + filtered words) ---- */
 
-.speaker-core {
-    flex: 1;
-    min-height: 0;
-    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) max(1.25rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
-}
-
-.speaker-core-grid {
+.speaker-letter-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    touch-action: pan-y;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
 }
 
-.speaker-word-btn {
-    min-height: 84px;
-    border-radius: 1rem;
+.speaker-filter-letter {
+    min-height: 2.25rem;
+    border-radius: 0.5rem;
     border: 2px solid #c7d1d8;
     background: #ffffff;
-    font-size: 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    cursor: pointer;
+    touch-action: manipulation;
+    padding: 0;
+}
+
+.speaker-filter-letter:hover,
+.speaker-filter-letter:focus-visible {
+    border-color: #94a3b8;
+    outline: none;
+}
+
+.speaker-prefix-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.speaker-prefix-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.speaker-prefix-display {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: #f5f7f8;
+    border: 2px solid #c7d1d8;
+    display: flex;
+    align-items: center;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    letter-spacing: 0.04em;
+}
+
+.speaker-prefix-display--empty {
+    color: #8a97a0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: normal;
+}
+
+.speaker-prefix-btn {
+    flex-shrink: 0;
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    border: 2px solid #c7d1d8;
+    background: #ffffff;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #1f2937;
     cursor: pointer;
     touch-action: manipulation;
-    padding: 0.5rem;
+    padding: 0 0.75rem;
+}
+
+.speaker-prefix-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.speaker-prefix-btn--icon {
+    width: 2.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.speaker-prefix-btn--add {
+    border-color: #e8734a;
+    background: #e8734a;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.speaker-prefix-btn--add:disabled {
+    background: #f3d9cd;
+    border-color: #f3d9cd;
+    color: #ffffff;
+}
+
+.speaker-word-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    touch-action: pan-y;
+}
+
+.speaker-word-btn {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    border: 2px solid #c7d1d8;
+    background: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    touch-action: manipulation;
+    padding: 0.35rem 0.65rem;
     text-align: center;
 }
 
@@ -254,6 +353,18 @@ body.speaker-body-locked .speaker-scroll {
 .speaker-word-btn:focus-visible {
     border-color: #94a3b8;
     outline: none;
+}
+
+.speaker-word-empty {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7680;
+}
+
+.speaker-core {
+    flex: 1;
+    min-height: 0;
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) max(1.25rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
 }
 
 /* ---- Modals ---- */
@@ -328,102 +439,6 @@ body.speaker-body-locked .speaker-scroll {
     margin: 0 0 1rem;
     font-size: 0.875rem;
     color: #6b7680;
-}
-
-/* ---- Keyboard modal ---- */
-
-.speaker-spell-buffer {
-    min-height: 56px;
-    border-radius: 1rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    background: #f5f7f8;
-    border: 2px solid #c7d1d8;
-    display: flex;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.speaker-spell-buffer--empty {
-    color: #8a97a0;
-}
-
-.speaker-spell-suggestions {
-    min-height: 2.75rem;
-    margin-bottom: 0.75rem;
-}
-
-.speaker-chip--spell {
-    background: #e8f0fe;
-    color: #1e4a8a;
-    border: 2px solid #c5d7fb;
-    font-size: 1.0625rem;
-}
-
-.speaker-letter-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.speaker-letter-btn {
-    min-height: 52px;
-    border-radius: 0.75rem;
-    border: 2px solid #c7d1d8;
-    background: #ffffff;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    cursor: pointer;
-    touch-action: manipulation;
-}
-
-.speaker-spell-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.speaker-spell-btn {
-    height: 56px;
-    border-radius: 0.75rem;
-    border: 2px solid #c7d1d8;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
-}
-
-.speaker-spell-btn--space {
-    flex: 1;
-    background: #f5f7f8;
-    color: #1f2937;
-}
-
-.speaker-spell-btn--icon {
-    width: 64px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    color: #3f4a52;
-}
-
-.speaker-spell-btn--add {
-    flex: 1;
-    border-color: #e8734a;
-    background: #e8734a;
-    color: #ffffff;
-    font-weight: 700;
-}
-
-.speaker-spell-btn--add:disabled {
-    background: #f3d9cd;
-    border-color: #f3d9cd;
-    opacity: 0.6;
-    cursor: default;
 }
 
 /* ---- Phrases modal ---- */
@@ -556,18 +571,8 @@ body.speaker-body-locked .speaker-scroll {
     border-color: #e8734a;
 }
 
-@media (min-width: 768px) {
-    .speaker-core-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
-}
-
 @media (max-width: 480px) {
-    .speaker-core-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .speaker-letter-grid {
-        grid-template-columns: repeat(5, 1fr);
+    .speaker-letter-row {
+        grid-template-columns: repeat(7, 1fr);
     }
 }
