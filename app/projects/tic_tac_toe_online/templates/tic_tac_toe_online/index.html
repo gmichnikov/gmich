@@ -8,7 +8,26 @@
 <div class="ttto-wrapper">
     <div class="ttto-container">
         <h1>Tic-Tac-Toe Online</h1>
-        <p class="ttto-subtitle">Skeleton page &mdash; game coming soon.</p>
+        <p class="ttto-subtitle">Play against a friend anywhere on the web &mdash; no login required.</p>
+
+        <div class="ttto-landing-panel">
+            <button id="tttoCreateBtn" class="ttto-primary-btn" type="button">Create New Game</button>
+
+            <div class="ttto-divider">or</div>
+
+            <form id="tttoJoinForm" class="ttto-join-form">
+                <label for="tttoJoinCode">Join with a room code</label>
+                <input type="text" id="tttoJoinCode" maxlength="6" placeholder="e.g. AB3XQK" autocomplete="off">
+                <button type="submit" class="ttto-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="tttoLandingError" class="ttto-error" hidden></p>
     </div>
 </div>
+
+<script>
+    var TTTO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('tic_tac_toe_online.static', filename='landing.js') }}"></script>
 {% endblock %}

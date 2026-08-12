@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Tic-Tac-Toe Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('tic_tac_toe_online.static', filename='style.css') }}">
+
+<div class="ttto-wrapper">
+    <div class="ttto-container">
+        <h1>Tic-Tac-Toe Online</h1>
+
+        <div class="ttto-room-info">
+            <div class="ttto-room-code-label">Room code: <strong id="tttoRoomCode">{{ code }}</strong></div>
+            <div class="ttto-share-row">
+                <label for="tttoShareLink">Share this link with your opponent:</label>
+                <input type="text" id="tttoShareLink" readonly>
+            </div>
+        </div>
+
+        <div class="ttto-status-message" id="tttoStatusMessage">Loading&hellip;</div>
+
+        <div class="ttto-game-board" id="tttoBoard">
+            <div class="ttto-cell" data-index="0"></div>
+            <div class="ttto-cell" data-index="1"></div>
+            <div class="ttto-cell" data-index="2"></div>
+            <div class="ttto-cell" data-index="3"></div>
+            <div class="ttto-cell" data-index="4"></div>
+            <div class="ttto-cell" data-index="5"></div>
+            <div class="ttto-cell" data-index="6"></div>
+            <div class="ttto-cell" data-index="7"></div>
+            <div class="ttto-cell" data-index="8"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var TTTO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var TTTO_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('tic_tac_toe_online.static', filename='room.js') }}"></script>
+{% endblock %}

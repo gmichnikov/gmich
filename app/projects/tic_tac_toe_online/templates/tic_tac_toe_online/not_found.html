@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Not Found - Tic-Tac-Toe Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('tic_tac_toe_online.static', filename='style.css') }}">
+
+<div class="ttto-wrapper">
+    <div class="ttto-container">
+        <h1>Room Not Found</h1>
+        <p class="ttto-subtitle">{{ message }}</p>
+        <a class="ttto-primary-btn ttto-link-btn" href="{{ url_for('tic_tac_toe_online.index') }}">Start a New Game</a>
+    </div>
+</div>
+{% endblock %}
