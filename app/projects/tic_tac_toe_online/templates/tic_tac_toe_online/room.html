@@ -11,10 +11,14 @@
 
         <div class="ttto-room-info">
             <div class="ttto-room-code-label">Room code: <strong id="tttoRoomCode">{{ code }}</strong></div>
-            <div class="ttto-share-row">
+            <div class="ttto-share-row" id="tttoShareRow">
                 <label for="tttoShareLink">Share this link with your opponent:</label>
-                <input type="text" id="tttoShareLink" readonly>
+                <div class="ttto-share-input-row">
+                    <input type="text" id="tttoShareLink" readonly>
+                    <button id="tttoCopyBtn" class="ttto-secondary-btn ttto-copy-btn" type="button">Copy</button>
+                </div>
             </div>
+            <div class="ttto-spectator-badge" id="tttoSpectatorBadge" hidden>You're spectating this room</div>
         </div>
 
         <div class="ttto-status-message" id="tttoStatusMessage">Loading&hellip;</div>
@@ -30,6 +34,8 @@
             <div class="ttto-cell" data-index="7"></div>
             <div class="ttto-cell" data-index="8"></div>
         </div>
+
+        <button id="tttoRematchBtn" class="ttto-primary-btn ttto-rematch-btn" type="button" hidden>Rematch</button>
     </div>
 </div>
 

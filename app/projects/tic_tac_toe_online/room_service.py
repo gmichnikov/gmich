@@ -50,8 +50,8 @@ def seat_for_player(room, player_id):
     return None
 
 
-def create_room(creator_player_id):
-    """Create a new room and seat the creator as 'X'."""
+def create_room():
+    """Create an empty room. Seats are claimed later via join_room."""
     with _lock:
         for _ in range(20):
             code = _generate_code()
@@ -61,7 +61,8 @@ def create_room(creator_player_id):
                     "code": code,
                     "board": [None] * 9,
                     "turn": "X",
-                    "seats": {"X": creator_player_id, "O": None},
+                    "last_starter": "X",
+                    "seats": {"X": None, "O": None},
                     "status": "waiting",  # waiting | active | won | draw
                     "winner": None,
                     "winning_line": None,
@@ -89,6 +90,9 @@ def join_room(code, player_id):
     Ensure player_id has a seat if one is open, or is recognized as an
     existing occupant. Returns (room, seat) where seat is None for
     spectators.
+
+    Intentionally only called from an explicit POST (not page GET), so
+    link prefetchers / chat unfurl bots can't steal a seat.
     """
     with _lock:
         room = get_room(code)
@@ -96,12 +100,15 @@ def join_room(code, player_id):
         if seat is not None:
             return room, seat
 
-        if room["seats"]["O"] is None:
-            room["seats"]["O"] = player_id
-            room["status"] = "active"
-            room["updated_at"] = time.time()
-            room["version"] += 1
-            return room, "O"
+        # Prefer an empty seat; X then O (covers odd recovery cases too).
+        for open_seat in ("X", "O"):
+            if room["seats"][open_seat] is None:
+                room["seats"][open_seat] = player_id
+                if room["seats"]["X"] is not None and room["seats"]["O"] is not None:
+                    room["status"] = "active"
+                room["updated_at"] = time.time()
+                room["version"] += 1
+                return room, open_seat
 
         return room, None  # both seats taken by others: spectator
 
@@ -140,6 +147,29 @@ def make_move(code, player_id, cell_index):
         else:
             room["turn"] = "O" if seat == "X" else "X"
 
+        room["updated_at"] = time.time()
+        room["version"] += 1
+        return room, seat
+
+
+def rematch(code, player_id):
+    """Reset the board in-place, alternating who starts for fairness. Players only."""
+    with _lock:
+        room = get_room(code)
+        seat = seat_for_player(room, player_id)
+
+        if seat is None:
+            raise RoomError("Only players in this room can start a rematch.", 403)
+        if room["status"] not in ("won", "draw"):
+            raise RoomError("The current game isn't finished yet.", 400)
+
+        new_starter = "O" if room["last_starter"] == "X" else "X"
+        room["board"] = [None] * 9
+        room["winner"] = None
+        room["winning_line"] = None
+        room["status"] = "active"
+        room["turn"] = new_starter
+        room["last_starter"] = new_starter
         room["updated_at"] = time.time()
         room["version"] += 1
         return room, seat

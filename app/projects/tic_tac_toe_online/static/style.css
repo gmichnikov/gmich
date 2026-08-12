@@ -135,13 +135,42 @@
     margin-bottom: 4px;
 }
 
-.ttto-share-row input {
-    width: 100%;
+.ttto-share-input-row {
+    display: flex;
+    gap: 6px;
+}
+
+.ttto-share-input-row input {
+    flex: 1;
+    min-width: 0;
     padding: 8px;
     font-size: 0.85em;
     border: 1px solid #ddd;
     border-radius: 6px;
     background: #f8f9fa;
+}
+
+.ttto-copy-btn {
+    padding: 8px 14px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.ttto-spectator-badge {
+    margin-top: 10px;
+    display: inline-block;
+    background: #fff3bf;
+    color: #7d5a00;
+    font-size: 0.85em;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+.ttto-spectator-badge[hidden],
+.ttto-rematch-btn[hidden],
+.ttto-share-row[hidden] {
+    display: none !important;
 }
 
 .ttto-status-message {
@@ -151,6 +180,19 @@
     font-weight: 600;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     margin-bottom: 15px;
+}
+
+.ttto-status-message.ttto-status-waiting {
+    animation: tttoPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tttoPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
 }
 
 .ttto-status-message.ttto-status-won {
@@ -198,6 +240,12 @@
 
 .ttto-cell.ttto-winning {
     background: #51cf66;
+}
+
+.ttto-rematch-btn {
+    margin-top: 20px;
+    width: auto;
+    padding: 12px 32px;
 }
 
 @media (max-width: 480px) {

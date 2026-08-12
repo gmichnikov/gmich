@@ -3,23 +3,54 @@
 
     var POLL_MS = 1000;
     var SYMBOLS = { X: "\u274C", O: "\u2B55" };
+    var PLAYER_KEY = "ttto_player_id";
 
     var pollTimer = null;
     var isMoving = false;
+    var lastState = null;
 
     var boardEl = document.getElementById("tttoBoard");
     var cells = boardEl.querySelectorAll(".ttto-cell");
     var statusEl = document.getElementById("tttoStatusMessage");
     var shareLinkInput = document.getElementById("tttoShareLink");
+    var shareRow = document.getElementById("tttoShareRow");
+    var copyBtn = document.getElementById("tttoCopyBtn");
+    var spectatorBadge = document.getElementById("tttoSpectatorBadge");
+    var rematchBtn = document.getElementById("tttoRematchBtn");
 
     shareLinkInput.value = window.location.href;
+
+    function getPlayerId() {
+        var id = null;
+        try {
+            id = localStorage.getItem(PLAYER_KEY);
+        } catch (err) {
+            /* ignore */
+        }
+        if (!id || !/^[a-f0-9]{32}$/.test(id)) {
+            id = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                .map(function (b) {
+                    return b.toString(16).padStart(2, "0");
+                })
+                .join("");
+            try {
+                localStorage.setItem(PLAYER_KEY, id);
+            } catch (err) {
+                /* ignore */
+            }
+        }
+        return id;
+    }
 
     function apiUrl(path) {
         return "/tic-tac-toe-online/room/" + encodeURIComponent(TTTO_ROOM_CODE) + path;
     }
 
     function apiRequest(method, path, body) {
-        var headers = { Accept: "application/json" };
+        var headers = {
+            Accept: "application/json",
+            "X-TTTO-Player-Id": getPlayerId(),
+        };
         var options = { method: method, headers: headers, credentials: "same-origin" };
         if (method !== "GET") {
             headers["X-CSRFToken"] = TTTO_CSRF_TOKEN;
@@ -68,6 +99,7 @@
     }
 
     function render(state) {
+        lastState = state;
         statusEl.textContent = statusText(state);
         statusEl.className = "ttto-status-message ttto-status-" + state.status;
 
@@ -82,8 +114,13 @@
             );
         });
 
-        var canMove = state.status === "active" && state.turn === state.your_seat;
-        boardEl.classList.toggle("ttto-board-interactive", canMove);
+        boardEl.classList.toggle("ttto-board-interactive", canMoveNow());
+
+        var isPlayer = !!state.your_seat;
+        var isFinished = state.status === "won" || state.status === "draw";
+        rematchBtn.hidden = !(isPlayer && isFinished);
+        spectatorBadge.hidden = isPlayer;
+        shareRow.hidden = !isPlayer;
     }
 
     function poll() {
@@ -92,11 +129,34 @@
         });
     }
 
+    function joinThenStart() {
+        // Claim a seat via POST so mere link previews/prefetch GETs can't take it.
+        apiRequest("POST", "/join")
+            .then(function (state) {
+                render(state);
+                startPolling();
+            })
+            .catch(function (err) {
+                statusEl.textContent = err.message || "Could not join this room.";
+            });
+    }
+
+    function canMoveNow() {
+        return (
+            !!lastState &&
+            lastState.status === "active" &&
+            lastState.turn === lastState.your_seat
+        );
+    }
+
     function handleCellClick(event) {
-        if (isMoving) {
+        if (isMoving || !canMoveNow()) {
             return;
         }
         var idx = parseInt(event.currentTarget.getAttribute("data-index"), 10);
+        if (lastState.board[idx]) {
+            return;
+        }
         isMoving = true;
         apiRequest("POST", "/move", { cell: idx })
             .then(render)
@@ -111,6 +171,46 @@
     cells.forEach(function (cell) {
         cell.addEventListener("click", handleCellClick);
     });
+
+    function handleCopyClick() {
+        var restoreLabel = copyBtn.textContent;
+        function showCopied() {
+            copyBtn.textContent = "Copied!";
+            setTimeout(function () {
+                copyBtn.textContent = restoreLabel;
+            }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareLinkInput.value).then(showCopied).catch(function () {
+                shareLinkInput.select();
+            });
+        } else {
+            shareLinkInput.select();
+            shareLinkInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand("copy");
+                showCopied();
+            } catch (err) {
+                /* selection is already visible for manual copy */
+            }
+        }
+    }
+
+    copyBtn.addEventListener("click", handleCopyClick);
+
+    function handleRematchClick() {
+        rematchBtn.disabled = true;
+        apiRequest("POST", "/rematch")
+            .then(render)
+            .catch(function (err) {
+                statusEl.textContent = err.message;
+            })
+            .then(function () {
+                rematchBtn.disabled = false;
+            });
+    }
+
+    rematchBtn.addEventListener("click", handleRematchClick);
 
     function startPolling() {
         if (pollTimer) {
@@ -135,5 +235,5 @@
         }
     });
 
-    startPolling();
+    joinThenStart();
 })();
