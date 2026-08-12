@@ -1,0 +1,8 @@
+---
+description: gmich Flask app conventions for adding projects and writing CSS
+globs:
+alwaysApply: false
+---
+When creating a new project, make sure to check app/__init__.py and app/projects/registry.py and adjust those files as needed, in addition to adding the new directory to projects and everything else.
+
+It's really critical to avoid collisions of css classes, etc. I may have multiple projects in a single flask app so we need styles to use prefixed names for classes to avoid collisions across projects.
