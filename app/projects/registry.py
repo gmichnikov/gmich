@@ -78,6 +78,17 @@ PROJECTS = [
         "order": 304,
     },
     {
+        "id": "tic_tac_toe_online",
+        "name": "Tic-Tac-Toe Online",
+        "description": "Play tic-tac-toe with a friend anywhere via a shareable link",
+        "url": "/tic-tac-toe-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "simple_games",
+        "order": 308,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",

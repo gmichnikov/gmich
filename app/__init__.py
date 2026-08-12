@@ -120,6 +120,7 @@ def create_app():
     from app.projects.ss_to_cal.routes import ss_to_cal_bp
     from app.projects.mini_golf.routes import mini_golf_bp
     from app.projects.speaker.routes import speaker_bp
+    from app.projects.tic_tac_toe_online.routes import tic_tac_toe_online_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -167,6 +168,9 @@ def create_app():
     app.register_blueprint(ss_to_cal_bp)
     app.register_blueprint(mini_golf_bp, url_prefix="/mini-golf")
     app.register_blueprint(speaker_bp, url_prefix="/speaker")
+    app.register_blueprint(
+        tic_tac_toe_online_bp, url_prefix="/tic-tac-toe-online"
+    )
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
