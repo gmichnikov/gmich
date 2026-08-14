@@ -520,6 +520,17 @@ PROJECTS = [
         "icon": "🔊",
         "order": 28,
     },
+    {
+        "id": "japan_recs",
+        "name": "Japan Recs",
+        "description": "Recommendations for a trip to Japan — public, no login",
+        "url": "/japan-recs",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🇯🇵",
+        "order": 29,
+    },
 ]
 
 

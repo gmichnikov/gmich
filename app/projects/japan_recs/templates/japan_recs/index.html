@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Japan Recs{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('japan_recs.static', filename='japan_recs/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="japan-recs-page">
+  <header class="japan-recs-header">
+    <h1 class="japan-recs-title">Japan Recs</h1>
+    <p class="japan-recs-lead">Recommendations for a trip to Japan.</p>
+  </header>
+</div>
+{% endblock %}

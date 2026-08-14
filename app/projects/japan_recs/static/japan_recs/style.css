@@ -1,0 +1,23 @@
+.japan-recs-page {
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding: 0 1.25rem;
+}
+
+.japan-recs-header {
+  text-align: center;
+}
+
+.japan-recs-title {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.japan-recs-lead {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #555;
+  line-height: 1.5;
+}
