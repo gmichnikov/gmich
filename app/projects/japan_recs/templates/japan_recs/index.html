@@ -3,39 +3,23 @@
 {% block title %}Japan Recs{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin="">
 <link rel="stylesheet" href="{{ url_for('japan_recs.static', filename='japan_recs/style.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="japan-recs-page">
-  <div
-    class="japan-recs-day-filter"
-    role="group"
-    aria-label="Filter places by day"
-  >
-    <button type="button" class="japan-recs-day-btn is-active" data-day="all" aria-pressed="true">All</button>
-    <button type="button" class="japan-recs-day-btn" data-day="1" aria-pressed="false">Day 1</button>
-    <button type="button" class="japan-recs-day-btn" data-day="2" aria-pressed="false">Day 2</button>
-    <button type="button" class="japan-recs-day-btn" data-day="3" aria-pressed="false">Day 3</button>
-    <button type="button" class="japan-recs-day-btn" data-day="other" aria-pressed="false">Other</button>
-  </div>
-  <div
-    id="japan-recs-map"
-    class="japan-recs-map"
-    role="application"
-    aria-label="Map of Japan trip recommendations"
-    data-monkey-qr="{{ url_for('japan_recs.static', filename='japan_recs/monkey-park-qr.png') }}"
-    data-bamboo-qr="{{ url_for('japan_recs.static', filename='japan_recs/bamboo-forest-qr.png') }}"
-  ></div>
+<div class="japan-recs-landing">
+  <header class="japan-recs-landing-header">
+    <h1 class="japan-recs-landing-title">Japan Recs</h1>
+  </header>
+  <nav class="japan-recs-landing-nav" aria-label="City maps">
+    <a class="japan-recs-landing-card" href="{{ url_for('japan_recs.kyoto') }}">
+      <span class="japan-recs-landing-card-icon" aria-hidden="true">⛩️</span>
+      <span class="japan-recs-landing-card-name">Kyoto</span>
+    </a>
+    <a class="japan-recs-landing-card" href="{{ url_for('japan_recs.tokyo') }}">
+      <span class="japan-recs-landing-card-icon" aria-hidden="true">🗼</span>
+      <span class="japan-recs-landing-card-name">Tokyo</span>
+    </a>
+  </nav>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
-<script src="{{ url_for('japan_recs.static', filename='japan_recs/map.js') }}"></script>
 {% endblock %}

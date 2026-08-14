@@ -62,6 +62,14 @@
   color: #00897b;
 }
 
+.japan-recs-day-btn[data-day="4"] {
+  color: #ef6c00;
+}
+
+.japan-recs-day-btn[data-day="5"] {
+  color: #3949ab;
+}
+
 .japan-recs-day-btn[data-day="other"] {
   color: #6d4c41;
 }
@@ -106,6 +114,24 @@
   background: #00695c;
 }
 
+.japan-recs-day-btn[data-day="4"].is-active {
+  background: #ef6c00;
+  color: #fff;
+}
+
+.japan-recs-day-btn[data-day="4"].is-active:hover {
+  background: #e65100;
+}
+
+.japan-recs-day-btn[data-day="5"].is-active {
+  background: #3949ab;
+  color: #fff;
+}
+
+.japan-recs-day-btn[data-day="5"].is-active:hover {
+  background: #283593;
+}
+
 .japan-recs-day-btn[data-day="other"].is-active {
   background: #6d4c41;
   color: #fff;
@@ -142,6 +168,16 @@
 .japan-recs-popup--day-3 .japan-recs-popup-title,
 .japan-recs-popup--day-3 .japan-recs-popup-day {
   color: #00897b;
+}
+
+.japan-recs-popup--day-4 .japan-recs-popup-title,
+.japan-recs-popup--day-4 .japan-recs-popup-day {
+  color: #ef6c00;
+}
+
+.japan-recs-popup--day-5 .japan-recs-popup-title,
+.japan-recs-popup--day-5 .japan-recs-popup-day {
+  color: #3949ab;
 }
 
 .japan-recs-popup--day-other .japan-recs-popup-title,
@@ -222,6 +258,14 @@
   color: #00897b;
 }
 
+.japan-recs-marker-pin--day-4 {
+  color: #ef6c00;
+}
+
+.japan-recs-marker-pin--day-5 {
+  color: #3949ab;
+}
+
 .japan-recs-marker-pin--day-other {
   color: #6d4c41;
 }
@@ -238,4 +282,81 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.japan-recs-landing {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  box-sizing: border-box;
+}
+
+.japan-recs-landing-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.japan-recs-landing-title {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.japan-recs-landing-lead {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #555;
+}
+
+.japan-recs-landing-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  max-width: 28rem;
+  width: 100%;
+}
+
+.japan-recs-landing-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1 1 12rem;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+  background: #fafafa;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.japan-recs-landing-card:hover {
+  border-color: #999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.japan-recs-landing-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.japan-recs-landing-card-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.35rem;
+}
+
+.japan-recs-landing-card-desc {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
 }
