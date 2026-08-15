@@ -160,6 +160,7 @@
       lat: 34.98793077291315,
       lng: 135.74112171849868,
       mapsUrl: "https://maps.app.goo.gl/N7ygAy7Ai3SUtc849",
+      photoKey: "kyoto/boulengerie-cherish.jpg",
     },
   ];
 

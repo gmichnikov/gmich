@@ -12,6 +12,7 @@
       lng: 139.7974361,
       mapsUrl: "https://maps.app.goo.gl/NGLLqcTNW9ixPg9aA",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Asakusa_Shrine",
+      photoKey: "tokyo/asakusa-shrine.jpg",
     },
     {
       name: "Maguro-to-Shari Asakusa",
@@ -20,6 +21,7 @@
       lng: 139.79358809614266,
       mapsUrl: "https://maps.app.goo.gl/HbT94E95YzbNdoko9",
       websiteUrl: "https://maguroshari.com/",
+      photoKey: "tokyo/maguro-to-shari.jpg",
     },
     {
       name: "Meiji Jingu Shrine",
@@ -29,6 +31,7 @@
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Meiji+Jingu+Shrine",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Meiji_Shrine",
+      photoKey: "tokyo/meiji-jingu.jpg",
     },
     {
       name: "TsuruTonTan UDON NOODLE Brasserie SHIBUYA",
@@ -36,6 +39,7 @@
       lat: 35.65844671780108,
       lng: 139.70216436918733,
       mapsUrl: "https://maps.app.goo.gl/kyTFpfF8RCHmJPim7",
+      photoKey: "tokyo/tsurutontan-udon.jpg",
     },
     {
       name: "Shibuya Crossing",
@@ -44,6 +48,7 @@
       lng: 139.7005449531125,
       mapsUrl: "https://maps.app.goo.gl/zMBQ4gqaAXY2NEdo7",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Shibuya_Crossing",
+      photoKey: "tokyo/shibuya-crossing.jpg",
     },
     {
       name: "Tsukiji Peppers Cafe",
@@ -52,6 +57,7 @@
       lng: 139.77015429380677,
       mapsUrl: "https://maps.app.goo.gl/DKihSHcYR2Zd5tZJ7",
       websiteUrl: "https://pepperscafe.tokyo/",
+      photoKey: "tokyo/tsukiji-peppers.jpg",
     },
     {
       name: "Tsukiji Outer Market",
@@ -60,6 +66,7 @@
       lng: 139.7703117571338,
       mapsUrl: "https://maps.app.goo.gl/eKcKTy6bsr7yR9dz8",
       websiteUrl: "https://www.tsukiji.or.jp/english/",
+      photoKey: "tokyo/tsukiji-outer-market.jpg",
     },
     {
       name: "BREIZH Café Crêperie Shinjuku Takashimaya",
@@ -68,6 +75,7 @@
       lng: 139.70226976176534,
       mapsUrl: "https://maps.app.goo.gl/e13kbJus2xHx1ezv8",
       websiteUrl: "https://le-bretagne.com/creperie/shinjuku/",
+      photoKey: "tokyo/briezh-cafe.jpg",
     },
     {
       name: "Ginza Kagari - Soba",
@@ -76,6 +84,7 @@
       lng: 139.76135095452554,
       mapsUrl: "https://maps.app.goo.gl/BQEmFVC4SUJDWDhb9",
       websiteUrl: "https://ginzakagari.thebase.in/",
+      photoKey: "tokyo/kagari-soba.jpg",
     },
     {
       name: "Wagyu Yakiniku Ten Gamushara Akasaka",
@@ -84,6 +93,7 @@
       lng: 139.73997943956655,
       mapsUrl: "https://maps.app.goo.gl/v5npXsthsUZGbwKX8",
       websiteUrl: "https://www.gamushara.info/",
+      photoKey: "tokyo/wagyu-yakiniku.jpg",
     },
     {
       name: "Asakusa Gyukatsu",
@@ -92,6 +102,7 @@
       lng: 139.79596854929756,
       mapsUrl: "https://maps.app.goo.gl/rnC86bXAoXVCA8bC6",
       websiteUrl: "https://tabelog.com/en/tokyo/A1311/A131102/13172454/",
+      photoKey: "tokyo/asakusa-gyukatsu.jpg",
     },
     {
       name: "teamLab Planets",
@@ -100,6 +111,7 @@
       lng: 139.78999048131445,
       mapsUrl: "https://maps.app.goo.gl/pNW2r1RZusR7R6zDA",
       websiteUrl: "https://www.teamlab.art/jp/e/planets/",
+      photoKey: "tokyo/teamlab-planets.jpg",
     },
     {
       name: "Tokyo Skytree",
@@ -108,6 +120,7 @@
       lng: 139.81070273748836,
       mapsUrl: "https://maps.app.goo.gl/moVsrRfDd3A2Ldn68",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Tokyo_Skytree",
+      photoKey: "tokyo/skytree.jpg",
     },
     {
       name: "Isetan Shinjuku",
@@ -116,6 +129,15 @@
       lng: 139.70465230960664,
       mapsUrl: "https://maps.app.goo.gl/MtyVPRcMgUWm2RWZ8",
       websiteUrl: "https://www.jocjapantravel.com/tokyo-shinjuku-isetan-food-floor/",
+      photoKey: "tokyo/isetan.jpg",
+    },
+    {
+      name: "Gong Cha",
+      day: "other",
+      lat: 35.68073475074474,
+      lng: 139.76881980970325,
+      mapsUrl: "https://maps.app.goo.gl/m1XhQaccPHc15Yzz7",
+      photoKey: "tokyo/gong-cha.jpg",
     },
   ];
 

@@ -44,11 +44,16 @@
 
     if (place.photoKey && photoBaseUrl) {
       html +=
+        '<div class="japan-recs-popup-photo-wrap">' +
         '<img class="japan-recs-popup-photo" src="' +
         escapeHtml(photoBaseUrl + place.photoKey) +
         '" alt="' +
         escapeHtml(place.name) +
-        '" loading="lazy" hidden onload="this.hidden=false" onerror="this.remove()">';
+        '">' +
+        '<button type="button" class="japan-recs-popup-photo-expand" aria-label="View larger photo">' +
+        '<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">' +
+        '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/>' +
+        "</svg></button></div>";
     } else if (place.qrSrc) {
       html +=
         '<img class="japan-recs-popup-qr" src="' +
@@ -110,10 +115,44 @@
     });
   }
 
-  function createLayer(place, index) {
+  function getPopupPanPadding(listEl) {
+    var mobile = window.matchMedia("(max-width: 767px)").matches;
+    var top = mobile ? 250 : 280;
+    var left = 36;
+    var right = 36;
+    var bottom = 36;
+
+    if (mobile && listEl) {
+      bottom = listEl.classList.contains("is-open") ? 220 : 64;
+    }
+
+    return {
+      topLeft: L.point(left, top),
+      bottomRight: L.point(right, bottom),
+    };
+  }
+
+  function applyPopupPanPadding(layer, listEl) {
+    var popup = layer.getPopup && layer.getPopup();
+    if (!popup) {
+      return;
+    }
+    var pad = getPopupPanPadding(listEl);
+    popup.options.autoPan = true;
+    popup.options.keepInView = true;
+    popup.options.autoPanPaddingTopLeft = pad.topLeft;
+    popup.options.autoPanPaddingBottomRight = pad.bottomRight;
+  }
+
+  function createLayer(place, index, listEl) {
+    var pad = getPopupPanPadding(listEl);
     var popupOptions = {
       className: "japan-recs-leaflet-popup",
       maxWidth: place.photoKey ? 280 : 220,
+      autoPan: true,
+      keepInView: true,
+      autoPanPaddingTopLeft: pad.topLeft,
+      autoPanPaddingBottomRight: pad.bottomRight,
     };
     var layer;
 
@@ -155,13 +194,112 @@
     map.fitBounds(group.getBounds(), { padding: [56, 56], maxZoom: 15 });
   }
 
-  function focusLayer(map, layer) {
+  function focusLayer(map, layer, listEl) {
+    applyPopupPanPadding(layer, listEl);
+    var pad = getPopupPanPadding(listEl);
+    var targetZoom = Math.max(map.getZoom(), 15);
+    var panOptions = {
+      duration: 0.35,
+      paddingTopLeft: pad.topLeft,
+      paddingBottomRight: pad.bottomRight,
+    };
+
     if (layer.getLatLng) {
-      map.setView(layer.getLatLng(), Math.max(map.getZoom(), 15));
+      map.flyTo(layer.getLatLng(), targetZoom, panOptions);
     } else if (layer.getBounds) {
-      map.fitBounds(layer.getBounds(), { padding: [80, 80], maxZoom: 16 });
+      map.flyTo(layer.getBounds().getCenter(), targetZoom, panOptions);
     }
+
     layer.openPopup();
+
+    var popup = layer.getPopup && layer.getPopup();
+    if (popup && popup._adjustPan) {
+      popup._adjustPan();
+    }
+  }
+
+  function setupPhotoLightbox(pageEl) {
+    var lightbox = document.getElementById("japan-recs-photo-lightbox");
+    if (!lightbox) {
+      lightbox = document.createElement("div");
+      lightbox.id = "japan-recs-photo-lightbox";
+      lightbox.className = "japan-recs-photo-lightbox";
+      lightbox.hidden = true;
+      lightbox.innerHTML =
+        '<button type="button" class="japan-recs-photo-lightbox-backdrop" aria-label="Close photo"></button>' +
+        '<div class="japan-recs-photo-lightbox-panel" role="dialog" aria-modal="true" aria-label="Photo preview">' +
+        '<button type="button" class="japan-recs-photo-lightbox-close">Close</button>' +
+        '<img class="japan-recs-photo-lightbox-img" src="" alt="">' +
+        "</div>";
+      pageEl.appendChild(lightbox);
+    }
+
+    var backdrop = lightbox.querySelector(".japan-recs-photo-lightbox-backdrop");
+    var closeBtn = lightbox.querySelector(".japan-recs-photo-lightbox-close");
+    var image = lightbox.querySelector(".japan-recs-photo-lightbox-img");
+
+    function closeLightbox() {
+      if (lightbox.hidden) {
+        return;
+      }
+      lightbox.hidden = true;
+      image.removeAttribute("src");
+      image.alt = "";
+      document.removeEventListener("keydown", onKeydown);
+    }
+
+    function onKeydown(event) {
+      if (event.key === "Escape") {
+        closeLightbox();
+      }
+    }
+
+    function openLightbox(src, alt) {
+      image.src = src;
+      image.alt = alt || "";
+      lightbox.hidden = false;
+      closeBtn.focus();
+      document.addEventListener("keydown", onKeydown);
+    }
+
+    pageEl.addEventListener("click", function (event) {
+      var expandBtn = event.target.closest(".japan-recs-popup-photo-expand");
+      if (expandBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        var wrap = expandBtn.closest(".japan-recs-popup-photo-wrap");
+        var thumb = wrap && wrap.querySelector(".japan-recs-popup-photo");
+        if (thumb && thumb.src) {
+          openLightbox(thumb.src, thumb.alt);
+        }
+        return;
+      }
+
+      if (
+        event.target === backdrop ||
+        event.target === closeBtn ||
+        event.target.closest(".japan-recs-photo-lightbox-close")
+      ) {
+        closeLightbox();
+      }
+    });
+
+    pageEl.addEventListener(
+      "error",
+      function (event) {
+        var img = event.target;
+        if (!img.classList || !img.classList.contains("japan-recs-popup-photo")) {
+          return;
+        }
+        var wrap = img.closest(".japan-recs-popup-photo-wrap");
+        if (wrap) {
+          wrap.remove();
+        }
+      },
+      true
+    );
+
+    return { close: closeLightbox };
   }
 
   function init(config) {
@@ -189,6 +327,9 @@
       return;
     }
 
+    var pageEl = mapEl.closest(".japan-recs-page") || document.body;
+    var photoLightbox = setupPhotoLightbox(pageEl);
+
     var map = L.map(mapEl, { scrollWheelZoom: true });
     L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
@@ -208,19 +349,26 @@
     var dayLayers = [];
 
     places.forEach(function (place, index) {
-      var layer = createLayer(place, index);
+      var layer = createLayer(place, index, listEl);
       placeEntries.push({ place: place, layer: layer, index: index });
       layersByDay[place.day].push(layer);
       dayLayers.push(layer);
 
       layer.on("popupopen", function () {
         setActiveIndex(index);
+        applyPopupPanPadding(layer, listEl);
+        var popup = layer.getPopup();
+        if (popup && popup._adjustPan) {
+          popup._adjustPan();
+        }
       });
     });
 
     alwaysPlaces.forEach(function (place) {
-      createLayer(place, -1).addTo(map);
+      createLayer(place, -1, listEl).addTo(map);
     });
+
+    map.on("popupclose", photoLightbox.close);
 
     var currentDay = "all";
     var activeIndex = null;
@@ -314,6 +462,7 @@
 
     function applyDayFilter(dayFilter) {
       currentDay = dayFilter;
+      photoLightbox.close();
       map.closePopup();
       clearActiveIndex();
 
@@ -362,7 +511,7 @@
       if (!entry) {
         return;
       }
-      focusLayer(map, entry.layer);
+      focusLayer(map, entry.layer, listEl);
       setActiveIndex(index);
       if (window.matchMedia("(max-width: 767px)").matches) {
         listEl.classList.remove("is-open");
