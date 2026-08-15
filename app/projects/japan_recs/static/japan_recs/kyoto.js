@@ -1,16 +1,8 @@
 (function () {
   var mapEl = document.getElementById("japan-recs-map");
-  var filterEl = document.querySelector(".japan-recs-day-filter");
-  if (!mapEl || !filterEl || !window.L) {
+  if (!mapEl || !window.JapanRecsMap) {
     return;
   }
-
-  var DAY_COLORS = {
-    1: "#c62828",
-    2: "#6a1b9a",
-    3: "#00897b",
-    other: "#6d4c41",
-  };
 
   var places = [
     {
@@ -68,7 +60,6 @@
     {
       name: "Philosopher's Path",
       day: "2",
-      // Approximate canal route from near Ginkaku-ji south toward Nanzen-ji
       path: [
         [35.0261, 135.79635],
         [35.0248, 135.79655],
@@ -170,216 +161,12 @@
     },
   ];
 
-  function escapeHtml(text) {
-    var el = document.createElement("div");
-    el.textContent = text;
-    return el.innerHTML;
-  }
-
-  function dayLabel(day) {
-    if (day === "other") {
-      return "Other";
-    }
-    return "Day " + day;
-  }
-
-  function popupHtml(place) {
-    var badge =
-      place.kind === "hotel"
-        ? "Hotel"
-        : dayLabel(place.day);
-    var toneClass =
-      place.kind === "hotel"
-        ? "japan-recs-popup--hotel"
-        : "japan-recs-popup--day-" + place.day;
-
-    var html =
-      '<div class="japan-recs-popup ' +
-      toneClass +
-      '">' +
-      '<strong class="japan-recs-popup-title">' +
-      escapeHtml(place.name) +
-      "</strong>" +
-      '<span class="japan-recs-popup-day">' +
-      escapeHtml(badge) +
-      "</span>";
-
-    if (place.qrSrc) {
-      html +=
-        '<img class="japan-recs-popup-qr" src="' +
-        escapeHtml(place.qrSrc) +
-        '" width="148" height="148" alt="QR code for Google Maps">';
-    }
-
-    html += '<div class="japan-recs-popup-links">';
-    if (place.mapsUrl) {
-      html +=
-        '<a class="japan-recs-popup-link" href="' +
-        escapeHtml(place.mapsUrl) +
-        '" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>';
-    }
-    if (place.websiteUrl) {
-      html +=
-        '<a class="japan-recs-popup-link" href="' +
-        escapeHtml(place.websiteUrl) +
-        '" target="_blank" rel="noopener noreferrer">Website</a>';
-    }
-    if (place.wikipediaUrl) {
-      html +=
-        '<a class="japan-recs-popup-link" href="' +
-        escapeHtml(place.wikipediaUrl) +
-        '" target="_blank" rel="noopener noreferrer">Wikipedia</a>';
-    }
-    html += "</div></div>";
-    return html;
-  }
-
-  function markerIcon(day) {
-    return L.divIcon({
-      className: "japan-recs-marker-icon",
-      html:
-        '<div class="japan-recs-marker-pin japan-recs-marker-pin--day-' +
-        day +
-        '" aria-hidden="true">' +
-        '<svg viewBox="0 0 28 40" focusable="false">' +
-        '<path fill="currentColor" d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0zm0 19a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>' +
-        "</svg></div>",
-      iconSize: [28, 40],
-      iconAnchor: [14, 40],
-      popupAnchor: [0, -36],
-    });
-  }
-
-  function hotelIcon() {
-    return L.divIcon({
-      className: "japan-recs-marker-icon",
-      html:
-        '<div class="japan-recs-hotel-marker" aria-hidden="true">' +
-        '<svg viewBox="0 0 40 40" focusable="false">' +
-        '<circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#333333" stroke-width="2"/>' +
-        '<path fill="#333333" d="M11 27V15.5c0-.8.7-1.5 1.5-1.5H16v-1.2c0-.7.6-1.3 1.3-1.3h5.4c.7 0 1.3.6 1.3 1.3V14h3.5c.8 0 1.5.7 1.5 1.5V27h-2.2v-2.2H13.2V27H11zm2.2-4.4h13.6v-7.1h-2.3V18h-2.2v-2.5h-4.8V18h-2.2v-2.5h-2.1v7.1z"/>' +
-        "</svg></div>",
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-      popupAnchor: [0, -18],
-    });
-  }
-
-  function createLayer(place) {
-    var popupOptions = {
-      className: "japan-recs-leaflet-popup",
-      maxWidth: 220,
-    };
-    var layer;
-
-    if (place.path && place.path.length) {
-      layer = L.polyline(place.path, {
-        color: DAY_COLORS[place.day] || "#333",
-        weight: 5,
-        opacity: 0.9,
-        lineJoin: "round",
-        lineCap: "round",
-        className: "japan-recs-path japan-recs-path--day-" + place.day,
-      });
-    } else if (place.kind === "hotel") {
-      layer = L.marker([place.lat, place.lng], {
-        icon: hotelIcon(),
-        zIndexOffset: 500,
-      });
-    } else {
-      layer = L.marker([place.lat, place.lng], {
-        icon: markerIcon(place.day),
-      });
-    }
-
-    layer.bindPopup(popupHtml(place), popupOptions);
-    layer._japanRecsDay = place.day || null;
-    layer._japanRecsAlways = !!place.kind && place.kind === "hotel";
-    return layer;
-  }
-
-  var map = L.map(mapEl, { scrollWheelZoom: true });
-  // Esri World Street Map favors English / romanized labels in Japan
-  // (default OSM tiles render Japanese characters).
-  L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    {
-      maxZoom: 19,
-      attribution:
-        "Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom",
-    }
-  ).addTo(map);
-
-  var layersByDay = { 1: [], 2: [], 3: [], other: [] };
-  var dayLayers = [];
-  var alwaysLayers = [];
-
-  places.forEach(function (place) {
-    var layer = createLayer(place);
-    layersByDay[place.day].push(layer);
-    dayLayers.push(layer);
+  JapanRecsMap.init({
+    mapEl: mapEl,
+    filterEl: document.querySelector(".japan-recs-day-filter"),
+    listEl: document.getElementById("japan-recs-place-list"),
+    places: places,
+    alwaysPlaces: alwaysPlaces,
+    dayOrder: ["1", "2", "3", "other"],
   });
-
-  alwaysPlaces.forEach(function (place) {
-    var layer = createLayer(place);
-    alwaysLayers.push(layer);
-    layer.addTo(map);
-  });
-
-  var currentDay = "all";
-
-  function visibleDayLayers(dayFilter) {
-    if (dayFilter === "all") {
-      return dayLayers;
-    }
-    return layersByDay[dayFilter] || [];
-  }
-
-  function fitToLayers(layers) {
-    if (!layers.length) {
-      return;
-    }
-    if (layers.length === 1 && layers[0].getLatLng) {
-      map.setView(layers[0].getLatLng(), 15);
-      return;
-    }
-    var group = L.featureGroup(layers);
-    map.fitBounds(group.getBounds(), { padding: [56, 56], maxZoom: 15 });
-  }
-
-  function applyDayFilter(dayFilter) {
-    currentDay = dayFilter;
-    map.closePopup();
-
-    dayLayers.forEach(function (layer) {
-      map.removeLayer(layer);
-    });
-
-    var shown = visibleDayLayers(dayFilter);
-    shown.forEach(function (layer) {
-      layer.addTo(map);
-    });
-    // Hotel stays on the map; fit to the day selection only
-    fitToLayers(shown);
-
-    filterEl.querySelectorAll(".japan-recs-day-btn").forEach(function (btn) {
-      var active = btn.getAttribute("data-day") === String(dayFilter);
-      btn.classList.toggle("is-active", active);
-      btn.setAttribute("aria-pressed", active ? "true" : "false");
-    });
-  }
-
-  filterEl.addEventListener("click", function (event) {
-    var btn = event.target.closest(".japan-recs-day-btn");
-    if (!btn) {
-      return;
-    }
-    var day = btn.getAttribute("data-day");
-    if (!day || day === currentDay) {
-      return;
-    }
-    applyDayFilter(day);
-  });
-
-  applyDayFilter("all");
 })();

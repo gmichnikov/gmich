@@ -11,25 +11,51 @@
 
 {% block content %}
 <div class="japan-recs-page">
-  <div
-    class="japan-recs-day-filter"
-    role="group"
-    aria-label="Filter places by day"
-  >
-    <button type="button" class="japan-recs-day-btn is-active" data-day="all" aria-pressed="true">All</button>
-    <button type="button" class="japan-recs-day-btn" data-day="1" aria-pressed="false">Day 1</button>
-    <button type="button" class="japan-recs-day-btn" data-day="2" aria-pressed="false">Day 2</button>
-    <button type="button" class="japan-recs-day-btn" data-day="3" aria-pressed="false">Day 3</button>
-    <button type="button" class="japan-recs-day-btn" data-day="other" aria-pressed="false">Other</button>
+  <header class="japan-recs-toolbar">
+    <div
+      class="japan-recs-day-filter"
+      role="group"
+      aria-label="Filter places by day"
+    >
+      <button type="button" class="japan-recs-day-btn is-active" data-day="all" aria-pressed="true">All</button>
+      <button type="button" class="japan-recs-day-btn" data-day="1" aria-pressed="false">Day 1</button>
+      <button type="button" class="japan-recs-day-btn" data-day="2" aria-pressed="false">Day 2</button>
+      <button type="button" class="japan-recs-day-btn" data-day="3" aria-pressed="false">Day 3</button>
+      <button type="button" class="japan-recs-day-btn" data-day="other" aria-pressed="false">Other</button>
+    </div>
+  </header>
+  <div class="japan-recs-layout">
+    <aside
+      id="japan-recs-place-list"
+      class="japan-recs-place-list"
+      aria-label="Places list"
+    >
+      <button
+        type="button"
+        class="japan-recs-place-list-handle"
+        aria-expanded="false"
+        aria-controls="japan-recs-place-list-body"
+      >
+        <span class="japan-recs-place-list-handle-label">Places</span>
+        <span class="japan-recs-place-list-handle-count"></span>
+      </button>
+      <div
+        id="japan-recs-place-list-body"
+        class="japan-recs-place-list-scroll"
+        role="list"
+      ></div>
+    </aside>
+    <div class="japan-recs-map-wrap">
+      <div
+        id="japan-recs-map"
+        class="japan-recs-map"
+        role="application"
+        aria-label="Map of Kyoto trip recommendations"
+        data-monkey-qr="{{ url_for('japan_recs.static', filename='japan_recs/monkey-park-qr.png') }}"
+        data-bamboo-qr="{{ url_for('japan_recs.static', filename='japan_recs/bamboo-forest-qr.png') }}"
+      ></div>
+    </div>
   </div>
-  <div
-    id="japan-recs-map"
-    class="japan-recs-map"
-    role="application"
-    aria-label="Map of Kyoto trip recommendations"
-    data-monkey-qr="{{ url_for('japan_recs.static', filename='japan_recs/monkey-park-qr.png') }}"
-    data-bamboo-qr="{{ url_for('japan_recs.static', filename='japan_recs/bamboo-forest-qr.png') }}"
-  ></div>
 </div>
 {% endblock %}
 
@@ -37,5 +63,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
+<script src="{{ url_for('japan_recs.static', filename='japan_recs/map.js') }}"></script>
 <script src="{{ url_for('japan_recs.static', filename='japan_recs/kyoto.js') }}"></script>
 {% endblock %}
