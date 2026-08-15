@@ -8,6 +8,8 @@
     other: "#6d4c41",
   };
 
+  var photoBaseUrl = "";
+
   function escapeHtml(text) {
     var el = document.createElement("div");
     el.textContent = text;
@@ -40,7 +42,14 @@
       escapeHtml(badge) +
       "</span>";
 
-    if (place.qrSrc) {
+    if (place.photoKey && photoBaseUrl) {
+      html +=
+        '<img class="japan-recs-popup-photo" src="' +
+        escapeHtml(photoBaseUrl + place.photoKey) +
+        '" alt="' +
+        escapeHtml(place.name) +
+        '" loading="lazy" hidden onload="this.hidden=false" onerror="this.remove()">';
+    } else if (place.qrSrc) {
       html +=
         '<img class="japan-recs-popup-qr" src="' +
         escapeHtml(place.qrSrc) +
@@ -104,7 +113,7 @@
   function createLayer(place, index) {
     var popupOptions = {
       className: "japan-recs-leaflet-popup",
-      maxWidth: 220,
+      maxWidth: place.photoKey ? 280 : 220,
     };
     var layer;
 
@@ -167,6 +176,11 @@
     if (!mapEl || !filterEl || !listEl || !global.L) {
       return;
     }
+
+    photoBaseUrl =
+      config.photoBaseUrl ||
+      mapEl.getAttribute("data-photo-base") ||
+      "/japan-recs/photos/";
 
     var listBody = listEl.querySelector(".japan-recs-place-list-scroll");
     var listHandle = listEl.querySelector(".japan-recs-place-list-handle");

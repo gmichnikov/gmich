@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Japan Recs Photos{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('japan_recs.static', filename='japan_recs/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="japan-recs-admin">
+  <header class="japan-recs-admin-header">
+    <div>
+      <h1 class="japan-recs-admin-title">Japan Recs photos</h1>
+      <p class="japan-recs-admin-lead">
+        Upload personal photos to Cloudflare R2. They are not stored in GitHub.
+        After upload, paste the <code>photoKey</code> line into
+        <code>kyoto.js</code> or <code>tokyo.js</code> on the matching place.
+      </p>
+    </div>
+    <div class="japan-recs-admin-links">
+      <a href="{{ url_for('japan_recs.kyoto') }}">Kyoto map</a>
+      <a href="{{ url_for('japan_recs.tokyo') }}">Tokyo map</a>
+    </div>
+  </header>
+
+  <section class="japan-recs-admin-section">
+    <h2 class="japan-recs-admin-section-title">Upload</h2>
+    <form class="japan-recs-admin-form" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="upload">
+
+      <label class="japan-recs-admin-label" for="japan-recs-admin-city">City</label>
+      <select id="japan-recs-admin-city" class="japan-recs-admin-input" name="city" required>
+        <option value="">Choose city…</option>
+        {% for city in cities %}
+        <option value="{{ city }}">{{ city|capitalize }}</option>
+        {% endfor %}
+      </select>
+
+      <label class="japan-recs-admin-label" for="japan-recs-admin-filename">Photo slug</label>
+      <input
+        id="japan-recs-admin-filename"
+        class="japan-recs-admin-input"
+        type="text"
+        name="filename"
+        placeholder="bamboo-forest"
+        required
+      >
+      <p class="japan-recs-admin-help">
+        Stored as <code>japan_recs/&lt;city&gt;/&lt;slug&gt;.&lt;ext&gt;</code>. The extension
+        comes from your uploaded file — enter <code>bamboo-forest</code>, not
+        <code>bamboo-forest.jpg</code>.
+      </p>
+
+      <label class="japan-recs-admin-label" for="japan-recs-admin-photo">Image file</label>
+      <input
+        id="japan-recs-admin-photo"
+        class="japan-recs-admin-input"
+        type="file"
+        name="photo"
+        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+        required
+      >
+
+      <button type="submit" class="japan-recs-admin-btn">Upload to R2</button>
+    </form>
+  </section>
+
+  <section class="japan-recs-admin-section">
+    <h2 class="japan-recs-admin-section-title">Uploaded photos</h2>
+
+    {% if photos %}
+    <div class="japan-recs-admin-table-wrap">
+      <table class="japan-recs-admin-table">
+        <thead>
+          <tr>
+            <th scope="col">Preview</th>
+            <th scope="col">Photo key</th>
+            <th scope="col">Paste into JS</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for photo in photos %}
+          <tr>
+            <td>
+              <img
+                class="japan-recs-admin-thumb"
+                src="{{ url_for('japan_recs.photo', filename=photo.path) }}"
+                alt=""
+                loading="lazy"
+              >
+            </td>
+            <td><code>{{ photo.path }}</code></td>
+            <td><code>{{ 'photoKey: "' ~ photo.path ~ '",' }}</code></td>
+            <td>
+              <form method="post" onsubmit="return confirm('Delete {{ photo.path }} from R2?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="photo_path" value="{{ photo.path }}">
+                <button type="submit" class="japan-recs-admin-btn japan-recs-admin-btn--danger">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="japan-recs-admin-empty">No photos uploaded yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -12,7 +12,7 @@
       lng: 135.674681,
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Arashiyama+Monkey+Park+Iwatayama",
-      qrSrc: mapEl.dataset.monkeyQr,
+      photoKey: "kyoto/monkey-park.jpg",
     },
     {
       name: "Arashiyama Bamboo Forest",
@@ -21,7 +21,7 @@
       lng: 135.671148,
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Arashiyama+Bamboo+Forest",
-      qrSrc: mapEl.dataset.bambooQr,
+      photoKey: "kyoto/bamboo-forest.jpg",
     },
     {
       name: "Sabanji Ramen",
@@ -30,6 +30,7 @@
       lng: 135.73078304235545,
       mapsUrl: "https://maps.app.goo.gl/6pHjonZUveMKox7a8",
       websiteUrl: "https://sabanji.com/en/index.html",
+      photoKey: "kyoto/ramen-sabanji.jpg",
     },
     {
       name: "Kinkaku-ji (Golden Pavilion)",
@@ -39,6 +40,7 @@
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Kinkaku-ji",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Kinkaku-ji",
+      photoKey: "kyoto/golden-temple.jpg",
     },
     {
       name: "Ginkaku-ji (Silver Pavilion)",
@@ -48,6 +50,7 @@
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Ginkaku-ji",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Ginkaku-ji",
+      photoKey: "kyoto/silver-temple.jpg",
     },
     {
       name: "Omen Ginkaku-ji Udon",
@@ -56,6 +59,7 @@
       lng: 135.79494026483994,
       mapsUrl: "https://maps.app.goo.gl/ZW3pJUCb4UYFARy29",
       websiteUrl: "https://omen.co.jp",
+      photoKey: "kyoto/omen-udon.jpg",
     },
     {
       name: "Philosopher's Path",
@@ -75,6 +79,7 @@
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Philosopher%27s+Path+Kyoto",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Philosopher%27s_Walk",
+      photoKey: "kyoto/philosophers-path.jpg",
     },
     {
       name: "Nanzen-ji",
@@ -84,6 +89,7 @@
       mapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Nanzen-ji",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Nanzen-ji",
+      photoKey: "kyoto/nanzen-ji.jpg",
     },
     {
       name: "Kyoto Tonkatsu Katsuda Shijokarasuma",
@@ -92,6 +98,7 @@
       lng: 135.75944064822355,
       mapsUrl: "https://maps.app.goo.gl/zsGsidgpZU48C8Bw6",
       websiteUrl: "https://chikayado.jp/tonkatsukarasuma?_src=gbpmenu",
+      photoKey: "kyoto/katsuda-shijokarasuma.jpg",
     },
     {
       name: "Nijō Castle",
@@ -100,6 +107,7 @@
       lng: 135.747498,
       mapsUrl: "https://maps.app.goo.gl/6sH5GopS6KWrYzAE8",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Nijo_Castle",
+      photoKey: "kyoto/nijo-castle.jpg",
     },
     {
       name: "Sushiro",
@@ -108,6 +116,7 @@
       lng: 135.77421649564323,
       mapsUrl: "https://maps.app.goo.gl/djTVTXmPtW6pjcdb9",
       websiteUrl: "https://www.akindo-sushiro.co.jp/en/",
+      photoKey: "kyoto/sushiro.jpg",
     },
     {
       name: "Nishiki Market",
@@ -116,6 +125,7 @@
       lng: 135.7646169064146,
       mapsUrl: "https://maps.app.goo.gl/LkuRck4Vr7ze1y3M8",
       websiteUrl: "https://www.kyoto-nishiki.or.jp/en/",
+      photoKey: "kyoto/nishiki-market.jpg",
     },
     {
       name: "Kiyomizu-dera",
@@ -124,6 +134,7 @@
       lng: 135.785,
       mapsUrl: "https://maps.app.goo.gl/UFf46S5F7fPuSQFe6",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Kiyomizu-dera",
+      photoKey: "kyoto/kiyomizu-dera.jpg",
     },
     {
       name: "Fushimi Inari Taisha",
@@ -132,6 +143,7 @@
       lng: 135.77278,
       mapsUrl: "https://maps.app.goo.gl/qJHzAtWBRsJyTYxZA",
       wikipediaUrl: "https://en.wikipedia.org/wiki/Fushimi_Inari-taisha",
+      photoKey: "kyoto/fushimi-inari-taisha.jpg",
     },
     {
       name: "Sushi no Musashi - Kyoto Station",
@@ -140,6 +152,7 @@
       lng: 135.75940259330807,
       mapsUrl: "https://maps.app.goo.gl/qNn18kt4miKSM5zV7",
       websiteUrl: "https://sushinomusashi.com/",
+      photoKey: "kyoto/sushi-no-musashi.jpg",
     },
     {
       name: "Boulangerie Cherish",

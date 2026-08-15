@@ -413,6 +413,15 @@
   image-rendering: pixelated;
 }
 
+.japan-recs-popup-photo {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto 0.55rem;
+  border-radius: 6px;
+}
+
 .japan-recs-popup-links {
   display: flex;
   flex-direction: column;
@@ -567,4 +576,148 @@
   font-size: 0.9rem;
   color: #666;
   line-height: 1.4;
+}
+
+.japan-recs-admin {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.japan-recs-admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.japan-recs-admin-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.japan-recs-admin-lead {
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+  max-width: 40rem;
+}
+
+.japan-recs-admin-links {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.japan-recs-admin-links a {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.japan-recs-admin-links a:hover {
+  text-decoration: underline;
+}
+
+.japan-recs-admin-section {
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.japan-recs-admin-section-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.japan-recs-admin-form {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 28rem;
+}
+
+.japan-recs-admin-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
+}
+
+.japan-recs-admin-input {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.japan-recs-admin-help,
+.japan-recs-admin-empty {
+  margin: 0.25rem 0 0;
+  color: #666;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.japan-recs-admin-btn {
+  appearance: none;
+  border: 0;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.japan-recs-admin-btn:hover {
+  background: #333;
+}
+
+.japan-recs-admin-btn--danger {
+  background: #b71c1c;
+  margin-top: 0;
+}
+
+.japan-recs-admin-btn--danger:hover {
+  background: #8e0000;
+}
+
+.japan-recs-admin-table-wrap {
+  overflow-x: auto;
+}
+
+.japan-recs-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.japan-recs-admin-table th,
+.japan-recs-admin-table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #ddd;
+  vertical-align: top;
+  text-align: left;
+}
+
+.japan-recs-admin-table th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #666;
+}
+
+.japan-recs-admin-thumb {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #eee;
 }

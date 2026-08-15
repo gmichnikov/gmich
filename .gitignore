@@ -10,3 +10,6 @@ instance/
 *.sqlite
 
 adk_debug.*
+
+# Japan Recs personal photos — upload to R2 instead
+app/projects/japan_recs/photos/
