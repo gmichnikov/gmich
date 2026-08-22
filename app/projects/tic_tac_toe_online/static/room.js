@@ -2,13 +2,18 @@
     "use strict";
 
     var POLL_MS = 1000;
-    var SYMBOLS = { X: "\u274C", O: "\u2B55" };
     var PLAYER_KEY = "ttto_player_id";
 
     var pollTimer = null;
     var isMoving = false;
     var isSavingName = false;
+    var isSavingSymbol = false;
+    var hasJoined = false;
+    var nameDirty = false;
+    var pendingName = null;
+    var pendingSymbol = null;
     var lastState = null;
+    var symbolPickerBuilt = false;
 
     var boardEl = document.getElementById("tttoBoard");
     var cells = boardEl.querySelectorAll(".ttto-cell");
@@ -21,6 +26,8 @@
     var nameRow = document.getElementById("tttoNameRow");
     var nameInput = document.getElementById("tttoNameInput");
     var nameSaveBtn = document.getElementById("tttoNameSaveBtn");
+    var symbolRow = document.getElementById("tttoSymbolRow");
+    var symbolPicker = document.getElementById("tttoSymbolPicker");
     var opponentLabel = document.getElementById("tttoOpponentLabel");
 
     shareLinkInput.value = window.location.href;
@@ -84,6 +91,13 @@
         return "Player " + seat;
     }
 
+    function boardSymbol(state, seat) {
+        if (state.symbols && state.symbols[seat]) {
+            return state.symbols[seat];
+        }
+        return seat === "X" ? "\u274C" : "\u2B55";
+    }
+
     function opponentSeat(state) {
         if (!state.your_seat) {
             return null;
@@ -113,9 +127,46 @@
             return "Spectating \u2014 " + turnName + "'s turn";
         }
         if (state.turn === state.your_seat) {
-            return "Your turn (" + SYMBOLS[state.your_seat] + ")";
+            return "Your turn (" + boardSymbol(state, state.your_seat) + ")";
         }
         return "Waiting for " + turnName + "\u2026";
+    }
+
+    function updateSymbolPicker(state) {
+        if (!state.your_seat) {
+            symbolRow.hidden = true;
+            return;
+        }
+        symbolRow.hidden = false;
+
+        var current = state.your_symbol || boardSymbol(state, state.your_seat);
+        var opponent = state.opponent_symbol;
+        var buttons = symbolPicker.querySelectorAll(".ttto-symbol-btn");
+
+        if (!symbolPickerBuilt && state.allowed_symbols && state.allowed_symbols.length) {
+            state.allowed_symbols.forEach(function (sym) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "ttto-symbol-btn";
+                btn.textContent = sym;
+                btn.dataset.symbol = sym;
+                btn.addEventListener("click", function () {
+                    pickSymbol(sym);
+                });
+                symbolPicker.appendChild(btn);
+            });
+            symbolPickerBuilt = true;
+            buttons = symbolPicker.querySelectorAll(".ttto-symbol-btn");
+        }
+
+        buttons.forEach(function (btn) {
+            var sym = btn.dataset.symbol;
+            btn.classList.toggle("ttto-symbol-selected", sym === current);
+            var taken = sym === opponent;
+            btn.disabled = taken || isSavingSymbol;
+            btn.classList.toggle("ttto-symbol-taken", taken);
+            btn.title = taken ? "Taken by your opponent" : "";
+        });
     }
 
     function render(state) {
@@ -126,7 +177,7 @@
         cells.forEach(function (cell) {
             var idx = parseInt(cell.getAttribute("data-index"), 10);
             var value = state.board[idx];
-            cell.textContent = value ? SYMBOLS[value] : "";
+            cell.textContent = value ? boardSymbol(state, value) : "";
             cell.classList.toggle("ttto-taken", !!value);
             cell.classList.toggle(
                 "ttto-winning",
@@ -145,17 +196,24 @@
 
         if (isPlayer) {
             nameInput.placeholder = "Player " + state.your_seat;
-            if (document.activeElement !== nameInput) {
+            if (!nameDirty && document.activeElement !== nameInput) {
                 nameInput.value = state.your_name || "";
             }
+            updateSymbolPicker(state);
             var opp = opponentSeat(state);
             if (opp && state.seats[opp]) {
-                opponentLabel.textContent = "Playing against: " + seatName(state, opp);
+                opponentLabel.textContent =
+                    "Playing against: " +
+                    seatName(state, opp) +
+                    " (" +
+                    boardSymbol(state, opp) +
+                    ")";
                 opponentLabel.hidden = false;
             } else {
                 opponentLabel.hidden = true;
             }
         } else {
+            symbolRow.hidden = true;
             opponentLabel.hidden = true;
         }
     }
@@ -166,10 +224,32 @@
         });
     }
 
+    function flushPending(state) {
+        var chain = Promise.resolve(state);
+        if (pendingName !== null) {
+            var name = pendingName;
+            pendingName = null;
+            chain = chain.then(function () {
+                return apiRequest("POST", "/name", { name: name });
+            });
+        }
+        if (pendingSymbol !== null) {
+            var symbol = pendingSymbol;
+            pendingSymbol = null;
+            chain = chain.then(function () {
+                return apiRequest("POST", "/symbol", { symbol: symbol });
+            });
+        }
+        return chain.then(render);
+    }
+
     function joinThenStart() {
         apiRequest("POST", "/join")
             .then(function (state) {
-                render(state);
+                hasJoined = true;
+                return flushPending(state);
+            })
+            .then(function () {
                 startPolling();
             })
             .catch(function (err) {
@@ -238,10 +318,19 @@
         if (isSavingName) {
             return;
         }
+        var name = nameInput.value;
+        nameDirty = true;
+        if (!hasJoined) {
+            pendingName = name;
+            return;
+        }
         isSavingName = true;
         nameSaveBtn.disabled = true;
-        apiRequest("POST", "/name", { name: nameInput.value })
-            .then(render)
+        apiRequest("POST", "/name", { name: name })
+            .then(function (state) {
+                nameDirty = false;
+                render(state);
+            })
             .catch(function (err) {
                 statusEl.textContent = err.message;
             })
@@ -251,7 +340,41 @@
             });
     }
 
+    function pickSymbol(symbol) {
+        if (isSavingSymbol) {
+            return;
+        }
+        if (lastState && symbol === lastState.your_symbol) {
+            return;
+        }
+        if (!hasJoined) {
+            pendingSymbol = symbol;
+            if (lastState) {
+                render(lastState);
+            }
+            return;
+        }
+        isSavingSymbol = true;
+        if (lastState) {
+            updateSymbolPicker(lastState);
+        }
+        apiRequest("POST", "/symbol", { symbol: symbol })
+            .then(render)
+            .catch(function (err) {
+                statusEl.textContent = err.message;
+            })
+            .then(function () {
+                isSavingSymbol = false;
+                if (lastState) {
+                    updateSymbolPicker(lastState);
+                }
+            });
+    }
+
     nameSaveBtn.addEventListener("click", saveName);
+    nameInput.addEventListener("input", function () {
+        nameDirty = true;
+    });
     nameInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
             event.preventDefault();

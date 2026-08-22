@@ -20,6 +20,8 @@ class TicTacToeOnlineRoom(db.Model):
     seat_o = db.Column(db.String(32), nullable=True)
     name_x = db.Column(db.String(30), nullable=True)
     name_o = db.Column(db.String(30), nullable=True)
+    symbol_x = db.Column(db.String(16), nullable=True)
+    symbol_o = db.Column(db.String(16), nullable=True)
     status = db.Column(db.String(10), nullable=False, default=STATUS_WAITING)
     winner = db.Column(db.String(1), nullable=True)
     winning_line = db.Column(db.JSON, nullable=True)

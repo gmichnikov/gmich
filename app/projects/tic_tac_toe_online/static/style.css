@@ -171,6 +171,7 @@
 .ttto-rematch-btn[hidden],
 .ttto-share-row[hidden],
 .ttto-name-row[hidden],
+.ttto-symbol-row[hidden],
 .ttto-opponent-label[hidden] {
     display: none !important;
 }
@@ -191,6 +192,52 @@
     font-size: 0.9em;
     color: #444;
     font-weight: 600;
+}
+
+.ttto-symbol-row {
+    margin-top: 10px;
+}
+
+.ttto-symbol-row label {
+    display: block;
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.ttto-symbol-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ttto-symbol-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-size: 1.35em;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ttto-symbol-btn:hover:not(:disabled) {
+    border-color: #667eea;
+    transform: scale(1.08);
+}
+
+.ttto-symbol-btn.ttto-symbol-selected {
+    border-color: #667eea;
+    background: #f0f0ff;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.35);
+}
+
+.ttto-symbol-btn.ttto-symbol-taken {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .ttto-status-message {
@@ -263,9 +310,24 @@
 }
 
 .ttto-rematch-btn {
-    margin-top: 20px;
+    margin-top: 0;
     width: auto;
     padding: 12px 32px;
+}
+
+.ttto-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.ttto-home-btn {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
 }
 
 @media (max-width: 480px) {

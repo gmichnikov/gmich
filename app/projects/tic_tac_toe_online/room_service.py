@@ -5,6 +5,10 @@ from datetime import datetime, timedelta
 
 from app import db
 from app.projects.tic_tac_toe_online.models import TicTacToeOnlineRoom
+from app.projects.tic_tac_toe_online.symbols import (
+    ALLOWED_SYMBOLS,
+    default_symbol_for_seat,
+)
 
 ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 ROOM_CODE_LENGTH = 6
@@ -115,10 +119,14 @@ def join_room(code, player_id, name=None):
                 room.seat_x = player_id
                 if normalized_name is not None:
                     room.name_x = normalized_name
+                if room.symbol_x is None:
+                    room.symbol_x = default_symbol_for_seat(room, "X")
             else:
                 room.seat_o = player_id
                 if normalized_name is not None:
                     room.name_o = normalized_name
+                if room.symbol_o is None:
+                    room.symbol_o = default_symbol_for_seat(room, "O")
             if room.seat_x and room.seat_o:
                 room.status = TicTacToeOnlineRoom.STATUS_ACTIVE
             room.version += 1
@@ -132,6 +140,30 @@ def join_room(code, player_id, name=None):
 def get_state(code, player_id):
     room = _get_room_row(code)
     return room, room.seat_for_player(player_id)
+
+
+def set_symbol(code, player_id, symbol):
+    room = _get_room_row(code)
+    seat = room.seat_for_player(player_id)
+    if seat is None:
+        raise RoomError("Only seated players can change their symbol.", 403)
+
+    cleaned = (symbol or "").strip()
+    if cleaned not in ALLOWED_SYMBOLS:
+        raise RoomError("Pick a symbol from the list.", 400)
+
+    other_seat = "O" if seat == "X" else "X"
+    other_value = room.symbol_x if other_seat == "X" else room.symbol_o
+    if other_value and cleaned == other_value:
+        raise RoomError("That symbol is already taken by your opponent.", 409)
+
+    if seat == "X":
+        room.symbol_x = cleaned
+    else:
+        room.symbol_o = cleaned
+    _touch(room)
+    db.session.commit()
+    return room, seat
 
 
 def set_name(code, player_id, name):

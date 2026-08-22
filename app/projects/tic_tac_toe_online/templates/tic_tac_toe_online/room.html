@@ -26,6 +26,10 @@
                     <button id="tttoNameSaveBtn" class="ttto-secondary-btn ttto-copy-btn" type="button">Save</button>
                 </div>
             </div>
+            <div class="ttto-symbol-row" id="tttoSymbolRow" hidden>
+                <label>Your symbol:</label>
+                <div class="ttto-symbol-picker" id="tttoSymbolPicker"></div>
+            </div>
             <div class="ttto-opponent-label" id="tttoOpponentLabel" hidden></div>
         </div>
 
@@ -43,7 +47,10 @@
             <div class="ttto-cell" data-index="8"></div>
         </div>
 
-        <button id="tttoRematchBtn" class="ttto-primary-btn ttto-rematch-btn" type="button" hidden>Rematch</button>
+        <div class="ttto-actions">
+            <button id="tttoRematchBtn" class="ttto-primary-btn ttto-rematch-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('tic_tac_toe_online.index') }}" class="ttto-secondary-btn ttto-home-btn">Home</a>
+        </div>
     </div>
 </div>
 

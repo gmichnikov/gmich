@@ -12,6 +12,7 @@ from app.projects.tic_tac_toe_online.room_service import (
     make_move,
     rematch,
     set_name,
+    set_symbol,
 )
 from app.projects.tic_tac_toe_online.serialize import room_to_dict
 from app.utils.logging import log_project_visit
@@ -100,6 +101,14 @@ def api_room_join(code):
 def api_room_name(code):
     data = request.get_json(silent=True) or {}
     room, seat = set_name(code, _player_id(), data.get("name", ""))
+    return jsonify(room_to_dict(room, seat))
+
+
+@tic_tac_toe_online_bp.route("/room/<code>/symbol", methods=["POST"])
+@_handle_room_errors
+def api_room_symbol(code):
+    data = request.get_json(silent=True) or {}
+    room, seat = set_symbol(code, _player_id(), data.get("symbol", ""))
     return jsonify(room_to_dict(room, seat))
 
 
