@@ -121,6 +121,7 @@ def create_app():
     from app.projects.mini_golf.routes import mini_golf_bp
     from app.projects.speaker.routes import speaker_bp
     from app.projects.tic_tac_toe_online.routes import tic_tac_toe_online_bp
+    from app.projects.battleship_online.routes import battleship_online_bp
     from app.projects.japan_recs.routes import japan_recs_bp
 
     app.register_blueprint(main_bp)
@@ -171,6 +172,9 @@ def create_app():
     app.register_blueprint(speaker_bp, url_prefix="/speaker")
     app.register_blueprint(
         tic_tac_toe_online_bp, url_prefix="/tic-tac-toe-online"
+    )
+    app.register_blueprint(
+        battleship_online_bp, url_prefix="/battleship-online"
     )
     app.register_blueprint(japan_recs_bp)
 
@@ -253,6 +257,7 @@ def create_app():
         BowlingRoll,
     )
     from app.projects.tic_tac_toe_online.models import TicTacToeOnlineRoom
+    from app.projects.battleship_online.models import BattleshipOnlineRoom
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():

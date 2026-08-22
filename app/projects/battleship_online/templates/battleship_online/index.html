@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Battleship Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('battleship_online.static', filename='style.css') }}">
+
+<div class="bso-wrapper">
+    <div class="bso-container">
+        <h1>Battleship Online</h1>
+        <p class="bso-subtitle">Sink your opponent's fleet &mdash; share a link, no login required.</p>
+
+        <div class="bso-landing-panel">
+            <button id="bsoCreateBtn" class="bso-primary-btn" type="button">Create New Game</button>
+
+            <div class="bso-divider">or</div>
+
+            <form id="bsoJoinForm" class="bso-join-form">
+                <label for="bsoJoinCode">Join with a room code</label>
+                <input type="text" id="bsoJoinCode" maxlength="6" placeholder="e.g. AB3XQK" autocomplete="off">
+                <button type="submit" class="bso-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="bsoLandingError" class="bso-error" hidden></p>
+    </div>
+</div>
+
+<script>
+    var BSO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('battleship_online.static', filename='landing.js') }}"></script>
+{% endblock %}

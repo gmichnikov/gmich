@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Battleship Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('battleship_online.static', filename='style.css') }}">
+
+<div class="bso-wrapper">
+    <div class="bso-container bso-room-container">
+        <h1>Battleship Online</h1>
+
+        <div class="bso-room-info">
+            <div class="bso-room-code-label">Room code: <strong id="bsoRoomCode">{{ code }}</strong></div>
+            <div class="bso-share-row" id="bsoShareRow">
+                <label for="bsoShareLink">Share this link with your opponent:</label>
+                <div class="bso-share-input-row">
+                    <input type="text" id="bsoShareLink" readonly>
+                    <button id="bsoCopyBtn" class="bso-secondary-btn bso-copy-btn" type="button">Copy</button>
+                </div>
+            </div>
+            <div class="bso-spectator-badge" id="bsoSpectatorBadge" hidden>You're spectating this room</div>
+            <div class="bso-name-row" id="bsoNameRow" hidden>
+                <label for="bsoNameInput">Your name:</label>
+                <div class="bso-share-input-row">
+                    <input type="text" id="bsoNameInput" maxlength="30" autocomplete="nickname">
+                    <button id="bsoNameSaveBtn" class="bso-secondary-btn bso-copy-btn" type="button">Save</button>
+                </div>
+            </div>
+            <div class="bso-opponent-label" id="bsoOpponentLabel" hidden></div>
+        </div>
+
+        <div class="bso-status-message" id="bsoStatusMessage">Loading&hellip;</div>
+
+        <div class="bso-sink-toast" id="bsoSinkToast" hidden></div>
+
+        <div class="bso-placement-actions" id="bsoPlacementActions" hidden>
+            <div class="bso-placement-toolbar">
+                <div class="bso-ship-list" id="bsoShipList"></div>
+                <div class="bso-placement-controls">
+                    <div class="bso-arrow-pad">
+                        <button id="bsoMoveUp" class="bso-arrow-btn" type="button" aria-label="Move up">&#8593;</button>
+                        <div class="bso-arrow-pad-row">
+                            <button id="bsoMoveLeft" class="bso-arrow-btn" type="button" aria-label="Move left">&#8592;</button>
+                            <button id="bsoMoveDown" class="bso-arrow-btn" type="button" aria-label="Move down">&#8595;</button>
+                            <button id="bsoMoveRight" class="bso-arrow-btn" type="button" aria-label="Move right">&#8594;</button>
+                        </div>
+                    </div>
+                    <button id="bsoRotateBtn" class="bso-secondary-btn" type="button">Rotate (Space)</button>
+                </div>
+            </div>
+            <div class="bso-placement-buttons">
+                <button id="bsoShuffleBtn" class="bso-secondary-btn" type="button">Randomize</button>
+                <button id="bsoReadyBtn" class="bso-primary-btn" type="button">Ready</button>
+            </div>
+            <p class="bso-placement-hint">Click a ship to select it, then move with arrows or rotate with Space.</p>
+        </div>
+
+        <div class="bso-boards" id="bsoPlayerBoards" hidden>
+            <div class="bso-board-panel" id="bsoOwnPanel">
+                <h2 class="bso-board-title" id="bsoOwnTitle">Your fleet</h2>
+                <div class="bso-grid bso-own-grid" id="bsoOwnGrid"></div>
+            </div>
+            <div class="bso-board-panel" id="bsoTargetPanel" hidden>
+                <h2 class="bso-board-title">Enemy waters</h2>
+                <div class="bso-grid bso-target-grid" id="bsoTargetGrid"></div>
+            </div>
+        </div>
+
+        <div class="bso-spectator-boards" id="bsoSpectatorBoards" hidden></div>
+
+        <div class="bso-actions">
+            <button id="bsoRematchBtn" class="bso-primary-btn bso-rematch-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('battleship_online.index') }}" class="bso-secondary-btn bso-home-btn">Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var BSO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var BSO_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('battleship_online.static', filename='room.js') }}"></script>
+{% endblock %}

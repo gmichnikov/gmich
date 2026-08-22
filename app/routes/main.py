@@ -16,6 +16,16 @@ def index():
     
     return render_template('index.html', projects=projects)
 
+@main_bp.route('/live-multiplayer-games')
+def live_multiplayer_games():
+    category = get_project_by_id('live_multiplayer_games')
+
+    is_authenticated = current_user.is_authenticated
+    is_admin = getattr(current_user, 'is_admin', False) if is_authenticated else False
+    items = get_children_of_category('live_multiplayer_games', is_authenticated, is_admin)
+
+    return render_template('category.html', category=category, items=items)
+
 @main_bp.route('/games')
 def games():
     # Get the Simple Games category info
