@@ -19,6 +19,8 @@
     var selectedShipId = 0;
     var mobileBoardTab = "enemy";
     var lastTurnSeen = null;
+    var tabSwitchTimer = null;
+    var TAB_SWITCH_DELAY_MS = 1200;
     var mobileLayout = window.matchMedia("(max-width: 820px)");
 
     var statusEl = document.getElementById("bsoStatusMessage");
@@ -146,22 +148,7 @@
         );
     }
 
-    function updateMobileBoardTabs(state) {
-        var useTabs = usesMobileBoardTabs(state);
-        boardTabsEl.hidden = !useTabs;
-        playerBoards.classList.toggle("bso-mobile-tabs", useTabs);
-
-        if (!useTabs) {
-            ownPanel.classList.remove("bso-board-panel-hidden");
-            targetPanel.classList.remove("bso-board-panel-hidden");
-            return;
-        }
-
-        if (state.turn !== lastTurnSeen && state.status === "battle") {
-            mobileBoardTab = state.turn === state.your_seat ? "enemy" : "own";
-            lastTurnSeen = state.turn;
-        }
-
+    function applyMobileBoardTabVisibility() {
         var showEnemy = mobileBoardTab === "enemy";
         targetPanel.classList.toggle("bso-board-panel-hidden", !showEnemy);
         ownPanel.classList.toggle("bso-board-panel-hidden", showEnemy);
@@ -169,11 +156,54 @@
         tabOwnBtn.classList.toggle("bso-board-tab-active", !showEnemy);
     }
 
-    function setMobileBoardTab(tab) {
-        mobileBoardTab = tab;
-        if (lastState) {
-            updateMobileBoardTabs(lastState);
+    function scheduleTabSwitchForTurn(state) {
+        var targetTab = state.turn === state.your_seat ? "enemy" : "own";
+        if (tabSwitchTimer) {
+            clearTimeout(tabSwitchTimer);
         }
+        tabSwitchTimer = setTimeout(function () {
+            tabSwitchTimer = null;
+            mobileBoardTab = targetTab;
+            applyMobileBoardTabVisibility();
+        }, TAB_SWITCH_DELAY_MS);
+    }
+
+    function updateMobileBoardTabs(state) {
+        var useTabs = usesMobileBoardTabs(state);
+        boardTabsEl.hidden = !useTabs;
+        playerBoards.classList.toggle("bso-mobile-tabs", useTabs);
+
+        if (!useTabs) {
+            if (tabSwitchTimer) {
+                clearTimeout(tabSwitchTimer);
+                tabSwitchTimer = null;
+            }
+            ownPanel.classList.remove("bso-board-panel-hidden");
+            targetPanel.classList.remove("bso-board-panel-hidden");
+            lastTurnSeen = null;
+            return;
+        }
+
+        if (state.status === "battle") {
+            if (lastTurnSeen === null) {
+                mobileBoardTab = state.turn === state.your_seat ? "enemy" : "own";
+                lastTurnSeen = state.turn;
+            } else if (state.turn !== lastTurnSeen) {
+                lastTurnSeen = state.turn;
+                scheduleTabSwitchForTurn(state);
+            }
+        }
+
+        applyMobileBoardTabVisibility();
+    }
+
+    function setMobileBoardTab(tab) {
+        if (tabSwitchTimer) {
+            clearTimeout(tabSwitchTimer);
+            tabSwitchTimer = null;
+        }
+        mobileBoardTab = tab;
+        applyMobileBoardTabVisibility();
     }
 
     function updatePlayBar(state) {

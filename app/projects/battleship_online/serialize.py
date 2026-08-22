@@ -1,14 +1,34 @@
 GRID_SIZE = 10
 
 
-def _ship_cells(fleet):
-    cells = set()
+def _cell_ship_id(fleet, row, col):
     if not fleet:
-        return cells
+        return None
     for ship in fleet.get("ships", []):
-        for row, col in ship["cells"]:
-            cells.add((row, col))
-    return cells
+        for ship_row, ship_col in ship["cells"]:
+            if ship_row == row and ship_col == col:
+                return ship["id"]
+    return None
+
+
+def build_own_board(fleet, incoming_shots):
+    board = []
+    for row in range(GRID_SIZE):
+        board_row = []
+        for col in range(GRID_SIZE):
+            shot = incoming_shots[row][col] if incoming_shots else 0
+            if shot == 0:
+                ship_id = _cell_ship_id(fleet, row, col)
+                if ship_id is not None:
+                    board_row.append("ship-" + str(ship_id))
+                else:
+                    board_row.append("water")
+            elif shot == 1:
+                board_row.append("miss")
+            else:
+                board_row.append("hit")
+        board.append(board_row)
+    return board
 
 
 def _sunk_cells(fleet):
@@ -20,23 +40,6 @@ def _sunk_cells(fleet):
             for row, col in ship["cells"]:
                 cells.add((row, col))
     return cells
-
-
-def build_own_board(fleet, incoming_shots):
-    ship_cells = _ship_cells(fleet)
-    board = []
-    for row in range(GRID_SIZE):
-        board_row = []
-        for col in range(GRID_SIZE):
-            shot = incoming_shots[row][col] if incoming_shots else 0
-            if shot == 0:
-                board_row.append("ship" if (row, col) in ship_cells else "water")
-            elif shot == 1:
-                board_row.append("miss")
-            else:
-                board_row.append("hit")
-        board.append(board_row)
-    return board
 
 
 def build_placement_board(fleet, selected_ship_id=None):
