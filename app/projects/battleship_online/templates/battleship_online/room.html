@@ -5,7 +5,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('battleship_online.static', filename='style.css') }}">
 
-<div class="bso-wrapper">
+<div class="bso-wrapper" id="bsoWrapper">
     <div class="bso-container bso-room-container">
         <h1>Battleship Online</h1>
 
@@ -31,8 +31,6 @@
 
         <div class="bso-status-message" id="bsoStatusMessage">Loading&hellip;</div>
 
-        <div class="bso-sink-toast" id="bsoSinkToast" hidden></div>
-
         <div class="bso-placement-actions" id="bsoPlacementActions" hidden>
             <div class="bso-placement-toolbar">
                 <div class="bso-ship-list" id="bsoShipList"></div>
@@ -55,13 +53,23 @@
             <p class="bso-placement-hint">Click a ship to select it, then move with arrows or rotate with Space.</p>
         </div>
 
+        <div class="bso-play-bar" id="bsoPlayBar" hidden>
+            <div class="bso-sink-toast" id="bsoSinkToast" hidden></div>
+            <div class="bso-turn-banner" id="bsoTurnBanner"></div>
+        </div>
+
+        <div class="bso-board-tabs" id="bsoBoardTabs" hidden>
+            <button type="button" id="bsoTabEnemy" class="bso-board-tab">Enemy waters</button>
+            <button type="button" id="bsoTabOwn" class="bso-board-tab">Your fleet</button>
+        </div>
+
         <div class="bso-boards" id="bsoPlayerBoards" hidden>
             <div class="bso-board-panel" id="bsoOwnPanel">
                 <h2 class="bso-board-title" id="bsoOwnTitle">Your fleet</h2>
                 <div class="bso-grid bso-own-grid" id="bsoOwnGrid"></div>
             </div>
             <div class="bso-board-panel" id="bsoTargetPanel" hidden>
-                <h2 class="bso-board-title">Enemy waters</h2>
+                <h2 class="bso-board-title" id="bsoTargetTitle">Enemy waters</h2>
                 <div class="bso-grid bso-target-grid" id="bsoTargetGrid"></div>
             </div>
         </div>

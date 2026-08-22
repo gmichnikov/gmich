@@ -17,9 +17,18 @@
     var pendingName = null;
     var lastState = null;
     var selectedShipId = 0;
+    var mobileBoardTab = "enemy";
+    var lastTurnSeen = null;
+    var mobileLayout = window.matchMedia("(max-width: 820px)");
 
     var statusEl = document.getElementById("bsoStatusMessage");
     var sinkToastEl = document.getElementById("bsoSinkToast");
+    var playBarEl = document.getElementById("bsoPlayBar");
+    var turnBannerEl = document.getElementById("bsoTurnBanner");
+    var wrapperEl = document.getElementById("bsoWrapper");
+    var boardTabsEl = document.getElementById("bsoBoardTabs");
+    var tabEnemyBtn = document.getElementById("bsoTabEnemy");
+    var tabOwnBtn = document.getElementById("bsoTabOwn");
     var shareLinkInput = document.getElementById("bsoShareLink");
     var shareRow = document.getElementById("bsoShareRow");
     var copyBtn = document.getElementById("bsoCopyBtn");
@@ -43,6 +52,7 @@
     var ownTitle = document.getElementById("bsoOwnTitle");
     var ownGrid = document.getElementById("bsoOwnGrid");
     var targetPanel = document.getElementById("bsoTargetPanel");
+    var targetTitle = document.getElementById("bsoTargetTitle");
     var targetGrid = document.getElementById("bsoTargetGrid");
     var spectatorBoards = document.getElementById("bsoSpectatorBoards");
 
@@ -128,40 +138,119 @@
         }
     }
 
+    function usesMobileBoardTabs(state) {
+        return (
+            mobileLayout.matches &&
+            !!state.your_seat &&
+            (state.status === "battle" || state.status === "won")
+        );
+    }
+
+    function updateMobileBoardTabs(state) {
+        var useTabs = usesMobileBoardTabs(state);
+        boardTabsEl.hidden = !useTabs;
+        playerBoards.classList.toggle("bso-mobile-tabs", useTabs);
+
+        if (!useTabs) {
+            ownPanel.classList.remove("bso-board-panel-hidden");
+            targetPanel.classList.remove("bso-board-panel-hidden");
+            return;
+        }
+
+        if (state.turn !== lastTurnSeen && state.status === "battle") {
+            mobileBoardTab = state.turn === state.your_seat ? "enemy" : "own";
+            lastTurnSeen = state.turn;
+        }
+
+        var showEnemy = mobileBoardTab === "enemy";
+        targetPanel.classList.toggle("bso-board-panel-hidden", !showEnemy);
+        ownPanel.classList.toggle("bso-board-panel-hidden", showEnemy);
+        tabEnemyBtn.classList.toggle("bso-board-tab-active", showEnemy);
+        tabOwnBtn.classList.toggle("bso-board-tab-active", !showEnemy);
+    }
+
+    function setMobileBoardTab(tab) {
+        mobileBoardTab = tab;
+        if (lastState) {
+            updateMobileBoardTabs(lastState);
+        }
+    }
+
+    function updatePlayBar(state) {
+        var isPlayer = !!state.your_seat;
+        var showBar =
+            state.status === "placement" ||
+            state.status === "battle" ||
+            state.status === "won" ||
+            (!!state.spectator && state.status !== "waiting");
+
+        playBarEl.hidden = !showBar;
+        wrapperEl.classList.toggle("bso-play-active", showBar);
+        turnBannerEl.className = "bso-turn-banner";
+        turnBannerEl.innerHTML = "";
+
+        if (!showBar) {
+            return;
+        }
+
+        var mainText = "";
+        var subText = "";
+        var bannerClass = "bso-turn-banner";
+
+        if (state.status === "placement") {
+            if (!isPlayer) {
+                mainText = "Ship placement";
+                subText = "Players are arranging fleets";
+            } else if (state.your_ready && !state.opponent_ready) {
+                bannerClass += " bso-turn-waiting";
+                mainText = "Waiting for opponent";
+                subText = "They still need to ready up";
+            } else if (!state.your_ready) {
+                bannerClass += " bso-turn-yours";
+                mainText = "Place your ships";
+                subText = "Select a ship, move/rotate, then Ready";
+            } else {
+                bannerClass += " bso-turn-waiting";
+                mainText = "Starting battle\u2026";
+            }
+        } else if (state.status === "battle") {
+            var turnName = seatName(state, state.turn);
+            if (!isPlayer) {
+                bannerClass += " bso-turn-spectate";
+                mainText = turnName + "'s turn";
+                subText = "Spectating";
+            } else if (state.turn === state.your_seat) {
+                bannerClass += " bso-turn-yours";
+                mainText = "Your turn";
+                subText = "Fire on enemy waters";
+            } else {
+                bannerClass += " bso-turn-opponent";
+                mainText = turnName + "'s turn";
+                subText = "Waiting for their shot";
+            }
+        } else if (state.status === "won") {
+            if (isPlayer && state.winner === state.your_seat) {
+                bannerClass += " bso-turn-yours";
+                mainText = "You win!";
+                subText = "You sank their fleet";
+            } else if (isPlayer) {
+                bannerClass += " bso-turn-opponent";
+                mainText = seatName(state, state.winner) + " wins";
+                subText = "Tap Rematch to play again";
+            } else {
+                mainText = seatName(state, state.winner) + " wins";
+            }
+        }
+
+        turnBannerEl.className = bannerClass;
+        turnBannerEl.innerHTML =
+            '<div class="bso-turn-main">' + mainText + "</div>" +
+            (subText ? '<div class="bso-turn-sub">' + subText + "</div>" : "");
+    }
+
     function statusText(state) {
         if (state.status === "waiting") {
             return "Waiting for an opponent\u2026 share the link above.";
-        }
-        if (state.status === "placement") {
-            if (!state.your_seat) {
-                return "Players are placing ships\u2026";
-            }
-            if (state.your_ready && !state.opponent_ready) {
-                return "Waiting for your opponent to ready up\u2026";
-            }
-            if (!state.your_ready) {
-                return "Place your ships, then hit Ready.";
-            }
-            return "Both players ready\u2026";
-        }
-        if (state.status === "won") {
-            if (state.your_seat && state.winner === state.your_seat) {
-                return "You sank their fleet!";
-            }
-            if (state.your_seat) {
-                return seatName(state, state.winner) + " wins!";
-            }
-            return seatName(state, state.winner) + " wins!";
-        }
-        if (state.status === "battle") {
-            var turnName = seatName(state, state.turn);
-            if (!state.your_seat) {
-                return "Spectating \u2014 " + turnName + "'s turn";
-            }
-            if (state.turn === state.your_seat) {
-                return "Your turn \u2014 fire on the enemy grid.";
-            }
-            return "Waiting for " + turnName + "\u2026";
         }
         return "";
     }
@@ -318,10 +407,15 @@
 
     function render(state) {
         lastState = state;
-        statusEl.textContent = statusText(state);
-        statusEl.className = "bso-status-message bso-status-" + state.status;
-
         var isPlayer = !!state.your_seat;
+        var statusMessage = statusText(state);
+        statusEl.textContent = statusMessage;
+        statusEl.hidden = !statusMessage;
+        statusEl.className = "bso-status-message bso-status-" + state.status;
+        updatePlayBar(state);
+        wrapperEl.classList.toggle("bso-in-battle", isPlayer && state.status === "battle");
+        updateMobileBoardTabs(state);
+
         var isFinished = state.status === "won";
         rematchBtn.hidden = !(isPlayer && isFinished);
         spectatorBadge.hidden = isPlayer;
@@ -345,6 +439,8 @@
             spectatorBoards.hidden = true;
 
             var placing = state.status === "placement";
+            var battling = state.status === "battle";
+            playerBoards.classList.toggle("bso-battle-active", battling);
             placementActions.hidden = !placing;
             targetPanel.hidden = placing;
 
@@ -364,6 +460,13 @@
                     );
                 } else {
                     ownTitle.textContent = "Your fleet";
+                    if (battling && state.turn === state.your_seat) {
+                        targetTitle.textContent = "Enemy waters \u2014 your turn";
+                        targetPanel.classList.add("bso-panel-active-turn");
+                    } else {
+                        targetTitle.textContent = "Enemy waters";
+                        targetPanel.classList.remove("bso-panel-active-turn");
+                    }
                     selectedShipId = null;
                     renderGrid(ownGrid, state.your_board, "view", null);
                     renderGrid(
@@ -379,6 +482,7 @@
             nameRow.hidden = true;
             placementActions.hidden = true;
             playerBoards.hidden = true;
+            playerBoards.classList.remove("bso-battle-active");
             spectatorBoards.hidden = state.status === "waiting";
             if (state.spectator && state.status !== "waiting") {
                 renderSpectatorBoards(state);
@@ -640,6 +744,18 @@
             stopPolling();
         } else {
             startPolling();
+        }
+    });
+
+    tabEnemyBtn.addEventListener("click", function () {
+        setMobileBoardTab("enemy");
+    });
+    tabOwnBtn.addEventListener("click", function () {
+        setMobileBoardTab("own");
+    });
+    mobileLayout.addEventListener("change", function () {
+        if (lastState) {
+            render(lastState);
         }
     });
 
