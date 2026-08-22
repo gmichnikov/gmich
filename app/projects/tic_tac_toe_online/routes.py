@@ -5,11 +5,13 @@ from flask import Blueprint, jsonify, render_template, request, session
 
 from app.projects.tic_tac_toe_online.room_service import (
     RoomError,
+    cleanup_stale_rooms,
     create_room,
     get_state,
     join_room,
     make_move,
     rematch,
+    set_name,
 )
 from app.projects.tic_tac_toe_online.serialize import room_to_dict
 from app.utils.logging import log_project_visit
@@ -60,6 +62,7 @@ def _handle_room_errors(fn):
 @tic_tac_toe_online_bp.route("/")
 def index():
     """Landing page: create a new room or join one via a code/link."""
+    cleanup_stale_rooms()
     log_project_visit("tic_tac_toe_online", "Tic-Tac-Toe Online")
     return render_template("tic_tac_toe_online/index.html")
 
@@ -67,53 +70,56 @@ def index():
 @tic_tac_toe_online_bp.route("/rooms", methods=["POST"])
 @_handle_room_errors
 def api_create_room():
-    # Don't seat anyone yet — the creator claims X via /join after redirect.
     room = create_room()
-    return jsonify({"code": room["code"]}), 201
+    return jsonify({"code": room.code}), 201
 
 
 @tic_tac_toe_online_bp.route("/room/<code>")
 def room_page(code):
     """Room page shell. Seats are claimed via POST /join (not here) so bots/prefetchers can't steal them."""
     try:
-        # Existence check only; identity may not be known until JS sends the player header.
         room, _seat = get_state(code, _player_id())
     except RoomError as exc:
         return (
             render_template("tic_tac_toe_online/not_found.html", message=exc.message),
             exc.status_code,
         )
-    return render_template("tic_tac_toe_online/room.html", code=room["code"])
+    return render_template("tic_tac_toe_online/room.html", code=room.code)
 
 
 @tic_tac_toe_online_bp.route("/room/<code>/join", methods=["POST"])
 @_handle_room_errors
 def api_room_join(code):
-    player_id = _player_id()
-    room, seat = join_room(code, player_id)
+    data = request.get_json(silent=True) or {}
+    room, seat = join_room(code, _player_id(), name=data.get("name"))
+    return jsonify(room_to_dict(room, seat))
+
+
+@tic_tac_toe_online_bp.route("/room/<code>/name", methods=["POST"])
+@_handle_room_errors
+def api_room_name(code):
+    data = request.get_json(silent=True) or {}
+    room, seat = set_name(code, _player_id(), data.get("name", ""))
     return jsonify(room_to_dict(room, seat))
 
 
 @tic_tac_toe_online_bp.route("/room/<code>/state")
 @_handle_room_errors
 def api_room_state(code):
-    player_id = _player_id()
-    room, seat = get_state(code, player_id)
+    room, seat = get_state(code, _player_id())
     return jsonify(room_to_dict(room, seat))
 
 
 @tic_tac_toe_online_bp.route("/room/<code>/move", methods=["POST"])
 @_handle_room_errors
 def api_room_move(code):
-    player_id = _player_id()
     data = request.get_json(silent=True) or {}
-    room, seat = make_move(code, player_id, data.get("cell"))
+    room, seat = make_move(code, _player_id(), data.get("cell"))
     return jsonify(room_to_dict(room, seat))
 
 
 @tic_tac_toe_online_bp.route("/room/<code>/rematch", methods=["POST"])
 @_handle_room_errors
 def api_room_rematch(code):
-    player_id = _player_id()
-    room, seat = rematch(code, player_id)
+    room, seat = rematch(code, _player_id())
     return jsonify(room_to_dict(room, seat))

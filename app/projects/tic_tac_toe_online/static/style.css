@@ -169,8 +169,28 @@
 
 .ttto-spectator-badge[hidden],
 .ttto-rematch-btn[hidden],
-.ttto-share-row[hidden] {
+.ttto-share-row[hidden],
+.ttto-name-row[hidden],
+.ttto-opponent-label[hidden] {
     display: none !important;
+}
+
+.ttto-name-row {
+    margin-top: 10px;
+}
+
+.ttto-name-row label {
+    display: block;
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.ttto-opponent-label {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #444;
+    font-weight: 600;
 }
 
 .ttto-status-message {

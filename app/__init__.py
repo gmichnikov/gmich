@@ -252,6 +252,7 @@ def create_app():
         BowlingPlayer,
         BowlingRoll,
     )
+    from app.projects.tic_tac_toe_online.models import TicTacToeOnlineRoom
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():

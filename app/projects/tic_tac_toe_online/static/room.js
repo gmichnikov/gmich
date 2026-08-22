@@ -7,6 +7,7 @@
 
     var pollTimer = null;
     var isMoving = false;
+    var isSavingName = false;
     var lastState = null;
 
     var boardEl = document.getElementById("tttoBoard");
@@ -17,6 +18,10 @@
     var copyBtn = document.getElementById("tttoCopyBtn");
     var spectatorBadge = document.getElementById("tttoSpectatorBadge");
     var rematchBtn = document.getElementById("tttoRematchBtn");
+    var nameRow = document.getElementById("tttoNameRow");
+    var nameInput = document.getElementById("tttoNameInput");
+    var nameSaveBtn = document.getElementById("tttoNameSaveBtn");
+    var opponentLabel = document.getElementById("tttoOpponentLabel");
 
     shareLinkInput.value = window.location.href;
 
@@ -72,30 +77,45 @@
         });
     }
 
+    function seatName(state, seat) {
+        if (state.names && state.names[seat]) {
+            return state.names[seat];
+        }
+        return "Player " + seat;
+    }
+
+    function opponentSeat(state) {
+        if (!state.your_seat) {
+            return null;
+        }
+        return state.your_seat === "X" ? "O" : "X";
+    }
+
     function statusText(state) {
         if (state.status === "waiting") {
             return "Waiting for an opponent to join\u2026 share the link above.";
         }
         if (state.status === "won") {
+            var winnerName = seatName(state, state.winner);
             if (state.your_seat && state.winner === state.your_seat) {
-                return "You win! (" + SYMBOLS[state.winner] + ")";
+                return "You win!";
             }
             if (state.your_seat) {
-                return "You lose. (" + SYMBOLS[state.winner] + " wins)";
+                return winnerName + " wins!";
             }
-            return state.winner + " wins! (" + SYMBOLS[state.winner] + ")";
+            return winnerName + " wins!";
         }
         if (state.status === "draw") {
             return "It's a draw!";
         }
-        // active
+        var turnName = seatName(state, state.turn);
         if (!state.your_seat) {
-            return "Spectating \u2014 " + state.turn + "'s turn";
+            return "Spectating \u2014 " + turnName + "'s turn";
         }
         if (state.turn === state.your_seat) {
             return "Your turn (" + SYMBOLS[state.your_seat] + ")";
         }
-        return "Waiting for opponent's move\u2026";
+        return "Waiting for " + turnName + "\u2026";
     }
 
     function render(state) {
@@ -121,6 +141,23 @@
         rematchBtn.hidden = !(isPlayer && isFinished);
         spectatorBadge.hidden = isPlayer;
         shareRow.hidden = !isPlayer;
+        nameRow.hidden = !isPlayer;
+
+        if (isPlayer) {
+            nameInput.placeholder = "Player " + state.your_seat;
+            if (document.activeElement !== nameInput) {
+                nameInput.value = state.your_name || "";
+            }
+            var opp = opponentSeat(state);
+            if (opp && state.seats[opp]) {
+                opponentLabel.textContent = "Playing against: " + seatName(state, opp);
+                opponentLabel.hidden = false;
+            } else {
+                opponentLabel.hidden = true;
+            }
+        } else {
+            opponentLabel.hidden = true;
+        }
     }
 
     function poll() {
@@ -130,7 +167,6 @@
     }
 
     function joinThenStart() {
-        // Claim a seat via POST so mere link previews/prefetch GETs can't take it.
         apiRequest("POST", "/join")
             .then(function (state) {
                 render(state);
@@ -197,6 +233,31 @@
     }
 
     copyBtn.addEventListener("click", handleCopyClick);
+
+    function saveName() {
+        if (isSavingName) {
+            return;
+        }
+        isSavingName = true;
+        nameSaveBtn.disabled = true;
+        apiRequest("POST", "/name", { name: nameInput.value })
+            .then(render)
+            .catch(function (err) {
+                statusEl.textContent = err.message;
+            })
+            .then(function () {
+                isSavingName = false;
+                nameSaveBtn.disabled = false;
+            });
+    }
+
+    nameSaveBtn.addEventListener("click", saveName);
+    nameInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            saveName();
+        }
+    });
 
     function handleRematchClick() {
         rematchBtn.disabled = true;
