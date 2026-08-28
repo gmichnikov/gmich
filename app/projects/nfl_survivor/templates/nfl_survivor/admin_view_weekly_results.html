@@ -8,7 +8,7 @@
     <thead>
         <tr>
             <th>Team</th>
-            {% for week in range(1, max_weeks) %}
+            {% for week in range(1, max_weeks + 1) %}
             <th>W{{ week }}</th>
             {% endfor %}
         </tr>
@@ -17,7 +17,7 @@
         {% for team, weeks in results_by_team.items() %}
         <tr>
             <td>{{ team }}</td>
-            {% for week in range(1, max_weeks) %}
+            {% for week in range(1, max_weeks + 1) %}
             <td class="{% if weeks[week] == 'win' %}ns-result-win{% elif weeks[week] == 'lose' %}ns-result-lose{% endif %}">
                 {{ weeks[week] }}
             </td>

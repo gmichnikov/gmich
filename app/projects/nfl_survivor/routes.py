@@ -209,7 +209,7 @@ def pick():
     form = TeamSelectionForm()
     form.team_choice.choices = available_teams
     form.week.choices = [
-        (str(w), str(w)) for w in range(current_week, season.max_weeks)
+        (str(w), str(w)) for w in range(current_week, season.max_weeks + 1)
     ]
 
     if form.validate_on_submit():
@@ -424,6 +424,7 @@ def admin_set_pick():
     display_names = build_display_names([p.user for p in participants])
     form = AdminSetPickForm()
     form.user_id.choices = [(p.user_id, display_names[p.user_id]) for p in participants]
+    form.week.choices = [(str(w), str(w)) for w in range(1, season.max_weeks + 1)]
     form.team.choices = load_nfl_teams_as_pairs()
 
     if form.validate_on_submit():

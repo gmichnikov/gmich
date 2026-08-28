@@ -17,7 +17,7 @@ class TeamSelectionForm(FlaskForm):
 
 class AdminSetPickForm(FlaskForm):
     user_id = SelectField("Participant", coerce=int, choices=[])
-    week = SelectField("Week", choices=[(str(i), str(i)) for i in range(1, 18)])
+    week = SelectField("Week", choices=[])
     team = SelectField("Team", choices=[])
     submit = SubmitField("Set Pick")
 
