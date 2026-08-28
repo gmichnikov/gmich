@@ -1,0 +1,23 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Current Week Picks{% endblock %}
+
+{% block ns_content %}
+<h1>Current week picks (week {{ week }})</h1>
+<table class="ns-admin-table">
+    <thead>
+        <tr>
+            <th>Player</th>
+            <th>Pick</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for name, team_name in picks %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ team_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Seasons{% endblock %}
+
+{% block ns_content %}
+<h1>Seasons</h1>
+<p><a href="{{ url_for('nfl_survivor.admin_season_new') }}">Create season</a></p>
+
+<table class="ns-admin-table">
+    <thead>
+        <tr>
+            <th>Year</th>
+            <th>Name</th>
+            <th>Active</th>
+            <th>Week 2 starts</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in seasons %}
+        <tr>
+            <td>{{ s.year }}</td>
+            <td>{{ s.name }}</td>
+            <td>{% if s.is_active %}Yes{% else %}No{% endif %}</td>
+            <td>{{ s.week_2_start|user_local_datetime }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No seasons yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

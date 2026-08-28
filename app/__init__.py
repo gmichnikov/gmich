@@ -123,6 +123,7 @@ def create_app():
     from app.projects.tic_tac_toe_online.routes import tic_tac_toe_online_bp
     from app.projects.battleship_online.routes import battleship_online_bp
     from app.projects.japan_recs.routes import japan_recs_bp
+    from app.projects.nfl_survivor import nfl_survivor_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -177,6 +178,7 @@ def create_app():
         battleship_online_bp, url_prefix="/battleship-online"
     )
     app.register_blueprint(japan_recs_bp)
+    app.register_blueprint(nfl_survivor_bp, url_prefix="/nfl-survivor")
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
@@ -258,6 +260,13 @@ def create_app():
     )
     from app.projects.tic_tac_toe_online.models import TicTacToeOnlineRoom
     from app.projects.battleship_online.models import BattleshipOnlineRoom
+    from app.projects.nfl_survivor.models import (
+        NflSurvivorSeason,
+        NflSurvivorParticipant,
+        NflSurvivorPick,
+        NflSurvivorWeeklyResult,
+        NflSurvivorSpread,
+    )
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():

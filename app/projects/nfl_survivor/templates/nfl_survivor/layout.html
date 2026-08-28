@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{% block ns_title %}NFL Survivor{% endblock %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('nfl_survivor.static', filename='nfl_survivor/styles.css') }}">
+{% block ns_styles %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="ns-page">
+    {% if season %}
+    <p class="ns-help-text">{{ season.name }}</p>
+    {% endif %}
+
+    {% block ns_content %}{% endblock %}
+
+    <div class="ns-nav-links">
+        <a href="{{ url_for('nfl_survivor.index') }}">Home</a>
+        {% if season and is_participant %}
+        <a href="{{ url_for('nfl_survivor.pick') }}">Pick</a>
+        <a href="{{ url_for('nfl_survivor.view_picks') }}">View Picks</a>
+        {% endif %}
+    </div>
+
+    {% if current_user.is_admin %}
+    <div class="ns-admin-section">
+        <h2>Pool admin</h2>
+        <div class="ns-nav-links">
+            <a href="{{ url_for('nfl_survivor.admin_seasons') }}">Seasons</a>
+            {% if season %}
+            <a href="{{ url_for('nfl_survivor.admin_set_pick') }}">Set Pick</a>
+            <a href="{{ url_for('nfl_survivor.admin_auto_pick') }}">Auto Pick</a>
+            <a href="{{ url_for('nfl_survivor.admin') }}">Set Results</a>
+            <a href="{{ url_for('nfl_survivor.auto_update') }}">Auto Update Results</a>
+            <a href="{{ url_for('nfl_survivor.fetch_spreads') }}">Fetch Spreads</a>
+            <a href="{{ url_for('nfl_survivor.all_spreads') }}">All Spreads</a>
+            <a href="{{ url_for('nfl_survivor.admin_view_picks') }}">Current Week Picks</a>
+            <a href="{{ url_for('nfl_survivor.admin_view_all_picks') }}">All Picks Grid</a>
+            <a href="{{ url_for('nfl_survivor.admin_view_weekly_results') }}">Weekly Results</a>
+            <a href="{{ url_for('nfl_survivor.admin_view_participants') }}">Participants</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

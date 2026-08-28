@@ -1,0 +1,29 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Weekly Results{% endblock %}
+
+{% block ns_content %}
+<h1>Weekly results by team</h1>
+<table class="ns-results-table">
+    <thead>
+        <tr>
+            <th>Team</th>
+            {% for week in range(1, max_weeks) %}
+            <th>W{{ week }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for team, weeks in results_by_team.items() %}
+        <tr>
+            <td>{{ team }}</td>
+            {% for week in range(1, max_weeks) %}
+            <td class="{% if weeks[week] == 'win' %}ns-result-win{% elif weeks[week] == 'lose' %}ns-result-lose{% endif %}">
+                {{ weeks[week] }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

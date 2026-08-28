@@ -1,0 +1,21 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Set Results{% endblock %}
+
+{% block ns_content %}
+<h1>Set results — week {{ week }}</h1>
+
+<form method="post" class="ns-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for team in teams %}
+    <label>{{ team.name }}</label>
+    <select name="result_{{ team.id }}">
+        <option value="win" {% if existing_results.get(team.id) == 'win' %}selected{% endif %}>Win</option>
+        <option value="tie" {% if existing_results.get(team.id) == 'tie' %}selected{% endif %}>Tie</option>
+        <option value="lose" {% if existing_results.get(team.id) == 'lose' %}selected{% endif %}>Lose</option>
+        <option value="did not play" {% if existing_results.get(team.id) == 'did not play' %}selected{% endif %}>Did not play</option>
+    </select>
+    {% endfor %}
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}
