@@ -66,6 +66,7 @@ class NflSurvivorParticipant(db.Model):
     )
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     joined_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    has_paid = db.Column(db.Boolean, nullable=False, default=False)
 
     user = db.relationship("User", backref=db.backref("nfl_survivor_entries", lazy=True))
 

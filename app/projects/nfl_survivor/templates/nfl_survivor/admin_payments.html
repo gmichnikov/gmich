@@ -1,0 +1,46 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Payments{% endblock %}
+
+{% block ns_content %}
+<h1 class="ns-card-title">Entry payments</h1>
+<p class="ns-help-text">
+  {{ paid_count }} of {{ participants|length }} participants marked paid.
+  Only admins can see this page.
+</p>
+
+{% if participants %}
+<form method="post" class="ns-form ns-form-wide">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="ns-table-scroll">
+    <table class="ns-admin-table">
+      <thead>
+        <tr>
+          <th>Paid</th>
+          <th>Player</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in participants %}
+        <tr class="{% if not row.has_paid %}ns-highlight{% endif %}">
+          <td>
+            <input type="checkbox"
+                   name="paid"
+                   value="{{ row.id }}"
+                   id="paid_{{ row.id }}"
+                   {% if row.has_paid %}checked{% endif %}>
+          </td>
+          <td>
+            <label for="paid_{{ row.id }}">{{ row.name }}</label>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <button type="submit" class="ns-btn ns-btn-primary">Save payment status</button>
+</form>
+{% else %}
+<p class="ns-help-text">No participants yet.</p>
+{% endif %}
+{% endblock %}

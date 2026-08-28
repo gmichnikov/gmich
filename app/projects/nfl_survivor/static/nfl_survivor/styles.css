@@ -142,6 +142,12 @@
   border-left-color: var(--ns-red);
 }
 
+.ns-status-message.ns-status-unpaid {
+  background: #fffbeb;
+  border-left-color: #d97706;
+  color: #92400e;
+}
+
 .ns-welcome-name {
   font-weight: 600;
   color: var(--ns-navy);
@@ -351,6 +357,10 @@
 
 .ns-form-wide {
   max-width: none;
+}
+
+.ns-form-wide.ns-form {
+  max-width: 520px;
 }
 
 .ns-team-results-grid {

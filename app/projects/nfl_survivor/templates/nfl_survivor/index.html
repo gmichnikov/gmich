@@ -19,6 +19,14 @@
 {% else %}
 <p class="ns-card-subtitle">Welcome, <span class="ns-welcome-name">{{ current_user.full_name }}</span>.</p>
 
+{% if is_participant and not has_paid %}
+<div class="ns-status">
+  <p class="ns-status-message ns-status-unpaid">
+    You have not paid yet.
+  </p>
+</div>
+{% endif %}
+
 <div class="ns-status">
   {% if is_participant %}
   <div class="ns-status-message ns-status-success">

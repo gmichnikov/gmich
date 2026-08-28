@@ -68,6 +68,7 @@ def _season_context(season):
     return {
         "season": season,
         "is_participant": participant is not None,
+        "has_paid": participant.has_paid if participant else None,
         "join_open": season and is_join_open(season),
     }
 
@@ -838,6 +839,61 @@ def admin_view_participants():
         "nfl_survivor/admin_view_participants.html",
         participants=rows,
         current_week=current_week,
+        **ctx,
+    )
+
+
+@nfl_survivor_bp.route("/admin/payments", methods=["GET", "POST"])
+@admin_required
+def admin_payments():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    participants = _participants_for_season(season)
+    display_names = build_display_names([p.user for p in participants])
+
+    if request.method == "POST":
+        paid_ids = {int(value) for value in request.form.getlist("paid")}
+        changes = []
+        for participant in participants:
+            new_paid = participant.id in paid_ids
+            if participant.has_paid == new_paid:
+                continue
+            participant.has_paid = new_paid
+            name = display_names[participant.user_id]
+            changes.append(f"{name}: {'paid' if new_paid else 'unpaid'}")
+
+        if changes:
+            log_nfl_survivor(
+                "Payments",
+                (
+                    f"{current_user.full_name} updated payment status "
+                    f"({season.name}): {', '.join(changes)}"
+                ),
+            )
+            db.session.commit()
+            flash("Payment status updated.")
+        else:
+            flash("No changes to save.")
+
+        return redirect(url_for("nfl_survivor.admin_payments"))
+
+    rows = [
+        {
+            "id": participant.id,
+            "name": display_names[participant.user_id],
+            "has_paid": participant.has_paid,
+        }
+        for participant in participants
+    ]
+    paid_count = sum(1 for row in rows if row["has_paid"])
+
+    ctx = _season_context(season)
+    return render_template(
+        "nfl_survivor/admin_payments.html",
+        participants=rows,
+        paid_count=paid_count,
         **ctx,
     )
 
