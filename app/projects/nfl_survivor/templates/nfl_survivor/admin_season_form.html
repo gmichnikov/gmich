@@ -3,28 +3,27 @@
 {% block ns_title %}Create Season{% endblock %}
 
 {% block ns_content %}
-<h1>Create season</h1>
+<h1 class="ns-card-title">Create season</h1>
 <p class="ns-help-text">
-    All times are US/Eastern (<code>YYYY-MM-DD HH:MM</code>).
-    <strong>Week 2 starts</strong> is the first Tuesday boundary after Week 1's MNF
-    (e.g. Tue 5:00 AM). Everything runs on this cadence:
-    join closes at the first one; each week picks lock at the next Tuesday;
-    completed weeks appear on the shared grid; odds are fetched for Tue–Tue windows.
+  All times are US/Eastern (<code>YYYY-MM-DD HH:MM</code>).
+  <strong>Week 2 starts</strong> is the Tuesday after Week 1's MNF — join closes, pick weeks roll, and spreads align to that schedule.
 </p>
 
-<form method="post" class="ns-form">
-    {{ form.hidden_tag() }}
-    <label>{{ form.year.label.text }}</label>
-    {{ form.year() }}
-    <label>{{ form.name.label.text }}</label>
-    {{ form.name() }}
-    <label>{{ form.week_2_start.label.text }}</label>
-    {{ form.week_2_start() }}
-    <label>{{ form.espn_season_year.label.text }}</label>
-    {{ form.espn_season_year() }}
-    <label>{{ form.max_weeks.label.text }}</label>
-    {{ form.max_weeks() }}
-    <label>{{ form.is_active() }} {{ form.is_active.label.text }}</label>
-    {{ form.submit() }}
+<form method="post" class="ns-form ns-form-wide">
+  {{ form.hidden_tag() }}
+  <label>{{ form.year.label.text }}</label>
+  {{ form.year() }}
+  <label>{{ form.name.label.text }}</label>
+  {{ form.name() }}
+  <label>{{ form.week_2_start.label.text }}</label>
+  {{ form.week_2_start() }}
+  <label>{{ form.espn_season_year.label.text }}</label>
+  {{ form.espn_season_year() }}
+  <label>{{ form.max_weeks.label.text }}</label>
+  {{ form.max_weeks() }}
+  <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+    {{ form.is_active() }} {{ form.is_active.label.text }}
+  </label>
+  {{ form.submit() }}
 </form>
 {% endblock %}

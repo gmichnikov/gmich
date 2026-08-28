@@ -3,23 +3,41 @@
 {% block ns_title %}NFL Survivor{% endblock %}
 
 {% block ns_content %}
-<h1>NFL Survivor Pool</h1>
+<h1 class="ns-card-title">Survivor pool</h1>
 
 {% if not season %}
-<p>No active season yet.{% if current_user.is_admin %} Use <strong>Pool admin → Seasons</strong> below to create one.{% endif %}</p>
+<div class="ns-status">
+  <p class="ns-status-message">
+    No active season yet.
+    {% if current_user.is_admin %}
+    Create one under <strong>Pool admin → Seasons</strong> below.
+    {% else %}
+    Check back soon — the commissioner will open the pool before kickoff.
+    {% endif %}
+  </p>
+</div>
 {% else %}
-<p>Welcome, {{ current_user.full_name }}.</p>
+<p class="ns-card-subtitle">Welcome, <span class="ns-welcome-name">{{ current_user.full_name }}</span>.</p>
 
-{% if is_participant %}
-<p>You are in the {{ season.name }} pool.</p>
-{% elif join_open %}
-<p>Join period is open until {{ season.week_2_start|user_local_datetime }}.</p>
-<form method="post" action="{{ url_for('nfl_survivor.join') }}">
+<div class="ns-status">
+  {% if is_participant %}
+  <div class="ns-status-message ns-status-success">
+    You're in for <strong>{{ season.name }}</strong>. Head to <strong>Make a pick</strong> when you're ready.
+  </div>
+  {% elif join_open %}
+  <div class="ns-status-message">
+    Join before <strong>{{ season.week_2_start|user_local_datetime }}</strong> to play this season.
+    Pick one NFL team each week — no repeats. Two losses and you're out.
+  </div>
+  <form method="post" action="{{ url_for('nfl_survivor.join') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit">Join pool</button>
-</form>
-{% else %}
-<p>Join period is closed for {{ season.name }}.</p>
-{% endif %}
+    <button type="submit" class="ns-btn ns-btn-primary">Join pool</button>
+  </form>
+  {% else %}
+  <div class="ns-status-message ns-status-closed">
+    Registration is closed for <strong>{{ season.name }}</strong>.
+  </div>
+  {% endif %}
+</div>
 {% endif %}
 {% endblock %}

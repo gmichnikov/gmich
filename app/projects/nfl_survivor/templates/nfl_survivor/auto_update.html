@@ -3,11 +3,12 @@
 {% block ns_title %}Auto Update Results{% endblock %}
 
 {% block ns_content %}
-<h1>Automated weekly results update</h1>
+<h1 class="ns-card-title">Auto update results</h1>
+<p class="ns-help-text">Pull scores from ESPN for a completed week.</p>
 <form method="post" class="ns-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label for="week_number">Week number</label>
-    <input type="number" id="week_number" name="week_number">
-    <input type="submit" value="Update results">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="week_number">Week number</label>
+  <input type="number" id="week_number" name="week_number">
+  <button type="submit" class="ns-btn ns-btn-primary">Update from ESPN</button>
 </form>
 {% endblock %}

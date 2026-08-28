@@ -266,6 +266,7 @@ def create_app():
         NflSurvivorPick,
         NflSurvivorWeeklyResult,
         NflSurvivorSpread,
+        NflSurvivorGame,
     )
     # Inject PostHog API key into all templates
     @app.context_processor

@@ -2,12 +2,25 @@ import click
 from flask.cli import with_appcontext
 
 from app.projects.nfl_survivor.routes import _fetch_spreads_data
+from app.projects.nfl_survivor.schedule import fetch_schedule_for_active_weeks
 from app.projects.nfl_survivor.utils import get_active_season, is_scheduled_spreads_day
 
 
 @click.group(name="nfl-survivor")
 def nfl_survivor_cli():
     """NFL Survivor pool commands."""
+
+
+@nfl_survivor_cli.command("fetch-schedule")
+@with_appcontext
+def fetch_schedule_command():
+    """Fetch NFL kickoff times from ESPN for the active season."""
+    season = get_active_season()
+    if not season:
+        raise click.ClickException("No active NFL Survivor season.")
+
+    total, weeks = fetch_schedule_for_active_weeks(season)
+    click.echo(f"Updated schedule for weeks {weeks}: {total} team rows.")
 
 
 @nfl_survivor_cli.command("fetch-spreads")
@@ -31,6 +44,28 @@ def fetch_spreads_command():
     click.echo(result["message"])
     if result.get("remaining_requests") is not None:
         click.echo(f"Odds API quota remaining: {result['remaining_requests']}")
+
+
+@nfl_survivor_cli.command("sync")
+@with_appcontext
+def sync_command():
+    """Daily job: always refresh schedule; refresh spreads on Tue/Thu."""
+    season = get_active_season()
+    if not season:
+        raise click.ClickException("No active NFL Survivor season.")
+
+    total, weeks = fetch_schedule_for_active_weeks(season)
+    click.echo(f"Schedule weeks {weeks}: {total} team rows.")
+
+    if is_scheduled_spreads_day():
+        result = _fetch_spreads_data(season, manual=False)
+        if isinstance(result, tuple):
+            body, status = result
+            msg = body.get("error", body) if isinstance(body, dict) else body
+            raise click.ClickException(f"Spreads fetch failed ({status}): {msg}")
+        click.echo(result["message"])
+    else:
+        click.echo("Spreads skipped (not Tuesday or Thursday, US/Eastern).")
 
 
 def init_app(app):

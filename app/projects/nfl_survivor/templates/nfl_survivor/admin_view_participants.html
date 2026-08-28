@@ -3,26 +3,28 @@
 {% block ns_title %}Participants{% endblock %}
 
 {% block ns_content %}
-<h1>Participants</h1>
+<h1 class="ns-card-title">Participants</h1>
 <p class="ns-help-text">Week {{ current_week }} — highlighted rows still need a pick.</p>
-<table class="ns-admin-table">
+<div class="ns-table-scroll">
+  <table class="ns-admin-table">
     <thead>
-        <tr>
-            <th>Player</th>
-            <th>Total picks</th>
-            <th>Wrong picks</th>
-            <th>Needs pick</th>
-        </tr>
+      <tr>
+        <th>Player</th>
+        <th>Picks</th>
+        <th>Losses</th>
+        <th>Needs pick</th>
+      </tr>
     </thead>
     <tbody>
-        {% for row in participants %}
-        <tr class="{% if row.needs_to_pick %}ns-highlight{% endif %}">
-            <td>{{ row.name }}</td>
-            <td>{{ row.picks_count }}</td>
-            <td>{{ row.wrong_picks }}</td>
-            <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
-        </tr>
-        {% endfor %}
+      {% for row in participants %}
+      <tr class="{% if row.needs_to_pick %}ns-highlight{% endif %}">
+        <td>{{ row.name }}</td>
+        <td>{{ row.picks_count }}</td>
+        <td>{{ row.wrong_picks }}</td>
+        <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
 {% endblock %}

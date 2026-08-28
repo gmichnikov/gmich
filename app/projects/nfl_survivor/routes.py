@@ -31,12 +31,14 @@ from app.projects.nfl_survivor.utils import (
     is_join_open,
     is_pick_correct,
     is_scheduled_spreads_day,
+    is_team_kickoff_locked,
     is_week_pickable,
     load_nfl_teams,
     load_nfl_teams_as_dict,
     load_nfl_teams_as_pairs,
     map_team_names_to_ids,
     parse_eastern_datetime,
+    teams_available_for_week,
 )
 from app.utils.logging import log_project_visit
 
@@ -181,6 +183,13 @@ def pick():
         flash("Season is over.")
         return redirect(url_for("nfl_survivor.view_picks"))
 
+    try:
+        selected_week = int(request.args.get("week", current_week))
+    except (TypeError, ValueError):
+        selected_week = current_week
+    if selected_week < current_week or selected_week > season.max_weeks:
+        selected_week = current_week
+
     wrong_picks = NflSurvivorPick.query.filter_by(
         season_id=season.id, user_id=current_user.id, is_correct=False
     ).count()
@@ -191,7 +200,6 @@ def pick():
     previous_picks = NflSurvivorPick.query.filter_by(
         season_id=season.id, user_id=current_user.id
     ).all()
-    picked_teams = [p.team for p in previous_picks]
     team_lookup = load_nfl_teams_as_dict()
     picked_team_names = OrderedDict(
         (
@@ -201,27 +209,55 @@ def pick():
         for p in sorted(previous_picks, key=lambda x: x.week)
     )
 
-    available_teams = [
-        (team_id, team_name)
-        for team_id, team_name in load_nfl_teams_as_pairs()
-        if team_id not in picked_teams
+    picked_teams_other_weeks = [
+        p.team for p in previous_picks if p.week != selected_week
     ]
+
+    existing_pick_for_week = NflSurvivorPick.query.filter_by(
+        season_id=season.id, user_id=current_user.id, week=selected_week
+    ).first()
+    pick_locked = (
+        existing_pick_for_week is not None
+        and is_team_kickoff_locked(season, selected_week, existing_pick_for_week.team)
+    )
+
+    available_teams = teams_available_for_week(
+        season, selected_week, picked_teams_other_weeks
+    )
 
     form = TeamSelectionForm()
     form.team_choice.choices = available_teams
-    form.week.choices = [
-        (str(w), str(w)) for w in range(current_week, season.max_weeks + 1)
-    ]
+    form.week.data = str(selected_week)
 
     if form.validate_on_submit():
         week_num = int(form.week.data)
+        picked_for_week = [
+            p.team for p in previous_picks if p.week != week_num
+        ]
+        allowed_teams = teams_available_for_week(season, week_num, picked_for_week)
+        allowed_ids = {t[0] for t in allowed_teams}
+
+        if form.team_choice.data not in allowed_ids:
+            flash("That team is not available for this week.")
+            return redirect(url_for("nfl_survivor.pick", week=week_num))
+
         if not is_week_pickable(season, week_num):
             flash("That week's pick deadline has passed.")
-            return redirect(url_for("nfl_survivor.pick"))
+            return redirect(url_for("nfl_survivor.pick", week=week_num))
+
+        if is_team_kickoff_locked(season, week_num, form.team_choice.data):
+            flash("That team's game has already started.")
+            return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         existing_pick = NflSurvivorPick.query.filter_by(
             season_id=season.id, user_id=current_user.id, week=week_num
         ).first()
+        if existing_pick and is_team_kickoff_locked(
+            season, week_num, existing_pick.team
+        ):
+            flash("Your pick for this week is locked — that game has started.")
+            return redirect(url_for("nfl_survivor.pick", week=week_num))
+
         if existing_pick:
             existing_pick.team = form.team_choice.data
         else:
@@ -234,14 +270,21 @@ def pick():
                 )
             )
 
-        team_name = dict(available_teams).get(form.team_choice.data, form.team_choice.data)
+        team_name = load_nfl_teams_as_dict().get(
+            form.team_choice.data, form.team_choice.data
+        )
         _log(
             "Pick",
             f"{current_user.full_name} picked {team_name} for week {week_num} ({season.name})",
         )
         db.session.commit()
         flash("Your pick has been submitted.")
-        return redirect(url_for("nfl_survivor.pick"))
+        return redirect(url_for("nfl_survivor.pick", week=week_num))
+
+    week_closed = not is_week_pickable(season, selected_week)
+
+    if not form.is_submitted() and existing_pick_for_week:
+        form.team_choice.data = existing_pick_for_week.team
 
     current_time_utc = datetime.now(UTC)
     time_24_hours_ago = current_time_utc - timedelta(hours=24)
@@ -290,6 +333,12 @@ def pick():
         spreads_by_week=spreads_by_week,
         last_updated_time=last_updated_time,
         current_week=current_week,
+        selected_week=selected_week,
+        existing_pick_for_week=existing_pick_for_week,
+        pick_locked=pick_locked,
+        week_closed=week_closed,
+        available_teams=available_teams,
+        team_lookup=team_lookup,
         **ctx,
     )
 
@@ -565,6 +614,26 @@ def auto_update():
 
     ctx = _season_context(season)
     return render_template("nfl_survivor/auto_update.html", **ctx)
+
+
+@nfl_survivor_bp.route("/admin/fetch-schedule")
+@admin_required
+def fetch_schedule():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    from app.projects.nfl_survivor.schedule import fetch_schedule_for_active_weeks
+
+    try:
+        total, weeks = fetch_schedule_for_active_weeks(
+            season, actor_id=current_user.id
+        )
+        flash(f"Schedule updated for weeks {weeks} ({total} team rows).")
+    except Exception as exc:
+        flash(f"Schedule fetch failed: {exc}")
+
+    return redirect(url_for("nfl_survivor.pick"))
 
 
 @nfl_survivor_bp.route("/admin/fetch-spreads")

@@ -43,6 +43,12 @@ class NflSurvivorSeason(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
     )
+    games = db.relationship(
+        "NflSurvivorGame",
+        backref="season",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<NflSurvivorSeason {self.year}>"
@@ -131,3 +137,27 @@ class NflSurvivorSpread(db.Model):
 
     def __repr__(self):
         return f"<NflSurvivorSpread week={self.week} {self.road_team}@{self.home_team}>"
+
+
+class NflSurvivorGame(db.Model):
+    """Kickoff time for a team in a given pool week (from ESPN)."""
+
+    __tablename__ = "nfl_survivor_games"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "season_id", "week", "team_id", name="uq_nfl_survivor_game"
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    season_id = db.Column(
+        db.Integer, db.ForeignKey("nfl_survivor_seasons.id"), nullable=False
+    )
+    week = db.Column(db.Integer, nullable=False)
+    team_id = db.Column(db.String(64), nullable=False)
+    kickoff = db.Column(db.DateTime, nullable=False)
+    espn_event_id = db.Column(db.String(32), nullable=True)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<NflSurvivorGame week={self.week} team={self.team_id}>"

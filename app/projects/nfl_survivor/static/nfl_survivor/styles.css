@@ -1,195 +1,539 @@
-.ns-correct {
-    color: forestgreen;
+/* NFL Survivor — scoped styles (ns- prefix) */
+
+:root {
+  --ns-navy: #013369;
+  --ns-navy-dark: #001a3a;
+  --ns-red: #d50a0a;
+  --ns-turf: #2d6a4f;
+  --ns-turf-light: #e8f5e9;
+  --ns-bg: #eef1f6;
+  --ns-card: #ffffff;
+  --ns-text: #1a1f2e;
+  --ns-text-muted: #5c6578;
+  --ns-border: #d8dee9;
+  --ns-shadow: 0 4px 24px rgba(1, 51, 105, 0.08);
+  --ns-radius: 12px;
+  --ns-radius-sm: 8px;
 }
 
-.ns-incorrect {
-    color: maroon;
-    text-decoration: line-through;
+/* Full-bleed panel over site purple gradient */
+.ns-page-wrapper {
+  background: var(--ns-bg);
+  margin: -40px -20px;
+  padding: 1.5rem 1.25rem 3rem;
+  min-height: calc(100vh - 140px);
+  color: var(--ns-text);
 }
 
-.ns-nopick {
-    color: grey;
+.ns-container {
+  max-width: 920px;
+  margin: 0 auto;
 }
 
-.ns-styled-table {
-    border-collapse: collapse;
-    margin: 25px 0;
-    font-size: 18px;
-    text-align: left;
+/* Header */
+.ns-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
 }
 
-.ns-styled-table thead tr.ns-header-row {
-    background-color: #009879;
-    color: #ffffff;
-    text-align: center;
+.ns-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: inherit;
 }
 
-.ns-styled-table th,
-.ns-styled-table td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
+.ns-brand-icon {
+  font-size: 1.75rem;
+  line-height: 1;
 }
 
-.ns-styled-table .ns-first-col,
-.ns-styled-table .ns-second-col {
-    background-color: #f2f2f2;
-    font-weight: bold;
+.ns-brand-text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ns-navy);
+  letter-spacing: -0.02em;
 }
 
-.ns-styled-table thead tr.ns-header-row .ns-first-col {
-    color: green;
+.ns-season-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ns-navy);
+  background: var(--ns-card);
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  box-shadow: var(--ns-shadow);
 }
 
-.ns-styled-table thead tr.ns-header-row .ns-second-col {
-    color: crimson;
+/* Main card */
+.ns-card {
+  background: var(--ns-card);
+  border-radius: var(--ns-radius);
+  box-shadow: var(--ns-shadow);
+  border: 1px solid var(--ns-border);
+  padding: 1.75rem 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.ns-spread-favored-1 {
-    font-weight: bold;
-    color: cornflowerblue;
+.ns-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ns-navy);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
 }
 
-.ns-spread-favored-2 {
-    font-weight: bold;
-    color: blue;
+.ns-card-subtitle {
+  color: var(--ns-text-muted);
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
 }
 
-.ns-spread-favored-3 {
-    font-weight: bold;
-    color: darkblue;
+.ns-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ns-navy);
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--ns-bg);
 }
 
-.ns-page {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 1rem 2rem;
+.ns-card h2:first-child {
+  margin-top: 0;
 }
 
-.ns-page h1,
-.ns-page h2,
-.ns-page h3 {
-    margin-top: 1.25rem;
+.ns-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ns-text);
+  margin: 1.25rem 0 0.5rem;
 }
 
-.ns-nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1rem 0;
+/* Status blocks on home */
+.ns-status {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.ns-nav-links a {
-    display: inline-block;
-    padding: 0.5rem 0.75rem;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #111;
+.ns-status-message {
+  padding: 1rem 1.15rem;
+  border-radius: var(--ns-radius-sm);
+  background: var(--ns-bg);
+  border-left: 4px solid var(--ns-navy);
+  color: var(--ns-text);
+  line-height: 1.5;
 }
 
-.ns-nav-links a:hover {
-    background-color: #e0e0e0;
+.ns-status-message.ns-status-success {
+  background: var(--ns-turf-light);
+  border-left-color: var(--ns-turf);
 }
 
+.ns-status-message.ns-status-closed {
+  background: #fff5f5;
+  border-left-color: var(--ns-red);
+}
+
+.ns-welcome-name {
+  font-weight: 600;
+  color: var(--ns-navy);
+}
+
+/* Buttons */
+.ns-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  border: none;
+  border-radius: var(--ns-radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.ns-btn:active {
+  transform: translateY(1px);
+}
+
+.ns-btn-primary {
+  background: linear-gradient(180deg, var(--ns-navy) 0%, var(--ns-navy-dark) 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(1, 51, 105, 0.35);
+}
+
+.ns-btn-primary:hover {
+  box-shadow: 0 4px 14px rgba(1, 51, 105, 0.45);
+  color: #fff;
+}
+
+.ns-btn-secondary {
+  background: var(--ns-card);
+  color: var(--ns-navy);
+  border: 2px solid var(--ns-navy);
+}
+
+.ns-btn-secondary:hover {
+  background: var(--ns-bg);
+  color: var(--ns-navy-dark);
+}
+
+/* Nav pills */
+.ns-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ns-nav-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ns-navy);
+  background: var(--ns-card);
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ns-nav-link:hover {
+  background: var(--ns-bg);
+  border-color: var(--ns-navy);
+  color: var(--ns-navy-dark);
+}
+
+.ns-nav-link.ns-nav-active {
+  background: var(--ns-navy);
+  border-color: var(--ns-navy);
+  color: #fff;
+}
+
+/* Forms */
 .ns-form {
-    margin: 1.25rem 0;
-    max-width: 500px;
+  max-width: 420px;
+  margin: 0.5rem 0 1rem;
 }
 
 .ns-form label {
-    display: block;
-    margin-top: 0.75rem;
-    font-weight: 600;
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ns-text);
+}
+
+.ns-form label:first-child {
+  margin-top: 0;
 }
 
 .ns-form input[type="text"],
 .ns-form input[type="number"],
 .ns-form input[type="password"],
 .ns-form select {
-    display: block;
-    width: 100%;
-    margin-top: 0.25rem;
-    padding: 0.625rem;
-    font-size: 16px;
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--ns-text);
+  background: var(--ns-card);
+  border: 1px solid var(--ns-border);
+  border-radius: var(--ns-radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.ns-form input[type="submit"],
-.ns-form button[type="submit"] {
-    margin-top: 1rem;
-    padding: 0.625rem 1rem;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.ns-form input:focus,
+.ns-form select:focus {
+  outline: none;
+  border-color: var(--ns-navy);
+  box-shadow: 0 0 0 3px rgba(1, 51, 105, 0.15);
 }
 
-.ns-form input[type="submit"]:hover,
-.ns-form button[type="submit"]:hover {
-    background-color: #45a049;
+.ns-form input[type="submit"] {
+  margin-top: 1.25rem;
+  padding: 0.7rem 1.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(180deg, var(--ns-turf) 0%, #1b4332 100%);
+  border: none;
+  border-radius: var(--ns-radius-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.35);
 }
 
-.ns-admin-section {
-    margin: 1.5rem 0;
-    padding-top: 0.5rem;
-    border-top: 1px solid #ddd;
+.ns-form input[type="submit"]:hover {
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.45);
 }
 
-.ns-admin-section h2 {
-    font-size: 1.1rem;
-    color: #444;
+.ns-form-wide {
+  max-width: none;
 }
 
-.ns-result-win {
-    background-color: darkgreen;
-    color: white;
+.ns-team-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
 }
 
-.ns-result-lose {
-    background-color: maroon;
-    color: white;
+.ns-team-results-grid label {
+  margin-top: 0;
+}
+
+.ns-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--ns-text-muted);
+  margin-top: 1rem;
+}
+
+.ns-meta-row strong {
+  color: var(--ns-text);
+}
+
+/* Pick list */
+.ns-pick-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ns-pick-list li {
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.35rem;
+  background: var(--ns-bg);
+  border-radius: var(--ns-radius-sm);
+  font-weight: 500;
+}
+
+.ns-pick-list li.ns-correct {
+  background: var(--ns-turf-light);
+  color: #1b4332;
+}
+
+.ns-pick-list li.ns-incorrect {
+  background: #fdecea;
+  color: #9b1c1c;
+  text-decoration: line-through;
+}
+
+/* Spreads list */
+.ns-spreads-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ns-spreads-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ns-border);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.ns-spreads-list li:last-child {
+  border-bottom: none;
+}
+
+.ns-spread-time {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ns-text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.ns-spread-favored-1 {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.ns-spread-favored-2 {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.ns-spread-favored-3 {
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+/* Tables */
+.ns-table-scroll {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: var(--ns-radius-sm);
+  border: 1px solid var(--ns-border);
+}
+
+.ns-styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: center;
+  background: var(--ns-card);
+}
+
+.ns-styled-table thead tr.ns-header-row {
+  background: var(--ns-navy);
+  color: #fff;
+}
+
+.ns-styled-table th,
+.ns-styled-table td {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--ns-border);
+}
+
+.ns-styled-table .ns-first-col,
+.ns-styled-table .ns-second-col {
+  background: var(--ns-bg);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ns-styled-table thead .ns-first-col,
+.ns-styled-table thead .ns-second-col {
+  background: var(--ns-navy-dark);
+  color: #fff;
+}
+
+.ns-correct {
+  color: #1b4332;
+  font-weight: 600;
+  background: var(--ns-turf-light) !important;
+}
+
+.ns-incorrect {
+  color: #9b1c1c;
+  font-weight: 600;
+  text-decoration: line-through;
+  background: #fdecea !important;
+}
+
+.ns-nopick {
+  color: var(--ns-text-muted);
 }
 
 .ns-results-table,
 .ns-admin-table {
-    border-collapse: collapse;
-    margin: 1rem 0;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: var(--ns-card);
 }
 
 .ns-results-table th,
 .ns-results-table td,
 .ns-admin-table th,
 .ns-admin-table td {
-    border: 1px solid #ccc;
-    padding: 8px 10px;
-    text-align: center;
+  border: 1px solid var(--ns-border);
+  padding: 0.5rem 0.65rem;
+  text-align: center;
+}
+
+.ns-results-table thead,
+.ns-admin-table thead {
+  background: var(--ns-navy);
+  color: #fff;
+}
+
+.ns-result-win {
+  background: var(--ns-turf) !important;
+  color: #fff;
+  font-weight: 600;
+}
+
+.ns-result-lose {
+  background: var(--ns-red) !important;
+  color: #fff;
+  font-weight: 600;
 }
 
 .ns-highlight {
-    background-color: #ffffcc;
+  background: #fffbeb !important;
 }
 
+/* Help text & admin */
 .ns-help-text {
-    color: #666;
-    font-size: 0.95rem;
+  color: var(--ns-text-muted);
+  font-size: 0.925rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
 }
 
-.ns-pick-list {
-    list-style: none;
-    padding-left: 0;
+.ns-help-text code {
+  font-size: 0.85em;
+  padding: 0.15rem 0.4rem;
+  background: var(--ns-bg);
+  border-radius: 4px;
+  color: var(--ns-navy);
 }
 
-.ns-pick-list li {
-    padding: 0.25rem 0;
+.ns-admin-section {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--ns-card);
+  border-radius: var(--ns-radius);
+  border: 1px dashed var(--ns-border);
+}
+
+.ns-admin-section h2 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ns-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.ns-admin-section .ns-nav-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
 }
 
 @media (max-width: 600px) {
-    .ns-styled-table {
-        font-size: 14px;
-    }
+  .ns-page-wrapper {
+    margin: -40px -12px;
+    padding: 1rem 0.75rem 2rem;
+  }
 
-    .ns-nav-links a {
-        width: 100%;
-        text-align: center;
-    }
+  .ns-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .ns-brand-text {
+    font-size: 1.15rem;
+  }
+
+  .ns-nav-link {
+    flex: 1 1 calc(50% - 0.25rem);
+    text-align: center;
+  }
+
+  .ns-btn {
+    width: 100%;
+  }
 }

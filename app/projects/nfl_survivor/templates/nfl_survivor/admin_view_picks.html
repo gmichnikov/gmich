@@ -3,21 +3,24 @@
 {% block ns_title %}Current Week Picks{% endblock %}
 
 {% block ns_content %}
-<h1>Current week picks (week {{ week }})</h1>
-<table class="ns-admin-table">
+<h1 class="ns-card-title">This week's picks</h1>
+<p class="ns-card-subtitle">Week {{ week }} — admin only</p>
+<div class="ns-table-scroll">
+  <table class="ns-admin-table">
     <thead>
-        <tr>
-            <th>Player</th>
-            <th>Pick</th>
-        </tr>
+      <tr>
+        <th>Player</th>
+        <th>Pick</th>
+      </tr>
     </thead>
     <tbody>
-        {% for name, team_name in picks %}
-        <tr>
-            <td>{{ name }}</td>
-            <td>{{ team_name }}</td>
-        </tr>
-        {% endfor %}
+      {% for name, team_name in picks %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ team_name }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
 {% endblock %}

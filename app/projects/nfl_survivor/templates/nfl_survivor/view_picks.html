@@ -1,34 +1,40 @@
 {% extends "nfl_survivor/layout.html" %}
 
-{% block ns_title %}View Picks{% endblock %}
+{% block ns_title %}All Picks{% endblock %}
 
 {% block ns_content %}
-<h1>All picks</h1>
-<p class="ns-help-text">Current week picks are hidden until the week rolls over.</p>
+<h1 class="ns-card-title">Standings &amp; picks</h1>
+<p class="ns-help-text">This week's picks stay hidden until the week rolls over on Tuesday.</p>
 
-<table class="ns-styled-table">
+<div class="ns-table-scroll">
+  <table class="ns-styled-table">
     <thead>
-        <tr class="ns-header-row">
-            <th class="ns-first-col">Player</th>
-            <th class="ns-second-col">Losses</th>
-            {% for week in all_picks.keys() %}
-            <th>Week {{ week }}</th>
-            {% endfor %}
-        </tr>
+      <tr class="ns-header-row">
+        <th class="ns-first-col">Player</th>
+        <th class="ns-second-col">L</th>
+        {% for week in all_picks.keys() %}
+        <th>Wk {{ week }}</th>
+        {% endfor %}
+      </tr>
     </thead>
     <tbody>
-        {% for user in sorted_users %}
-        <tr>
-            <td class="ns-first-col">{{ display_names[user.id] }}</td>
-            <td class="ns-second-col">{{ wrong_picks_count.get(user.id, 0) }}</td>
-            {% for week, week_picks in all_picks.items() %}
-            {% set cell = week_picks.get(user.id, {}) %}
-            <td class="{% if cell.get('is_correct') is true %}ns-correct{% elif cell.get('is_correct') is false %}ns-incorrect{% else %}ns-nopick{% endif %}">
-                {{ cell.get('team', '') }}
-            </td>
-            {% endfor %}
-        </tr>
+      {% for user in sorted_users %}
+      <tr>
+        <td class="ns-first-col">{{ display_names[user.id] }}</td>
+        <td class="ns-second-col">{{ wrong_picks_count.get(user.id, 0) }}</td>
+        {% for week, week_picks in all_picks.items() %}
+        {% set cell = week_picks.get(user.id, {}) %}
+        <td class="{% if cell.get('is_correct') is true %}ns-correct{% elif cell.get('is_correct') is false %}ns-incorrect{% else %}ns-nopick{% endif %}">
+          {{ cell.get('team', '') }}
+        </td>
         {% endfor %}
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="99" class="ns-help-text" style="padding: 1.5rem;">No completed weeks to show yet.</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
 {% endblock %}

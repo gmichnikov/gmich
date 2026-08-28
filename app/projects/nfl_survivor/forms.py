@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
+    HiddenField,
     IntegerField,
     SelectField,
     StringField,
@@ -10,9 +11,9 @@ from wtforms.validators import DataRequired, Optional
 
 
 class TeamSelectionForm(FlaskForm):
-    week = SelectField("Select Week", choices=[], coerce=str)
+    week = HiddenField("Week")
     team_choice = SelectField("Select an NFL Team", choices=[])
-    submit = SubmitField("Submit")
+    submit = SubmitField("Submit pick")
 
 
 class AdminSetPickForm(FlaskForm):

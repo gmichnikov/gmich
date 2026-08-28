@@ -8,40 +8,54 @@
 {% endblock %}
 
 {% block content %}
-<div class="ns-page">
-    {% if season %}
-    <p class="ns-help-text">{{ season.name }}</p>
-    {% endif %}
+<div class="ns-page-wrapper">
+  <div class="ns-container">
+    <header class="ns-header">
+      <a href="{{ url_for('nfl_survivor.index') }}" class="ns-brand">
+        <span class="ns-brand-icon" aria-hidden="true">🏈</span>
+        <span class="ns-brand-text">NFL Survivor</span>
+      </a>
+      {% if season %}
+      <span class="ns-season-badge">{{ season.name }}</span>
+      {% endif %}
+    </header>
 
-    {% block ns_content %}{% endblock %}
+    <nav class="ns-nav" aria-label="Pool navigation">
+      <a href="{{ url_for('nfl_survivor.index') }}"
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.index' %}ns-nav-active{% endif %}">Home</a>
+      {% if season and is_participant %}
+      <a href="{{ url_for('nfl_survivor.pick') }}"
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.pick' %}ns-nav-active{% endif %}">Make a pick</a>
+      <a href="{{ url_for('nfl_survivor.view_picks') }}"
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.view_picks' %}ns-nav-active{% endif %}">All picks</a>
+      {% endif %}
+    </nav>
 
-    <div class="ns-nav-links">
-        <a href="{{ url_for('nfl_survivor.index') }}">Home</a>
-        {% if season and is_participant %}
-        <a href="{{ url_for('nfl_survivor.pick') }}">Pick</a>
-        <a href="{{ url_for('nfl_survivor.view_picks') }}">View Picks</a>
-        {% endif %}
-    </div>
+    <main class="ns-card">
+      {% block ns_content %}{% endblock %}
+    </main>
 
     {% if current_user.is_admin %}
     <div class="ns-admin-section">
-        <h2>Pool admin</h2>
-        <div class="ns-nav-links">
-            <a href="{{ url_for('nfl_survivor.admin_seasons') }}">Seasons</a>
-            {% if season %}
-            <a href="{{ url_for('nfl_survivor.admin_set_pick') }}">Set Pick</a>
-            <a href="{{ url_for('nfl_survivor.admin_auto_pick') }}">Auto Pick</a>
-            <a href="{{ url_for('nfl_survivor.admin') }}">Set Results</a>
-            <a href="{{ url_for('nfl_survivor.auto_update') }}">Auto Update Results</a>
-            <a href="{{ url_for('nfl_survivor.fetch_spreads') }}">Fetch Spreads</a>
-            <a href="{{ url_for('nfl_survivor.all_spreads') }}">All Spreads</a>
-            <a href="{{ url_for('nfl_survivor.admin_view_picks') }}">Current Week Picks</a>
-            <a href="{{ url_for('nfl_survivor.admin_view_all_picks') }}">All Picks Grid</a>
-            <a href="{{ url_for('nfl_survivor.admin_view_weekly_results') }}">Weekly Results</a>
-            <a href="{{ url_for('nfl_survivor.admin_view_participants') }}">Participants</a>
-            {% endif %}
-        </div>
+      <h2>Pool admin</h2>
+      <nav class="ns-nav" aria-label="Pool admin">
+        <a href="{{ url_for('nfl_survivor.admin_seasons') }}" class="ns-nav-link">Seasons</a>
+        {% if season %}
+        <a href="{{ url_for('nfl_survivor.admin_set_pick') }}" class="ns-nav-link">Set pick</a>
+        <a href="{{ url_for('nfl_survivor.admin_auto_pick') }}" class="ns-nav-link">Auto pick</a>
+        <a href="{{ url_for('nfl_survivor.admin') }}" class="ns-nav-link">Set results</a>
+        <a href="{{ url_for('nfl_survivor.auto_update') }}" class="ns-nav-link">Auto update</a>
+        <a href="{{ url_for('nfl_survivor.fetch_schedule') }}" class="ns-nav-link">Fetch schedule</a>
+        <a href="{{ url_for('nfl_survivor.fetch_spreads') }}" class="ns-nav-link">Fetch spreads</a>
+        <a href="{{ url_for('nfl_survivor.all_spreads') }}" class="ns-nav-link">All spreads</a>
+        <a href="{{ url_for('nfl_survivor.admin_view_picks') }}" class="ns-nav-link">This week</a>
+        <a href="{{ url_for('nfl_survivor.admin_view_all_picks') }}" class="ns-nav-link">Pick grid</a>
+        <a href="{{ url_for('nfl_survivor.admin_view_weekly_results') }}" class="ns-nav-link">Results</a>
+        <a href="{{ url_for('nfl_survivor.admin_view_participants') }}" class="ns-nav-link">Participants</a>
+        {% endif %}
+      </nav>
     </div>
     {% endif %}
+  </div>
 </div>
 {% endblock %}

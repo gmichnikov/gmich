@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytz
 
-from app.projects.nfl_survivor.models import NflSurvivorSeason, NflSurvivorWeeklyResult
+from app.projects.nfl_survivor.models import NflSurvivorSeason, NflSurvivorWeeklyResult, NflSurvivorGame
 
 EASTERN = pytz.timezone("US/Eastern")
 UTC = pytz.UTC
@@ -146,5 +146,48 @@ def is_scheduled_spreads_day(when=None):
     else:
         when = when.astimezone(EASTERN)
     return when.weekday() in SCHEDULED_SPREADS_WEEKDAYS
+
+
+def get_team_kickoff(season_id, week, team_id):
+    """Return kickoff as UTC-aware datetime, or None if unknown."""
+    game = NflSurvivorGame.query.filter_by(
+        season_id=season_id, week=week, team_id=str(team_id)
+    ).first()
+    if not game or not game.kickoff:
+        return None
+    kickoff = game.kickoff
+    if kickoff.tzinfo is None:
+        return UTC.localize(kickoff)
+    return kickoff.astimezone(UTC)
+
+
+def is_team_kickoff_locked(season, week, team_id):
+    """True if this team's game for the week has started (or no schedule = unlocked)."""
+    kickoff = get_team_kickoff(season.id, week, team_id)
+    if kickoff is None:
+        return False
+    return datetime.now(UTC) >= kickoff
+
+
+def teams_available_for_week(season, week, picked_team_ids):
+    """
+    Team (id, name) pairs pickable for `week`: not already used and kickoff not passed.
+    """
+    pairs = []
+    for team_id, team_name in load_nfl_teams_as_pairs():
+        if team_id in picked_team_ids:
+            continue
+        if is_team_kickoff_locked(season, week, team_id):
+            continue
+        pairs.append((team_id, team_name))
+    return pairs
+
+
+def format_kickoff_et(season_id, week, team_id):
+    """Human-readable kickoff in Eastern, or empty string."""
+    kickoff = get_team_kickoff(season_id, week, team_id)
+    if not kickoff:
+        return ""
+    return kickoff.astimezone(EASTERN).strftime("%a %b %-d, %-I:%M %p ET")
 
 
