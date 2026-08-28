@@ -4,11 +4,73 @@
 {% block ns_title %}Pick{% endblock %}
 
 {% block ns_content %}
-<div class="ns-pick-page{% if not pick_locked and not week_closed %} ns-pick-page-has-submit{% endif %}">
+{% set picked_team = team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) if existing_pick_for_week else none %}
+{% set updating_pick = existing_pick_for_week and not pick_locked and not week_closed %}
+<div class="ns-pick-page{% if updating_pick %} ns-pick-page-update{% endif %}{% if not pick_locked and not week_closed %} ns-pick-page-has-submit{% endif %}">
+
+{% if pick_locked and existing_pick_for_week %}
+<h1 class="ns-card-title">Week {{ selected_week }} pick</h1>
+<p class="ns-card-subtitle">Entry <strong>{{ active_entry.display_name }}</strong></p>
+<div class="ns-pick-current ns-pick-current-locked">
+  <span class="ns-pick-current-label">Locked in</span>
+  <strong class="ns-pick-current-team">{{ picked_team }}</strong>
+  <span class="ns-pick-current-note">That game has started.</span>
+</div>
+
+{% elif week_closed %}
+<h1 class="ns-card-title">Week {{ selected_week }}</h1>
+<p class="ns-card-subtitle">Entry <strong>{{ active_entry.display_name }}</strong></p>
+{% if existing_pick_for_week %}
+<div class="ns-pick-current">
+  <span class="ns-pick-current-label">Your pick</span>
+  <strong class="ns-pick-current-team">{{ picked_team }}</strong>
+</div>
+{% endif %}
+<div class="ns-status-message ns-status-closed">
+  Week {{ selected_week }} is closed for picks.
+</div>
+
+{% elif updating_pick %}
+<h1 class="ns-card-title">Week {{ selected_week }} pick</h1>
+<p class="ns-card-subtitle">Entry <strong>{{ active_entry.display_name }}</strong></p>
+<div class="ns-pick-current">
+  <span class="ns-pick-current-label">Your pick</span>
+  <strong class="ns-pick-current-team">{{ picked_team }}</strong>
+  <span class="ns-pick-current-note">Change below before kickoff if you want.</span>
+</div>
+
+<section class="ns-pick-primary ns-pick-primary-update" aria-label="Change pick">
+  <div class="ns-week-picker">
+    <span class="ns-week-picker-label">Week</span>
+    <div class="ns-week-picker-scroll">
+      <div class="ns-week-picker-inner">
+        {% for w in range(current_week, season.max_weeks + 1) %}
+        <a href="{{ url_for('nfl_survivor.pick', week=w) }}"
+           class="ns-week-pill {% if w == selected_week %}ns-week-pill-active{% endif %}">{{ w }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <form method="post" class="ns-form ns-pick-form" id="ns-pick-form">
+    {{ form.hidden_tag() }}
+    {{ form.week() }}
+    <label for="{{ form.team_choice.id }}">{{ form.team_choice.label.text }}</label>
+    {{ form.team_choice(class_="ns-team-select") }}
+    {% if not available_teams %}
+    <p class="ns-help-text">No teams available — games may have started or you've used every team.</p>
+    {% endif %}
+    <div class="ns-pick-submit-bar">
+      {{ form.submit(class_="ns-pick-submit ns-pick-submit-update", disabled=not available_teams) }}
+    </div>
+  </form>
+</section>
+
+{% else %}
 <h1 class="ns-card-title">Make your pick</h1>
 <p class="ns-card-subtitle">
   Entry <strong>{{ active_entry.display_name }}</strong> —
-  choose a team for the selected week. Teams lock when their game kicks off.
+  choose a team for week {{ selected_week }}. Teams lock when their game kicks off.
 </p>
 
 <section class="ns-pick-primary" aria-labelledby="ns-new-pick-heading">
@@ -26,27 +88,9 @@
     </div>
   </div>
 
-  {% if pick_locked and existing_pick_for_week %}
-  <div class="ns-status-message ns-status-closed">
-    Your Week {{ selected_week }} pick is locked:
-    <strong>{{ team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) }}</strong>
-    — that game has started.
-  </div>
-  {% elif week_closed %}
-  <div class="ns-status-message ns-status-closed">
-    Week {{ selected_week }} is closed for picks.
-  </div>
-  {% else %}
   <form method="post" class="ns-form ns-pick-form" id="ns-pick-form">
     {{ form.hidden_tag() }}
     {{ form.week() }}
-    {% if existing_pick_for_week %}
-    <p class="ns-help-text">
-      Current pick:
-      <strong>{{ team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) }}</strong>
-      — change before kickoff.
-    </p>
-    {% endif %}
     <label for="{{ form.team_choice.id }}">{{ form.team_choice.label.text }}</label>
     {{ form.team_choice(class_="ns-team-select") }}
     {% if not available_teams %}
@@ -56,10 +100,10 @@
       {{ form.submit(class_="ns-pick-submit", disabled=not available_teams) }}
     </div>
   </form>
-  {% endif %}
 </section>
+{% endif %}
 
-<details class="ns-pick-details">
+<details class="ns-pick-details" open>
   <summary>Your picks</summary>
   <ul class="ns-pick-list">
     {% for week, (team, is_correct) in all_picks.items() %}
@@ -72,7 +116,7 @@
   </ul>
 </details>
 
-<details class="ns-pick-details">
+<details class="ns-pick-details" open>
   <summary>Lines &amp; kickoffs</summary>
   {% if last_updated_time %}
   <p class="ns-help-text">Spreads last updated {{ last_updated_time.strftime("%b %-d, %-I:%M %p %Z") }}.</p>

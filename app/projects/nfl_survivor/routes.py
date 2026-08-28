@@ -408,6 +408,15 @@ def pick():
     if not form.is_submitted() and existing_pick_for_week:
         form.team_choice.data = existing_pick_for_week.team
 
+    updating_pick = (
+        existing_pick_for_week is not None
+        and not pick_locked
+        and not week_closed
+    )
+    if updating_pick:
+        form.submit.label.text = "Update pick"
+        form.team_choice.label.text = "Change to"
+
     current_time_utc = datetime.now(UTC)
     time_24_hours_ago = current_time_utc - timedelta(hours=24)
     spreads = (
