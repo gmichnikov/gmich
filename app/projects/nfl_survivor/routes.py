@@ -62,6 +62,15 @@ from app.projects.nfl_survivor.utils import (
 
 EASTERN = pytz.timezone("US/Eastern")
 PROJECT = "nfl_survivor"
+NS_INLINE_ERROR_KEY = "ns_inline_error"
+
+
+def _set_inline_error(message):
+    session[NS_INLINE_ERROR_KEY] = message
+
+
+def _pop_inline_error():
+    return session.pop(NS_INLINE_ERROR_KEY, None)
 
 
 def admin_required(view):
@@ -69,7 +78,7 @@ def admin_required(view):
     @login_required
     def wrapped(*args, **kwargs):
         if not current_user.is_admin:
-            flash("You do not have permission to access this page.")
+            _set_inline_error("You do not have permission to access this page.")
             return redirect(url_for("nfl_survivor.index"))
         return view(*args, **kwargs)
 
@@ -96,7 +105,6 @@ def _season_context(season):
 def _require_season():
     season = get_active_season()
     if not season:
-        flash("No active NFL Survivor season. Check back later.")
         return None
     return season
 
@@ -104,7 +112,6 @@ def _require_season():
 def _require_active_entry(season):
     entry = resolve_active_entry(season, current_user.id)
     if not entry:
-        flash("Add an entry before making or viewing picks.")
         return None
     return entry
 
@@ -137,6 +144,11 @@ def _spread_favored_class(spread_value):
 @nfl_survivor_bp.app_template_filter("ns_spread_class")
 def ns_spread_class_filter(spread_value):
     return _spread_favored_class(spread_value)
+
+
+@nfl_survivor_bp.context_processor
+def nfl_survivor_template_context():
+    return {"ns_inline_error": _pop_inline_error()}
 
 
 @nfl_survivor_bp.route("/")
@@ -173,19 +185,18 @@ def join():
         return redirect(url_for("nfl_survivor.index"))
 
     if not is_join_open(season):
-        flash("Entry period is closed for this season.")
         return redirect(url_for("nfl_survivor.index"))
 
     form = AddEntryForm()
     if not form.validate_on_submit():
-        flash("Could not add entry.")
+        _set_inline_error("Could not add entry.")
         return redirect(url_for("nfl_survivor.index"))
 
     raw_name = normalize_entry_name(form.display_name.data)
     display_name = raw_name or default_entry_name_for_user(season, current_user)
     display_name, error = validate_entry_name(season.id, display_name)
     if error:
-        flash(error)
+        _set_inline_error(error)
         return redirect(url_for("nfl_survivor.index"))
 
     entry = NflSurvivorParticipant(
@@ -204,7 +215,6 @@ def join():
         ),
     )
     db.session.commit()
-    flash(f'Entry "{display_name}" added.')
     return redirect(url_for("nfl_survivor.index"))
 
 
@@ -218,16 +228,13 @@ def switch_entry():
     try:
         participant_id = int(request.form.get("participant_id", ""))
     except (TypeError, ValueError):
-        flash("Invalid entry.")
         return redirect(request.referrer or url_for("nfl_survivor.index"))
 
     entry = _get_owned_entry(season, participant_id)
     if not entry:
-        flash("That entry is not yours.")
         return redirect(request.referrer or url_for("nfl_survivor.index"))
 
     set_active_entry(entry.id)
-    flash(f'Now using entry "{entry.display_name}".')
     return redirect(request.referrer or url_for("nfl_survivor.pick"))
 
 
@@ -283,11 +290,9 @@ def pick():
 
     current_week = get_current_pick_week(season)
     if current_week > season.max_weeks:
-        flash("Season is over.")
         return redirect(url_for("nfl_survivor.view_picks"))
 
     if participant_is_eliminated(entry):
-        flash(f'Entry "{entry.display_name}" has been eliminated. Switch to another entry.')
         return redirect(url_for("nfl_survivor.index"))
 
     try:
@@ -340,15 +345,15 @@ def pick():
         allowed_ids = {t[0] for t in allowed_teams}
 
         if form.team_choice.data not in allowed_ids:
-            flash("That team is not available for this week.")
+            _set_inline_error("That team is not available for this week.")
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         if not is_week_pickable(season, week_num):
-            flash("That week's pick deadline has passed.")
+            _set_inline_error("That week's pick deadline has passed.")
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         if is_team_kickoff_locked(season, week_num, form.team_choice.data):
-            flash("That team's game has already started.")
+            _set_inline_error("That team's game has already started.")
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         existing_pick = NflSurvivorPick.query.filter_by(
@@ -357,7 +362,7 @@ def pick():
         if existing_pick and is_team_kickoff_locked(
             season, week_num, existing_pick.team
         ):
-            flash("Your pick for this week is locked — that game has started.")
+            _set_inline_error("Your pick for this week is locked — that game has started.")
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         team_lookup_for_log = load_nfl_teams_as_dict()
@@ -396,7 +401,6 @@ def pick():
 
         log_nfl_survivor("Pick", pick_description)
         db.session.commit()
-        flash("Your pick has been submitted.")
         return redirect(url_for("nfl_survivor.pick", week=week_num))
 
     week_closed = not is_week_pickable(season, selected_week)

@@ -148,6 +148,20 @@
   color: #92400e;
 }
 
+.ns-inline-error {
+  margin-bottom: 1rem;
+}
+
+.ns-admin-flashes {
+  max-width: 920px;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+}
+
+.ns-admin-flashes .ns-status-message + .ns-status-message {
+  margin-top: 0.5rem;
+}
+
 .ns-welcome-name {
   font-weight: 600;
   color: var(--ns-navy);
@@ -679,14 +693,23 @@
 }
 
 .ns-spreads-list li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--ns-border);
+  padding: 0.35rem 0;
   font-size: 0.95rem;
   line-height: 1.45;
 }
 
-.ns-spreads-list li:last-child {
-  border-bottom: none;
+.ns-spreads-list li:not(.ns-spread-row-same-time):not(:first-child) {
+  border-top: 1px solid var(--ns-border);
+  padding-top: 0.65rem;
+  margin-top: 0.15rem;
+}
+
+.ns-spreads-list li.ns-spread-row-same-time {
+  padding-top: 0.15rem;
+}
+
+.ns-spread-matchup {
+  display: block;
 }
 
 .ns-spread-time {

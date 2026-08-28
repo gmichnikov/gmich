@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 
+{% block flash_messages %}
+{% if current_user.is_admin %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="ns-admin-flashes">
+  {% for message in messages %}
+  <div class="ns-status-message ns-status-success">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% else %}
+{% with messages = get_flashed_messages() %}{% endwith %}
+{% endif %}
+{% endblock %}
+
 {% block title %}{% block ns_title %}NFL Survivor{% endblock %}{% endblock %}
 
 {% block styles %}
@@ -54,6 +70,9 @@
     </nav>
 
     <main class="ns-card">
+      {% if ns_inline_error %}
+      <div class="ns-status-message ns-status-closed ns-inline-error">{{ ns_inline_error }}</div>
+      {% endif %}
       {% block ns_content %}{% endblock %}
     </main>
 

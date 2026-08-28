@@ -1,4 +1,5 @@
 {% extends "nfl_survivor/layout.html" %}
+{% from "nfl_survivor/_spreads_list.html" import ns_spreads_list %}
 
 {% block ns_title %}Fetch Spreads{% endblock %}
 
@@ -8,22 +9,7 @@
 <p class="ns-help-text">Last updated {{ last_updated_time.strftime("%b %-d, %-I:%M %p %Z") }}.</p>
 {% endif %}
 
-<ul class="ns-spreads-list">
-  {% for spread in spreads %}
-  <li>
-    <span class="ns-spread-time">{{ spread.game_time.strftime("%a %b %-d, %-I:%M %p %Z") }}</span>
-    <span class="{{ spread.road_team_spread|ns_spread_class }}">
-      {{ spread.road_team }}{% if spread.road_team_spread <= 0 %} {{ spread.road_team_spread }}{% endif %}
-    </span>
-    @
-    <span class="{{ spread.home_team_spread|ns_spread_class }}">
-      {{ spread.home_team }}{% if spread.home_team_spread <= 0 %} {{ spread.home_team_spread }}{% endif %}
-    </span>
-  </li>
-  {% else %}
-  <li class="ns-help-text">No spreads in the current window.</li>
-  {% endfor %}
-</ul>
+{{ ns_spreads_list(spreads, empty_message="No spreads in the current window.") }}
 
 <div class="ns-meta-row">
   <span>API remaining: <strong>{{ remaining_requests }}</strong></span>
