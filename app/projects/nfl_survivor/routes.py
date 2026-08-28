@@ -7,13 +7,19 @@ from functools import wraps
 
 import pytz
 import requests
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 
 from app import csrf, db
 from app.models import User
 from app.projects.nfl_survivor import nfl_survivor_bp
-from app.projects.nfl_survivor.forms import AdminSetPickForm, SeasonForm, TeamSelectionForm
+from app.projects.nfl_survivor.forms import (
+    AddEntryForm,
+    AdminSetPickForm,
+    RenameEntryForm,
+    SeasonForm,
+    TeamSelectionForm,
+)
 from app.projects.nfl_survivor.log import log_nfl_survivor
 from app.projects.nfl_survivor.models import (
     NflSurvivorParticipant,
@@ -24,11 +30,15 @@ from app.projects.nfl_survivor.models import (
 )
 from app.projects.nfl_survivor.utils import (
     UTC,
-    build_display_names,
+    ACTIVE_ENTRY_SESSION_KEY,
     calculate_game_week,
+    clear_active_entry,
+    default_entry_name_for_user,
+    entry_log_description,
     get_active_season,
     get_current_pick_week,
     get_odds_fetch_window,
+    get_user_entries,
     is_join_open,
     is_pick_correct,
     is_scheduled_spreads_day,
@@ -38,9 +48,16 @@ from app.projects.nfl_survivor.utils import (
     load_nfl_teams_as_dict,
     load_nfl_teams_as_pairs,
     map_team_names_to_ids,
+    normalize_entry_name,
     parse_eastern_datetime,
+    participant_correct_picks_count,
+    participant_is_eliminated,
+    participant_wrong_picks_count,
+    resolve_active_entry,
+    set_active_entry,
     teams_available_for_week,
     team_pick_choices,
+    validate_entry_name,
 )
 
 EASTERN = pytz.timezone("US/Eastern")
@@ -60,15 +77,18 @@ def admin_required(view):
 
 
 def _season_context(season):
-    participant = None
+    user_entries = []
+    active_entry = None
     if season and current_user.is_authenticated:
-        participant = NflSurvivorParticipant.query.filter_by(
-            season_id=season.id, user_id=current_user.id
-        ).first()
+        user_entries = get_user_entries(season, current_user.id)
+        active_entry = resolve_active_entry(season, current_user.id)
+
     return {
         "season": season,
-        "is_participant": participant is not None,
-        "has_paid": participant.has_paid if participant else None,
+        "user_entries": user_entries,
+        "has_entries": bool(user_entries),
+        "active_entry": active_entry,
+        "show_entry_switcher": len(user_entries) > 1,
         "join_open": season and is_join_open(season),
     }
 
@@ -81,27 +101,27 @@ def _require_season():
     return season
 
 
-def _require_participant(season):
-    participant = NflSurvivorParticipant.query.filter_by(
-        season_id=season.id, user_id=current_user.id
-    ).first()
-    if not participant:
-        flash("Join the pool before making or viewing picks.")
+def _require_active_entry(season):
+    entry = resolve_active_entry(season, current_user.id)
+    if not entry:
+        flash("Add an entry before making or viewing picks.")
         return None
-    return participant
+    return entry
+
+
+def _get_owned_entry(season, participant_id):
+    return NflSurvivorParticipant.query.filter_by(
+        id=participant_id, season_id=season.id, user_id=current_user.id
+    ).first()
 
 
 def _participants_for_season(season):
     return (
         NflSurvivorParticipant.query.filter_by(season_id=season.id)
         .join(User)
-        .order_by(User.full_name.asc())
+        .order_by(NflSurvivorParticipant.display_name.asc())
         .all()
     )
-
-
-def _participant_users(season):
-    return [entry.user for entry in _participants_for_season(season)]
 
 
 def _spread_favored_class(spread_value):
@@ -124,7 +144,25 @@ def ns_spread_class_filter(spread_value):
 def index():
     season = get_active_season()
     ctx = _season_context(season)
-    return render_template("nfl_survivor/index.html", **ctx)
+    entry_summaries = []
+    for entry in ctx["user_entries"]:
+        entry_summaries.append(
+            {
+                "entry": entry,
+                "is_eliminated": participant_is_eliminated(entry),
+            }
+        )
+    add_entry_form = AddEntryForm()
+    if season:
+        add_entry_form.display_name.data = default_entry_name_for_user(
+            season, current_user
+        )
+    return render_template(
+        "nfl_survivor/index.html",
+        add_entry_form=add_entry_form,
+        entry_summaries=entry_summaries,
+        **ctx,
+    )
 
 
 @nfl_survivor_bp.route("/join", methods=["POST"])
@@ -135,26 +173,102 @@ def join():
         return redirect(url_for("nfl_survivor.index"))
 
     if not is_join_open(season):
-        flash("Join period is closed for this season.")
+        flash("Entry period is closed for this season.")
         return redirect(url_for("nfl_survivor.index"))
 
-    existing = NflSurvivorParticipant.query.filter_by(
-        season_id=season.id, user_id=current_user.id
-    ).first()
-    if existing:
-        flash("You are already in the pool.")
+    form = AddEntryForm()
+    if not form.validate_on_submit():
+        flash("Could not add entry.")
         return redirect(url_for("nfl_survivor.index"))
 
-    db.session.add(
-        NflSurvivorParticipant(season_id=season.id, user_id=current_user.id)
+    raw_name = normalize_entry_name(form.display_name.data)
+    display_name = raw_name or default_entry_name_for_user(season, current_user)
+    display_name, error = validate_entry_name(season.id, display_name)
+    if error:
+        flash(error)
+        return redirect(url_for("nfl_survivor.index"))
+
+    entry = NflSurvivorParticipant(
+        season_id=season.id,
+        user_id=current_user.id,
+        display_name=display_name,
     )
+    db.session.add(entry)
+    db.session.flush()
+    set_active_entry(entry.id)
     log_nfl_survivor(
         "Join",
-        f"{current_user.full_name} joined {season.name}",
+        (
+            f"{current_user.full_name} added {entry_log_description(entry)} "
+            f"to {season.name}"
+        ),
     )
     db.session.commit()
-    flash("You joined the pool!")
+    flash(f'Entry "{display_name}" added.')
     return redirect(url_for("nfl_survivor.index"))
+
+
+@nfl_survivor_bp.route("/switch-entry", methods=["POST"])
+@login_required
+def switch_entry():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    try:
+        participant_id = int(request.form.get("participant_id", ""))
+    except (TypeError, ValueError):
+        flash("Invalid entry.")
+        return redirect(request.referrer or url_for("nfl_survivor.index"))
+
+    entry = _get_owned_entry(season, participant_id)
+    if not entry:
+        flash("That entry is not yours.")
+        return redirect(request.referrer or url_for("nfl_survivor.index"))
+
+    set_active_entry(entry.id)
+    flash(f'Now using entry "{entry.display_name}".')
+    return redirect(request.referrer or url_for("nfl_survivor.pick"))
+
+
+@nfl_survivor_bp.route("/entry/<int:participant_id>/rename", methods=["POST"])
+@admin_required
+def rename_entry(participant_id):
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    entry = NflSurvivorParticipant.query.filter_by(
+        id=participant_id, season_id=season.id
+    ).first()
+    if not entry:
+        flash("Entry not found.")
+        return redirect(url_for("nfl_survivor.admin_view_participants"))
+
+    form = RenameEntryForm()
+    if not form.validate_on_submit():
+        flash("Could not rename entry.")
+        return redirect(url_for("nfl_survivor.admin_view_participants"))
+
+    display_name, error = validate_entry_name(
+        season.id, form.display_name.data, exclude_participant_id=entry.id
+    )
+    if error:
+        flash(error)
+        return redirect(url_for("nfl_survivor.admin_view_participants"))
+
+    old_name = entry.display_name
+    entry.display_name = display_name
+    log_nfl_survivor(
+        "Rename Entry",
+        (
+            f'{current_user.full_name} renamed entry "{old_name}" to "{display_name}" '
+            f"({entry.user.full_name}, {season.name})"
+        ),
+    )
+    db.session.commit()
+    flash(f'Entry renamed to "{display_name}".')
+    return redirect(url_for("nfl_survivor.admin_view_participants"))
 
 
 @nfl_survivor_bp.route("/pick", methods=["GET", "POST"])
@@ -163,13 +277,18 @@ def pick():
     season = _require_season()
     if not season:
         return redirect(url_for("nfl_survivor.index"))
-    if not _require_participant(season):
+    entry = _require_active_entry(season)
+    if not entry:
         return redirect(url_for("nfl_survivor.index"))
 
     current_week = get_current_pick_week(season)
     if current_week > season.max_weeks:
         flash("Season is over.")
         return redirect(url_for("nfl_survivor.view_picks"))
+
+    if participant_is_eliminated(entry):
+        flash(f'Entry "{entry.display_name}" has been eliminated. Switch to another entry.')
+        return redirect(url_for("nfl_survivor.index"))
 
     try:
         selected_week = int(request.args.get("week", current_week))
@@ -178,15 +297,8 @@ def pick():
     if selected_week < current_week or selected_week > season.max_weeks:
         selected_week = current_week
 
-    wrong_picks = NflSurvivorPick.query.filter_by(
-        season_id=season.id, user_id=current_user.id, is_correct=False
-    ).count()
-    if wrong_picks >= 2:
-        flash("You have been eliminated.")
-        return redirect(url_for("nfl_survivor.view_picks"))
-
     previous_picks = NflSurvivorPick.query.filter_by(
-        season_id=season.id, user_id=current_user.id
+        participant_id=entry.id
     ).all()
     team_lookup = load_nfl_teams_as_dict()
     picked_team_names = OrderedDict(
@@ -202,7 +314,7 @@ def pick():
     ]
 
     existing_pick_for_week = NflSurvivorPick.query.filter_by(
-        season_id=season.id, user_id=current_user.id, week=selected_week
+        participant_id=entry.id, week=selected_week
     ).first()
     pick_locked = (
         existing_pick_for_week is not None
@@ -240,7 +352,7 @@ def pick():
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
         existing_pick = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=current_user.id, week=week_num
+            participant_id=entry.id, week=week_num
         ).first()
         if existing_pick and is_team_kickoff_locked(
             season, week_num, existing_pick.team
@@ -259,26 +371,27 @@ def pick():
             if existing_pick.team != form.team_choice.data:
                 pick_description = (
                     f"{current_user.full_name} changed week {week_num} pick from "
-                    f"{old_team_name} to {team_name} ({season.name})"
+                    f"{old_team_name} to {team_name} for {entry_log_description(entry)} "
+                    f"({season.name})"
                 )
             else:
                 pick_description = (
                     f"{current_user.full_name} kept week {week_num} pick: "
-                    f"{team_name} ({season.name})"
+                    f"{team_name} for {entry_log_description(entry)} ({season.name})"
                 )
             existing_pick.team = form.team_choice.data
         else:
             db.session.add(
                 NflSurvivorPick(
                     season_id=season.id,
-                    user_id=current_user.id,
+                    participant_id=entry.id,
                     week=week_num,
                     team=form.team_choice.data,
                 )
             )
             pick_description = (
                 f"{current_user.full_name} picked {team_name} for week {week_num} "
-                f"({season.name})"
+                f"for {entry_log_description(entry)} ({season.name})"
             )
 
         log_nfl_survivor("Pick", pick_description)
@@ -354,30 +467,27 @@ def view_picks():
     season = _require_season()
     if not season:
         return redirect(url_for("nfl_survivor.index"))
-    if not _require_participant(season):
+    if not _require_active_entry(season):
         return redirect(url_for("nfl_survivor.index"))
 
     current_week = get_current_pick_week(season)
-    users = _participant_users(season)
-    display_names = build_display_names(users)
+    participants = _participants_for_season(season)
     team_lookup = load_nfl_teams_as_dict()
 
     wrong_picks_count = {}
     correct_picks_count = {}
-    for user in users:
-        wrong_picks_count[user.id] = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=user.id, is_correct=False
-        ).count()
-        correct_picks_count[user.id] = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=user.id, is_correct=True
-        ).count()
+    for participant in participants:
+        wrong_picks_count[participant.id] = participant_wrong_picks_count(participant)
+        correct_picks_count[participant.id] = participant_correct_picks_count(
+            participant
+        )
 
-    sorted_users = sorted(
-        users,
-        key=lambda user: (
-            wrong_picks_count.get(user.id, 0),
-            -correct_picks_count.get(user.id, 0),
-            (display_names[user.id] or "").lower(),
+    sorted_participants = sorted(
+        participants,
+        key=lambda participant: (
+            wrong_picks_count.get(participant.id, 0),
+            -correct_picks_count.get(participant.id, 0),
+            participant.display_name.lower(),
         ),
     )
 
@@ -388,10 +498,8 @@ def view_picks():
             season_id=season.id, week=week
         ).all()
         for pick in picks_for_week:
-            if pick.user_id not in display_names:
-                continue
             team_name = team_lookup.get(pick.team, pick.team)
-            all_picks[week][pick.user_id] = {
+            all_picks[week][pick.participant_id] = {
                 "team": team_name,
                 "is_correct": pick.is_correct,
             }
@@ -400,8 +508,7 @@ def view_picks():
     return render_template(
         "nfl_survivor/view_picks.html",
         all_picks=all_picks,
-        sorted_users=sorted_users,
-        display_names=display_names,
+        sorted_participants=sorted_participants,
         wrong_picks_count=wrong_picks_count,
         **ctx,
     )
@@ -476,46 +583,55 @@ def admin_set_pick():
         return redirect(url_for("nfl_survivor.index"))
 
     participants = _participants_for_season(season)
-    display_names = build_display_names([p.user for p in participants])
     form = AdminSetPickForm()
-    form.user_id.choices = [(p.user_id, display_names[p.user_id]) for p in participants]
+    form.participant_id.choices = [
+        (p.id, p.display_name) for p in participants
+    ]
     form.week.choices = [(str(w), str(w)) for w in range(1, season.max_weeks + 1)]
     form.team.choices = load_nfl_teams_as_pairs()
 
     if form.validate_on_submit():
-        user_id = form.user_id.data
+        participant_id = form.participant_id.data
         week_num = int(form.week.data)
+        participant = NflSurvivorParticipant.query.filter_by(
+            id=participant_id, season_id=season.id
+        ).first()
+        if not participant:
+            flash("Entry not found.")
+            return redirect(url_for("nfl_survivor.admin_set_pick"))
+
         existing_pick = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=user_id, week=week_num
+            participant_id=participant_id, week=week_num
         ).first()
         team_lookup = load_nfl_teams_as_dict()
         team_name = team_lookup.get(form.team.data, form.team.data)
+        entry_label = entry_log_description(participant)
         if existing_pick:
             old_team_name = team_lookup.get(existing_pick.team, existing_pick.team)
             if existing_pick.team != form.team.data:
                 pick_description = (
                     f"Admin {current_user.full_name} changed pick for "
-                    f"{display_names[user_id]} week {week_num} from {old_team_name} "
+                    f"{entry_label} week {week_num} from {old_team_name} "
                     f"to {team_name} ({season.name})"
                 )
             else:
                 pick_description = (
                     f"Admin {current_user.full_name} set pick for "
-                    f"{display_names[user_id]} week {week_num}: {team_name} ({season.name})"
+                    f"{entry_label} week {week_num}: {team_name} ({season.name})"
                 )
             existing_pick.team = form.team.data
         else:
             db.session.add(
                 NflSurvivorPick(
                     season_id=season.id,
-                    user_id=user_id,
+                    participant_id=participant_id,
                     week=week_num,
                     team=form.team.data,
                 )
             )
             pick_description = (
                 f"Admin {current_user.full_name} set pick for "
-                f"{display_names[user_id]} week {week_num}: {team_name} ({season.name})"
+                f"{entry_label} week {week_num}: {team_name} ({season.name})"
             )
 
         log_nfl_survivor("Pick", pick_description)
@@ -537,17 +653,16 @@ def admin_view_picks():
     current_week = get_current_pick_week(season)
     team_lookup = load_nfl_teams_as_dict()
     participants = _participants_for_season(season)
-    display_names = build_display_names([p.user for p in participants])
 
     picks = []
     for participant in participants:
         pick = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=participant.user_id, week=current_week
+            participant_id=participant.id, week=current_week
         ).first()
         team_name = (
             team_lookup.get(pick.team, "Not Picked") if pick else "Not Picked"
         )
-        picks.append((display_names[participant.user_id], team_name))
+        picks.append((participant.display_name, team_name))
 
     ctx = _season_context(season)
     return render_template(
@@ -569,16 +684,14 @@ def admin_auto_pick():
         week_number = int(request.form["week_number"])
         participants = _participants_for_season(season)
         name_to_id = {team["name"]: team["id"] for team in load_nfl_teams()}
-        display_names = build_display_names([p.user for p in participants])
 
         for participant in participants:
-            user = participant.user
-            if _user_has_two_wrong_picks(season, user.id):
+            if participant_is_eliminated(participant):
                 continue
-            if _user_made_pick_for_week(season, user.id, week_number):
+            if _participant_made_pick_for_week(participant.id, week_number):
                 continue
             previously_picked = _get_previously_picked_team_names(
-                season, user.id, week_number
+                participant.id, week_number
             )
             team_to_pick = _find_team_with_most_negative_spread(
                 season, previously_picked, week_number
@@ -589,7 +702,7 @@ def admin_auto_pick():
             db.session.add(
                 NflSurvivorPick(
                     season_id=season.id,
-                    user_id=user.id,
+                    participant_id=participant.id,
                     week=week_number,
                     team=team_id,
                     is_correct=None,
@@ -598,7 +711,8 @@ def admin_auto_pick():
             log_nfl_survivor(
                 "Pick",
                 f"Auto-pick: {current_user.full_name} assigned {team_to_pick} to "
-                f"{display_names[user.id]} for week {week_number} ({season.name})",
+                f"{entry_log_description(participant)} for week {week_number} "
+                f"({season.name})",
             )
 
         db.session.commit()
@@ -782,25 +896,25 @@ def admin_view_all_picks():
         return redirect(url_for("nfl_survivor.index"))
 
     participants = _participants_for_season(season)
-    display_names = build_display_names([p.user for p in participants])
     team_lookup = load_nfl_teams_as_dict()
     picks = NflSurvivorPick.query.filter_by(season_id=season.id).all()
 
-    picks_by_user = {
-        display_names[p.user_id]: {week: "" for week in range(1, season.max_weeks + 1)}
+    picks_by_entry = {
+        p.display_name: {week: "" for week in range(1, season.max_weeks + 1)}
         for p in participants
     }
     for pick in picks:
-        if pick.user_id not in display_names:
+        participant = pick.participant
+        if participant.display_name not in picks_by_entry:
             continue
-        picks_by_user[display_names[pick.user_id]][pick.week] = team_lookup.get(
+        picks_by_entry[participant.display_name][pick.week] = team_lookup.get(
             pick.team, pick.team
         )
 
     ctx = _season_context(season)
     return render_template(
         "nfl_survivor/admin_view_all_picks.html",
-        picks_by_user=picks_by_user,
+        picks_by_user=picks_by_entry,
         max_weeks=season.max_weeks,
         **ctx,
     )
@@ -815,11 +929,10 @@ def admin_view_participants():
 
     current_week = get_current_pick_week(season)
     participants = _participants_for_season(season)
-    display_names = build_display_names([p.user for p in participants])
     rows = []
     for participant in participants:
         picks = NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=participant.user_id
+            participant_id=participant.id
         ).all()
         wrong_picks = sum(1 for pick in picks if pick.is_correct is False)
         has_picked = any(pick.week == current_week for pick in picks)
@@ -827,7 +940,8 @@ def admin_view_participants():
         rows.append(
             {
                 "id": participant.id,
-                "name": display_names[participant.user_id],
+                "name": participant.display_name,
+                "owner": participant.user.full_name or participant.user.email,
                 "picks_count": len(picks),
                 "wrong_picks": wrong_picks,
                 "needs_to_pick": needs_to_pick,
@@ -851,7 +965,6 @@ def admin_payments():
         return redirect(url_for("nfl_survivor.index"))
 
     participants = _participants_for_season(season)
-    display_names = build_display_names([p.user for p in participants])
 
     if request.method == "POST":
         paid_ids = {int(value) for value in request.form.getlist("paid")}
@@ -861,8 +974,9 @@ def admin_payments():
             if participant.has_paid == new_paid:
                 continue
             participant.has_paid = new_paid
-            name = display_names[participant.user_id]
-            changes.append(f"{name}: {'paid' if new_paid else 'unpaid'}")
+            changes.append(
+                f'{participant.display_name}: {"paid" if new_paid else "unpaid"}'
+            )
 
         if changes:
             log_nfl_survivor(
@@ -882,7 +996,7 @@ def admin_payments():
     rows = [
         {
             "id": participant.id,
-            "name": display_names[participant.user_id],
+            "name": participant.display_name,
             "has_paid": participant.has_paid,
         }
         for participant in participants
@@ -914,11 +1028,8 @@ def admin_remove_participant(participant_id):
         flash("Participant not found in this season.")
         return redirect(url_for("nfl_survivor.admin_view_participants"))
 
-    display_names = build_display_names([participant.user])
-    participant_name = display_names[participant.user_id]
-    picks = NflSurvivorPick.query.filter_by(
-        season_id=season.id, user_id=participant.user_id
-    ).all()
+    participant_name = participant.display_name
+    picks = NflSurvivorPick.query.filter_by(participant_id=participant.id).all()
     picks_count = len(picks)
 
     if request.method == "POST":
@@ -931,15 +1042,16 @@ def admin_remove_participant(participant_id):
                 )
             )
 
-        NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=participant.user_id
-        ).delete()
+        if session.get(ACTIVE_ENTRY_SESSION_KEY) == participant.id:
+            clear_active_entry()
+
+        NflSurvivorPick.query.filter_by(participant_id=participant.id).delete()
         db.session.delete(participant)
         log_nfl_survivor(
             "Remove Participant",
             (
-                f"{current_user.full_name} removed {participant_name} from "
-                f"{season.name} ({picks_count} picks deleted)"
+                f"{current_user.full_name} removed {entry_log_description(participant)} "
+                f"from {season.name} ({picks_count} picks deleted)"
             ),
         )
         db.session.commit()
@@ -1203,28 +1315,18 @@ def _update_weekly_results(season, week, results):
     db.session.commit()
 
 
-def _user_has_two_wrong_picks(season, user_id):
+def _participant_made_pick_for_week(participant_id, week):
     return (
         NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=user_id, is_correct=False
-        ).count()
-        >= 2
-    )
-
-
-def _user_made_pick_for_week(season, user_id, week):
-    return (
-        NflSurvivorPick.query.filter_by(
-            season_id=season.id, user_id=user_id, week=week
+            participant_id=participant_id, week=week
         ).first()
         is not None
     )
 
 
-def _get_previously_picked_team_names(season, user_id, up_to_week):
+def _get_previously_picked_team_names(participant_id, up_to_week):
     picks = NflSurvivorPick.query.filter(
-        NflSurvivorPick.season_id == season.id,
-        NflSurvivorPick.user_id == user_id,
+        NflSurvivorPick.participant_id == participant_id,
         NflSurvivorPick.week < up_to_week,
     ).all()
     team_lookup = load_nfl_teams_as_dict()

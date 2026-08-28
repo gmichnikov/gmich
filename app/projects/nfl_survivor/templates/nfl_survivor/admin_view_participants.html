@@ -10,6 +10,7 @@
     <thead>
       <tr>
         <th>Player</th>
+        <th>Owner</th>
         <th>Picks</th>
         <th>Losses</th>
         <th>Needs pick</th>
@@ -20,10 +21,18 @@
       {% for row in participants %}
       <tr class="{% if row.needs_to_pick %}ns-highlight{% endif %}">
         <td>{{ row.name }}</td>
+        <td>{{ row.owner }}</td>
         <td>{{ row.picks_count }}</td>
         <td>{{ row.wrong_picks }}</td>
         <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
         <td class="ns-actions-cell">
+          <form method="post"
+                action="{{ url_for('nfl_survivor.rename_entry', participant_id=row.id) }}"
+                class="ns-entry-rename-form ns-entry-rename-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="display_name" value="{{ row.name }}" maxlength="100" required>
+            <button type="submit" class="ns-btn ns-btn-secondary ns-btn-small">Rename</button>
+          </form>
           <a href="{{ url_for('nfl_survivor.admin_remove_participant', participant_id=row.id) }}"
              class="ns-link-danger">Remove</a>
         </td>

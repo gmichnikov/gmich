@@ -262,6 +262,124 @@
   text-align: right;
 }
 
+.ns-active-entry-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--ns-card);
+  border: 2px solid var(--ns-navy);
+  border-radius: var(--ns-radius-sm);
+  box-shadow: var(--ns-shadow);
+}
+
+.ns-active-entry-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ns-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ns-active-entry-name {
+  color: var(--ns-navy);
+  font-size: 1.05rem;
+}
+
+.ns-entry-switch-form {
+  margin: 0;
+  margin-left: auto;
+}
+
+.ns-entry-switch-form select {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--ns-navy);
+  border: 1px solid var(--ns-border);
+  border-radius: var(--ns-radius-sm);
+  background: var(--ns-bg);
+}
+
+.ns-entry-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.ns-entry-item {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.ns-entry-item:last-child {
+  border-bottom: none;
+}
+
+.ns-entry-item-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ns-entry-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ns-navy);
+  background: #e8eef8;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.ns-entry-meta {
+  font-size: 0.85rem;
+  color: var(--ns-text-muted);
+}
+
+.ns-entry-unpaid {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.ns-entry-rename-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ns-entry-rename-form input[type="text"] {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--ns-border);
+  border-radius: var(--ns-radius-sm);
+}
+
+.ns-btn-small {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.ns-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Nav pills */
 .ns-nav {
   display: flex;

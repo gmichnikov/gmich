@@ -7,7 +7,7 @@ from wtforms import (
     StringField,
     SubmitField,
 )
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, Length, Optional
 
 
 class TeamSelectionForm(FlaskForm):
@@ -16,8 +16,24 @@ class TeamSelectionForm(FlaskForm):
     submit = SubmitField("Submit pick")
 
 
+class AddEntryForm(FlaskForm):
+    display_name = StringField(
+        "Entry name",
+        validators=[Optional(), Length(max=100)],
+    )
+    submit = SubmitField("Add entry")
+
+
+class RenameEntryForm(FlaskForm):
+    display_name = StringField(
+        "Entry name",
+        validators=[DataRequired(), Length(max=100)],
+    )
+    submit = SubmitField("Save name")
+
+
 class AdminSetPickForm(FlaskForm):
-    user_id = SelectField("Participant", coerce=int, choices=[])
+    participant_id = SelectField("Entry", coerce=int, choices=[])
     week = SelectField("Week", choices=[])
     team = SelectField("Team", choices=[])
     submit = SubmitField("Set Pick")

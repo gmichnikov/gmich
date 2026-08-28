@@ -5,17 +5,22 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytz
+from flask import session
 
 from app.projects.nfl_survivor.models import (
+    NflSurvivorGame,
+    NflSurvivorParticipant,
+    NflSurvivorPick,
     NflSurvivorSeason,
     NflSurvivorSpread,
     NflSurvivorWeeklyResult,
-    NflSurvivorGame,
 )
 
 EASTERN = pytz.timezone("US/Eastern")
 UTC = pytz.UTC
 DATA_DIR = Path(__file__).resolve().parent / "data"
+ACTIVE_ENTRY_SESSION_KEY = "nfl_survivor_active_entry_id"
+MAX_ENTRY_NAME_LENGTH = 100
 
 
 def load_nfl_teams():
@@ -126,6 +131,105 @@ def build_display_names(users):
         else:
             labels[user.id] = label
     return labels
+
+
+def normalize_entry_name(name):
+    return (name or "").strip()
+
+
+def entry_name_taken(season_id, display_name, exclude_participant_id=None):
+    display_name = normalize_entry_name(display_name)
+    if not display_name:
+        return True
+    query = NflSurvivorParticipant.query.filter_by(
+        season_id=season_id, display_name=display_name
+    )
+    if exclude_participant_id is not None:
+        query = query.filter(NflSurvivorParticipant.id != exclude_participant_id)
+    return query.first() is not None
+
+
+def default_entry_name_for_user(season, user):
+    base = (user.full_name or user.email.split("@")[0]).strip()
+    entry_count = NflSurvivorParticipant.query.filter_by(
+        season_id=season.id, user_id=user.id
+    ).count()
+    if entry_count == 0:
+        candidate = base
+    else:
+        candidate = f"{base} #{entry_count + 1}"
+
+    if not entry_name_taken(season.id, candidate):
+        return candidate
+
+    suffix = entry_count + 2
+    while entry_name_taken(season.id, f"{base} #{suffix}"):
+        suffix += 1
+    return f"{base} #{suffix}"
+
+
+def get_user_entries(season, user_id):
+    if not season:
+        return []
+    return (
+        NflSurvivorParticipant.query.filter_by(season_id=season.id, user_id=user_id)
+        .order_by(NflSurvivorParticipant.joined_at.asc())
+        .all()
+    )
+
+
+def resolve_active_entry(season, user_id):
+    entries = get_user_entries(season, user_id)
+    if not entries:
+        return None
+
+    stored_id = session.get(ACTIVE_ENTRY_SESSION_KEY)
+    if stored_id is not None:
+        for entry in entries:
+            if entry.id == stored_id:
+                return entry
+
+    return entries[0]
+
+
+def set_active_entry(participant_id):
+    session[ACTIVE_ENTRY_SESSION_KEY] = participant_id
+
+
+def clear_active_entry():
+    session.pop(ACTIVE_ENTRY_SESSION_KEY, None)
+
+
+def participant_wrong_picks_count(participant):
+    return NflSurvivorPick.query.filter_by(
+        participant_id=participant.id, is_correct=False
+    ).count()
+
+
+def participant_correct_picks_count(participant):
+    return NflSurvivorPick.query.filter_by(
+        participant_id=participant.id, is_correct=True
+    ).count()
+
+
+def participant_is_eliminated(participant):
+    return participant_wrong_picks_count(participant) >= 2
+
+
+def entry_log_description(entry):
+    owner = entry.user.full_name or entry.user.email
+    return f'entry "{entry.display_name}" ({owner})'
+
+
+def validate_entry_name(season_id, display_name, exclude_participant_id=None):
+    display_name = normalize_entry_name(display_name)
+    if not display_name:
+        return None, "Entry name is required."
+    if len(display_name) > MAX_ENTRY_NAME_LENGTH:
+        return None, f"Entry name must be {MAX_ENTRY_NAME_LENGTH} characters or fewer."
+    if entry_name_taken(season_id, display_name, exclude_participant_id):
+        return None, "That entry name is already taken."
+    return display_name, None
 
 
 def map_team_names_to_ids():

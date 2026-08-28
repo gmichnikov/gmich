@@ -57,28 +57,8 @@ class NflSurvivorSeason(db.Model):
 class NflSurvivorParticipant(db.Model):
     __tablename__ = "nfl_survivor_participants"
     __table_args__ = (
-        db.UniqueConstraint("season_id", "user_id", name="uq_nfl_survivor_participant"),
-    )
-
-    id = db.Column(db.Integer, primary_key=True)
-    season_id = db.Column(
-        db.Integer, db.ForeignKey("nfl_survivor_seasons.id"), nullable=False
-    )
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    joined_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    has_paid = db.Column(db.Boolean, nullable=False, default=False)
-
-    user = db.relationship("User", backref=db.backref("nfl_survivor_entries", lazy=True))
-
-    def __repr__(self):
-        return f"<NflSurvivorParticipant season={self.season_id} user={self.user_id}>"
-
-
-class NflSurvivorPick(db.Model):
-    __tablename__ = "nfl_survivor_picks"
-    __table_args__ = (
         db.UniqueConstraint(
-            "season_id", "user_id", "week", name="uq_nfl_survivor_pick"
+            "season_id", "display_name", name="uq_nfl_survivor_entry_name"
         ),
     )
 
@@ -87,11 +67,40 @@ class NflSurvivorPick(db.Model):
         db.Integer, db.ForeignKey("nfl_survivor_seasons.id"), nullable=False
     )
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    display_name = db.Column(db.String(100), nullable=False)
+    joined_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    has_paid = db.Column(db.Boolean, nullable=False, default=False)
+
+    user = db.relationship("User", backref=db.backref("nfl_survivor_entries", lazy=True))
+    picks = db.relationship(
+        "NflSurvivorPick",
+        backref="participant",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self):
+        return f"<NflSurvivorParticipant {self.display_name} season={self.season_id}>"
+
+
+class NflSurvivorPick(db.Model):
+    __tablename__ = "nfl_survivor_picks"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "participant_id", "week", name="uq_nfl_survivor_pick"
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    season_id = db.Column(
+        db.Integer, db.ForeignKey("nfl_survivor_seasons.id"), nullable=False
+    )
+    participant_id = db.Column(
+        db.Integer, db.ForeignKey("nfl_survivor_participants.id"), nullable=False
+    )
     week = db.Column(db.Integer, nullable=False)
     team = db.Column(db.String(64), nullable=False)
     is_correct = db.Column(db.Boolean, nullable=True)
-
-    user = db.relationship("User", backref=db.backref("nfl_survivor_picks", lazy=True))
 
     def __repr__(self):
         return f"<NflSurvivorPick week={self.week} team={self.team}>"

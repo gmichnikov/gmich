@@ -7,6 +7,10 @@
 {% block ns_styles %}{% endblock %}
 {% endblock %}
 
+{% block scripts %}
+{% block ns_scripts %}{% endblock %}
+{% endblock %}
+
 {% block content %}
 <div class="ns-page-wrapper">
   <div class="ns-container">
@@ -20,10 +24,28 @@
       {% endif %}
     </header>
 
+    {% if season and show_entry_switcher and active_entry %}
+    <div class="ns-active-entry-bar">
+      <span class="ns-active-entry-label">Picking as</span>
+      <strong class="ns-active-entry-name">{{ active_entry.display_name }}</strong>
+      <form method="post" action="{{ url_for('nfl_survivor.switch_entry') }}" class="ns-entry-switch-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="ns-sr-only" for="ns-entry-switch">Switch entry</label>
+        <select id="ns-entry-switch" name="participant_id" onchange="this.form.submit()">
+          {% for entry in user_entries %}
+          <option value="{{ entry.id }}" {% if entry.id == active_entry.id %}selected{% endif %}>
+            {{ entry.display_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    {% endif %}
+
     <nav class="ns-nav" aria-label="Pool navigation">
       <a href="{{ url_for('nfl_survivor.index') }}"
          class="ns-nav-link {% if request.endpoint == 'nfl_survivor.index' %}ns-nav-active{% endif %}">Home</a>
-      {% if season and is_participant %}
+      {% if season and has_entries %}
       <a href="{{ url_for('nfl_survivor.pick') }}"
          class="ns-nav-link {% if request.endpoint == 'nfl_survivor.pick' %}ns-nav-active{% endif %}">Make a pick</a>
       <a href="{{ url_for('nfl_survivor.view_picks') }}"

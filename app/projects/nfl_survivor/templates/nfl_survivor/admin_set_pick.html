@@ -3,11 +3,11 @@
 {% block ns_title %}Admin Set Pick{% endblock %}
 
 {% block ns_content %}
-<h1 class="ns-card-title">Set pick for player</h1>
+<h1 class="ns-card-title">Set pick for entry</h1>
 <form method="post" class="ns-form">
   {{ form.hidden_tag() }}
-  <label>{{ form.user_id.label.text }}</label>
-  {{ form.user_id() }}
+  <label>{{ form.participant_id.label.text }}</label>
+  {{ form.participant_id() }}
   <label>{{ form.week.label.text }}</label>
   {{ form.week() }}
   <label>{{ form.team.label.text }}</label>

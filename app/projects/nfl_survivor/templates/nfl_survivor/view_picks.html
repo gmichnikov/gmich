@@ -10,7 +10,7 @@
   <table class="ns-styled-table">
     <thead>
       <tr class="ns-header-row">
-        <th class="ns-first-col">Player</th>
+        <th class="ns-first-col">Entry</th>
         <th class="ns-second-col">L</th>
         {% for week in all_picks.keys() %}
         <th>Wk {{ week }}</th>
@@ -18,12 +18,12 @@
       </tr>
     </thead>
     <tbody>
-      {% for user in sorted_users %}
+      {% for participant in sorted_participants %}
       <tr>
-        <td class="ns-first-col">{{ display_names[user.id] }}</td>
-        <td class="ns-second-col">{{ wrong_picks_count.get(user.id, 0) }}</td>
+        <td class="ns-first-col">{{ participant.display_name }}</td>
+        <td class="ns-second-col">{{ wrong_picks_count.get(participant.id, 0) }}</td>
         {% for week, week_picks in all_picks.items() %}
-        {% set cell = week_picks.get(user.id, {}) %}
+        {% set cell = week_picks.get(participant.id, {}) %}
         <td class="{% if cell.get('is_correct') is true %}ns-correct{% elif cell.get('is_correct') is false %}ns-incorrect{% else %}ns-nopick{% endif %}">
           {{ cell.get('team', '') }}
         </td>

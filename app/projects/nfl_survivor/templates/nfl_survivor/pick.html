@@ -4,7 +4,10 @@
 
 {% block ns_content %}
 <h1 class="ns-card-title">Make your pick</h1>
-<p class="ns-card-subtitle">Choose a team for the selected week. Teams lock when their game kicks off.</p>
+<p class="ns-card-subtitle">
+  Entry <strong>{{ active_entry.display_name }}</strong> —
+  choose a team for the selected week. Teams lock when their game kicks off.
+</p>
 
 <h2>Your picks</h2>
 <ul class="ns-pick-list">
