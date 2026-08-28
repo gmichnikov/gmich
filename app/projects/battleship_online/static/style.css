@@ -176,6 +176,7 @@
 
 .bso-spectator-badge[hidden],
 .bso-rematch-btn[hidden],
+#bsoUnreadyBtn[hidden],
 .bso-share-row[hidden],
 .bso-name-row[hidden],
 .bso-placement-actions[hidden],
@@ -525,6 +526,22 @@
     background: #2c5282;
 }
 
+.bso-target-grid .bso-revealed-ship,
+.bso-spectator-grid .bso-revealed-ship {
+    background: #d6bcfa;
+    box-shadow: inset 0 0 0 2px #6b46c1;
+    position: relative;
+}
+
+.bso-target-grid .bso-revealed-ship::after,
+.bso-spectator-grid .bso-revealed-ship::after {
+    content: "";
+    position: absolute;
+    inset: 22%;
+    border-radius: 2px;
+    background: #553c9a;
+}
+
 .bso-miss {
     position: relative;
 }
@@ -554,6 +571,45 @@
 
 .bso-own-grid .bso-miss::after {
     background: #718096;
+}
+
+.bso-own-grid .bso-recent-opponent-shot {
+    position: relative;
+    z-index: 1;
+    animation: bsoRecentShotPulse 1.4s ease-in-out 4;
+}
+
+.bso-own-grid .bso-recent-opponent-shot::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 5px;
+    border: 3px solid #f6ad55;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.35),
+        0 0 10px rgba(246, 173, 85, 0.95),
+        0 0 20px rgba(237, 137, 54, 0.55);
+    pointer-events: none;
+    z-index: 2;
+    animation: bsoRecentShotRing 1.4s ease-in-out 4;
+}
+
+@keyframes bsoRecentShotPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+}
+
+@keyframes bsoRecentShotRing {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
 }
 
 .bso-hit {

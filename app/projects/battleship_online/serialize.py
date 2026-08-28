@@ -55,7 +55,7 @@ def build_placement_board(fleet, selected_ship_id=None):
     return board
 
 
-def build_targeting(shots, opponent_fleet=None):
+def build_targeting(shots, opponent_fleet=None, reveal_unhit_ships=False):
     sunk = _sunk_cells(opponent_fleet)
     board = []
     for row in range(GRID_SIZE):
@@ -63,7 +63,10 @@ def build_targeting(shots, opponent_fleet=None):
         for col in range(GRID_SIZE):
             shot = shots[row][col] if shots else 0
             if shot == 0:
-                board_row.append("unknown")
+                if reveal_unhit_ships and _cell_ship_id(opponent_fleet, row, col) is not None:
+                    board_row.append("revealed-ship")
+                else:
+                    board_row.append("unknown")
             elif shot == 1:
                 board_row.append("miss")
             elif (row, col) in sunk:
@@ -92,6 +95,10 @@ def _opponent_fleet_for_viewer(room, viewer_seat):
     if viewer_seat == "O":
         return room.fleet_x
     return None
+
+
+def _reveal_unhit_ships_for_viewer(room, viewer_seat):
+    return room.status == "won" and viewer_seat is not None and viewer_seat != room.winner
 
 
 def room_to_dict(room, viewer_seat):
@@ -131,7 +138,9 @@ def room_to_dict(room, viewer_seat):
                 room.fleet_x, room.shots_o or _empty_board(0)
             )
             payload["targeting"] = build_targeting(
-                room.shots_x or _empty_board(0), room.fleet_o
+                room.shots_x or _empty_board(0),
+                room.fleet_o,
+                reveal_unhit_ships=_reveal_unhit_ships_for_viewer(room, "X"),
             )
     elif viewer_seat == "O":
         payload["your_ready"] = room.ready_o
@@ -144,7 +153,9 @@ def room_to_dict(room, viewer_seat):
                 room.fleet_o, room.shots_x or _empty_board(0)
             )
             payload["targeting"] = build_targeting(
-                room.shots_o or _empty_board(0), room.fleet_x
+                room.shots_o or _empty_board(0),
+                room.fleet_x,
+                reveal_unhit_ships=_reveal_unhit_ships_for_viewer(room, "O"),
             )
     elif viewer_seat is None:
         payload["spectator"] = True

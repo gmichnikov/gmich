@@ -14,6 +14,7 @@ from app.projects.battleship_online.room_service import (
     rematch,
     set_name,
     set_ready,
+    set_unready,
     shuffle_fleet,
 )
 from app.projects.battleship_online.serialize import room_to_dict
@@ -122,6 +123,13 @@ def api_room_ship(code):
 @_handle_room_errors
 def api_room_ready(code):
     room, seat = set_ready(code, _player_id())
+    return jsonify(room_to_dict(room, seat))
+
+
+@battleship_online_bp.route("/room/<code>/unready", methods=["POST"])
+@_handle_room_errors
+def api_room_unready(code):
+    room, seat = set_unready(code, _player_id())
     return jsonify(room_to_dict(room, seat))
 
 

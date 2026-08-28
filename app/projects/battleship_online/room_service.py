@@ -356,6 +356,28 @@ def set_ready(code, player_id):
     return room, seat
 
 
+def set_unready(code, player_id):
+    room = _get_room_row(code)
+    seat = room.seat_for_player(player_id)
+    if seat is None:
+        raise RoomError("Only seated players can unready.", 403)
+    if room.status != BattleshipOnlineRoom.STATUS_PLACEMENT:
+        raise RoomError("Ship placement is already finished.", 400)
+    if seat == "X":
+        if not room.ready_x:
+            raise RoomError("You're not ready yet.", 400)
+        room.ready_x = False
+    else:
+        if not room.ready_o:
+            raise RoomError("You're not ready yet.", 400)
+        room.ready_o = False
+
+    room.version += 1
+    _touch(room)
+    db.session.commit()
+    return room, seat
+
+
 def fire(code, player_id, row, col):
     room = _get_room_row(code)
     seat = room.seat_for_player(player_id)

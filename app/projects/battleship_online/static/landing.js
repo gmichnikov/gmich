@@ -2,10 +2,15 @@
     "use strict";
 
     var PLAYER_KEY = "bso_player_id";
+    var CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
     var createBtn = document.getElementById("bsoCreateBtn");
     var joinForm = document.getElementById("bsoJoinForm");
     var joinInput = document.getElementById("bsoJoinCode");
     var errorEl = document.getElementById("bsoLandingError");
+
+    function normalizeCode(value) {
+        return value.trim().toUpperCase();
+    }
 
     function getPlayerId() {
         var id = null;
@@ -32,6 +37,10 @@
     function showError(message) {
         errorEl.textContent = message;
         errorEl.hidden = false;
+    }
+
+    function clearError() {
+        errorEl.hidden = true;
     }
 
     function goToRoom(code) {
@@ -65,13 +74,26 @@
             });
     });
 
+    joinInput.addEventListener("input", function () {
+        var normalized = normalizeCode(joinInput.value);
+        if (normalized !== joinInput.value) {
+            joinInput.value = normalized;
+        }
+        clearError();
+    });
+
     joinForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        var code = joinInput.value.trim().toUpperCase();
+        var code = normalizeCode(joinInput.value);
         if (!code) {
             showError("Enter a room code first.");
             return;
         }
+        if (!CODE_RE.test(code)) {
+            showError("Enter a valid 6-character room code.");
+            return;
+        }
+        clearError();
         goToRoom(code);
     });
 })();
