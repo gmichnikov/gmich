@@ -1,6 +1,8 @@
 import click
 from flask.cli import with_appcontext
 
+from app import db
+from app.projects.nfl_survivor.log import log_nfl_survivor
 from app.projects.nfl_survivor.routes import _fetch_spreads_data
 from app.projects.nfl_survivor.schedule import fetch_schedule_for_active_weeks
 from app.projects.nfl_survivor.utils import get_active_season, is_scheduled_spreads_day
@@ -19,7 +21,17 @@ def fetch_schedule_command():
     if not season:
         raise click.ClickException("No active NFL Survivor season.")
 
-    total, weeks = fetch_schedule_for_active_weeks(season)
+    try:
+        total, weeks = fetch_schedule_for_active_weeks(season, source="cron")
+    except Exception as exc:
+        log_nfl_survivor(
+            "Fetch Schedule",
+            f"Cron fetch schedule failed ({season.name}): {exc}",
+            actor_id=None,
+        )
+        db.session.commit()
+        raise click.ClickException(str(exc)) from exc
+
     click.echo(f"Updated schedule for weeks {weeks}: {total} team rows.")
 
 
@@ -28,6 +40,12 @@ def fetch_schedule_command():
 def fetch_spreads_command():
     """Fetch NFL spreads from The Odds API for the active season."""
     if not is_scheduled_spreads_day():
+        log_nfl_survivor(
+            "Fetch Spreads",
+            "Cron fetch-spreads skipped (not Tuesday or Thursday, US/Eastern)",
+            actor_id=None,
+        )
+        db.session.commit()
         click.echo("Skipped: spreads fetch only runs on Tuesday and Thursday (US/Eastern).")
         return
 
@@ -54,7 +72,17 @@ def sync_command():
     if not season:
         raise click.ClickException("No active NFL Survivor season.")
 
-    total, weeks = fetch_schedule_for_active_weeks(season)
+    try:
+        total, weeks = fetch_schedule_for_active_weeks(season, source="cron")
+    except Exception as exc:
+        log_nfl_survivor(
+            "Fetch Schedule",
+            f"Cron sync schedule fetch failed ({season.name}): {exc}",
+            actor_id=None,
+        )
+        db.session.commit()
+        raise click.ClickException(str(exc)) from exc
+
     click.echo(f"Schedule weeks {weeks}: {total} team rows.")
 
     if is_scheduled_spreads_day():
@@ -65,6 +93,15 @@ def sync_command():
             raise click.ClickException(f"Spreads fetch failed ({status}): {msg}")
         click.echo(result["message"])
     else:
+        log_nfl_survivor(
+            "Sync",
+            (
+                f"Cron sync: schedule updated for weeks {weeks}; spreads skipped "
+                f"(not Tuesday or Thursday, US/Eastern) ({season.name})"
+            ),
+            actor_id=None,
+        )
+        db.session.commit()
         click.echo("Spreads skipped (not Tuesday or Thursday, US/Eastern).")
 
 

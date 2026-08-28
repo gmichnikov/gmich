@@ -3,11 +3,10 @@
 import logging
 from datetime import datetime
 
-import pytz
 import requests
 
 from app import db
-from app.models import LogEntry
+from app.projects.nfl_survivor.log import log_nfl_survivor
 from app.projects.nfl_survivor.models import NflSurvivorGame
 from app.projects.nfl_survivor.utils import UTC, map_team_names_to_ids
 
@@ -23,7 +22,7 @@ def _parse_espn_kickoff(date_str):
     return datetime.fromisoformat(date_str).astimezone(UTC)
 
 
-def fetch_schedule_for_week(season, week, *, log=True, actor_id=None):
+def fetch_schedule_for_week(season, week, *, log=True, actor_id=None, source="cron"):
     """
     Load kickoff times for all teams playing in `week` from ESPN.
     Returns number of team rows upserted.
@@ -76,19 +75,17 @@ def fetch_schedule_for_week(season, week, *, log=True, actor_id=None):
                 upserted += 1
 
     if log:
-        db.session.add(
-            LogEntry(
-                project="nfl_survivor",
-                category="Fetch Schedule",
-                actor_id=actor_id,
-                description=f"Fetched ESPN schedule for week {week} ({season.name}): {upserted} teams",
-            )
+        label = "Manual" if source == "manual" else "Cron"
+        log_nfl_survivor(
+            "Fetch Schedule",
+            f"{label} fetch schedule for week {week} ({season.name}): {upserted} teams",
+            actor_id=actor_id,
         )
     db.session.commit()
     return upserted
 
 
-def fetch_schedule_for_active_weeks(season, *, actor_id=None):
+def fetch_schedule_for_active_weeks(season, *, actor_id=None, source="cron"):
     """Fetch current pick week and the next week (for early future picks)."""
     from app.projects.nfl_survivor.utils import get_current_pick_week
 
@@ -99,18 +96,18 @@ def fetch_schedule_for_active_weeks(season, *, actor_id=None):
 
     total = 0
     for week in sorted(weeks):
-        total += fetch_schedule_for_week(season, week, log=False, actor_id=actor_id)
-
-    db.session.add(
-        LogEntry(
-            project="nfl_survivor",
-            category="Fetch Schedule",
-            actor_id=actor_id,
-            description=(
-                f"Fetched ESPN schedule for weeks {sorted(weeks)} "
-                f"({season.name}): {total} team rows"
-            ),
+        total += fetch_schedule_for_week(
+            season, week, log=False, actor_id=actor_id, source=source
         )
+
+    label = "Manual" if source == "manual" else "Cron"
+    log_nfl_survivor(
+        "Fetch Schedule",
+        (
+            f"{label} fetch schedule for weeks {sorted(weeks)} "
+            f"({season.name}): {total} team rows"
+        ),
+        actor_id=actor_id,
     )
     db.session.commit()
     return total, sorted(weeks)

@@ -11,9 +11,10 @@ from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import csrf, db
-from app.models import LogEntry, User
+from app.models import User
 from app.projects.nfl_survivor import nfl_survivor_bp
 from app.projects.nfl_survivor.forms import AdminSetPickForm, SeasonForm, TeamSelectionForm
+from app.projects.nfl_survivor.log import log_nfl_survivor
 from app.projects.nfl_survivor.models import (
     NflSurvivorParticipant,
     NflSurvivorPick,
@@ -40,23 +41,9 @@ from app.projects.nfl_survivor.utils import (
     parse_eastern_datetime,
     teams_available_for_week,
 )
-from app.utils.logging import log_project_visit
 
 EASTERN = pytz.timezone("US/Eastern")
 PROJECT = "nfl_survivor"
-
-
-def _log(category, description, actor_id=None):
-    db.session.add(
-        LogEntry(
-            project=PROJECT,
-            category=category,
-            actor_id=actor_id if actor_id is not None else (
-                current_user.id if current_user.is_authenticated else None
-            ),
-            description=description,
-        )
-    )
 
 
 def admin_required(view):
@@ -133,7 +120,6 @@ def ns_spread_class_filter(spread_value):
 @nfl_survivor_bp.route("/")
 @login_required
 def index():
-    log_project_visit(PROJECT, "NFL Survivor")
     season = get_active_season()
     ctx = _season_context(season)
     return render_template("nfl_survivor/index.html", **ctx)
@@ -160,7 +146,7 @@ def join():
     db.session.add(
         NflSurvivorParticipant(season_id=season.id, user_id=current_user.id)
     )
-    _log(
+    log_nfl_survivor(
         "Join",
         f"{current_user.full_name} joined {season.name}",
     )
@@ -258,7 +244,24 @@ def pick():
             flash("Your pick for this week is locked — that game has started.")
             return redirect(url_for("nfl_survivor.pick", week=week_num))
 
+        team_lookup_for_log = load_nfl_teams_as_dict()
+        team_name = team_lookup_for_log.get(
+            form.team_choice.data, form.team_choice.data
+        )
         if existing_pick:
+            old_team_name = team_lookup_for_log.get(
+                existing_pick.team, existing_pick.team
+            )
+            if existing_pick.team != form.team_choice.data:
+                pick_description = (
+                    f"{current_user.full_name} changed week {week_num} pick from "
+                    f"{old_team_name} to {team_name} ({season.name})"
+                )
+            else:
+                pick_description = (
+                    f"{current_user.full_name} kept week {week_num} pick: "
+                    f"{team_name} ({season.name})"
+                )
             existing_pick.team = form.team_choice.data
         else:
             db.session.add(
@@ -269,14 +272,12 @@ def pick():
                     team=form.team_choice.data,
                 )
             )
+            pick_description = (
+                f"{current_user.full_name} picked {team_name} for week {week_num} "
+                f"({season.name})"
+            )
 
-        team_name = load_nfl_teams_as_dict().get(
-            form.team_choice.data, form.team_choice.data
-        )
-        _log(
-            "Pick",
-            f"{current_user.full_name} picked {team_name} for week {week_num} ({season.name})",
-        )
+        log_nfl_survivor("Pick", pick_description)
         db.session.commit()
         flash("Your pick has been submitted.")
         return redirect(url_for("nfl_survivor.pick", week=week_num))
@@ -439,7 +440,7 @@ def admin():
         for pick in all_picks:
             pick.is_correct = is_pick_correct(season.id, pick.team, current_week)
 
-        _log(
+        log_nfl_survivor(
             "Set Results",
             f"{current_user.full_name} set results for week {current_week} ({season.name})",
         )
@@ -483,7 +484,21 @@ def admin_set_pick():
         existing_pick = NflSurvivorPick.query.filter_by(
             season_id=season.id, user_id=user_id, week=week_num
         ).first()
+        team_lookup = load_nfl_teams_as_dict()
+        team_name = team_lookup.get(form.team.data, form.team.data)
         if existing_pick:
+            old_team_name = team_lookup.get(existing_pick.team, existing_pick.team)
+            if existing_pick.team != form.team.data:
+                pick_description = (
+                    f"Admin {current_user.full_name} changed pick for "
+                    f"{display_names[user_id]} week {week_num} from {old_team_name} "
+                    f"to {team_name} ({season.name})"
+                )
+            else:
+                pick_description = (
+                    f"Admin {current_user.full_name} set pick for "
+                    f"{display_names[user_id]} week {week_num}: {team_name} ({season.name})"
+                )
             existing_pick.team = form.team.data
         else:
             db.session.add(
@@ -494,13 +509,12 @@ def admin_set_pick():
                     team=form.team.data,
                 )
             )
+            pick_description = (
+                f"Admin {current_user.full_name} set pick for "
+                f"{display_names[user_id]} week {week_num}: {team_name} ({season.name})"
+            )
 
-        team_name = load_nfl_teams_as_dict().get(form.team.data, form.team.data)
-        _log(
-            "Admin Set Pick",
-            f"{current_user.full_name} set pick for {display_names[user_id]} "
-            f"week {week_num}: {team_name}",
-        )
+        log_nfl_survivor("Pick", pick_description)
         db.session.commit()
         flash("Pick set successfully.")
         return redirect(url_for("nfl_survivor.admin_set_pick"))
@@ -577,10 +591,10 @@ def admin_auto_pick():
                     is_correct=None,
                 )
             )
-            _log(
-                "Auto Pick",
-                f"{current_user.full_name} auto-picked {team_to_pick} for "
-                f"{display_names[user.id]} week {week_number}",
+            log_nfl_survivor(
+                "Pick",
+                f"Auto-pick: {current_user.full_name} assigned {team_to_pick} to "
+                f"{display_names[user.id]} for week {week_number} ({season.name})",
             )
 
         db.session.commit()
@@ -609,6 +623,13 @@ def auto_update():
             except ValueError:
                 flash("Invalid week number.")
             except Exception as exc:
+                week_label = week_number if week_number else "unknown"
+                log_nfl_survivor(
+                    "Auto Update",
+                    f"{current_user.full_name} auto-update failed for week "
+                    f"{week_label} ({season.name}): {exc}",
+                )
+                db.session.commit()
                 flash(f"Error updating results: {exc}")
         return redirect(url_for("nfl_survivor.auto_update"))
 
@@ -627,10 +648,15 @@ def fetch_schedule():
 
     try:
         total, weeks = fetch_schedule_for_active_weeks(
-            season, actor_id=current_user.id
+            season, actor_id=current_user.id, source="manual"
         )
         flash(f"Schedule updated for weeks {weeks} ({total} team rows).")
     except Exception as exc:
+        log_nfl_survivor(
+            "Fetch Schedule",
+            f"Manual fetch schedule failed ({season.name}): {exc}",
+        )
+        db.session.commit()
         flash(f"Schedule fetch failed: {exc}")
 
     return redirect(url_for("nfl_survivor.pick"))
@@ -662,6 +688,12 @@ def api_fetch_spreads():
         return jsonify({"error": "No active season"}), 404
 
     if not is_scheduled_spreads_day():
+        log_nfl_survivor(
+            "Fetch Spreads",
+            "Cron fetch spreads skipped (not Tuesday or Thursday, US/Eastern)",
+            actor_id=None,
+        )
+        db.session.commit()
         return jsonify(
             {
                 "success": True,
@@ -831,7 +863,7 @@ def admin_season_new():
             is_active=form.is_active.data,
         )
         db.session.add(season)
-        _log("Season", f"{current_user.full_name} created season {season.name}")
+        log_nfl_survivor("Season", f"{current_user.full_name} created season {season.name}")
         db.session.commit()
         flash(f"Season {season.name} created.")
         return redirect(url_for("nfl_survivor.admin_seasons"))
@@ -844,6 +876,9 @@ def _fetch_spreads_data(season, manual=False):
     api_key = os.environ.get("ODDS_API_KEY")
     if not api_key:
         msg = "ODDS_API_KEY is not configured."
+        if not manual:
+            log_nfl_survivor("Fetch Spreads", f"Cron fetch spreads failed: {msg}", actor_id=None)
+            db.session.commit()
         if manual:
             flash(msg)
             return redirect(url_for("nfl_survivor.index"))
@@ -873,6 +908,13 @@ def _fetch_spreads_data(season, manual=False):
             f"Failed to get odds: status {odds_response.status_code}, "
             f"body {odds_response.text}"
         )
+        if not manual:
+            log_nfl_survivor(
+                "Fetch Spreads",
+                f"Cron fetch spreads failed for week {current_week} ({season.name}): {msg}",
+                actor_id=None,
+            )
+            db.session.commit()
         if manual:
             flash(msg)
             return redirect(url_for("nfl_survivor.index"))
@@ -931,7 +973,7 @@ def _fetch_spreads_data(season, manual=False):
                     spread.road_team_spread = outcome["point"]
             db.session.add(spread)
 
-    _log(
+    log_nfl_survivor(
         "Fetch Spreads",
         f"{'Manual' if manual else 'Cron'} fetch spreads for week {current_week} ({season.name})",
         actor_id=current_user.id if manual and current_user.is_authenticated else None,
@@ -1031,7 +1073,7 @@ def _update_weekly_results(season, week, results):
                 )
             )
 
-    _log(
+    log_nfl_survivor(
         "Auto Update",
         f"{current_user.full_name} auto-updated results for week {week} ({season.name})",
     )

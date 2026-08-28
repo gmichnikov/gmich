@@ -16,6 +16,42 @@ from app.projects.better_signups.models import (
 
 admin_bp = Blueprint("admin", __name__)
 
+# LogEntry.project values that differ from registry project ids
+LOG_PROJECT_DISPLAY_ALIASES = {
+    "sports_admin": "Sports Schedule Admin",
+}
+
+
+def _log_project_display_name(project_id, registry_names):
+    if project_id in LOG_PROJECT_DISPLAY_ALIASES:
+        return LOG_PROJECT_DISPLAY_ALIASES[project_id]
+    if project_id in registry_names:
+        return registry_names[project_id]
+    return project_id.replace("_", " ").title()
+
+
+def get_log_project_filter_choices():
+    """Project filter options for view_logs, sorted A–Z by display name."""
+    from app.projects.registry import PROJECTS
+
+    registry_names = {
+        p["id"]: p["name"] for p in PROJECTS if p.get("type") == "project"
+    }
+
+    project_ids = set(registry_names)
+    project_ids.update(["auth", "admin", *LOG_PROJECT_DISPLAY_ALIASES])
+
+    for (project_id,) in db.session.query(LogEntry.project).distinct():
+        if project_id:
+            project_ids.add(project_id)
+
+    choices = [
+        (project_id, _log_project_display_name(project_id, registry_names))
+        for project_id in project_ids
+    ]
+    choices.sort(key=lambda choice: choice[1].casefold())
+    return choices
+
 
 # Admin decorator
 def admin_required(f):
@@ -220,6 +256,7 @@ def view_logs():
         "admin/view_logs.html",
         log_entries=log_entries,
         all_users=all_users,
+        project_choices=get_log_project_filter_choices(),
         selected_project=request.args.get("project", ""),
         selected_user=request.args.get("user", ""),
         search_value=request.args.get("search", ""),
