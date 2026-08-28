@@ -825,6 +825,7 @@ def admin_view_participants():
         needs_to_pick = wrong_picks < 2 and not has_picked
         rows.append(
             {
+                "id": participant.id,
                 "name": display_names[participant.user_id],
                 "picks_count": len(picks),
                 "wrong_picks": wrong_picks,
@@ -837,6 +838,64 @@ def admin_view_participants():
         "nfl_survivor/admin_view_participants.html",
         participants=rows,
         current_week=current_week,
+        **ctx,
+    )
+
+
+@nfl_survivor_bp.route(
+    "/admin/participants/<int:participant_id>/remove", methods=["GET", "POST"]
+)
+@admin_required
+def admin_remove_participant(participant_id):
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    participant = NflSurvivorParticipant.query.filter_by(
+        id=participant_id, season_id=season.id
+    ).first()
+    if not participant:
+        flash("Participant not found in this season.")
+        return redirect(url_for("nfl_survivor.admin_view_participants"))
+
+    display_names = build_display_names([participant.user])
+    participant_name = display_names[participant.user_id]
+    picks = NflSurvivorPick.query.filter_by(
+        season_id=season.id, user_id=participant.user_id
+    ).all()
+    picks_count = len(picks)
+
+    if request.method == "POST":
+        if request.form.get("confirm") != "REMOVE":
+            flash('Type REMOVE exactly to confirm removal.')
+            return redirect(
+                url_for(
+                    "nfl_survivor.admin_remove_participant",
+                    participant_id=participant_id,
+                )
+            )
+
+        NflSurvivorPick.query.filter_by(
+            season_id=season.id, user_id=participant.user_id
+        ).delete()
+        db.session.delete(participant)
+        log_nfl_survivor(
+            "Remove Participant",
+            (
+                f"{current_user.full_name} removed {participant_name} from "
+                f"{season.name} ({picks_count} picks deleted)"
+            ),
+        )
+        db.session.commit()
+        flash(f"{participant_name} was removed from the pool.")
+        return redirect(url_for("nfl_survivor.admin_view_participants"))
+
+    ctx = _season_context(season)
+    return render_template(
+        "nfl_survivor/admin_remove_participant.html",
+        participant_name=participant_name,
+        picks_count=picks_count,
+        participant_id=participant_id,
         **ctx,
     )
 

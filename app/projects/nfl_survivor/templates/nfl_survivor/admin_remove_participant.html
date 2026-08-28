@@ -1,0 +1,42 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Remove Participant{% endblock %}
+
+{% block ns_content %}
+<h1 class="ns-card-title">Remove participant</h1>
+
+<div class="ns-warning-panel">
+  <p class="ns-warning-panel-title">This cannot be undone</p>
+  <p>
+    You are about to remove <strong>{{ participant_name }}</strong> from
+    <strong>{{ season.name }}</strong>.
+  </p>
+  <ul class="ns-warning-list">
+    <li>Their user account is <strong>not</strong> deleted.</li>
+    <li>They will no longer appear in the pool or standings.</li>
+    <li>
+      <strong>{{ picks_count }}</strong>
+      pick{{ 's' if picks_count != 1 else '' }} for this season will be permanently deleted.
+    </li>
+    <li>
+      They may join again later
+      {% if join_open %}
+      — registration is currently <strong>open</strong>.
+      {% else %}
+      — only if registration is still open (it is <strong>closed</strong> right now).
+      {% endif %}
+    </li>
+  </ul>
+</div>
+
+<form method="post" class="ns-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="confirm">Type <strong>REMOVE</strong> to confirm</label>
+  <input type="text" id="confirm" name="confirm" autocomplete="off" required
+         placeholder="REMOVE" class="ns-confirm-input">
+  <div class="ns-form-actions">
+    <button type="submit" class="ns-btn ns-btn-danger">Remove from pool</button>
+    <a href="{{ url_for('nfl_survivor.admin_view_participants') }}" class="ns-btn ns-btn-secondary">Cancel</a>
+  </div>
+</form>
+{% endblock %}

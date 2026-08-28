@@ -13,6 +13,7 @@
         <th>Picks</th>
         <th>Losses</th>
         <th>Needs pick</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -22,6 +23,10 @@
         <td>{{ row.picks_count }}</td>
         <td>{{ row.wrong_picks }}</td>
         <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
+        <td class="ns-actions-cell">
+          <a href="{{ url_for('nfl_survivor.admin_remove_participant', participant_id=row.id) }}"
+             class="ns-link-danger">Remove</a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

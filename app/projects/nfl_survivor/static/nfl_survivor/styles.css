@@ -191,6 +191,71 @@
   color: var(--ns-navy-dark);
 }
 
+.ns-btn-danger {
+  background: linear-gradient(180deg, var(--ns-red) 0%, #a00808 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(213, 10, 10, 0.35);
+}
+
+.ns-btn-danger:hover {
+  box-shadow: 0 4px 14px rgba(213, 10, 10, 0.45);
+  color: #fff;
+}
+
+.ns-warning-panel {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem 1.15rem;
+  background: #fff5f5;
+  border: 2px solid var(--ns-red);
+  border-radius: var(--ns-radius-sm);
+  color: var(--ns-text);
+  line-height: 1.5;
+}
+
+.ns-warning-panel-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ns-red);
+}
+
+.ns-warning-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.ns-warning-list li {
+  margin-bottom: 0.35rem;
+}
+
+.ns-confirm-input {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.ns-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.ns-link-danger {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ns-red);
+  text-decoration: none;
+}
+
+.ns-link-danger:hover {
+  text-decoration: underline;
+}
+
+.ns-actions-cell {
+  white-space: nowrap;
+  text-align: right;
+}
+
 /* Nav pills */
 .ns-nav {
   display: flex;
