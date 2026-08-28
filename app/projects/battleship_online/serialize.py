@@ -42,6 +42,12 @@ def _sunk_cells(fleet):
     return cells
 
 
+def _sunk_ship_ids(fleet):
+    if not fleet:
+        return []
+    return [ship["id"] for ship in fleet.get("ships", []) if ship.get("sunk")]
+
+
 def build_placement_board(fleet, selected_ship_id=None):
     board = [["water" for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
     if not fleet:
@@ -142,6 +148,7 @@ def room_to_dict(room, viewer_seat):
                 room.fleet_o,
                 reveal_unhit_ships=_reveal_unhit_ships_for_viewer(room, "X"),
             )
+            payload["your_sunk_ship_ids"] = _sunk_ship_ids(room.fleet_x)
     elif viewer_seat == "O":
         payload["your_ready"] = room.ready_o
         payload["opponent_ready"] = room.ready_x
@@ -157,6 +164,7 @@ def room_to_dict(room, viewer_seat):
                 room.fleet_x,
                 reveal_unhit_ships=_reveal_unhit_ships_for_viewer(room, "O"),
             )
+            payload["your_sunk_ship_ids"] = _sunk_ship_ids(room.fleet_o)
     elif viewer_seat is None:
         payload["spectator"] = True
         payload["board_x"] = build_own_board(room.fleet_x, room.shots_o or _empty_board(0))

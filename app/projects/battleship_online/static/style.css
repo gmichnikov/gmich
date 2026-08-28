@@ -339,6 +339,12 @@
     display: none !important;
 }
 
+.bso-sink-toast-victim {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border-color: #fc8181;
+}
+
 .bso-play-bar {
     position: fixed;
     left: 0;

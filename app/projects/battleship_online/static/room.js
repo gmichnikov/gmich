@@ -125,8 +125,12 @@
         return state.your_seat === "X" ? "O" : "X";
     }
 
-    function showSinkToast(message) {
+    function showSinkToast(message, variant) {
         sinkToastEl.textContent = message;
+        sinkToastEl.className = "bso-sink-toast";
+        if (variant === "victim") {
+            sinkToastEl.classList.add("bso-sink-toast-victim");
+        }
         sinkToastEl.hidden = false;
         if (sinkToastTimer) {
             clearTimeout(sinkToastTimer);
@@ -140,6 +144,22 @@
         if (data.event && data.event.type === "sink") {
             showSinkToast("You sunk their " + data.event.ship_name + "!");
         }
+    }
+
+    function checkVictimSinkToast(state, prevState) {
+        if (!state.your_seat || (state.status !== "battle" && state.status !== "won")) {
+            return;
+        }
+        if (!prevState || prevState.status === "placement") {
+            return;
+        }
+        var current = state.your_sunk_ship_ids || [];
+        var prev = prevState.your_sunk_ship_ids || [];
+        current.forEach(function (shipId) {
+            if (prev.indexOf(shipId) === -1) {
+                showSinkToast("They sunk your " + SHIP_NAMES[shipId] + "!", "victim");
+            }
+        });
     }
 
     function usesMobileBoardTabs(state) {
@@ -478,7 +498,9 @@
 
     function render(state) {
         var prevYourBoard = lastState && lastState.your_board;
+        var prevState = lastState;
         lastState = state;
+        checkVictimSinkToast(state, prevState);
         var isPlayer = !!state.your_seat;
 
         if (state.status === "battle" && state.your_board) {
