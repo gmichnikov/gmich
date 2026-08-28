@@ -3,126 +3,98 @@
 {% block ns_title %}Pick{% endblock %}
 
 {% block ns_content %}
+<div class="ns-pick-page{% if not pick_locked and not week_closed %} ns-pick-page-has-submit{% endif %}">
 <h1 class="ns-card-title">Make your pick</h1>
 <p class="ns-card-subtitle">
   Entry <strong>{{ active_entry.display_name }}</strong> —
   choose a team for the selected week. Teams lock when their game kicks off.
 </p>
 
-<h2>Your picks</h2>
-<ul class="ns-pick-list">
-  {% for week, (team, is_correct) in all_picks.items() %}
-  <li class="{% if is_correct %}ns-correct{% elif is_correct is not none and not is_correct %}ns-incorrect{% endif %}">
-    Week {{ week }} — {{ team }}
-  </li>
-  {% else %}
-  <li class="ns-help-text" style="background: transparent; padding-left: 0;">No picks yet.</li>
-  {% endfor %}
-</ul>
+<section class="ns-pick-primary" aria-labelledby="ns-new-pick-heading">
+  <h2 id="ns-new-pick-heading">New pick</h2>
 
-<h2>New pick</h2>
+  <div class="ns-week-picker">
+    <span class="ns-week-picker-label">Week</span>
+    <div class="ns-week-picker-scroll">
+      <div class="ns-week-picker-inner">
+        {% for w in range(current_week, season.max_weeks + 1) %}
+        <a href="{{ url_for('nfl_survivor.pick', week=w) }}"
+           class="ns-week-pill {% if w == selected_week %}ns-week-pill-active{% endif %}">{{ w }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 
-<div class="ns-week-picker">
-  <span class="ns-week-picker-label">Week</span>
-  {% for w in range(current_week, season.max_weeks + 1) %}
-  <a href="{{ url_for('nfl_survivor.pick', week=w) }}"
-     class="ns-week-pill {% if w == selected_week %}ns-week-pill-active{% endif %}">{{ w }}</a>
-  {% endfor %}
-</div>
-
-{% if pick_locked and existing_pick_for_week %}
-<div class="ns-status-message ns-status-closed">
-  Your Week {{ selected_week }} pick is locked:
-  <strong>{{ team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) }}</strong>
-  — that game has started.
-</div>
-{% elif week_closed %}
-<div class="ns-status-message ns-status-closed">
-  Week {{ selected_week }} is closed for picks.
-</div>
-{% else %}
-<form method="post" class="ns-form">
-  {{ form.hidden_tag() }}
-  {{ form.week() }}
-  {% if existing_pick_for_week %}
-  <p class="ns-help-text">
-    Current pick:
+  {% if pick_locked and existing_pick_for_week %}
+  <div class="ns-status-message ns-status-closed">
+    Your Week {{ selected_week }} pick is locked:
     <strong>{{ team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) }}</strong>
-    — change before kickoff.
-  </p>
+    — that game has started.
+  </div>
+  {% elif week_closed %}
+  <div class="ns-status-message ns-status-closed">
+    Week {{ selected_week }} is closed for picks.
+  </div>
+  {% else %}
+  <form method="post" class="ns-form ns-pick-form" id="ns-pick-form">
+    {{ form.hidden_tag() }}
+    {{ form.week() }}
+    {% if existing_pick_for_week %}
+    <p class="ns-help-text">
+      Current pick:
+      <strong>{{ team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) }}</strong>
+      — change before kickoff.
+    </p>
+    {% endif %}
+    <label for="{{ form.team_choice.id }}">{{ form.team_choice.label.text }}</label>
+    {{ form.team_choice(class_="ns-team-select") }}
+    {% if not available_teams %}
+    <p class="ns-help-text">No teams available — games may have started or you've used every team.</p>
+    {% endif %}
+    <div class="ns-pick-submit-bar">
+      {{ form.submit(class_="ns-pick-submit", disabled=not available_teams) }}
+    </div>
+  </form>
   {% endif %}
-  <label for="{{ form.team_choice.id }}">{{ form.team_choice.label.text }}</label>
-  {{ form.team_choice(class_="ns-team-select") }}
-  {% if not available_teams %}
-  <p class="ns-help-text">No teams available — games may have started or you've used every team.</p>
+</section>
+
+<details class="ns-pick-details">
+  <summary>Your picks</summary>
+  <ul class="ns-pick-list">
+    {% for week, (team, is_correct) in all_picks.items() %}
+    <li class="{% if is_correct %}ns-correct{% elif is_correct is not none and not is_correct %}ns-incorrect{% endif %}">
+      Week {{ week }} — {{ team }}
+    </li>
+    {% else %}
+    <li class="ns-help-text ns-pick-list-empty">No picks yet.</li>
+    {% endfor %}
+  </ul>
+</details>
+
+<details class="ns-pick-details">
+  <summary>Lines &amp; kickoffs</summary>
+  {% if last_updated_time %}
+  <p class="ns-help-text">Spreads last updated {{ last_updated_time.strftime("%b %-d, %-I:%M %p %Z") }}.</p>
   {% endif %}
-  {{ form.submit(class_="", disabled=not available_teams) }}
-</form>
-{% endif %}
-
-<h2>Lines &amp; kickoffs</h2>
-{% if last_updated_time %}
-<p class="ns-help-text">Spreads last updated {{ last_updated_time.strftime("%b %-d, %-I:%M %p %Z") }}.</p>
-{% endif %}
-
-{% for week, spreads in spreads_by_week.items() %}
-<h3>Week {{ week }}</h3>
-<ul class="ns-spreads-list">
-  {% for spread in spreads %}
-  <li>
-    <span class="ns-spread-time">{{ spread.game_time.strftime("%a %b %-d, %-I:%M %p %Z") }}</span>
-    <span class="{{ spread.road_team_spread|ns_spread_class }}">
-      {{ spread.road_team }}{% if spread.road_team_spread <= 0 %} {{ spread.road_team_spread }}{% endif %}
-    </span>
-    @
-    <span class="{{ spread.home_team_spread|ns_spread_class }}">
-      {{ spread.home_team }}{% if spread.home_team_spread <= 0 %} {{ spread.home_team_spread }}{% endif %}
-    </span>
-  </li>
+  {% for week, spreads in spreads_by_week.items() %}
+  <h3 class="ns-pick-spreads-week">Week {{ week }}</h3>
+  <ul class="ns-spreads-list">
+    {% for spread in spreads %}
+    <li>
+      <span class="ns-spread-time">{{ spread.game_time.strftime("%a %b %-d, %-I:%M %p %Z") }}</span>
+      <span class="{{ spread.road_team_spread|ns_spread_class }}">
+        {{ spread.road_team }}{% if spread.road_team_spread <= 0 %} {{ spread.road_team_spread }}{% endif %}
+      </span>
+      @
+      <span class="{{ spread.home_team_spread|ns_spread_class }}">
+        {{ spread.home_team }}{% if spread.home_team_spread <= 0 %} {{ spread.home_team_spread }}{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="ns-help-text">No spreads loaded yet — check back after the next fetch.</p>
   {% endfor %}
-</ul>
-{% else %}
-<p class="ns-help-text">No spreads loaded yet — check back after the next fetch.</p>
-{% endfor %}
-{% endblock %}
-
-{% block ns_styles %}
-<style>
-.ns-form select.ns-team-select {
-  max-width: 100%;
-}
-.ns-week-picker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0.75rem 0 1.25rem;
-}
-.ns-week-picker-label {
-  font-weight: 600;
-  color: var(--ns-navy);
-  margin-right: 0.25rem;
-}
-.ns-week-pill {
-  display: inline-block;
-  min-width: 2.25rem;
-  padding: 0.35rem 0.6rem;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-decoration: none;
-  color: var(--ns-navy);
-  background: var(--ns-bg);
-  border: 1px solid var(--ns-border);
-  border-radius: 999px;
-}
-.ns-week-pill:hover {
-  border-color: var(--ns-navy);
-}
-.ns-week-pill-active {
-  background: var(--ns-navy);
-  border-color: var(--ns-navy);
-  color: #fff;
-}
-</style>
+</details>
+</div>
 {% endblock %}

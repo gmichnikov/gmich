@@ -531,6 +531,146 @@
   text-decoration: line-through;
 }
 
+.ns-pick-list-empty {
+  background: transparent !important;
+  padding-left: 0 !important;
+}
+
+/* Pick page — mobile-first */
+.ns-pick-page {
+  max-width: 100%;
+}
+
+.ns-pick-primary {
+  margin-bottom: 1.25rem;
+}
+
+.ns-week-picker {
+  margin: 0.75rem 0 1.25rem;
+}
+
+.ns-week-picker-label {
+  display: block;
+  font-weight: 600;
+  color: var(--ns-navy);
+  margin-bottom: 0.5rem;
+}
+
+.ns-week-picker-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+}
+
+.ns-week-picker-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.ns-week-picker-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: 0.15rem;
+}
+
+.ns-week-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  color: var(--ns-navy);
+  background: var(--ns-bg);
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+}
+
+.ns-week-pill:hover {
+  border-color: var(--ns-navy);
+}
+
+.ns-week-pill-active {
+  background: var(--ns-navy);
+  border-color: var(--ns-navy);
+  color: #fff;
+}
+
+.ns-pick-form {
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.ns-form select.ns-team-select {
+  max-width: 100%;
+  min-height: 3rem;
+  font-size: 1rem;
+}
+
+.ns-pick-submit-bar {
+  margin-top: 1.25rem;
+}
+
+.ns-pick-submit-bar .ns-pick-submit,
+.ns-pick-submit-bar input[type="submit"] {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.ns-pick-details {
+  margin-top: 1rem;
+  border: 1px solid var(--ns-border);
+  border-radius: var(--ns-radius-sm);
+  background: var(--ns-bg);
+}
+
+.ns-pick-details summary {
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  color: var(--ns-navy);
+  cursor: pointer;
+  list-style: none;
+}
+
+.ns-pick-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ns-pick-details summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+.ns-pick-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.ns-pick-details > :not(summary) {
+  padding: 0 1rem 1rem;
+}
+
+.ns-pick-details .ns-pick-list {
+  margin-top: 0;
+}
+
+.ns-pick-spreads-week {
+  font-size: 0.95rem;
+  margin: 0.75rem 0 0.35rem;
+  color: var(--ns-navy);
+}
+
 /* Spreads list */
 .ns-spreads-list {
   list-style: none;
@@ -728,5 +868,28 @@
 
   .ns-btn {
     width: 100%;
+  }
+
+  .ns-pick-page-has-submit {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ns-form select.ns-team-select {
+    font-size: 16px;
+    min-height: 3rem;
+  }
+
+  .ns-pick-submit-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    margin-top: 0;
+    padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: var(--ns-card);
+    border-top: 1px solid var(--ns-border);
+    box-shadow: 0 -4px 20px rgba(1, 51, 105, 0.1);
   }
 }
