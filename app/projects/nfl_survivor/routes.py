@@ -30,6 +30,7 @@ from app.projects.nfl_survivor.utils import (
     get_odds_fetch_window,
     is_join_open,
     is_pick_correct,
+    is_scheduled_spreads_day,
     is_week_pickable,
     load_nfl_teams,
     load_nfl_teams_as_dict,
@@ -590,6 +591,15 @@ def api_fetch_spreads():
     season = get_active_season()
     if not season:
         return jsonify({"error": "No active season"}), 404
+
+    if not is_scheduled_spreads_day():
+        return jsonify(
+            {
+                "success": True,
+                "skipped": True,
+                "message": "Spreads fetch only runs on Tuesday and Thursday (US/Eastern).",
+            }
+        )
 
     result = _fetch_spreads_data(season, manual=False)
     if isinstance(result, tuple):

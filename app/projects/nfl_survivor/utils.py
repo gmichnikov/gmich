@@ -133,3 +133,18 @@ def parse_eastern_datetime(value):
     return EASTERN.localize(naive).astimezone(UTC)
 
 
+# Tuesday and Thursday (US/Eastern) — matches Heroku daily scheduler cadence.
+SCHEDULED_SPREADS_WEEKDAYS = (1, 3)  # Mon=0 … Tue=1 … Thu=3
+
+
+def is_scheduled_spreads_day(when=None):
+    """True if today (US/Eastern) is a day we auto-fetch spreads."""
+    if when is None:
+        when = datetime.now(EASTERN)
+    elif when.tzinfo is None:
+        when = EASTERN.localize(when)
+    else:
+        when = when.astimezone(EASTERN)
+    return when.weekday() in SCHEDULED_SPREADS_WEEKDAYS
+
+
