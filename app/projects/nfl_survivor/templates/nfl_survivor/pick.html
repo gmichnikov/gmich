@@ -49,7 +49,7 @@
   </p>
   {% endif %}
   <label for="{{ form.team_choice.id }}">{{ form.team_choice.label.text }}</label>
-  {{ form.team_choice() }}
+  {{ form.team_choice(class_="ns-team-select") }}
   {% if not available_teams %}
   <p class="ns-help-text">No teams available — games may have started or you've used every team.</p>
   {% endif %}
@@ -85,6 +85,9 @@
 
 {% block ns_styles %}
 <style>
+.ns-form select.ns-team-select {
+  max-width: 100%;
+}
 .ns-week-picker {
   display: flex;
   flex-wrap: wrap;

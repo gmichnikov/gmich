@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytz
 
-from app.projects.nfl_survivor.models import NflSurvivorSeason, NflSurvivorWeeklyResult, NflSurvivorGame
+from app.projects.nfl_survivor.models import (
+    NflSurvivorSeason,
+    NflSurvivorSpread,
+    NflSurvivorWeeklyResult,
+    NflSurvivorGame,
+)
 
 EASTERN = pytz.timezone("US/Eastern")
 UTC = pytz.UTC
@@ -189,5 +194,75 @@ def format_kickoff_et(season_id, week, team_id):
     if not kickoff:
         return ""
     return kickoff.astimezone(EASTERN).strftime("%a %b %-d, %-I:%M %p ET")
+
+
+def format_team_spread(spread_value):
+    """Format spread for display, e.g. -7 or +3."""
+    if spread_value is None:
+        return None
+    if spread_value == int(spread_value):
+        spread_value = int(spread_value)
+    if spread_value <= 0:
+        return str(spread_value)
+    return f"+{spread_value}"
+
+
+def format_team_pick_label(team_name, opponent=None, spread_display=None, kickoff=None):
+    """Single-line dropdown label with optional matchup details."""
+    label = team_name
+    if opponent:
+        label += f" vs {opponent}"
+    extras = [part for part in (spread_display, kickoff) if part]
+    if extras:
+        label += " · " + " · ".join(extras)
+    return label
+
+
+def build_team_pick_options(season, week, available_team_pairs):
+    """
+    Enrich pickable teams with opponent, spread, and kickoff when known.
+    `available_team_pairs` is a list of (team_id, team_name).
+    """
+    spreads = NflSurvivorSpread.query.filter_by(
+        season_id=season.id, week=week
+    ).all()
+    matchup_by_name = {}
+    for spread in spreads:
+        matchup_by_name[spread.home_team] = {
+            "opponent": spread.road_team,
+            "spread": spread.home_team_spread,
+        }
+        matchup_by_name[spread.road_team] = {
+            "opponent": spread.home_team,
+            "spread": spread.road_team_spread,
+        }
+
+    options = []
+    for team_id, team_name in available_team_pairs:
+        matchup = matchup_by_name.get(team_name, {})
+        spread = matchup.get("spread")
+        kickoff = format_kickoff_et(season.id, week, team_id)
+        spread_display = format_team_spread(spread)
+        options.append(
+            {
+                "team_id": team_id,
+                "team_name": team_name,
+                "label": format_team_pick_label(
+                    team_name,
+                    opponent=matchup.get("opponent"),
+                    spread_display=spread_display,
+                    kickoff=kickoff or None,
+                ),
+            }
+        )
+    return options
+
+
+def team_pick_choices(season, week, available_team_pairs):
+    """SelectField choices: (team_id, enriched label)."""
+    return [
+        (option["team_id"], option["label"])
+        for option in build_team_pick_options(season, week, available_team_pairs)
+    ]
 
 

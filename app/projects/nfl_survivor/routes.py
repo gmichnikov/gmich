@@ -40,6 +40,7 @@ from app.projects.nfl_survivor.utils import (
     map_team_names_to_ids,
     parse_eastern_datetime,
     teams_available_for_week,
+    team_pick_choices,
 )
 
 EASTERN = pytz.timezone("US/Eastern")
@@ -212,7 +213,9 @@ def pick():
     )
 
     form = TeamSelectionForm()
-    form.team_choice.choices = available_teams
+    form.team_choice.choices = team_pick_choices(
+        season, selected_week, available_teams
+    )
     form.week.data = str(selected_week)
 
     if form.validate_on_submit():
