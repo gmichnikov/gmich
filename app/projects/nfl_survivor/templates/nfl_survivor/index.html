@@ -3,7 +3,7 @@
 {% block ns_title %}NFL Survivor{% endblock %}
 
 {% block ns_content %}
-<h1 class="ns-card-title">Survivor pool</h1>
+<h1 class="ns-card-title">Join the pool</h1>
 
 {% if not season %}
 <div class="ns-status">
@@ -16,113 +16,22 @@
     {% endif %}
   </p>
 </div>
+{% elif join_open %}
+<p class="ns-card-subtitle">
+  Welcome, <span class="ns-welcome-name">{{ current_user.full_name }}</span>.
+  Choose an entry name to join <strong>{{ season.name }}</strong>.
+</p>
+<form method="post" action="{{ url_for('nfl_survivor.join') }}" class="ns-form">
+  {{ add_entry_form.hidden_tag() }}
+  <label for="{{ add_entry_form.display_name.id }}">{{ add_entry_form.display_name.label.text }}</label>
+  {{ add_entry_form.display_name(class_="") }}
+  {{ add_entry_form.submit(class_="ns-btn ns-btn-primary") }}
+</form>
 {% else %}
-<p class="ns-card-subtitle">Welcome, <span class="ns-welcome-name">{{ current_user.full_name }}</span>.</p>
-
-{% if entry_summaries %}
-<h2>Your entries</h2>
-<ul class="ns-entry-list">
-  {% for summary in entry_summaries %}
-  {% set entry = summary.entry %}
-  <li class="ns-entry-item">
-    <div class="ns-entry-item-main">
-      <strong>{{ entry.display_name }}</strong>
-      {% if summary.is_eliminated %}
-      <span class="ns-entry-meta">Eliminated</span>
-      {% endif %}
-      {% if not entry.has_paid %}
-      <span class="ns-entry-unpaid">You have not paid yet.</span>
-      {% endif %}
-    </div>
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
-
-{% if join_open %}
-<div class="ns-status ns-add-entry-section">
-  {% if user_entries %}
-  <button type="button" class="ns-btn ns-btn-secondary" id="ns-show-add-entry-btn">Add entry</button>
-  <form method="post"
-        action="{{ url_for('nfl_survivor.join') }}"
-        class="ns-form ns-add-entry-form ns-add-entry-form-collapsed"
-        id="ns-add-entry-form">
-    {{ add_entry_form.hidden_tag() }}
-    <label for="{{ add_entry_form.display_name.id }}">{{ add_entry_form.display_name.label.text }}</label>
-    {{ add_entry_form.display_name(class_="") }}
-    <div class="ns-form-actions">
-      <button type="submit" class="ns-btn ns-btn-primary">Confirm additional entry</button>
-      <button type="button" class="ns-btn ns-btn-secondary" id="ns-cancel-add-entry-btn">Cancel</button>
-    </div>
-  </form>
-  {% else %}
-  <form method="post" action="{{ url_for('nfl_survivor.join') }}" class="ns-form">
-    {{ add_entry_form.hidden_tag() }}
-    <label for="{{ add_entry_form.display_name.id }}">{{ add_entry_form.display_name.label.text }}</label>
-    {{ add_entry_form.display_name(class_="") }}
-    {{ add_entry_form.submit(class_="ns-btn ns-btn-primary") }}
-  </form>
-  {% endif %}
-</div>
-{% elif not user_entries %}
 <div class="ns-status">
   <div class="ns-status-message ns-status-closed">
     Registration is closed for <strong>{{ season.name }}</strong>.
   </div>
 </div>
-{% elif user_entries %}
-<div class="ns-status">
-  <div class="ns-status-message ns-status-success">
-    You're in for <strong>{{ season.name }}</strong>.
-    {% if active_entry %}Head to <strong>Make a pick</strong> for <strong>{{ active_entry.display_name }}</strong>.{% endif %}
-  </div>
-</div>
 {% endif %}
-{% endif %}
-{% endblock %}
-
-{% block ns_styles %}
-<style>
-.ns-add-entry-form-collapsed {
-  display: none;
-  margin-top: 0.75rem;
-}
-.ns-add-entry-form-expanded {
-  display: block;
-  margin-top: 0.75rem;
-}
-.ns-add-entry-section .ns-form-actions {
-  margin-top: 1rem;
-}
-</style>
-{% endblock %}
-
-{% block ns_scripts %}
-<script>
-(function () {
-  var showBtn = document.getElementById("ns-show-add-entry-btn");
-  var cancelBtn = document.getElementById("ns-cancel-add-entry-btn");
-  var form = document.getElementById("ns-add-entry-form");
-  if (!showBtn || !form) return;
-
-  function expandForm() {
-    form.classList.remove("ns-add-entry-form-collapsed");
-    form.classList.add("ns-add-entry-form-expanded");
-    showBtn.style.display = "none";
-    var input = form.querySelector('input[name="display_name"]');
-    if (input) input.focus();
-  }
-
-  function collapseForm() {
-    form.classList.add("ns-add-entry-form-collapsed");
-    form.classList.remove("ns-add-entry-form-expanded");
-    showBtn.style.display = "";
-  }
-
-  showBtn.addEventListener("click", expandForm);
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", collapseForm);
-  }
-})();
-</script>
 {% endblock %}

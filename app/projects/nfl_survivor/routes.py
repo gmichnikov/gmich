@@ -73,6 +73,33 @@ def _pop_inline_error():
     return session.pop(NS_INLINE_ERROR_KEY, None)
 
 
+NS_OPEN_ADD_ENTRY_KEY = "ns_open_add_entry"
+
+
+def _set_open_add_entry():
+    session[NS_OPEN_ADD_ENTRY_KEY] = True
+
+
+def _pop_open_add_entry():
+    return session.pop(NS_OPEN_ADD_ENTRY_KEY, False)
+
+
+def _default_pool_url(season, user_entries):
+    if not user_entries:
+        return url_for("nfl_survivor.index")
+    current_week = get_current_pick_week(season)
+    if current_week > season.max_weeks:
+        return url_for("nfl_survivor.view_picks")
+    return url_for("nfl_survivor.pick")
+
+
+def _post_join_redirect(season):
+    user_entries = get_user_entries(season, current_user.id)
+    if user_entries:
+        return redirect(request.referrer or url_for("nfl_survivor.pick"))
+    return redirect(url_for("nfl_survivor.index"))
+
+
 def admin_required(view):
     @wraps(view)
     @login_required
@@ -148,7 +175,30 @@ def ns_spread_class_filter(spread_value):
 
 @nfl_survivor_bp.context_processor
 def nfl_survivor_template_context():
-    return {"ns_inline_error": _pop_inline_error()}
+    ctx = {
+        "ns_inline_error": _pop_inline_error(),
+        "ns_open_add_entry": _pop_open_add_entry(),
+        "pool_home_url": url_for("nfl_survivor.index"),
+        "show_unpaid_banner": False,
+        "show_add_entry": False,
+        "add_entry_form": None,
+    }
+    season = get_active_season()
+    if season and current_user.is_authenticated:
+        user_entries = get_user_entries(season, current_user.id)
+        active_entry = resolve_active_entry(season, current_user.id)
+        ctx["pool_home_url"] = _default_pool_url(season, user_entries)
+        ctx["show_unpaid_banner"] = (
+            active_entry is not None and not active_entry.has_paid
+        )
+        if is_join_open(season) and user_entries:
+            add_entry_form = AddEntryForm()
+            add_entry_form.display_name.data = default_entry_name_for_user(
+                season, current_user
+            )
+            ctx["add_entry_form"] = add_entry_form
+            ctx["show_add_entry"] = True
+    return ctx
 
 
 @nfl_survivor_bp.route("/")
@@ -156,14 +206,9 @@ def nfl_survivor_template_context():
 def index():
     season = get_active_season()
     ctx = _season_context(season)
-    entry_summaries = []
-    for entry in ctx["user_entries"]:
-        entry_summaries.append(
-            {
-                "entry": entry,
-                "is_eliminated": participant_is_eliminated(entry),
-            }
-        )
+    if season and ctx["has_entries"]:
+        return redirect(_default_pool_url(season, ctx["user_entries"]))
+
     add_entry_form = AddEntryForm()
     if season:
         add_entry_form.display_name.data = default_entry_name_for_user(
@@ -172,7 +217,6 @@ def index():
     return render_template(
         "nfl_survivor/index.html",
         add_entry_form=add_entry_form,
-        entry_summaries=entry_summaries,
         **ctx,
     )
 
@@ -190,14 +234,18 @@ def join():
     form = AddEntryForm()
     if not form.validate_on_submit():
         _set_inline_error("Could not add entry.")
-        return redirect(url_for("nfl_survivor.index"))
+        if get_user_entries(season, current_user.id):
+            _set_open_add_entry()
+        return _post_join_redirect(season)
 
     raw_name = normalize_entry_name(form.display_name.data)
     display_name = raw_name or default_entry_name_for_user(season, current_user)
     display_name, error = validate_entry_name(season.id, display_name)
     if error:
         _set_inline_error(error)
-        return redirect(url_for("nfl_survivor.index"))
+        if get_user_entries(season, current_user.id):
+            _set_open_add_entry()
+        return _post_join_redirect(season)
 
     entry = NflSurvivorParticipant(
         season_id=season.id,
@@ -215,7 +263,7 @@ def join():
         ),
     )
     db.session.commit()
-    return redirect(url_for("nfl_survivor.index"))
+    return redirect(url_for("nfl_survivor.pick"))
 
 
 @nfl_survivor_bp.route("/switch-entry", methods=["POST"])
@@ -292,8 +340,7 @@ def pick():
     if current_week > season.max_weeks:
         return redirect(url_for("nfl_survivor.view_picks"))
 
-    if participant_is_eliminated(entry):
-        return redirect(url_for("nfl_survivor.index"))
+    entry_eliminated = participant_is_eliminated(entry)
 
     try:
         selected_week = int(request.args.get("week", current_week))
@@ -336,7 +383,7 @@ def pick():
     )
     form.week.data = str(selected_week)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() and not entry_eliminated:
         week_num = int(form.week.data)
         picked_for_week = [
             p.team for p in previous_picks if p.week != week_num
@@ -412,6 +459,7 @@ def pick():
         existing_pick_for_week is not None
         and not pick_locked
         and not week_closed
+        and not entry_eliminated
     )
     if updating_pick:
         form.submit.label.text = "Update pick"
@@ -470,6 +518,7 @@ def pick():
         week_closed=week_closed,
         available_teams=available_teams,
         team_lookup=team_lookup,
+        entry_eliminated=entry_eliminated,
         **ctx,
     )
 

@@ -24,6 +24,33 @@
 {% endblock %}
 
 {% block scripts %}
+{% if show_add_entry %}
+<script>
+(function () {
+  var btn = document.getElementById("ns-pool-settings-btn");
+  var dialog = document.getElementById("ns-add-entry-dialog");
+  if (!btn || !dialog) return;
+
+  if (dialog.parentElement !== document.body) {
+    document.body.appendChild(dialog);
+  }
+
+  btn.addEventListener("click", function () {
+    dialog.showModal();
+  });
+
+  dialog.querySelectorAll("[data-ns-dialog-close]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      dialog.close();
+    });
+  });
+
+  {% if ns_open_add_entry %}
+  dialog.showModal();
+  {% endif %}
+})();
+</script>
+{% endif %}
 {% block ns_scripts %}{% endblock %}
 {% endblock %}
 
@@ -31,12 +58,27 @@
 <div class="ns-page-wrapper">
   <div class="ns-container">
     <header class="ns-header">
-      <a href="{{ url_for('nfl_survivor.index') }}" class="ns-brand">
+      <a href="{{ pool_home_url }}" class="ns-brand">
         <span class="ns-brand-icon" aria-hidden="true">🏈</span>
         <span class="ns-brand-text">NFL Survivor</span>
       </a>
       {% if season %}
-      <span class="ns-season-badge">{{ season.name }}</span>
+      <div class="ns-header-meta">
+        <span class="ns-season-badge">{{ season.name }}</span>
+        {% if show_add_entry %}
+        <button type="button"
+                class="ns-pool-settings-btn"
+                id="ns-pool-settings-btn"
+                aria-label="Pool settings"
+                aria-haspopup="dialog"
+                aria-controls="ns-add-entry-dialog">
+          <svg class="ns-pool-settings-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
       {% endif %}
     </header>
 
@@ -58,16 +100,20 @@
     </div>
     {% endif %}
 
+    {% if season and has_entries %}
     <nav class="ns-nav" aria-label="Pool navigation">
-      <a href="{{ url_for('nfl_survivor.index') }}"
-         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.index' %}ns-nav-active{% endif %}">Home</a>
-      {% if season and has_entries %}
       <a href="{{ url_for('nfl_survivor.pick') }}"
-         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.pick' %}ns-nav-active{% endif %}">Make a pick</a>
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.pick' %}ns-nav-active{% endif %}">Pick</a>
       <a href="{{ url_for('nfl_survivor.view_picks') }}"
          class="ns-nav-link {% if request.endpoint == 'nfl_survivor.view_picks' %}ns-nav-active{% endif %}">All picks</a>
-      {% endif %}
     </nav>
+    {% endif %}
+
+    {% if show_unpaid_banner %}
+    <div class="ns-unpaid-banner" role="status">
+      You have not paid yet.
+    </div>
+    {% endif %}
 
     <main class="ns-card">
       {% if ns_inline_error %}
@@ -100,4 +146,22 @@
     {% endif %}
   </div>
 </div>
+
+{% if show_add_entry and add_entry_form %}
+<dialog class="ns-dialog" id="ns-add-entry-dialog" aria-labelledby="ns-add-entry-dialog-title">
+  <form method="post" action="{{ url_for('nfl_survivor.join') }}" class="ns-form ns-add-entry-dialog-form">
+    {{ add_entry_form.hidden_tag() }}
+    <h2 class="ns-dialog-title" id="ns-add-entry-dialog-title">Add another entry</h2>
+    <p class="ns-dialog-text">
+      This will add another entry to the pool, if you want to enter again or enter for someone else.
+    </p>
+    <label for="ns-add-entry-display-name">{{ add_entry_form.display_name.label.text }}</label>
+    {{ add_entry_form.display_name(id="ns-add-entry-display-name") }}
+    <div class="ns-dialog-actions">
+      <button type="button" class="ns-btn ns-btn-secondary" data-ns-dialog-close>Cancel</button>
+      <button type="submit" class="ns-btn ns-btn-primary">Add entry</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
 {% endblock %}

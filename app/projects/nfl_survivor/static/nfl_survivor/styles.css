@@ -72,6 +72,49 @@
   box-shadow: var(--ns-shadow);
 }
 
+.ns-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ns-pool-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  background: var(--ns-card);
+  color: var(--ns-text-muted);
+  cursor: pointer;
+  box-shadow: var(--ns-shadow);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.ns-pool-settings-btn:hover {
+  color: var(--ns-navy);
+  border-color: var(--ns-navy);
+  background: var(--ns-bg);
+}
+
+.ns-pool-settings-icon {
+  display: block;
+}
+
+.ns-unpaid-banner {
+  margin-bottom: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: var(--ns-radius-sm);
+}
+
 /* Main card */
 .ns-card {
   background: var(--ns-card);
@@ -425,6 +468,57 @@
   background: var(--ns-navy);
   border-color: var(--ns-navy);
   color: #fff;
+}
+
+/* Dialog */
+.ns-dialog {
+  width: min(92vw, 420px);
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: var(--ns-radius);
+  box-shadow: 0 12px 40px rgba(1, 51, 105, 0.2);
+}
+
+.ns-dialog::backdrop {
+  background: rgba(1, 26, 58, 0.45);
+}
+
+.ns-add-entry-dialog-form {
+  padding: 1.5rem;
+  margin: 0;
+  max-width: none;
+}
+
+.ns-dialog-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ns-navy);
+}
+
+.ns-dialog-text {
+  margin: 0 0 1rem;
+  color: var(--ns-text-muted);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.ns-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.ns-dialog-actions .ns-btn {
+  flex: 1 1 auto;
+}
+
+.ns-dialog-actions .ns-form input[type="submit"] {
+  margin-top: 0;
+  width: 100%;
 }
 
 /* Forms */

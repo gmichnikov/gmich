@@ -5,10 +5,23 @@
 
 {% block ns_content %}
 {% set picked_team = team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) if existing_pick_for_week else none %}
-{% set updating_pick = existing_pick_for_week and not pick_locked and not week_closed %}
-<div class="ns-pick-page{% if updating_pick %} ns-pick-page-update{% endif %}{% if not pick_locked and not week_closed %} ns-pick-page-has-submit{% endif %}">
+{% set updating_pick = existing_pick_for_week and not pick_locked and not week_closed and not entry_eliminated %}
+<div class="ns-pick-page{% if updating_pick %} ns-pick-page-update{% endif %}{% if not pick_locked and not week_closed and not entry_eliminated %} ns-pick-page-has-submit{% endif %}">
 
-{% if pick_locked and existing_pick_for_week %}
+{% if entry_eliminated %}
+<h1 class="ns-card-title">Entry eliminated</h1>
+<p class="ns-card-subtitle">
+  Entry <strong>{{ active_entry.display_name }}</strong> is out for {{ season.name }}.
+</p>
+<div class="ns-status-message ns-status-closed">
+  {% if show_entry_switcher %}
+  Switch to another entry above to keep playing.
+  {% else %}
+  Check <a href="{{ url_for('nfl_survivor.view_picks') }}">All picks</a> for pool standings.
+  {% endif %}
+</div>
+
+{% elif pick_locked and existing_pick_for_week %}
 <h1 class="ns-card-title">Week {{ selected_week }} pick</h1>
 <p class="ns-card-subtitle">Entry <strong>{{ active_entry.display_name }}</strong></p>
 <div class="ns-pick-current ns-pick-current-locked">
