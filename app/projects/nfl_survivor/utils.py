@@ -311,20 +311,16 @@ def format_team_spread(spread_value):
     return f"+{spread_value}"
 
 
-def format_team_pick_label(team_name, opponent=None, spread_display=None, kickoff=None):
-    """Single-line dropdown label with optional matchup details."""
-    label = team_name
-    if opponent:
-        label += f" vs {opponent}"
-    extras = [part for part in (spread_display, kickoff) if part]
-    if extras:
-        label += " · " + " · ".join(extras)
-    return label
+def format_team_pick_label(team_name, opponent=None, spread_display=None):
+    """Single-line dropdown label with optional spread and opponent."""
+    if opponent and spread_display is not None:
+        return f"{team_name} ({spread_display} vs {opponent})"
+    return team_name
 
 
 def build_team_pick_options(season, week, available_team_pairs):
     """
-    Enrich pickable teams with opponent, spread, and kickoff when known.
+    Enrich pickable teams with opponent and spread when both are known.
     `available_team_pairs` is a list of (team_id, team_name).
     """
     spreads = NflSurvivorSpread.query.filter_by(
@@ -344,18 +340,16 @@ def build_team_pick_options(season, week, available_team_pairs):
     options = []
     for team_id, team_name in available_team_pairs:
         matchup = matchup_by_name.get(team_name, {})
-        spread = matchup.get("spread")
-        kickoff = format_kickoff_et(season.id, week, team_id)
-        spread_display = format_team_spread(spread)
+        opponent = matchup.get("opponent")
+        spread_display = format_team_spread(matchup.get("spread"))
         options.append(
             {
                 "team_id": team_id,
                 "team_name": team_name,
                 "label": format_team_pick_label(
                     team_name,
-                    opponent=matchup.get("opponent"),
+                    opponent=opponent,
                     spread_display=spread_display,
-                    kickoff=kickoff or None,
                 ),
             }
         )

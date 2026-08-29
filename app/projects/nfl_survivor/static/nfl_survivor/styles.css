@@ -708,64 +708,30 @@
   box-shadow: none;
 }
 
-.ns-week-picker {
-  margin: 0.75rem 0 1.25rem;
+.ns-week-select {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 1.25rem;
 }
 
-.ns-week-picker-label {
-  display: block;
+.ns-week-select-label {
   font-weight: 600;
   color: var(--ns-navy);
-  margin-bottom: 0.5rem;
-}
-
-.ns-week-picker-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  margin: 0 -0.25rem;
-  padding: 0 0.25rem;
-}
-
-.ns-week-picker-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.ns-week-picker-inner {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.5rem;
-  width: max-content;
-  min-width: 100%;
-  padding-bottom: 0.15rem;
-}
-
-.ns-week-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.85rem;
-  text-align: center;
-  font-weight: 600;
+}
+
+.ns-week-select-control {
+  min-width: 8rem;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
   font-size: 1rem;
-  text-decoration: none;
+  font-weight: 600;
+  font-family: inherit;
   color: var(--ns-navy);
   background: var(--ns-bg);
   border: 1px solid var(--ns-border);
-  border-radius: 999px;
-}
-
-.ns-week-pill:hover {
-  border-color: var(--ns-navy);
-}
-
-.ns-week-pill-active {
-  background: var(--ns-navy);
-  border-color: var(--ns-navy);
-  color: #fff;
+  border-radius: var(--ns-radius-sm);
 }
 
 .ns-pick-form {
@@ -1033,6 +999,26 @@
     font-size: 1.15rem;
   }
 
+  .ns-header-meta {
+    flex-shrink: 0;
+  }
+
+  .ns-active-entry-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ns-entry-switch-form {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .ns-entry-switch-form select {
+    width: 100%;
+    font-size: 16px;
+    min-height: 3rem;
+  }
+
   .ns-nav-link {
     flex: 1 1 calc(50% - 0.25rem);
     text-align: center;
@@ -1042,13 +1028,41 @@
     width: 100%;
   }
 
+  .ns-week-select {
+    flex-wrap: wrap;
+  }
+
+  .ns-week-select-control {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .ns-form {
+    max-width: none;
+  }
+
   .ns-pick-page-has-submit {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  .ns-form select.ns-team-select {
+  .ns-form select.ns-team-select,
+  .ns-week-select-control {
     font-size: 16px;
     min-height: 3rem;
+  }
+
+  .ns-add-entry-dialog-form input[type="text"] {
+    font-size: 16px;
+    min-height: 3rem;
+  }
+
+  .ns-dialog-actions {
+    flex-direction: column;
+  }
+
+  .ns-dialog-actions .ns-btn {
+    flex: none;
+    width: 100%;
   }
 
   .ns-pick-submit-bar {
@@ -1063,5 +1077,11 @@
     background: var(--ns-card);
     border-top: 1px solid var(--ns-border);
     box-shadow: 0 -4px 20px rgba(1, 51, 105, 0.1);
+  }
+
+  .ns-pick-submit-bar .ns-pick-submit,
+  .ns-pick-submit-bar input[type="submit"] {
+    min-height: 3rem;
+    font-size: 1.05rem;
   }
 }

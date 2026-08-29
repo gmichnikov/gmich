@@ -1,0 +1,14 @@
+{% macro ns_week_select(current_week, selected_week, max_weeks) %}
+<div class="ns-week-select">
+  <label for="ns-week-select" class="ns-week-select-label">Week</label>
+  <select id="ns-week-select" class="ns-week-select-control"
+          onchange="if (this.value) window.location.href = this.value;">
+    {% for w in range(current_week, max_weeks + 1) %}
+    <option value="{{ url_for('nfl_survivor.pick', week=w) }}"
+            {% if w == selected_week %}selected{% endif %}>
+      {{ w }}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+{% endmacro %}

@@ -1,5 +1,6 @@
 {% extends "nfl_survivor/layout.html" %}
 {% from "nfl_survivor/_spreads_list.html" import ns_spreads_list %}
+{% from "nfl_survivor/_week_select.html" import ns_week_select %}
 
 {% block ns_title %}Pick{% endblock %}
 
@@ -7,6 +8,10 @@
 {% set picked_team = team_lookup.get(existing_pick_for_week.team, existing_pick_for_week.team) if existing_pick_for_week else none %}
 {% set updating_pick = existing_pick_for_week and not pick_locked and not week_closed and not entry_eliminated %}
 <div class="ns-pick-page{% if updating_pick %} ns-pick-page-update{% endif %}{% if not pick_locked and not week_closed and not entry_eliminated %} ns-pick-page-has-submit{% endif %}">
+
+{% if not entry_eliminated %}
+{{ ns_week_select(current_week, selected_week, season.max_weeks) }}
+{% endif %}
 
 {% if entry_eliminated %}
 <h1 class="ns-card-title">Entry eliminated</h1>
@@ -53,18 +58,6 @@
 </div>
 
 <section class="ns-pick-primary ns-pick-primary-update" aria-label="Change pick">
-  <div class="ns-week-picker">
-    <span class="ns-week-picker-label">Week</span>
-    <div class="ns-week-picker-scroll">
-      <div class="ns-week-picker-inner">
-        {% for w in range(current_week, season.max_weeks + 1) %}
-        <a href="{{ url_for('nfl_survivor.pick', week=w) }}"
-           class="ns-week-pill {% if w == selected_week %}ns-week-pill-active{% endif %}">{{ w }}</a>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-
   <form method="post" class="ns-form ns-pick-form" id="ns-pick-form">
     {{ form.hidden_tag() }}
     {{ form.week() }}
@@ -87,19 +80,7 @@
 </p>
 
 <section class="ns-pick-primary" aria-labelledby="ns-new-pick-heading">
-  <h2 id="ns-new-pick-heading">New pick</h2>
-
-  <div class="ns-week-picker">
-    <span class="ns-week-picker-label">Week</span>
-    <div class="ns-week-picker-scroll">
-      <div class="ns-week-picker-inner">
-        {% for w in range(current_week, season.max_weeks + 1) %}
-        <a href="{{ url_for('nfl_survivor.pick', week=w) }}"
-           class="ns-week-pill {% if w == selected_week %}ns-week-pill-active{% endif %}">{{ w }}</a>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
+  <h2 id="ns-new-pick-heading" class="ns-sr-only">New pick</h2>
 
   <form method="post" class="ns-form ns-pick-form" id="ns-pick-form">
     {{ form.hidden_tag() }}
