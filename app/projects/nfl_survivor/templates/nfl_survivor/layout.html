@@ -104,8 +104,10 @@
     <nav class="ns-nav" aria-label="Pool navigation">
       <a href="{{ url_for('nfl_survivor.pick') }}"
          class="ns-nav-link {% if request.endpoint == 'nfl_survivor.pick' %}ns-nav-active{% endif %}">Pick</a>
+      <a href="{{ url_for('nfl_survivor.your_picks') }}"
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.your_picks' %}ns-nav-active{% endif %}">Your picks</a>
       <a href="{{ url_for('nfl_survivor.view_picks') }}"
-         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.view_picks' %}ns-nav-active{% endif %}">All picks</a>
+         class="ns-nav-link {% if request.endpoint == 'nfl_survivor.view_picks' %}ns-nav-active{% endif %}">Standings + All Picks</a>
     </nav>
     {% endif %}
 

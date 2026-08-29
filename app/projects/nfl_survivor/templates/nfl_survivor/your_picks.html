@@ -1,0 +1,26 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Your Picks{% endblock %}
+
+{% block ns_content %}
+<h1 class="ns-card-title">Your picks</h1>
+<p class="ns-card-subtitle">Entry <strong>{{ active_entry.display_name }}</strong></p>
+
+{% if pick_history %}
+<ul class="ns-my-picks-list">
+  {% for row in pick_history %}
+  <li class="ns-my-pick-item{% if row.is_correct %} ns-my-pick-correct{% elif row.is_correct is not none and not row.is_correct %} ns-my-pick-incorrect{% endif %}">
+    <div class="ns-my-pick-week">Week {{ row.week }}</div>
+    <div class="ns-my-pick-team">{{ row.pick_label }}</div>
+    {% if row.outcome %}
+    <div class="ns-my-pick-outcome">{{ row.outcome }}</div>
+    {% else %}
+    <div class="ns-my-pick-outcome ns-my-pick-pending">Result pending</div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="ns-help-text">No picks yet. <a href="{{ url_for('nfl_survivor.pick') }}">Make your first pick</a>.</p>
+{% endif %}
+{% endblock %}

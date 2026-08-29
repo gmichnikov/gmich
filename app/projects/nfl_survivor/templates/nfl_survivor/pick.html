@@ -22,7 +22,7 @@
   {% if show_entry_switcher %}
   Switch to another entry above to keep playing.
   {% else %}
-  Check <a href="{{ url_for('nfl_survivor.view_picks') }}">All picks</a> for pool standings.
+  Check <a href="{{ url_for('nfl_survivor.view_picks') }}">Standings + All Picks</a> for pool standings.
   {% endif %}
 </div>
 
@@ -96,19 +96,6 @@
   </form>
 </section>
 {% endif %}
-
-<details class="ns-pick-details" open>
-  <summary>Your picks</summary>
-  <ul class="ns-pick-list">
-    {% for week, (team, is_correct) in all_picks.items() %}
-    <li class="{% if is_correct %}ns-correct{% elif is_correct is not none and not is_correct %}ns-incorrect{% endif %}">
-      Week {{ week }} — {{ team }}
-    </li>
-    {% else %}
-    <li class="ns-help-text ns-pick-list-empty">No picks yet.</li>
-    {% endfor %}
-  </ul>
-</details>
 
 <details class="ns-pick-details" open>
   <summary>Lines &amp; kickoffs</summary>

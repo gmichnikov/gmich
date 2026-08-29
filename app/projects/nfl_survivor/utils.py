@@ -364,3 +364,81 @@ def team_pick_choices(season, week, available_team_pairs):
     ]
 
 
+def format_pick_outcome(result, opponent):
+    """Human-readable result vs opponent, or None if not yet known."""
+    if not result:
+        return None
+    if result == "did not play":
+        return "Did not play"
+    if not opponent:
+        return result.capitalize()
+    if result == "win":
+        return f"Beat {opponent}"
+    if result == "lose":
+        return f"Lost to {opponent}"
+    if result == "tie":
+        return f"Tied {opponent}"
+    return result.replace("_", " ").capitalize()
+
+
+def build_entry_pick_history(season, participant):
+    """
+    Per-week pick summary for one entry: team, spread, opponent, and result.
+    """
+    team_lookup = load_nfl_teams_as_dict()
+    picks = (
+        NflSurvivorPick.query.filter_by(participant_id=participant.id)
+        .order_by(NflSurvivorPick.week.asc())
+        .all()
+    )
+    if not picks:
+        return []
+
+    weeks = [pick.week for pick in picks]
+    spreads = NflSurvivorSpread.query.filter_by(season_id=season.id).filter(
+        NflSurvivorSpread.week.in_(weeks)
+    ).all()
+    matchup_by_week_name = {}
+    for spread in spreads:
+        week_map = matchup_by_week_name.setdefault(spread.week, {})
+        week_map[spread.home_team] = {
+            "opponent": spread.road_team,
+            "spread": spread.home_team_spread,
+        }
+        week_map[spread.road_team] = {
+            "opponent": spread.home_team,
+            "spread": spread.road_team_spread,
+        }
+
+    weekly_results = NflSurvivorWeeklyResult.query.filter_by(
+        season_id=season.id
+    ).filter(NflSurvivorWeeklyResult.week.in_(weeks)).all()
+    result_by_week_team = {
+        (result.week, result.team): result.result for result in weekly_results
+    }
+
+    history = []
+    for pick in picks:
+        team_name = team_lookup.get(pick.team, pick.team)
+        matchup = matchup_by_week_name.get(pick.week, {}).get(team_name, {})
+        opponent = matchup.get("opponent")
+        spread_display = format_team_spread(matchup.get("spread"))
+        result = result_by_week_team.get((pick.week, pick.team))
+        history.append(
+            {
+                "week": pick.week,
+                "team_name": team_name,
+                "opponent": opponent,
+                "spread_display": spread_display,
+                "pick_label": format_team_pick_label(
+                    team_name,
+                    opponent=opponent,
+                    spread_display=spread_display,
+                ),
+                "result": result,
+                "outcome": format_pick_outcome(result, opponent),
+                "is_correct": pick.is_correct,
+            }
+        )
+    return history
+

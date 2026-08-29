@@ -1,7 +1,6 @@
 """NFL Survivor pool routes."""
 
 import os
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -31,6 +30,7 @@ from app.projects.nfl_survivor.models import (
 from app.projects.nfl_survivor.utils import (
     UTC,
     ACTIVE_ENTRY_SESSION_KEY,
+    build_entry_pick_history,
     calculate_game_week,
     clear_active_entry,
     default_entry_name_for_user,
@@ -353,13 +353,6 @@ def pick():
         participant_id=entry.id
     ).all()
     team_lookup = load_nfl_teams_as_dict()
-    picked_team_names = OrderedDict(
-        (
-            p.week,
-            (team_lookup.get(p.team, p.team), p.is_correct),
-        )
-        for p in sorted(previous_picks, key=lambda x: x.week)
-    )
 
     picked_teams_other_weeks = [
         p.team for p in previous_picks if p.week != selected_week
@@ -508,7 +501,6 @@ def pick():
     return render_template(
         "nfl_survivor/pick.html",
         form=form,
-        all_picks=picked_team_names,
         spreads_by_week=spreads_by_week,
         last_updated_time=last_updated_time,
         current_week=current_week,
@@ -519,6 +511,25 @@ def pick():
         available_teams=available_teams,
         team_lookup=team_lookup,
         entry_eliminated=entry_eliminated,
+        **ctx,
+    )
+
+
+@nfl_survivor_bp.route("/your-picks")
+@login_required
+def your_picks():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+    entry = _require_active_entry(season)
+    if not entry:
+        return redirect(url_for("nfl_survivor.index"))
+
+    pick_history = build_entry_pick_history(season, entry)
+    ctx = _season_context(season)
+    return render_template(
+        "nfl_survivor/your_picks.html",
+        pick_history=pick_history,
         **ctx,
     )
 
