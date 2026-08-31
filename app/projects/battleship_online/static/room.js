@@ -21,7 +21,9 @@
     var lastTurnSeen = null;
     var lastOpponentShot = null;
     var tabSwitchTimer = null;
+    var tabSwitchGeneration = 0;
     var TAB_SWITCH_DELAY_MS = 1200;
+    var PEEK_OWN_FLEET_MS = 2200;
     var mobileLayout = window.matchMedia("(max-width: 820px)");
 
     var statusEl = document.getElementById("bsoStatusMessage");
@@ -178,15 +180,55 @@
         tabOwnBtn.classList.toggle("bso-board-tab-active", !showEnemy);
     }
 
-    function scheduleTabSwitchForTurn(state) {
-        var targetTab = state.turn === state.your_seat ? "enemy" : "own";
+    function cancelTabSwitchSequence() {
+        tabSwitchGeneration += 1;
         if (tabSwitchTimer) {
             clearTimeout(tabSwitchTimer);
+            tabSwitchTimer = null;
         }
+    }
+
+    function scheduleTabSwitchForTurn(state) {
+        var targetTab = state.turn === state.your_seat ? "enemy" : "own";
+        cancelTabSwitchSequence();
+        var generation = tabSwitchGeneration;
         tabSwitchTimer = setTimeout(function () {
+            if (generation !== tabSwitchGeneration) {
+                return;
+            }
             tabSwitchTimer = null;
             mobileBoardTab = targetTab;
             applyMobileBoardTabVisibility();
+        }, TAB_SWITCH_DELAY_MS);
+    }
+
+    function schedulePeekAtOwnFleet(state) {
+        if (!usesMobileBoardTabs(state) || mobileBoardTab === "own") {
+            return;
+        }
+        cancelTabSwitchSequence();
+        var generation = tabSwitchGeneration;
+        tabSwitchTimer = setTimeout(function () {
+            if (generation !== tabSwitchGeneration) {
+                return;
+            }
+            tabSwitchTimer = null;
+            mobileBoardTab = "own";
+            applyMobileBoardTabVisibility();
+            tabSwitchTimer = setTimeout(function () {
+                if (generation !== tabSwitchGeneration) {
+                    return;
+                }
+                tabSwitchTimer = null;
+                if (
+                    lastState &&
+                    lastState.status === "battle" &&
+                    lastState.turn === lastState.your_seat
+                ) {
+                    mobileBoardTab = "enemy";
+                    applyMobileBoardTabVisibility();
+                }
+            }, PEEK_OWN_FLEET_MS);
         }, TAB_SWITCH_DELAY_MS);
     }
 
@@ -196,10 +238,7 @@
         playerBoards.classList.toggle("bso-mobile-tabs", useTabs);
 
         if (!useTabs) {
-            if (tabSwitchTimer) {
-                clearTimeout(tabSwitchTimer);
-                tabSwitchTimer = null;
-            }
+            cancelTabSwitchSequence();
             ownPanel.classList.remove("bso-board-panel-hidden");
             targetPanel.classList.remove("bso-board-panel-hidden");
             lastTurnSeen = null;
@@ -220,10 +259,7 @@
     }
 
     function setMobileBoardTab(tab) {
-        if (tabSwitchTimer) {
-            clearTimeout(tabSwitchTimer);
-            tabSwitchTimer = null;
-        }
+        cancelTabSwitchSequence();
         mobileBoardTab = tab;
         applyMobileBoardTabVisibility();
     }
@@ -338,7 +374,7 @@
                 var prev = prevBoard[row][col];
                 var curr = newBoard[row][col];
                 var wasUntargeted = prev === "water" || prev.indexOf("ship") === 0;
-                if (wasUntargeted && (curr === "miss" || curr === "hit")) {
+                if (wasUntargeted && (curr === "miss" || curr === "hit" || curr === "sunk")) {
                     return { row: row, col: col };
                 }
             }
@@ -511,10 +547,11 @@
         checkVictimSinkToast(state, prevState);
         var isPlayer = !!state.your_seat;
 
+        var newOpponentShot = null;
         if (state.status === "battle" && state.your_board) {
-            var newShot = findNewOpponentShot(prevYourBoard, state.your_board);
-            if (newShot) {
-                lastOpponentShot = newShot;
+            newOpponentShot = findNewOpponentShot(prevYourBoard, state.your_board);
+            if (newOpponentShot) {
+                lastOpponentShot = newOpponentShot;
             }
         } else if (state.status !== "battle") {
             lastOpponentShot = null;
@@ -526,6 +563,9 @@
         updatePlayBar(state);
         wrapperEl.classList.toggle("bso-in-battle", isPlayer && state.status === "battle");
         updateMobileBoardTabs(state);
+        if (newOpponentShot) {
+            schedulePeekAtOwnFleet(state);
+        }
 
         var isFinished = state.status === "won";
         rematchBtn.hidden = !(isPlayer && isFinished);

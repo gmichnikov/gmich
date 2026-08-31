@@ -12,6 +12,7 @@ def _cell_ship_id(fleet, row, col):
 
 
 def build_own_board(fleet, incoming_shots):
+    sunk = _sunk_cells(fleet)
     board = []
     for row in range(GRID_SIZE):
         board_row = []
@@ -25,6 +26,8 @@ def build_own_board(fleet, incoming_shots):
                     board_row.append("water")
             elif shot == 1:
                 board_row.append("miss")
+            elif (row, col) in sunk:
+                board_row.append("sunk")
             else:
                 board_row.append("hit")
         board.append(board_row)
