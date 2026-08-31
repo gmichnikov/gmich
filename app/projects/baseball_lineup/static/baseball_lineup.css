@@ -1,0 +1,96 @@
+/* Baseball Lineup — all classes prefixed blu- */
+
+.blu-page {
+  padding: 24px 16px 48px;
+  min-height: 60vh;
+}
+
+.blu-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.blu-page-header {
+  margin-bottom: 24px;
+}
+
+.blu-page-title {
+  margin: 0 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.blu-page-subtitle {
+  margin: 0;
+  color: #555;
+  font-size: 15px;
+}
+
+.blu-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.blu-card-header {
+  padding: 12px 16px;
+  font-weight: 600;
+  background: #f7f7f7;
+  border-bottom: 1px solid #eee;
+}
+
+.blu-card-body {
+  padding: 16px;
+}
+
+.blu-muted {
+  margin: 0 0 12px;
+  color: #666;
+}
+
+.blu-checklist {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #444;
+}
+
+.blu-checklist li + li {
+  margin-top: 6px;
+}
+
+.blu-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #666;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+}
+
+.blu-team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.blu-team-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.blu-team-item:last-child {
+  border-bottom: none;
+}
+
+.blu-team-name {
+  font-weight: 600;
+}
+
+.blu-team-meta {
+  font-size: 13px;
+  color: #777;
+}

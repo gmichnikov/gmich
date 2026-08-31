@@ -305,6 +305,17 @@ PROJECTS = [
         "order": 3,
     },
     {
+        "id": "baseball_lineup",
+        "name": "Baseball Lineup",
+        "description": "Youth baseball roster, attendance, and inning-by-inning lineup manager",
+        "url": "/baseball-lineup",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "⚾",
+        "order": 32,
+    },
+    {
         "id": "better_signups",
         "name": "Better Signups",
         "description": "Create and manage signup lists for events and items",

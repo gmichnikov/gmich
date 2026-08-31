@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Baseball Lineup{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container">
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">&#x26BE; Baseball Lineup</h1>
+      <p class="blu-page-subtitle">
+        Manage youth baseball rosters, game attendance, and inning-by-inning lineups.
+      </p>
+    </header>
+
+    <div class="blu-card">
+      <div class="blu-card-header">Project status</div>
+      <div class="blu-card-body">
+        <p class="blu-muted">
+          PRD and schema are locked. Phase 1 (teams, roster, games) is next after migration.
+        </p>
+        <ul class="blu-checklist">
+          <li>Spreadsheet lineup grid with Bench, P, PH, and field positions</li>
+          <li>Team config: per-inning expectations (e.g. P in 3/4, 2&times; CF)</li>
+          <li>Warnings for wrong inning counts, blanks, and uneven player distribution</li>
+        </ul>
+      </div>
+    </div>
+
+    {% if teams %}
+    <div class="blu-card">
+      <div class="blu-card-header">Your teams</div>
+      <div class="blu-card-body">
+        <ul class="blu-team-list">
+          {% for team in teams %}
+          <li class="blu-team-item">
+            <span class="blu-team-name">{{ team.name }}</span>
+            {% if team.season_label %}
+            <span class="blu-team-meta">{{ team.season_label }}</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% else %}
+    <div class="blu-empty">
+      <p>No teams yet. Once CRUD is implemented, you&rsquo;ll create a team here.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

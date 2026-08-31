@@ -124,6 +124,7 @@ def create_app():
     from app.projects.battleship_online.routes import battleship_online_bp
     from app.projects.japan_recs.routes import japan_recs_bp
     from app.projects.nfl_survivor import nfl_survivor_bp
+    from app.projects.baseball_lineup.routes import baseball_lineup_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -179,6 +180,7 @@ def create_app():
     )
     app.register_blueprint(japan_recs_bp)
     app.register_blueprint(nfl_survivor_bp, url_prefix="/nfl-survivor")
+    app.register_blueprint(baseball_lineup_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
@@ -267,6 +269,13 @@ def create_app():
         NflSurvivorWeeklyResult,
         NflSurvivorSpread,
         NflSurvivorGame,
+    )
+    from app.projects.baseball_lineup.models import (
+        BluTeam,
+        BluPlayer,
+        BluGame,
+        BluGameRosterEntry,
+        BluLineupCell,
     )
     # Inject PostHog API key into all templates
     @app.context_processor
