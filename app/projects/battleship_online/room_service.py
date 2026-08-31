@@ -8,7 +8,7 @@ from app import db
 from app.projects.battleship_online.cpu import (
     CPU_DISPLAY_NAME,
     CPU_PLAYER_ID,
-    choose_random_shot,
+    choose_shot,
 )
 from app.projects.battleship_online.models import BattleshipOnlineRoom
 
@@ -47,12 +47,34 @@ def _empty_shots():
     return [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 
 
+def _neighbor_cells(row, col):
+    for drow in (-1, 0, 1):
+        for dcol in (-1, 0, 1):
+            if drow == 0 and dcol == 0:
+                continue
+            neighbor_row = row + drow
+            neighbor_col = col + dcol
+            if 0 <= neighbor_row < GRID_SIZE and 0 <= neighbor_col < GRID_SIZE:
+                yield neighbor_row, neighbor_col
+
+
+def _forbidden_cells_for_fleet(fleet, ship_index=None):
+    forbidden = set()
+    for index, ship in enumerate(fleet["ships"]):
+        if index == ship_index:
+            continue
+        for row, col in ship["cells"]:
+            forbidden.add((row, col))
+            forbidden.update(_neighbor_cells(row, col))
+    return forbidden
+
+
 def _generate_random_fleet():
     ships = []
-    occupied = set()
+    forbidden = set()
     for size in SHIP_SIZES:
         placed = False
-        for _ in range(300):
+        for _ in range(1000):
             horizontal = random.choice((True, False))
             if horizontal:
                 row = random.randint(0, GRID_SIZE - 1)
@@ -63,8 +85,10 @@ def _generate_random_fleet():
                 col = random.randint(0, GRID_SIZE - 1)
                 cells = [[row + offset, col] for offset in range(size)]
             cell_set = {tuple(cell) for cell in cells}
-            if cell_set.isdisjoint(occupied):
-                occupied |= cell_set
+            if cell_set.isdisjoint(forbidden):
+                for row, col in cell_set:
+                    forbidden.add((row, col))
+                    forbidden.update(_neighbor_cells(row, col))
                 ships.append(
                     {
                         "id": len(ships),
@@ -120,15 +144,18 @@ def _cells_are_valid(cells, size, fleet, ship_index):
         for row, col in ship["cells"]:
             occupied.add((row, col))
 
+    forbidden = _forbidden_cells_for_fleet(fleet, ship_index)
     for row, col in cells:
         if (row, col) in occupied:
+            return False
+        if (row, col) in forbidden:
             return False
     return True
 
 
 def _apply_ship_update(fleet, ship_index, cells, horizontal):
     if not _cells_are_valid(cells, fleet["ships"][ship_index]["size"], fleet, ship_index):
-        raise RoomError("Ships can't overlap or leave the grid.", 400)
+        raise RoomError("Ships can't overlap, touch, or leave the grid.", 400)
     fleet = copy.deepcopy(fleet)
     fleet["ships"][ship_index]["cells"] = cells
     fleet["ships"][ship_index]["horizontal"] = horizontal
@@ -251,7 +278,8 @@ def _fire_for_seat(room, seat, row, col):
 def _cpu_take_turn(room):
     cpu_seat = _cpu_seat()
     shots = room.shots_o if cpu_seat == "O" else room.shots_x
-    target = choose_random_shot(shots)
+    opponent_fleet = room.fleet_x if cpu_seat == "O" else room.fleet_o
+    target = choose_shot(shots, opponent_fleet)
     if target is None:
         return room
     row, col = target
