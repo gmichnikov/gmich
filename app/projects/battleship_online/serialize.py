@@ -131,6 +131,7 @@ def room_to_dict(room, viewer_seat):
         "your_name": your_name,
         "version": room.version,
         "grid_size": GRID_SIZE,
+        "vs_cpu": room.vs_cpu,
     }
 
     if viewer_seat == "X":

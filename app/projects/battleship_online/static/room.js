@@ -283,8 +283,13 @@
                 }
             } else {
                 bannerClass += " bso-turn-opponent";
-                mainText = turnName + "'s turn";
-                subText = "Waiting for their shot";
+                if (state.vs_cpu) {
+                    mainText = "Computer's turn";
+                    subText = "Computer is thinking\u2026";
+                } else {
+                    mainText = turnName + "'s turn";
+                    subText = "Waiting for their shot";
+                }
             }
         } else if (state.status === "won") {
             if (isPlayer && state.winner === state.your_seat) {
@@ -308,6 +313,9 @@
 
     function statusText(state) {
         if (state.status === "waiting") {
+            if (state.vs_cpu) {
+                return "Setting up solo game\u2026";
+            }
             return "Waiting for an opponent\u2026 share the link above.";
         }
         return "";
@@ -522,7 +530,7 @@
         var isFinished = state.status === "won";
         rematchBtn.hidden = !(isPlayer && isFinished);
         spectatorBadge.hidden = isPlayer;
-        shareRow.hidden = !isPlayer;
+        shareRow.hidden = !isPlayer || !!state.vs_cpu;
         nameRow.hidden = !isPlayer;
 
         if (isPlayer) {

@@ -26,6 +26,7 @@ class BattleshipOnlineRoom(db.Model):
     shots_o = db.Column(db.JSON, nullable=True)
     ready_x = db.Column(db.Boolean, nullable=False, default=False)
     ready_o = db.Column(db.Boolean, nullable=False, default=False)
+    vs_cpu = db.Column(db.Boolean, nullable=False, default=False)
     version = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

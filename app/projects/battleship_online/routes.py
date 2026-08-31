@@ -7,6 +7,7 @@ from app.projects.battleship_online.room_service import (
     RoomError,
     adjust_ship,
     cleanup_stale_rooms,
+    create_cpu_room,
     create_room,
     fire,
     get_state,
@@ -67,7 +68,11 @@ def index():
 @battleship_online_bp.route("/rooms", methods=["POST"])
 @_handle_room_errors
 def api_create_room():
-    room = create_room()
+    data = request.get_json(silent=True) or {}
+    if data.get("vs_cpu"):
+        room = create_cpu_room()
+    else:
+        room = create_room()
     return jsonify({"code": room.code}), 201
 
 

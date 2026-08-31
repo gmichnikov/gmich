@@ -4,6 +4,7 @@
     var PLAYER_KEY = "bso_player_id";
     var CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
     var createBtn = document.getElementById("bsoCreateBtn");
+    var vsCpuBtn = document.getElementById("bsoVsCpuBtn");
     var joinForm = document.getElementById("bsoJoinForm");
     var joinInput = document.getElementById("bsoJoinCode");
     var errorEl = document.getElementById("bsoLandingError");
@@ -47,15 +48,18 @@
         window.location.href = "/battleship-online/room/" + encodeURIComponent(code);
     }
 
-    createBtn.addEventListener("click", function () {
-        createBtn.disabled = true;
+    function createRoom(vsCpu) {
+        var btn = vsCpu ? vsCpuBtn : createBtn;
+        btn.disabled = true;
         fetch("/battleship-online/rooms", {
             method: "POST",
             headers: {
                 "X-CSRFToken": BSO_CSRF_TOKEN,
                 "X-BSO-Player-Id": getPlayerId(),
+                "Content-Type": "application/json",
             },
             credentials: "same-origin",
+            body: JSON.stringify({ vs_cpu: !!vsCpu }),
         })
             .then(function (response) {
                 return response.json().catch(function () { return {}; });
@@ -65,13 +69,21 @@
                     goToRoom(data.code);
                 } else {
                     showError(data.error || "Could not create a game. Please try again.");
-                    createBtn.disabled = false;
+                    btn.disabled = false;
                 }
             })
             .catch(function () {
                 showError("Could not create a game. Please try again.");
-                createBtn.disabled = false;
+                btn.disabled = false;
             });
+    }
+
+    createBtn.addEventListener("click", function () {
+        createRoom(false);
+    });
+
+    vsCpuBtn.addEventListener("click", function () {
+        createRoom(true);
     });
 
     joinInput.addEventListener("input", function () {

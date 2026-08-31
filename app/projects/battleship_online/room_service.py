@@ -5,6 +5,11 @@ import random
 from datetime import datetime, timedelta
 
 from app import db
+from app.projects.battleship_online.cpu import (
+    CPU_DISPLAY_NAME,
+    CPU_PLAYER_ID,
+    choose_random_shot,
+)
 from app.projects.battleship_online.models import BattleshipOnlineRoom
 
 ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -173,6 +178,90 @@ def _start_placement(room):
     room.turn = "X"
 
 
+def _cpu_seat():
+    return "O"
+
+
+def _is_cpu_turn(room):
+    return room.vs_cpu and room.turn == _cpu_seat()
+
+
+def _auto_ready_cpu(room):
+    cpu_seat = _cpu_seat()
+    if cpu_seat == "O":
+        room.fleet_o = _generate_random_fleet()
+        room.ready_o = True
+        room.name_o = CPU_DISPLAY_NAME
+    else:
+        room.fleet_x = _generate_random_fleet()
+        room.ready_x = True
+        room.name_x = CPU_DISPLAY_NAME
+
+
+def _fire_for_seat(room, seat, row, col):
+    if not isinstance(row, int) or not isinstance(col, int):
+        raise RoomError("Invalid coordinates.", 400)
+    if not (0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE):
+        raise RoomError("Invalid coordinates.", 400)
+
+    if seat == "X":
+        shots = [shot_row[:] for shot_row in room.shots_x]
+        opponent_fleet = room.fleet_o
+    else:
+        shots = [shot_row[:] for shot_row in room.shots_o]
+        opponent_fleet = room.fleet_x
+
+    if shots[row][col] != 0:
+        raise RoomError("You already fired there.", 400)
+
+    opponent_fleet = copy.deepcopy(opponent_fleet)
+    event = None
+
+    ship_index, hit_index = _find_ship_hit(opponent_fleet, row, col)
+    if ship_index is not None:
+        shots[row][col] = 2
+        ship = opponent_fleet["ships"][ship_index]
+        ship["hits"][hit_index] = True
+        if all(ship["hits"]) and not ship["sunk"]:
+            ship["sunk"] = True
+            event = {
+                "type": "sink",
+                "ship_name": SHIP_NAMES[ship_index],
+                "ship_size": ship["size"],
+            }
+        if _all_sunk(opponent_fleet):
+            room.status = BattleshipOnlineRoom.STATUS_WON
+            room.winner = seat
+    else:
+        shots[row][col] = 1
+
+    if room.status != BattleshipOnlineRoom.STATUS_WON:
+        room.turn = "O" if seat == "X" else "X"
+
+    if seat == "X":
+        room.shots_x = shots
+        room.fleet_o = opponent_fleet
+    else:
+        room.shots_o = shots
+        room.fleet_x = opponent_fleet
+
+    return event
+
+
+def _cpu_take_turn(room):
+    cpu_seat = _cpu_seat()
+    shots = room.shots_o if cpu_seat == "O" else room.shots_x
+    target = choose_random_shot(shots)
+    if target is None:
+        return room
+    row, col = target
+    _fire_for_seat(room, cpu_seat, row, col)
+    room.version += 1
+    _touch(room)
+    db.session.commit()
+    return room
+
+
 def cleanup_stale_rooms():
     cutoff = datetime.utcnow() - timedelta(days=CLEANUP_DAYS)
     BattleshipOnlineRoom.query.filter(BattleshipOnlineRoom.updated_at < cutoff).delete()
@@ -196,6 +285,29 @@ def create_room():
         room = BattleshipOnlineRoom(
             code=code,
             status=BattleshipOnlineRoom.STATUS_WAITING,
+            version=1,
+            created_at=now,
+            updated_at=now,
+        )
+        db.session.add(room)
+        db.session.commit()
+        return room
+    raise RoomError("Could not create a room right now. Please try again.", 500)
+
+
+def create_cpu_room():
+    cleanup_stale_rooms()
+    for _ in range(20):
+        code = _generate_code()
+        if BattleshipOnlineRoom.query.filter_by(code=code).first():
+            continue
+        now = datetime.utcnow()
+        room = BattleshipOnlineRoom(
+            code=code,
+            status=BattleshipOnlineRoom.STATUS_WAITING,
+            seat_o=CPU_PLAYER_ID,
+            name_o=CPU_DISPLAY_NAME,
+            vs_cpu=True,
             version=1,
             created_at=now,
             updated_at=now,
@@ -344,6 +456,9 @@ def set_ready(code, player_id):
     else:
         room.ready_o = True
 
+    if room.vs_cpu and seat == "X":
+        _auto_ready_cpu(room)
+
     if room.ready_x and room.ready_o:
         room.status = BattleshipOnlineRoom.STATUS_BATTLE
         room.turn = random.choice(("X", "O"))
@@ -353,6 +468,10 @@ def set_ready(code, player_id):
     room.version += 1
     _touch(room)
     db.session.commit()
+
+    if _is_cpu_turn(room):
+        room = _cpu_take_turn(room)
+
     return room, seat
 
 
@@ -367,6 +486,8 @@ def set_unready(code, player_id):
         if not room.ready_x:
             raise RoomError("You're not ready yet.", 400)
         room.ready_x = False
+        if room.vs_cpu:
+            room.ready_o = False
     else:
         if not room.ready_o:
             raise RoomError("You're not ready yet.", 400)
@@ -387,55 +508,15 @@ def fire(code, player_id, row, col):
         raise RoomError("The battle hasn't started yet.", 400)
     if room.turn != seat:
         raise RoomError("It's not your turn.", 400)
-    if not isinstance(row, int) or not isinstance(col, int):
-        raise RoomError("Invalid coordinates.", 400)
-    if not (0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE):
-        raise RoomError("Invalid coordinates.", 400)
 
-    if seat == "X":
-        shots = [shot_row[:] for shot_row in room.shots_x]
-        opponent_fleet = room.fleet_o
-    else:
-        shots = [shot_row[:] for shot_row in room.shots_o]
-        opponent_fleet = room.fleet_x
-
-    if shots[row][col] != 0:
-        raise RoomError("You already fired there.", 400)
-
-    opponent_fleet = copy.deepcopy(opponent_fleet)
-    event = None
-
-    ship_index, hit_index = _find_ship_hit(opponent_fleet, row, col)
-    if ship_index is not None:
-        shots[row][col] = 2
-        ship = opponent_fleet["ships"][ship_index]
-        ship["hits"][hit_index] = True
-        if all(ship["hits"]) and not ship["sunk"]:
-            ship["sunk"] = True
-            event = {
-                "type": "sink",
-                "ship_name": SHIP_NAMES[ship_index],
-                "ship_size": ship["size"],
-            }
-        if _all_sunk(opponent_fleet):
-            room.status = BattleshipOnlineRoom.STATUS_WON
-            room.winner = seat
-    else:
-        shots[row][col] = 1
-
-    if room.status != BattleshipOnlineRoom.STATUS_WON:
-        room.turn = "O" if seat == "X" else "X"
-
-    if seat == "X":
-        room.shots_x = shots
-        room.fleet_o = opponent_fleet
-    else:
-        room.shots_o = shots
-        room.fleet_x = opponent_fleet
-
+    event = _fire_for_seat(room, seat, row, col)
     room.version += 1
     _touch(room)
     db.session.commit()
+
+    if room.status == BattleshipOnlineRoom.STATUS_BATTLE and _is_cpu_turn(room):
+        room = _cpu_take_turn(room)
+
     return room, seat, event
 
 
@@ -446,7 +527,9 @@ def rematch(code, player_id):
         raise RoomError("Only players in this room can start a rematch.", 403)
     if room.status != BattleshipOnlineRoom.STATUS_WON:
         raise RoomError("The current game isn't finished yet.", 400)
-    if not (room.seat_x and room.seat_o):
+    if not room.seat_x:
+        raise RoomError("Both players are needed for a rematch.", 400)
+    if not room.vs_cpu and not room.seat_o:
         raise RoomError("Both players are needed for a rematch.", 400)
 
     _start_placement(room)
