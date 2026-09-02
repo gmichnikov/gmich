@@ -1,9 +1,7 @@
-{% macro structure_editor(inning_count, counts, field_spots, codes, labels, battery_codes) %}
+{% macro structure_editor(inning_count, counts, field_spots, codes, labels, battery_codes, title="Default lineup structure", description="Expected count for each position in each inning. Field spots per inning is the column total below.") %}
 <section class="blu-structure-section" id="blu-structure-editor">
-  <h2 class="blu-section-title">Default lineup structure</h2>
-  <p class="blu-muted">
-    Expected count for each position in each inning. Field spots per inning is the column total below.
-  </p>
+  <h2 class="blu-section-title">{{ title }}</h2>
+  <p class="blu-muted">{{ description }}</p>
 
   <div class="blu-form-group blu-form-group-inline">
     <label for="blu-inning-count" class="blu-label">Innings</label>

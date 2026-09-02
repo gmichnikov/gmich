@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -16,7 +16,13 @@ from app.projects.baseball_lineup.lineup_config import (
     parse_inning_count,
     resize_expected_counts,
 )
-from app.projects.baseball_lineup.models import BluLineupCell, BluPlayer, BluTeam
+from app.projects.baseball_lineup.models import (
+    BluGame,
+    BluGameRosterEntry,
+    BluLineupCell,
+    BluPlayer,
+    BluTeam,
+)
 from app.utils.logging import log_project_visit
 
 baseball_lineup_bp = Blueprint(
@@ -75,6 +81,10 @@ def _structure_editor_context(expected_counts, inning_count):
 
 
 def _parse_team_structure_form(form, current_counts, current_inning_count):
+    return _parse_structure_form(form, current_counts, current_inning_count)
+
+
+def _parse_structure_form(form, current_counts, current_inning_count):
     inning_count = parse_inning_count(
         form.get("inning_count"), default=current_inning_count
     )
@@ -84,6 +94,59 @@ def _parse_team_structure_form(form, current_counts, current_inning_count):
         if code not in counts:
             counts[code] = resized.get(code, [0] * inning_count)
     return inning_count, counts
+
+
+def _parse_game_date(raw):
+    if not raw or not str(raw).strip():
+        return None
+    try:
+        return datetime.strptime(str(raw).strip(), "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
+def _get_game_or_404(team_id, game_id):
+    team = _get_team_or_404(team_id)
+    game = BluGame.query.filter_by(id=game_id, team_id=team.id).first()
+    if game is None:
+        abort(404)
+    return team, game
+
+
+def _game_roster_status(game, team):
+    """Return roster players with present/absent status for a game."""
+    players = team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
+    absent_ids = {
+        entry.player_id
+        for entry in game.roster_entries.filter_by(is_present=False).all()
+    }
+    return [
+        {"player": player, "is_present": player.id not in absent_ids}
+        for player in players
+    ]
+
+
+def _set_player_present(game, player, present):
+    entry = BluGameRosterEntry.query.filter_by(
+        game_id=game.id, player_id=player.id
+    ).first()
+    if present:
+        if entry is None:
+            return
+        if entry.batting_order is None:
+            db.session.delete(entry)
+        else:
+            entry.is_present = True
+    elif entry is None:
+        db.session.add(
+            BluGameRosterEntry(
+                game_id=game.id,
+                player_id=player.id,
+                is_present=False,
+            )
+        )
+    else:
+        entry.is_present = False
 
 
 @baseball_lineup_bp.route("/")
@@ -133,10 +196,12 @@ def team_create():
 def team_detail(team_id):
     team = _get_team_or_404(team_id)
     players = team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
+    games = team.games.order_by(BluGame.game_date.desc(), BluGame.id.desc()).all()
     return render_template(
         "baseball_lineup/team_detail.html",
         team=team,
         players=players,
+        games=games,
     )
 
 
@@ -312,3 +377,149 @@ def player_move_down(team_id, player_id):
     team.updated_at = datetime.utcnow()
     db.session.commit()
     return redirect(url_for("baseball_lineup.team_detail", team_id=team.id))
+
+
+@baseball_lineup_bp.route("/teams/<int:team_id>/games/new")
+@login_required
+def game_new(team_id):
+    team = _get_team_or_404(team_id)
+    return render_template(
+        "baseball_lineup/game_new.html",
+        team=team,
+        default_date=date.today().isoformat(),
+    )
+
+
+@baseball_lineup_bp.route("/teams/<int:team_id>/games/create", methods=["POST"])
+@login_required
+def game_create(team_id):
+    team = _get_team_or_404(team_id)
+    opponent_name = (request.form.get("opponent_name") or "").strip()
+    game_date = _parse_game_date(request.form.get("game_date"))
+
+    if not opponent_name:
+        flash("Opponent name is required.", "error")
+        return redirect(url_for("baseball_lineup.game_new", team_id=team.id))
+    if game_date is None:
+        flash("A valid game date is required.", "error")
+        return redirect(url_for("baseball_lineup.game_new", team_id=team.id))
+
+    game = BluGame.from_team_defaults(team, game_date, opponent_name)
+    db.session.add(game)
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    flash(f"Game vs {opponent_name} created.", "success")
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )
+
+
+@baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>")
+@login_required
+def game_detail(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    roster_status = _game_roster_status(game, team)
+    present_count = sum(1 for row in roster_status if row["is_present"])
+    return render_template(
+        "baseball_lineup/game_detail.html",
+        team=team,
+        game=game,
+        roster_status=roster_status,
+        present_count=present_count,
+    )
+
+
+@baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>/edit")
+@login_required
+def game_edit(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    ctx = _structure_editor_context(game.expected_counts, game.inning_count)
+    return render_template(
+        "baseball_lineup/game_edit.html",
+        team=team,
+        game=game,
+        **ctx,
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/update", methods=["POST"]
+)
+@login_required
+def game_update(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    opponent_name = (request.form.get("opponent_name") or "").strip()
+    game_date = _parse_game_date(request.form.get("game_date"))
+
+    if not opponent_name:
+        flash("Opponent name is required.", "error")
+        return redirect(
+            url_for("baseball_lineup.game_edit", team_id=team.id, game_id=game.id)
+        )
+    if game_date is None:
+        flash("A valid game date is required.", "error")
+        return redirect(
+            url_for("baseball_lineup.game_edit", team_id=team.id, game_id=game.id)
+        )
+
+    inning_count, counts = _parse_structure_form(
+        request.form,
+        game.expected_counts,
+        game.inning_count,
+    )
+
+    game.game_date = game_date
+    game.opponent_name = opponent_name
+    game.inning_count = inning_count
+    game.expected_counts = counts
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    flash("Game settings saved.", "success")
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/delete", methods=["POST"]
+)
+@login_required
+def game_delete(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    label = f"{game.game_date.strftime('%b %d, %Y')} vs {game.opponent_name}"
+
+    db.session.delete(game)
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    flash(f"Deleted {label}.", "success")
+    return redirect(url_for("baseball_lineup.team_detail", team_id=team.id))
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/attendance/<int:player_id>/toggle",
+    methods=["POST"],
+)
+@login_required
+def game_attendance_toggle(team_id, game_id, player_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    _, player = _get_player_or_404(team_id, player_id)
+
+    entry = BluGameRosterEntry.query.filter_by(
+        game_id=game.id, player_id=player.id
+    ).first()
+    currently_present = entry is None or entry.is_present
+    _set_player_present(game, player, present=not currently_present)
+
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    status = "present" if not currently_present else "absent"
+    flash(f"Marked {player.full_name} {status}.", "success")
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )

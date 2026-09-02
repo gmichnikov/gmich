@@ -27,6 +27,29 @@
     </header>
 
     <div class="blu-card">
+      <div class="blu-card-header blu-card-header-row">
+        <span>Games</span>
+        <a href="{{ url_for('baseball_lineup.game_new', team_id=team.id) }}" class="blu-btn blu-btn-primary blu-btn-small">New game</a>
+      </div>
+      <div class="blu-card-body">
+        {% if games %}
+        <ul class="blu-game-list">
+          {% for game in games %}
+          <li class="blu-game-item">
+            <a href="{{ url_for('baseball_lineup.game_detail', team_id=team.id, game_id=game.id) }}" class="blu-game-link">
+              <span class="blu-game-label">{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}</span>
+              <span class="blu-game-meta">{{ game.inning_count }} innings</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="blu-muted blu-roster-empty">No games yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="blu-card">
       <div class="blu-card-header">Roster</div>
       <div class="blu-card-body">
 

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "baseball_lineup/_structure_editor.html" import structure_editor %}
+
+{% block title %}{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container blu-container-wide">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; {{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}
+    </p>
+
+    <header class="blu-page-header blu-page-header-row">
+      <div>
+        <h1 class="blu-page-title">{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}</h1>
+        <p class="blu-page-subtitle">
+          {{ game.inning_count }} innings &middot; {{ present_count }} of {{ roster_status|length }} players present
+        </p>
+      </div>
+      <a href="{{ url_for('baseball_lineup.game_edit', team_id=team.id, game_id=game.id) }}" class="blu-btn blu-btn-secondary">Game settings</a>
+    </header>
+
+    <div class="blu-card">
+      <div class="blu-card-header">Attendance</div>
+      <div class="blu-card-body">
+        <p class="blu-muted">Everyone is present by default. Mark absent players before building the lineup.</p>
+
+        {% if roster_status %}
+        <ul class="blu-attendance-list">
+          {% for row in roster_status %}
+          <li class="blu-attendance-item {% if not row.is_present %}blu-attendance-absent{% endif %}">
+            <span class="blu-attendance-name">{{ row.player.full_name }}</span>
+            <div class="blu-attendance-actions">
+              <span class="blu-attendance-badge {% if row.is_present %}blu-attendance-badge-present{% else %}blu-attendance-badge-absent{% endif %}">
+                {{ 'Present' if row.is_present else 'Absent' }}
+              </span>
+              <form method="post" action="{{ url_for('baseball_lineup.game_attendance_toggle', team_id=team.id, game_id=game.id, player_id=row.player.id) }}" class="blu-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small">
+                  Mark {{ 'absent' if row.is_present else 'present' }}
+                </button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="blu-muted">Add players to the roster first.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="blu-card blu-card-muted">
+      <div class="blu-card-header">Lineup</div>
+      <div class="blu-card-body">
+        <p class="blu-muted">Lineup editor coming in the next phase. Set attendance and game structure here for now.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

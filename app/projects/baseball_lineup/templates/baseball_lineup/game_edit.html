@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "baseball_lineup/_structure_editor.html" import structure_editor %}
+
+{% block title %}Game settings - {{ game.opponent_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container blu-container-wide">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.game_detail', team_id=team.id, game_id=game.id) }}">{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}</a>
+      &rsaquo; Settings
+    </p>
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">Game settings</h1>
+      <p class="blu-page-subtitle">Changes here do not affect team defaults.</p>
+    </header>
+
+    <form method="post" action="{{ url_for('baseball_lineup.game_update', team_id=team.id, game_id=game.id) }}" class="blu-form" id="blu-game-settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="blu-form-group">
+        <label for="blu-game-date" class="blu-label">Date</label>
+        <input
+          type="date"
+          id="blu-game-date"
+          name="game_date"
+          class="blu-input blu-input-date"
+          value="{{ game.game_date.isoformat() }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="blu-form-group">
+        <label for="blu-opponent-name" class="blu-label">Opponent</label>
+        <input
+          type="text"
+          id="blu-opponent-name"
+          name="opponent_name"
+          class="blu-input"
+          value="{{ game.opponent_name }}"
+          required
+        >
+      </div>
+
+      {{ structure_editor(
+        structure_inning_count,
+        structure_counts,
+        structure_field_spots,
+        structure_codes,
+        structure_labels,
+        structure_battery_codes,
+        title="Game lineup structure",
+        description="Expected count for each position in each inning for this game only. Field spots per inning is the column total below."
+      ) }}
+
+      <div class="blu-form-actions">
+        <button type="submit" class="blu-btn blu-btn-primary">Save settings</button>
+        <a href="{{ url_for('baseball_lineup.game_detail', team_id=team.id, game_id=game.id) }}" class="blu-btn blu-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <div class="blu-form-divider"></div>
+
+    <form
+      method="post"
+      action="{{ url_for('baseball_lineup.game_delete', team_id=team.id, game_id=game.id) }}"
+      onsubmit="return confirm('Delete this game ({{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }})?');"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="blu-btn blu-btn-danger">Delete game</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('baseball_lineup.static', filename='baseball_lineup.js') }}"></script>
+{% endblock %}

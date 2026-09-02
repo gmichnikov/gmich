@@ -137,6 +137,17 @@
   border-bottom: 1px solid #eee;
 }
 
+.blu-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.blu-card-muted .blu-card-body {
+  background: #fafafa;
+}
+
 .blu-card-body {
   padding: 16px;
 }
@@ -242,6 +253,10 @@
   max-width: 80px;
 }
 
+.blu-input-date {
+  max-width: 220px;
+}
+
 .blu-input:focus {
   outline: none;
   border-color: #2563eb;
@@ -315,6 +330,96 @@
 
 .blu-roster-empty {
   margin: 0;
+}
+
+/* Games list */
+.blu-game-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.blu-game-item {
+  margin-bottom: 8px;
+}
+
+.blu-game-item:last-child {
+  margin-bottom: 0;
+}
+
+.blu-game-link {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.blu-game-link:hover {
+  background: #f9fafb;
+}
+
+.blu-game-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.blu-game-meta {
+  font-size: 13px;
+  color: #777;
+}
+
+/* Attendance */
+.blu-attendance-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.blu-attendance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.blu-attendance-item:last-child {
+  border-bottom: none;
+}
+
+.blu-attendance-absent .blu-attendance-name {
+  color: #888;
+  text-decoration: line-through;
+}
+
+.blu-attendance-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.blu-attendance-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.blu-attendance-badge-present {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.blu-attendance-badge-absent {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 /* Structure editor */

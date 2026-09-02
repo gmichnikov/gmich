@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}New game - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; New game
+    </p>
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">New game</h1>
+      <p class="blu-page-subtitle">
+        Lineup structure is copied from team defaults ({{ team.default_inning_count }} innings).
+      </p>
+    </header>
+
+    <form method="post" action="{{ url_for('baseball_lineup.game_create', team_id=team.id) }}" class="blu-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="blu-form-group">
+        <label for="blu-game-date" class="blu-label">Date</label>
+        <input
+          type="date"
+          id="blu-game-date"
+          name="game_date"
+          class="blu-input blu-input-date"
+          value="{{ default_date }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="blu-form-group">
+        <label for="blu-opponent-name" class="blu-label">Opponent</label>
+        <input
+          type="text"
+          id="blu-opponent-name"
+          name="opponent_name"
+          class="blu-input"
+          placeholder="e.g. Blue Jays"
+          required
+        >
+      </div>
+
+      <div class="blu-form-actions">
+        <button type="submit" class="blu-btn blu-btn-primary">Create game</button>
+        <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}" class="blu-btn blu-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
