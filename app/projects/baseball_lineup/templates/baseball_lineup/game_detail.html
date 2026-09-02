@@ -59,6 +59,43 @@
     </div>
 
     <div class="blu-card">
+      <div class="blu-card-header blu-card-header-row">
+        <span>Batting order</span>
+        {% if batting_order_rows %}
+        <form method="post" action="{{ url_for('baseball_lineup.game_batting_order_randomize', team_id=team.id, game_id=game.id) }}" class="blu-inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small">Randomize</button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="blu-card-body">
+        {% if batting_order_rows %}
+        <p class="blu-muted">Use the arrows to reorder. Numbers update automatically.</p>
+        <ul class="blu-batting-order-list">
+          {% for row in batting_order_rows %}
+          <li class="blu-batting-order-item">
+            <span class="blu-batting-order-number">{{ row.display_order }}</span>
+            <span class="blu-batting-order-name">{{ row.player.full_name }}</span>
+            <div class="blu-batting-order-actions">
+              <form method="post" action="{{ url_for('baseball_lineup.game_batting_order_move_up', team_id=team.id, game_id=game.id, player_id=row.player.id) }}" class="blu-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small" {% if loop.first %}disabled{% endif %} title="Move up">&#x25B2;</button>
+              </form>
+              <form method="post" action="{{ url_for('baseball_lineup.game_batting_order_move_down', team_id=team.id, game_id=game.id, player_id=row.player.id) }}" class="blu-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small" {% if loop.last %}disabled{% endif %} title="Move down">&#x25BC;</button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="blu-muted">Mark players present above to set batting order.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="blu-card">
       <div class="blu-card-body">
         {{ lineup_grid_readonly(team, game, lineup_rows, lineup_warnings) }}
       </div>

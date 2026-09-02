@@ -34,7 +34,10 @@
       <tbody>
         {% for row in lineup_rows %}
         <tr>
-          <th scope="row" class="blu-lineup-player-col">{{ row.player_name }}</th>
+          <th scope="row" class="blu-lineup-player-col">
+            <span class="blu-batting-order-prefix">{{ row.batting_order }}.</span>
+            {{ row.player_name }}
+          </th>
           {% for code in row.cells %}
           <td class="{% if code and code in row.repeats %}blu-cell-repeat{% endif %}" {% if code and code in row.repeats %}title="{{ code }} — {{ row.repeats[code] }} innings this game"{% endif %}>
             {{ code or '—' }}

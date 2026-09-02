@@ -4,6 +4,8 @@ Lineup grid load/save and inning-level validation.
 See docs/PRD.md §5.4 and §6.
 """
 
+import random
+
 from app import db
 from app.projects.baseball_lineup.lineup_config import (
     ALL_CODES,
@@ -16,20 +18,93 @@ from app.projects.baseball_lineup.lineup_config import (
     repeated_positions,
     summarize_row,
 )
-from app.projects.baseball_lineup.models import BluLineupCell, BluPlayer
+from app.projects.baseball_lineup.models import BluGameRosterEntry, BluLineupCell, BluPlayer
+
+
+def _player_sort_key(player, entry_by_player):
+    entry = entry_by_player.get(player.id)
+    if entry and entry.batting_order is not None:
+        return (entry.batting_order, player.sort_order, player.id)
+    return (999999, player.sort_order, player.id)
 
 
 def present_players_for_game(game, team):
-    """Roster players marked present for this game, in roster order."""
+    """Present players sorted by batting order, then roster order."""
     absent_ids = {
         entry.player_id
         for entry in game.roster_entries.filter_by(is_present=False).all()
     }
-    return [
+    entry_by_player = {entry.player_id: entry for entry in game.roster_entries.all()}
+    players = [
         player
         for player in team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
         if player.id not in absent_ids
     ]
+    return sorted(
+        players,
+        key=lambda player: _player_sort_key(player, entry_by_player),
+    )
+
+
+def batting_order_rows(game, team):
+    """Present players in batting order with consecutive display numbers."""
+    players = present_players_for_game(game, team)
+    return [
+        {"player": player, "display_order": order}
+        for order, player in enumerate(players, start=1)
+    ]
+
+
+def save_batting_order_sequence(game, ordered_player_ids):
+    """Persist batting order as 1..N for the given player sequence."""
+    for order, player_id in enumerate(ordered_player_ids, start=1):
+        entry = BluGameRosterEntry.query.filter_by(
+            game_id=game.id, player_id=player_id
+        ).first()
+        if entry is None:
+            db.session.add(
+                BluGameRosterEntry(
+                    game_id=game.id,
+                    player_id=player_id,
+                    is_present=True,
+                    batting_order=order,
+                )
+            )
+        else:
+            entry.batting_order = order
+
+
+def move_batting_order(game, team, player_id, direction):
+    """Move one present player up or down in the batting order."""
+    players = present_players_for_game(game, team)
+    player_ids = [player.id for player in players]
+    if player_id not in player_ids:
+        return False
+
+    index = player_ids.index(player_id)
+    if direction == "up" and index > 0:
+        player_ids[index], player_ids[index - 1] = (
+            player_ids[index - 1],
+            player_ids[index],
+        )
+    elif direction == "down" and index < len(player_ids) - 1:
+        player_ids[index], player_ids[index + 1] = (
+            player_ids[index + 1],
+            player_ids[index],
+        )
+    else:
+        return False
+
+    save_batting_order_sequence(game, player_ids)
+    return True
+
+
+def randomize_batting_order(game, team):
+    """Shuffle present players and renumber 1..N."""
+    players = present_players_for_game(game, team)
+    player_ids = [player.id for player in players]
+    random.shuffle(player_ids)
+    save_batting_order_sequence(game, player_ids)
 
 
 def load_cells_by_player(game, player_ids):
@@ -52,7 +127,7 @@ def load_cells_by_player(game, player_ids):
 def build_lineup_rows(game, present_players, cells_by_player):
     """Rows for template/JSON: cells list, summary, repeat map per player."""
     rows = []
-    for player in present_players:
+    for order, player in enumerate(present_players, start=1):
         codes_by_inning = cells_by_player.get(player.id, {})
         cells = [
             codes_by_inning.get(inning, "")
@@ -64,6 +139,7 @@ def build_lineup_rows(game, present_players, cells_by_player):
                 "player": player,
                 "player_id": player.id,
                 "player_name": player.full_name,
+                "batting_order": order,
                 "cells": cells,
                 "codes_by_inning": codes_by_inning,
                 "summary": summarize_row(codes_by_inning, game.inning_count),
@@ -140,6 +216,7 @@ def lineup_editor_payload(game, team):
             {
                 "player_id": row["player_id"],
                 "player_name": row["player_name"],
+                "batting_order": row["batting_order"],
                 "cells": {
                     str(inning): row["cells"][inning - 1]
                     for inning in range(1, game.inning_count + 1)

@@ -24,11 +24,14 @@ from app.projects.baseball_lineup.models import (
     BluTeam,
 )
 from app.projects.baseball_lineup.lineup_grid import (
+    batting_order_rows,
     build_lineup_rows,
     compute_inning_warnings,
     lineup_editor_payload,
     load_cells_by_player,
+    move_batting_order,
     present_players_for_game,
+    randomize_batting_order,
     save_lineup_cells,
 )
 from app.utils.logging import log_project_visit
@@ -449,6 +452,7 @@ def game_detail(team_id, game_id):
         game=game,
         roster_status=roster_status,
         present_count=present_count,
+        batting_order_rows=batting_order_rows(game, team),
         **lineup_ctx,
     )
 
@@ -600,4 +604,55 @@ def game_lineup_save(team_id, game_id):
                 "baseball_lineup.game_detail", team_id=team.id, game_id=game.id
             ),
         }
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/batting-order/<int:player_id>/move-up",
+    methods=["POST"],
+)
+@login_required
+def game_batting_order_move_up(team_id, game_id, player_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    _, player = _get_player_or_404(team_id, player_id)
+    move_batting_order(game, team, player.id, "up")
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/batting-order/<int:player_id>/move-down",
+    methods=["POST"],
+)
+@login_required
+def game_batting_order_move_down(team_id, game_id, player_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    _, player = _get_player_or_404(team_id, player_id)
+    move_batting_order(game, team, player.id, "down")
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/batting-order/randomize",
+    methods=["POST"],
+)
+@login_required
+def game_batting_order_randomize(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    randomize_batting_order(game, team)
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+    flash("Batting order randomized.", "success")
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
     )

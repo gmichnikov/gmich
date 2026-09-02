@@ -216,7 +216,11 @@
       var nameCell = document.createElement("th");
       nameCell.scope = "row";
       nameCell.className = "blu-lineup-player-col";
-      nameCell.textContent = row.player_name;
+      var prefix = document.createElement("span");
+      prefix.className = "blu-batting-order-prefix";
+      prefix.textContent = row.batting_order + ". ";
+      nameCell.appendChild(prefix);
+      nameCell.appendChild(document.createTextNode(row.player_name));
       tr.appendChild(nameCell);
 
       for (var inning = 1; inning <= state.inning_count; inning += 1) {

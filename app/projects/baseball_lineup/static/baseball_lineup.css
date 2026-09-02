@@ -582,6 +582,56 @@
   align-self: center;
 }
 
+/* Batting order */
+.blu-batting-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.blu-batting-order-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.blu-batting-order-item:last-child {
+  border-bottom: none;
+}
+
+.blu-batting-order-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.blu-batting-order-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.blu-batting-order-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.blu-batting-order-prefix {
+  color: #666;
+  font-weight: 600;
+  margin-right: 2px;
+}
+
 /* Structure editor */
 .blu-structure-section {
   margin: 24px 0;
