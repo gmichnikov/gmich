@@ -46,6 +46,19 @@
         >
       </div>
 
+      {% if existing_teams %}
+      <div class="blu-form-group">
+        <label for="blu-copy-roster" class="blu-label">Copy roster from <span class="blu-label-optional">(optional)</span></label>
+        <select id="blu-copy-roster" name="copy_roster_from_team_id" class="blu-input blu-select">
+          <option value="">Start with empty roster</option>
+          {% for team in existing_teams %}
+          <option value="{{ team.id }}">{{ team.display_name }} ({{ team.players.count() }} {{ 'player' if team.players.count() == 1 else 'players' }})</option>
+          {% endfor %}
+        </select>
+        <p class="blu-field-hint">Copies player names and order only — not games or lineup settings.</p>
+      </div>
+      {% endif %}
+
       <div class="blu-form-actions">
         <button type="submit" class="blu-btn blu-btn-primary">Create team</button>
         <a href="{{ url_for('baseball_lineup.index') }}" class="blu-btn blu-btn-secondary">Cancel</a>

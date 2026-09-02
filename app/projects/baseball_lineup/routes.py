@@ -171,10 +171,33 @@ def index():
     return render_template("baseball_lineup/index.html", teams=teams)
 
 
+def _copy_roster_from_team(source_team, dest_team):
+    """Copy players from one team to another. Returns the number copied."""
+    players = source_team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
+    for player in players:
+        db.session.add(
+            BluPlayer(
+                team_id=dest_team.id,
+                first_name=player.first_name,
+                last_name=player.last_name,
+                sort_order=player.sort_order,
+            )
+        )
+    return len(players)
+
+
 @baseball_lineup_bp.route("/teams/new")
 @login_required
 def team_new():
-    return render_template("baseball_lineup/team_new.html")
+    existing_teams = (
+        BluTeam.query.filter_by(user_id=current_user.id)
+        .order_by(BluTeam.updated_at.desc())
+        .all()
+    )
+    return render_template(
+        "baseball_lineup/team_new.html",
+        existing_teams=existing_teams,
+    )
 
 
 @baseball_lineup_bp.route("/teams/create", methods=["POST"])
@@ -195,9 +218,34 @@ def team_create():
         default_expected_counts=default_expected_counts(),
     )
     db.session.add(team)
+    db.session.flush()
+
+    copied_count = 0
+    copy_from_raw = (request.form.get("copy_roster_from_team_id") or "").strip()
+    if copy_from_raw:
+        try:
+            copy_from_id = int(copy_from_raw)
+        except ValueError:
+            copy_from_id = None
+        if copy_from_id:
+            source_team = BluTeam.query.filter_by(
+                id=copy_from_id, user_id=current_user.id
+            ).first()
+            if source_team is None:
+                flash("Could not copy roster from that team.", "error")
+                db.session.rollback()
+                return redirect(url_for("baseball_lineup.team_new"))
+            copied_count = _copy_roster_from_team(source_team, team)
+
     db.session.commit()
 
-    flash(f'Team "{team.display_name}" created.', "success")
+    if copied_count:
+        flash(
+            f'Team "{team.display_name}" created with {copied_count} players copied from {source_team.display_name}.',
+            "success",
+        )
+    else:
+        flash(f'Team "{team.display_name}" created.', "success")
     return redirect(url_for("baseball_lineup.team_edit", team_id=team.id))
 
 

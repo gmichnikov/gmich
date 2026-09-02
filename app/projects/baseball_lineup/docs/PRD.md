@@ -76,7 +76,7 @@ See [`DATA_MODEL.md`](DATA_MODEL.md) for schema.
 
 - Add / edit / reorder / remove players (first + last name).
 - Removing a player deletes their lineup cells in **all** games, including past ones — confirm with a count of affected games.
-- Duplicate roster from another team — **backlog**, not v1.
+- **Duplicate roster on team create:** optional dropdown on the new-team form copies names and sort order from another of your teams (not games or lineup settings).
 
 ### 4.3 Lineup structure (team defaults, and per game)
 
@@ -242,7 +242,6 @@ Each phase ends at a manually testable point.
 
 ### Backlog (post-v1)
 
-- Duplicate roster on team create
 - Copy lineup from last game
 - Per-player fairness warnings and thresholds
 - Player constraints

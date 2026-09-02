@@ -263,6 +263,16 @@
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
+.blu-select {
+  max-width: 100%;
+}
+
+.blu-field-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
 .blu-form-actions {
   display: flex;
   gap: 10px;
