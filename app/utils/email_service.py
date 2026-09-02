@@ -30,7 +30,7 @@ def _get_mailgun_config():
     }
 
 
-def send_email(to_email, subject, text_content, html_content=None, from_name="Greg", from_email=None, reply_to=None):
+def send_email(to_email, subject, text_content, html_content=None, from_name="Greg", from_email=None, reply_to=None, timeout=None):
     """
     Send an email using Mailgun API.
     
@@ -42,6 +42,9 @@ def send_email(to_email, subject, text_content, html_content=None, from_name="Gr
         from_name: Display name for the From header (default: "Greg")
         from_email: Sender address (default: SENDER_EMAIL env var)
         reply_to: Optional Reply-To address; if set, replies go here instead of from_email
+        timeout: Optional seconds to wait on Mailgun. Worth setting when the
+            send happens during a web request, where a stalled call would
+            otherwise occupy a worker until the Heroku router gives up.
     
     Returns:
         requests.Response object if successful
@@ -70,7 +73,8 @@ def send_email(to_email, subject, text_content, html_content=None, from_name="Gr
         response = requests.post(
             f"https://api.mailgun.net/v3/{config['domain']}/messages",
             auth=("api", config['api_key']),
-            data=data
+            data=data,
+            timeout=timeout
         )
         response.raise_for_status()
         logger.info(f"Email sent successfully to {to_email}")

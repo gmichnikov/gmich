@@ -37,6 +37,11 @@ def create_app():
     migrate.init_app(app, db)
     csrf.init_app(app)
 
+    # Watch for credit balances hitting zero, from any project or CLI command
+    from app.utils.credit_alerts import init_credit_alerts
+
+    init_credit_alerts(db)
+
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
@@ -337,7 +342,9 @@ def create_app():
     from app.projects.helper.commands import init_app as init_helper_commands
     from app.projects.daily_email.commands import init_app as init_daily_email_commands
     from app.projects.nfl_survivor.commands import init_app as init_nfl_survivor_commands
+    from app.core.commands import init_app as init_credit_commands
 
+    init_credit_commands(app)
     init_better_signups_commands(app)
     init_betfake_commands(app)
     init_sports_admin_commands(app)
