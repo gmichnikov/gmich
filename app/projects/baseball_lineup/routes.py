@@ -24,14 +24,11 @@ from app.projects.baseball_lineup.models import (
     BluTeam,
 )
 from app.projects.baseball_lineup.lineup_grid import (
-    batting_order_rows,
-    build_lineup_rows,
-    compute_inning_warnings,
-    lineup_editor_payload,
-    load_cells_by_player,
+    lineup_state_for_game,
     move_batting_order,
     present_players_for_game,
     randomize_batting_order,
+    roster_status_for_game,
     save_lineup_cells,
 )
 from app.utils.logging import log_project_visit
@@ -124,17 +121,19 @@ def _get_game_or_404(team_id, game_id):
     return team, game
 
 
-def _game_roster_status(game, team):
-    """Return roster players with present/absent status for a game."""
-    players = team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
-    absent_ids = {
-        entry.player_id
-        for entry in game.roster_entries.filter_by(is_present=False).all()
+def _game_page_json(team, game):
+    attendance = roster_status_for_game(game, team)
+    present_count = sum(1 for row in attendance if row["is_present"])
+    return {
+        "present_count": present_count,
+        "roster_total": len(attendance),
+        "attendance": attendance,
+        "lineup": lineup_state_for_game(game, team),
     }
-    return [
-        {"player": player, "is_present": player.id not in absent_ids}
-        for player in players
-    ]
+
+
+def _json_game_response(team, game):
+    return jsonify({"ok": True, "state": _game_page_json(team, game)})
 
 
 def _set_player_present(game, player, present):
@@ -426,34 +425,46 @@ def game_create(team_id):
     )
 
 
-def _lineup_view_context(game, team):
-    present_players = present_players_for_game(game, team)
-    player_ids = [player.id for player in present_players]
-    cells_by_player = load_cells_by_player(game, player_ids)
-    lineup_rows = build_lineup_rows(game, present_players, cells_by_player)
-    warnings = compute_inning_warnings(game, present_players, cells_by_player)
-    return {
-        "present_players": present_players,
-        "lineup_rows": lineup_rows,
-        "lineup_warnings": warnings,
-    }
-
-
 @baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>")
 @login_required
 def game_detail(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
-    roster_status = _game_roster_status(game, team)
-    present_count = sum(1 for row in roster_status if row["is_present"])
-    lineup_ctx = _lineup_view_context(game, team)
+    page_state = _game_page_json(team, game)
     return render_template(
         "baseball_lineup/game_detail.html",
         team=team,
         game=game,
-        roster_status=roster_status,
-        present_count=present_count,
-        batting_order_rows=batting_order_rows(game, team),
-        **lineup_ctx,
+        page_state=page_state,
+        urls={
+            "attendance_toggle": url_for(
+                "baseball_lineup.game_attendance_toggle",
+                team_id=team.id,
+                game_id=game.id,
+                player_id=0,
+            ).replace("/0/toggle", "/{player_id}/toggle"),
+            "batting_move_up": url_for(
+                "baseball_lineup.game_batting_order_move_up",
+                team_id=team.id,
+                game_id=game.id,
+                player_id=0,
+            ).replace("/0/move-up", "/{player_id}/move-up"),
+            "batting_move_down": url_for(
+                "baseball_lineup.game_batting_order_move_down",
+                team_id=team.id,
+                game_id=game.id,
+                player_id=0,
+            ).replace("/0/move-down", "/{player_id}/move-down"),
+            "batting_randomize": url_for(
+                "baseball_lineup.game_batting_order_randomize",
+                team_id=team.id,
+                game_id=game.id,
+            ),
+            "lineup_save": url_for(
+                "baseball_lineup.game_lineup_save",
+                team_id=team.id,
+                game_id=game.id,
+            ),
+        },
     )
 
 
@@ -545,36 +556,15 @@ def game_attendance_toggle(team_id, game_id, player_id):
     team.updated_at = datetime.utcnow()
     db.session.commit()
 
-    status = "present" if not currently_present else "absent"
-    flash(f"Marked {player.full_name} {status}.", "success")
-    return redirect(
-        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
-    )
+    return _json_game_response(team, game)
 
 
 @baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>/lineup")
 @login_required
 def game_lineup_edit(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
-    present_players = present_players_for_game(game, team)
-    if not present_players:
-        flash("Add players and mark attendance before editing the lineup.", "error")
-        return redirect(
-            url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
-        )
-
-    payload = lineup_editor_payload(game, team)
-    return render_template(
-        "baseball_lineup/game_lineup_edit.html",
-        team=team,
-        game=game,
-        lineup_payload=payload,
-        save_url=url_for(
-            "baseball_lineup.game_lineup_save", team_id=team.id, game_id=game.id
-        ),
-        cancel_url=url_for(
-            "baseball_lineup.game_detail", team_id=team.id, game_id=game.id
-        ),
+    return redirect(
+        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
     )
 
 
@@ -597,14 +587,7 @@ def game_lineup_save(team_id, game_id):
     team.updated_at = datetime.utcnow()
     db.session.commit()
 
-    return jsonify(
-        {
-            "ok": True,
-            "redirect": url_for(
-                "baseball_lineup.game_detail", team_id=team.id, game_id=game.id
-            ),
-        }
-    )
+    return _json_game_response(team, game)
 
 
 @baseball_lineup_bp.route(
@@ -619,9 +602,7 @@ def game_batting_order_move_up(team_id, game_id, player_id):
     game.updated_at = datetime.utcnow()
     team.updated_at = datetime.utcnow()
     db.session.commit()
-    return redirect(
-        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
-    )
+    return _json_game_response(team, game)
 
 
 @baseball_lineup_bp.route(
@@ -636,9 +617,7 @@ def game_batting_order_move_down(team_id, game_id, player_id):
     game.updated_at = datetime.utcnow()
     team.updated_at = datetime.utcnow()
     db.session.commit()
-    return redirect(
-        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
-    )
+    return _json_game_response(team, game)
 
 
 @baseball_lineup_bp.route(
@@ -652,7 +631,4 @@ def game_batting_order_randomize(team_id, game_id):
     game.updated_at = datetime.utcnow()
     team.updated_at = datetime.utcnow()
     db.session.commit()
-    flash("Batting order randomized.", "success")
-    return redirect(
-        url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
-    )
+    return _json_game_response(team, game)

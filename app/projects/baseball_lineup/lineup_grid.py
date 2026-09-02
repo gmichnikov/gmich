@@ -194,13 +194,28 @@ def compute_inning_warnings(game, present_players, cells_by_player):
     return warnings
 
 
-def lineup_editor_payload(game, team):
-    """Initial JSON for the client-side lineup editor."""
+def roster_status_for_game(game, team):
+    """All roster players with present/absent status."""
+    absent_ids = {
+        entry.player_id
+        for entry in game.roster_entries.filter_by(is_present=False).all()
+    }
+    return [
+        {
+            "player_id": player.id,
+            "name": player.full_name,
+            "is_present": player.id not in absent_ids,
+        }
+        for player in team.players.order_by(BluPlayer.sort_order, BluPlayer.id).all()
+    ]
+
+
+def lineup_state_for_game(game, team):
+    """Lineup grid data for the client-side game page."""
     present_players = present_players_for_game(game, team)
     player_ids = [player.id for player in present_players]
     cells_by_player = load_cells_by_player(game, player_ids)
     rows = build_lineup_rows(game, present_players, cells_by_player)
-
     return {
         "inning_count": game.inning_count,
         "expected_counts": normalize_expected_counts(
@@ -221,11 +236,18 @@ def lineup_editor_payload(game, team):
                     str(inning): row["cells"][inning - 1]
                     for inning in range(1, game.inning_count + 1)
                 },
+                "summary": row["summary"],
+                "repeats": row["repeats"],
             }
             for row in rows
         ],
         "warnings": compute_inning_warnings(game, present_players, cells_by_player),
     }
+
+
+def lineup_editor_payload(game, team):
+    """Initial JSON for the client-side lineup editor."""
+    return lineup_state_for_game(game, team)
 
 
 def save_lineup_cells(game, present_player_ids, cells_payload):

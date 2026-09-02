@@ -632,6 +632,76 @@
   margin-right: 2px;
 }
 
+/* Collapsible sections */
+.blu-collapse {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.blu-collapse-summary {
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  background: #f7f7f7;
+  border-bottom: 1px solid transparent;
+}
+
+.blu-collapse-summary::-webkit-details-marker {
+  display: none;
+}
+
+.blu-collapse-summary::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.15s;
+}
+
+.blu-collapse[open] .blu-collapse-summary::before {
+  transform: rotate(90deg);
+}
+
+.blu-collapse[open] .blu-collapse-summary {
+  border-bottom-color: #eee;
+}
+
+.blu-collapse-body {
+  padding: 16px;
+}
+
+.blu-lineup-order-col {
+  min-width: 32px;
+  font-weight: 700;
+  color: #3730a3;
+  background: #f9fafb;
+}
+
+.blu-lineup-reorder-col {
+  min-width: 52px;
+  padding: 4px !important;
+}
+
+.blu-lineup-reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.blu-lineup-reorder-buttons .blu-btn {
+  min-height: 22px;
+  padding: 0 6px;
+  line-height: 1;
+}
+
+.blu-lineup-empty {
+  margin: 0;
+}
+
 /* Structure editor */
 .blu-structure-section {
   margin: 24px 0;
