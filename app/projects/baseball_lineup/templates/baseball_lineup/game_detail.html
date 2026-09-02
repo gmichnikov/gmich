@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "baseball_lineup/_structure_editor.html" import structure_editor %}
+{% from "baseball_lineup/_lineup_grid_readonly.html" import lineup_grid_readonly %}
 
 {% block title %}{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}{% endblock %}
 
@@ -58,10 +58,9 @@
       </div>
     </div>
 
-    <div class="blu-card blu-card-muted">
-      <div class="blu-card-header">Lineup</div>
+    <div class="blu-card">
       <div class="blu-card-body">
-        <p class="blu-muted">Lineup editor coming in the next phase. Set attendance and game structure here for now.</p>
+        {{ lineup_grid_readonly(team, game, lineup_rows, lineup_warnings) }}
       </div>
     </div>
 

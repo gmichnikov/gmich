@@ -11,7 +11,7 @@
 }
 
 .blu-container-wide {
-  max-width: 960px;
+  max-width: 1100px;
 }
 
 .blu-breadcrumb {
@@ -420,6 +420,166 @@
 .blu-attendance-badge-absent {
   background: #fee2e2;
   color: #991b1b;
+}
+
+/* Lineup grid */
+.blu-lineup-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.blu-lineup-section-header .blu-section-title {
+  margin: 0;
+}
+
+.blu-lineup-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.blu-lineup-scroll {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.blu-lineup-table {
+  border-collapse: collapse;
+  font-size: 14px;
+  width: 100%;
+  min-width: 640px;
+}
+
+.blu-lineup-table th,
+.blu-lineup-table td {
+  border: 1px solid #e5e7eb;
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.blu-lineup-table thead th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.blu-lineup-player-col {
+  text-align: left !important;
+  padding-left: 10px !important;
+  min-width: 120px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.blu-lineup-inning-col {
+  min-width: 56px;
+}
+
+.blu-lineup-fill-col {
+  padding: 4px !important;
+  background: #fafafa;
+}
+
+.blu-lineup-summary-col {
+  min-width: 44px;
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.blu-lineup-summary-value {
+  color: #374151;
+}
+
+.blu-lineup-select {
+  width: 52px;
+  padding: 4px 2px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  background: #fff;
+}
+
+.blu-lineup-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.blu-cell-repeat,
+.blu-lineup-select.blu-cell-repeat {
+  background: #fef9c3;
+}
+
+.blu-warnings-panel {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.blu-warnings-panel-empty {
+  display: none;
+}
+
+.blu-warnings-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #92400e;
+}
+
+.blu-warnings-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #78350f;
+  font-size: 14px;
+}
+
+.blu-warnings-list li + li {
+  margin-top: 4px;
+}
+
+.blu-lineup-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.blu-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.blu-legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid #d1d5db;
+}
+
+.blu-legend-swatch-repeat {
+  background: #fef9c3;
+}
+
+.blu-btn-tiny {
+  min-height: 26px;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.blu-save-status {
+  font-size: 14px;
+  color: #666;
+  align-self: center;
 }
 
 /* Structure editor */

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import func
 
@@ -22,6 +22,14 @@ from app.projects.baseball_lineup.models import (
     BluLineupCell,
     BluPlayer,
     BluTeam,
+)
+from app.projects.baseball_lineup.lineup_grid import (
+    build_lineup_rows,
+    compute_inning_warnings,
+    lineup_editor_payload,
+    load_cells_by_player,
+    present_players_for_game,
+    save_lineup_cells,
 )
 from app.utils.logging import log_project_visit
 
@@ -415,18 +423,33 @@ def game_create(team_id):
     )
 
 
+def _lineup_view_context(game, team):
+    present_players = present_players_for_game(game, team)
+    player_ids = [player.id for player in present_players]
+    cells_by_player = load_cells_by_player(game, player_ids)
+    lineup_rows = build_lineup_rows(game, present_players, cells_by_player)
+    warnings = compute_inning_warnings(game, present_players, cells_by_player)
+    return {
+        "present_players": present_players,
+        "lineup_rows": lineup_rows,
+        "lineup_warnings": warnings,
+    }
+
+
 @baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>")
 @login_required
 def game_detail(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
     roster_status = _game_roster_status(game, team)
     present_count = sum(1 for row in roster_status if row["is_present"])
+    lineup_ctx = _lineup_view_context(game, team)
     return render_template(
         "baseball_lineup/game_detail.html",
         team=team,
         game=game,
         roster_status=roster_status,
         present_count=present_count,
+        **lineup_ctx,
     )
 
 
@@ -522,4 +545,59 @@ def game_attendance_toggle(team_id, game_id, player_id):
     flash(f"Marked {player.full_name} {status}.", "success")
     return redirect(
         url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+    )
+
+
+@baseball_lineup_bp.route("/teams/<int:team_id>/games/<int:game_id>/lineup")
+@login_required
+def game_lineup_edit(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    present_players = present_players_for_game(game, team)
+    if not present_players:
+        flash("Add players and mark attendance before editing the lineup.", "error")
+        return redirect(
+            url_for("baseball_lineup.game_detail", team_id=team.id, game_id=game.id)
+        )
+
+    payload = lineup_editor_payload(game, team)
+    return render_template(
+        "baseball_lineup/game_lineup_edit.html",
+        team=team,
+        game=game,
+        lineup_payload=payload,
+        save_url=url_for(
+            "baseball_lineup.game_lineup_save", team_id=team.id, game_id=game.id
+        ),
+        cancel_url=url_for(
+            "baseball_lineup.game_detail", team_id=team.id, game_id=game.id
+        ),
+    )
+
+
+@baseball_lineup_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/lineup/save", methods=["POST"]
+)
+@login_required
+def game_lineup_save(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    data = request.get_json(silent=True) or {}
+    cells = data.get("cells")
+    if not isinstance(cells, list):
+        return jsonify({"ok": False, "error": "Invalid lineup data."}), 400
+
+    present_players = present_players_for_game(game, team)
+    present_ids = [player.id for player in present_players]
+
+    save_lineup_cells(game, present_ids, cells)
+    game.updated_at = datetime.utcnow()
+    team.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify(
+        {
+            "ok": True,
+            "redirect": url_for(
+                "baseball_lineup.game_detail", team_id=team.id, game_id=game.id
+            ),
+        }
     )
