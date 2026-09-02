@@ -51,11 +51,6 @@
         </div>
       </div>
       <div class="blu-card-body">
-        <div id="blu-lineup-warnings" class="blu-warnings-panel blu-warnings-panel-empty">
-          <div class="blu-warnings-title">Warnings</div>
-          <ul class="blu-warnings-list" id="blu-warnings-list"></ul>
-        </div>
-
         <div class="blu-lineup-scroll" id="blu-lineup-scroll">
           <table class="blu-lineup-table">
             <thead id="blu-lineup-thead"></thead>
@@ -64,7 +59,16 @@
         </div>
 
         <div class="blu-lineup-legend">
-          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-repeat"></span> Same position in multiple innings</span>
+          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-overassigned"></span> Too many of a position in one inning</span>
+          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-skewed"></span> OF/Bench/IF more than 1 inning off another player</span>
+        </div>
+
+        <div id="blu-lineup-warnings" class="blu-warnings-panel blu-warnings-panel-empty">
+          <div class="blu-warnings-header">
+            <div class="blu-warnings-title" id="blu-warnings-title">Warnings</div>
+            <div class="blu-warnings-filters" id="blu-warnings-filters" hidden></div>
+          </div>
+          <div id="blu-warnings-content"></div>
         </div>
 
         <p class="blu-muted blu-lineup-empty" id="blu-lineup-empty" hidden>

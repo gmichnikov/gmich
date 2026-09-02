@@ -1,13 +1,54 @@
 /* Baseball Lineup — all classes prefixed blu- */
 
+:root {
+  --blu-bg: #eef2ea;
+  --blu-surface: #ffffff;
+  --blu-surface-muted: #f7faf5;
+  --blu-surface-header: #f1f5ee;
+  --blu-border: #d5ddd0;
+  --blu-border-strong: #b8c4b0;
+  --blu-text: #1a2e1a;
+  --blu-text-muted: #4a5c48;
+  --blu-text-subtle: #6b7f68;
+  --blu-accent: #2d6a4f;
+  --blu-accent-hover: #1b4332;
+  --blu-accent-soft: #d8f3dc;
+  --blu-link: #1e5631;
+  --blu-danger: #b91c1c;
+  --blu-danger-hover: #991b1b;
+  --blu-warning-bg: #fffbeb;
+  --blu-warning-border: #fbbf24;
+  --blu-warning-text: #92400e;
+  --blu-over-bg: #fee2e2;
+  --blu-over-text: #991b1b;
+  --blu-over-border: #fca5a5;
+  --blu-skewed-bg: #ffedd5;
+  --blu-skewed-text: #9a3412;
+  --blu-shadow: 0 1px 3px rgba(26, 46, 26, 0.08);
+}
+
+/* Full-bleed page shell — covers the hub purple gradient */
 .blu-page {
-  padding: 24px 16px 48px;
-  min-height: 60vh;
+  background: var(--blu-bg);
+  color: var(--blu-text);
+  min-height: calc(100vh - 140px);
+  margin: -40px -20px 0 -20px;
+  padding: 32px 20px 48px;
+}
+
+.main-content:has(.blu-page) .flash-message {
+  margin-bottom: 16px;
+  border-radius: 8px;
 }
 
 .blu-container {
   max-width: 720px;
   margin: 0 auto;
+  padding: 24px 20px;
+  background: var(--blu-surface);
+  border: 1px solid var(--blu-border);
+  border-radius: 10px;
+  box-shadow: var(--blu-shadow);
 }
 
 .blu-container-wide {
@@ -17,16 +58,18 @@
 .blu-breadcrumb {
   margin: 0 0 12px;
   font-size: 14px;
-  color: #666;
+  color: var(--blu-text-muted);
 }
 
 .blu-breadcrumb a {
-  color: #2563eb;
+  color: var(--blu-link);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .blu-breadcrumb a:hover {
   text-decoration: underline;
+  color: var(--blu-accent-hover);
 }
 
 .blu-page-header {
@@ -45,11 +88,13 @@
   margin: 0 0 4px;
   font-size: 26px;
   font-weight: 700;
+  color: var(--blu-text);
+  letter-spacing: -0.02em;
 }
 
 .blu-page-subtitle {
   margin: 0;
-  color: #555;
+  color: var(--blu-text-muted);
   font-size: 15px;
 }
 
@@ -57,6 +102,7 @@
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
+  color: var(--blu-text);
 }
 
 .blu-header-actions {
@@ -79,40 +125,44 @@
   cursor: pointer;
   border: 1px solid transparent;
   appearance: none;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .blu-btn-primary {
-  background: #2563eb;
+  background: var(--blu-accent);
   color: #fff;
 }
 
 .blu-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--blu-accent-hover);
+  color: #fff;
 }
 
 .blu-btn-secondary {
-  background: #fff;
-  color: #1f2937;
-  border-color: #d1d5db;
+  background: var(--blu-surface);
+  color: var(--blu-text);
+  border-color: var(--blu-border-strong);
 }
 
 .blu-btn-secondary:hover {
-  background: #f3f4f6;
+  background: var(--blu-surface-muted);
+  border-color: var(--blu-border-strong);
+  color: var(--blu-text);
 }
 
 .blu-btn-secondary:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .blu-btn-danger {
-  background: #dc2626;
+  background: var(--blu-danger);
   color: #fff;
 }
 
 .blu-btn-danger:hover {
-  background: #b91c1c;
+  background: var(--blu-danger-hover);
+  color: #fff;
 }
 
 .blu-btn-small {
@@ -123,18 +173,20 @@
 
 /* Cards */
 .blu-card {
-  border: 1px solid #ddd;
+  border: 1px solid var(--blu-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--blu-surface);
   margin-bottom: 16px;
   overflow: hidden;
+  box-shadow: var(--blu-shadow);
 }
 
 .blu-card-header {
   padding: 12px 16px;
   font-weight: 600;
-  background: #f7f7f7;
-  border-bottom: 1px solid #eee;
+  color: var(--blu-text);
+  background: var(--blu-surface-header);
+  border-bottom: 1px solid var(--blu-border);
 }
 
 .blu-card-header-row {
@@ -142,10 +194,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .blu-card-muted .blu-card-body {
-  background: #fafafa;
+  background: var(--blu-surface-muted);
 }
 
 .blu-card-body {
@@ -154,16 +207,17 @@
 
 .blu-muted {
   margin: 0 0 12px;
-  color: #666;
+  color: var(--blu-text-muted);
   font-size: 14px;
 }
 
 .blu-empty {
   padding: 32px 16px;
   text-align: center;
-  color: #666;
-  border: 1px dashed #ccc;
+  color: var(--blu-text-muted);
+  border: 1px dashed var(--blu-border-strong);
   border-radius: 8px;
+  background: var(--blu-surface-muted);
 }
 
 .blu-empty p {
@@ -181,30 +235,37 @@
   margin-bottom: 8px;
 }
 
+.blu-team-item:last-child {
+  margin-bottom: 0;
+}
+
 .blu-team-link {
   display: block;
   padding: 14px 16px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--blu-surface);
+  border: 1px solid var(--blu-border);
   border-radius: 8px;
   text-decoration: none;
-  color: inherit;
-  transition: background 0.15s;
+  color: var(--blu-text);
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .blu-team-link:hover {
-  background: #f9fafb;
+  background: var(--blu-surface-muted);
+  border-color: var(--blu-border-strong);
+  color: var(--blu-text);
 }
 
 .blu-team-name {
   display: block;
   font-weight: 600;
   margin-bottom: 2px;
+  color: var(--blu-text);
 }
 
 .blu-team-meta {
   font-size: 13px;
-  color: #777;
+  color: var(--blu-text-subtle);
 }
 
 /* Forms */
@@ -226,8 +287,9 @@
 .blu-label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
+  color: var(--blu-text);
 }
 
 .blu-form-group-inline .blu-label {
@@ -236,17 +298,20 @@
 
 .blu-label-optional {
   font-weight: 400;
-  color: #888;
+  color: var(--blu-text-subtle);
 }
 
-.blu-input {
+.blu-input,
+.blu-select {
   width: 100%;
   max-width: 400px;
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--blu-border-strong);
   border-radius: 6px;
   font-size: 15px;
   box-sizing: border-box;
+  background: var(--blu-surface);
+  color: var(--blu-text);
 }
 
 .blu-input-narrow {
@@ -257,10 +322,11 @@
   max-width: 220px;
 }
 
-.blu-input:focus {
+.blu-input:focus,
+.blu-select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: var(--blu-accent);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
 }
 
 .blu-select {
@@ -270,7 +336,7 @@
 .blu-field-hint {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #666;
+  color: var(--blu-text-subtle);
 }
 
 .blu-form-actions {
@@ -278,11 +344,12 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 20px;
+  align-items: center;
 }
 
 .blu-form-divider {
   margin: 32px 0 16px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--blu-border);
 }
 
 .blu-inline-form {
@@ -293,7 +360,7 @@
 .blu-roster-add-form {
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--blu-border);
 }
 
 .blu-roster-add-fields {
@@ -320,7 +387,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--blu-border);
 }
 
 .blu-roster-item:last-child {
@@ -329,6 +396,7 @@
 
 .blu-roster-name {
   font-weight: 500;
+  color: var(--blu-text);
 }
 
 .blu-roster-actions {
@@ -360,15 +428,18 @@
 .blu-game-link {
   display: block;
   padding: 12px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--blu-border);
   border-radius: 8px;
   text-decoration: none;
-  color: inherit;
-  transition: background 0.15s;
+  color: var(--blu-text);
+  background: var(--blu-surface);
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .blu-game-link:hover {
-  background: #f9fafb;
+  background: var(--blu-surface-muted);
+  border-color: var(--blu-border-strong);
+  color: var(--blu-text);
 }
 
 .blu-game-label {
@@ -379,7 +450,7 @@
 
 .blu-game-meta {
   font-size: 13px;
-  color: #777;
+  color: var(--blu-text-subtle);
 }
 
 /* Attendance */
@@ -395,15 +466,20 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--blu-border);
 }
 
 .blu-attendance-item:last-child {
   border-bottom: none;
 }
 
+.blu-attendance-name {
+  font-weight: 500;
+  color: var(--blu-text);
+}
+
 .blu-attendance-absent .blu-attendance-name {
-  color: #888;
+  color: var(--blu-text-subtle);
   text-decoration: line-through;
 }
 
@@ -419,12 +495,12 @@
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .blu-attendance-badge-present {
   background: #dcfce7;
-  color: #166534;
+  color: #14532d;
 }
 
 .blu-attendance-badge-absent {
@@ -449,12 +525,15 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  align-items: center;
 }
 
 .blu-lineup-scroll {
   overflow-x: auto;
   margin-bottom: 12px;
+  border: 1px solid var(--blu-border);
+  border-radius: 8px;
+  background: var(--blu-surface);
 }
 
 .blu-lineup-table {
@@ -466,15 +545,17 @@
 
 .blu-lineup-table th,
 .blu-lineup-table td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--blu-border);
   padding: 6px 4px;
   text-align: center;
   vertical-align: middle;
+  color: var(--blu-text);
 }
 
 .blu-lineup-table thead th {
-  background: #f3f4f6;
+  background: var(--blu-surface-header);
   font-weight: 600;
+  color: var(--blu-text);
 }
 
 .blu-lineup-player-col {
@@ -483,6 +564,7 @@
   min-width: 120px;
   white-space: nowrap;
   font-weight: 600;
+  color: var(--blu-text);
 }
 
 .blu-lineup-inning-col {
@@ -491,60 +573,149 @@
 
 .blu-lineup-fill-col {
   padding: 4px !important;
-  background: #fafafa;
+  background: var(--blu-surface-muted);
 }
 
 .blu-lineup-summary-col {
   min-width: 44px;
-  background: #f9fafb;
+  background: var(--blu-surface-muted);
   font-weight: 600;
+  color: var(--blu-text-muted);
 }
 
 .blu-lineup-summary-value {
-  color: #374151;
+  color: var(--blu-text);
+  font-weight: 600;
+}
+
+.blu-lineup-summary-skewed {
+  background: var(--blu-skewed-bg);
+  color: var(--blu-skewed-text);
 }
 
 .blu-lineup-select {
   width: 52px;
   padding: 4px 2px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--blu-border-strong);
   border-radius: 4px;
   font-size: 13px;
   text-align: center;
-  background: #fff;
+  background: var(--blu-surface);
+  color: var(--blu-text);
 }
 
 .blu-lineup-select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--blu-accent);
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.2);
 }
 
-.blu-cell-repeat,
-.blu-lineup-select.blu-cell-repeat {
-  background: #fef9c3;
+.blu-cell-overassigned,
+.blu-lineup-select.blu-cell-overassigned {
+  background: var(--blu-over-bg);
+  color: var(--blu-over-text);
+  border-color: var(--blu-over-border);
 }
 
 .blu-warnings-panel {
-  margin-bottom: 12px;
+  margin-top: 16px;
   padding: 12px 14px;
-  border: 1px solid #fcd34d;
+  border: 1px solid var(--blu-warning-border);
   border-radius: 8px;
-  background: #fffbeb;
+  background: var(--blu-warning-bg);
 }
 
 .blu-warnings-panel-empty {
   display: none;
 }
 
+.blu-warnings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
 .blu-warnings-title {
   font-weight: 600;
-  margin-bottom: 6px;
-  color: #92400e;
+  color: var(--blu-warning-text);
+}
+
+.blu-warnings-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.blu-warnings-filter {
+  min-height: 28px;
+  padding: 2px 10px;
+  border: 1px solid var(--blu-warning-border);
+  border-radius: 999px;
+  background: var(--blu-surface);
+  color: var(--blu-warning-text);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.blu-warnings-filter:hover {
+  background: #fef3c7;
+}
+
+.blu-warnings-filter-active {
+  background: var(--blu-warning-text);
+  border-color: var(--blu-warning-text);
+  color: #fff;
+}
+
+.blu-warnings-filter-active:hover {
+  background: #78350f;
+}
+
+.blu-warnings-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.blu-warnings-group {
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.blu-warnings-group-summary {
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--blu-warning-text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.blu-warnings-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.blu-warnings-group-summary::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.15s;
+}
+
+.blu-warnings-group[open] .blu-warnings-group-summary::before {
+  transform: rotate(90deg);
 }
 
 .blu-warnings-list {
   margin: 0;
-  padding-left: 1.2rem;
+  padding: 0 10px 10px 1.8rem;
   color: #78350f;
   font-size: 14px;
 }
@@ -557,9 +728,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   font-size: 13px;
-  color: #666;
+  color: var(--blu-text-muted);
 }
 
 .blu-legend-item {
@@ -573,11 +744,16 @@
   width: 16px;
   height: 16px;
   border-radius: 3px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--blu-border-strong);
 }
 
-.blu-legend-swatch-repeat {
-  background: #fef9c3;
+.blu-legend-swatch-overassigned {
+  background: var(--blu-over-bg);
+  border-color: var(--blu-over-border);
+}
+
+.blu-legend-swatch-skewed {
+  background: var(--blu-skewed-bg);
 }
 
 .blu-btn-tiny {
@@ -588,29 +764,11 @@
 
 .blu-save-status {
   font-size: 14px;
-  color: #666;
+  color: var(--blu-text-muted);
   align-self: center;
 }
 
-/* Batting order */
-.blu-batting-order-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.blu-batting-order-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.blu-batting-order-item:last-child {
-  border-bottom: none;
-}
-
+/* Batting order (legacy list — kept if reused) */
 .blu-batting-order-number {
   display: inline-flex;
   align-items: center;
@@ -618,81 +776,24 @@
   min-width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+  background: var(--blu-accent-soft);
+  color: var(--blu-accent-hover);
   font-weight: 700;
   font-size: 13px;
   flex-shrink: 0;
 }
 
-.blu-batting-order-name {
-  font-weight: 500;
-  flex: 1;
-}
-
-.blu-batting-order-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.blu-batting-order-prefix {
-  color: #666;
-  font-weight: 600;
-  margin-right: 2px;
-}
-
-/* Collapsible sections */
-.blu-collapse {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.blu-collapse-summary {
-  padding: 12px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none;
-  background: #f7f7f7;
-  border-bottom: 1px solid transparent;
-}
-
-.blu-collapse-summary::-webkit-details-marker {
-  display: none;
-}
-
-.blu-collapse-summary::before {
-  content: "\25B8";
-  display: inline-block;
-  margin-right: 8px;
-  transition: transform 0.15s;
-}
-
-.blu-collapse[open] .blu-collapse-summary::before {
-  transform: rotate(90deg);
-}
-
-.blu-collapse[open] .blu-collapse-summary {
-  border-bottom-color: #eee;
-}
-
-.blu-collapse-body {
-  padding: 16px;
-}
-
 .blu-lineup-order-col {
   min-width: 32px;
   font-weight: 700;
-  color: #3730a3;
-  background: #f9fafb;
+  color: var(--blu-accent-hover);
+  background: var(--blu-accent-soft);
 }
 
 .blu-lineup-reorder-col {
   min-width: 52px;
   padding: 4px !important;
+  background: var(--blu-surface-muted);
 }
 
 .blu-lineup-reorder-buttons {
@@ -712,33 +813,82 @@
   margin: 0;
 }
 
+/* Collapsible sections */
+.blu-collapse {
+  border: 1px solid var(--blu-border);
+  border-radius: 8px;
+  background: var(--blu-surface);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--blu-shadow);
+}
+
+.blu-collapse-summary {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--blu-text);
+  cursor: pointer;
+  list-style: none;
+  background: var(--blu-surface-header);
+  border-bottom: 1px solid transparent;
+  user-select: none;
+}
+
+.blu-collapse-summary::-webkit-details-marker {
+  display: none;
+}
+
+.blu-collapse-summary::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--blu-accent);
+  transition: transform 0.15s;
+}
+
+.blu-collapse[open] .blu-collapse-summary::before {
+  transform: rotate(90deg);
+}
+
+.blu-collapse[open] .blu-collapse-summary {
+  border-bottom-color: var(--blu-border);
+}
+
+.blu-collapse-body {
+  padding: 16px;
+}
+
 /* Structure editor */
 .blu-structure-section {
   margin: 24px 0;
   padding-top: 8px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--blu-border);
 }
 
 .blu-structure-scroll {
   overflow-x: auto;
   margin-top: 12px;
+  border: 1px solid var(--blu-border);
+  border-radius: 8px;
 }
 
 .blu-structure-table {
   border-collapse: collapse;
   font-size: 14px;
   min-width: 100%;
+  background: var(--blu-surface);
 }
 
 .blu-structure-table th,
 .blu-structure-table td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--blu-border);
   padding: 4px;
   text-align: center;
+  color: var(--blu-text);
 }
 
 .blu-structure-table thead th {
-  background: #f3f4f6;
+  background: var(--blu-surface-header);
   font-weight: 600;
   padding: 8px 6px;
 }
@@ -757,34 +907,47 @@
 .blu-structure-input {
   width: 44px;
   padding: 6px 4px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--blu-border-strong);
   border-radius: 4px;
   text-align: center;
   font-size: 14px;
   box-sizing: border-box;
+  background: var(--blu-surface);
+  color: var(--blu-text);
 }
 
 .blu-structure-input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--blu-accent);
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.2);
 }
 
 .blu-structure-battery-row th,
 .blu-structure-battery-row td {
-  border-top: 2px solid #d1d5db;
+  border-top: 2px solid var(--blu-border-strong);
 }
 
 .blu-structure-total-row th,
 .blu-structure-total-row td {
-  background: #f9fafb;
+  background: var(--blu-surface-muted);
   font-weight: 600;
 }
 
 .blu-structure-total {
-  color: #374151;
+  color: var(--blu-text);
 }
 
 @media (max-width: 640px) {
+  .blu-page {
+    margin: -24px -12px 0 -12px;
+    padding: 24px 12px 36px;
+  }
+
+  .blu-container,
+  .blu-container-wide {
+    padding: 16px 14px;
+  }
+
   .blu-roster-item {
     flex-direction: column;
     align-items: flex-start;
@@ -792,5 +955,9 @@
 
   .blu-page-header-row {
     flex-direction: column;
+  }
+
+  .blu-lineup-toolbar {
+    width: 100%;
   }
 }

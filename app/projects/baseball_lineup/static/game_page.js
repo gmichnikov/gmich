@@ -20,7 +20,9 @@
   var tbody = document.getElementById("blu-lineup-tbody");
   var lineupScroll = document.getElementById("blu-lineup-scroll");
   var warningsPanel = document.getElementById("blu-lineup-warnings");
-  var warningsList = document.getElementById("blu-warnings-list");
+  var warningsTitle = document.getElementById("blu-warnings-title");
+  var warningsFilters = document.getElementById("blu-warnings-filters");
+  var warningsContent = document.getElementById("blu-warnings-content");
   var lineupEmpty = document.getElementById("blu-lineup-empty");
   var saveBtn = document.getElementById("blu-save-lineup");
   var saveStatus = document.getElementById("blu-save-status");
@@ -31,6 +33,7 @@
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
   var dirty = false;
+  var warningFilterInning = "all";
 
   var CATEGORY_BY_CODE = {
     C: "infield",
@@ -159,6 +162,72 @@
     return repeats;
   }
 
+  function computeOverassignedCells(rows) {
+    var overassigned = {};
+
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      var actualByCode = {};
+      var playerIdsByCode = {};
+
+      rows.forEach(function (row) {
+        var code = row.cells[String(inning)] || "";
+        if (!code || code === "Bench") {
+          return;
+        }
+        actualByCode[code] = (actualByCode[code] || 0) + 1;
+        if (!playerIdsByCode[code]) {
+          playerIdsByCode[code] = [];
+        }
+        playerIdsByCode[code].push(row.player_id);
+      });
+
+      Object.keys(actualByCode).forEach(function (code) {
+        var expected = expectedCount(code, inning);
+        if (actualByCode[code] > expected) {
+          playerIdsByCode[code].forEach(function (playerId) {
+            overassigned[playerId + "-" + inning] = {
+              code: code,
+              actual: actualByCode[code],
+              expected: expected,
+            };
+          });
+        }
+      });
+    }
+
+    return overassigned;
+  }
+
+  function computeFairnessHighlights(rows) {
+    var categories = ["outfield", "bench", "infield"];
+    var highlights = {};
+
+    if (rows.length < 2) {
+      return highlights;
+    }
+
+    categories.forEach(function (key) {
+      var valuesByPlayer = rows.map(function (row) {
+        var summary = row.summary || summarizeRow(row.cells);
+        return { playerId: row.player_id, value: summary[key] };
+      });
+
+      valuesByPlayer.forEach(function (item) {
+        var skewed = valuesByPlayer.some(function (other) {
+          return other.playerId !== item.playerId && Math.abs(item.value - other.value) > 1;
+        });
+        if (skewed) {
+          if (!highlights[item.playerId]) {
+            highlights[item.playerId] = {};
+          }
+          highlights[item.playerId][key] = true;
+        }
+      });
+    });
+
+    return highlights;
+  }
+
   function computeWarnings() {
     var warnings = [];
     var presentCount = lineup.rows.length;
@@ -181,32 +250,162 @@
         var actual = actualByCode[item.code] || 0;
         if (actual !== expected) {
           if (actual === 0) {
-            warnings.push(
-              "Inning " + inning + ": expected " + expected + " " + item.label + ", found none"
-            );
+            warnings.push({
+              inning: inning,
+              text: "Expected " + expected + " " + item.label + ", found none",
+            });
           } else {
-            warnings.push(
-              "Inning " + inning + ": expected " + expected + " " + item.label + ", found " + actual
-            );
+            warnings.push({
+              inning: inning,
+              text: "Expected " + expected + " " + item.label + ", found " + actual,
+            });
           }
         }
       });
 
       if (unassigned) {
-        warnings.push(
-          "Inning " + inning + ": " + unassigned + (unassigned === 1 ? " player" : " players") + " unassigned"
-        );
+        warnings.push({
+          inning: inning,
+          text: unassigned + (unassigned === 1 ? " player" : " players") + " unassigned",
+        });
       }
 
       var fieldSpots = fieldSpotsForInning(inning);
       if (fieldSpots > presentCount) {
-        warnings.push(
-          "Inning " + inning + ": " + fieldSpots + " field spots but only " + presentCount + " players present"
-        );
+        warnings.push({
+          inning: inning,
+          text: fieldSpots + " field spots but only " + presentCount + " players present",
+        });
       }
     }
 
     return warnings;
+  }
+
+  function warningsByInning(warnings) {
+    var grouped = {};
+    warnings.forEach(function (warning) {
+      if (!grouped[warning.inning]) {
+        grouped[warning.inning] = [];
+      }
+      grouped[warning.inning].push(warning);
+    });
+    return grouped;
+  }
+
+  function renderWarningFilters(warnings) {
+    if (!warningsFilters) {
+      return;
+    }
+
+    var grouped = warningsByInning(warnings);
+    var innings = Object.keys(grouped)
+      .map(function (value) {
+        return parseInt(value, 10);
+      })
+      .sort(function (a, b) {
+        return a - b;
+      });
+
+    warningsFilters.innerHTML = "";
+    warningsFilters.hidden = innings.length <= 1;
+
+    function addFilterButton(label, value) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "blu-warnings-filter";
+      if (warningFilterInning === value) {
+        btn.classList.add("blu-warnings-filter-active");
+      }
+      btn.textContent = label;
+      btn.dataset.inningFilter = value;
+      warningsFilters.appendChild(btn);
+    }
+
+    addFilterButton("All", "all");
+    innings.forEach(function (inning) {
+      addFilterButton("Inning " + inning + " (" + grouped[inning].length + ")", String(inning));
+    });
+  }
+
+  function renderWarningList(items) {
+    var list = document.createElement("ul");
+    list.className = "blu-warnings-list";
+    items.forEach(function (warning) {
+      var li = document.createElement("li");
+      li.textContent = warning.text;
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function renderWarnings() {
+    var warnings = computeWarnings();
+    if (warningFilterInning !== "all") {
+      var hasInning = warnings.some(function (warning) {
+        return String(warning.inning) === warningFilterInning;
+      });
+      if (!hasInning) {
+        warningFilterInning = "all";
+      }
+    }
+    if (warningsTitle) {
+      warningsTitle.textContent =
+        warnings.length === 0 ? "Warnings" : "Warnings (" + warnings.length + ")";
+    }
+
+    if (!warningsContent) {
+      warningsPanel.classList.toggle("blu-warnings-panel-empty", warnings.length === 0);
+      return;
+    }
+
+    warningsContent.innerHTML = "";
+    renderWarningFilters(warnings);
+
+    if (warnings.length === 0) {
+      warningsPanel.classList.toggle("blu-warnings-panel-empty", true);
+      return;
+    }
+
+    warningsPanel.classList.remove("blu-warnings-panel-empty");
+
+    if (warningFilterInning !== "all") {
+      var inning = parseInt(warningFilterInning, 10);
+      var filtered = warnings.filter(function (warning) {
+        return warning.inning === inning;
+      });
+      warningsContent.appendChild(renderWarningList(filtered));
+      return;
+    }
+
+    var grouped = warningsByInning(warnings);
+    var innings = Object.keys(grouped)
+      .map(function (value) {
+        return parseInt(value, 10);
+      })
+      .sort(function (a, b) {
+        return a - b;
+      });
+
+    var groupsWrap = document.createElement("div");
+    groupsWrap.className = "blu-warnings-groups";
+
+    innings.forEach(function (inning) {
+      var details = document.createElement("details");
+      details.className = "blu-warnings-group";
+      if (warnings.length <= 8) {
+        details.open = true;
+      }
+
+      var summary = document.createElement("summary");
+      summary.className = "blu-warnings-group-summary";
+      summary.textContent = "Inning " + inning + " (" + grouped[inning].length + ")";
+      details.appendChild(summary);
+      details.appendChild(renderWarningList(grouped[inning]));
+      groupsWrap.appendChild(details);
+    });
+
+    warningsContent.appendChild(groupsWrap);
   }
 
   function renderAttendance() {
@@ -253,18 +452,7 @@
       " present)";
   }
 
-  function renderWarnings() {
-    var warnings = computeWarnings();
-    warningsList.innerHTML = "";
-    warnings.forEach(function (text) {
-      var li = document.createElement("li");
-      li.textContent = text;
-      warningsList.appendChild(li);
-    });
-    warningsPanel.classList.toggle("blu-warnings-panel-empty", warnings.length === 0);
-  }
-
-  function buildSelect(row, inning, value, repeats) {
+  function buildSelect(row, inning, value, overassigned) {
     var select = document.createElement("select");
     select.className = "blu-lineup-select";
     select.dataset.playerId = String(row.player_id);
@@ -285,9 +473,20 @@
       select.appendChild(option);
     });
 
-    if (value && repeats[value]) {
-      select.classList.add("blu-cell-repeat");
-      select.title = value + " — " + repeats[value] + " innings this game";
+    var overKey = row.player_id + "-" + inning;
+    if (value && overassigned[overKey]) {
+      var detail = overassigned[overKey];
+      select.classList.add("blu-cell-overassigned");
+      select.title =
+        "Inning " +
+        inning +
+        ": " +
+        detail.actual +
+        " " +
+        detail.code +
+        " (expected " +
+        detail.expected +
+        ")";
     }
 
     select.addEventListener("change", function () {
@@ -335,12 +534,12 @@
     var activeCell = getActiveCell();
     var scrollLeft = lineupScroll ? lineupScroll.scrollLeft : 0;
     tbody.innerHTML = "";
+    var fairnessHighlights = computeFairnessHighlights(lineup.rows);
+    var overassignedCells = computeOverassignedCells(lineup.rows);
 
     lineup.rows.forEach(function (row, index) {
       var tr = document.createElement("tr");
-      var repeats = row.repeats || repeatedPositions(row.cells);
       var summary = row.summary || summarizeRow(row.cells);
-      row.repeats = repeats;
       row.summary = summary;
 
       var orderTd = document.createElement("td");
@@ -387,13 +586,21 @@
       for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
         var td = document.createElement("td");
         var value = row.cells[String(inning)] || "";
-        td.appendChild(buildSelect(row, inning, value, repeats));
+        td.appendChild(buildSelect(row, inning, value, overassignedCells));
         tr.appendChild(td);
       }
 
       ["outfield", "bench", "infield", "blank"].forEach(function (key) {
         var sumTd = document.createElement("td");
         sumTd.className = "blu-lineup-summary-col blu-lineup-summary-value";
+        if (
+          key !== "blank" &&
+          fairnessHighlights[row.player_id] &&
+          fairnessHighlights[row.player_id][key]
+        ) {
+          sumTd.classList.add("blu-lineup-summary-skewed");
+          sumTd.title = "More than 1 inning off another player";
+        }
         sumTd.textContent = String(summary[key]);
         tr.appendChild(sumTd);
       });
@@ -596,6 +803,17 @@
 
   if (saveBtn) {
     saveBtn.addEventListener("click", saveLineup);
+  }
+
+  if (warningsPanel) {
+    warningsPanel.addEventListener("click", function (event) {
+      var btn = event.target.closest(".blu-warnings-filter");
+      if (!btn) {
+        return;
+      }
+      warningFilterInning = btn.dataset.inningFilter || "all";
+      renderWarnings();
+    });
   }
 
   if (sessionStorage.getItem(collapseKey) === "closed") {
