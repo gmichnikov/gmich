@@ -534,6 +534,7 @@
   border: 1px solid var(--blu-border);
   border-radius: 8px;
   background: var(--blu-surface);
+  -webkit-overflow-scrolling: touch;
 }
 
 .blu-lineup-table {
@@ -569,11 +570,6 @@
 
 .blu-lineup-inning-col {
   min-width: 56px;
-}
-
-.blu-lineup-fill-col {
-  padding: 4px !important;
-  background: var(--blu-surface-muted);
 }
 
 .blu-lineup-summary-col {
@@ -953,11 +949,109 @@
     align-items: flex-start;
   }
 
+  .blu-attendance-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .blu-page-header-row {
     flex-direction: column;
+  }
+
+  .blu-card-header-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .blu-lineup-toolbar {
     width: 100%;
   }
+
+  .blu-lineup-toolbar .blu-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .blu-lineup-toolbar .blu-save-status {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
+  .blu-lineup-scroll-hint {
+    display: block;
+  }
+
+  .blu-lineup-table {
+    min-width: 560px;
+  }
+
+  .blu-lineup-select {
+    width: 56px;
+    min-height: 36px;
+    font-size: 14px;
+  }
+
+  .blu-lineup-reorder-buttons .blu-btn {
+    min-height: 28px;
+    min-width: 28px;
+    padding: 0 8px;
+  }
+
+  .blu-lineup-order-col {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 28px;
+  }
+
+  thead .blu-lineup-order-col {
+    background: var(--blu-surface-header);
+  }
+
+  tbody .blu-lineup-order-col {
+    background: var(--blu-accent-soft);
+  }
+
+  .blu-lineup-reorder-col {
+    position: sticky;
+    left: 28px;
+    z-index: 3;
+    min-width: 44px;
+    background: var(--blu-surface-muted);
+  }
+
+  .blu-lineup-player-col {
+    position: sticky;
+    left: 72px;
+    z-index: 3;
+    min-width: 96px;
+    max-width: 120px;
+    box-shadow: 2px 0 4px rgba(26, 46, 26, 0.08);
+  }
+
+  thead .blu-lineup-player-col {
+    background: var(--blu-surface-header);
+  }
+
+  tbody .blu-lineup-player-col {
+    background: var(--blu-surface);
+  }
+
+  .blu-lineup-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .blu-warnings-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.blu-lineup-scroll-hint {
+  display: none;
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--blu-text-subtle);
 }

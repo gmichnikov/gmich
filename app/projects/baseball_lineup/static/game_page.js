@@ -502,32 +502,22 @@
   }
 
   function renderLineupHeader() {
-    var row1 = document.createElement("tr");
-    row1.innerHTML =
-      '<th class="blu-lineup-order-col" rowspan="2">#</th>' +
-      '<th class="blu-lineup-reorder-col" rowspan="2"></th>' +
-      '<th class="blu-lineup-player-col" rowspan="2">Player</th>';
+    var row = document.createElement("tr");
+    row.innerHTML =
+      '<th class="blu-lineup-order-col">#</th>' +
+      '<th class="blu-lineup-reorder-col"></th>' +
+      '<th class="blu-lineup-player-col">Player</th>';
     for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
-      row1.innerHTML += '<th class="blu-lineup-inning-col">' + inning + "</th>";
+      row.innerHTML += '<th class="blu-lineup-inning-col">' + inning + "</th>";
     }
-    row1.innerHTML +=
-      '<th class="blu-lineup-summary-col" rowspan="2">OF</th>' +
-      '<th class="blu-lineup-summary-col" rowspan="2">Bench</th>' +
-      '<th class="blu-lineup-summary-col" rowspan="2">IF</th>' +
-      '<th class="blu-lineup-summary-col" rowspan="2">Blank</th>';
-
-    var row2 = document.createElement("tr");
-    for (var fillInning = 1; fillInning <= lineup.inning_count; fillInning += 1) {
-      row2.innerHTML +=
-        '<th class="blu-lineup-fill-col">' +
-        '<button type="button" class="blu-btn blu-btn-secondary blu-btn-tiny blu-fill-inning" data-inning="' +
-        fillInning +
-        '">Bench</button></th>';
-    }
+    row.innerHTML +=
+      '<th class="blu-lineup-summary-col">OF</th>' +
+      '<th class="blu-lineup-summary-col">Bench</th>' +
+      '<th class="blu-lineup-summary-col">IF</th>' +
+      '<th class="blu-lineup-summary-col">Blank</th>';
 
     thead.innerHTML = "";
-    thead.appendChild(row1);
-    thead.appendChild(row2);
+    thead.appendChild(row);
   }
 
   function renderLineupBody() {
@@ -769,13 +759,6 @@
       postAction(urlFor(urls.batting_move_down, downBtn.dataset.playerId), true).catch(function (err) {
         saveStatus.textContent = err.message || "Update failed.";
       });
-    }
-  });
-
-  thead.addEventListener("click", function (event) {
-    var btn = event.target.closest(".blu-fill-inning");
-    if (btn) {
-      fillBlanksWithBench(parseInt(btn.dataset.inning, 10));
     }
   });
 
