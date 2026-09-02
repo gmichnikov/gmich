@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "baseball_lineup/_structure_editor.html" import structure_editor %}
+
+{% block title %}Settings - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container blu-container-wide">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; Settings
+    </p>
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">Team settings</h1>
+    </header>
+
+    <form method="post" action="{{ url_for('baseball_lineup.team_update', team_id=team.id) }}" class="blu-form" id="blu-team-settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="blu-form-group">
+        <label for="blu-team-name" class="blu-label">Team name</label>
+        <input
+          type="text"
+          id="blu-team-name"
+          name="name"
+          class="blu-input"
+          value="{{ team.name }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="blu-form-group">
+        <label for="blu-season-label" class="blu-label">Season <span class="blu-label-optional">(optional)</span></label>
+        <input
+          type="text"
+          id="blu-season-label"
+          name="season_label"
+          class="blu-input"
+          value="{{ team.season_label or '' }}"
+        >
+      </div>
+
+      {{ structure_editor(
+        structure_inning_count,
+        structure_counts,
+        structure_field_spots,
+        structure_codes,
+        structure_labels,
+        structure_battery_codes
+      ) }}
+
+      <div class="blu-form-actions">
+        <button type="submit" class="blu-btn blu-btn-primary">Save settings</button>
+        <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}" class="blu-btn blu-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <div class="blu-form-divider"></div>
+
+    <form
+      method="post"
+      action="{{ url_for('baseball_lineup.team_delete', team_id=team.id) }}"
+      onsubmit="return confirm('Delete {{ team.display_name }}? This removes {{ team.players.count() }} players and {{ team.games.count() }} games permanently.');"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="blu-btn blu-btn-danger">Delete team</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('baseball_lineup.static', filename='baseball_lineup.js') }}"></script>
+{% endblock %}

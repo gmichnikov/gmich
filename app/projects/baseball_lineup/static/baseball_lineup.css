@@ -10,8 +10,35 @@
   margin: 0 auto;
 }
 
+.blu-container-wide {
+  max-width: 960px;
+}
+
+.blu-breadcrumb {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.blu-breadcrumb a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.blu-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
 .blu-page-header {
   margin-bottom: 24px;
+}
+
+.blu-page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .blu-page-title {
@@ -26,6 +53,75 @@
   font-size: 15px;
 }
 
+.blu-section-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.blu-header-actions {
+  margin-bottom: 16px;
+}
+
+/* Buttons */
+.blu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  min-height: 40px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  appearance: none;
+  transition: background 0.15s;
+}
+
+.blu-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.blu-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.blu-btn-secondary {
+  background: #fff;
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+
+.blu-btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+.blu-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.blu-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.blu-btn-danger:hover {
+  background: #b91c1c;
+}
+
+.blu-btn-small {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Cards */
 .blu-card {
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -48,26 +144,22 @@
 .blu-muted {
   margin: 0 0 12px;
   color: #666;
-}
-
-.blu-checklist {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: #444;
-}
-
-.blu-checklist li + li {
-  margin-top: 6px;
+  font-size: 14px;
 }
 
 .blu-empty {
-  padding: 24px 16px;
+  padding: 32px 16px;
   text-align: center;
   color: #666;
   border: 1px dashed #ccc;
   border-radius: 8px;
 }
 
+.blu-empty p {
+  margin: 0 0 16px;
+}
+
+/* Team list */
 .blu-team-list {
   list-style: none;
   margin: 0;
@@ -75,22 +167,235 @@
 }
 
 .blu-team-item {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 8px;
 }
 
-.blu-team-item:last-child {
-  border-bottom: none;
+.blu-team-link {
+  display: block;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.blu-team-link:hover {
+  background: #f9fafb;
 }
 
 .blu-team-name {
+  display: block;
   font-weight: 600;
+  margin-bottom: 2px;
 }
 
 .blu-team-meta {
   font-size: 13px;
   color: #777;
+}
+
+/* Forms */
+.blu-form {
+  margin-top: 8px;
+}
+
+.blu-form-group {
+  margin-bottom: 16px;
+}
+
+.blu-form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.blu-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.blu-form-group-inline .blu-label {
+  margin-bottom: 0;
+}
+
+.blu-label-optional {
+  font-weight: 400;
+  color: #888;
+}
+
+.blu-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.blu-input-narrow {
+  max-width: 80px;
+}
+
+.blu-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.blu-form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.blu-form-divider {
+  margin: 32px 0 16px;
+  border-top: 1px solid #eee;
+}
+
+.blu-inline-form {
+  display: inline;
+}
+
+/* Roster */
+.blu-roster-add-form {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.blu-roster-add-fields {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.blu-roster-add-fields .blu-input {
+  max-width: 180px;
+  flex: 1 1 140px;
+}
+
+.blu-roster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.blu-roster-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.blu-roster-item:last-child {
+  border-bottom: none;
+}
+
+.blu-roster-name {
+  font-weight: 500;
+}
+
+.blu-roster-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.blu-roster-empty {
+  margin: 0;
+}
+
+/* Structure editor */
+.blu-structure-section {
+  margin: 24px 0;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.blu-structure-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.blu-structure-table {
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 100%;
+}
+
+.blu-structure-table th,
+.blu-structure-table td {
+  border: 1px solid #e5e7eb;
+  padding: 4px;
+  text-align: center;
+}
+
+.blu-structure-table thead th {
+  background: #f3f4f6;
+  font-weight: 600;
+  padding: 8px 6px;
+}
+
+.blu-structure-pos-col {
+  text-align: left;
+  padding-left: 10px !important;
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+.blu-structure-inning-col {
+  min-width: 52px;
+}
+
+.blu-structure-input {
+  width: 44px;
+  padding: 6px 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.blu-structure-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.blu-structure-battery-row th,
+.blu-structure-battery-row td {
+  border-top: 2px solid #d1d5db;
+}
+
+.blu-structure-total-row th,
+.blu-structure-total-row td {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.blu-structure-total {
+  color: #374151;
+}
+
+@media (max-width: 640px) {
+  .blu-roster-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .blu-page-header-row {
+    flex-direction: column;
+  }
 }

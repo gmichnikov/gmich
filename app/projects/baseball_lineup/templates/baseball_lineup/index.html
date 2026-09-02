@@ -12,44 +12,31 @@
 
     <header class="blu-page-header">
       <h1 class="blu-page-title">&#x26BE; Baseball Lineup</h1>
-      <p class="blu-page-subtitle">
-        Manage youth baseball rosters, game attendance, and inning-by-inning lineups.
-      </p>
+      <p class="blu-page-subtitle">Manage youth baseball rosters and lineup defaults.</p>
     </header>
 
-    <div class="blu-card">
-      <div class="blu-card-header">Project status</div>
-      <div class="blu-card-body">
-        <p class="blu-muted">
-          PRD and schema are reviewed. Phase 1 (teams and roster) is next after migration.
-        </p>
-        <ul class="blu-checklist">
-          <li>Spreadsheet lineup grid with Bench, P, PH, and field positions</li>
-          <li>Configurable expected count for every position in every inning, set per game</li>
-          <li>Inning-level warnings, plus per-player outfield / infield / bench totals</li>
-        </ul>
-      </div>
+    {% if teams %}
+    <div class="blu-header-actions">
+      <a href="{{ url_for('baseball_lineup.team_new') }}" class="blu-btn blu-btn-primary">New team</a>
     </div>
 
-    {% if teams %}
-    <div class="blu-card">
-      <div class="blu-card-header">Your teams</div>
-      <div class="blu-card-body">
-        <ul class="blu-team-list">
-          {% for team in teams %}
-          <li class="blu-team-item">
-            <span class="blu-team-name">{{ team.name }}</span>
-            {% if team.season_label %}
-            <span class="blu-team-meta">{{ team.season_label }}</span>
-            {% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
+    <ul class="blu-team-list">
+      {% for team in teams %}
+      <li class="blu-team-item">
+        <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}" class="blu-team-link">
+          <span class="blu-team-name">{{ team.display_name }}</span>
+          <span class="blu-team-meta">
+            {{ team.players.count() }} {{ 'player' if team.players.count() == 1 else 'players' }}
+            &middot; {{ team.default_inning_count }} innings
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
     {% else %}
     <div class="blu-empty">
-      <p>No teams yet. Once CRUD is implemented, you&rsquo;ll create a team here.</p>
+      <p>No teams yet. Create one to add a roster and set your default lineup structure.</p>
+      <a href="{{ url_for('baseball_lineup.team_new') }}" class="blu-btn blu-btn-primary">New team</a>
     </div>
     {% endif %}
 

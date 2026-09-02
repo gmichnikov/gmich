@@ -1,0 +1,65 @@
+{% macro structure_editor(inning_count, counts, field_spots, codes, labels, battery_codes) %}
+<section class="blu-structure-section" id="blu-structure-editor">
+  <h2 class="blu-section-title">Default lineup structure</h2>
+  <p class="blu-muted">
+    Expected count for each position in each inning. Field spots per inning is the column total below.
+  </p>
+
+  <div class="blu-form-group blu-form-group-inline">
+    <label for="blu-inning-count" class="blu-label">Innings</label>
+    <input
+      type="number"
+      id="blu-inning-count"
+      name="inning_count"
+      class="blu-input blu-input-narrow"
+      min="1"
+      max="12"
+      value="{{ inning_count }}"
+      required
+    >
+    <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-apply-inning-1">
+      Apply inning 1 to all
+    </button>
+  </div>
+
+  <div class="blu-structure-scroll">
+    <table class="blu-structure-table">
+      <thead>
+        <tr>
+          <th class="blu-structure-pos-col">Position</th>
+          {% for inning in range(1, inning_count + 1) %}
+          <th class="blu-structure-inning-col">{{ inning }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for code in codes %}
+        <tr class="{% if code in battery_codes %}blu-structure-battery-row{% endif %}">
+          <th scope="row" class="blu-structure-pos-col">{{ labels[code] }}</th>
+          {% for inning in range(1, inning_count + 1) %}
+          <td>
+            <input
+              type="number"
+              class="blu-structure-input"
+              name="count_{{ code }}_{{ inning }}"
+              data-code="{{ code }}"
+              data-inning="{{ inning }}"
+              min="0"
+              max="20"
+              value="{{ counts[code][inning - 1] }}"
+            >
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+        <tr class="blu-structure-total-row">
+          <th scope="row" class="blu-structure-pos-col">Field spots</th>
+          {% for total in field_spots %}
+          <td class="blu-structure-total" data-inning="{{ loop.index }}">{{ total }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endmacro %}

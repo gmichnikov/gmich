@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}New team - Baseball Lineup{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+    </p>
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">New team</h1>
+      <p class="blu-page-subtitle">Defaults (6 innings, 2 CF, P in 3/4) are applied automatically.</p>
+    </header>
+
+    <form method="post" action="{{ url_for('baseball_lineup.team_create') }}" class="blu-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="blu-form-group">
+        <label for="blu-team-name" class="blu-label">Team name</label>
+        <input
+          type="text"
+          id="blu-team-name"
+          name="name"
+          class="blu-input"
+          placeholder="e.g. 10U Tigers"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="blu-form-group">
+        <label for="blu-season-label" class="blu-label">Season <span class="blu-label-optional">(optional)</span></label>
+        <input
+          type="text"
+          id="blu-season-label"
+          name="season_label"
+          class="blu-input"
+          placeholder="e.g. Spring 2026"
+        >
+      </div>
+
+      <div class="blu-form-actions">
+        <button type="submit" class="blu-btn blu-btn-primary">Create team</button>
+        <a href="{{ url_for('baseball_lineup.index') }}" class="blu-btn blu-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

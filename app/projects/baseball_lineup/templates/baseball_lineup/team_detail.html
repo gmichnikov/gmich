@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "baseball_lineup/_structure_editor.html" import structure_editor %}
+
+{% block title %}{{ team.display_name }} - Baseball Lineup{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container blu-container-wide">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo; {{ team.display_name }}
+    </p>
+
+    <header class="blu-page-header blu-page-header-row">
+      <div>
+        <h1 class="blu-page-title">{{ team.display_name }}</h1>
+        <p class="blu-page-subtitle">
+          {{ team.default_inning_count }} innings &middot; default structure for new games
+        </p>
+      </div>
+      <a href="{{ url_for('baseball_lineup.team_edit', team_id=team.id) }}" class="blu-btn blu-btn-secondary">Team settings</a>
+    </header>
+
+    <div class="blu-card">
+      <div class="blu-card-header">Roster</div>
+      <div class="blu-card-body">
+
+        <form method="post" action="{{ url_for('baseball_lineup.player_create', team_id=team.id) }}" class="blu-roster-add-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="blu-roster-add-fields">
+            <input type="text" name="first_name" class="blu-input" placeholder="First name" required>
+            <input type="text" name="last_name" class="blu-input" placeholder="Last name" required>
+            <button type="submit" class="blu-btn blu-btn-primary">Add player</button>
+          </div>
+        </form>
+
+        {% if players %}
+        <ul class="blu-roster-list">
+          {% for player in players %}
+          <li class="blu-roster-item">
+            <span class="blu-roster-name">{{ player.full_name }}</span>
+            <div class="blu-roster-actions">
+              <form method="post" action="{{ url_for('baseball_lineup.player_move_up', team_id=team.id, player_id=player.id) }}" class="blu-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small" {% if loop.first %}disabled{% endif %} title="Move up">&#x25B2;</button>
+              </form>
+              <form method="post" action="{{ url_for('baseball_lineup.player_move_down', team_id=team.id, player_id=player.id) }}" class="blu-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="blu-btn blu-btn-secondary blu-btn-small" {% if loop.last %}disabled{% endif %} title="Move down">&#x25BC;</button>
+              </form>
+              <a href="{{ url_for('baseball_lineup.player_edit', team_id=team.id, player_id=player.id) }}" class="blu-btn blu-btn-secondary blu-btn-small">Edit</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="blu-muted blu-roster-empty">No players yet. Add your roster above.</p>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

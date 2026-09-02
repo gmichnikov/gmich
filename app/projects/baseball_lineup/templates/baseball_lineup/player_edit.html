@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ player.full_name }} - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('baseball_lineup.static', filename='baseball_lineup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="blu-page">
+  <div class="blu-container">
+
+    <p class="blu-breadcrumb">
+      <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
+      &rsaquo;
+      <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; Edit player
+    </p>
+
+    <header class="blu-page-header">
+      <h1 class="blu-page-title">Edit player</h1>
+    </header>
+
+    <form method="post" action="{{ url_for('baseball_lineup.player_update', team_id=team.id, player_id=player.id) }}" class="blu-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="blu-form-group">
+        <label for="blu-first-name" class="blu-label">First name</label>
+        <input
+          type="text"
+          id="blu-first-name"
+          name="first_name"
+          class="blu-input"
+          value="{{ player.first_name }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="blu-form-group">
+        <label for="blu-last-name" class="blu-label">Last name</label>
+        <input
+          type="text"
+          id="blu-last-name"
+          name="last_name"
+          class="blu-input"
+          value="{{ player.last_name }}"
+          required
+        >
+      </div>
+
+      <div class="blu-form-actions">
+        <button type="submit" class="blu-btn blu-btn-primary">Save</button>
+        <a href="{{ url_for('baseball_lineup.team_detail', team_id=team.id) }}" class="blu-btn blu-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <div class="blu-form-divider"></div>
+
+    <form
+      method="post"
+      action="{{ url_for('baseball_lineup.player_delete', team_id=team.id, player_id=player.id) }}"
+      onsubmit="return confirm('Remove {{ player.full_name }} from the roster?{% if game_count %} This also deletes their lineup data in {{ game_count }} {{ 'game' if game_count == 1 else 'games' }}.{% endif %}');"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="blu-btn blu-btn-danger">Remove from roster</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

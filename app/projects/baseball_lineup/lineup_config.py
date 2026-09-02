@@ -45,6 +45,20 @@ CODES_BY_CATEGORY = {
 # Grouping for the structure editor only; these codes count as infield above.
 BATTERY_CODES = ("P", "PH")
 
+# Row order in the structure editor (Bench omitted — it is never expected).
+EDITOR_FIELD_CODES = [
+    "C",
+    "1B",
+    "2B",
+    "3B",
+    "SS",
+    "LF",
+    "CF",
+    "RF",
+    "P",
+    "PH",
+]
+
 DEFAULT_INNING_COUNT = 6
 
 # Shipped default template: 5 infield + 4 outfield (2 CF) + 1 battery = 10 spots.
@@ -101,6 +115,49 @@ def expected_count(expected_counts, code, inning):
 def field_spots_for_inning(expected_counts, inning):
     """Derived total on-field spots for an inning: the sum of that inning's column."""
     return sum(expected_count(expected_counts, code, inning) for code in FIELD_CODES)
+
+
+def field_spots_by_inning(expected_counts, inning_count):
+    """Field-spot totals for innings 1..inning_count."""
+    return [
+        field_spots_for_inning(expected_counts, inning)
+        for inning in range(1, inning_count + 1)
+    ]
+
+
+def parse_inning_count(raw, default=DEFAULT_INNING_COUNT):
+    """Parse and clamp inning count from form input."""
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return default
+    return max(1, min(12, value))
+
+
+def parse_expected_counts_from_form(form, inning_count, codes=None):
+    """Read ``count_{code}_{inning}`` fields into the stored JSON shape."""
+    codes = codes or EDITOR_FIELD_CODES
+    counts = {}
+    for code in codes:
+        row = []
+        for inning in range(1, inning_count + 1):
+            key = f"count_{code}_{inning}"
+            try:
+                value = max(0, int(form.get(key, 0) or 0))
+            except (TypeError, ValueError):
+                value = 0
+            row.append(value)
+        counts[code] = row
+    return counts
+
+
+def normalize_expected_counts(expected_counts, inning_count):
+    """Ensure every editor code has a row of the right length."""
+    normalized = resize_expected_counts(expected_counts or {}, inning_count)
+    for code in EDITOR_FIELD_CODES:
+        if code not in normalized:
+            normalized[code] = [0] * inning_count
+    return normalized
 
 
 def summarize_row(codes_by_inning, inning_count):
