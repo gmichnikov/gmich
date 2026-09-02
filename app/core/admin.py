@@ -1,7 +1,11 @@
+import re
+from collections import defaultdict
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
+from sqlalchemy import func
 from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
 from functools import wraps
@@ -148,26 +152,296 @@ def add_credits():
     return render_template("admin/add_credits.html", form=form)
 
 
+# Matches the description written by add_credits() above.
+ADD_CREDITS_PATTERN = re.compile(r"added (\d+) credits to (\S+)")
+
+# Mirrors User.credits' column default; every account starts here.
+DEFAULT_STARTING_CREDITS = 10
+
+RECENT_ACTIVITY_DAYS = 30
+
+CREDIT_PROJECT_LABELS = {
+    "adk_agent_demo": "ADK Agent Demo",
+    "ask_many_llms": "Ask Many LLMs",
+    "chatbot": "Greg-Bot",
+    "daily_email": "Daily Email",
+    "reminders": "Reminders",
+    "sports_schedules": "Sports NL Query",
+    "sports_schedules_digest": "Sports Digest",
+}
+
+
+def _new_credit_row():
+    return {
+        "added": 0,
+        "by_project": defaultdict(int),
+        "recent_by_project": defaultdict(int),
+        "last_activity": None,
+        "recent_events": 0,
+        "total_events": 0,
+        "no_credit_skips": 0,
+        "failed_sends": 0,
+    }
+
+
+def get_credit_usage_by_user():
+    """Per-user credit activity, derived rather than read from a ledger.
+
+    Credits only ever increase through add_credits(), which writes an "Add
+    Credits" LogEntry, and every account starts at DEFAULT_STARTING_CREDITS.
+    That makes lifetime consumption recoverable from the current balance even
+    though nothing records individual debits.
+
+    The per-project breakdown is best effort and will undercount: reminder test
+    sends and sports digest sends deduct a credit without leaving a per-event
+    row, and Daily Email clamps balances at zero. Trust "consumed" over the sum
+    of the project counts.
+    """
+    from app.projects.daily_email.models import DailyEmailSendLog
+    from app.projects.reminders.models import Reminder
+    from app.projects.sports_schedules.models import SportsScheduleScheduledDigest
+
+    summary = defaultdict(_new_credit_row)
+    cutoff = datetime.utcnow() - timedelta(days=RECENT_ACTIVITY_DAYS)
+
+    def record(user_id, project, count, last_at, recent_count=0):
+        if user_id is None:
+            return
+        row = summary[user_id]
+        row["by_project"][project] += count
+        row["total_events"] += count
+        if recent_count:
+            row["recent_by_project"][project] += recent_count
+            row["recent_events"] += recent_count
+        if last_at and (
+            row["last_activity"] is None or last_at > row["last_activity"]
+        ):
+            row["last_activity"] = last_at
+
+    # --- Credits granted by an admin, parsed back out of the log ---
+    user_ids_by_email = {
+        email.lower(): user_id
+        for user_id, email in db.session.query(User.id, User.email)
+        if email
+    }
+    for (description,) in db.session.query(LogEntry.description).filter(
+        LogEntry.category == "Add Credits"
+    ):
+        match = ADD_CREDITS_PATTERN.search(description or "")
+        if not match:
+            continue
+        user_id = user_ids_by_email.get(match.group(2).strip().lower())
+        if user_id is not None:
+            summary[user_id]["added"] += int(match.group(1))
+
+    # --- Projects that log an explicit "Credit Usage" entry per deduction ---
+    recent_logged = {
+        (actor_id, project): count
+        for actor_id, project, count in db.session.query(
+            LogEntry.actor_id, LogEntry.project, func.count(LogEntry.id)
+        )
+        .filter(LogEntry.category == "Credit Usage", LogEntry.timestamp >= cutoff)
+        .group_by(LogEntry.actor_id, LogEntry.project)
+    }
+    for actor_id, project, count, last_at in (
+        db.session.query(
+            LogEntry.actor_id,
+            LogEntry.project,
+            func.count(LogEntry.id),
+            func.max(LogEntry.timestamp),
+        )
+        .filter(LogEntry.category == "Credit Usage")
+        .group_by(LogEntry.actor_id, LogEntry.project)
+    ):
+        record(
+            actor_id,
+            project,
+            count,
+            last_at,
+            recent_logged.get((actor_id, project), 0),
+        )
+
+    # --- Sports natural-language queries mark the credit inside the description ---
+    nl_filters = (
+        LogEntry.category == "NL Query",
+        LogEntry.description.like("%1 credit used.%"),
+    )
+    recent_nl = dict(
+        db.session.query(LogEntry.actor_id, func.count(LogEntry.id))
+        .filter(*nl_filters, LogEntry.timestamp >= cutoff)
+        .group_by(LogEntry.actor_id)
+    )
+    for actor_id, count, last_at in (
+        db.session.query(
+            LogEntry.actor_id, func.count(LogEntry.id), func.max(LogEntry.timestamp)
+        )
+        .filter(*nl_filters)
+        .group_by(LogEntry.actor_id)
+    ):
+        record(
+            actor_id, "sports_schedules", count, last_at, recent_nl.get(actor_id, 0)
+        )
+
+    # --- Daily Email keeps its own send log, including no-credit skips ---
+    recent_email = dict(
+        db.session.query(DailyEmailSendLog.user_id, func.count(DailyEmailSendLog.id))
+        .filter(
+            DailyEmailSendLog.status == "sent",
+            DailyEmailSendLog.sent_at >= cutoff,
+        )
+        .group_by(DailyEmailSendLog.user_id)
+    )
+    for user_id, status, count, last_at in (
+        db.session.query(
+            DailyEmailSendLog.user_id,
+            DailyEmailSendLog.status,
+            func.count(DailyEmailSendLog.id),
+            func.max(DailyEmailSendLog.sent_at),
+        ).group_by(DailyEmailSendLog.user_id, DailyEmailSendLog.status)
+    ):
+        if user_id is None:
+            continue
+        if status == "sent":
+            record(
+                user_id,
+                "daily_email",
+                count,
+                last_at,
+                recent_email.get(user_id, 0),
+            )
+        elif status == "no_credits":
+            summary[user_id]["no_credit_skips"] += count
+        elif status == "failed":
+            summary[user_id]["failed_sends"] += count
+
+    # --- Reminders: one credit per row that actually went out ---
+    recent_reminders = dict(
+        db.session.query(Reminder.user_id, func.count(Reminder.id))
+        .filter(Reminder.sent_at.isnot(None), Reminder.sent_at >= cutoff)
+        .group_by(Reminder.user_id)
+    )
+    for user_id, count, last_at in (
+        db.session.query(
+            Reminder.user_id, func.count(Reminder.id), func.max(Reminder.sent_at)
+        )
+        .filter(Reminder.sent_at.isnot(None))
+        .group_by(Reminder.user_id)
+    ):
+        record(
+            user_id, "reminders", count, last_at, recent_reminders.get(user_id, 0)
+        )
+
+    # --- Sports digests only retain the most recent send, so count it as one ---
+    for user_id, last_at in db.session.query(
+        SportsScheduleScheduledDigest.user_id,
+        SportsScheduleScheduledDigest.last_sent_at,
+    ).filter(SportsScheduleScheduledDigest.last_sent_at.isnot(None)):
+        record(
+            user_id,
+            "sports_schedules_digest",
+            1,
+            last_at,
+            1 if last_at >= cutoff else 0,
+        )
+
+    return summary
+
+
+def decorate_users_with_credits(users, user_tz):
+    """Attach derived credit fields to each user for template rendering."""
+    usage = get_credit_usage_by_user()
+
+    for user in users:
+        row = usage.get(user.id) or _new_credit_row()
+        balance = user.credits or 0
+        granted = DEFAULT_STARTING_CREDITS + row["added"]
+
+        user.credit_added = row["added"]
+        user.credit_granted = granted
+        user.credit_consumed = max(0, granted - balance)
+        user.credit_recent_events = row["recent_events"]
+        user.credit_total_events = row["total_events"]
+        user.credit_no_credit_skips = row["no_credit_skips"]
+        user.credit_failed_sends = row["failed_sends"]
+        user.credit_breakdown = sorted(
+            (
+                (CREDIT_PROJECT_LABELS.get(project, project), count,
+                 row["recent_by_project"].get(project, 0))
+                for project, count in row["by_project"].items()
+                if count
+            ),
+            key=lambda item: -item[1],
+        )
+
+        last_at = row["last_activity"]
+        user.credit_last_activity = last_at
+        if last_at:
+            localized = last_at.replace(tzinfo=pytz.utc).astimezone(user_tz)
+            user.credit_last_activity_display = (
+                localized.strftime("%Y-%m-%d, %I:%M %p ") + localized.tzname()
+            )
+            user.credit_days_since_activity = (datetime.utcnow() - last_at).days
+        else:
+            user.credit_last_activity_display = None
+            user.credit_days_since_activity = None
+
+
 @admin_bp.route("/users")
 @login_required
 @admin_required
 def manage_users():
-    """Admin view of all users with verification status."""
-    # Get filter parameter
-    filter_status = request.args.get("filter", "all")  # 'all', 'verified', 'unverified'
+    """Admin view of all users with verification status and credit usage."""
+    filter_status = request.args.get("filter", "all")
+    sort_key = request.args.get("sort", "email")
 
-    # Query users
     query = User.query
 
     if filter_status == "verified":
         query = query.filter_by(email_verified=True)
     elif filter_status == "unverified":
         query = query.filter_by(email_verified=False)
+    elif filter_status == "out_of_credits":
+        query = query.filter(User.credits <= 0)
+    elif filter_status == "low_credits":
+        query = query.filter(User.credits > 0, User.credits <= 5)
 
     users = query.order_by(User.email).all()
 
+    user_tz = pytz.timezone(current_user.time_zone)
+    decorate_users_with_credits(users, user_tz)
+
+    if sort_key == "credits":
+        users.sort(key=lambda u: (u.credits or 0, u.email))
+    elif sort_key == "consumed":
+        users.sort(key=lambda u: (-u.credit_consumed, u.email))
+    elif sort_key == "recent":
+        users.sort(key=lambda u: (-u.credit_recent_events, u.email))
+    elif sort_key == "activity":
+        users.sort(
+            key=lambda u: (
+                u.credit_last_activity is None,
+                -(u.credit_last_activity.timestamp() if u.credit_last_activity else 0),
+                u.email,
+            )
+        )
+
+    totals = {
+        "users": len(users),
+        "consumed": sum(u.credit_consumed for u in users),
+        "recent_events": sum(u.credit_recent_events for u in users),
+        "out_of_credits": sum(1 for u in users if (u.credits or 0) <= 0),
+        "low_credits": sum(1 for u in users if 0 < (u.credits or 0) <= 5),
+        "no_credit_skips": sum(u.credit_no_credit_skips for u in users),
+        "active_recently": sum(1 for u in users if u.credit_recent_events > 0),
+    }
+
     return render_template(
-        "admin/manage_users.html", users=users, filter_status=filter_status
+        "admin/manage_users.html",
+        users=users,
+        filter_status=filter_status,
+        sort_key=sort_key,
+        totals=totals,
+        recent_days=RECENT_ACTIVITY_DAYS,
     )
 
 

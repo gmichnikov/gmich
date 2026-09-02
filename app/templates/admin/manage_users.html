@@ -2,39 +2,88 @@
 
 {% block title %}Manage Users{% endblock %}
 
+{% macro filter_button(value, label, active_color) %}
+<a href="{{ url_for('admin.manage_users', filter=value, sort=sort_key) }}"
+   class="admin-link"
+   style="display: inline-block; padding: 8px 16px; margin: 0 10px 8px 0; background-color: {% if filter_status == value %}{{ active_color }}{% else %}#f0f0f0{% endif %}; color: {% if filter_status == value %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
+    {{ label }}
+</a>
+{% endmacro %}
+
+{% macro sort_button(value, label) %}
+<a href="{{ url_for('admin.manage_users', filter=filter_status, sort=value) }}"
+   class="admin-link"
+   style="display: inline-block; padding: 5px 12px; margin: 0 8px 8px 0; font-size: 0.85em; background-color: {% if sort_key == value %}#343a40{% else %}#f0f0f0{% endif %}; color: {% if sort_key == value %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
+    {{ label }}
+</a>
+{% endmacro %}
+
 {% block content %}
 
 <div class="admin-page-container">
     <div class="admin-card">
         <div class="admin-header">
             <h1 class="admin-title">👥 Manage Users</h1>
-            <p class="admin-subtitle">View and manage user accounts and verification status</p>
+            <p class="admin-subtitle">Account status and credit usage</p>
         </div>
 
-        <!-- Filter buttons -->
+        <!-- Summary -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+            <div style="flex: 1; min-width: 130px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold;">{{ totals.users }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Users shown</div>
+            </div>
+            <div style="flex: 1; min-width: 130px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold; color: {% if totals.active_recently > 0 %}#28a745{% else %}#6c757d{% endif %};">{{ totals.active_recently }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Active in last {{ recent_days }} days</div>
+            </div>
+            <div style="flex: 1; min-width: 130px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold;">{{ totals.consumed }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Credits consumed (lifetime)</div>
+            </div>
+            <div style="flex: 1; min-width: 130px; background-color: {% if totals.out_of_credits > 0 %}#f8d7da{% else %}#f8f9fa{% endif %}; border: 1px solid {% if totals.out_of_credits > 0 %}#dc3545{% else %}#dee2e6{% endif %}; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold; color: {% if totals.out_of_credits > 0 %}#dc3545{% else %}#6c757d{% endif %};">{{ totals.out_of_credits }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Out of credits</div>
+            </div>
+            <div style="flex: 1; min-width: 130px; background-color: {% if totals.low_credits > 0 %}#fff3cd{% else %}#f8f9fa{% endif %}; border: 1px solid {% if totals.low_credits > 0 %}#ffc107{% else %}#dee2e6{% endif %}; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold; color: {% if totals.low_credits > 0 %}#856404{% else %}#6c757d{% endif %};">{{ totals.low_credits }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Low (1&ndash;5 credits)</div>
+            </div>
+        </div>
+
+        {% if totals.no_credit_skips > 0 %}
+        <div style="background-color: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 12px 16px; margin-bottom: 20px;">
+            <strong style="color: #721c24;">⚠️ {{ totals.no_credit_skips }} daily email(s) were skipped because a user had no credits.</strong>
+            <div style="font-size: 0.9em; color: #721c24; margin-top: 4px;">
+                Reminders and sports digests skip silently and are not counted here.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="admin-form-group" style="margin-bottom: 8px;">
+            {{ filter_button('all', 'All Users', '#007bff') }}
+            {{ filter_button('verified', 'Verified', '#28a745') }}
+            {{ filter_button('unverified', 'Unverified', '#dc3545') }}
+            {{ filter_button('out_of_credits', 'Out of Credits', '#dc3545') }}
+            {{ filter_button('low_credits', 'Low Credits', '#ffc107') }}
+        </div>
+
+        <!-- Sorting -->
         <div class="admin-form-group" style="margin-bottom: 20px;">
-            <a href="{{ url_for('admin.manage_users', filter='all') }}" 
-               class="admin-link" 
-               style="display: inline-block; padding: 8px 16px; margin-right: 10px; background-color: {% if filter_status == 'all' %}#007bff{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'all' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
-                All Users
-            </a>
-            <a href="{{ url_for('admin.manage_users', filter='verified') }}" 
-               class="admin-link" 
-               style="display: inline-block; padding: 8px 16px; margin-right: 10px; background-color: {% if filter_status == 'verified' %}#28a745{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'verified' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
-                Verified
-            </a>
-            <a href="{{ url_for('admin.manage_users', filter='unverified') }}" 
-               class="admin-link" 
-               style="display: inline-block; padding: 8px 16px; background-color: {% if filter_status == 'unverified' %}#dc3545{% else %}#f0f0f0{% endif %}; color: {% if filter_status == 'unverified' %}white{% else %}#333{% endif %}; border-radius: 4px; text-decoration: none;">
-                Unverified
-            </a>
+            <span style="font-size: 0.85em; color: #6c757d; margin-right: 8px;">Sort by:</span>
+            {{ sort_button('email', 'Email') }}
+            {{ sort_button('credits', 'Lowest balance') }}
+            {{ sort_button('consumed', 'Most consumed') }}
+            {{ sort_button('recent', 'Most active (30d)') }}
+            {{ sort_button('activity', 'Most recent activity') }}
         </div>
 
         <!-- Users list -->
         {% if users %}
         <div style="margin-top: 20px;">
             {% for user in users %}
-            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 16px; margin-bottom: 12px;">
+            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-left: 4px solid {% if (user.credits or 0) <= 0 %}#dc3545{% elif (user.credits or 0) <= 5 %}#ffc107{% elif user.credit_recent_events > 0 %}#28a745{% else %}#dee2e6{% endif %}; border-radius: 4px; padding: 16px; margin-bottom: 12px;">
                 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
                     <div style="flex: 1; min-width: 200px;">
                         <div style="font-weight: bold; margin-bottom: 4px;">{{ user.email }}</div>
@@ -55,7 +104,10 @@
                                 {% endif %}
                             </span>
                             <span>•</span>
-                            <span>{{ user.credits }} credits</span>
+                            <span>
+                                <span style="color: {% if (user.credits or 0) <= 0 %}#dc3545{% elif (user.credits or 0) <= 5 %}#856404{% else %}#212529{% endif %}; font-weight: bold;">{{ user.credits }} credits</span>
+                                left
+                            </span>
                         </div>
                     </div>
                     <div style="flex-shrink: 0;">
@@ -71,6 +123,47 @@
                         {% endif %}
                     </div>
                 </div>
+
+                <!-- Credit usage -->
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #dee2e6; font-size: 0.88em; color: #495057;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px;">
+                        <span>Consumed: <strong>{{ user.credit_consumed }}</strong> of {{ user.credit_granted }} granted</span>
+                        <span>Last {{ recent_days }}d: <strong>{{ user.credit_recent_events }}</strong></span>
+                        <span>
+                            Last activity:
+                            {% if user.credit_last_activity_display %}
+                                <strong>{{ user.credit_last_activity_display }}</strong>
+                                <span style="color: #6c757d;">({{ user.credit_days_since_activity }}d ago)</span>
+                            {% else %}
+                                <span style="color: #6c757d; font-style: italic;">never</span>
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {% if user.credit_breakdown %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        {% for label, count, recent in user.credit_breakdown %}
+                        <span style="background-color: #e9ecef; border-radius: 12px; padding: 3px 10px; font-size: 0.9em;">
+                            {{ label }}: {{ count }}{% if recent %} <span style="color: #28a745;">(+{{ recent }})</span>{% endif %}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="color: #6c757d; font-style: italic;">No recorded credit activity.</div>
+                    {% endif %}
+
+                    {% if user.credit_no_credit_skips or user.credit_failed_sends %}
+                    <div style="margin-top: 8px;">
+                        {% if user.credit_no_credit_skips %}
+                        <span style="color: #dc3545; font-weight: bold;">⚠️ {{ user.credit_no_credit_skips }} daily email(s) skipped for no credits</span>
+                        {% endif %}
+                        {% if user.credit_no_credit_skips and user.credit_failed_sends %} • {% endif %}
+                        {% if user.credit_failed_sends %}
+                        <span style="color: #856404;">{{ user.credit_failed_sends }} failed send(s)</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -80,11 +173,21 @@
         </div>
         {% endif %}
 
+        <div style="margin-top: 20px; padding: 12px 16px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.82em; color: #6c757d;">
+            <strong>How these numbers are derived:</strong> there is no credit ledger, so "consumed" is computed as
+            (10 starting credits + credits added by an admin) &minus; current balance. That total is reliable.
+            The per-project counts are best effort and can undercount, since reminder test sends and sports digests
+            do not record one row per credit spent.
+        </div>
+
         <div class="admin-footer" style="margin-top: 30px;">
-            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+            <p class="admin-footer-text">
+                <a href="{{ url_for('admin.add_credits') }}" class="admin-link">Add Credits</a>
+                &nbsp;|&nbsp;
+                <a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a>
+            </p>
         </div>
     </div>
 </div>
 
 {% endblock %}
-
