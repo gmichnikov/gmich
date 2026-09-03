@@ -33,12 +33,33 @@
   var lineupCard = document.getElementById("blu-lineup-card");
   var lineupCardTitle = document.getElementById("blu-lineup-card-title");
   var modeToggle = document.getElementById("blu-mode-toggle");
+  var fieldView = document.getElementById("blu-field-view");
+  var fieldDiagram = document.getElementById("blu-field-diagram");
+  var inningTabs = document.getElementById("blu-inning-tabs");
+  var fieldBench = document.getElementById("blu-field-bench");
+  var viewDisplayToggle = document.getElementById("blu-view-display-toggle");
+  var scrollHint = document.querySelector(".blu-lineup-scroll-hint");
 
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
   var dirty = false;
   var warningFilterInning = "all";
   var isViewMode = !!(pageState.lineup_complete && lineup.rows.length);
+  var viewDisplay = "grid";
+  var fieldInning = 1;
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var FIELD_SPOT_ANCHORS = {
+    LF: { x: 52, y: 118 },
+    RF: { x: 348, y: 118 },
+    SS: { x: 142, y: 222 },
+    "2B": { x: 258, y: 222 },
+    "3B": { x: 102, y: 272 },
+    "1B": { x: 298, y: 272 },
+    C: { x: 200, y: 372 },
+    P: { x: 200, y: 308 },
+    PH: { x: 200, y: 308 },
+  };
 
   var CATEGORY_BY_CODE = {
     C: "infield",
@@ -216,16 +237,431 @@
       return;
     }
     isViewMode = view;
+    if (!isViewMode) {
+      viewDisplay = "grid";
+    }
     pageRoot.classList.toggle("blu-game-page--view", isViewMode);
     pageRoot.classList.toggle("blu-game-page--edit", !isViewMode);
     if (lineupCard) {
       lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
     }
     if (lineupCardTitle) {
-      lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
+      updateViewCardTitle();
     }
     updateModeToggle();
+    updateViewDisplayToggle();
     renderAll();
+  }
+
+  function updateViewCardTitle() {
+    if (!lineupCardTitle) {
+      return;
+    }
+    if (!isViewMode) {
+      lineupCardTitle.textContent = "Edit lineup";
+      return;
+    }
+    if (viewDisplay === "field") {
+      lineupCardTitle.textContent = "Inning " + fieldInning;
+      return;
+    }
+    lineupCardTitle.textContent = "Lineup";
+  }
+
+  function updateViewDisplayToggle() {
+    if (!viewDisplayToggle) {
+      return;
+    }
+    viewDisplayToggle.hidden = !canShowFieldView();
+    if (viewDisplayToggle.hidden) {
+      return;
+    }
+    viewDisplayToggle.querySelectorAll(".blu-view-display-btn").forEach(function (btn) {
+      var isField = btn.dataset.display === "field";
+      btn.hidden = isField && !canShowFieldView();
+      btn.classList.toggle("blu-view-display-btn-active", btn.dataset.display === viewDisplay);
+    });
+  }
+
+  function canShowFieldView() {
+    return isViewMode && isLineupComplete();
+  }
+
+  function setViewDisplay(display, inning) {
+    if (!isViewMode) {
+      return;
+    }
+    if (display === "field" && !canShowFieldView()) {
+      display = "grid";
+    }
+    viewDisplay = display;
+    if (inning) {
+      fieldInning = inning;
+    }
+    updateViewDisplayToggle();
+    updateViewCardTitle();
+    renderLineup();
+  }
+
+  function buildInningSnapshot(inning) {
+    var byCode = {};
+    var bench = [];
+    var unassigned = [];
+
+    lineup.rows.forEach(function (row) {
+      var code = row.cells[String(inning)] || "";
+      if (!code) {
+        unassigned.push(row.player_name);
+        return;
+      }
+      if (code === "Bench") {
+        bench.push(row.player_name);
+        return;
+      }
+      if (!byCode[code]) {
+        byCode[code] = [];
+      }
+      byCode[code].push(row.player_name);
+    });
+
+    return { byCode: byCode, bench: bench, unassigned: unassigned };
+  }
+
+  function cfSpotXs(count) {
+    if (count <= 1) {
+      return [200];
+    }
+    if (count === 2) {
+      return [155, 245];
+    }
+    var xs = [];
+    var minX = 120;
+    var maxX = 280;
+    for (var i = 0; i < count; i += 1) {
+      xs.push(minX + ((maxX - minX) * i) / (count - 1));
+    }
+    return xs;
+  }
+
+  function duplicateFirstNames(names) {
+    var counts = {};
+    names.forEach(function (name) {
+      var parts = String(name).trim().split(/\s+/);
+      var firstKey = (parts[0] || "").toLowerCase();
+      if (!firstKey) {
+        return;
+      }
+      counts[firstKey] = (counts[firstKey] || 0) + 1;
+    });
+    var dupes = {};
+    Object.keys(counts).forEach(function (key) {
+      if (counts[key] > 1) {
+        dupes[key] = true;
+      }
+    });
+    return dupes;
+  }
+
+  function shortPlayerName(name, dupes) {
+    var trimmed = String(name).trim();
+    var parts = trimmed.split(/\s+/);
+    if (parts.length <= 1) {
+      return parts[0] || trimmed;
+    }
+    var firstKey = parts[0].toLowerCase();
+    if (!dupes || !dupes[firstKey]) {
+      return parts[0];
+    }
+    return parts[0] + " " + parts[parts.length - 1].charAt(0) + ".";
+  }
+
+  function buildCompleteFieldSpots(inning, snapshot) {
+    var spots = [];
+
+    lineup.editor_field_codes.forEach(function (item) {
+      var code = item.code;
+      var expected = expectedCount(code, inning);
+      var players = snapshot.byCode[code] || [];
+      if (expected <= 0) {
+        return;
+      }
+      if (code === "CF") {
+        cfSpotXs(expected).forEach(function (x, index) {
+          spots.push({
+            code: code,
+            x: x,
+            y: 72,
+            name: players[index] || "",
+          });
+        });
+        return;
+      }
+      var anchor = FIELD_SPOT_ANCHORS[code];
+      if (anchor) {
+        spots.push({
+          code: code,
+          x: anchor.x,
+          y: anchor.y,
+          name: players[0] || "",
+        });
+      }
+    });
+
+    return spots;
+  }
+
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach(function (key) {
+      el.setAttribute(key, attrs[key]);
+    });
+    return el;
+  }
+
+  function svgText(className, x, y, content) {
+    var text = svgEl("text", {
+      class: className,
+      x: String(x),
+      y: String(y),
+    });
+    text.textContent = content;
+    return text;
+  }
+
+  function drawBase(svg, x, y) {
+    var base = svgEl("rect", {
+      x: String(x - 7),
+      y: String(y - 7),
+      width: "14",
+      height: "14",
+      class: "blu-diamond-base",
+      transform: "rotate(45 " + x + " " + y + ")",
+    });
+    svg.appendChild(base);
+  }
+
+  function appendDiamondArt(svg) {
+    var defs = svgEl("defs");
+    var grassGrad = svgEl("linearGradient", {
+      id: "bluGrassGrad",
+      x1: "0",
+      y1: "0",
+      x2: "0",
+      y2: "1",
+    });
+    grassGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "#8fcf5c" }));
+    grassGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "#4f8f32" }));
+    defs.appendChild(grassGrad);
+
+    var dirtGrad = svgEl("linearGradient", {
+      id: "bluDirtGrad",
+      x1: "0",
+      y1: "0",
+      x2: "1",
+      y2: "1",
+    });
+    dirtGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "#d4b896" }));
+    dirtGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "#b8926a" }));
+    defs.appendChild(dirtGrad);
+    svg.appendChild(defs);
+
+    svg.appendChild(
+      svgEl("rect", {
+        x: "0",
+        y: "0",
+        width: "400",
+        height: "400",
+        rx: "18",
+        fill: "url(#bluGrassGrad)",
+      })
+    );
+
+    svg.appendChild(
+      svgEl("path", {
+        class: "blu-diamond-fence",
+        d: "M 24 210 Q 200 28 376 210",
+      })
+    );
+
+    svg.appendChild(
+      svgEl("path", {
+        class: "blu-diamond-dirt",
+        d: "M 200 338 L 272 272 L 200 206 L 128 272 Z",
+        fill: "url(#bluDirtGrad)",
+      })
+    );
+
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-chalk",
+        x1: "200",
+        y1: "338",
+        x2: "272",
+        y2: "272",
+      })
+    );
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-chalk",
+        x1: "200",
+        y1: "338",
+        x2: "128",
+        y2: "272",
+      })
+    );
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-chalk",
+        x1: "272",
+        y1: "272",
+        x2: "200",
+        y2: "206",
+      })
+    );
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-chalk",
+        x1: "128",
+        y1: "272",
+        x2: "200",
+        y2: "206",
+      })
+    );
+
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-foul",
+        x1: "200",
+        y1: "338",
+        x2: "28",
+        y2: "108",
+      })
+    );
+    svg.appendChild(
+      svgEl("line", {
+        class: "blu-diamond-foul",
+        x1: "200",
+        y1: "338",
+        x2: "372",
+        y2: "108",
+      })
+    );
+
+    drawBase(svg, 272, 272);
+    drawBase(svg, 200, 206);
+    drawBase(svg, 128, 272);
+
+    svg.appendChild(
+      svgEl("path", {
+        class: "blu-diamond-home",
+        d: "M 200 338 L 210 352 L 200 360 L 190 352 Z",
+      })
+    );
+
+    svg.appendChild(
+      svgEl("ellipse", {
+        class: "blu-diamond-mound",
+        cx: "200",
+        cy: "308",
+        rx: "20",
+        ry: "11",
+      })
+    );
+  }
+
+  function drawPlayerBadge(svg, spot, dupes) {
+    var group = svgEl("g", {
+      class: "blu-diamond-player",
+      transform: "translate(" + spot.x + "," + spot.y + ")",
+    });
+
+    group.appendChild(
+      svgEl("circle", {
+        r: "28",
+        class: "blu-diamond-player-bg",
+      })
+    );
+    group.appendChild(svgText("blu-diamond-player-pos", 0, -5, spot.code));
+    group.appendChild(
+      svgText("blu-diamond-player-name", 0, 13, shortPlayerName(spot.name, dupes))
+    );
+    svg.appendChild(group);
+  }
+
+  function renderFieldDiagram(inning) {
+    if (!fieldDiagram || !canShowFieldView()) {
+      return;
+    }
+
+    var snapshot = buildInningSnapshot(inning);
+    var spots = buildCompleteFieldSpots(inning, snapshot);
+    fieldDiagram.innerHTML = "";
+
+    var svg = svgEl("svg", {
+      viewBox: "0 0 400 400",
+      class: "blu-field-svg",
+      role: "img",
+      "aria-label": "Diamond for inning " + inning,
+    });
+
+    appendDiamondArt(svg);
+    var fieldNames = spots
+      .filter(function (spot) {
+        return spot.name;
+      })
+      .map(function (spot) {
+        return spot.name;
+      });
+    var dupes = duplicateFirstNames(fieldNames);
+    spots.forEach(function (spot) {
+      if (spot.name) {
+        drawPlayerBadge(svg, spot, dupes);
+      }
+    });
+
+    fieldDiagram.appendChild(svg);
+
+    if (fieldBench) {
+      if (snapshot.bench.length) {
+        fieldBench.hidden = false;
+        fieldBench.innerHTML =
+          '<div class="blu-field-bench-title">Bench (X)</div>' +
+          '<div class="blu-field-bench-names">' +
+          snapshot.bench.map(escapeHtml).join(", ") +
+          "</div>";
+      } else {
+        fieldBench.hidden = true;
+        fieldBench.innerHTML = "";
+      }
+    }
+  }
+
+  function renderInningTabs() {
+    if (!inningTabs) {
+      return;
+    }
+    inningTabs.innerHTML = "";
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "blu-inning-tab";
+      if (inning === fieldInning) {
+        btn.classList.add("blu-inning-tab-active");
+      }
+      btn.textContent = "Inning " + inning;
+      btn.dataset.inning = String(inning);
+      inningTabs.appendChild(btn);
+    }
+  }
+
+  function renderFieldView() {
+    if (!canShowFieldView()) {
+      viewDisplay = "grid";
+      renderLineup();
+      return;
+    }
+    renderInningTabs();
+    renderFieldDiagram(fieldInning);
   }
 
   function updateModeToggle() {
@@ -580,9 +1016,19 @@
     row.innerHTML =
       '<th class="blu-lineup-order-col">#</th>' +
       '<th class="blu-lineup-player-col">Player</th>';
+
     for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
-      row.innerHTML += '<th class="blu-lineup-inning-col">' + inning + "</th>";
+      var th = document.createElement("th");
+      th.className = "blu-lineup-inning-col";
+      if (canShowFieldView()) {
+        th.classList.add("blu-inning-header-btn");
+        th.title = "Diamond view for inning " + inning;
+      }
+      th.textContent = String(inning);
+      th.dataset.inning = String(inning);
+      row.appendChild(th);
     }
+
     thead.innerHTML = "";
     thead.appendChild(row);
   }
@@ -711,11 +1157,28 @@
 
   function renderLineup() {
     var hasRows = lineup.rows.length > 0;
-    lineupEmpty.hidden = hasRows;
-    lineupScroll.hidden = !hasRows;
-    if (lineupTable) {
-      lineupTable.classList.toggle("blu-lineup-table-view", isViewMode);
+    var showGrid = !isViewMode || viewDisplay !== "field" || !canShowFieldView();
+    var showField = isViewMode && viewDisplay === "field" && canShowFieldView();
+    if (isViewMode && viewDisplay === "field" && !canShowFieldView()) {
+      viewDisplay = "grid";
     }
+
+    lineupEmpty.hidden = hasRows;
+    if (lineupScroll) {
+      lineupScroll.hidden = !hasRows || !showGrid;
+    }
+    if (fieldView) {
+      fieldView.hidden = !hasRows || !showField;
+    }
+    if (scrollHint) {
+      scrollHint.hidden = !hasRows || !showGrid;
+    }
+    if (lineupTable) {
+      lineupTable.classList.toggle("blu-lineup-table-view", isViewMode && showGrid);
+    }
+
+    updateViewDisplayToggle();
+    updateViewCardTitle();
 
     if (!hasRows) {
       thead.innerHTML = "";
@@ -725,8 +1188,12 @@
     }
 
     if (isViewMode) {
-      renderLineupViewHeader();
-      renderLineupViewBody();
+      if (showField) {
+        renderFieldView();
+      } else {
+        renderLineupViewHeader();
+        renderLineupViewBody();
+      }
     } else {
       renderLineupHeader();
       renderLineupBody();
@@ -778,6 +1245,7 @@
     pageState.lineup_complete = nextState.lineup_complete;
     if (!pageState.lineup_complete || dirty) {
       isViewMode = false;
+      viewDisplay = "grid";
     } else if (options.switchToViewIfComplete) {
       isViewMode = true;
     }
@@ -786,9 +1254,7 @@
     if (lineupCard) {
       lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
     }
-    if (lineupCardTitle) {
-      lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
-    }
+    updateViewCardTitle();
 
     renderAll();
   }
@@ -925,6 +1391,38 @@
     });
   }
 
+  if (viewDisplayToggle) {
+    viewDisplayToggle.addEventListener("click", function (event) {
+      var btn = event.target.closest(".blu-view-display-btn");
+      if (!btn) {
+        return;
+      }
+      setViewDisplay(btn.dataset.display || "grid");
+    });
+  }
+
+  if (inningTabs) {
+    inningTabs.addEventListener("click", function (event) {
+      var btn = event.target.closest(".blu-inning-tab");
+      if (!btn) {
+        return;
+      }
+      fieldInning = parseInt(btn.dataset.inning, 10) || 1;
+      updateViewCardTitle();
+      renderFieldView();
+    });
+  }
+
+  if (thead) {
+    thead.addEventListener("click", function (event) {
+      var header = event.target.closest(".blu-inning-header-btn");
+      if (!header || !canShowFieldView()) {
+        return;
+      }
+      setViewDisplay("field", parseInt(header.dataset.inning, 10) || 1);
+    });
+  }
+
   if (modeToggle) {
     modeToggle.addEventListener("click", function () {
       setViewMode(!isViewMode);
@@ -968,8 +1466,7 @@
   if (lineupCard) {
     lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
   }
-  if (lineupCardTitle) {
-    lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
-  }
+  updateViewCardTitle();
+  updateViewDisplayToggle();
   renderAll();
 })();

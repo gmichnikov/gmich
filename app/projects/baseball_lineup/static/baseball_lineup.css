@@ -95,6 +95,204 @@
   display: none !important;
 }
 
+.blu-view-only {
+  display: none !important;
+}
+
+.blu-game-page--view .blu-view-only {
+  display: block;
+}
+
+.blu-game-page--view .blu-view-display-toggle.blu-view-only,
+.blu-game-page--view .blu-card-header-row .blu-view-display-toggle {
+  display: flex !important;
+}
+
+.blu-view-display-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--blu-border);
+  border-radius: 8px;
+  background: var(--blu-surface-muted);
+}
+
+.blu-view-display-btn {
+  min-height: 30px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--blu-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.blu-view-display-btn-active {
+  background: var(--blu-surface);
+  color: var(--blu-text);
+  box-shadow: var(--blu-shadow);
+}
+
+.blu-inning-header-btn {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.blu-inning-header-btn:hover {
+  background: var(--blu-accent-soft);
+  color: var(--blu-accent-hover);
+}
+
+.blu-field-view {
+  margin-top: 4px;
+}
+
+.blu-field-view:not([hidden]) {
+  display: block;
+}
+
+.blu-game-page--edit .blu-field-view {
+  display: none !important;
+}
+
+.blu-inning-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.blu-inning-tab {
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 1px solid var(--blu-border-strong);
+  border-radius: 999px;
+  background: var(--blu-surface);
+  color: var(--blu-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.blu-inning-tab:hover {
+  border-color: var(--blu-accent);
+  color: var(--blu-accent-hover);
+}
+
+.blu-inning-tab-active {
+  background: var(--blu-accent);
+  border-color: var(--blu-accent);
+  color: #fff;
+}
+
+.blu-field-diagram-wrap {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.blu-field-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(26, 46, 26, 0.12));
+}
+
+.blu-diamond-fence {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 3;
+}
+
+.blu-diamond-dirt {
+  stroke: #9a7348;
+  stroke-width: 2;
+}
+
+.blu-diamond-chalk {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.blu-diamond-foul {
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.blu-diamond-base {
+  fill: #fff;
+  stroke: #ddd;
+  stroke-width: 1;
+}
+
+.blu-diamond-home {
+  fill: #fff;
+  stroke: #ccc;
+  stroke-width: 1;
+}
+
+.blu-diamond-mound {
+  fill: #c9a87a;
+  stroke: #9a7348;
+  stroke-width: 1.5;
+}
+
+.blu-diamond-player-bg {
+  fill: var(--blu-accent);
+  stroke: #fff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 1px 3px rgba(26, 46, 26, 0.35));
+}
+
+.blu-diamond-player-pos {
+  font-size: 10px;
+  font-weight: 800;
+  fill: #fff;
+  text-anchor: middle;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+.blu-diamond-player-name {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #fff;
+  stroke: rgba(26, 46, 26, 0.45);
+  stroke-width: 1.5px;
+  paint-order: stroke fill;
+  text-anchor: middle;
+  font-family: inherit;
+}
+
+.blu-field-side-panel {
+  max-width: 440px;
+  margin: 14px auto 0;
+  padding: 10px 14px;
+  border: 1px solid var(--blu-border);
+  border-radius: 8px;
+  background: var(--blu-surface-muted);
+  font-size: 14px;
+}
+
+.blu-field-bench-title {
+  font-weight: 600;
+  color: var(--blu-text-muted);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.blu-field-bench-names {
+  color: var(--blu-text);
+  line-height: 1.5;
+}
+
 .blu-game-page--view .blu-lineup-scroll {
   margin-bottom: 0;
 }

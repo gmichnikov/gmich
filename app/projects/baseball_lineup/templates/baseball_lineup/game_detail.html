@@ -42,6 +42,10 @@
     <div class="blu-card{% if page_state.lineup_complete and page_state.present_count %} blu-lineup-card-compact{% endif %}" id="blu-lineup-card">
       <div class="blu-card-header blu-card-header-row">
         <span id="blu-lineup-card-title">{% if page_state.lineup_complete and page_state.present_count %}Lineup{% else %}Edit lineup{% endif %}</span>
+        <div class="blu-view-display-toggle blu-view-only" id="blu-view-display-toggle" hidden>
+          <button type="button" class="blu-view-display-btn blu-view-display-btn-active" data-display="grid">Grid</button>
+          <button type="button" class="blu-view-display-btn" data-display="field">Diamond</button>
+        </div>
         <div class="blu-lineup-toolbar blu-edit-only" id="blu-lineup-toolbar">
           <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-fill-all-bench">
             Fill blanks with Bench
@@ -62,6 +66,14 @@
             <thead id="blu-lineup-thead"></thead>
             <tbody id="blu-lineup-tbody"></tbody>
           </table>
+        </div>
+
+        <div class="blu-field-view" id="blu-field-view" hidden>
+          <div class="blu-inning-tabs" id="blu-inning-tabs"></div>
+          <div class="blu-field-diagram-wrap" id="blu-field-diagram"></div>
+          <div class="blu-field-side-panel">
+            <div class="blu-field-bench" id="blu-field-bench" hidden></div>
+          </div>
         </div>
 
         <div class="blu-lineup-legend blu-edit-only">
