@@ -29,11 +29,16 @@
   var fillAllBtn = document.getElementById("blu-fill-all-bench");
   var randomizeBtn = document.getElementById("blu-randomize-order");
   var lineupToolbar = document.getElementById("blu-lineup-toolbar");
+  var lineupTable = document.getElementById("blu-lineup-table");
+  var lineupCard = document.getElementById("blu-lineup-card");
+  var lineupCardTitle = document.getElementById("blu-lineup-card-title");
+  var modeToggle = document.getElementById("blu-mode-toggle");
 
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
   var dirty = false;
   var warningFilterInning = "all";
+  var isViewMode = !!(pageState.lineup_complete && lineup.rows.length);
 
   var CATEGORY_BY_CODE = {
     C: "infield",
@@ -196,6 +201,51 @@
     }
 
     return overassigned;
+  }
+
+  function isLineupComplete() {
+    return lineup.rows.length > 0 && computeWarnings().length === 0;
+  }
+
+  function canEnterViewMode() {
+    return isLineupComplete() && !dirty;
+  }
+
+  function setViewMode(view) {
+    if (view && !canEnterViewMode()) {
+      return;
+    }
+    isViewMode = view;
+    pageRoot.classList.toggle("blu-game-page--view", isViewMode);
+    pageRoot.classList.toggle("blu-game-page--edit", !isViewMode);
+    if (lineupCard) {
+      lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
+    }
+    if (lineupCardTitle) {
+      lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
+    }
+    updateModeToggle();
+    renderAll();
+  }
+
+  function updateModeToggle() {
+    if (!modeToggle) {
+      return;
+    }
+    var hasRows = lineup.rows.length > 0;
+    modeToggle.hidden = !hasRows || (!isViewMode && !canEnterViewMode());
+    if (modeToggle.hidden) {
+      return;
+    }
+    if (isViewMode) {
+      modeToggle.textContent = "Edit lineup";
+      modeToggle.disabled = false;
+      modeToggle.title = "";
+      return;
+    }
+    modeToggle.textContent = "View lineup";
+    modeToggle.disabled = false;
+    modeToggle.title = "";
   }
 
   function computeFairnessHighlights(rows) {
@@ -495,7 +545,12 @@
       row.repeats = repeatedPositions(row.cells);
       dirty = true;
       saveStatus.textContent = "Unsaved changes";
-      renderLineupBody();
+      if (isViewMode) {
+        setViewMode(false);
+      } else {
+        updateModeToggle();
+        renderLineupBody();
+      }
     });
 
     return select;
@@ -518,6 +573,55 @@
 
     thead.innerHTML = "";
     thead.appendChild(row);
+  }
+
+  function renderLineupViewHeader() {
+    var row = document.createElement("tr");
+    row.innerHTML =
+      '<th class="blu-lineup-order-col">#</th>' +
+      '<th class="blu-lineup-player-col">Player</th>';
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      row.innerHTML += '<th class="blu-lineup-inning-col">' + inning + "</th>";
+    }
+    thead.innerHTML = "";
+    thead.appendChild(row);
+  }
+
+  function renderLineupViewBody() {
+    tbody.innerHTML = "";
+
+    lineup.rows.forEach(function (row) {
+      var tr = document.createElement("tr");
+
+      var orderTd = document.createElement("td");
+      orderTd.className = "blu-lineup-order-col";
+      orderTd.textContent = String(row.batting_order);
+      tr.appendChild(orderTd);
+
+      var nameCell = document.createElement("th");
+      nameCell.scope = "row";
+      nameCell.className = "blu-lineup-player-col";
+      nameCell.textContent = row.player_name;
+      tr.appendChild(nameCell);
+
+      for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+        var td = document.createElement("td");
+        var value = row.cells[String(inning)] || "";
+        td.className = "blu-lineup-view-cell";
+        if (!value) {
+          td.classList.add("blu-lineup-view-cell-empty");
+          td.textContent = "\u2014";
+        } else if (value === "Bench") {
+          td.classList.add("blu-lineup-view-cell-bench");
+          td.textContent = "X";
+        } else {
+          td.textContent = value;
+        }
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    });
   }
 
   function renderLineupBody() {
@@ -609,17 +713,25 @@
     var hasRows = lineup.rows.length > 0;
     lineupEmpty.hidden = hasRows;
     lineupScroll.hidden = !hasRows;
-    lineupToolbar.hidden = !hasRows;
-    warningsPanel.hidden = !hasRows;
+    if (lineupTable) {
+      lineupTable.classList.toggle("blu-lineup-table-view", isViewMode);
+    }
 
     if (!hasRows) {
       thead.innerHTML = "";
       tbody.innerHTML = "";
+      updateModeToggle();
       return;
     }
 
-    renderLineupHeader();
-    renderLineupBody();
+    if (isViewMode) {
+      renderLineupViewHeader();
+      renderLineupViewBody();
+    } else {
+      renderLineupHeader();
+      renderLineupBody();
+    }
+    updateModeToggle();
   }
 
   function renderSubtitle() {
@@ -663,6 +775,21 @@
       dirty = false;
     }
 
+    pageState.lineup_complete = nextState.lineup_complete;
+    if (!pageState.lineup_complete || dirty) {
+      isViewMode = false;
+    } else if (options.switchToViewIfComplete) {
+      isViewMode = true;
+    }
+    pageRoot.classList.toggle("blu-game-page--view", isViewMode);
+    pageRoot.classList.toggle("blu-game-page--edit", !isViewMode);
+    if (lineupCard) {
+      lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
+    }
+    if (lineupCardTitle) {
+      lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
+    }
+
     renderAll();
   }
 
@@ -690,6 +817,16 @@
     });
     dirty = true;
     saveStatus.textContent = "Unsaved changes";
+    isViewMode = false;
+    pageRoot.classList.remove("blu-game-page--view");
+    pageRoot.classList.add("blu-game-page--edit");
+    if (lineupCard) {
+      lineupCard.classList.remove("blu-lineup-card-compact");
+    }
+    if (lineupCardTitle) {
+      lineupCardTitle.textContent = "Edit lineup";
+    }
+    updateModeToggle();
     renderLineupBody();
   }
 
@@ -716,7 +853,7 @@
     saveStatus.textContent = "Saving\u2026";
     return apiPost(urls.lineup_save, { cells: collectCellsPayload() })
       .then(function (data) {
-        applyServerState(data.state);
+        applyServerState(data.state, { switchToViewIfComplete: true });
         saveStatus.textContent = "Saved.";
       })
       .catch(function (err) {
@@ -739,9 +876,13 @@
       return;
     }
     btn.disabled = true;
-    postAction(urlFor(urls.attendance_toggle, btn.dataset.playerId), true).catch(function (err) {
-      saveStatus.textContent = err.message || "Update failed.";
-    });
+    postAction(urlFor(urls.attendance_toggle, btn.dataset.playerId), true)
+      .catch(function (err) {
+        saveStatus.textContent = err.message || "Update failed.";
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
   });
 
   tbody.addEventListener("click", function (event) {
@@ -784,6 +925,12 @@
     });
   }
 
+  if (modeToggle) {
+    modeToggle.addEventListener("click", function () {
+      setViewMode(!isViewMode);
+    });
+  }
+
   if (saveBtn) {
     saveBtn.addEventListener("click", saveLineup);
   }
@@ -799,8 +946,8 @@
     });
   }
 
-  if (sessionStorage.getItem(collapseKey) === "closed") {
-    attendanceCollapse.removeAttribute("open");
+  if (sessionStorage.getItem(collapseKey) === "open") {
+    attendanceCollapse.setAttribute("open", "");
   }
   attendanceCollapse.addEventListener("toggle", function () {
     sessionStorage.setItem(
@@ -816,5 +963,13 @@
     }
   });
 
+  pageRoot.classList.toggle("blu-game-page--view", isViewMode);
+  pageRoot.classList.toggle("blu-game-page--edit", !isViewMode);
+  if (lineupCard) {
+    lineupCard.classList.toggle("blu-lineup-card-compact", isViewMode);
+  }
+  if (lineupCardTitle) {
+    lineupCardTitle.textContent = isViewMode ? "Lineup" : "Edit lineup";
+  }
   renderAll();
 })();

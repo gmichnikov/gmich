@@ -24,6 +24,7 @@ from app.projects.baseball_lineup.models import (
     BluTeam,
 )
 from app.projects.baseball_lineup.lineup_grid import (
+    lineup_is_complete,
     lineup_state_for_game,
     move_batting_order,
     present_players_for_game,
@@ -129,6 +130,7 @@ def _game_page_json(team, game):
         "roster_total": len(attendance),
         "attendance": attendance,
         "lineup": lineup_state_for_game(game, team),
+        "lineup_complete": lineup_is_complete(game, team),
     }
 
 

@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="blu-page">
-  <div class="blu-container blu-container-wide" id="blu-game-page" data-game-id="{{ game.id }}">
+  <div class="blu-container blu-container-wide{% if page_state.lineup_complete and page_state.present_count %} blu-game-page--view{% else %} blu-game-page--edit{% endif %}" id="blu-game-page" data-game-id="{{ game.id }}">
 
     <p class="blu-breadcrumb">
       <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
@@ -24,20 +24,25 @@
           {{ game.inning_count }} innings &middot; {{ page_state.present_count }} of {{ page_state.roster_total }} players present
         </p>
       </div>
-      <a href="{{ url_for('baseball_lineup.game_edit', team_id=team.id, game_id=game.id) }}" class="blu-btn blu-btn-secondary">Game settings</a>
+      <div class="blu-page-header-actions">
+        <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-mode-toggle"{% if not page_state.present_count or not page_state.lineup_complete %} hidden{% endif %}>
+          {% if page_state.lineup_complete and page_state.present_count %}Edit lineup{% else %}View lineup{% endif %}
+        </button>
+        <a href="{{ url_for('baseball_lineup.game_edit', team_id=team.id, game_id=game.id) }}" class="blu-btn blu-btn-secondary">Game settings</a>
+      </div>
     </header>
 
-    <details class="blu-collapse" id="blu-attendance-collapse" open>
+    <details class="blu-collapse blu-edit-only" id="blu-attendance-collapse">
       <summary class="blu-collapse-summary" id="blu-attendance-summary">
         Attendance
       </summary>
       <div class="blu-collapse-body" id="blu-attendance-body"></div>
     </details>
 
-    <div class="blu-card" id="blu-lineup-card">
+    <div class="blu-card{% if page_state.lineup_complete and page_state.present_count %} blu-lineup-card-compact{% endif %}" id="blu-lineup-card">
       <div class="blu-card-header blu-card-header-row">
-        <span>Lineup</span>
-        <div class="blu-lineup-toolbar" id="blu-lineup-toolbar">
+        <span id="blu-lineup-card-title">{% if page_state.lineup_complete and page_state.present_count %}Lineup{% else %}Edit lineup{% endif %}</span>
+        <div class="blu-lineup-toolbar blu-edit-only" id="blu-lineup-toolbar">
           <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-fill-all-bench">
             Fill blanks with Bench
           </button>
@@ -51,20 +56,20 @@
         </div>
       </div>
       <div class="blu-card-body">
-        <p class="blu-lineup-scroll-hint">Swipe sideways to see all innings.</p>
+        <p class="blu-lineup-scroll-hint blu-edit-only">Swipe sideways to see all innings.</p>
         <div class="blu-lineup-scroll" id="blu-lineup-scroll">
-          <table class="blu-lineup-table">
+          <table class="blu-lineup-table{% if page_state.lineup_complete and page_state.present_count %} blu-lineup-table-view{% endif %}" id="blu-lineup-table">
             <thead id="blu-lineup-thead"></thead>
             <tbody id="blu-lineup-tbody"></tbody>
           </table>
         </div>
 
-        <div class="blu-lineup-legend">
+        <div class="blu-lineup-legend blu-edit-only">
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-overassigned"></span> Too many of a position in one inning</span>
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-skewed"></span> OF/Bench/IF more than 1 inning off another player</span>
         </div>
 
-        <div id="blu-lineup-warnings" class="blu-warnings-panel blu-warnings-panel-empty">
+        <div id="blu-lineup-warnings" class="blu-warnings-panel blu-warnings-panel-empty blu-edit-only">
           <div class="blu-warnings-header">
             <div class="blu-warnings-title" id="blu-warnings-title">Warnings</div>
             <div class="blu-warnings-filters" id="blu-warnings-filters" hidden></div>

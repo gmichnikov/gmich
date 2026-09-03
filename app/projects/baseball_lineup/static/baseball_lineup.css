@@ -84,6 +84,68 @@
   flex-wrap: wrap;
 }
 
+.blu-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.blu-game-page--view .blu-edit-only {
+  display: none !important;
+}
+
+.blu-game-page--view .blu-lineup-scroll {
+  margin-bottom: 0;
+}
+
+.blu-lineup-table-view {
+  min-width: 0;
+  font-size: 13px;
+}
+
+.blu-lineup-table-view th,
+.blu-lineup-table-view td {
+  padding: 3px 5px;
+}
+
+.blu-lineup-table-view .blu-lineup-order-col {
+  min-width: 24px;
+  font-size: 12px;
+}
+
+.blu-lineup-table-view .blu-lineup-player-col {
+  min-width: 88px;
+  max-width: 140px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.blu-lineup-table-view .blu-lineup-inning-col {
+  min-width: 36px;
+}
+
+.blu-lineup-view-cell {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+}
+
+.blu-lineup-view-cell-empty {
+  color: var(--blu-text-subtle);
+  font-weight: 400;
+}
+
+.blu-lineup-view-cell-bench {
+  color: var(--blu-text-muted);
+  font-weight: 500;
+}
+
+.blu-game-page--view .blu-lineup-card-compact .blu-card-body {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
 .blu-page-title {
   margin: 0 0 4px;
   font-size: 26px;
@@ -1027,6 +1089,18 @@
     min-width: 96px;
     max-width: 120px;
     box-shadow: 2px 0 4px rgba(26, 46, 26, 0.08);
+  }
+
+  .blu-game-page--view .blu-lineup-reorder-col {
+    display: none;
+  }
+
+  .blu-game-page--view .blu-lineup-player-col {
+    left: 28px;
+  }
+
+  .blu-lineup-table-view {
+    min-width: 320px;
   }
 
   thead .blu-lineup-player-col {
