@@ -122,6 +122,17 @@ PROJECTS = [
         "order": 504,
     },
     {
+        "id": "codenames_online",
+        "name": "Codenames",
+        "description": "Two phones, four players — in-person Codenames with shareable rooms",
+        "url": "/codenames-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "live_multiplayer_games",
+        "order": 505,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",

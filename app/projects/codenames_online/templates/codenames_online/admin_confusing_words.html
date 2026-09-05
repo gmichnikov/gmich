@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Confusing Words - Codenames Admin{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('codenames_online.static', filename='style.css') }}">
+
+<div class="cno-admin-wrapper">
+    <div class="cno-admin-container">
+        <h1>Confusing words</h1>
+        <p class="cno-subtitle cno-admin-subtitle">Words tagged here are skipped when &ldquo;Exclude confusing words&rdquo; is on.</p>
+
+        <div class="cno-admin-toolbar">
+            <input type="search" id="cnoAdminSearch" placeholder="Search words…" autocomplete="off">
+            <label class="cno-checkbox-row">
+                <input type="checkbox" id="cnoAdminConfusingOnly">
+                Show confusing only
+            </label>
+        </div>
+
+        <p id="cnoAdminStatus" class="cno-admin-status">Loading…</p>
+        <div class="cno-admin-list" id="cnoAdminList"></div>
+
+        <a href="{{ url_for('codenames_online.index') }}" class="cno-secondary-btn cno-link-btn">Back to Codenames</a>
+    </div>
+</div>
+
+<script>
+    var CNO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('codenames_online.static', filename='admin_confusing_words.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Codenames{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('codenames_online.static', filename='style.css') }}">
+
+<div class="cno-wrapper" id="cnoWrapper">
+    <div class="cno-container cno-room-container">
+        <h1 class="cno-room-title">Codenames</h1>
+
+        <div class="cno-room-info">
+            <div class="cno-room-code-label">Room: <strong id="cnoRoomCode">{{ code }}</strong></div>
+            <div class="cno-share-row" id="cnoShareRow">
+                <label for="cnoShareLink">Share this link with the other phone:</label>
+                <div class="cno-share-input-row">
+                    <input type="text" id="cnoShareLink" readonly>
+                    <button id="cnoCopyBtn" class="cno-secondary-btn cno-copy-btn" type="button">Copy</button>
+                    <button id="cnoShareBtn" class="cno-secondary-btn cno-copy-btn" type="button" hidden>Share</button>
+                </div>
+            </div>
+            <div class="cno-role-badge" id="cnoRoleBadge" hidden></div>
+        </div>
+
+        <div class="cno-status-message" id="cnoStatusMessage">Loading&hellip;</div>
+        <div class="cno-toast" id="cnoToast" hidden></div>
+
+        <div class="cno-join-panel" id="cnoJoinPanel" hidden>
+            <button id="cnoJoinBtn" class="cno-primary-btn" type="button">Join this room</button>
+        </div>
+
+        <div class="cno-lobby-panel" id="cnoLobbyPanel" hidden>
+            <button id="cnoClaimClueBtn" class="cno-primary-btn" type="button">This is the clue-giver phone</button>
+            <button id="cnoSwapRolesBtn" class="cno-secondary-btn" type="button" hidden>Swap phone roles</button>
+        </div>
+
+        <div class="cno-setup-panel" id="cnoSetupPanel" hidden>
+            <div class="cno-setup-field">
+                <label for="cnoWordListSelect">Word list</label>
+                <select id="cnoWordListSelect"></select>
+            </div>
+            <div class="cno-setup-field">
+                <label for="cnoNameRed">Red spymaster</label>
+                <input type="text" id="cnoNameRed" maxlength="30" autocomplete="nickname">
+            </div>
+            <div class="cno-setup-field">
+                <label for="cnoNameBlue">Blue spymaster</label>
+                <input type="text" id="cnoNameBlue" maxlength="30" autocomplete="nickname">
+            </div>
+            <label class="cno-checkbox-row">
+                <input type="checkbox" id="cnoExcludeConfusing" checked>
+                Exclude confusing-for-kids words
+            </label>
+            <button id="cnoPreviewBtn" class="cno-primary-btn" type="button">Deal preview</button>
+        </div>
+
+        <div class="cno-grid-wrap" id="cnoGridWrap" hidden>
+            <div class="cno-grid" id="cnoGrid"></div>
+        </div>
+
+        <div class="cno-play-bar" id="cnoPlayBar" hidden>
+            <div class="cno-turn-banner" id="cnoTurnBanner"></div>
+            <button id="cnoStartBtn" class="cno-primary-btn cno-start-btn" type="button" hidden>Start game</button>
+            <button id="cnoRedealBtn" class="cno-secondary-btn cno-redeal-btn" type="button" hidden>Deal again</button>
+            <button id="cnoDoneBtn" class="cno-primary-btn cno-done-btn" type="button" hidden>Done guessing</button>
+            <button id="cnoRematchBtn" class="cno-primary-btn cno-rematch-btn" type="button" hidden>Play again</button>
+        </div>
+
+        <div class="cno-actions">
+            <a href="{{ url_for('codenames_online.index') }}" class="cno-secondary-btn cno-home-btn">Home</a>
+            {% if is_admin %}
+            <a href="{{ url_for('codenames_online.admin_confusing_words_page') }}" class="cno-secondary-btn">Manage confusing words</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    var CNO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var CNO_ROOM_CODE = {{ code | tojson }};
+    var CNO_PAGE_IS_ADMIN = {{ is_admin | tojson }};
+</script>
+<script src="{{ url_for('codenames_online.static', filename='room.js') }}"></script>
+{% endblock %}

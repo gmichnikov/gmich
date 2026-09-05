@@ -1,6 +1,6 @@
 # Codenames Online — Product Requirements (v1)
 
-**Status:** Planning only — no routes or DB yet.  
+**Status:** Implemented — run `flask db migrate` / `upgrade` before first use.  
 **Category:** [Live Multiplayer Games](/live-multiplayer-games)  
 **Related code:** Same room patterns as `tic_tac_toe_online` and `battleship_online`.
 
@@ -429,13 +429,14 @@ Table `codenames_confusing_word` — global confusing-word registry (§9.3).
 
 ## 13. Implementation checklist (when starting build)
 
-- [ ] `app/projects/codenames_online/` — models, room_service, serialize, routes, templates, static
-- [ ] Register blueprint + model import in `app/__init__.py`
-- [ ] Registry entry under `live_multiplayer_games`
+- [x] `app/projects/codenames_online/` — models, room_service, serialize, routes, templates, static
+- [x] Register blueprint + model import in `app/__init__.py`
+- [x] Registry entry under `live_multiplayer_games`
 - [x] Word list manifest + Base400, Base800, DarkTwinge832
-- [ ] `codenames_confusing_word` model + admin browse UI
-- [ ] Preview / boot / exclude-confusing deal logic
-- [ ] Manual test: 2 browsers as spy/guesser; 4 humans optional
+- [x] `codenames_confusing_word` model + admin browse UI
+- [x] Preview / boot / exclude-confusing deal logic
+- [ ] **You run:** `flask db migrate` then `flask db upgrade`
+- [ ] Manual test: 2 browsers as clue-giver / guesser
 
 ---
 

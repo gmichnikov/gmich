@@ -127,6 +127,7 @@ def create_app():
     from app.projects.speaker.routes import speaker_bp
     from app.projects.tic_tac_toe_online.routes import tic_tac_toe_online_bp
     from app.projects.battleship_online.routes import battleship_online_bp
+    from app.projects.codenames_online.routes import codenames_online_bp
     from app.projects.connect4_online.routes import connect4_online_bp
     from app.projects.friend_wordle.routes import friend_wordle_bp
     from app.projects.japan_recs.routes import japan_recs_bp
@@ -184,6 +185,9 @@ def create_app():
     )
     app.register_blueprint(
         battleship_online_bp, url_prefix="/battleship-online"
+    )
+    app.register_blueprint(
+        codenames_online_bp, url_prefix="/codenames-online"
     )
     app.register_blueprint(
         connect4_online_bp, url_prefix="/connect4-online"
@@ -275,6 +279,10 @@ def create_app():
     )
     from app.projects.tic_tac_toe_online.models import TicTacToeOnlineRoom
     from app.projects.battleship_online.models import BattleshipOnlineRoom
+    from app.projects.codenames_online.models import (
+        CodenamesConfusingWord,
+        CodenamesOnlineRoom,
+    )
     from app.projects.connect4_online.models import Connect4OnlineRoom
     from app.projects.friend_wordle.models import FriendWordleRoom
     from app.projects.nfl_survivor.models import (
