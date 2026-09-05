@@ -312,7 +312,24 @@ CSS prefix: **`cno-`**.
 }
 ```
 
-Word list assets: `app/projects/codenames_online/word_lists/<id>.json` + manifest (`word_lists/manifest.json`) with `{ id, name, default?: true }`. **Deferred** — add packs after PRD sign-off; ship v1 with one bundled default list.
+Word list assets live in `word_lists/`:
+
+| File | Purpose |
+|------|---------|
+| `manifest.json` | Catalog: `{ "lists": [{ "id", "name", "word_count", "default?" }] }` |
+| `<id>.json` | `{ "words": ["APPLE", …] }` — min **25** unique words; **400** typical |
+
+**Shipped lists:**
+
+| id | name | words | default |
+|----|------|-------|---------|
+| `base400` | Base400 | 400 | yes |
+| `base800` | Base800 | 800 | no (superset of Base400 — adds 400 words) |
+| `darktwinge832` | DarkTwinge832 | 832 | no |
+
+Loader: `app/projects/codenames_online/word_lists.py` (`list_word_lists`, `load_word_list`, `default_word_list_id`).
+
+To add a list: drop `<id>.json`, add an entry to `manifest.json`. Multi-word entries are one string (e.g. `"ICE CREAM"`).
 
 ### 9.3 Serialize (`room_to_dict`)
 
@@ -365,7 +382,7 @@ Table `codenames_online_room` — same lifecycle fields as other online games (`
 - [ ] `app/projects/codenames_online/` — models, room_service, serialize, routes, templates, static
 - [ ] Register blueprint + model import in `app/__init__.py`
 - [ ] Registry entry under `live_multiplayer_games`
-- [ ] Word list manifest + packs (**after PRD** — start with one bundled default)
+- [x] Word list manifest + Base400 default pack
 - [ ] Manual test: 2 browsers as spy/guesser; 4 humans optional
 
 ---
