@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Not Found - Connect 4 Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('connect4_online.static', filename='style.css') }}">
+
+<div class="c4o-wrapper">
+    <div class="c4o-container">
+        <h1>Room Not Found</h1>
+        <p class="c4o-subtitle">{{ message }}</p>
+        <a class="c4o-primary-btn c4o-link-btn" href="{{ url_for('connect4_online.index') }}">Start a New Game</a>
+    </div>
+</div>
+{% endblock %}

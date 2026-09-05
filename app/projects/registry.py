@@ -100,6 +100,17 @@ PROJECTS = [
         "order": 502,
     },
     {
+        "id": "connect4_online",
+        "name": "Connect 4 Online",
+        "description": "Drop four in a row with a friend via a shareable link",
+        "url": "/connect4-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "live_multiplayer_games",
+        "order": 503,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Connect 4 Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('connect4_online.static', filename='style.css') }}">
+
+<div class="c4o-wrapper">
+    <div class="c4o-container c4o-room-container">
+        <h1>Connect 4 Online</h1>
+
+        <div class="c4o-room-info">
+            <div class="c4o-room-code-label">Room code: <strong id="c4oRoomCode">{{ code }}</strong></div>
+            <div class="c4o-share-row" id="c4oShareRow">
+                <label for="c4oShareLink">Share this link with your opponent:</label>
+                <div class="c4o-share-input-row">
+                    <input type="text" id="c4oShareLink" readonly>
+                    <button id="c4oCopyBtn" class="c4o-secondary-btn c4o-copy-btn" type="button">Copy</button>
+                </div>
+            </div>
+            <div class="c4o-spectator-badge" id="c4oSpectatorBadge" hidden>You're spectating this room</div>
+            <div class="c4o-name-row" id="c4oNameRow" hidden>
+                <label for="c4oNameInput">Your name:</label>
+                <div class="c4o-share-input-row">
+                    <input type="text" id="c4oNameInput" maxlength="30" autocomplete="nickname">
+                    <button id="c4oNameSaveBtn" class="c4o-secondary-btn c4o-copy-btn" type="button">Save</button>
+                </div>
+            </div>
+            <div class="c4o-color-row" id="c4oColorRow" hidden>
+                <label>Your disc color:</label>
+                <div class="c4o-color-picker" id="c4oColorPicker"></div>
+            </div>
+            <div class="c4o-opponent-label" id="c4oOpponentLabel" hidden></div>
+        </div>
+
+        <div class="c4o-status-message" id="c4oStatusMessage">Loading&hellip;</div>
+
+        <div class="c4o-board-frame" id="c4oBoardFrame">
+            <div class="c4o-board" id="c4oBoard"></div>
+        </div>
+
+        <div class="c4o-actions">
+            <button id="c4oRematchBtn" class="c4o-primary-btn c4o-rematch-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('connect4_online.index') }}" class="c4o-secondary-btn c4o-home-btn">Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var C4O_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var C4O_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('connect4_online.static', filename='room.js') }}"></script>
+{% endblock %}

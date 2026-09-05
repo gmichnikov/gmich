@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Connect 4 Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('connect4_online.static', filename='style.css') }}">
+
+<div class="c4o-wrapper">
+    <div class="c4o-container">
+        <h1>Connect 4 Online</h1>
+        <p class="c4o-subtitle">Drop discs with a friend anywhere on the web &mdash; no login required.</p>
+
+        <div class="c4o-landing-panel">
+            <button id="c4oCreateBtn" class="c4o-primary-btn" type="button">Create New Game</button>
+
+            <div class="c4o-divider">or</div>
+
+            <form id="c4oJoinForm" class="c4o-join-form">
+                <label for="c4oJoinCode">Join with a room code</label>
+                <input type="text" id="c4oJoinCode" maxlength="6" placeholder="e.g. AB3XQK" autocomplete="off">
+                <button type="submit" class="c4o-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="c4oLandingError" class="c4o-error" hidden></p>
+    </div>
+</div>
+
+<script>
+    var C4O_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('connect4_online.static', filename='landing.js') }}"></script>
+{% endblock %}
