@@ -228,6 +228,13 @@
     color: #68d391;
 }
 
+.bso-join-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
 .bso-placement-actions {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;

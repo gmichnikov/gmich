@@ -12,6 +12,7 @@
     var isFiring = false;
     var isSavingName = false;
     var isPlacementAction = false;
+    var isJoining = false;
     var hasJoined = false;
     var nameDirty = false;
     var pendingName = null;
@@ -61,6 +62,8 @@
     var targetTitle = document.getElementById("bsoTargetTitle");
     var targetGrid = document.getElementById("bsoTargetGrid");
     var spectatorBoards = document.getElementById("bsoSpectatorBoards");
+    var joinPanel = document.getElementById("bsoJoinPanel");
+    var joinBtn = document.getElementById("bsoJoinBtn");
 
     shareLinkInput.value = window.location.href;
 
@@ -125,6 +128,14 @@
             return null;
         }
         return state.your_seat === "X" ? "O" : "X";
+    }
+
+    function bothSeatsFull(state) {
+        return !!(state.seats && state.seats.X && state.seats.O);
+    }
+
+    function canTakeSeat(state) {
+        return !state.your_seat && !bothSeatsFull(state) && !state.vs_cpu;
     }
 
     function showSinkToast(message, variant) {
@@ -348,11 +359,17 @@
     }
 
     function statusText(state) {
+        if (canTakeSeat(state)) {
+            return "Tap Join game to take the open seat.";
+        }
         if (state.status === "waiting") {
             if (state.vs_cpu) {
                 return "Setting up solo game\u2026";
             }
-            return "Waiting for an opponent\u2026 share the link above.";
+            if (state.your_seat) {
+                return "Waiting for an opponent\u2026 share the link above.";
+            }
+            return "Both seats are full.";
         }
         return "";
     }
@@ -560,6 +577,24 @@
         statusEl.textContent = statusMessage;
         statusEl.hidden = !statusMessage;
         statusEl.className = "bso-status-message bso-status-" + state.status;
+
+        joinPanel.hidden = !canTakeSeat(state);
+        joinBtn.disabled = isJoining;
+
+        if (canTakeSeat(state)) {
+            playBarEl.hidden = true;
+            boardTabsEl.hidden = true;
+            placementActions.hidden = true;
+            playerBoards.hidden = true;
+            spectatorBoards.hidden = true;
+            opponentLabel.hidden = true;
+            shareRow.hidden = true;
+            nameRow.hidden = true;
+            rematchBtn.hidden = true;
+            spectatorBadge.hidden = true;
+            return;
+        }
+
         updatePlayBar(state);
         wrapperEl.classList.toggle("bso-in-battle", isPlayer && state.status === "battle");
         updateMobileBoardTabs(state);
@@ -569,7 +604,7 @@
 
         var isFinished = state.status === "won";
         rematchBtn.hidden = !(isPlayer && isFinished);
-        spectatorBadge.hidden = isPlayer;
+        spectatorBadge.hidden = isPlayer || !bothSeatsFull(state);
         shareRow.hidden = !isPlayer || !!state.vs_cpu;
         nameRow.hidden = !isPlayer;
 
@@ -717,19 +752,47 @@
         return chain.then(render);
     }
 
-    function joinThenStart() {
-        apiRequest("POST", "/join")
+    function initRoom() {
+        apiRequest("GET", "/state")
             .then(function (state) {
-                hasJoined = true;
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
                 return flushPending(state);
             })
             .then(function () {
                 startPolling();
             })
             .catch(function (err) {
-                statusEl.textContent = err.message || "Could not join this room.";
+                statusEl.textContent = err.message || "Could not load this room.";
             });
     }
+
+    function handleJoinClick() {
+        if (isJoining) {
+            return;
+        }
+        isJoining = true;
+        joinBtn.disabled = true;
+        apiRequest("POST", "/join")
+            .then(function (state) {
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
+                return flushPending(state);
+            })
+            .catch(function (err) {
+                statusEl.textContent = err.message || "Could not join this room.";
+            })
+            .then(function () {
+                isJoining = false;
+                if (lastState) {
+                    joinBtn.disabled = !canTakeSeat(lastState);
+                }
+            });
+    }
+
+    joinBtn.addEventListener("click", handleJoinClick);
 
     function handleCopyClick() {
         var restoreLabel = copyBtn.textContent;
@@ -916,5 +979,5 @@
         }
     });
 
-    joinThenStart();
+    initRoom();
 })();

@@ -303,7 +303,7 @@ def _get_room_row(code):
     return room
 
 
-def create_room():
+def create_room(creator_player_id=None):
     cleanup_stale_rooms()
     for _ in range(20):
         code = _generate_code()
@@ -313,6 +313,7 @@ def create_room():
         room = BattleshipOnlineRoom(
             code=code,
             status=BattleshipOnlineRoom.STATUS_WAITING,
+            seat_x=creator_player_id,
             version=1,
             created_at=now,
             updated_at=now,
@@ -323,7 +324,7 @@ def create_room():
     raise RoomError("Could not create a room right now. Please try again.", 500)
 
 
-def create_cpu_room():
+def create_cpu_room(creator_player_id=None):
     cleanup_stale_rooms()
     for _ in range(20):
         code = _generate_code()
@@ -333,6 +334,7 @@ def create_cpu_room():
         room = BattleshipOnlineRoom(
             code=code,
             status=BattleshipOnlineRoom.STATUS_WAITING,
+            seat_x=creator_player_id,
             seat_o=CPU_PLAYER_ID,
             name_o=CPU_DISPLAY_NAME,
             vs_cpu=True,

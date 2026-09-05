@@ -72,7 +72,7 @@ def api_guesses():
 @friend_wordle_bp.route("/rooms", methods=["POST"])
 @_handle_room_errors
 def api_create_room():
-    room = create_room()
+    room = create_room(_player_id())
     return jsonify({"code": room.code}), 201
 
 

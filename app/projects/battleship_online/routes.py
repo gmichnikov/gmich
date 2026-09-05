@@ -70,9 +70,9 @@ def index():
 def api_create_room():
     data = request.get_json(silent=True) or {}
     if data.get("vs_cpu"):
-        room = create_cpu_room()
+        room = create_cpu_room(_player_id())
     else:
-        room = create_room()
+        room = create_room(_player_id())
     return jsonify({"code": room.code}), 201
 
 

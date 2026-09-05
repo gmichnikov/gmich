@@ -71,7 +71,7 @@ def index():
 @tic_tac_toe_online_bp.route("/rooms", methods=["POST"])
 @_handle_room_errors
 def api_create_room():
-    room = create_room()
+    room = create_room(_player_id())
     return jsonify({"code": room.code}), 201
 
 

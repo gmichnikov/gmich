@@ -270,6 +270,15 @@
     color: #ffd43b;
 }
 
+.ttto-join-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    max-width: 360px;
+    width: 100%;
+}
+
 .ttto-game-board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

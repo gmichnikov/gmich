@@ -70,7 +70,7 @@ def _get_room_row(code):
     return room
 
 
-def create_room():
+def create_room(creator_player_id=None):
     cleanup_stale_rooms()
     for _ in range(20):
         code = _generate_code()
@@ -83,6 +83,7 @@ def create_room():
             turn="X",
             last_starter="X",
             status=TicTacToeOnlineRoom.STATUS_WAITING,
+            seat_x=creator_player_id,
             version=1,
             created_at=now,
             updated_at=now,

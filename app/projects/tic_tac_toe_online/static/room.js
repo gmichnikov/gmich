@@ -8,6 +8,7 @@
     var isMoving = false;
     var isSavingName = false;
     var isSavingSymbol = false;
+    var isJoining = false;
     var hasJoined = false;
     var nameDirty = false;
     var pendingName = null;
@@ -29,6 +30,8 @@
     var symbolRow = document.getElementById("tttoSymbolRow");
     var symbolPicker = document.getElementById("tttoSymbolPicker");
     var opponentLabel = document.getElementById("tttoOpponentLabel");
+    var joinPanel = document.getElementById("tttoJoinPanel");
+    var joinBtn = document.getElementById("tttoJoinBtn");
 
     shareLinkInput.value = window.location.href;
 
@@ -105,9 +108,27 @@
         return state.your_seat === "X" ? "O" : "X";
     }
 
+    function bothSeatsFull(state) {
+        return !!(state.seats && state.seats.X && state.seats.O);
+    }
+
+    function canTakeSeat(state) {
+        return !state.your_seat && !bothSeatsFull(state);
+    }
+
+    function showGameBoard(state) {
+        return !!state.your_seat || bothSeatsFull(state);
+    }
+
     function statusText(state) {
+        if (canTakeSeat(state)) {
+            return "Tap Join game to take the open seat.";
+        }
         if (state.status === "waiting") {
-            return "Waiting for an opponent to join\u2026 share the link above.";
+            if (state.your_seat) {
+                return "Waiting for an opponent to join\u2026 share the link above.";
+            }
+            return "Both seats are full.";
         }
         if (state.status === "won") {
             var winnerName = seatName(state, state.winner);
@@ -190,9 +211,12 @@
         var isPlayer = !!state.your_seat;
         var isFinished = state.status === "won" || state.status === "draw";
         rematchBtn.hidden = !(isPlayer && isFinished);
-        spectatorBadge.hidden = isPlayer;
+        joinPanel.hidden = !canTakeSeat(state);
+        joinBtn.disabled = isJoining;
+        spectatorBadge.hidden = isPlayer || !bothSeatsFull(state);
         shareRow.hidden = !isPlayer;
         nameRow.hidden = !isPlayer;
+        boardEl.hidden = !showGameBoard(state);
 
         if (isPlayer) {
             nameInput.placeholder = "Player " + state.your_seat;
@@ -241,20 +265,6 @@
             });
         }
         return chain.then(render);
-    }
-
-    function joinThenStart() {
-        apiRequest("POST", "/join")
-            .then(function (state) {
-                hasJoined = true;
-                return flushPending(state);
-            })
-            .then(function () {
-                startPolling();
-            })
-            .catch(function (err) {
-                statusEl.textContent = err.message || "Could not join this room.";
-            });
     }
 
     function canMoveNow() {
@@ -419,5 +429,47 @@
         }
     });
 
-    joinThenStart();
+    function initRoom() {
+        apiRequest("GET", "/state")
+            .then(function (state) {
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
+                return flushPending(state);
+            })
+            .then(function () {
+                startPolling();
+            })
+            .catch(function (err) {
+                statusEl.textContent = err.message || "Could not load this room.";
+            });
+    }
+
+    function handleJoinClick() {
+        if (isJoining) {
+            return;
+        }
+        isJoining = true;
+        joinBtn.disabled = true;
+        apiRequest("POST", "/join")
+            .then(function (state) {
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
+                return flushPending(state);
+            })
+            .catch(function (err) {
+                statusEl.textContent = err.message || "Could not join this room.";
+            })
+            .then(function () {
+                isJoining = false;
+                if (lastState) {
+                    joinBtn.disabled = !canTakeSeat(lastState);
+                }
+            });
+    }
+
+    joinBtn.addEventListener("click", handleJoinClick);
+
+    initRoom();
 })();

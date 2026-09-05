@@ -107,7 +107,7 @@ def _get_room_row(code):
     return room
 
 
-def create_room():
+def create_room(creator_player_id=None):
     cleanup_stale_rooms()
     starter = random.choice(("X", "O"))
     for _ in range(20):
@@ -121,6 +121,7 @@ def create_room():
             turn=starter,
             last_starter=starter,
             status=Connect4OnlineRoom.STATUS_WAITING,
+            seat_x=creator_player_id,
             version=1,
             created_at=now,
             updated_at=now,

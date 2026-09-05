@@ -21,6 +21,7 @@
     var isSavingName = false;
     var isClaiming = false;
     var isConfirming = false;
+    var isJoining = false;
     var nameDirty = false;
     var pendingName = null;
     var secretDirty = false;
@@ -52,6 +53,8 @@
     var keyboardEl = document.getElementById("fwKeyboard");
     var toastEl = document.getElementById("fwToast");
     var rematchBtn = document.getElementById("fwRematchBtn");
+    var joinPanel = document.getElementById("fwJoinPanel");
+    var joinBtn = document.getElementById("fwJoinBtn");
 
     shareLinkInput.value = window.location.href;
 
@@ -134,6 +137,14 @@
         return null;
     }
 
+    function bothSeatsFull(state) {
+        return !!(state.seats && state.seats.X && state.seats.O);
+    }
+
+    function canTakeSeat(state) {
+        return !state.your_seat && !bothSeatsFull(state);
+    }
+
     function showToast(message) {
         if (!message) {
             toastEl.hidden = true;
@@ -177,6 +188,9 @@
     }
 
     function statusText(state) {
+        if (canTakeSeat(state)) {
+            return "Tap Join game to take the open seat.";
+        }
         if (isSpectator(state)) {
             return spectatorStatusText(state);
         }
@@ -467,10 +481,28 @@
         lastState = state;
         statusEl.textContent = statusText(state);
 
+        joinPanel.hidden = !canTakeSeat(state);
+        joinBtn.disabled = isJoining;
+
+        if (canTakeSeat(state)) {
+            spectatorBadge.hidden = true;
+            shareRow.hidden = true;
+            nameRow.hidden = true;
+            roleBadge.hidden = true;
+            rolePanel.hidden = true;
+            secretPanel.hidden = true;
+            setterWatchPanel.hidden = true;
+            waitingPanel.hidden = true;
+            gamePanel.hidden = true;
+            keyboardEl.hidden = true;
+            rematchBtn.hidden = true;
+            return;
+        }
+
         var isPlayer = !!state.your_seat;
         var isFinished = state.status === "won" || state.status === "lost";
 
-        spectatorBadge.hidden = isPlayer;
+        spectatorBadge.hidden = isPlayer || !bothSeatsFull(state);
         shareRow.hidden = !isPlayer;
         nameRow.hidden = !isPlayer;
         rematchBtn.hidden = !(isPlayer && isFinished);
@@ -590,19 +622,48 @@
         return chain.then(render);
     }
 
-    function joinThenStart() {
-        Promise.all([loadGuesses(), apiRequest("POST", "/join")])
+    function initRoom() {
+        Promise.all([loadGuesses(), apiRequest("GET", "/state")])
             .then(function (results) {
-                hasJoined = true;
-                return flushPending(results[1]);
+                var state = results[1];
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
+                return flushPending(state);
             })
             .then(function () {
                 startPolling();
             })
             .catch(function (err) {
-                statusEl.textContent = err.message || "Could not join this room.";
+                statusEl.textContent = err.message || "Could not load this room.";
             });
     }
+
+    function handleJoinClick() {
+        if (isJoining) {
+            return;
+        }
+        isJoining = true;
+        joinBtn.disabled = true;
+        apiRequest("POST", "/join")
+            .then(function (state) {
+                if (state.your_seat) {
+                    hasJoined = true;
+                }
+                return flushPending(state);
+            })
+            .catch(function (err) {
+                statusEl.textContent = err.message || "Could not join this room.";
+            })
+            .then(function () {
+                isJoining = false;
+                if (lastState) {
+                    joinBtn.disabled = !canTakeSeat(lastState);
+                }
+            });
+    }
+
+    joinBtn.addEventListener("click", handleJoinClick);
 
     function saveName() {
         if (isSavingName) {
@@ -779,5 +840,5 @@
         }
     });
 
-    joinThenStart();
+    initRoom();
 })();
