@@ -47,7 +47,7 @@ Backlog for games that fit the **room engine** used by Tic-Tac-Toe Online and Ba
 | **Onitama** | 5×5 + move cards |
 | **Coup / Love Letter (2p)** | Small deck, bluff |
 | **Liar's Dice (2p)** | Hidden dice, bids |
-| **Codenames Online** | 2-device spy/guesser split — see [design below](#codenames-online-v1) |
+| **Codenames Online** | 2-device spy/guesser — [PRD](../codenames_online/docs/PRD.md) (planning) |
 | **Carcassonne lite** | Tile placement |
 | **Stratego lite** | Hidden ranks, 8×8 |
 | **Bulls and Cows** | Number Mastermind |
@@ -122,75 +122,15 @@ Leverage existing hub projects; same room pattern:
 
 ---
 
-## Codenames Online (v1)
+## Codenames Online
 
-**Target:** 4 people, **2 phones** — competitive rules, minimal app scope.
+**Full spec:** [`../codenames_online/docs/PRD.md`](../codenames_online/docs/PRD.md)  
+Planning-only project folder: `app/projects/codenames_online/`.
 
-### Device layout
-
-| Phone | Seat | Who huddles | Sees |
-|-------|------|-------------|------|
-| **Spy phone** | X | Both spymasters | Full 5×5 grid with colors (key card) |
-| **Guesser phone** | O | All guessers (both teams) | Words only; colors after reveal |
-
-No secrets *within* a phone — only *between* the two phones (same as the board game: both spies share the key).
-
-Extra visitors = spectators (guesser view or full view).
-
-### v1: verbal clues (no clue UI)
-
-Clue word and number are said **out loud**. The app does **not** capture clues in v1.
-
-The app only:
-
-1. **Shows the board** (role-appropriate view per seat)
-2. **Handles guesses** — active team taps words on the guesser phone
-3. **Ends the turn** — button on guesser phone: “Done guessing” / pass
-
-Server still tracks `turn` (red | blue) so only the active team can guess.
-
-### Guess rules (server)
-
-- Tap unrevealed word → reveal tile; apply color from key:
-  - **Own team** → may guess again (same turn continues)
-  - **Other team** → end turn, switch teams
-  - **Neutral** → end turn
-  - **Assassin** → game over (other team wins)
-- **“Done guessing”** → end turn (same as passing remaining guesses in tabletop)
-- Ignore or reject taps when it’s not that team’s turn
-
-Optional v1.1: spy phone shows whose turn it is + running guess count (honor system for how many taps match the spoken number).
-
-### State shape (sketch)
-
-```json
-{
-  "words": ["Apple", "…"],
-  "key": ["red", "blue", "neutral", "…"],
-  "revealed": [false, …],
-  "turn": "red",
-  "status": "active",
-  "winner": null
-}
-```
-
-Serialize filters `key` for guesser seat until a card is revealed.
-
-### Fits existing engine
-
-- **2 seats** — no N-player join needed
-- **Per-seat serialize** — same pattern as Battleship fog-of-war
-- **Polling** — tap guess + end turn are discrete POSTs
-
-### Later (v2+)
-
-- Type clue + number on spy phone (validation, log)
-- Timer per turn
-- Word list packs / custom word lists
-- Duet (co-op) mode
+Summary: 4 people, 2 phones (Spy + Guesser seats), verbal clues in v1, app handles board + guesses + done.
 
 ---
 
-- Category on homepage: **Live Multiplayer Games** (`/live-multiplayer-games`)
+## Notes
 - Shared engine extraction (optional someday): `room_service` patterns, player id, serialize per-viewer, cleanup
 - Mobile: one board at a time + bottom turn bar (Battleship)
