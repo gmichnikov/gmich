@@ -63,6 +63,9 @@
 | **Product name** | **Codenames** (homepage + in-app). URL slug: `/codenames-online/`. Personal/family site — see §10. |
 | **Start game** | **Clue-giver phone only** — they run setup; guesser phone shows “Waiting to start…” |
 | **Creator join** | Creator auto-claims first device seat on room create (same as TTTO/Battleship) |
+| **Confusing words** | **Global** list; words stay in list files. **Toggle** at deal time: “Exclude confusing words” (**default on**). Only **hub admin** (`is_admin`) can edit the list. |
+| **Boot word (admin)** | During pre-start preview: **one action** — remove from this board **and** add to global confusing list. |
+| **Word identity** | Normalized string (ALL CAPS, e.g. `ICE CREAM`) — same token across all lists; exclusion applies everywhere. |
 
 ---
 
@@ -74,8 +77,9 @@ This is the flow — no hidden steps:
 1. Person A creates game, shares link
 2. Person B opens link on another device → both devices are in the room
 3. One device taps “Clue-giver phone” → the other becomes “Guesser phone”
-4. On clue-giver phone: pick word list, enter both spymaster names (one per color)
-5. Deal board → team with 9 cards goes first → play
+4. On clue-giver phone: pick word list, enter spymaster names, set **Exclude confusing words** (default on)
+5. Deal **preview** board (25 words + key) — clue-giver reviews; admin can boot words
+6. Confirm **Start game** → guesser phone sees board → play
 ```
 
 ### Step 1–2: Get both devices in the room
@@ -100,18 +104,26 @@ There is no separate “pick guesser” step — claiming clue-giver assigns bot
 On the **clue-giver phone only:**
 
 1. **Word list** — picker with named lists; default pre-selected.
-2. **Spymaster names** — two fields, one per color (e.g. Red = “Sarah”, Blue = “Mike”). These are the two people giving clues at this phone.
-3. Tap **Start game** when ready (**clue-giver phone only**).
+2. **Spymaster names** — two fields, one per color (e.g. Red = “Sarah”, Blue = “Mike”).
+3. **Exclude confusing words** — toggle, **default on**. Filters the deal pool; words are not removed from list files.
+4. Tap **Deal preview** when ready (**clue-giver phone only**).
 
-The **guesser phone** shows the two spymaster names once entered, plus **“Waiting for {name} to start…”** until the board deals. It does not show the key.
+The **guesser phone** shows spymaster names once entered, plus **“Waiting to start…”** until the game is confirmed. It never sees the preview board or key.
 
-### Step 5: Deal and first turn
+### Step 5: Preview board (clue-giver phone only)
 
-1. Server deals 25 words from the chosen list and a random key (9 / 8 / 7 / 1).
-2. Red vs blue placement on the key is **random** each game.
-3. **First turn** = whichever color has **9 cards** on the key (official Codenames rule).
-4. Clue-giver phone sees the full colored grid. Guesser phone sees words only.
-5. Turn bar on both phones: **“{Spymaster name}’s turn ({Color})”** — play begins.
+1. Server deals 25 words + random key into status **`preview`**.
+2. Red vs blue on the key is random; team with **9 cards** will go first once play starts.
+3. Clue-giver phone shows the full 5×5 grid (words + colors).
+4. **Admin only** (hub login + `is_admin` on this browser): tap **Boot** on any tile → word is **replaced on this board** and **added to the global confusing list** permanently.
+5. Tap **Start game** to confirm → status **`active`**; guesser phone receives words-only grid; play begins.
+
+Non-admin clue-givers see the preview but **no Boot controls** — they can still confirm Start.
+
+### Step 6: Play
+
+1. Turn bar on both phones: **“{Spymaster name}’s turn ({Color})”**.
+2. Guesser phone never saw the preview — only the final board.
 
 ### Edge case: picked the wrong phone before Start
 
@@ -122,19 +134,19 @@ If someone tapped clue-giver on the wrong device **before Start game**, either d
 ## 5. Turn flow (every moment)
 
 ```
-Lobby (2 devices) → Role claim → Word list + names → Deal → [Team turn loop] → Win → Rematch?
+Lobby → Role claim → Setup (+ exclude toggle) → Preview (clue phone) → Start → [Turn loop] → Win → Rematch?
 ```
 
 ### 5.1 Lobby (steps 1–4 above)
 
 See §4 — no separate lobby logic beyond that flow.
 
-### 5.2 Deal (step 5)
+### 5.2 Preview & deal
 
-1. Server picks 25 words from selected list + random key (standard counts).
-2. Server randomly assigns which key color is red vs blue; **team with 9 cards goes first**.
-3. Clue-giver phone: full 5×5 colored grid + spymaster names.
-4. Guesser phone: 5×5 words only + spymaster names in turn bar.
+1. Clue-giver taps **Deal preview** → 25 words + key, status **`preview`**.
+2. Deal pool = chosen list minus words on global confusing list (if toggle on) minus words already on this board.
+3. Admin may **Boot** tiles during preview (swap + permanent tag).
+4. **Start game** → **`active`**; guesser grid syncs; first turn = team with 9 cards.
 
 ### 5.3 Active team turn (e.g. Red — spymaster “Sarah”)
 
@@ -152,7 +164,7 @@ See §4 — no separate lobby logic beyond that flow.
 
 - **Win:** All of one team’s words revealed → that team wins.
 - **Assassin:** Opposite team wins immediately.
-- **Rematch:** Same word list pre-selected; user confirms → new 25 words + new random key/colors.
+- **Rematch:** Same list + exclude toggle pre-selected → **Deal preview** again → confirm Start.
 
 ---
 
@@ -189,7 +201,10 @@ On `POST /end_turn`:
 - **Spymaster name fields** (Red / Blue) in lobby; editable until game starts.
 - Turn bar: **“{Name}’s turn ({Color})”** + remaining counts per team.
 - Read-only for guesses (no tile taps that affect game).
-- Word list picker + **Start game** (clue-giver phone only) before first deal; **Rematch** with confirm after win.
+- Word list picker + **Exclude confusing words** toggle (default on).
+- **Deal preview** then **Start game** (clue-giver only); same on rematch.
+- During **`preview`**: full grid + **Boot** button per tile (**admin logged in only**).
+- **Rematch** with confirm after win.
 
 ### Guesser phone
 
@@ -197,7 +212,12 @@ On `POST /end_turn`:
 - All unrevealed tiles tappable; revealed tiles visually **dead** (dimmed, no tap).
 - **Done guessing** only in bottom bar **during active turn** — hidden otherwise.
 - Turn bar: **“{Name}’s turn ({Color})”** — prominent; both spymaster names in lobby.
-- Pre-start: **“Waiting to start…”** while clue-giver finishes setup.
+- Pre-start: **“Waiting to start…”** — no preview, no key, no words until **`active`**.
+
+### Admin (hub login, off-game)
+
+- **`/codenames-online/admin/confusing-words`** — browse/search words across all lists; toggle confusing on/off (untag supported).
+- Same auth pattern as site admin: `@login_required` + `current_user.is_admin`.
 
 ### Both
 
@@ -219,8 +239,9 @@ Each lobby phase gets **one primary action** — no forms and choices competing 
 |-------|----------------|----------------|
 | Waiting for 2nd device | Room code + share hint | **Share link** (copy or native share) |
 | Both devices in | “Who’s which phone?” | **Clue-giver phone** (single button) |
-| Setup (clue phone) | List picker + two name fields | **Start game** |
-| Setup (guesser phone) | Names + waiting message | — (read-only) |
+| Setup (clue phone) | List + names + exclude toggle | **Deal preview** |
+| Preview (clue phone) | 5×5 grid + key | **Start game** (admin: **Boot** on tiles) |
+| Preview (guesser phone) | Waiting message | — |
 | Playing | Grid + turn bar | Tap words / **Done guessing** |
 | Won | Winner + rematch | **Play again** |
 
@@ -264,9 +285,8 @@ Both phones share a **fixed bottom bar** (Battleship pattern):
 ### 8.7 Rematch flow
 
 1. Either phone taps **Play again** after win.
-2. Clue-giver phone sees confirm: same word list pre-selected, can change list.
-3. Names carry over; editable before deal.
-4. **Start game** → new 25 words + new key.
+2. Clue-giver phone: same list + exclude toggle pre-selected; names carry over.
+3. **Deal preview** → optional admin boots → **Start game**.
 
 ---
 
@@ -281,12 +301,16 @@ Both phones share a **fixed bottom bar** (Battleship pattern):
 | GET | `/codenames-online/room/<code>` | Page shell |
 | POST | `/codenames-online/room/<code>/join` | Claim device seat (no role yet) |
 | POST | `/codenames-online/room/<code>/claim_role` | `{ role: "clue_giver" }` or `{ swap: true }` |
-| POST | `/codenames-online/room/<code>/setup` | `{ word_list_id, name_red, name_blue }` — clue-giver only |
-| POST | `/codenames-online/room/<code>/start` | Deal board — **clue-giver phone only** |
+| POST | `/codenames-online/room/<code>/setup` | `{ word_list_id, name_red, name_blue, exclude_confusing }` — clue-giver only |
+| POST | `/codenames-online/room/<code>/preview` | Deal preview board — clue-giver only |
+| POST | `/codenames-online/room/<code>/boot_word` | `{ index }` — admin only; swap tile + add to global list |
+| POST | `/codenames-online/room/<code>/start` | Preview → **active** — clue-giver only |
 | GET | `/codenames-online/room/<code>/state` | Poll |
 | POST | `/codenames-online/room/<code>/guess` | `{ index: 0–24 }` |
 | POST | `/codenames-online/room/<code>/end_turn` | Pass |
-| POST | `/codenames-online/room/<code>/rematch` | Confirm rematch → new board, same list |
+| POST | `/codenames-online/room/<code>/rematch` | Reset to setup; same list + toggle |
+| GET | `/codenames-online/admin/confusing-words` | Admin UI — browse/toggle (login + `is_admin`) |
+| POST | `/codenames-online/admin/confusing-words` | `{ word, confusing: true \| false }` — admin only |
 
 Player identity: `localStorage` + `X-CNO-Player-Id` header (same pattern as TTTO/BSO).
 
@@ -300,9 +324,10 @@ CSS prefix: **`cno-`**.
   "key": ["red", "blue", "neutral", "…25"],
   "revealed": [false, "…25"],
   "turn": "red",
-  "status": "waiting_devices | waiting_roles | waiting_start | active | won",
+  "status": "waiting_devices | waiting_roles | waiting_start | preview | active | won",
   "winner": "red | blue | null",
-  "word_list_id": "default",
+  "word_list_id": "base400",
+  "exclude_confusing": true,
   "name_red": "Sarah",
   "name_blue": "Mike",
   "phone_role_x": "clue_giver | guesser | null",
@@ -329,19 +354,44 @@ Word list assets live in `word_lists/`:
 
 Loader: `app/projects/codenames_online/word_lists.py` (`list_word_lists`, `load_word_list`, `default_word_list_id`).
 
-To add a list: drop `<id>.json`, add an entry to `manifest.json`. Multi-word entries are one string (e.g. `"ICE CREAM"`).
+To add a list: drop `<id>.json`, add an entry to `manifest.json`. Multi-word entries are one string (e.g. `"ICE CREAM"`). All lists use the same normalization — words are comparable across lists for the confusing-word registry.
 
-### 9.3 Serialize (`room_to_dict`)
+### 9.3 Confusing words (global)
+
+**Storage:** table `codenames_confusing_word`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `word` | `String`, PK | Normalized: `strip().upper()` — e.g. `ICE CREAM` |
+| `created_at` | `DateTime` | |
+| `created_by_user_id` | FK → user, nullable | Admin who tagged it |
+
+**Rules:**
+
+- Tagging is **global** — applies to every list and every future deal.
+- Words are **never removed** from list JSON files.
+- **`exclude_confusing`** (room field, default `true`): deal/preview/boot-replacement draws only from words not in this table.
+- **Boot** (preview, admin): replace tile with a new word from the filtered pool; insert row into `codenames_confusing_word` if absent.
+- **Untag:** admin UI sets `confusing: false` → delete row.
+- **Normalize** on every write: `word.strip().upper()`.
+
+**Admin browse UI:** flatten all manifest lists; show each unique word once with which list(s) contain it; filter/search; toggle confusing.
+
+**Auth:** gameplay stays no-login; admin routes require hub login + `is_admin` (same as existing site admin). Admin must be logged in on the clue-giver phone browser to use Boot in preview.
+
+### 9.4 Serialize (`room_to_dict`)
 
 | Viewer | Payload |
 |--------|---------|
-| **Clue-giver phone** | Full `words`, `key`, `revealed`, `turn`, `status`, `winner`, names, remaining counts |
-| **Guesser phone** | `words`, `revealed` (+ colors only for revealed indices), `turn`, names — no unrevealed `key` |
+| **Clue-giver phone** | Full `words`, `key`, `revealed`, `turn`, `status`, `winner`, names, remaining counts; in **`preview`**: boot affordances if viewer is admin |
+| **Guesser phone** | Nothing during **`preview`**. During **`active`/`won`**: `words`, revealed colors only, `turn`, names — no unrevealed `key` |
 | **Spectator / unseated** | Same as guesser |
 
-### 9.4 DB
+### 9.5 DB
 
 Table `codenames_online_room` — same lifecycle fields as other online games (`code`, seats, `version`, `updated_at`, 14-day idle cleanup).
+
+Table `codenames_confusing_word` — global confusing-word registry (§9.3).
 
 **Migration:** User runs `flask db migrate` / `upgrade` — do not hand-create migration files in agent sessions.
 
@@ -382,7 +432,9 @@ Table `codenames_online_room` — same lifecycle fields as other online games (`
 - [ ] `app/projects/codenames_online/` — models, room_service, serialize, routes, templates, static
 - [ ] Register blueprint + model import in `app/__init__.py`
 - [ ] Registry entry under `live_multiplayer_games`
-- [x] Word list manifest + Base400 default pack
+- [x] Word list manifest + Base400, Base800, DarkTwinge832
+- [ ] `codenames_confusing_word` model + admin browse UI
+- [ ] Preview / boot / exclude-confusing deal logic
 - [ ] Manual test: 2 browsers as spy/guesser; 4 humans optional
 
 ---
