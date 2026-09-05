@@ -1,0 +1,441 @@
+.fw-wrapper {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #e8eef4;
+    min-height: calc(100vh - 70px - 60px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px;
+    margin: -20px;
+}
+
+.fw-container {
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+}
+
+.fw-room-container {
+    max-width: 480px;
+}
+
+.fw-wrapper h1 {
+    color: #1a3a5c;
+    font-size: 2.1em;
+    margin-bottom: 8px;
+}
+
+.fw-subtitle {
+    color: #4a6278;
+    font-size: 1.05em;
+    margin-bottom: 20px;
+}
+
+.fw-landing-panel,
+.fw-room-info {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(26, 58, 92, 0.1);
+    border: 1px solid #d0dae4;
+    text-align: left;
+}
+
+.fw-room-info {
+    margin-bottom: 16px;
+}
+
+.fw-primary-btn,
+.fw-secondary-btn {
+    padding: 12px 24px;
+    font-size: 1em;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.fw-primary-btn {
+    background: #6aaa64;
+    color: white;
+    width: 100%;
+}
+
+.fw-primary-btn:hover {
+    background: #5a9954;
+    transform: translateY(-1px);
+}
+
+.fw-primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.fw-link-btn {
+    display: inline-block;
+    margin-top: 12px;
+}
+
+.fw-divider {
+    margin: 18px 0;
+    color: #8899aa;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.fw-join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fw-join-form label,
+.fw-share-row label,
+.fw-name-row label,
+.fw-secret-panel label {
+    font-weight: 600;
+    color: #334455;
+    font-size: 0.9em;
+}
+
+.fw-join-form input,
+.fw-share-input-row input,
+.fw-name-row input,
+.fw-secret-input-row input {
+    padding: 10px;
+    font-size: 1em;
+    border: 2px solid #d0dae4;
+    border-radius: 8px;
+    color: #223344;
+    background: #fafbfc;
+}
+
+.fw-join-form input {
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.fw-secondary-btn {
+    background: white;
+    color: #1a3a5c;
+    border: 2px solid #1a3a5c;
+}
+
+.fw-secondary-btn:hover {
+    background: #f0f4f8;
+}
+
+.fw-error {
+    color: #c0392b;
+    font-weight: 600;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.fw-room-code-label {
+    font-size: 0.95em;
+    color: #334455;
+    margin-bottom: 10px;
+}
+
+.fw-share-row {
+    margin-bottom: 12px;
+}
+
+.fw-share-input-row,
+.fw-secret-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.fw-share-input-row input,
+.fw-secret-input-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.fw-secret-input-row input {
+    font-size: 1.4em;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.fw-secret-masked {
+    -webkit-text-security: disc;
+    text-security: disc;
+}
+
+.fw-copy-btn {
+    flex-shrink: 0;
+    padding: 10px 16px;
+}
+
+.fw-spectator-badge {
+    background: #fff3cd;
+    color: #856404;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.fw-name-row {
+    margin-top: 12px;
+}
+
+.fw-role-badge {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #eef4fb;
+    color: #1a3a5c;
+    font-size: 0.9em;
+    font-weight: 600;
+    text-align: center;
+}
+
+.fw-waiting-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px 20px;
+    border: 1px solid #d0dae4;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.fw-waiting-panel p {
+    margin: 0;
+    color: #4a6278;
+    font-size: 1.05em;
+    line-height: 1.5;
+}
+
+.fw-status-message {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1a3a5c;
+    margin: 16px 0;
+    min-height: 1.5em;
+}
+
+.fw-role-panel,
+.fw-secret-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #d0dae4;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.fw-confirm-btn {
+    margin-top: 14px;
+}
+
+.fw-setter-watch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    border: 1px solid #d0dae4;
+    margin-bottom: 12px;
+}
+
+.fw-setter-word-label {
+    font-weight: 600;
+    color: #334455;
+    font-size: 0.95em;
+}
+
+.fw-setter-word-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #1a3a5c;
+    min-width: 5.5em;
+    text-align: center;
+}
+
+.fw-game-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 12px 8px;
+    border: 1px solid #d0dae4;
+    margin-bottom: 12px;
+}
+
+.fw-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.fw-row {
+    display: flex;
+    gap: 6px;
+}
+
+.fw-cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border: 2px solid #d3d6da;
+    border-radius: 4px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.fw-cell.fw-correct {
+    background: #6aaa64;
+    border-color: #6aaa64;
+    color: #fff;
+}
+
+.fw-cell.fw-present {
+    background: #c9b458;
+    border-color: #c9b458;
+    color: #fff;
+}
+
+.fw-cell.fw-absent {
+    background: #787c7e;
+    border-color: #787c7e;
+    color: #fff;
+}
+
+.fw-cell.fw-shake {
+    animation: fwShake 0.5s ease;
+}
+
+@keyframes fwShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+.fw-keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #e0e4e8;
+}
+
+.fw-keyboard-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.fw-key {
+    min-width: 34px;
+    height: 48px;
+    padding: 0 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    background: #d3d6da;
+    color: #1a1a1b;
+    cursor: pointer;
+}
+
+.fw-key-wide {
+    min-width: 56px;
+    font-size: 0.75rem;
+}
+
+.fw-key:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.fw-key.fw-correct {
+    background: #6aaa64;
+    color: #fff;
+}
+
+.fw-key.fw-present {
+    background: #c9b458;
+    color: #fff;
+}
+
+.fw-key.fw-absent {
+    background: #787c7e;
+    color: #fff;
+}
+
+.fw-readonly .fw-key {
+    pointer-events: none;
+}
+
+.fw-toast {
+    color: #c0392b;
+    font-weight: 600;
+    font-size: 0.95em;
+    margin: 0 0 12px;
+    text-align: center;
+}
+
+.fw-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.fw-rematch-btn {
+    width: auto;
+}
+
+.fw-home-btn {
+    padding: 12px 24px;
+}
+
+@media (max-width: 480px) {
+    .fw-cell {
+        width: 44px;
+        height: 44px;
+        font-size: 1.3rem;
+    }
+
+    .fw-row {
+        gap: 4px;
+    }
+
+    .fw-key {
+        min-width: 28px;
+        height: 42px;
+        padding: 0 6px;
+        font-size: 0.8rem;
+    }
+}

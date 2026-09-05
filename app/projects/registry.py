@@ -111,6 +111,17 @@ PROJECTS = [
         "order": 503,
     },
     {
+        "id": "friend_wordle",
+        "name": "Friend Wordle",
+        "description": "Pick a secret word for a friend to guess in a shareable room",
+        "url": "/friend-wordle-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "live_multiplayer_games",
+        "order": 504,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",

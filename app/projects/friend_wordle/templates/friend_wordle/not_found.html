@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Not Found - Friend Wordle{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('friend_wordle.static', filename='style.css') }}">
+
+<div class="fw-wrapper">
+    <div class="fw-container">
+        <h1>Room Not Found</h1>
+        <p class="fw-subtitle">{{ message }}</p>
+        <a class="fw-primary-btn fw-link-btn" href="{{ url_for('friend_wordle.index') }}">Start a New Game</a>
+    </div>
+</div>
+{% endblock %}

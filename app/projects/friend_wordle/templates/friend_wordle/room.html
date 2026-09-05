@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Friend Wordle{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('friend_wordle.static', filename='style.css') }}">
+
+<div class="fw-wrapper">
+    <div class="fw-container fw-room-container">
+        <h1>Friend Wordle</h1>
+
+        <div class="fw-room-info">
+            <div class="fw-room-code-label">Room code: <strong id="fwRoomCode">{{ code }}</strong></div>
+            <div class="fw-share-row" id="fwShareRow">
+                <label for="fwShareLink">Share this link with a friend:</label>
+                <div class="fw-share-input-row">
+                    <input type="text" id="fwShareLink" readonly>
+                    <button id="fwCopyBtn" class="fw-secondary-btn fw-copy-btn" type="button">Copy</button>
+                </div>
+            </div>
+            <div class="fw-spectator-badge" id="fwSpectatorBadge" hidden>You're spectating this room</div>
+            <div class="fw-name-row" id="fwNameRow" hidden>
+                <label for="fwNameInput">Your name:</label>
+                <div class="fw-share-input-row">
+                    <input type="text" id="fwNameInput" maxlength="30" autocomplete="nickname">
+                    <button id="fwNameSaveBtn" class="fw-secondary-btn fw-copy-btn" type="button">Save</button>
+                </div>
+            </div>
+            <div class="fw-role-badge" id="fwRoleBadge" hidden></div>
+        </div>
+
+        <div class="fw-status-message" id="fwStatusMessage">Loading&hellip;</div>
+
+        <div class="fw-role-panel" id="fwRolePanel" hidden>
+            <button id="fwClaimSetterBtn" class="fw-primary-btn" type="button">I&rsquo;ll be the setter</button>
+        </div>
+
+        <div class="fw-waiting-panel" id="fwWaitingPanel" hidden>
+            <p id="fwWaitingMessage"></p>
+        </div>
+
+        <div class="fw-secret-panel" id="fwSecretPanel" hidden>
+            <label for="fwSecretInput">Your secret word (5 letters):</label>
+            <div class="fw-secret-input-row">
+                <input
+                    type="text"
+                    id="fwSecretInput"
+                    class="fw-secret-masked"
+                    maxlength="5"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    data-bwignore
+                    inputmode="text"
+                    aria-label="Secret word, 5 letters"
+                >
+                <button id="fwSecretShowBtn" class="fw-secondary-btn fw-copy-btn" type="button">Show</button>
+            </div>
+            <button id="fwConfirmBtn" class="fw-primary-btn fw-confirm-btn" type="button">Confirm &amp; start</button>
+        </div>
+
+        <div class="fw-setter-watch" id="fwSetterWatchPanel" hidden>
+            <span class="fw-setter-word-label">Your word:</span>
+            <span class="fw-setter-word-value" id="fwSetterWordValue">&bull;&bull;&bull;&bull;&bull;</span>
+            <button id="fwSetterWordShowBtn" class="fw-secondary-btn fw-copy-btn" type="button">Show</button>
+        </div>
+
+        <div class="fw-game-panel" id="fwGamePanel" hidden>
+            <div class="fw-grid" id="fwGrid"></div>
+            <div class="fw-keyboard" id="fwKeyboard" hidden></div>
+        </div>
+
+        <p class="fw-toast" id="fwToast" hidden></p>
+
+        <div class="fw-actions">
+            <button id="fwRematchBtn" class="fw-primary-btn fw-rematch-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('friend_wordle.index') }}" class="fw-secondary-btn fw-home-btn">Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var FW_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var FW_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('friend_wordle.static', filename='room.js') }}"></script>
+{% endblock %}

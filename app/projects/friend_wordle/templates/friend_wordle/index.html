@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Friend Wordle{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('friend_wordle.static', filename='style.css') }}">
+
+<div class="fw-wrapper">
+    <div class="fw-container">
+        <h1>Friend Wordle</h1>
+        <p class="fw-subtitle">Pick a secret word for a friend to guess &mdash; or be the one guessing.</p>
+
+        <div class="fw-landing-panel">
+            <button id="fwCreateBtn" class="fw-primary-btn" type="button">Create New Game</button>
+
+            <div class="fw-divider">or</div>
+
+            <form id="fwJoinForm" class="fw-join-form">
+                <label for="fwJoinCode">Join with a room code</label>
+                <input type="text" id="fwJoinCode" maxlength="6" placeholder="e.g. AB3XQK" autocomplete="off">
+                <button type="submit" class="fw-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="fwLandingError" class="fw-error" hidden></p>
+    </div>
+</div>
+
+<script>
+    var FW_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('friend_wordle.static', filename='landing.js') }}"></script>
+{% endblock %}
