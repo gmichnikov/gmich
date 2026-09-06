@@ -15,6 +15,7 @@
 
     var statusEl = document.getElementById("cnoStatusMessage");
     var toastEl = document.getElementById("cnoToast");
+    var roomInfo = document.getElementById("cnoRoomInfo");
     var shareRow = document.getElementById("cnoShareRow");
     var copyBtn = document.getElementById("cnoCopyBtn");
     var shareBtn = document.getElementById("cnoShareBtn");
@@ -431,14 +432,15 @@
         if (state.status === "won") {
             var showFull = (isClueGiver(state) || postGameRevealed) && state.key;
             if (revealed) {
-                if (!isClueGiver(state)) {
-                    classes.push("cno-tile-revealed");
-                }
                 var revealedColor = state.key ? state.key[index] : (state.tile_colors ? state.tile_colors[index] : "neutral");
                 classes.push("cno-tile-" + revealedColor);
+                if (showFull) {
+                    classes.push("cno-tile-guessed-dim");
+                } else {
+                    classes.push("cno-tile-revealed");
+                }
             } else if (showFull) {
-                classes.push("cno-tile-unguessed");
-                classes.push("cno-tile-unguessed-" + state.key[index]);
+                classes.push("cno-tile-" + state.key[index]);
             } else {
                 classes.push("cno-tile-hidden");
             }
@@ -448,6 +450,7 @@
         if (revealed) {
             if (isClueGiver(state) && state.key) {
                 classes.push("cno-tile-" + state.key[index]);
+                classes.push("cno-tile-guessed-dim");
             } else {
                 classes.push("cno-tile-revealed");
                 if (state.tile_colors && state.tile_colors[index]) {
@@ -456,8 +459,7 @@
             }
         } else {
             if (isClueGiver(state) && state.key) {
-                classes.push("cno-tile-unguessed");
-                classes.push("cno-tile-unguessed-" + state.key[index]);
+                classes.push("cno-tile-" + state.key[index]);
             } else {
                 classes.push("cno-tile-hidden");
                 if (isSelected) {
@@ -807,6 +809,9 @@
 
         var showShare = !rolesAssigned(state) && !compact;
         shareRow.hidden = !showShare;
+        if (compact) {
+            roomInfo.open = false;
+        }
 
         joinPanel.hidden = !canTakeSeat(state);
         joinBtn.disabled = isJoining;
