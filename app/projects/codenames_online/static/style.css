@@ -277,7 +277,9 @@
 .cno-redeal-btn[hidden],
 .cno-done-btn[hidden],
 .cno-reveal-key-btn[hidden],
-.cno-rematch-btn[hidden] {
+.cno-rematch-btn[hidden],
+.cno-guess-log[hidden],
+.cno-turn-announce[hidden] {
     display: none !important;
 }
 
@@ -419,31 +421,37 @@
 }
 
 .cno-tile-unguessed {
-    opacity: 0.95;
+    background: #ffffff;
+    color: #1a1a1a;
+    opacity: 1;
     cursor: default;
 }
 
 .cno-tile-unguessed-red {
-    background-color: rgba(192, 57, 43, 0.16) !important;
-    border: 2px dashed #c0392b !important;
-    color: #922b21 !important;
+    background: #ffffff !important;
+    border: 3px solid #c0392b !important;
+    box-shadow: inset 0 0 0 1px #c0392b;
+    color: #1a1a1a !important;
 }
 
 .cno-tile-unguessed-blue {
-    background-color: rgba(41, 128, 185, 0.16) !important;
-    border: 2px dashed #2980b9 !important;
-    color: #1f618d !important;
+    background: #ffffff !important;
+    border: 3px solid #2980b9 !important;
+    box-shadow: inset 0 0 0 1px #2980b9;
+    color: #1a1a1a !important;
 }
 
 .cno-tile-unguessed-neutral {
-    background-color: rgba(212, 184, 150, 0.25) !important;
-    border: 2px dashed #a0825e !important;
-    color: #5c472d !important;
+    background: #ffffff !important;
+    border: 3px solid #c4a574 !important;
+    box-shadow: inset 0 0 0 1px #c4a574;
+    color: #1a1a1a !important;
 }
 
 .cno-tile-unguessed-assassin {
-    background-color: rgba(44, 44, 44, 0.18) !important;
-    border: 2.5px dashed #1a1a1a !important;
+    background: #ffffff !important;
+    border: 3px solid #111111 !important;
+    box-shadow: inset 0 0 0 1px #111111;
     color: #1a1a1a !important;
 }
 
@@ -461,6 +469,28 @@
 
 .cno-tile-flipping {
     animation: cnoCardFlip 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cnoJustGuessedPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.85);
+        transform: scale(1);
+    }
+    40% {
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.35);
+        transform: scale(1.06);
+        z-index: 6;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+        transform: scale(1);
+    }
+}
+
+.cno-tile-just-guessed {
+    animation: cnoCardFlip 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+        cnoJustGuessedPulse 1.1s ease 0.32s;
+    z-index: 6;
 }
 
 .cno-boot-btn {
@@ -485,20 +515,206 @@
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
     z-index: 20;
+    transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .cno-turn-red .cno-play-bar {
-    border-top: 4px solid #c0392b;
+    border-top: 6px solid #e74c3c;
+    background: #6b1d18;
 }
 
 .cno-turn-blue .cno-play-bar {
-    border-top: 4px solid #2980b9;
+    border-top: 6px solid #5dade2;
+    background: #163a5f;
+}
+
+@keyframes cnoPlayBarFlash {
+    0%, 100% {
+        filter: brightness(1);
+    }
+    18% {
+        filter: brightness(1.55);
+    }
+    36% {
+        filter: brightness(1);
+    }
+    54% {
+        filter: brightness(1.35);
+    }
+}
+
+.cno-play-bar-flash {
+    animation: cnoPlayBarFlash 1.15s ease;
 }
 
 .cno-turn-banner {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.08rem;
+    font-weight: 800;
     margin-bottom: 8px;
+    letter-spacing: 0.01em;
+}
+
+.cno-guess-log {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0 0 10px;
+    text-align: left;
+}
+
+.cno-guess-log-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.cno-guess-log-label {
+    flex-shrink: 0;
+    width: 5.6em;
+    padding-top: 3px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.72;
+}
+
+.cno-guess-log-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 1.4em;
+}
+
+.cno-guess-log-empty {
+    font-size: 0.82rem;
+    font-weight: 500;
+    opacity: 0.55;
+}
+
+.cno-guess-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.35;
+}
+
+.cno-guess-chip-red {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+.cno-guess-chip-blue {
+    background: #2980b9;
+    color: #ffffff;
+}
+
+.cno-guess-chip-neutral {
+    background: #d4b896;
+    color: #1a1a1a;
+}
+
+.cno-guess-chip-assassin {
+    background: #111111;
+    color: #ffffff;
+}
+
+@keyframes cnoChipFresh {
+    0% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    40% {
+        transform: scale(1.12);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.cno-guess-chip-fresh {
+    animation: cnoChipFresh 0.45s ease;
+}
+
+.cno-turn-announce {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.42);
+}
+
+.cno-turn-announce-card {
+    min-width: min(78%, 320px);
+    padding: 26px 32px;
+    border-radius: 16px;
+    text-align: center;
+    color: #ffffff;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.cno-turn-announce-red .cno-turn-announce-card {
+    background: #c0392b;
+}
+
+.cno-turn-announce-blue .cno-turn-announce-card {
+    background: #2980b9;
+}
+
+.cno-turn-announce-neutral .cno-turn-announce-card {
+    background: #d4b896;
+    color: #1a1a1a;
+}
+
+.cno-turn-announce-assassin .cno-turn-announce-card {
+    background: #111111;
+}
+
+.cno-turn-announce-kicker {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.88;
+}
+
+.cno-turn-announce-name {
+    margin-top: 6px;
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+@keyframes cnoTurnPop {
+    0% {
+        transform: scale(0.72);
+        opacity: 0;
+    }
+    12% {
+        transform: scale(1.06);
+        opacity: 1;
+    }
+    78% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.98);
+        opacity: 0;
+    }
+}
+
+.cno-turn-announce-pop {
+    animation: cnoTurnPop 2.4s ease forwards;
 }
 
 .cno-done-btn {
@@ -516,7 +732,11 @@
 }
 
 .cno-compact-play .cno-grid-wrap {
-    margin-bottom: 88px;
+    margin-bottom: 108px;
+}
+
+.cno-compact-play.cno-has-guess-log .cno-grid-wrap {
+    margin-bottom: 176px;
 }
 
 .cno-lobby-swap-only {
@@ -640,5 +860,18 @@
         padding: 0 3px;
         top: 1px;
         right: 1px;
+    }
+
+    .cno-turn-announce-name {
+        font-size: 1.5rem;
+    }
+
+    .cno-guess-chip {
+        font-size: 0.72rem;
+        padding: 2px 6px;
+    }
+
+    .cno-compact-play.cno-has-guess-log .cno-grid-wrap {
+        margin-bottom: 190px;
     }
 }

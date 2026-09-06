@@ -65,11 +65,28 @@
 
         <div class="cno-play-bar" id="cnoPlayBar" hidden>
             <div class="cno-turn-banner" id="cnoTurnBanner"></div>
+            <div class="cno-guess-log" id="cnoGuessLog" hidden>
+                <div class="cno-guess-log-row">
+                    <span class="cno-guess-log-label">This turn</span>
+                    <span class="cno-guess-log-words" id="cnoGuessThisWords"></span>
+                </div>
+                <div class="cno-guess-log-row">
+                    <span class="cno-guess-log-label">Last turn</span>
+                    <span class="cno-guess-log-words" id="cnoGuessLastWords"></span>
+                </div>
+            </div>
             <button id="cnoStartBtn" class="cno-primary-btn cno-start-btn" type="button" hidden>Start game</button>
             <button id="cnoRedealBtn" class="cno-secondary-btn cno-redeal-btn" type="button" hidden>Deal again</button>
             <button id="cnoDoneBtn" class="cno-primary-btn cno-done-btn" type="button" hidden>Done guessing</button>
             <button id="cnoRevealKeyBtn" class="cno-secondary-btn cno-reveal-key-btn" type="button" hidden>Reveal Full Board</button>
             <button id="cnoRematchBtn" class="cno-primary-btn cno-rematch-btn" type="button" hidden>Play again</button>
+        </div>
+
+        <div class="cno-turn-announce" id="cnoTurnAnnounce" hidden>
+            <div class="cno-turn-announce-card" id="cnoTurnAnnounceCard">
+                <div class="cno-turn-announce-kicker" id="cnoTurnAnnounceKicker"></div>
+                <div class="cno-turn-announce-name" id="cnoTurnAnnounceName"></div>
+            </div>
         </div>
 
         <div class="cno-actions">

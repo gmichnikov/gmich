@@ -36,6 +36,13 @@
     var gridEl = document.getElementById("cnoGrid");
     var playBar = document.getElementById("cnoPlayBar");
     var turnBanner = document.getElementById("cnoTurnBanner");
+    var guessLogEl = document.getElementById("cnoGuessLog");
+    var guessThisWordsEl = document.getElementById("cnoGuessThisWords");
+    var guessLastWordsEl = document.getElementById("cnoGuessLastWords");
+    var turnAnnounceEl = document.getElementById("cnoTurnAnnounce");
+    var turnAnnounceCard = document.getElementById("cnoTurnAnnounceCard");
+    var turnAnnounceKicker = document.getElementById("cnoTurnAnnounceKicker");
+    var turnAnnounceName = document.getElementById("cnoTurnAnnounceName");
     var doneBtn = document.getElementById("cnoDoneBtn");
     var revealKeyBtn = document.getElementById("cnoRevealKeyBtn");
     var rematchBtn = document.getElementById("cnoRematchBtn");
@@ -45,6 +52,10 @@
     var selectedGuessIndex = null;
     var postGameRevealed = false;
     var previousRevealedState = null;
+    var thisTurnGuesses = [];
+    var lastTurnGuesses = [];
+    var announceTimer = null;
+    var guessLogRestored = false;
 
     shareLinkInput.value = window.location.href;
     if (navigator.share) {
@@ -155,6 +166,226 @@
         return name + "'s turn (" + color + ")";
     }
 
+    function boardId(state) {
+        return (state && state.words) ? state.words.join("|") : "";
+    }
+
+    function colorForIndex(state, index) {
+        if (state.key && state.key[index]) {
+            return state.key[index];
+        }
+        if (state.tile_colors && state.tile_colors[index]) {
+            return state.tile_colors[index];
+        }
+        return "neutral";
+    }
+
+    function guessLogStorageKey() {
+        return "cno_guess_log_" + CNO_ROOM_CODE;
+    }
+
+    function persistGuessLog(state) {
+        try {
+            sessionStorage.setItem(guessLogStorageKey(), JSON.stringify({
+                boardId: boardId(state),
+                thisTurn: thisTurnGuesses,
+                lastTurn: lastTurnGuesses,
+            }));
+        } catch (err) {
+            /* ignore */
+        }
+    }
+
+    function restoreGuessLog(state) {
+        if (guessLogRestored) {
+            return;
+        }
+        guessLogRestored = true;
+        try {
+            var raw = sessionStorage.getItem(guessLogStorageKey());
+            if (!raw) {
+                return;
+            }
+            var data = JSON.parse(raw);
+            if (data && data.boardId === boardId(state)) {
+                thisTurnGuesses = data.thisTurn || [];
+                lastTurnGuesses = data.lastTurn || [];
+            }
+        } catch (err) {
+            /* ignore */
+        }
+    }
+
+    function resetGuessLog() {
+        thisTurnGuesses = [];
+        lastTurnGuesses = [];
+        try {
+            sessionStorage.removeItem(guessLogStorageKey());
+        } catch (err) {
+            /* ignore */
+        }
+    }
+
+    function renderGuessChips(container, guesses) {
+        container.innerHTML = "";
+        if (!guesses.length) {
+            var empty = document.createElement("span");
+            empty.className = "cno-guess-log-empty";
+            empty.textContent = "None yet";
+            container.appendChild(empty);
+            return;
+        }
+        guesses.forEach(function (guess) {
+            var chip = document.createElement("span");
+            chip.className = "cno-guess-chip cno-guess-chip-" + guess.color;
+            if (guess.fresh) {
+                chip.classList.add("cno-guess-chip-fresh");
+            }
+            chip.textContent = guess.word;
+            container.appendChild(chip);
+        });
+    }
+
+    function renderGuessLog(state) {
+        var showLog =
+            isClueGiver(state) &&
+            (state.status === "active" || state.status === "won") &&
+            !!state.words;
+        guessLogEl.hidden = !showLog;
+        wrapperEl.classList.toggle("cno-has-guess-log", showLog);
+        if (!showLog) {
+            return;
+        }
+        renderGuessChips(guessThisWordsEl, thisTurnGuesses);
+        renderGuessChips(guessLastWordsEl, lastTurnGuesses);
+        thisTurnGuesses.forEach(function (guess) {
+            guess.fresh = false;
+        });
+        lastTurnGuesses.forEach(function (guess) {
+            guess.fresh = false;
+        });
+        persistGuessLog(state);
+    }
+
+    function clearAnnounceColorClasses() {
+        turnAnnounceEl.classList.remove(
+            "cno-turn-announce-red",
+            "cno-turn-announce-blue",
+            "cno-turn-announce-neutral",
+            "cno-turn-announce-assassin"
+        );
+    }
+
+    function playAnnounceAnimation(durationMs) {
+        turnAnnounceEl.hidden = false;
+        turnAnnounceCard.classList.remove("cno-turn-announce-pop");
+        void turnAnnounceCard.offsetWidth;
+        turnAnnounceCard.classList.add("cno-turn-announce-pop");
+        if (announceTimer) {
+            clearTimeout(announceTimer);
+        }
+        announceTimer = setTimeout(function () {
+            turnAnnounceEl.hidden = true;
+            playBar.classList.remove("cno-play-bar-flash");
+        }, durationMs);
+    }
+
+    function showTurnAnnounce(state) {
+        if (!state.turn || !turnAnnounceEl) {
+            return;
+        }
+        var name = state.turn_spymaster || (state.turn === "red" ? "Red" : "Blue");
+        var color = state.turn === "red" ? "Red" : "Blue";
+        turnAnnounceKicker.textContent = color + "'s turn";
+        turnAnnounceName.textContent = name;
+        clearAnnounceColorClasses();
+        turnAnnounceEl.classList.add(
+            state.turn === "red" ? "cno-turn-announce-red" : "cno-turn-announce-blue"
+        );
+        playBar.classList.remove("cno-play-bar-flash");
+        void playBar.offsetWidth;
+        playBar.classList.add("cno-play-bar-flash");
+        playAnnounceAnimation(2400);
+    }
+
+    function showGuessAnnounce(guesses, followUpState) {
+        if (!guesses.length || !turnAnnounceEl) {
+            if (followUpState) {
+                showTurnAnnounce(followUpState);
+            }
+            return;
+        }
+        var latest = guesses[guesses.length - 1];
+        turnAnnounceKicker.textContent = guesses.length === 1 ? "Guessed" : "Guessed this turn";
+        turnAnnounceName.textContent = guesses.map(function (guess) {
+            return guess.word;
+        }).join(" · ");
+        clearAnnounceColorClasses();
+        turnAnnounceEl.classList.add("cno-turn-announce-" + latest.color);
+        playAnnounceAnimation(followUpState ? 1600 : 2000);
+        if (followUpState) {
+            if (announceTimer) {
+                clearTimeout(announceTimer);
+            }
+            announceTimer = setTimeout(function () {
+                showTurnAnnounce(followUpState);
+            }, 1600);
+        }
+    }
+
+    function syncGuessLog(prev, next) {
+        var added = [];
+        if (!next.words || next.status === "preview" || next.status === "waiting_start") {
+            if (!prev || boardId(prev) !== boardId(next) || next.status === "preview") {
+                resetGuessLog();
+            }
+            return added;
+        }
+
+        if (prev && boardId(prev) && boardId(next) && boardId(prev) !== boardId(next)) {
+            resetGuessLog();
+        }
+
+        if (next.status !== "active" && next.status !== "won") {
+            return added;
+        }
+
+        if (prev && prev.revealed && next.revealed && prev.words && next.words) {
+            for (var i = 0; i < next.revealed.length; i++) {
+                if (next.revealed[i] && !prev.revealed[i]) {
+                    var entry = {
+                        word: next.words[i],
+                        color: colorForIndex(next, i),
+                        index: i,
+                        fresh: true,
+                    };
+                    thisTurnGuesses.push(entry);
+                    added.push(entry);
+                }
+            }
+        }
+
+        if (
+            prev &&
+            prev.status === "active" &&
+            next.status === "active" &&
+            prev.turn &&
+            next.turn &&
+            prev.turn !== next.turn
+        ) {
+            lastTurnGuesses = thisTurnGuesses.map(function (guess) {
+                return {
+                    word: guess.word,
+                    color: guess.color,
+                    index: guess.index,
+                    fresh: guess.fresh,
+                };
+            });
+            thisTurnGuesses = [];
+        }
+        return added;
+    }
+
     function populateWordLists(state) {
         if (!state.word_lists || !wordListSelect.options.length) {
             wordListSelect.innerHTML = "";
@@ -200,7 +431,9 @@
         if (state.status === "won") {
             var showFull = (isClueGiver(state) || postGameRevealed) && state.key;
             if (revealed) {
-                classes.push("cno-tile-revealed");
+                if (!isClueGiver(state)) {
+                    classes.push("cno-tile-revealed");
+                }
                 var revealedColor = state.key ? state.key[index] : (state.tile_colors ? state.tile_colors[index] : "neutral");
                 classes.push("cno-tile-" + revealedColor);
             } else if (showFull) {
@@ -213,15 +446,18 @@
         }
 
         if (revealed) {
-            classes.push("cno-tile-revealed");
             if (isClueGiver(state) && state.key) {
                 classes.push("cno-tile-" + state.key[index]);
-            } else if (state.tile_colors && state.tile_colors[index]) {
-                classes.push("cno-tile-" + state.tile_colors[index]);
+            } else {
+                classes.push("cno-tile-revealed");
+                if (state.tile_colors && state.tile_colors[index]) {
+                    classes.push("cno-tile-" + state.tile_colors[index]);
+                }
             }
         } else {
             if (isClueGiver(state) && state.key) {
-                classes.push("cno-tile-" + state.key[index]);
+                classes.push("cno-tile-unguessed");
+                classes.push("cno-tile-unguessed-" + state.key[index]);
             } else {
                 classes.push("cno-tile-hidden");
                 if (isSelected) {
@@ -391,13 +627,13 @@
             var isNewlyRevealed = (revealed === true && wasRevealed === false);
 
             if (isNewlyRevealed) {
-                tile.classList.remove("cno-tile-flipping");
+                tile.classList.remove("cno-tile-flipping", "cno-tile-just-guessed");
                 void tile.offsetWidth;
             }
 
             tile.className = tileClass(state, index);
             if (isNewlyRevealed) {
-                tile.classList.add("cno-tile-flipping");
+                tile.classList.add("cno-tile-just-guessed");
             }
 
             updateTileBadge(tile, state, index);
@@ -522,11 +758,31 @@
     }
 
     function renderState(state) {
-        if (lastState) {
-            if (state.status !== lastState.status || state.turn !== lastState.turn) {
+        var prevState = lastState;
+        if (prevState) {
+            if (state.status !== prevState.status || state.turn !== prevState.turn) {
                 selectedGuessIndex = null;
             }
+        } else if (state.words) {
+            restoreGuessLog(state);
         }
+        var newGuesses = syncGuessLog(prevState, state);
+
+        var turnStarted = !!(
+            prevState &&
+            prevState.status === "preview" &&
+            state.status === "active" &&
+            state.turn
+        );
+        var turnFlipped = !!(
+            prevState &&
+            prevState.status === "active" &&
+            state.status === "active" &&
+            prevState.turn &&
+            state.turn &&
+            prevState.turn !== state.turn
+        );
+
         if (state.status !== "won") {
             postGameRevealed = false;
         }
@@ -539,6 +795,8 @@
         wrapperEl.classList.toggle("cno-compact-play", compact);
         wrapperEl.classList.toggle("cno-status-active", state.status === "active");
         wrapperEl.classList.toggle("cno-status-won", state.status === "won");
+        wrapperEl.classList.toggle("cno-clue-giver-phone", isClueGiver(state));
+        wrapperEl.classList.toggle("cno-guesser-phone", isGuesser(state));
 
         roleBadge.hidden = !state.your_phone_role || compact;
         if (state.your_phone_role === "clue_giver") {
@@ -600,6 +858,14 @@
         }
 
         setPlayBar(state);
+        renderGuessLog(state);
+
+        var shouldAnnounceTurn = turnStarted || turnFlipped;
+        if (isClueGiver(state) && newGuesses.length) {
+            showGuessAnnounce(newGuesses, shouldAnnounceTurn ? state : null);
+        } else if (shouldAnnounceTurn) {
+            showTurnAnnounce(state);
+        }
     }
 
     function poll() {
@@ -741,6 +1007,7 @@
         selectedGuessIndex = null;
         postGameRevealed = false;
         previousRevealedState = null;
+        resetGuessLog();
         apiRequest("POST", "/rematch")
             .then(function (state) {
                 setupDirty = false;
