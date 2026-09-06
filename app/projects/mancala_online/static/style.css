@@ -47,6 +47,54 @@
     text-align: left;
 }
 
+.mo-room-info-summary {
+    cursor: pointer;
+    font-size: 0.95em;
+    color: #4a3425;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
+}
+
+.mo-room-info-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mo-room-info-summary::marker {
+    content: "";
+}
+
+.mo-room-info-hint {
+    font-size: 0.8em;
+    font-weight: 500;
+    color: #9c8a7c;
+}
+
+.mo-room-info:not([open]) .mo-room-info-hint {
+    display: none;
+}
+
+.mo-room-info-summary::after {
+    content: "▾";
+    font-size: 0.9em;
+    color: #9c8a7c;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mo-room-info:not([open]) .mo-room-info-summary::after {
+    transform: rotate(-90deg);
+}
+
+.mo-room-info-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5d8cc;
+}
+
 .mo-primary-btn,
 .mo-secondary-btn {
     padding: 12px 24px;

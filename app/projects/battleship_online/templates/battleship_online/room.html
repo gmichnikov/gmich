@@ -9,8 +9,12 @@
     <div class="bso-container bso-room-container">
         <h1>Battleship Online</h1>
 
-        <div class="bso-room-info">
-            <div class="bso-room-code-label">Room code: <strong id="bsoRoomCode">{{ code }}</strong></div>
+        <details class="bso-room-info" open>
+            <summary class="bso-room-info-summary">
+                <span>Room code: <strong id="bsoRoomCode">{{ code }}</strong></span>
+                <span class="bso-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="bso-room-info-body">
             <div class="bso-share-row" id="bsoShareRow">
                 <label for="bsoShareLink">Share this link with your opponent:</label>
                 <div class="bso-share-input-row">
@@ -27,7 +31,8 @@
                 </div>
             </div>
             <div class="bso-opponent-label" id="bsoOpponentLabel" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="bso-status-message" id="bsoStatusMessage">Loading&hellip;</div>
 

@@ -9,8 +9,12 @@
     <div class="mo-container mo-room-container">
         <h1>Mancala Online</h1>
 
-        <div class="mo-room-info">
-            <div class="mo-room-code-label">Room code: <strong id="moRoomCode">{{ code }}</strong></div>
+        <details class="mo-room-info" open>
+            <summary class="mo-room-info-summary">
+                <span>Room code: <strong id="moRoomCode">{{ code }}</strong></span>
+                <span class="mo-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="mo-room-info-body">
             <div class="mo-share-row" id="moShareRow">
                 <label for="moShareLink">Share this link with your opponent:</label>
                 <div class="mo-share-input-row">
@@ -27,7 +31,8 @@
                 </div>
             </div>
             <div class="mo-opponent-label" id="moOpponentLabel" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="mo-status-message" id="moStatusMessage">Loading&hellip;</div>
 

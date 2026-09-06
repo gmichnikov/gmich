@@ -9,8 +9,12 @@
     <div class="cno-container cno-room-container">
         <h1 class="cno-room-title">Codenames</h1>
 
-        <div class="cno-room-info">
-            <div class="cno-room-code-label">Room: <strong id="cnoRoomCode">{{ code }}</strong></div>
+        <details class="cno-room-info" open>
+            <summary class="cno-room-info-summary">
+                <span>Room: <strong id="cnoRoomCode">{{ code }}</strong></span>
+                <span class="cno-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="cno-room-info-body">
             <div class="cno-share-row" id="cnoShareRow">
                 <label for="cnoShareLink">Share this link with the other phone:</label>
                 <div class="cno-share-input-row">
@@ -20,7 +24,8 @@
                 </div>
             </div>
             <div class="cno-role-badge" id="cnoRoleBadge" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="cno-status-message" id="cnoStatusMessage">Loading&hellip;</div>
         <div class="cno-toast" id="cnoToast" hidden></div>

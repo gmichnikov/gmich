@@ -9,8 +9,12 @@
     <div class="ttto-container">
         <h1>Tic-Tac-Toe Online</h1>
 
-        <div class="ttto-room-info">
-            <div class="ttto-room-code-label">Room code: <strong id="tttoRoomCode">{{ code }}</strong></div>
+        <details class="ttto-room-info" open>
+            <summary class="ttto-room-info-summary">
+                <span>Room code: <strong id="tttoRoomCode">{{ code }}</strong></span>
+                <span class="ttto-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="ttto-room-info-body">
             <div class="ttto-share-row" id="tttoShareRow">
                 <label for="tttoShareLink">Share this link with your opponent:</label>
                 <div class="ttto-share-input-row">
@@ -31,7 +35,8 @@
                 <div class="ttto-symbol-picker" id="tttoSymbolPicker"></div>
             </div>
             <div class="ttto-opponent-label" id="tttoOpponentLabel" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="ttto-status-message" id="tttoStatusMessage">Loading&hellip;</div>
 

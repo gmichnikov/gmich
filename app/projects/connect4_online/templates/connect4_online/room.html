@@ -9,8 +9,12 @@
     <div class="c4o-container c4o-room-container">
         <h1>Connect 4 Online</h1>
 
-        <div class="c4o-room-info">
-            <div class="c4o-room-code-label">Room code: <strong id="c4oRoomCode">{{ code }}</strong></div>
+        <details class="c4o-room-info" open>
+            <summary class="c4o-room-info-summary">
+                <span>Room code: <strong id="c4oRoomCode">{{ code }}</strong></span>
+                <span class="c4o-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="c4o-room-info-body">
             <div class="c4o-share-row" id="c4oShareRow">
                 <label for="c4oShareLink">Share this link with your opponent:</label>
                 <div class="c4o-share-input-row">
@@ -31,7 +35,8 @@
                 <div class="c4o-color-picker" id="c4oColorPicker"></div>
             </div>
             <div class="c4o-opponent-label" id="c4oOpponentLabel" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="c4o-status-message" id="c4oStatusMessage">Loading&hellip;</div>
 

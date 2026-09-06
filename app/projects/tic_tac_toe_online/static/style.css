@@ -122,10 +122,52 @@
     text-align: left;
 }
 
-.ttto-room-code-label {
+.ttto-room-info-summary {
+    cursor: pointer;
     font-size: 0.95em;
     color: #333;
-    margin-bottom: 8px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
+}
+
+.ttto-room-info-summary::-webkit-details-marker {
+    display: none;
+}
+
+.ttto-room-info-summary::marker {
+    content: "";
+}
+
+.ttto-room-info-hint {
+    font-size: 0.8em;
+    font-weight: 500;
+    color: #777;
+}
+
+.ttto-room-info:not([open]) .ttto-room-info-hint {
+    display: none;
+}
+
+.ttto-room-info-summary::after {
+    content: "▾";
+    font-size: 0.9em;
+    color: #777;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.ttto-room-info:not([open]) .ttto-room-info-summary::after {
+    transform: rotate(-90deg);
+}
+
+.ttto-room-info-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
 }
 
 .ttto-share-row label {

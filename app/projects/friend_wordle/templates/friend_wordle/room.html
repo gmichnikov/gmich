@@ -9,8 +9,12 @@
     <div class="fw-container fw-room-container">
         <h1>Friend Wordle</h1>
 
-        <div class="fw-room-info">
-            <div class="fw-room-code-label">Room code: <strong id="fwRoomCode">{{ code }}</strong></div>
+        <details class="fw-room-info" open>
+            <summary class="fw-room-info-summary">
+                <span>Room code: <strong id="fwRoomCode">{{ code }}</strong></span>
+                <span class="fw-room-info-hint">Share &amp; settings</span>
+            </summary>
+            <div class="fw-room-info-body">
             <div class="fw-share-row" id="fwShareRow">
                 <label for="fwShareLink">Share this link with a friend:</label>
                 <div class="fw-share-input-row">
@@ -27,7 +31,8 @@
                 </div>
             </div>
             <div class="fw-role-badge" id="fwRoleBadge" hidden></div>
-        </div>
+            </div>
+        </details>
 
         <div class="fw-status-message" id="fwStatusMessage">Loading&hellip;</div>
 

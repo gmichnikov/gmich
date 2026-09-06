@@ -140,9 +140,51 @@
     text-align: left;
 }
 
-.cno-room-code-label {
+.cno-room-info-summary {
+    cursor: pointer;
     font-weight: 600;
-    margin-bottom: 10px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
+}
+
+.cno-room-info-summary::-webkit-details-marker {
+    display: none;
+}
+
+.cno-room-info-summary::marker {
+    content: "";
+}
+
+.cno-room-info-hint {
+    font-size: 0.8em;
+    font-weight: 500;
+    opacity: 0.75;
+}
+
+.cno-room-info:not([open]) .cno-room-info-hint {
+    display: none;
+}
+
+.cno-room-info-summary::after {
+    content: "▾";
+    font-size: 0.9em;
+    opacity: 0.75;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.cno-room-info:not([open]) .cno-room-info-summary::after {
+    transform: rotate(-90deg);
+}
+
+.cno-room-info-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .cno-share-row label {
@@ -466,11 +508,6 @@
 .cno-compact-play .cno-room-title {
     font-size: 1.1em;
     margin-bottom: 4px;
-}
-
-.cno-compact-play.cno-status-active .cno-room-info,
-.cno-compact-play.cno-status-won .cno-room-info {
-    display: none;
 }
 
 .cno-compact-play .cno-room-info {
