@@ -110,6 +110,10 @@ Leverage existing hub projects; same room pattern:
 
 - [x] **Tic-Tac-Toe Online** — `/tic-tac-toe-online`
 - [x] **Battleship Online** — `/battleship-online`
+- [x] **Connect 4 Online** — `/connect4-online`
+- [x] **Friend Wordle** — `/friend-wordle-online`
+- [x] **Codenames Online** — `/codenames-online`
+- [x] **Mancala Online** — `/mancala-online` (in progress)
 
 ---
 

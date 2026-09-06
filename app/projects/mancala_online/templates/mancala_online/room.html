@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Mancala Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('mancala_online.static', filename='style.css') }}">
+
+<div class="mo-wrapper">
+    <div class="mo-container mo-room-container">
+        <h1>Mancala Online</h1>
+
+        <div class="mo-room-info">
+            <div class="mo-room-code-label">Room code: <strong id="moRoomCode">{{ code }}</strong></div>
+            <div class="mo-share-row" id="moShareRow">
+                <label for="moShareLink">Share this link with your opponent:</label>
+                <div class="mo-share-input-row">
+                    <input type="text" id="moShareLink" readonly>
+                    <button id="moCopyBtn" class="mo-secondary-btn mo-copy-btn" type="button">Copy</button>
+                </div>
+            </div>
+            <div class="mo-spectator-badge" id="moSpectatorBadge" hidden>You're spectating this room</div>
+            <div class="mo-name-row" id="moNameRow" hidden>
+                <label for="moNameInput">Your name:</label>
+                <div class="mo-share-input-row">
+                    <input type="text" id="moNameInput" maxlength="30" autocomplete="nickname">
+                    <button id="moNameSaveBtn" class="mo-secondary-btn mo-copy-btn" type="button">Save</button>
+                </div>
+            </div>
+            <div class="mo-opponent-label" id="moOpponentLabel" hidden></div>
+        </div>
+
+        <div class="mo-status-message" id="moStatusMessage">Loading&hellip;</div>
+
+        <div class="mo-join-panel" id="moJoinPanel" hidden>
+            <button id="moJoinBtn" class="mo-primary-btn" type="button">Join game</button>
+        </div>
+
+        <!-- Mancala Board -->
+        <div class="mo-board-outer">
+            <!-- Opponent Header (Top) -->
+            <div class="mo-player-strip mo-top-player" id="moTopPlayerStrip">
+                <span class="mo-player-indicator" id="moTopIndicator"></span>
+                <span class="mo-player-name" id="moTopPlayerName">Opponent</span>
+                <span class="mo-player-side-hint">(Opponent's Pits &larr;)</span>
+            </div>
+
+            <div class="mo-board-frame" id="moBoardFrame">
+                <!-- Opponent Store (Left from viewer's perspective) -->
+                <div class="mo-store mo-store-left" id="moLeftStore" data-store-idx="">
+                    <div class="mo-store-label" id="moLeftStoreLabel">Opponent</div>
+                    <div class="mo-store-count" id="moLeftStoreCount">0</div>
+                    <div class="mo-pit-pebbles" id="moLeftStorePebbles"></div>
+                </div>
+
+                <!-- 2x6 Pit Grid -->
+                <div class="mo-pits-grid">
+                    <!-- Top Pits (Opponent, flows right-to-left) -->
+                    <div class="mo-pits-row mo-pits-top" id="moTopPitsRow">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Bottom Pits (Viewer, flows left-to-right) -->
+                    <div class="mo-pits-row mo-pits-bottom" id="moBottomPitsRow">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Your Store (Right from viewer's perspective) -->
+                <div class="mo-store mo-store-right" id="moRightStore" data-store-idx="">
+                    <div class="mo-store-label" id="moRightStoreLabel">You</div>
+                    <div class="mo-store-count" id="moRightStoreCount">0</div>
+                    <div class="mo-pit-pebbles" id="moRightStorePebbles"></div>
+                </div>
+            </div>
+
+            <!-- Viewer Header (Bottom) -->
+            <div class="mo-player-strip mo-bottom-player" id="moBottomPlayerStrip">
+                <span class="mo-player-indicator" id="moBottomIndicator"></span>
+                <span class="mo-player-name" id="moBottomPlayerName">You</span>
+                <span class="mo-player-side-hint">(Your Pits &rarr;)</span>
+            </div>
+        </div>
+
+        <div class="mo-actions">
+            <button id="moRematchBtn" class="mo-primary-btn mo-rematch-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('mancala_online.index') }}" class="mo-secondary-btn mo-home-btn">Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var MO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var MO_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('mancala_online.static', filename='room.js') }}"></script>
+{% endblock %}

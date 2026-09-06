@@ -33,9 +33,12 @@ class MancalaOnlineRoom(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def seat_for_player(self, player_id):
-        if self.seat_x and self.seat_x == player_id:
+        if not player_id:
+            return None
+        player_id = str(player_id).lower()
+        if self.seat_x and self.seat_x.lower() == player_id:
             return "X"
-        if self.seat_o and self.seat_o == player_id:
+        if self.seat_o and self.seat_o.lower() == player_id:
             return "O"
         return None
 

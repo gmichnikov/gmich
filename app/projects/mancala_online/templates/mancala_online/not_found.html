@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Not Found - Mancala Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('mancala_online.static', filename='style.css') }}">
+
+<div class="mo-wrapper">
+    <div class="mo-container">
+        <h1>Room Not Found</h1>
+        <p class="mo-subtitle">{{ message }}</p>
+        <a class="mo-primary-btn mo-link-btn" href="{{ url_for('mancala_online.index') }}">Start a New Game</a>
+    </div>
+</div>
+{% endblock %}

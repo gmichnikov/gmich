@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Mancala Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('mancala_online.static', filename='style.css') }}">
+
+<div class="mo-wrapper">
+    <div class="mo-container">
+        <h1>Mancala Online</h1>
+        <p class="mo-subtitle">Sow seeds, score extra turns, and outplay a friend via a shareable link &mdash; no login required.</p>
+
+        <div class="mo-landing-panel">
+            <button id="moCreateBtn" class="mo-primary-btn" type="button">Create New Game</button>
+
+            <div class="mo-divider">or</div>
+
+            <form id="moJoinForm" class="mo-join-form">
+                <label for="moJoinCode">Join with a room code</label>
+                <input type="text" id="moJoinCode" maxlength="6" placeholder="e.g. AB3XQK" autocomplete="off">
+                <button type="submit" class="mo-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="moLandingError" class="mo-error" hidden></p>
+    </div>
+</div>
+
+<script>
+    var MO_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('mancala_online.static', filename='landing.js') }}"></script>
+{% endblock %}

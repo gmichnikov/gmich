@@ -133,6 +133,17 @@ PROJECTS = [
         "order": 505,
     },
     {
+        "id": "mancala_online",
+        "name": "Mancala Online",
+        "description": "Sow seeds, take extra turns, and outscore your opponent via a shareable link",
+        "url": "/mancala-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "live_multiplayer_games",
+        "order": 506,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",
