@@ -67,6 +67,7 @@ class TestMancalaLogic(unittest.TestCase):
         self.assertEqual(result["board"][7], 0)
         self.assertEqual(result["winner"], "O")
         self.assertEqual(result["swept"], {"X": 0, "O": 4})
+        self.assertEqual(result["sweep_steps"], [{"from": 7, "to": 13, "count": 4}])
 
 
 if __name__ == "__main__":

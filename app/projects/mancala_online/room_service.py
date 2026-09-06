@@ -170,6 +170,7 @@ def make_move(code, player_id, pit_index):
         "sown_steps": res["sown_steps"],
         "extra_turn": res["extra_turn"],
         "swept": res["swept"],
+        "sweep_steps": res["sweep_steps"],
         "last_pit": res["last_pit"],
     }
 

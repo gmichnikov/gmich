@@ -60,20 +60,30 @@ def check_game_over(board):
 def sweep_remaining(board):
     """
     Sweep any remaining stones in pits to their respective player's store.
-    Modifies board in-place and returns swept counts dict: {"X": int, "O": int}.
+    Modifies board in-place and returns:
+      - swept counts dict: {"X": int, "O": int}
+      - sweep_steps: ordered list of {from, to, count} for UI animation
     """
-    swept_x = sum(board[p] for p in P1_PITS)
-    swept_o = sum(board[p] for p in P2_PITS)
-
+    sweep_steps = []
+    swept_x = 0
     for p in P1_PITS:
-        board[p] = 0
+        cnt = board[p]
+        if cnt > 0:
+            sweep_steps.append({"from": p, "to": P1_STORE, "count": cnt})
+            swept_x += cnt
+            board[p] = 0
     board[P1_STORE] += swept_x
 
+    swept_o = 0
     for p in P2_PITS:
-        board[p] = 0
+        cnt = board[p]
+        if cnt > 0:
+            sweep_steps.append({"from": p, "to": P2_STORE, "count": cnt})
+            swept_o += cnt
+            board[p] = 0
     board[P2_STORE] += swept_o
 
-    return {"X": swept_x, "O": swept_o}
+    return {"X": swept_x, "O": swept_o}, sweep_steps
 
 
 def determine_winner(board):
@@ -98,6 +108,7 @@ def apply_move(board, pit_index, seat):
       - game_over: bool
       - winner: 'X', 'O', 'draw', or None
       - swept: {"X": int, "O": int} or None
+      - sweep_steps: list of {from, to, count} or []
       - last_pit: index where last stone landed
     """
     if seat not in ("X", "O"):
@@ -135,9 +146,10 @@ def apply_move(board, pit_index, seat):
     game_over = check_game_over(new_board)
     winner = None
     swept = None
+    sweep_steps = []
 
     if game_over:
-        swept = sweep_remaining(new_board)
+        swept, sweep_steps = sweep_remaining(new_board)
         winner = determine_winner(new_board)
         extra_turn = False
 
@@ -148,5 +160,6 @@ def apply_move(board, pit_index, seat):
         "game_over": game_over,
         "winner": winner,
         "swept": swept,
+        "sweep_steps": sweep_steps,
         "last_pit": last_pit,
     }

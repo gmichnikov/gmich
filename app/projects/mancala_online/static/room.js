@@ -107,13 +107,27 @@
 
     var isAnimatingSow = false;
 
+    function pebbleDensityClass(count) {
+        if (count <= 12) {
+            return "";
+        }
+        if (count <= 24) {
+            return "mo-pebbles-dense";
+        }
+        return "mo-pebbles-xdense";
+    }
+
     function renderPebbles(container, count, animLast) {
         container.innerHTML = "";
-        var displayCount = Math.min(count, 12);
-        for (var i = 0; i < displayCount; i++) {
+        container.classList.remove("mo-pebbles-dense", "mo-pebbles-xdense");
+        var density = pebbleDensityClass(count);
+        if (density) {
+            container.classList.add(density);
+        }
+        for (var i = 0; i < count; i++) {
             var dot = document.createElement("span");
             dot.className = "mo-pebble";
-            if (animLast && i === displayCount - 1) {
+            if (animLast && i === count - 1) {
                 dot.classList.add("mo-pebble-anim");
             }
             container.appendChild(dot);
@@ -142,7 +156,7 @@
             var sourceCountEl = sourcePitEl.querySelector(".mo-pit-count");
             if (sourceCountEl) sourceCountEl.textContent = "0";
             var sourcePebbles = sourcePitEl.querySelector(".mo-pit-pebbles");
-            if (sourcePebbles) sourcePebbles.innerHTML = "";
+            if (sourcePebbles) renderPebbles(sourcePebbles, 0);
         }
 
         var steps = lastMove.sown_steps;
@@ -180,6 +194,72 @@
                     }, 350);
                 }
             }, (i + 1) * stepDelay);
+        });
+    }
+
+    function animateSweep(sweepSteps, onComplete) {
+        if (!sweepSteps || !sweepSteps.length) {
+            onComplete();
+            return;
+        }
+
+        statusEl.textContent = "Sweeping remaining seeds…";
+        var pitDelay = 420;
+
+        sweepSteps.forEach(function (step, idx) {
+            setTimeout(function () {
+                var pitEl = getElementByPitIndex(step.from);
+                var storeEl = getElementByPitIndex(step.to);
+
+                if (pitEl) {
+                    pitEl.classList.add("mo-sweep-source");
+                }
+                if (storeEl) {
+                    storeEl.classList.remove("mo-sowing-target");
+                    void storeEl.offsetWidth;
+                    storeEl.classList.add("mo-sowing-target");
+                }
+
+                if (pitEl) {
+                    var pitCountEl = pitEl.querySelector(".mo-pit-count");
+                    var pitPebbles = pitEl.querySelector(".mo-pit-pebbles");
+                    if (pitCountEl) pitCountEl.textContent = "0";
+                    if (pitPebbles) renderPebbles(pitPebbles, 0);
+                }
+
+                if (storeEl) {
+                    var storeCountEl = storeEl.querySelector(".mo-store-count");
+                    var storePebbles = storeEl.querySelector(".mo-pit-pebbles");
+                    if (storeCountEl) {
+                        var curr = parseInt(storeCountEl.textContent, 10) || 0;
+                        var newCount = curr + step.count;
+                        storeCountEl.textContent = newCount;
+                        if (storePebbles) renderPebbles(storePebbles, newCount, true);
+                    }
+                }
+
+                if (idx === sweepSteps.length - 1) {
+                    setTimeout(function () {
+                        document.querySelectorAll(".mo-sweep-source").forEach(function (e) {
+                            e.classList.remove("mo-sweep-source");
+                        });
+                        document.querySelectorAll(".mo-sowing-target").forEach(function (e) {
+                            e.classList.remove("mo-sowing-target");
+                        });
+                        onComplete();
+                    }, 450);
+                }
+            }, idx * pitDelay);
+        });
+    }
+
+    function runMoveAnimation(lastMove, onComplete) {
+        animateSowing(lastMove, null, function () {
+            if (lastMove.sweep_steps && lastMove.sweep_steps.length) {
+                animateSweep(lastMove.sweep_steps, onComplete);
+            } else {
+                onComplete();
+            }
         });
     }
 
@@ -272,7 +352,7 @@
         apiRequest("POST", "/move", { pit_index: pitIndex })
             .then(function (newState) {
                 isMoving = false;
-                animateSowing(newState.last_move, newState, function () {
+                runMoveAnimation(newState.last_move, function () {
                     isAnimatingSow = false;
                     renderState(newState);
                 });
@@ -286,7 +366,7 @@
     }
 
     function updateStatusMessage(state) {
-        statusEl.classList.remove("mo-status-extra");
+        statusEl.classList.remove("mo-status-extra", "mo-status-starter");
 
         if (state.status === "waiting") {
             if (state.your_seat) {
@@ -318,6 +398,18 @@
 
         if (state.status === "draw") {
             statusEl.textContent = "Game ended in a tie (" + state.board[6] + " to " + state.board[13] + ")!";
+            return;
+        }
+
+        // Fresh game or rematch — announce who moves first
+        if (state.status === "active" && !state.last_move) {
+            var starterName = state.names[state.turn] || "Player " + state.turn;
+            statusEl.classList.add("mo-status-starter");
+            if (state.your_seat === state.turn) {
+                statusEl.textContent = "You go first — pick a pit to sow.";
+            } else {
+                statusEl.textContent = starterName + " goes first.";
+            }
             return;
         }
 
@@ -405,7 +497,7 @@
 
                     if (wasOpponentMove) {
                         isAnimatingSow = true;
-                        animateSowing(state.last_move, state, function () {
+                        runMoveAnimation(state.last_move, function () {
                             isAnimatingSow = false;
                             renderState(state);
                         });
