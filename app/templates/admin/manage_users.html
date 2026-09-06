@@ -49,6 +49,10 @@
                 <div style="font-size: 1.6em; font-weight: bold; color: {% if totals.low_credits > 0 %}#856404{% else %}#6c757d{% endif %};">{{ totals.low_credits }}</div>
                 <div style="font-size: 0.85em; color: #6c757d;">Low (1&ndash;5 credits)</div>
             </div>
+            <div style="flex: 1; min-width: 130px; background-color: {% if totals.safe_to_delete > 0 %}#f3e8ff{% else %}#f8f9fa{% endif %}; border: 1px solid {% if totals.safe_to_delete > 0 %}#6f42c1{% else %}#dee2e6{% endif %}; border-radius: 4px; padding: 12px;">
+                <div style="font-size: 1.6em; font-weight: bold; color: {% if totals.safe_to_delete > 0 %}#6f42c1{% else %}#6c757d{% endif %};">{{ totals.safe_to_delete }}</div>
+                <div style="font-size: 0.85em; color: #6c757d;">Safe to delete</div>
+            </div>
         </div>
 
         {% if totals.no_credit_skips > 0 %}
@@ -65,9 +69,14 @@
             {{ filter_button('all', 'All Users', '#007bff') }}
             {{ filter_button('verified', 'Verified', '#28a745') }}
             {{ filter_button('unverified', 'Unverified', '#dc3545') }}
+            {{ filter_button('safe_to_delete', 'Safe to delete', '#6f42c1') }}
             {{ filter_button('out_of_credits', 'Out of Credits', '#dc3545') }}
             {{ filter_button('low_credits', 'Low Credits', '#ffc107') }}
         </div>
+        <p style="font-size: 0.85em; color: #6c757d; margin: 0 0 16px 0;">
+            Safe to delete: unverified, no Google login, no admin flag, and no project data
+            beyond an unused Better Signups self record and auth logs.
+        </p>
 
         <!-- Sorting -->
         <div class="admin-form-group" style="margin-bottom: 20px;">
@@ -108,9 +117,16 @@
                                 <span style="color: {% if (user.credits or 0) <= 0 %}#dc3545{% elif (user.credits or 0) <= 5 %}#856404{% else %}#212529{% endif %}; font-weight: bold;">{{ user.credits }} credits</span>
                                 left
                             </span>
+                            {% if user.safe_to_delete %}
+                            <span>•</span>
+                            <span style="color: #6f42c1; font-weight: bold;">Safe to delete</span>
+                            {% elif not user.email_verified and user.safe_delete_blockers %}
+                            <span>•</span>
+                            <span style="color: #856404;">Not deletable: {{ user.safe_delete_blockers|join(', ') }}</span>
+                            {% endif %}
                         </div>
                     </div>
-                    <div style="flex-shrink: 0;">
+                    <div style="flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                         {% if not user.email_verified %}
                             <form method="POST" action="{{ url_for('admin.verify_user_email', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to manually verify {{ user.email }}?');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -120,6 +136,14 @@
                             </form>
                         {% else %}
                             <span style="color: #6c757d; font-style: italic; font-size: 0.9em;">Already verified</span>
+                        {% endif %}
+                        {% if user.safe_to_delete %}
+                            <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id, filter=filter_status, sort=sort_key) }}" style="display: inline;" onsubmit="return confirm('Delete {{ user.email }}? This cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
+                                    Delete
+                                </button>
+                            </form>
                         {% endif %}
                     </div>
                 </div>

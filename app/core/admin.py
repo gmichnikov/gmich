@@ -1,3 +1,4 @@
+import logging
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import func
 from app.models import User, LogEntry, db
 from app.forms import AdminPasswordResetForm, AdminCreditForm
+from app.core.user_deletion import annotate_users_for_safe_delete, delete_safe_user
 from functools import wraps
 import pytz
 from app.projects.better_signups.models import (
@@ -19,6 +21,7 @@ from app.projects.better_signups.models import (
 )
 
 admin_bp = Blueprint("admin", __name__)
+logger = logging.getLogger(__name__)
 
 # LogEntry.project values that differ from registry project ids
 LOG_PROJECT_DISPLAY_ALIASES = {
@@ -400,6 +403,12 @@ def manage_users():
         query = query.filter_by(email_verified=True)
     elif filter_status == "unverified":
         query = query.filter_by(email_verified=False)
+    elif filter_status == "safe_to_delete":
+        query = query.filter(
+            User.email_verified.is_(False),
+            User.is_admin.is_(False),
+            User.google_id.is_(None),
+        )
     elif filter_status == "out_of_credits":
         query = query.filter(User.credits <= 0)
     elif filter_status == "low_credits":
@@ -409,6 +418,10 @@ def manage_users():
 
     user_tz = pytz.timezone(current_user.time_zone)
     decorate_users_with_credits(users, user_tz)
+    annotate_users_for_safe_delete(users)
+
+    if filter_status == "safe_to_delete":
+        users = [user for user in users if user.safe_to_delete]
 
     if sort_key == "credits":
         users.sort(key=lambda u: (u.credits or 0, u.email))
@@ -433,6 +446,7 @@ def manage_users():
         "low_credits": sum(1 for u in users if 0 < (u.credits or 0) <= 5),
         "no_credit_skips": sum(u.credit_no_credit_skips for u in users),
         "active_recently": sum(1 for u in users if u.credit_recent_events > 0),
+        "safe_to_delete": sum(1 for u in users if u.safe_to_delete),
     }
 
     return render_template(
@@ -474,6 +488,30 @@ def verify_user_email(user_id):
         flash(f"Successfully verified email for {user.email}.", "success")
 
     return redirect(url_for("admin.manage_users"))
+
+
+@admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_user(user_id):
+    """Delete an unused unverified account after a second eligibility check."""
+    user = User.query.get_or_404(user_id)
+    filter_status = request.args.get("filter", "all")
+    sort_key = request.args.get("sort", "email")
+
+    try:
+        email = delete_safe_user(user, current_user)
+        flash(f"Deleted unused account {email}.", "success")
+    except ValueError as exc:
+        flash(str(exc), "error")
+    except Exception:
+        db.session.rollback()
+        logger.exception("Failed to delete user id=%s", user_id)
+        flash("Could not delete that account.", "error")
+
+    return redirect(
+        url_for("admin.manage_users", filter=filter_status, sort=sort_key)
+    )
 
 
 def _query_log_entries(user_tz):
