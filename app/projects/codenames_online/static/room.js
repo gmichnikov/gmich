@@ -37,9 +37,14 @@
     var playBar = document.getElementById("cnoPlayBar");
     var turnBanner = document.getElementById("cnoTurnBanner");
     var doneBtn = document.getElementById("cnoDoneBtn");
+    var revealKeyBtn = document.getElementById("cnoRevealKeyBtn");
     var rematchBtn = document.getElementById("cnoRematchBtn");
     var wrapperEl = document.getElementById("cnoWrapper");
     var shareLinkInput = document.getElementById("cnoShareLink");
+
+    var selectedGuessIndex = null;
+    var postGameRevealed = false;
+    var previousRevealedState = null;
 
     shareLinkInput.value = window.location.href;
     if (navigator.share) {
@@ -190,51 +195,101 @@
     function tileClass(state, index) {
         var classes = ["cno-tile"];
         var revealed = state.revealed && state.revealed[index];
+        var isSelected = (selectedGuessIndex === index && isGuesser(state) && state.status === "active" && !revealed);
+
+        if (state.status === "won") {
+            var showFull = (isClueGiver(state) || postGameRevealed) && state.key;
+            if (revealed) {
+                classes.push("cno-tile-revealed");
+                var revealedColor = state.key ? state.key[index] : (state.tile_colors ? state.tile_colors[index] : "neutral");
+                classes.push("cno-tile-" + revealedColor);
+            } else if (showFull) {
+                classes.push("cno-tile-unguessed");
+                classes.push("cno-tile-unguessed-" + state.key[index]);
+            } else {
+                classes.push("cno-tile-hidden");
+            }
+            return classes.join(" ");
+        }
+
         if (revealed) {
             classes.push("cno-tile-revealed");
-        }
-        if (isClueGiver(state) && state.key) {
-            classes.push("cno-tile-" + state.key[index]);
-        } else if (state.tile_colors && state.tile_colors[index]) {
-            classes.push("cno-tile-" + state.tile_colors[index]);
+            if (isClueGiver(state) && state.key) {
+                classes.push("cno-tile-" + state.key[index]);
+            } else if (state.tile_colors && state.tile_colors[index]) {
+                classes.push("cno-tile-" + state.tile_colors[index]);
+            }
         } else {
-            classes.push("cno-tile-hidden");
+            if (isClueGiver(state) && state.key) {
+                classes.push("cno-tile-" + state.key[index]);
+            } else {
+                classes.push("cno-tile-hidden");
+                if (isSelected) {
+                    classes.push("cno-tile-selected");
+                }
+            }
         }
         return classes.join(" ");
     }
 
-    function renderGrid(state) {
-        if (!state.words) {
-            gridEl.innerHTML = "";
+    function updateTileBadge(tile, state, index) {
+        var existingBadge = tile.querySelector(".cno-tile-badge");
+        var revealed = state.revealed && state.revealed[index];
+        var isSelected = (selectedGuessIndex === index && isGuesser(state) && state.status === "active" && !revealed);
+
+        if (isSelected) {
+            if (!existingBadge) {
+                existingBadge = document.createElement("span");
+                tile.appendChild(existingBadge);
+            }
+            existingBadge.className = "cno-tile-badge cno-tile-badge-confirm";
+            existingBadge.textContent = "Confirm?";
             return;
         }
-        gridEl.innerHTML = "";
-        state.words.forEach(function (word, index) {
-            var tile = document.createElement("button");
-            tile.type = "button";
-            tile.className = tileClass(state, index);
-            tile.textContent = word;
-            tile.dataset.index = String(index);
 
-            var revealed = state.revealed && state.revealed[index];
-            if (isGuesser(state) && state.status === "active" && !revealed) {
-                tile.addEventListener("click", function () {
-                    if (isBusy) {
-                        return;
-                    }
-                    isBusy = true;
-                    apiRequest("POST", "/guess", { index: index })
-                        .then(renderState)
-                        .catch(function (err) {
-                            showToast(err.message);
-                        })
-                        .finally(function () {
-                            isBusy = false;
-                        });
-                });
+        if (state.status === "won") {
+            var showFull = (isClueGiver(state) || postGameRevealed) && state.key;
+            if (revealed) {
+                if (!existingBadge) {
+                    existingBadge = document.createElement("span");
+                    tile.appendChild(existingBadge);
+                }
+                var color = state.key ? state.key[index] : (state.tile_colors ? state.tile_colors[index] : "");
+                if (color === "assassin") {
+                    existingBadge.className = "cno-tile-badge cno-tile-badge-assassin";
+                    existingBadge.textContent = "💀 Hit!";
+                } else {
+                    existingBadge.className = "cno-tile-badge cno-tile-badge-guessed";
+                    existingBadge.textContent = "✓ Guessed";
+                }
+                return;
+            } else if (showFull) {
+                if (!existingBadge) {
+                    existingBadge = document.createElement("span");
+                    tile.appendChild(existingBadge);
+                }
+                var secretColor = state.key[index];
+                if (secretColor === "assassin") {
+                    existingBadge.className = "cno-tile-badge cno-tile-badge-assassin";
+                    existingBadge.textContent = "💀 Assassin";
+                } else {
+                    existingBadge.className = "cno-tile-badge cno-tile-badge-unguessed";
+                    existingBadge.textContent = "Unguessed";
+                }
+                return;
             }
+        }
 
-            if (state.can_boot && !revealed) {
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+    }
+
+    function updateBootButton(tile, state, index) {
+        var existingBoot = tile.querySelector(".cno-boot-btn");
+        var revealed = state.revealed && state.revealed[index];
+        if (state.can_boot && !revealed) {
+            if (!existingBoot) {
                 var boot = document.createElement("span");
                 boot.className = "cno-boot-btn";
                 boot.textContent = "Boot";
@@ -255,15 +310,112 @@
                 });
                 tile.appendChild(boot);
             }
+        } else if (existingBoot) {
+            existingBoot.remove();
+        }
+    }
 
-            gridEl.appendChild(tile);
+    function handleTileClick(index) {
+        if (!lastState || !lastState.words) {
+            return;
+        }
+        var revealed = lastState.revealed && lastState.revealed[index];
+        if (!isGuesser(lastState) || lastState.status !== "active" || revealed) {
+            return;
+        }
+
+        if (selectedGuessIndex === index) {
+            selectedGuessIndex = null;
+            if (isBusy) {
+                return;
+            }
+            isBusy = true;
+            apiRequest("POST", "/guess", { index: index })
+                .then(renderState)
+                .catch(function (err) {
+                    showToast(err.message);
+                })
+                .finally(function () {
+                    isBusy = false;
+                });
+        } else {
+            selectedGuessIndex = index;
+            renderGrid(lastState);
+            setPlayBar(lastState);
+        }
+    }
+
+    function renderGrid(state) {
+        if (!state.words) {
+            gridEl.innerHTML = "";
+            previousRevealedState = null;
+            return;
+        }
+
+        var existingTiles = gridEl.children;
+        if (existingTiles.length !== state.words.length) {
+            gridEl.innerHTML = "";
+            for (var i = 0; i < state.words.length; i++) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "cno-tile";
+                btn.dataset.index = String(i);
+
+                var wordSpan = document.createElement("span");
+                wordSpan.className = "cno-tile-word";
+                btn.appendChild(wordSpan);
+
+                (function (idx) {
+                    btn.addEventListener("click", function () {
+                        handleTileClick(idx);
+                    });
+                })(i);
+
+                gridEl.appendChild(btn);
+            }
+        }
+
+        state.words.forEach(function (word, index) {
+            var tile = gridEl.children[index];
+            if (!tile) {
+                return;
+            }
+
+            var wordSpan = tile.querySelector(".cno-tile-word");
+            if (wordSpan && wordSpan.textContent !== word) {
+                wordSpan.textContent = word;
+            }
+
+            var revealed = state.revealed && state.revealed[index];
+            var wasRevealed = previousRevealedState ? previousRevealedState[index] : null;
+            var isNewlyRevealed = (revealed === true && wasRevealed === false);
+
+            if (isNewlyRevealed) {
+                tile.classList.remove("cno-tile-flipping");
+                void tile.offsetWidth;
+            }
+
+            tile.className = tileClass(state, index);
+            if (isNewlyRevealed) {
+                tile.classList.add("cno-tile-flipping");
+            }
+
+            updateTileBadge(tile, state, index);
+            updateBootButton(tile, state, index);
         });
+
+        if (state.revealed) {
+            previousRevealedState = state.revealed.slice();
+        } else {
+            previousRevealedState = null;
+        }
     }
 
     function setPlayBarButtons(state) {
         startBtn.hidden = true;
         redealBtn.hidden = true;
         doneBtn.hidden = true;
+        revealKeyBtn.hidden = true;
         rematchBtn.hidden = true;
 
         if (state.status === "preview" && isClueGiver(state)) {
@@ -275,8 +427,14 @@
             doneBtn.hidden = false;
             return;
         }
-        if (state.status === "won" && isClueGiver(state)) {
-            rematchBtn.hidden = false;
+        if (state.status === "won") {
+            if (!isClueGiver(state) && state.key) {
+                revealKeyBtn.hidden = false;
+                revealKeyBtn.textContent = postGameRevealed ? "Hide Full Board" : "Reveal Full Board";
+            }
+            if (isClueGiver(state)) {
+                rematchBtn.hidden = false;
+            }
         }
     }
 
@@ -302,22 +460,31 @@
             var winnerName = state.winner_spymaster || state.winner;
             var winnerColor = state.winner === "red" ? "Red" : "Blue";
             turnBanner.textContent = winnerName + " wins (" + winnerColor + ")!";
-            return;
-        }
-
-        if (state.status === "preview") {
-            turnBanner.textContent = "Preview — check the board before starting";
-            if (isClueGiver(state) && state.remaining) {
+            if (state.remaining) {
                 turnBanner.textContent +=
                     " · " + state.remaining.red + " Red · " + state.remaining.blue + " Blue left";
             }
             return;
         }
 
-        turnBanner.textContent = turnLabel(state);
-        if (isClueGiver(state) && state.remaining) {
-            turnBanner.textContent +=
-                " · " + state.remaining.red + " Red · " + state.remaining.blue + " Blue left";
+        if (state.status === "preview") {
+            turnBanner.textContent = "Preview — check the board before starting";
+            if (state.remaining) {
+                turnBanner.textContent +=
+                    " · " + state.remaining.red + " Red · " + state.remaining.blue + " Blue left";
+            }
+            return;
+        }
+
+        if (isGuesser(state) && selectedGuessIndex !== null && state.words) {
+            var selectedWord = state.words[selectedGuessIndex];
+            turnBanner.textContent = 'Selected: "' + selectedWord + '" — Tap card again to confirm';
+        } else {
+            turnBanner.textContent = turnLabel(state);
+            if (state.remaining) {
+                turnBanner.textContent +=
+                    " · " + state.remaining.red + " Red · " + state.remaining.blue + " Blue left";
+            }
         }
     }
 
@@ -347,7 +514,7 @@
         }
         if (state.status === "active") {
             if (isGuesser(state)) {
-                return "Tap words to guess. Tap Done when your team is finished.";
+                return "Tap a word to select, tap again to confirm. Tap Done when your team is finished.";
             }
             return "Give clues out loud. The guessers tap on their phone.";
         }
@@ -355,6 +522,17 @@
     }
 
     function renderState(state) {
+        if (lastState) {
+            if (state.status !== lastState.status || state.turn !== lastState.turn) {
+                selectedGuessIndex = null;
+            }
+        }
+        if (state.status !== "won") {
+            postGameRevealed = false;
+        }
+        if (state.status !== "active" && state.status !== "won") {
+            previousRevealedState = null;
+        }
         lastState = state;
 
         var compact = inPlayPhase(state);
@@ -538,6 +716,7 @@
     });
 
     doneBtn.addEventListener("click", function () {
+        selectedGuessIndex = null;
         isBusy = true;
         apiRequest("POST", "/end_turn")
             .then(renderState)
@@ -549,8 +728,19 @@
             });
     });
 
+    revealKeyBtn.addEventListener("click", function () {
+        postGameRevealed = !postGameRevealed;
+        revealKeyBtn.textContent = postGameRevealed ? "Hide Full Board" : "Reveal Full Board";
+        if (lastState) {
+            renderGrid(lastState);
+        }
+    });
+
     rematchBtn.addEventListener("click", function () {
         isBusy = true;
+        selectedGuessIndex = null;
+        postGameRevealed = false;
+        previousRevealedState = null;
         apiRequest("POST", "/rematch")
             .then(function (state) {
                 setupDirty = false;
@@ -562,6 +752,16 @@
             .finally(function () {
                 isBusy = false;
             });
+    });
+
+    document.addEventListener("click", function (event) {
+        if (selectedGuessIndex !== null && !event.target.closest(".cno-tile")) {
+            selectedGuessIndex = null;
+            if (lastState) {
+                renderGrid(lastState);
+                setPlayBar(lastState);
+            }
+        }
     });
 
     copyBtn.addEventListener("click", function () {

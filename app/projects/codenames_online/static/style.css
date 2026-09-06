@@ -234,6 +234,7 @@
 .cno-start-btn[hidden],
 .cno-redeal-btn[hidden],
 .cno-done-btn[hidden],
+.cno-reveal-key-btn[hidden],
 .cno-rematch-btn[hidden] {
     display: none !important;
 }
@@ -251,7 +252,7 @@
 .cno-tile {
     position: relative;
     aspect-ratio: 1.2;
-    border: none;
+    border: 2px solid transparent;
     border-radius: 8px;
     font-size: clamp(0.55rem, 2.8vw, 0.78rem);
     font-weight: 700;
@@ -263,6 +264,71 @@
     line-height: 1.15;
     word-break: break-word;
     hyphens: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.cno-tile-word {
+    display: block;
+    width: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.cno-tile-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.52rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1.2;
+    pointer-events: none;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.cno-tile-badge-confirm {
+    background: #8e44ad;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(142, 68, 173, 0.35);
+    animation: cnoBadgePulse 0.9s infinite alternate;
+}
+
+@keyframes cnoBadgePulse {
+    from { opacity: 0.85; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1.05); }
+}
+
+.cno-tile-badge-guessed {
+    background: rgba(0, 0, 0, 0.45);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cno-tile-badge-unguessed {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.cno-tile-badge-assassin {
+    background: #111111;
+    color: #ff5252;
+    border: 1px solid #ff5252;
+}
+
+.cno-tile-selected {
+    box-shadow: 0 0 0 3px #8e44ad, 0 4px 14px rgba(142, 68, 173, 0.5) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    border-color: #8e44ad !important;
+    background-color: #f5eefb !important;
+    color: #2c003e !important;
+    z-index: 5;
 }
 
 .cno-tile-hidden {
@@ -308,6 +374,51 @@
 
 .cno-tile-hidden:not(.cno-tile-revealed) {
     cursor: pointer;
+}
+
+.cno-tile-unguessed {
+    opacity: 0.95;
+    cursor: default;
+}
+
+.cno-tile-unguessed-red {
+    background-color: rgba(192, 57, 43, 0.16) !important;
+    border: 2px dashed #c0392b !important;
+    color: #922b21 !important;
+}
+
+.cno-tile-unguessed-blue {
+    background-color: rgba(41, 128, 185, 0.16) !important;
+    border: 2px dashed #2980b9 !important;
+    color: #1f618d !important;
+}
+
+.cno-tile-unguessed-neutral {
+    background-color: rgba(212, 184, 150, 0.25) !important;
+    border: 2px dashed #a0825e !important;
+    color: #5c472d !important;
+}
+
+.cno-tile-unguessed-assassin {
+    background-color: rgba(44, 44, 44, 0.18) !important;
+    border: 2.5px dashed #1a1a1a !important;
+    color: #1a1a1a !important;
+}
+
+@keyframes cnoCardFlip {
+    0% {
+        transform: perspective(600px) rotateY(0deg) scale(1);
+    }
+    50% {
+        transform: perspective(600px) rotateY(90deg) scale(1.08);
+    }
+    100% {
+        transform: perspective(600px) rotateY(0deg) scale(1);
+    }
+}
+
+.cno-tile-flipping {
+    animation: cnoCardFlip 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cno-boot-btn {
@@ -381,8 +492,13 @@
 
 .cno-start-btn,
 .cno-redeal-btn,
+.cno-reveal-key-btn,
 .cno-rematch-btn {
     width: 100%;
+}
+
+.cno-reveal-key-btn {
+    margin-bottom: 8px;
 }
 
 .cno-redeal-btn {
@@ -479,5 +595,13 @@
 
     .cno-tile {
         font-size: clamp(0.5rem, 2.5vw, 0.7rem);
+        padding: 2px;
+    }
+
+    .cno-tile-badge {
+        font-size: 0.44rem;
+        padding: 0 3px;
+        top: 1px;
+        right: 1px;
     }
 }

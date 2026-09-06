@@ -75,12 +75,20 @@ def room_to_dict(room, viewer_seat, is_admin=False):
         payload["words"] = room.words
         payload["revealed"] = room.revealed or [False] * 25
 
-        if phone_role == CodenamesOnlineRoom.ROLE_CLUE_GIVER or (
-            viewer_seat is None and room.status == CodenamesOnlineRoom.STATUS_WON
+        if room.status in (
+            CodenamesOnlineRoom.STATUS_PREVIEW,
+            CodenamesOnlineRoom.STATUS_ACTIVE,
+            CodenamesOnlineRoom.STATUS_WON,
+        ):
+            payload["remaining"] = remaining_counts(room.key, room.revealed)
+
+        if (
+            phone_role == CodenamesOnlineRoom.ROLE_CLUE_GIVER
+            or room.status == CodenamesOnlineRoom.STATUS_WON
         ):
             payload["key"] = room.key
-            payload["remaining"] = remaining_counts(room.key, room.revealed)
-        elif phone_role == CodenamesOnlineRoom.ROLE_GUESSER or viewer_seat is None:
+
+        if phone_role == CodenamesOnlineRoom.ROLE_GUESSER or viewer_seat is None:
             payload["tile_colors"] = _tile_colors_for_guesser(
                 room.words, room.key, room.revealed
             )
