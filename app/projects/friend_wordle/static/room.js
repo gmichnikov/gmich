@@ -565,7 +565,6 @@
             keyboardEl.hidden = !showKeyboard;
             if (showKeyboard) {
                 buildKeyboardOnce();
-                updateKeyboardFeedback(state);
                 keyboardEl.querySelectorAll(".fw-key").forEach(function (btn) {
                     btn.disabled = false;
                 });
@@ -577,6 +576,8 @@
             keyboardEl.hidden = true;
             currentGuess = "";
         }
+
+        updateKeyboardFeedback(state);
 
         if (!shouldShowKeyboard(state)) {
             currentGuess = "";
@@ -807,6 +808,7 @@
         secretInput.value = "";
         secretInput.classList.add("fw-secret-masked");
         secretShowBtn.textContent = "Show";
+        updateKeyboardFeedback({ guesses: [] });
         apiRequest("POST", "/rematch")
             .then(render)
             .catch(function (err) {

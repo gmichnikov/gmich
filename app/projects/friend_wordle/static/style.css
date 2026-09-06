@@ -10,6 +10,11 @@
     margin: -20px;
 }
 
+/* Author display rules (flex/inline-block) otherwise override the hidden attribute. */
+.fw-wrapper [hidden] {
+    display: none !important;
+}
+
 .fw-container {
     text-align: center;
     max-width: 520px;
