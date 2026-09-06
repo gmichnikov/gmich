@@ -285,6 +285,7 @@ def create_app():
     )
     from app.projects.connect4_online.models import Connect4OnlineRoom
     from app.projects.friend_wordle.models import FriendWordleRoom
+    from app.projects.mancala_online.models import MancalaOnlineRoom
     from app.projects.nfl_survivor.models import (
         NflSurvivorSeason,
         NflSurvivorParticipant,
