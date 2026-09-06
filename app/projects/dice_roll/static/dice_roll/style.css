@@ -21,31 +21,32 @@
     top: max(0.35rem, env(safe-area-inset-top, 0px));
     right: max(0.65rem, env(safe-area-inset-right, 0px));
     z-index: 2;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #94a3b8;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    padding: 0.4rem 0.55rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-decoration: none;
+    padding: 0.45rem 0.85rem;
     line-height: 1.2;
-    /* Adults still get a proper tap target without looking huge */
     min-height: 44px;
-    min-width: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    background: #fff;
+    border: 2px solid #0f172a;
+    border-radius: 999px;
+    box-shadow: 0 2px 0 #0f172a;
 }
 
 .diceroll-settings-link:hover,
 .diceroll-settings-link:focus-visible {
-    color: #64748b;
+    color: #0f172a;
+    background: #f8fafc;
     outline: none;
 }
 
 .diceroll-settings-link:focus-visible {
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6366f1;
-    border-radius: 4px;
+    box-shadow: 0 2px 0 #0f172a, 0 0 0 3px #6366f1;
 }
 
 .diceroll-roll-surface {
@@ -203,6 +204,33 @@
     /* Room for “Held” labels below dice on small screens */
     padding-bottom: 2rem;
     margin-bottom: 0.25rem;
+}
+
+.diceroll-roll-surface.diceroll-roll-surface--scatter {
+    justify-content: flex-start;
+}
+
+.diceroll-roll-surface.diceroll-roll-surface--scatter .diceroll-hint {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.diceroll-roll-surface.diceroll-roll-surface--scatter .diceroll-dice-row {
+    position: absolute;
+    left: 0.45rem;
+    right: 0.45rem;
+    top: 4.15rem;
+    bottom: 3.7rem;
+    display: block;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
+.diceroll-roll-surface.diceroll-roll-surface--scatter .diceroll-die {
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
 .diceroll-die {
@@ -378,6 +406,10 @@
     font-weight: 600;
 }
 
+.diceroll-setup-lead--sub {
+    margin: 0.15rem 0 0.75rem;
+}
+
 .diceroll-setup-choices {
     display: flex;
     flex-direction: column;
@@ -468,6 +500,16 @@
     font-size: 1.1rem;
     font-weight: 600;
     color: #64748b;
+}
+
+.diceroll-setup-choice[data-scatter] .diceroll-setup-choice-label {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #312e81;
+}
+
+.diceroll-setup-choice[data-scatter].diceroll-setup-choice--selected .diceroll-setup-choice-label {
+    color: #065f46;
 }
 
 .diceroll-setup-note {
@@ -567,6 +609,12 @@
     .diceroll-setup-choice {
         padding: 1.35rem 1.5rem;
         min-height: 52px;
+    }
+
+    .diceroll-roll-surface.diceroll-roll-surface--scatter .diceroll-dice-row {
+        top: 4.55rem;
+        left: max(0.35rem, env(safe-area-inset-left, 0px));
+        right: max(0.35rem, env(safe-area-inset-right, 0px));
     }
 
     .diceroll-setup-done {

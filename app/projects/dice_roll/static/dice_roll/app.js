@@ -5,6 +5,7 @@
     "use strict";
 
     var STORAGE_KEY = "dice_roll_count";
+    var SCATTER_KEY = "dice_roll_scatter";
     var VALID_COUNTS = [1, 2, 5];
 
     function getCount() {
@@ -17,6 +18,16 @@
         if (VALID_COUNTS.indexOf(n) !== -1) {
             localStorage.setItem(STORAGE_KEY, String(n));
         }
+    }
+
+    /** Default on: missing key means enabled. */
+    function getScatter() {
+        var raw = localStorage.getItem(SCATTER_KEY);
+        return raw === null ? true : raw === "1";
+    }
+
+    function setScatter(on) {
+        localStorage.setItem(SCATTER_KEY, on ? "1" : "0");
     }
 
     /** 3×3 grid cell indices (0–8) that show a pip for each face value */
@@ -95,11 +106,204 @@
             }
             state = [];
             for (var i = 0; i < n; i++) {
-                state.push({ value: randomFace(), held: false });
+                state.push({ value: randomFace(), held: false, nx: null, ny: null });
             }
         }
 
+        function measureDieSize() {
+            var existing = row.querySelector(".diceroll-die");
+            if (existing) {
+                return existing.offsetWidth;
+            }
+            var probe = document.createElement("button");
+            probe.type = "button";
+            probe.className = "diceroll-die";
+            probe.style.visibility = "hidden";
+            probe.style.position = "absolute";
+            row.appendChild(probe);
+            var size = probe.offsetWidth || 72;
+            row.removeChild(probe);
+            return size;
+        }
+
+        function getLayoutMetrics() {
+            var size = measureDieSize();
+            var tagReserve = 24;
+            var areaW = row.clientWidth;
+            var areaH = row.clientHeight;
+            return {
+                areaW: areaW,
+                areaH: areaH,
+                size: size,
+                maxX: Math.max(0, areaW - size),
+                maxY: Math.max(0, areaH - size - tagReserve),
+            };
+        }
+
+        function posToPx(cell, m) {
+            return {
+                x: (cell.nx == null ? 0.5 : cell.nx) * m.maxX,
+                y: (cell.ny == null ? 0.5 : cell.ny) * m.maxY,
+            };
+        }
+
+        function setPosFromPx(cell, x, y, m) {
+            cell.nx = m.maxX > 0 ? x / m.maxX : 0.5;
+            cell.ny = m.maxY > 0 ? y / m.maxY : 0.5;
+        }
+
+        function boxesOverlap(a, b, size, pad) {
+            return (
+                Math.abs(a.x - b.x) < size + pad &&
+                Math.abs(a.y - b.y) < size + pad
+            );
+        }
+
+        function pickNewPosition(m, occupied, prev) {
+            var pad = Math.max(8, m.size * 0.12);
+            var minDist = Math.max(
+                m.size * 1.15,
+                Math.min(m.areaW, m.areaH) * 0.22
+            );
+            var attempts = 55;
+
+            function tryPick(requireDist, requireClear) {
+                var best = null;
+                var bestDist = -1;
+                for (var i = 0; i < attempts; i++) {
+                    var x = m.maxX > 0 ? Math.random() * m.maxX : 0;
+                    var y = m.maxY > 0 ? Math.random() * m.maxY : 0;
+                    var cand = { x: x, y: y };
+                    if (requireClear) {
+                        var blocked = false;
+                        for (var j = 0; j < occupied.length; j++) {
+                            if (boxesOverlap(cand, occupied[j], m.size, pad)) {
+                                blocked = true;
+                                break;
+                            }
+                        }
+                        if (blocked) {
+                            continue;
+                        }
+                    }
+                    var dist = prev
+                        ? Math.hypot(x - prev.x, y - prev.y)
+                        : minDist;
+                    if (requireDist && prev && dist < minDist) {
+                        continue;
+                    }
+                    if (dist > bestDist) {
+                        bestDist = dist;
+                        best = cand;
+                    }
+                    if (requireClear && dist >= minDist) {
+                        return cand;
+                    }
+                }
+                return best;
+            }
+
+            return (
+                tryPick(true, true) ||
+                tryPick(false, true) ||
+                tryPick(false, false) ||
+                { x: 0, y: 0 }
+            );
+        }
+
+        function layoutInitialRow(m) {
+            if (m.areaW < 8 || m.areaH < 8) {
+                return;
+            }
+            var n = state.length;
+            var gap = Math.min(18, Math.max(8, m.size * 0.16));
+            var cols = n;
+            var rowW = cols * m.size + Math.max(0, cols - 1) * gap;
+            while (cols > 1 && rowW > m.areaW) {
+                cols -= 1;
+                rowW = cols * m.size + Math.max(0, cols - 1) * gap;
+            }
+            var rows = Math.ceil(n / Math.max(cols, 1));
+            var totalH = rows * m.size + Math.max(0, rows - 1) * gap;
+            var startY = Math.max(0, (m.maxY - (totalH - m.size)) / 2);
+            for (var i = 0; i < n; i++) {
+                var r = Math.floor(i / cols);
+                var c = i % cols;
+                var inRow = Math.min(cols, n - r * cols);
+                var lineW = inRow * m.size + Math.max(0, inRow - 1) * gap;
+                var startX = Math.max(0, (m.areaW - lineW) / 2);
+                var x = Math.min(m.maxX, startX + c * (m.size + gap));
+                var y = Math.min(m.maxY, startY + r * (m.size + gap));
+                setPosFromPx(state[i], x, y, m);
+            }
+        }
+
+        function relocateIndices(indices) {
+            var m = getLayoutMetrics();
+            if (m.areaW < 8 || m.areaH < 8 || indices.length === 0) {
+                return;
+            }
+            var occupied = [];
+            var i;
+            for (i = 0; i < state.length; i++) {
+                if (indices.indexOf(i) !== -1) {
+                    continue;
+                }
+                if (state[i].nx == null) {
+                    continue;
+                }
+                occupied.push(posToPx(state[i], m));
+            }
+            for (i = 0; i < indices.length; i++) {
+                var cell = state[indices[i]];
+                var prev = cell.nx != null ? posToPx(cell, m) : null;
+                var next = pickNewPosition(m, occupied, prev);
+                setPosFromPx(cell, next.x, next.y, m);
+                occupied.push(next);
+            }
+        }
+
+        function applyPositions() {
+            if (!getScatter()) {
+                return;
+            }
+            var m = getLayoutMetrics();
+            if (m.areaW < 8 || m.areaH < 8) {
+                return;
+            }
+            var dice = row.querySelectorAll(".diceroll-die");
+            for (var i = 0; i < dice.length; i++) {
+                var cell = state[i];
+                if (!cell || cell.nx == null) {
+                    continue;
+                }
+                var px = posToPx(cell, m);
+                dice[i].style.left = Math.round(px.x) + "px";
+                dice[i].style.top = Math.round(px.y) + "px";
+            }
+        }
+
+        function ensureScatterPositions() {
+            if (!getScatter()) {
+                return;
+            }
+            var missing = false;
+            for (var i = 0; i < state.length; i++) {
+                if (state[i].nx == null || state[i].ny == null) {
+                    missing = true;
+                    break;
+                }
+            }
+            var m = getLayoutMetrics();
+            if (missing) {
+                layoutInitialRow(m);
+            }
+            applyPositions();
+        }
+
         function render() {
+            var scatter = getScatter();
+            surface.classList.toggle("diceroll-roll-surface--scatter", scatter);
             row.innerHTML = "";
             for (var i = 0; i < state.length; i++) {
                 (function (index) {
@@ -137,6 +341,7 @@
                     row.appendChild(btn);
                 })(i);
             }
+            ensureScatterPositions();
         }
 
         function roll() {
@@ -168,6 +373,10 @@
                         "diceroll-roll-surface--roll-ping"
                     );
                 }, 520);
+                if (getScatter()) {
+                    surface.classList.add("diceroll-roll-surface--scatter");
+                    relocateIndices(bumped);
+                }
             }
             render();
             requestAnimationFrame(function () {
@@ -230,9 +439,20 @@
             }
         });
 
+        function onViewportChange() {
+            if (getScatter()) {
+                applyPositions();
+            }
+        }
+
+        window.addEventListener("resize", onViewportChange);
+
         syncStateLength();
         randomPastelBackdrop(surface);
         render();
+        requestAnimationFrame(function () {
+            ensureScatterPositions();
+        });
 
         window.addEventListener("pageshow", function () {
             syncStateLength();
@@ -246,12 +466,13 @@
             return;
         }
 
-        var buttons = root.querySelectorAll(".diceroll-setup-choice");
+        var countButtons = root.querySelectorAll(".diceroll-setup-choice[data-count]");
+        var scatterButtons = root.querySelectorAll(".diceroll-setup-choice[data-scatter]");
 
         function updateSelected() {
             var n = getCount();
-            for (var i = 0; i < buttons.length; i++) {
-                var b = buttons[i];
+            for (var i = 0; i < countButtons.length; i++) {
+                var b = countButtons[i];
                 var c = parseInt(b.getAttribute("data-count"), 10);
                 var sel = c === n;
                 b.classList.toggle("diceroll-setup-choice--selected", sel);
@@ -259,15 +480,33 @@
             }
         }
 
-        for (var j = 0; j < buttons.length; j++) {
-            buttons[j].addEventListener("click", function () {
+        function updateScatterChoices() {
+            var on = getScatter();
+            for (var i = 0; i < scatterButtons.length; i++) {
+                var b = scatterButtons[i];
+                var sel = (b.getAttribute("data-scatter") === "1") === on;
+                b.classList.toggle("diceroll-setup-choice--selected", sel);
+                b.setAttribute("aria-pressed", sel ? "true" : "false");
+            }
+        }
+
+        for (var j = 0; j < countButtons.length; j++) {
+            countButtons[j].addEventListener("click", function () {
                 var c = parseInt(this.getAttribute("data-count"), 10);
                 setCount(c);
                 updateSelected();
             });
         }
 
+        for (var k = 0; k < scatterButtons.length; k++) {
+            scatterButtons[k].addEventListener("click", function () {
+                setScatter(this.getAttribute("data-scatter") === "1");
+                updateScatterChoices();
+            });
+        }
+
         updateSelected();
+        updateScatterChoices();
     }
 
     if (document.readyState === "loading") {
