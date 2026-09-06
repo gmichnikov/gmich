@@ -16,11 +16,11 @@
     min-height: min(92dvh, calc(100dvh - 5.25rem));
 }
 
+.diceroll-history-toggle,
 .diceroll-settings-link {
     position: absolute;
     top: max(0.35rem, env(safe-area-inset-top, 0px));
-    right: max(0.65rem, env(safe-area-inset-right, 0px));
-    z-index: 2;
+    z-index: 12;
     font-size: 0.95rem;
     font-weight: 700;
     color: #0f172a;
@@ -31,13 +31,27 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
     box-sizing: border-box;
     background: #fff;
     border: 2px solid #0f172a;
     border-radius: 999px;
     box-shadow: 0 2px 0 #0f172a;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
 }
 
+.diceroll-history-toggle {
+    left: max(0.65rem, env(safe-area-inset-left, 0px));
+}
+
+.diceroll-settings-link {
+    right: max(0.65rem, env(safe-area-inset-right, 0px));
+}
+
+.diceroll-history-toggle:hover,
+.diceroll-history-toggle:focus-visible,
 .diceroll-settings-link:hover,
 .diceroll-settings-link:focus-visible {
     color: #0f172a;
@@ -45,8 +59,206 @@
     outline: none;
 }
 
+.diceroll-history-toggle:focus-visible,
 .diceroll-settings-link:focus-visible {
     box-shadow: 0 2px 0 #0f172a, 0 0 0 3px #6366f1;
+}
+
+.diceroll-history-toggle[aria-expanded="true"] {
+    background: #0f172a;
+    color: #fff;
+}
+
+.diceroll-history-toggle[aria-expanded="true"]:hover,
+.diceroll-history-toggle[aria-expanded="true"]:focus-visible {
+    background: #1e293b;
+    color: #fff;
+}
+
+.diceroll-history-count {
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.diceroll-history-toggle[aria-expanded="true"] .diceroll-history-count {
+    background: #fff;
+    color: #0f172a;
+}
+
+.diceroll-history-count[hidden] {
+    display: none;
+}
+
+.diceroll-history[hidden] {
+    display: none;
+}
+
+.diceroll-history {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0.65rem;
+    padding-top: 3.6rem;
+    padding-left: max(0.65rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    background: rgba(15, 23, 42, 0.38);
+    box-sizing: border-box;
+}
+
+.diceroll-history-panel {
+    width: 100%;
+    max-width: 28rem;
+    max-height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    border: 2px solid #0f172a;
+    border-radius: 20px;
+    box-shadow: 0 4px 0 #0f172a, 0 18px 40px rgba(15, 23, 42, 0.22);
+    padding: 0.85rem 0.9rem 1rem;
+    box-sizing: border-box;
+}
+
+.diceroll-history-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    position: sticky;
+    top: -0.85rem;
+    z-index: 1;
+    padding: 0.85rem 0 0.55rem;
+    margin-top: -0.85rem;
+    background: #fff;
+}
+
+.diceroll-history-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+
+.diceroll-history-close {
+    flex-shrink: 0;
+    min-height: 40px;
+    padding: 0.35rem 0.8rem;
+    border: 2px solid #0f172a;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.diceroll-history-close:hover,
+.diceroll-history-close:focus-visible {
+    background: #f8fafc;
+    outline: none;
+}
+
+.diceroll-history-close:focus-visible {
+    box-shadow: 0 0 0 3px #6366f1;
+}
+
+.diceroll-history-empty {
+    margin: 0.35rem 0 0.15rem;
+    padding: 0.85rem 0.75rem;
+    text-align: center;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.diceroll-history-empty[hidden] {
+    display: none;
+}
+
+.diceroll-history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.diceroll-history-item {
+    padding: 0.7rem 0.75rem 0.8rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.diceroll-history-item-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-bottom: 0.55rem;
+}
+
+.diceroll-history-item-n {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.diceroll-history-item-who {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.diceroll-history-item-dice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.diceroll-history-die {
+    width: 2.15rem;
+    height: 2.15rem;
+    flex-shrink: 0;
+    border-radius: 7px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 0 #cbd5e1;
+    box-sizing: border-box;
+}
+
+.diceroll-history-die .diceroll-pips {
+    padding: 12%;
+}
+
+.diceroll-history-die .diceroll-pip {
+    max-width: 0.32rem;
+    max-height: 0.32rem;
 }
 
 .diceroll-roll-surface {

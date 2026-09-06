@@ -151,8 +151,16 @@
 
         var state = [];
         var rollCount = 0;
+        var rollHistory = [];
         var rollPingTimer = null;
         var badge = document.getElementById("diceroll-roll-badge");
+        var historyToggle = document.getElementById("diceroll-history-toggle");
+        var historyRoot = document.getElementById("diceroll-history");
+        var historyList = document.getElementById("diceroll-history-list");
+        var historyEmpty = document.getElementById("diceroll-history-empty");
+        var historyClose = document.getElementById("diceroll-history-close");
+        var historyCount = document.getElementById("diceroll-history-count");
+        var historyOpen = false;
         var turnRoot = document.getElementById("diceroll-turn");
         var turnNow = document.getElementById("diceroll-turn-now");
         var turnNowName = document.getElementById("diceroll-turn-now-name");
@@ -251,6 +259,122 @@
                     displayPlayerName(0) +
                         " is first. Tap to roll, or tap a die to hold."
                 );
+            }
+        }
+
+        function updateHistoryCount() {
+            if (!historyCount || !historyToggle) {
+                return;
+            }
+            if (rollHistory.length === 0) {
+                historyCount.hidden = true;
+                historyCount.textContent = "";
+                historyToggle.setAttribute("aria-label", "Open roll history");
+                return;
+            }
+            historyCount.hidden = false;
+            historyCount.textContent = String(rollHistory.length);
+            historyToggle.setAttribute(
+                "aria-label",
+                "Open roll history, " + rollHistory.length + " rolls"
+            );
+        }
+
+        function renderHistory() {
+            if (!historyList) {
+                return;
+            }
+            historyList.innerHTML = "";
+            if (historyEmpty) {
+                historyEmpty.hidden = rollHistory.length > 0;
+            }
+            for (var i = rollHistory.length - 1; i >= 0; i--) {
+                var entry = rollHistory[i];
+                var item = document.createElement("li");
+                item.className = "diceroll-history-item";
+
+                var meta = document.createElement("div");
+                meta.className = "diceroll-history-item-meta";
+
+                var num = document.createElement("span");
+                num.className = "diceroll-history-item-n";
+                num.textContent = "Roll " + entry.n;
+                meta.appendChild(num);
+
+                if (entry.player) {
+                    var who = document.createElement("span");
+                    who.className = "diceroll-history-item-who";
+                    who.textContent = entry.player;
+                    meta.appendChild(who);
+                }
+                item.appendChild(meta);
+
+                var diceRow = document.createElement("div");
+                diceRow.className = "diceroll-history-item-dice";
+                diceRow.setAttribute("aria-hidden", "true");
+                for (var d = 0; d < entry.values.length; d++) {
+                    var die = document.createElement("div");
+                    die.className = "diceroll-history-die";
+                    var pips = document.createElement("div");
+                    pips.className = "diceroll-pips";
+                    pips.appendChild(buildPips(entry.values[d]));
+                    die.appendChild(pips);
+                    diceRow.appendChild(die);
+                }
+                item.appendChild(diceRow);
+                item.setAttribute(
+                    "aria-label",
+                    "Roll " +
+                        entry.n +
+                        (entry.player ? ", " + entry.player : "") +
+                        ", dice showing " +
+                        entry.values.join(", ")
+                );
+
+                historyList.appendChild(item);
+            }
+        }
+
+        function recordRoll() {
+            var values = [];
+            for (var i = 0; i < state.length; i++) {
+                values.push(state[i].value);
+            }
+            var players = getPlayers();
+            rollHistory.push({
+                n: rollCount,
+                values: values,
+                player: players.n >= 2 ? displayPlayerName(currentPlayer) : null,
+            });
+            updateHistoryCount();
+            if (historyOpen) {
+                renderHistory();
+            }
+        }
+
+        function setHistoryOpen(open) {
+            historyOpen = !!open;
+            if (!historyRoot || !historyToggle) {
+                return;
+            }
+            historyRoot.hidden = !historyOpen;
+            surface.inert = historyOpen;
+            historyToggle.setAttribute(
+                "aria-expanded",
+                historyOpen ? "true" : "false"
+            );
+            if (historyOpen) {
+                renderHistory();
+                historyToggle.setAttribute(
+                    "aria-label",
+                    rollHistory.length === 0
+                        ? "Close roll history"
+                        : "Close roll history, " +
+                              rollHistory.length +
+                              " rolls"
+                );
+            } else {
+                updateHistoryCount();
             }
         }
 
@@ -500,6 +624,9 @@
         }
 
         function roll() {
+            if (historyOpen) {
+                return;
+            }
             syncStateLength();
             var bumped = [];
             for (var i = 0; i < state.length; i++) {
@@ -517,6 +644,7 @@
                 if (badge) {
                     badge.textContent = "Roll " + rollCount;
                 }
+                recordRoll();
                 if (rollPingTimer !== null) {
                     window.clearTimeout(rollPingTimer);
                     rollPingTimer = null;
@@ -595,6 +723,48 @@
                 roll();
             }
         });
+
+        if (historyToggle) {
+            historyToggle.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                setHistoryOpen(!historyOpen);
+            });
+        }
+
+        if (historyClose) {
+            historyClose.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                setHistoryOpen(false);
+                if (historyToggle) {
+                    historyToggle.focus();
+                }
+            });
+        }
+
+        if (historyRoot) {
+            historyRoot.addEventListener("click", function (ev) {
+                if (ev.target === historyRoot) {
+                    setHistoryOpen(false);
+                    if (historyToggle) {
+                        historyToggle.focus();
+                    }
+                }
+            });
+        }
+
+        document.addEventListener("keydown", function (ev) {
+            if (ev.key === "Escape" && historyOpen) {
+                ev.preventDefault();
+                setHistoryOpen(false);
+                if (historyToggle) {
+                    historyToggle.focus();
+                }
+            }
+        });
+
+        updateHistoryCount();
 
         function onViewportChange() {
             if (getScatter()) {

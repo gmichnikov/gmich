@@ -10,7 +10,35 @@
 
 {% block content %}
 <div class="diceroll-play-root" id="diceroll-play-root">
+    <button
+        type="button"
+        class="diceroll-history-toggle"
+        id="diceroll-history-toggle"
+        aria-expanded="false"
+        aria-controls="diceroll-history"
+    >
+        History
+        <span class="diceroll-history-count" id="diceroll-history-count" hidden></span>
+    </button>
     <a href="{{ url_for('dice_roll.setup') }}" class="diceroll-settings-link">Settings</a>
+
+    <div
+        class="diceroll-history"
+        id="diceroll-history"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="diceroll-history-title"
+    >
+        <div class="diceroll-history-panel">
+            <div class="diceroll-history-head">
+                <h2 class="diceroll-history-title" id="diceroll-history-title">Roll history</h2>
+                <button type="button" class="diceroll-history-close" id="diceroll-history-close">Close</button>
+            </div>
+            <p class="diceroll-history-empty" id="diceroll-history-empty">No rolls yet. Tap the board to roll.</p>
+            <ol class="diceroll-history-list" id="diceroll-history-list"></ol>
+        </div>
+    </div>
 
     <div
         class="diceroll-roll-surface"
