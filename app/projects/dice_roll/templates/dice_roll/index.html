@@ -20,6 +20,16 @@
         aria-label="Roll dice. Tap a die to hold or release it for the next roll."
     >
         <p class="diceroll-hint" aria-hidden="true">Tap almost anywhere to roll</p>
+        <div class="diceroll-turn" id="diceroll-turn" hidden role="status" aria-live="polite">
+            <p class="diceroll-turn-now" id="diceroll-turn-now" hidden>
+                <span class="diceroll-turn-label">This roll</span>
+                <span class="diceroll-turn-name" id="diceroll-turn-now-name"></span>
+            </p>
+            <p class="diceroll-turn-next" id="diceroll-turn-next">
+                <span class="diceroll-turn-label" id="diceroll-turn-next-label">Next</span>
+                <span class="diceroll-turn-name" id="diceroll-turn-next-name"></span>
+            </p>
+        </div>
         <div class="diceroll-dice-row" id="diceroll-dice-row" aria-live="polite" aria-atomic="true"></div>
         <p class="diceroll-roll-badge" id="diceroll-roll-badge" role="status" aria-live="polite"></p>
     </div>

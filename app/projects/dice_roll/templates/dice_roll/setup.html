@@ -40,6 +40,29 @@
         </button>
     </div>
 
+    <p class="diceroll-setup-lead diceroll-setup-lead--sub">Players taking turns</p>
+    <div class="diceroll-setup-player-counts" role="group" aria-label="Number of players">
+        <button type="button" class="diceroll-setup-player-count" data-players="0" aria-pressed="true">None</button>
+        <button type="button" class="diceroll-setup-player-count" data-players="2" aria-pressed="false">2</button>
+        <button type="button" class="diceroll-setup-player-count" data-players="3" aria-pressed="false">3</button>
+        <button type="button" class="diceroll-setup-player-count" data-players="4" aria-pressed="false">4</button>
+        <button type="button" class="diceroll-setup-player-count" data-players="5" aria-pressed="false">5</button>
+        <button type="button" class="diceroll-setup-player-count" data-players="6" aria-pressed="false">6</button>
+    </div>
+
+    <div class="diceroll-setup-players" id="diceroll-setup-players" hidden>
+        <div class="diceroll-setup-names" id="diceroll-setup-names"></div>
+        <p class="diceroll-setup-lead diceroll-setup-lead--sub">If someone rolls a 6</p>
+        <div class="diceroll-setup-choices" role="group" aria-label="Extra turn on a six">
+            <button type="button" class="diceroll-setup-choice" data-extra-six="0" aria-pressed="true">
+                <span class="diceroll-setup-choice-label">Next player’s turn</span>
+            </button>
+            <button type="button" class="diceroll-setup-choice" data-extra-six="1" aria-pressed="false">
+                <span class="diceroll-setup-choice-label">They go again</span>
+            </button>
+        </div>
+    </div>
+
     <p class="diceroll-setup-note">On the roll screen, tap a die to hold its value (for games like Yahtzee). Everything else is a big “roll” button.</p>
 
     <div class="diceroll-setup-actions">

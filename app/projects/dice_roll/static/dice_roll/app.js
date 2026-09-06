@@ -6,7 +6,9 @@
 
     var STORAGE_KEY = "dice_roll_count";
     var SCATTER_KEY = "dice_roll_scatter";
+    var PLAYERS_KEY = "dice_roll_players";
     var VALID_COUNTS = [1, 2, 5];
+    var VALID_PLAYER_COUNTS = [0, 2, 3, 4, 5, 6];
 
     function getCount() {
         var raw = localStorage.getItem(STORAGE_KEY);
@@ -28,6 +30,59 @@
 
     function setScatter(on) {
         localStorage.setItem(SCATTER_KEY, on ? "1" : "0");
+    }
+
+    function defaultPlayers() {
+        return { n: 0, names: [], extraSix: false };
+    }
+
+    function getPlayers() {
+        try {
+            var raw = localStorage.getItem(PLAYERS_KEY);
+            if (!raw) {
+                return defaultPlayers();
+            }
+            var data = JSON.parse(raw);
+            var n = parseInt(data.n, 10);
+            if (VALID_PLAYER_COUNTS.indexOf(n) === -1) {
+                n = 0;
+            }
+            var names = Array.isArray(data.names) ? data.names.slice() : [];
+            while (names.length < 6) {
+                names.push("");
+            }
+            return {
+                n: n,
+                names: names,
+                extraSix: !!data.extraSix,
+            };
+        } catch (err) {
+            return defaultPlayers();
+        }
+    }
+
+    function setPlayers(partial) {
+        var cur = getPlayers();
+        if (partial.n !== undefined) {
+            var n = parseInt(partial.n, 10);
+            cur.n = VALID_PLAYER_COUNTS.indexOf(n) !== -1 ? n : 0;
+        }
+        if (partial.names) {
+            var i;
+            for (i = 0; i < partial.names.length && i < 6; i++) {
+                cur.names[i] = String(partial.names[i] || "");
+            }
+        }
+        if (partial.extraSix !== undefined) {
+            cur.extraSix = !!partial.extraSix;
+        }
+        localStorage.setItem(PLAYERS_KEY, JSON.stringify(cur));
+    }
+
+    function displayPlayerName(index) {
+        var p = getPlayers();
+        var name = (p.names[index] || "").trim();
+        return name || "Player " + (index + 1);
     }
 
     /** 3×3 grid cell indices (0–8) that show a pip for each face value */
@@ -98,6 +153,106 @@
         var rollCount = 0;
         var rollPingTimer = null;
         var badge = document.getElementById("diceroll-roll-badge");
+        var turnRoot = document.getElementById("diceroll-turn");
+        var turnNow = document.getElementById("diceroll-turn-now");
+        var turnNowName = document.getElementById("diceroll-turn-now-name");
+        var turnNext = document.getElementById("diceroll-turn-next");
+        var turnNextLabel = document.getElementById("diceroll-turn-next-label");
+        var turnNextName = document.getElementById("diceroll-turn-next-name");
+        var currentPlayer = 0;
+        var nextPlayer = 0;
+        var hasRolled = false;
+
+        function rollHasSix(indices) {
+            for (var i = 0; i < indices.length; i++) {
+                var cell = state[indices[i]];
+                if (cell && cell.value === 6) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function advanceTurn(bumped) {
+            var players = getPlayers();
+            if (players.n < 2) {
+                hasRolled = false;
+                currentPlayer = 0;
+                nextPlayer = 0;
+                return;
+            }
+            if (!hasRolled) {
+                currentPlayer = 0;
+            } else {
+                currentPlayer = nextPlayer;
+            }
+            hasRolled = true;
+            var again = players.extraSix && rollHasSix(bumped);
+            nextPlayer = again
+                ? currentPlayer
+                : (currentPlayer + 1) % players.n;
+        }
+
+        function updateTurnBanner() {
+            var players = getPlayers();
+            var usingTurns = players.n >= 2;
+            surface.classList.toggle("diceroll-roll-surface--turn", usingTurns);
+            surface.classList.toggle(
+                "diceroll-roll-surface--turn-both",
+                usingTurns && hasRolled
+            );
+            if (!turnRoot) {
+                return;
+            }
+            if (!usingTurns) {
+                turnRoot.hidden = true;
+                surface.setAttribute(
+                    "aria-label",
+                    "Roll dice. Tap a die to hold or release it for the next roll."
+                );
+                return;
+            }
+            turnRoot.hidden = false;
+            if (turnNow && turnNowName) {
+                if (hasRolled) {
+                    turnNow.hidden = false;
+                    turnNowName.textContent = displayPlayerName(currentPlayer);
+                } else {
+                    turnNow.hidden = true;
+                    turnNowName.textContent = "";
+                }
+            }
+            if (turnNextName) {
+                var nextName = displayPlayerName(hasRolled ? nextPlayer : 0);
+                if (hasRolled && nextPlayer === currentPlayer) {
+                    turnNextName.textContent = nextName + " · goes again";
+                } else {
+                    turnNextName.textContent = nextName;
+                }
+            }
+            if (turnNextLabel) {
+                turnNextLabel.textContent = hasRolled ? "Next" : "First up";
+            }
+            if (turnNext) {
+                turnNext.hidden = false;
+            }
+            if (hasRolled) {
+                surface.setAttribute(
+                    "aria-label",
+                    "This roll is " +
+                        displayPlayerName(currentPlayer) +
+                        ". Next is " +
+                        displayPlayerName(nextPlayer) +
+                        ". Tap to roll, or tap a die to hold."
+                );
+            } else {
+                surface.setAttribute(
+                    "aria-label",
+                    displayPlayerName(0) +
+                        " is first. Tap to roll, or tap a die to hold."
+                );
+            }
+        }
 
         function syncStateLength() {
             var n = getCount();
@@ -355,6 +510,8 @@
                 bumped.push(i);
             }
             if (bumped.length > 0) {
+                advanceTurn(bumped);
+                updateTurnBanner();
                 randomPastelBackdrop(surface);
                 rollCount += 1;
                 if (badge) {
@@ -449,6 +606,7 @@
 
         syncStateLength();
         randomPastelBackdrop(surface);
+        updateTurnBanner();
         render();
         requestAnimationFrame(function () {
             ensureScatterPositions();
@@ -456,6 +614,7 @@
 
         window.addEventListener("pageshow", function () {
             syncStateLength();
+            updateTurnBanner();
             render();
         });
     }
@@ -468,6 +627,10 @@
 
         var countButtons = root.querySelectorAll(".diceroll-setup-choice[data-count]");
         var scatterButtons = root.querySelectorAll(".diceroll-setup-choice[data-scatter]");
+        var playerCountButtons = root.querySelectorAll(".diceroll-setup-player-count");
+        var extraSixButtons = root.querySelectorAll(".diceroll-setup-choice[data-extra-six]");
+        var playersBlock = document.getElementById("diceroll-setup-players");
+        var namesRoot = document.getElementById("diceroll-setup-names");
 
         function updateSelected() {
             var n = getCount();
@@ -490,6 +653,75 @@
             }
         }
 
+        function updateExtraSixChoices() {
+            var on = getPlayers().extraSix;
+            for (var i = 0; i < extraSixButtons.length; i++) {
+                var b = extraSixButtons[i];
+                var sel = (b.getAttribute("data-extra-six") === "1") === on;
+                b.classList.toggle("diceroll-setup-choice--selected", sel);
+                b.setAttribute("aria-pressed", sel ? "true" : "false");
+            }
+        }
+
+        function renderNameFields() {
+            if (!namesRoot || !playersBlock) {
+                return;
+            }
+            var players = getPlayers();
+            var using = players.n >= 2;
+            playersBlock.hidden = !using;
+            namesRoot.innerHTML = "";
+            if (!using) {
+                return;
+            }
+            for (var i = 0; i < players.n; i++) {
+                (function (index) {
+                    var row = document.createElement("label");
+                    row.className = "diceroll-setup-name";
+                    var num = document.createElement("span");
+                    num.className = "diceroll-setup-name-num";
+                    num.textContent = String(index + 1);
+                    var input = document.createElement("input");
+                    input.type = "text";
+                    input.className = "diceroll-setup-name-input";
+                    input.maxLength = 18;
+                    input.autocomplete = "off";
+                    input.autocapitalize = "words";
+                    input.spellcheck = false;
+                    input.placeholder = "Player " + (index + 1);
+                    input.value = players.names[index] || "";
+                    input.setAttribute("aria-label", "Name for player " + (index + 1));
+                    input.addEventListener("input", function () {
+                        var names = getPlayers().names;
+                        names[index] = this.value;
+                        setPlayers({ names: names });
+                    });
+                    input.addEventListener("keydown", function (ev) {
+                        if (ev.key === "Enter") {
+                            ev.preventDefault();
+                            this.blur();
+                        }
+                    });
+                    row.appendChild(num);
+                    row.appendChild(input);
+                    namesRoot.appendChild(row);
+                })(i);
+            }
+        }
+
+        function updatePlayerCounts() {
+            var n = getPlayers().n;
+            for (var i = 0; i < playerCountButtons.length; i++) {
+                var b = playerCountButtons[i];
+                var c = parseInt(b.getAttribute("data-players"), 10);
+                var sel = c === n;
+                b.classList.toggle("diceroll-setup-player-count--selected", sel);
+                b.setAttribute("aria-pressed", sel ? "true" : "false");
+            }
+            renderNameFields();
+            updateExtraSixChoices();
+        }
+
         for (var j = 0; j < countButtons.length; j++) {
             countButtons[j].addEventListener("click", function () {
                 var c = parseInt(this.getAttribute("data-count"), 10);
@@ -505,8 +737,23 @@
             });
         }
 
+        for (var p = 0; p < playerCountButtons.length; p++) {
+            playerCountButtons[p].addEventListener("click", function () {
+                setPlayers({ n: parseInt(this.getAttribute("data-players"), 10) });
+                updatePlayerCounts();
+            });
+        }
+
+        for (var x = 0; x < extraSixButtons.length; x++) {
+            extraSixButtons[x].addEventListener("click", function () {
+                setPlayers({ extraSix: this.getAttribute("data-extra-six") === "1" });
+                updateExtraSixChoices();
+            });
+        }
+
         updateSelected();
         updateScatterChoices();
+        updatePlayerCounts();
     }
 
     if (document.readyState === "loading") {
