@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Kids AI — Parent{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page kids-ai-page-wide">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <h1 class="kids-ai-title">Kids AI</h1>
+            <p class="kids-ai-intro">
+                Credits remaining: <strong>{{ credits }}</strong>
+                (used when a child sends a message).
+            </p>
+        </header>
+
+        <section class="kids-ai-card" aria-labelledby="kids-ai-children-heading">
+            <h2 id="kids-ai-children-heading" class="kids-ai-section-title">Children</h2>
+            {% if children %}
+            <ul class="kids-ai-child-list">
+                {% for child in children %}
+                <li class="kids-ai-child-row">
+                    <div>
+                        <strong>{{ child.display_name }}</strong>
+                        <span class="kids-ai-muted">@{{ child.username }}</span>
+                        <div class="kids-ai-muted">
+                            {% if child.age_tier == 'young_child' %}Young child
+                            {% elif child.age_tier == 'tween' %}Tween
+                            {% else %}Teen{% endif %}
+                            · {% if child.enabled %}can sign in{% else %}sign-in off{% endif %}
+                            {% if child.paused %} · chatting paused ({{ child.lock_count }} locks){% endif %}
+                        </div>
+                    </div>
+                    <div class="kids-ai-row-actions">
+                        <a class="kids-ai-link" href="{{ url_for('kids_ai.edit_child', child_id=child.id) }}">Edit</a>
+                        {% if child.enabled %}
+                        <form method="post" action="{{ url_for('kids_ai.disable_child', child_id=child.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="kids-ai-link-button">Disable login</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{{ url_for('kids_ai.enable_child', child_id=child.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="kids-ai-link-button">Enable login</button>
+                        </form>
+                        {% endif %}
+                        {% if child.paused %}
+                        <form method="post" action="{{ url_for('kids_ai.unpause_child', child_id=child.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="kids-ai-link-button">Allow chatting again</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="kids-ai-muted">No children yet. Create one below.</p>
+            {% endif %}
+        </section>
+
+        <section class="kids-ai-card" aria-labelledby="kids-ai-create-heading">
+            <h2 id="kids-ai-create-heading" class="kids-ai-section-title">Add a child</h2>
+            <p class="kids-ai-muted">Creating a child records your consent for them to use Kids AI. You will get summaries of what they talk about. Usernames cannot be changed later.</p>
+            <form method="post" action="{{ url_for('kids_ai.create_child') }}" class="kids-ai-form">
+                {{ create_form.hidden_tag() }}
+                <div class="kids-ai-field">
+                    {{ create_form.username.label(class="kids-ai-label") }}
+                    {{ create_form.username(class="kids-ai-input", autocomplete="off") }}
+                    {% for error in create_form.username.errors %}
+                    <span class="kids-ai-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="kids-ai-field">
+                    {{ create_form.password.label(class="kids-ai-label") }}
+                    {{ create_form.password(class="kids-ai-input", autocomplete="new-password") }}
+                    {% for error in create_form.password.errors %}
+                    <span class="kids-ai-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="kids-ai-field">
+                    {{ create_form.display_name.label(class="kids-ai-label") }}
+                    {{ create_form.display_name(class="kids-ai-input") }}
+                    {% for error in create_form.display_name.errors %}
+                    <span class="kids-ai-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="kids-ai-field">
+                    {{ create_form.age_tier.label(class="kids-ai-label") }}
+                    {{ create_form.age_tier(class="kids-ai-input") }}
+                </div>
+                {{ create_form.submit(class="kids-ai-button") }}
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

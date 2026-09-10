@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Kids AI Parents{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title">Kids AI Parents</h1>
+            <p class="admin-subtitle">Allowlist hub users as parents. Removing someone hides their dashboard and blocks their kids from signing in. Child data is kept.</p>
+        </div>
+
+        {% if form.email.choices %}
+        <form method="post" class="admin-form">
+            {{ form.hidden_tag() }}
+            <div class="admin-form-group">
+                {{ form.email.label(class="admin-label") }}
+                {{ form.email(class="admin-select") }}
+            </div>
+            <div class="admin-form-group">
+                {{ form.submit(class="admin-submit-btn") }}
+            </div>
+        </form>
+        {% else %}
+        <p class="admin-footer-text">Every hub user is already allowlisted, or there are no users yet.</p>
+        {% endif %}
+
+        <h2 class="admin-subtitle" style="margin-top: 2rem;">Current parents</h2>
+        {% if parents %}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            {% for parent in parents %}
+            <li style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                <div>
+                    <strong>{{ parent.user.email if parent.user else parent.user_id }}</strong>
+                    <div class="admin-footer-text">
+                        {{ child_counts.get(parent.user_id, 0) }}
+                        {{ 'child' if child_counts.get(parent.user_id, 0) == 1 else 'children' }}
+                    </div>
+                </div>
+                <form method="post" action="{{ url_for('admin.kids_ai_remove_parent', parent_id=parent.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="admin-link" style="border: none; background: none; cursor: pointer; padding: 0;">
+                        Remove
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="admin-footer-text">No parents allowlisted yet.</p>
+        {% endif %}
+
+        <div class="admin-footer">
+            <p class="admin-footer-text"><a href="{{ url_for('main.index') }}" class="admin-link">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

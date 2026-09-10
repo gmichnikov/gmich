@@ -566,9 +566,9 @@ PROJECTS = [
     {
         "id": "kids_ai",
         "name": "Kids AI",
-        "description": "Kid-focused AI experience — login required; database schema TBD",
+        "description": "A supervised chatbot for kids. Kids sign in here; parents use the dashboard after an admin enables it.",
         "url": "/kids-ai",
-        "auth_required": True,
+        "auth_required": False,
         "status": "active",
         "type": "project",
         "icon": "🧒",

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Kids AI{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <h1 class="kids-ai-title">Hi, {{ child.display_name }}</h1>
+            <p class="kids-ai-intro">Your parent can see a summary of what you talk about here.</p>
+        </header>
+
+        {% if child.paused %}
+        <p class="kids-ai-alert">Chatting is paused until a parent allows it again.</p>
+        {% else %}
+        <p class="kids-ai-placeholder-text">Conversations will show up here next. You’re signed in.</p>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('kids_ai.child_logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="kids-ai-button kids-ai-button-secondary">Log out</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

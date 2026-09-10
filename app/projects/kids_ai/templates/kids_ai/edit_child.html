@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ child.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <h1 class="kids-ai-title">{{ child.display_name }}</h1>
+            <p class="kids-ai-intro">Username <strong>@{{ child.username }}</strong> cannot be changed.</p>
+        </header>
+
+        <form method="post" class="kids-ai-form">
+            {{ form.hidden_tag() }}
+            <div class="kids-ai-field">
+                {{ form.display_name.label(class="kids-ai-label") }}
+                {{ form.display_name(class="kids-ai-input") }}
+                {% for error in form.display_name.errors %}
+                <span class="kids-ai-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="kids-ai-field">
+                {{ form.age_tier.label(class="kids-ai-label") }}
+                {{ form.age_tier(class="kids-ai-input") }}
+            </div>
+            <div class="kids-ai-field">
+                {{ form.new_password.label(class="kids-ai-label") }}
+                {{ form.new_password(class="kids-ai-input", autocomplete="new-password") }}
+                {% for error in form.new_password.errors %}
+                <span class="kids-ai-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="kids-ai-button") }}
+        </form>
+        <p><a class="kids-ai-link" href="{{ url_for('kids_ai.dashboard') }}">← Dashboard</a></p>
+    </div>
+</div>
+{% endblock %}

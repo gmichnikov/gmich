@@ -1176,3 +1176,92 @@ def helper_task_detail(task_id):
         source_actions=source_actions,
         completion_actions=completion_actions,
     )
+
+
+# ---------------------------------------------------------------------------
+# Kids AI — parent allowlist
+# ---------------------------------------------------------------------------
+
+@admin_bp.route("/kids-ai", methods=["GET", "POST"])
+@login_required
+@admin_required
+def kids_ai_allowlist():
+    from app.projects.kids_ai.forms import KidsAiAllowlistForm
+    from app.projects.kids_ai.models import KidsAiChild, KidsAiParent
+
+    allowlisted_ids = {
+        row.user_id for row in KidsAiParent.query.all()
+    }
+    form = KidsAiAllowlistForm()
+    form.email.choices = [
+        (user.email, f"{user.email} ({user.full_name})")
+        for user in User.query.order_by(User.email).all()
+        if user.id not in allowlisted_ids
+    ]
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user:
+            flash("User not found.", "error")
+        elif user.id in allowlisted_ids:
+            flash("That user is already a Kids AI parent.", "error")
+        else:
+            db.session.add(
+                KidsAiParent(
+                    user_id=user.id,
+                    created_by_user_id=current_user.id,
+                )
+            )
+            db.session.add(
+                LogEntry(
+                    project="admin",
+                    category="Kids AI Allowlist",
+                    actor_id=current_user.id,
+                    description=f"{current_user.email} allowlisted {user.email} as a Kids AI parent",
+                )
+            )
+            db.session.commit()
+            flash(f"{user.email} can use Kids AI as a parent.", "success")
+            return redirect(url_for("admin.kids_ai_allowlist"))
+
+    parents = (
+        KidsAiParent.query.order_by(KidsAiParent.created_at.desc()).all()
+    )
+    child_counts = dict(
+        db.session.query(KidsAiChild.parent_user_id, func.count(KidsAiChild.id))
+        .group_by(KidsAiChild.parent_user_id)
+        .all()
+    )
+    return render_template(
+        "admin/kids_ai_allowlist.html",
+        form=form,
+        parents=parents,
+        child_counts=child_counts,
+    )
+
+
+@admin_bp.route("/kids-ai/<int:parent_id>/remove", methods=["POST"])
+@login_required
+@admin_required
+def kids_ai_remove_parent(parent_id):
+    from app.projects.kids_ai.models import KidsAiParent
+
+    parent = KidsAiParent.query.get_or_404(parent_id)
+    email = parent.user.email if parent.user else f"user {parent.user_id}"
+    db.session.delete(parent)
+    db.session.add(
+        LogEntry(
+            project="admin",
+            category="Kids AI Allowlist",
+            actor_id=current_user.id,
+            description=(
+                f"{current_user.email} removed {email} from the Kids AI parent allowlist"
+            ),
+        )
+    )
+    db.session.commit()
+    flash(
+        f"{email} is no longer a Kids AI parent. Their kids cannot sign in until they are allowlisted again.",
+        "success",
+    )
+    return redirect(url_for("admin.kids_ai_allowlist"))

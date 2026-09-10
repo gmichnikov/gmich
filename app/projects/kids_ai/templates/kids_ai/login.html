@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Kids AI — Sign in{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <h1 class="kids-ai-title">Kids AI</h1>
+            <p class="kids-ai-intro">Sign in with the username and password a parent set up for you.</p>
+        </header>
+
+        {% if parent_signed_in %}
+        <p class="kids-ai-note">
+            You’re signed into the site as a parent.
+            <a href="{{ url_for('kids_ai.dashboard') }}">Open the parent dashboard</a>
+        </p>
+        {% endif %}
+
+        <form method="post" class="kids-ai-form">
+            {{ form.hidden_tag() }}
+            <div class="kids-ai-field">
+                {{ form.username.label(class="kids-ai-label") }}
+                {{ form.username(class="kids-ai-input", autocomplete="username") }}
+            </div>
+            <div class="kids-ai-field">
+                {{ form.password.label(class="kids-ai-label") }}
+                {{ form.password(class="kids-ai-input", autocomplete="current-password") }}
+            </div>
+            {{ form.submit(class="kids-ai-button") }}
+        </form>
+
+        {% if not parent_signed_in %}
+        <p class="kids-ai-note">
+            Parent? <a href="{{ url_for('auth.login', next=url_for('kids_ai.dashboard')) }}">Sign in</a>
+            to the site to manage kids.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

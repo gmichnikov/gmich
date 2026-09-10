@@ -1,1 +1,1 @@
-"""Kids AI — logged-in, database-backed project shell."""
+"""Kids AI — supervised child chat and parent dashboard."""
