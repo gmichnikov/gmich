@@ -8,6 +8,7 @@
         <div class="admin-header">
             <h1 class="admin-title">Kids AI Parents</h1>
             <p class="admin-subtitle">Allowlist hub users as parents. Removing someone hides their dashboard and blocks their kids from signing in. Child data is kept.</p>
+            <p><a href="{{ url_for('admin.kids_ai_costs') }}" class="admin-link">API costs →</a></p>
         </div>
 
         {% if form.email.choices %}

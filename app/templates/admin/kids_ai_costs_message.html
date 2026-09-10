@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Kids AI costs — message {{ child_message_id }}{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card" style="max-width: 960px;">
+        <div class="admin-header">
+            <h1 class="admin-title">Kid message #{{ child_message_id }}</h1>
+            <p class="admin-subtitle">
+                Provider calls for one send. No prompt or reply text.
+                {% if child %} · {{ child.display_name }} (@{{ child.username }}){% endif %}
+                {% if parent %} · {{ parent.email }}{% endif %}
+            </p>
+            <p>
+                {% if child %}
+                <a href="{{ url_for('admin.kids_ai_costs_child', child_id=child.id) }}" class="admin-link">← {{ child.display_name }}</a>
+                {% else %}
+                <a href="{{ url_for('admin.kids_ai_costs') }}" class="admin-link">← All costs</a>
+                {% endif %}
+            </p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">When (UTC)</th>
+                    <th style="padding: 0.4rem 0;">Kind</th>
+                    <th style="padding: 0.4rem 0;">Model</th>
+                    <th style="padding: 0.4rem 0;">Tokens in / out</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                    <th style="padding: 0.4rem 0;">Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for call in calls %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">{{ call.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td style="padding: 0.45rem 0;">{{ kind_labels.get(call.kind, call.kind) }}</td>
+                    <td style="padding: 0.45rem 0;">{{ call.model }}</td>
+                    <td style="padding: 0.45rem 0;">{{ call.input_tokens or '—' }} / {{ call.output_tokens or '—' }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd((call.input_cost_usd or 0) + (call.output_cost_usd or 0)) }}</td>
+                    <td style="padding: 0.45rem 0; color: #991b1b;">{{ call.error or '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

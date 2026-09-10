@@ -1265,3 +1265,129 @@ def kids_ai_remove_parent(parent_id):
         "success",
     )
     return redirect(url_for("admin.kids_ai_allowlist"))
+
+
+def _kids_ai_cost_days():
+    from app.projects.kids_ai.costs import COST_DAY_CHOICES
+
+    raw = request.args.get("days", "30")
+    try:
+        days = int(raw)
+    except ValueError:
+        days = 30
+    if days not in COST_DAY_CHOICES:
+        days = 30
+    return days
+
+
+@admin_bp.route("/kids-ai/costs")
+@login_required
+@admin_required
+def kids_ai_costs():
+    from app.projects.kids_ai.costs import (
+        COST_DAY_CHOICES,
+        format_usd,
+        since_for_days,
+        summarize,
+        totals_by_kind,
+        totals_by_parent,
+    )
+
+    days = _kids_ai_cost_days()
+    since = since_for_days(days)
+    return render_template(
+        "admin/kids_ai_costs.html",
+        days=days,
+        day_choices=COST_DAY_CHOICES,
+        totals=summarize(since=since),
+        by_kind=totals_by_kind(since=since),
+        by_parent=totals_by_parent(since=since),
+        format_usd=format_usd,
+    )
+
+
+@admin_bp.route("/kids-ai/costs/parents/<int:user_id>")
+@login_required
+@admin_required
+def kids_ai_costs_parent(user_id):
+    from app.projects.kids_ai.costs import (
+        COST_DAY_CHOICES,
+        format_usd,
+        since_for_days,
+        summarize,
+        totals_by_child,
+        totals_by_kind,
+    )
+
+    parent = User.query.get_or_404(user_id)
+    days = _kids_ai_cost_days()
+    since = since_for_days(days)
+    return render_template(
+        "admin/kids_ai_costs_parent.html",
+        parent=parent,
+        days=days,
+        day_choices=COST_DAY_CHOICES,
+        totals=summarize(since=since, parent_user_id=user_id),
+        by_kind=totals_by_kind(since=since, parent_user_id=user_id),
+        by_child=totals_by_child(user_id, since=since),
+        format_usd=format_usd,
+    )
+
+
+@admin_bp.route("/kids-ai/costs/children/<int:child_id>")
+@login_required
+@admin_required
+def kids_ai_costs_child(child_id):
+    from app.projects.kids_ai.costs import (
+        COST_DAY_CHOICES,
+        KIND_LABELS,
+        format_usd,
+        message_groups,
+        orphan_calls,
+        since_for_days,
+        summarize,
+        totals_by_kind,
+    )
+    from app.projects.kids_ai.models import KidsAiChild
+
+    child = KidsAiChild.query.get_or_404(child_id)
+    parent = User.query.get(child.parent_user_id)
+    days = _kids_ai_cost_days()
+    since = since_for_days(days)
+    return render_template(
+        "admin/kids_ai_costs_child.html",
+        child=child,
+        parent=parent,
+        days=days,
+        day_choices=COST_DAY_CHOICES,
+        totals=summarize(since=since, child_id=child_id),
+        by_kind=totals_by_kind(since=since, child_id=child_id),
+        message_groups=message_groups(child_id, since=since),
+        orphan_calls=orphan_calls(child_id, since=since),
+        format_usd=format_usd,
+        kind_labels=KIND_LABELS,
+    )
+
+
+@admin_bp.route("/kids-ai/costs/messages/<int:child_message_id>")
+@login_required
+@admin_required
+def kids_ai_costs_message(child_message_id):
+    from app.projects.kids_ai.costs import KIND_LABELS, calls_for_message, format_usd
+    from app.projects.kids_ai.models import KidsAiChild
+
+    calls = calls_for_message(child_message_id)
+    if not calls:
+        flash("No API cost rows for that message.", "error")
+        return redirect(url_for("admin.kids_ai_costs"))
+    child = KidsAiChild.query.get(calls[0].child_id)
+    parent = User.query.get(calls[0].parent_user_id) if calls[0].parent_user_id else None
+    return render_template(
+        "admin/kids_ai_costs_message.html",
+        child_message_id=child_message_id,
+        calls=calls,
+        child=child,
+        parent=parent,
+        format_usd=format_usd,
+        kind_labels=KIND_LABELS,
+    )

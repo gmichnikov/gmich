@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Kids AI costs — {{ child.display_name }}{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card" style="max-width: 960px;">
+        <div class="admin-header">
+            <h1 class="admin-title">{{ child.display_name }}</h1>
+            <p class="admin-subtitle">
+                @{{ child.username }}
+                {% if parent %} · {{ parent.email }}{% endif %}
+            </p>
+            <p>
+                {% if parent %}
+                <a href="{{ url_for('admin.kids_ai_costs_parent', user_id=parent.id, days=days) }}" class="admin-link">← {{ parent.email }}</a>
+                {% else %}
+                <a href="{{ url_for('admin.kids_ai_costs', days=days) }}" class="admin-link">← All costs</a>
+                {% endif %}
+            </p>
+        </div>
+
+        <p class="admin-footer-text">
+            {% for choice in day_choices %}
+            <a href="{{ url_for('admin.kids_ai_costs_child', child_id=child.id, days=choice) }}" class="admin-link"
+               style="margin-right: 0.75rem;{% if days == choice %} font-weight: 700;{% endif %}">
+                {% if choice == 0 %}All time{% else %}Last {{ choice }} days{% endif %}
+            </a>
+            {% endfor %}
+        </p>
+
+        <p class="admin-footer-text" style="margin-top: 1rem;">
+            {{ totals.calls }} calls · {{ format_usd(totals.usd) }} ·
+            {{ totals.input_tokens }} / {{ totals.output_tokens }} tokens
+        </p>
+
+        <h2 class="admin-subtitle">By kind</h2>
+        {% if by_kind %}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">Kind</th>
+                    <th style="padding: 0.4rem 0;">Calls</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in by_kind %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">{{ row.label }}</td>
+                    <td style="padding: 0.45rem 0;">{{ row.calls }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd(row.usd) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="admin-footer-text">No calls in this window.</p>
+        {% endif %}
+
+        <h2 class="admin-subtitle">By kid message</h2>
+        <p class="admin-footer-text">Each row is one child send (Pass 1, primary, Pass 2, title). Message text is not shown.</p>
+        {% if message_groups %}
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">Message id</th>
+                    <th style="padding: 0.4rem 0;">First call (UTC)</th>
+                    <th style="padding: 0.4rem 0;">Calls</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in message_groups %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">
+                        {% if row.child_message_id %}
+                        <a class="admin-link" href="{{ url_for('admin.kids_ai_costs_message', child_message_id=row.child_message_id) }}">
+                            #{{ row.child_message_id }}
+                        </a>
+                        {% else %}
+                        (deleted message)
+                        {% endif %}
+                    </td>
+                    <td style="padding: 0.45rem 0;">{{ row.first_at.strftime('%Y-%m-%d %H:%M') if row.first_at else '—' }}</td>
+                    <td style="padding: 0.45rem 0;">{{ row.calls }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd(row.usd) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="admin-footer-text">No per-message groups in this window.</p>
+        {% endif %}
+
+        {% if orphan_calls %}
+        <h2 class="admin-subtitle" style="margin-top: 1.5rem;">Calls with no message id</h2>
+        <p class="admin-footer-text">Usually left after a conversation delete. Still counted in the totals above.</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">When (UTC)</th>
+                    <th style="padding: 0.4rem 0;">Kind</th>
+                    <th style="padding: 0.4rem 0;">Model</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for call in orphan_calls %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">{{ call.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td style="padding: 0.45rem 0;">{{ kind_labels.get(call.kind, call.kind) }}</td>
+                    <td style="padding: 0.45rem 0;">{{ call.model }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd((call.input_cost_usd or 0) + (call.output_cost_usd or 0)) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Kids AI costs — {{ parent.email }}{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    <div class="admin-card" style="max-width: 960px;">
+        <div class="admin-header">
+            <h1 class="admin-title">{{ parent.email }}</h1>
+            <p class="admin-subtitle">API cost for this parent’s children. No conversation text.</p>
+            <p>
+                <a href="{{ url_for('admin.kids_ai_costs', days=days) }}" class="admin-link">← All costs</a>
+            </p>
+        </div>
+
+        <p class="admin-footer-text">
+            {% for choice in day_choices %}
+            <a href="{{ url_for('admin.kids_ai_costs_parent', user_id=parent.id, days=choice) }}" class="admin-link"
+               style="margin-right: 0.75rem;{% if days == choice %} font-weight: 700;{% endif %}">
+                {% if choice == 0 %}All time{% else %}Last {{ choice }} days{% endif %}
+            </a>
+            {% endfor %}
+        </p>
+
+        <p class="admin-footer-text" style="margin-top: 1rem;">
+            {{ totals.calls }} calls · {{ format_usd(totals.usd) }} ·
+            {{ totals.input_tokens }} / {{ totals.output_tokens }} tokens
+        </p>
+
+        <h2 class="admin-subtitle">By kind</h2>
+        {% if by_kind %}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">Kind</th>
+                    <th style="padding: 0.4rem 0;">Calls</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in by_kind %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">{{ row.label }}</td>
+                    <td style="padding: 0.45rem 0;">{{ row.calls }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd(row.usd) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="admin-footer-text">No calls in this window.</p>
+        {% endif %}
+
+        <h2 class="admin-subtitle">By child</h2>
+        {% if by_child %}
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #eee;">
+                    <th style="padding: 0.4rem 0;">Child</th>
+                    <th style="padding: 0.4rem 0;">Calls</th>
+                    <th style="padding: 0.4rem 0;">Tokens in / out</th>
+                    <th style="padding: 0.4rem 0;">USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in by_child %}
+                <tr style="border-bottom: 1px solid #f3f3f3;">
+                    <td style="padding: 0.45rem 0;">
+                        <a class="admin-link" href="{{ url_for('admin.kids_ai_costs_child', child_id=row.child_id, days=days) }}">
+                            {% if row.child %}{{ row.child.display_name }} (@{{ row.child.username }}){% else %}child {{ row.child_id }}{% endif %}
+                        </a>
+                    </td>
+                    <td style="padding: 0.45rem 0;">{{ row.calls }}</td>
+                    <td style="padding: 0.45rem 0;">{{ row.input_tokens }} / {{ row.output_tokens }}</td>
+                    <td style="padding: 0.45rem 0;">{{ format_usd(row.usd) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="admin-footer-text">No child spend in this window.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
