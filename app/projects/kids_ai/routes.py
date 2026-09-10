@@ -1,3 +1,5 @@
+import logging
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
@@ -10,6 +12,7 @@ from app.projects.kids_ai.auth import (
     set_child_session_cookie,
 )
 from app.projects.kids_ai.chat import (
+    RETRY_WARNING,
     can_child_send,
     conversation_messages,
     conversation_status,
@@ -43,6 +46,8 @@ kids_ai_bp = Blueprint(
     static_folder="static",
     static_url_path="/kids-ai/static",
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _parent_required():
@@ -320,11 +325,25 @@ def api_send_message():
     if error:
         return error
     data = request.get_json(silent=True) or {}
-    outcome = send_child_message(
-        child,
-        data.get("message", ""),
-        conversation_id=data.get("conversation_id"),
-    )
+    try:
+        outcome = send_child_message(
+            child,
+            data.get("message", ""),
+            conversation_id=data.get("conversation_id"),
+        )
+    except Exception:
+        logger.exception("Kids AI send failed")
+        db.session.rollback()
+        return (
+            jsonify(
+                {
+                    "status": "retry",
+                    "code": "server_error",
+                    "warning": RETRY_WARNING,
+                }
+            ),
+            500,
+        )
     return jsonify(outcome_payload(outcome)), outcome.http_status
 
 

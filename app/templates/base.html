@@ -88,11 +88,6 @@
                             <span class="nav-link-text">Home</span>
                         </a>
                     </li>
-                    {% if is_kids_ai_parent %}
-                    <li class="nav-item">
-                        <a href="{{ url_for('kids_ai.dashboard') }}" class="nav-link" title="Kids AI">Kids AI</a>
-                    </li>
-                    {% endif %}
                     
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">

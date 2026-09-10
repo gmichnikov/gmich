@@ -1,7 +1,17 @@
-/* Prefixed with kids-ai- to avoid collisions across hub projects */
+/* Prefixed with kids-ai- to avoid collisions across hub projects.
+   Hub body is a purple gradient with dark text — these pages sit on
+   a white card so copy stays readable. */
+
+.kids-ai-page,
+.kids-ai-chat {
+    background: #fff;
+    color: #1f2937;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
 
 .kids-ai-page {
-    padding: 1.5rem 1rem 3rem;
+    padding: 2rem 1.75rem 2.25rem;
     max-width: 42rem;
     margin: 0 auto;
 }
@@ -21,11 +31,12 @@
     font-weight: 700;
     margin: 0 0 0.5rem;
     letter-spacing: -0.02em;
+    color: #1f2937;
 }
 
 .kids-ai-intro {
     margin: 0;
-    color: var(--bs-secondary-color, #6c757d);
+    color: #4b5563;
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -34,20 +45,21 @@
     font-size: 1.05rem;
     font-weight: 600;
     margin: 0 0 0.75rem;
+    color: #1f2937;
 }
 
 .kids-ai-placeholder {
     padding: 1.25rem;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    background: var(--bs-tertiary-bg, #f8f9fa);
+    background: #f8fafc;
 }
 
 .kids-ai-placeholder-text {
     margin: 0;
     font-size: 0.95rem;
     line-height: 1.5;
-    color: #495057;
+    color: #374151;
 }
 
 .kids-ai-page-wide {
@@ -56,9 +68,10 @@
 
 .kids-ai-card {
     padding: 1.25rem 1.35rem;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    background: var(--bs-tertiary-bg, #f8f9fa);
+    background: #f8fafc;
+    color: #1f2937;
 }
 
 .kids-ai-form {
@@ -76,16 +89,22 @@
 .kids-ai-label {
     font-size: 0.9rem;
     font-weight: 600;
+    color: #1f2937;
+}
+
+.kids-ai-input,
+.kids-ai-chat-input {
+    color: #111827;
+    background: #fff;
 }
 
 .kids-ai-input {
     width: 100%;
     max-width: 24rem;
     padding: 0.55rem 0.7rem;
-    border: 1px solid #ced4da;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 1rem;
-    background: #fff;
 }
 
 .kids-ai-button {
@@ -115,9 +134,15 @@
 .kids-ai-note,
 .kids-ai-muted {
     margin: 0;
-    color: #6c757d;
+    color: #4b5563;
     font-size: 0.9rem;
     line-height: 1.45;
+}
+
+.kids-ai-note a,
+.kids-ai-intro a {
+    color: #1d4ed8;
+    font-weight: 600;
 }
 
 .kids-ai-error {
@@ -160,7 +185,8 @@
     gap: 1rem;
     flex-wrap: wrap;
     padding-bottom: 0.85rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #e5e7eb;
+    color: #1f2937;
 }
 
 .kids-ai-child-row:last-child {
@@ -231,11 +257,13 @@
 .kids-ai-transcript-text {
     white-space: pre-wrap;
     margin-top: 0.25rem;
+    color: #1f2937;
 }
 
 .kids-ai-markdown {
     margin-top: 0.25rem;
     line-height: 1.5;
+    color: #1f2937;
 }
 
 .kids-ai-markdown p {
@@ -268,7 +296,7 @@
 .kids-ai-chat {
     max-width: 64rem;
     margin: 0 auto;
-    padding: 1rem 1rem 2rem;
+    padding: 1.25rem 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -286,11 +314,12 @@
 .kids-ai-chat-title {
     margin: 0 0 0.25rem;
     font-size: 1.5rem;
+    color: #1f2937;
 }
 
 .kids-ai-chat-note {
     margin: 0;
-    color: #6c757d;
+    color: #4b5563;
     font-size: 0.9rem;
 }
 
@@ -318,6 +347,7 @@
 .kids-ai-chat-sidebar-title {
     margin: 0;
     font-size: 0.95rem;
+    color: #1f2937;
 }
 
 .kids-ai-chat-list {
@@ -335,6 +365,7 @@
     padding: 0.55rem 0.6rem;
     border-radius: 8px;
     cursor: pointer;
+    color: #1f2937;
 }
 
 .kids-ai-chat-item:hover,
@@ -353,7 +384,7 @@
 
 .kids-ai-chat-item-date {
     display: block;
-    color: #6c757d;
+    color: #6b7280;
     font-size: 0.75rem;
 }
 
@@ -372,7 +403,7 @@
 }
 
 .kids-ai-chat-empty {
-    color: #6c757d;
+    color: #4b5563;
     text-align: center;
     margin-top: 3rem;
 }
@@ -433,7 +464,7 @@
     max-height: 8rem;
     resize: vertical;
     padding: 0.55rem 0.75rem;
-    border: 1px solid #ced4da;
+    border: 1px solid #d1d5db;
     border-radius: 10px;
     font: inherit;
 }

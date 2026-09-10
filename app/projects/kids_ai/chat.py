@@ -363,7 +363,6 @@ def send_child_message(child, body, conversation_id=None):
             warning=f"Messages can be at most {CHILD_MESSAGE_MAX} characters.",
         )
 
-    created_new = False
     if conversation_id:
         conversation = KidsAiConversation.query.filter_by(
             id=conversation_id, child_id=child.id
@@ -390,7 +389,6 @@ def send_child_message(child, body, conversation_id=None):
         conversation = KidsAiConversation(child_id=child.id)
         db.session.add(conversation)
         db.session.flush()
-        created_new = True
 
     child_message = KidsAiMessage(
         conversation_id=conversation.id,
@@ -408,6 +406,23 @@ def send_child_message(child, body, conversation_id=None):
     )
     result_a, result_b = run_moderation_pair(prompt)
     decision, parsed = _evaluate_pass([result_a, result_b], require_summary=False)
+
+    if decision == "error":
+        parent_id = parent.id
+        child_id = child.id
+        db.session.rollback()
+        for result, _flagged, _concern, _summary, _parse_error in parsed:
+            record_llm_call(
+                parent_user_id=parent_id,
+                child_id=child_id,
+                conversation_id=None,
+                child_message_id=None,
+                kind=KidsAiLlmCall.KIND_PASS1,
+                result=result,
+            )
+        db.session.commit()
+        logger.warning("Kids AI Pass 1 outage for child %s; turn not saved", child_id)
+        return ChatOutcome("retry", "pass1_outage", http_status=503, warning=RETRY_WARNING)
 
     for result, flagged, concern, summary, parse_error in parsed:
         record_llm_call(
@@ -429,13 +444,6 @@ def send_child_message(child, body, conversation_id=None):
             summary=summary,
             parse_error=parse_error,
         )
-
-    if decision == "error":
-        db.session.delete(child_message)
-        if created_new:
-            db.session.delete(conversation)
-        db.session.commit()
-        return ChatOutcome("retry", "pass1_outage", http_status=503, warning=RETRY_WARNING)
 
     if decision == "flag":
         concern = _choose_concern(
@@ -666,4 +674,5 @@ def delete_conversation(conversation):
             KidsAiLlmCall.child_message_id: None,
         }
     )
+    KidsAiModerationResult.query.filter_by(conversation_id=conversation.id).delete()
     db.session.delete(conversation)

@@ -17,7 +17,7 @@
         {% if parent_signed_in %}
         <p class="kids-ai-note">
             You’re signed into the site as a parent.
-            <a href="{{ url_for('kids_ai.dashboard') }}">Open the parent dashboard</a>
+            <a class="kids-ai-link" href="{{ url_for('kids_ai.dashboard') }}">Open the parent dashboard</a>
         </p>
         {% endif %}
 
@@ -36,7 +36,7 @@
 
         {% if not parent_signed_in %}
         <p class="kids-ai-note">
-            Parent? <a href="{{ url_for('auth.login', next=url_for('kids_ai.dashboard')) }}">Sign in</a>
+            Parent? <a class="kids-ai-link" href="{{ url_for('auth.login', next=url_for('kids_ai.dashboard')) }}">Sign in</a>
             to the site to manage kids.
         </p>
         {% endif %}

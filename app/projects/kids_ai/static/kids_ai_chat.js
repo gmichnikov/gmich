@@ -276,7 +276,10 @@
           return;
         }
         if (data.status !== "ok") {
-          showBanner(data.warning || "Could not send. Please try again.", true);
+          showBanner(
+            data.warning || data.error || "Could not send. Please try again.",
+            true
+          );
           setComposerEnabled(true);
           return;
         }

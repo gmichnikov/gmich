@@ -321,17 +321,6 @@ def create_app():
     def inject_posthog():
         return dict(posthog_api_key=os.environ.get("POSTHOG_API_KEY", ""))
 
-    @app.context_processor
-    def inject_kids_ai_parent():
-        from sqlalchemy.exc import OperationalError, ProgrammingError
-
-        from app.projects.kids_ai.access import is_allowlisted_parent
-
-        try:
-            return {"is_kids_ai_parent": is_allowlisted_parent()}
-        except (OperationalError, ProgrammingError):
-            return {"is_kids_ai_parent": False}
-
     # Register markdown filter for Ask Many LLMs templates
     @app.template_filter("markdown")
     def markdown_filter(text):

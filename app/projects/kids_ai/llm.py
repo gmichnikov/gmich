@@ -78,7 +78,8 @@ def _openai_text(system, user_prompt, model, max_tokens, timeout=MODERATION_TIME
         model=model,
         messages=messages,
         max_completion_tokens=max_tokens,
-        reasoning_effort="minimal",
+        # gpt-5.6-luna rejects "minimal"; "none" is the right setting for Pass 1 JSON.
+        reasoning_effort="none",
     )
     choice = response.choices[0]
     text = (choice.message.content or "").strip()
