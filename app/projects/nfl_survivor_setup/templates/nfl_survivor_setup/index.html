@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}NFL Survivor Setup and Rules{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('nfl_survivor_setup.static', filename='nfl_survivor_setup/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="nss-page">
+  <div class="nss-container">
+    <header class="nss-header">
+      <p class="nss-eyebrow">NFL Survivor</p>
+      <h1 class="nss-title">Setup and Rules</h1>
+      <p class="nss-lede">
+        How to create an account, join the pool, and how the rules work.
+      </p>
+    </header>
+
+    <section class="nss-card" id="setup">
+      <h2 class="nss-heading">Steps for creating an account</h2>
+      <ol class="nss-steps">
+        <li>
+          Go to
+          <a href="{{ url_for('auth.register') }}">https://www.gregmichnikov.com/register</a>
+        </li>
+        <li>
+          Either register using an email and password, or choose Login with Google.
+          <ol class="nss-steps-sub" type="a">
+            <li>
+              If you registered via email, look for a verification email in your inbox
+              and click the Verify button. Then log in using your password.
+            </li>
+          </ol>
+        </li>
+        <li>
+          Click <strong>NFL Survivor</strong> (the first thing on the page when you log in)
+          or go to
+          <a href="{{ url_for('nfl_survivor.index') }}">https://www.gregmichnikov.com/nfl-survivor/</a>
+        </li>
+        <li>Give your Survivor Pool entry a name.</li>
+        <li>Make your Week 1 pick.</li>
+      </ol>
+      <p class="nss-note">
+        If you want an additional entry, for yourself or a kid, click the football
+        with the + sign at the top right. No need for an additional account.
+      </p>
+    </section>
+
+    <section class="nss-card" id="rules">
+      <h2 class="nss-heading">Rules</h2>
+      <ul class="nss-list">
+        <li>As many entries as you want. Children and any other new participants are welcome.</li>
+        <li>Double elimination. Ties count as wins.</li>
+        <li>Multiple picks may be required the last few weeks, depending on how many people are left.</li>
+        <li>Picks are due at the time of the game you are picking.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

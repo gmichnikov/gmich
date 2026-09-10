@@ -319,6 +319,17 @@ PROJECTS = [
         "order": 0,
     },
     {
+        "id": "nfl_survivor_setup",
+        "name": "NFL Survivor Setup and Rules",
+        "description": "How to join the pool and how the rules work",
+        "url": "/nfl-survivor-setup",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🏈",
+        "order": 1,
+    },
+    {
         "id": "ask_many_llms",
         "name": "Ask Many LLMs",
         "description": "Compare responses from multiple AI models (OpenAI, Anthropic, Google) side-by-side",
@@ -326,7 +337,7 @@ PROJECTS = [
         "auth_required": True,
         "status": "active",
         "type": "project",
-        "order": 1,
+        "order": 2,
     },
     {
         "id": "chatbot",

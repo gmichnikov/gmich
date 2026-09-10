@@ -1,0 +1,134 @@
+/* NFL Survivor Setup and Rules — nss- prefix to avoid collisions */
+
+.nss-page {
+  --nss-navy: #013369;
+  --nss-navy-dark: #001a3a;
+  --nss-red: #d50a0a;
+  --nss-bg: #eef1f6;
+  --nss-card: #ffffff;
+  --nss-text: #1a1f2e;
+  --nss-text-muted: #5c6578;
+  --nss-border: #d8dee9;
+  --nss-shadow: 0 4px 24px rgba(1, 51, 105, 0.08);
+  --nss-radius: 12px;
+  background: var(--nss-bg);
+  margin: -40px -20px;
+  padding: 1.75rem 1.25rem 3rem;
+  min-height: calc(100vh - 140px);
+  color: var(--nss-text);
+}
+
+.nss-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.nss-header {
+  margin-bottom: 1.5rem;
+}
+
+.nss-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nss-red);
+}
+
+.nss-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--nss-navy);
+}
+
+.nss-lede {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--nss-text-muted);
+}
+
+.nss-card {
+  background: var(--nss-card);
+  border: 1px solid var(--nss-border);
+  border-radius: var(--nss-radius);
+  box-shadow: var(--nss-shadow);
+  padding: 1.5rem 1.35rem;
+  margin-bottom: 1rem;
+}
+
+.nss-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--nss-navy);
+}
+
+.nss-subheading {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--nss-text);
+}
+
+.nss-card p {
+  margin: 0 0 0.75rem;
+  line-height: 1.55;
+}
+
+.nss-card p:last-child {
+  margin-bottom: 0;
+}
+
+.nss-card a {
+  color: var(--nss-navy);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.nss-card a:hover {
+  color: var(--nss-red);
+}
+
+.nss-steps,
+.nss-list {
+  margin: 0;
+  padding-left: 1.35rem;
+  line-height: 1.55;
+}
+
+.nss-steps li + li,
+.nss-list li + li {
+  margin-top: 0.7rem;
+}
+
+.nss-steps-sub {
+  margin: 0.55rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.nss-steps-sub li {
+  margin-top: 0.4rem;
+}
+
+.nss-note {
+  margin: 1.15rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--nss-bg);
+  border-left: 4px solid var(--nss-navy);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .nss-title {
+    font-size: 1.55rem;
+  }
+
+  .nss-card {
+    padding: 1.25rem 1.1rem;
+  }
+}
