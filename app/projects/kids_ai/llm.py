@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from anthropic import Anthropic
 from google import genai
+from google.genai import types
 from openai import OpenAI
 
 from app.projects.kids_ai.pricing import (
@@ -24,7 +25,7 @@ PRIMARY_TIMEOUT_SECONDS = 16
 TITLE_TIMEOUT_SECONDS = 10
 MODERATION_MAX_TOKENS = 400
 PRIMARY_MAX_TOKENS = 2048
-TITLE_MAX_TOKENS = 40
+TITLE_MAX_TOKENS = 80
 
 
 class LlmResult:
@@ -40,6 +41,15 @@ class LlmResult:
         return self.error is None and bool((self.text or "").strip())
 
 
+def _anthropic_output_text(response):
+    """Join visible text blocks. Sonnet 5 thinking blocks often come first and have no .text."""
+    parts = []
+    for block in response.content or []:
+        if getattr(block, "type", None) == "text":
+            parts.append(getattr(block, "text", None) or "")
+    return "".join(parts).strip()
+
+
 def _anthropic_text(system, messages, model, max_tokens, timeout=PRIMARY_TIMEOUT_SECONDS):
     client = Anthropic(
         api_key=os.getenv("ANTHROPIC_API_KEY"),
@@ -49,17 +59,25 @@ def _anthropic_text(system, messages, model, max_tokens, timeout=PRIMARY_TIMEOUT
         "model": model,
         "max_tokens": max_tokens,
         "messages": messages,
+        # Sonnet 5 adaptive-thinks by default; thinking can consume max_tokens and
+        # leave an empty first content block, which we treated as a failed reply.
+        "thinking": {"type": "disabled"},
     }
     if system:
         kwargs["system"] = system
     response = client.messages.create(**kwargs)
-    text = ""
-    if response.content:
-        text = getattr(response.content[0], "text", "") or ""
+    text = _anthropic_output_text(response)
+    if not text:
+        block_types = [getattr(b, "type", "?") for b in (response.content or [])]
+        logger.warning(
+            "Kids AI Claude returned no text (stop=%s blocks=%s)",
+            getattr(response, "stop_reason", None),
+            block_types,
+        )
     usage = response.usage
     return LlmResult(
         model=model,
-        text=text.strip(),
+        text=text,
         input_tokens=getattr(usage, "input_tokens", None),
         output_tokens=getattr(usage, "output_tokens", None),
     )
@@ -83,6 +101,11 @@ def _openai_text(system, user_prompt, model, max_tokens, timeout=MODERATION_TIME
     )
     choice = response.choices[0]
     text = (choice.message.content or "").strip()
+    if not text:
+        logger.warning(
+            "Kids AI OpenAI returned no text (finish=%s)",
+            getattr(choice, "finish_reason", None),
+        )
     usage = response.usage
     return LlmResult(
         model=model,
@@ -92,14 +115,50 @@ def _openai_text(system, user_prompt, model, max_tokens, timeout=MODERATION_TIME
     )
 
 
-def _gemini_text(prompt, model, max_tokens):
-    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+def _gemini_output_text(response):
+    """Prefer response.text; fall back to candidate parts if .text is empty or raises."""
+    try:
+        text = (getattr(response, "text", None) or "").strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    parts = []
+    for candidate in getattr(response, "candidates", None) or []:
+        content = getattr(candidate, "content", None)
+        for part in getattr(content, "parts", None) or []:
+            piece = getattr(part, "text", None)
+            if piece:
+                parts.append(piece)
+    return "".join(parts).strip()
+
+
+def _gemini_text(prompt, model, max_tokens, json_mode=False, timeout=MODERATION_TIMEOUT_SECONDS):
+    client = genai.Client(
+        api_key=os.getenv("GOOGLE_API_KEY"),
+        http_options=types.HttpOptions(timeout=int(timeout * 1000)),
+    )
+    config = types.GenerateContentConfig(
+        max_output_tokens=max_tokens,
+        thinking_config=types.ThinkingConfig(
+            thinking_level=types.ThinkingLevel.MINIMAL
+        ),
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+    )
+    if json_mode:
+        config.response_mime_type = "application/json"
     response = client.models.generate_content(
         model=model,
         contents=prompt,
-        config={"max_output_tokens": max_tokens},
+        config=config,
     )
-    text = (getattr(response, "text", None) or "").strip()
+    text = _gemini_output_text(response)
+    if not text:
+        finish = None
+        candidates = getattr(response, "candidates", None) or []
+        if candidates:
+            finish = getattr(candidates[0], "finish_reason", None)
+        logger.warning("Kids AI Gemini returned no text (finish=%s)", finish)
     usage = getattr(response, "usage_metadata", None)
     return LlmResult(
         model=model,
@@ -133,7 +192,12 @@ def call_primary(system, history_messages):
 
 def call_moderation_a(prompt):
     return _safe_call(
-        _gemini_text, MODEL_MODERATION_A, prompt, max_tokens=MODERATION_MAX_TOKENS
+        _gemini_text,
+        MODEL_MODERATION_A,
+        prompt,
+        max_tokens=MODERATION_MAX_TOKENS,
+        json_mode=True,
+        timeout=MODERATION_TIMEOUT_SECONDS,
     )
 
 
@@ -149,7 +213,11 @@ def call_moderation_b(prompt):
 
 def call_title(prompt):
     return _safe_call(
-        _gemini_text, MODEL_TITLE, prompt, max_tokens=TITLE_MAX_TOKENS
+        _gemini_text,
+        MODEL_TITLE,
+        prompt,
+        max_tokens=TITLE_MAX_TOKENS,
+        timeout=TITLE_TIMEOUT_SECONDS,
     )
 
 
