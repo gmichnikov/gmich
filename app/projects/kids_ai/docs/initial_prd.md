@@ -120,6 +120,7 @@ Giving a child access to the rest of the hub later would mean inventing a second
 - Allowlist / remove hub users as Kids AI parents
 - Removing a parent from the allowlist hides their dashboard and blocks those children from logging in. Conversations are not deleted (30-day retention still applies). Re-allowlisting restores parent dashboard and child login.
 - Cannot create child accounts, activate on a parent’s behalf, or view conversations
+- Can view Kids AI **API cost** totals (tokens + estimated USD per call kind), not transcripts
 
 **Parent**
 
@@ -256,12 +257,12 @@ Explanations are free-form. Both prompts use the same risk dimensions:
 
 Hardcoded in v1. No per-child or per-parent choice. Configurability is v2.
 
-| Role                               | Model                   | Provider   |
-| ---------------------------------- | ----------------------- | ---------- |
-| Primary conversation               | `claude-sonnet-5`       | Anthropic  |
-| Moderation — Model A (both passes) | `gemini-3.5-flash-lite` | Google     |
-| Moderation — Model B (both passes) | `gpt-5.6-luna`          | OpenAI     |
-| Conversation title (once)          | `gemini-3.5-flash-lite` | Google     |
+| Role                               | Model                   | Provider   | USD / 1M in / out |
+| ---------------------------------- | ----------------------- | ---------- | ----------------- |
+| Primary conversation               | `claude-sonnet-5`       | Anthropic  | $2 / $10 |
+| Moderation — Model A (both passes) | `gemini-3.5-flash-lite` | Google     | $0.30 / $2.50 |
+| Moderation — Model B (both passes) | `gpt-5.6-luna`          | OpenAI     | $0.20 / $1.20 |
+| Conversation title (once)          | `gemini-3.5-flash-lite` | Google     | $0.30 / $2.50 |
 
 Moderation models: fast and cheap. Primary: safety behavior and conversational quality. Titles reuse Model A.
 
@@ -341,7 +342,7 @@ Pass 2 is specified as “right after the reply,” not a daily batch job. How t
 
 1. **v1 scope:** Child chat, moderation, parent dashboard, summaries, and alerts only. No parent chat. No standalone adult users.
 2. **Identity:** Children are Kids AI-only (username + password, no email). Parents are hub `User`s. No link between a child and a hub account. Kids cannot use the rest of the site.
-3. **Admin:** Allowlists parent hub users only. Does not create children or read conversations.
+3. **Admin:** Allowlists parent hub users only. Does not create children or read conversations. Can view API cost rollups (no transcripts).
 4. **Child creation:** Parent creates children from the dashboard. Age tier is required. That create event is COPPA consent and is logged.
 5. **Child login:** `/kids-ai/login`; separate session cookie from the hub. Logged-out homepage card goes here. Parent reaches the dashboard via hub login (homepage card if already signed in, or **Parent? Sign in** on the kid login page).
 6. **Passwords:** Parent sets and resets child passwords. Minimum 4 characters (same as hub signup). No email-based reset for children.
@@ -352,7 +353,7 @@ Pass 2 is specified as “right after the reply,” not a daily batch job. How t
 11. **Prompts:** System and moderation prompts hardcoded in v1. Admin-editable versioned prompts in v2.
 12. **Minimum age / COPPA:** No hard minimum age. Consent is required for every child, via parent-created accounts (see Legal).
 13. **Locking:** Each flagged conversation stays locked (no per-thread unlock in v1). No cooldown after lock 1 or 2. After 3 locks, chatting is paused until the parent taps **Allow chatting again**; the counter resets to 0. No context carried into the next conversation.
-14. **Admin vs parent UI:** Admin = membership. Parent = children, transcripts, deletes, disable/reset, unpause after 3 locks.
+14. **Admin vs parent UI:** Admin = membership + API cost rollups (no transcripts). Parent = children, transcripts, deletes, disable/reset, unpause after 3 locks.
 15. **Flag email:** Free-form model concern + link. No verbatim child message. No rate limit in v1.
 16. **Moderation:** Two models, both passes, same prompt, union of flags. Context is the stored running summary plus the last ~20 messages (not the full thread). The primary chat model still gets the full conversation.
 17. **Summaries:** Written by Pass 2, stored, daily one-email-per-parent digest at 8:00 America/New_York (last 24 hours, skip if quiet). No extra AI calls. No per-parent send hour.
@@ -382,6 +383,7 @@ Pass 2 is specified as “right after the reply,” not a daily batch job. How t
 41. **Pass 1 outage:** Fail closed — no reply, no charge, no lock. Kid can retry.
 42. **Credits on Claude failure:** No refunds in v1.
 43. **Pass 2 outage:** Log, do not lock, re-enable send.
+44. **API cost ledger:** Every LLM call writes `kids_ai_llm_call` (tokens + estimated USD, no prompt/response text). Admin-only rollup by parent, child, kind, and per kid message. Survives conversation delete. No digest-send table.
 
 ---
 
@@ -463,9 +465,7 @@ Daily job hard-deletes conversations with `modified_at` older than 30 days. Pare
 
 ### Data model
 
-Not designed yet. Expected entities (names TBD): parent allowlist tied to `User`, child identity (username, password hash, display name, age tier, enabled, parent id, lock count, paused), consent log, conversations, messages, moderation results / summaries, session for child auth.
-
-Do not put children in the `user` table.
+See [DATA_MODEL.md](./DATA_MODEL.md). Do not put children in the `user` table. Review that doc before any migration.
 
 ---
 

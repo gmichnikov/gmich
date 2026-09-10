@@ -305,6 +305,15 @@ def create_app():
         BluGameRosterEntry,
         BluLineupCell,
     )
+    from app.projects.kids_ai.models import (
+        KidsAiParent,
+        KidsAiChild,
+        KidsAiConsentEvent,
+        KidsAiConversation,
+        KidsAiMessage,
+        KidsAiModerationResult,
+        KidsAiLlmCall,
+    )
     # Inject PostHog API key into all templates
     @app.context_processor
     def inject_posthog():
