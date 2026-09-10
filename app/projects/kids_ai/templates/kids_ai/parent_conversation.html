@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ conversation.title or 'Conversation' }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page kids-ai-page-wide">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <p><a class="kids-ai-link" href="{{ url_for('kids_ai.parent_conversations', child_id=child.id) }}">← {{ child.display_name }}</a></p>
+            <h1 class="kids-ai-title">{{ conversation.title or 'Untitled conversation' }}</h1>
+            <p class="kids-ai-intro">
+                {{ child.display_name }} · {{ age_label }}
+                {% if conversation.locked %}<span class="kids-ai-flag">Locked</span>{% endif %}
+            </p>
+        </header>
+
+        {% if conversation.last_flag_concern %}
+        <p class="kids-ai-alert">{{ conversation.last_flag_concern }}</p>
+        {% endif %}
+
+        {% if conversation.running_summary %}
+        <section class="kids-ai-card">
+            <h2 class="kids-ai-section-title">Latest summary</h2>
+            <p class="kids-ai-placeholder-text">{{ conversation.running_summary }}</p>
+        </section>
+        {% endif %}
+
+        <section class="kids-ai-card" aria-label="Transcript">
+            {% for item in rendered_messages %}
+            <div class="kids-ai-transcript-row kids-ai-transcript-{{ item.message.role }}">
+                <div class="kids-ai-muted">
+                    {% if item.message.role == 'child' %}{{ child.display_name }}{% else %}Assistant{% endif %}
+                    · {{ item.message.created_at.strftime('%-I:%M %p') }} UTC
+                </div>
+                {% if item.html %}
+                <div class="kids-ai-markdown">{{ item.html|safe }}</div>
+                {% else %}
+                <div class="kids-ai-transcript-text">{{ item.message.body }}</div>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="kids-ai-muted">No messages.</p>
+            {% endfor %}
+        </section>
+
+        <form method="post" action="{{ url_for('kids_ai.parent_delete_conversation', conversation_id=conversation.id) }}"
+              onsubmit="return confirm('Delete this conversation?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="kids-ai-button kids-ai-button-secondary">Delete conversation</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -7,23 +7,75 @@
 {% endblock %}
 
 {% block content %}
-<div class="kids-ai-page">
-    <div class="kids-ai-container">
-        <header class="kids-ai-header">
-            <h1 class="kids-ai-title">Hi, {{ child.display_name }}</h1>
-            <p class="kids-ai-intro">Your parent can see a summary of what you talk about here.</p>
-        </header>
-
-        {% if child.paused %}
-        <p class="kids-ai-alert">Chatting is paused until a parent allows it again.</p>
-        {% else %}
-        <p class="kids-ai-placeholder-text">Conversations will show up here next. You’re signed in.</p>
-        {% endif %}
-
+<div class="kids-ai-chat" data-can-send="{{ '1' if can_send else '0' }}" data-paused="{{ '1' if child.paused else '0' }}">
+    <header class="kids-ai-chat-header">
+        <div>
+            <h1 class="kids-ai-chat-title">Hi, {{ child.display_name }}</h1>
+            <p class="kids-ai-chat-note">Your parent can see a summary of what you talk about here.</p>
+        </div>
         <form method="post" action="{{ url_for('kids_ai.child_logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="kids-ai-button kids-ai-button-secondary">Log out</button>
         </form>
+    </header>
+
+    <div class="kids-ai-chat-body">
+        <aside class="kids-ai-chat-sidebar">
+            <h2 class="kids-ai-chat-sidebar-title">Conversations</h2>
+            <div class="kids-ai-chat-list" id="kidsAiConversationList">
+                <p class="kids-ai-muted">Loading…</p>
+            </div>
+            <button type="button" class="kids-ai-button" id="kidsAiNewConversation" {% if not can_send %}disabled{% endif %}>
+                New conversation
+            </button>
+        </aside>
+
+        <div class="kids-ai-chat-main">
+            <div class="kids-ai-chat-messages" id="kidsAiMessages">
+                <div class="kids-ai-chat-empty" id="kidsAiEmpty">
+                    {% if child.paused %}
+                    <p class="kids-ai-alert">Chatting is paused until a parent allows it again.</p>
+                    {% elif not can_send %}
+                    <p class="kids-ai-alert">Can't send right now. Please try again later.</p>
+                    {% else %}
+                    <p>Start a conversation, or pick one on the left.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="kids-ai-chat-banner" id="kidsAiBanner" hidden></div>
+
+            <form class="kids-ai-chat-composer" id="kidsAiComposer">
+                <label class="kids-ai-sr-only" for="kidsAiInput">Message</label>
+                <textarea
+                    id="kidsAiInput"
+                    class="kids-ai-chat-input"
+                    maxlength="2000"
+                    rows="2"
+                    placeholder="{% if child.paused %}Chatting is paused{% elif not can_send %}Can't send right now{% else %}Type a message…{% endif %}"
+                    {% if not can_send %}disabled{% endif %}
+                ></textarea>
+                <button type="submit" class="kids-ai-chat-send" id="kidsAiSend" disabled>Send</button>
+            </form>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.KIDS_AI = {
+    csrfToken: "{{ csrf_token() }}",
+    canSend: {{ 'true' if can_send else 'false' }},
+    paused: {{ 'true' if child.paused else 'false' }},
+    urls: {
+      conversations: "{{ url_for('kids_ai.api_conversations') }}",
+      send: "{{ url_for('kids_ai.api_send_message') }}",
+      conversationMessages: "{{ url_for('kids_ai.api_messages', conversation_id=987654) }}".replace("987654", "__ID__"),
+      pass2: "{{ url_for('kids_ai.api_pass2', conversation_id=987654) }}".replace("987654", "__ID__"),
+      status: "{{ url_for('kids_ai.api_status', conversation_id=987654) }}".replace("987654", "__ID__")
+    }
+  };
+</script>
+<script src="{{ url_for('kids_ai.static', filename='kids_ai_chat.js') }}"></script>
 {% endblock %}

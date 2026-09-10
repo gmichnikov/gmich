@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ child.display_name }} — Conversations{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('kids_ai.static', filename='kids_ai.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="kids-ai-page kids-ai-page-wide">
+    <div class="kids-ai-container">
+        <header class="kids-ai-header">
+            <p><a class="kids-ai-link" href="{{ url_for('kids_ai.dashboard') }}">← Dashboard</a></p>
+            <h1 class="kids-ai-title">{{ child.display_name }}</h1>
+            <p class="kids-ai-intro">
+                @{{ child.username }} · {{ age_label }}
+                {% if child.paused %} · chatting paused{% endif %}
+            </p>
+        </header>
+
+        {% if rows %}
+        <form method="post" action="{{ url_for('kids_ai.parent_delete_all_conversations', child_id=child.id) }}"
+              onsubmit="return confirm('Delete all conversations for {{ child.display_name }}? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="kids-ai-link-button">Delete all conversations</button>
+        </form>
+
+        <ul class="kids-ai-child-list">
+            {% for row in rows %}
+            <li class="kids-ai-child-row {% if row.conversation.locked %}kids-ai-row-flagged{% endif %}">
+                <div>
+                    <a class="kids-ai-link" href="{{ url_for('kids_ai.parent_conversation', conversation_id=row.conversation.id) }}">
+                        {{ row.conversation.title or 'Untitled' }}
+                    </a>
+                    {% if row.conversation.locked %}
+                    <span class="kids-ai-flag">Locked</span>
+                    {% endif %}
+                    <div class="kids-ai-muted">{{ row.conversation.modified_at.strftime('%b %d, %Y %-I:%M %p') }} UTC</div>
+                    {% if row.opening %}
+                    <div class="kids-ai-muted">Opened with: {{ row.opening }}</div>
+                    {% endif %}
+                    {% if row.summary %}
+                    <div class="kids-ai-muted">{{ row.summary }}</div>
+                    {% endif %}
+                </div>
+                <form method="post" action="{{ url_for('kids_ai.parent_delete_conversation', conversation_id=row.conversation.id) }}"
+                      onsubmit="return confirm('Delete this conversation?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="kids-ai-link-button">Delete</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="kids-ai-muted">No conversations yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

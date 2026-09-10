@@ -1,20 +1,38 @@
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
-from app.models import LogEntry
+from app.models import LogEntry, User
 from app.projects.kids_ai.access import is_allowlisted_parent
 from app.projects.kids_ai.auth import (
     clear_child_session_cookie,
     get_current_child,
     set_child_session_cookie,
 )
+from app.projects.kids_ai.chat import (
+    can_child_send,
+    conversation_messages,
+    conversation_status,
+    delete_conversation,
+    finish_pass2,
+    message_payload,
+    outcome_payload,
+    send_child_message,
+)
 from app.projects.kids_ai.forms import (
     KidsAiChildLoginForm,
     KidsAiCreateChildForm,
     KidsAiEditChildForm,
 )
-from app.projects.kids_ai.models import KidsAiChild, KidsAiConsentEvent, KidsAiParent
+from app.projects.kids_ai.models import (
+    KidsAiChild,
+    KidsAiConsentEvent,
+    KidsAiConversation,
+    KidsAiMessage,
+    KidsAiParent,
+)
+from app.projects.kids_ai.prompts import AGE_TIER_LABELS
+from app.projects.kids_ai.render import render_assistant_html
 from app.utils.logging import log_project_visit
 
 kids_ai_bp = Blueprint(
@@ -92,6 +110,13 @@ def child_logout():
     return clear_child_session_cookie(response)
 
 
+def _json_child():
+    child = get_current_child()
+    if child is None:
+        return None, (jsonify({"error": "Please sign in."}), 401)
+    return child, None
+
+
 @kids_ai_bp.route("/home")
 def child_home():
     child = get_current_child()
@@ -100,7 +125,14 @@ def child_home():
         response = redirect(url_for("kids_ai.child_login"))
         return clear_child_session_cookie(response)
     log_project_visit("kids_ai", "Kids AI")
-    return render_template("kids_ai/child_home.html", child=child)
+    parent = User.query.get(child.parent_user_id)
+    can_send, block_reason = can_child_send(child, parent)
+    return render_template(
+        "kids_ai/child_home.html",
+        child=child,
+        can_send=can_send,
+        block_reason=block_reason,
+    )
 
 
 @kids_ai_bp.route("/dashboard")
@@ -237,3 +269,205 @@ def unpause_child(child_id):
     db.session.commit()
     flash(f"{child.display_name} can chat again.", "success")
     return redirect(url_for("kids_ai.dashboard"))
+
+
+@kids_ai_bp.route("/api/conversations")
+def api_conversations():
+    child, error = _json_child()
+    if error:
+        return error
+    conversations = (
+        KidsAiConversation.query.filter_by(child_id=child.id, locked=False)
+        .order_by(KidsAiConversation.modified_at.desc())
+        .all()
+    )
+    return jsonify(
+        [
+            {
+                "id": conv.id,
+                "title": conv.title or "New conversation",
+                "modified_at": conv.modified_at.isoformat() + "Z",
+                "pass2_pending": conv.pass2_pending,
+            }
+            for conv in conversations
+        ]
+    )
+
+
+@kids_ai_bp.route("/api/conversations/<int:conversation_id>/messages")
+def api_messages(conversation_id):
+    child, error = _json_child()
+    if error:
+        return error
+    conversation = KidsAiConversation.query.filter_by(
+        id=conversation_id, child_id=child.id, locked=False
+    ).first()
+    if conversation is None:
+        return jsonify({"error": "Conversation not found."}), 404
+    return jsonify(
+        {
+            "conversation_id": conversation.id,
+            "title": conversation.title or "New conversation",
+            "pass2_pending": conversation.pass2_pending,
+            "messages": [message_payload(m) for m in conversation_messages(conversation)],
+        }
+    )
+
+
+@kids_ai_bp.route("/api/messages", methods=["POST"])
+def api_send_message():
+    child, error = _json_child()
+    if error:
+        return error
+    data = request.get_json(silent=True) or {}
+    outcome = send_child_message(
+        child,
+        data.get("message", ""),
+        conversation_id=data.get("conversation_id"),
+    )
+    return jsonify(outcome_payload(outcome)), outcome.http_status
+
+
+@kids_ai_bp.route("/api/conversations/<int:conversation_id>/pass2", methods=["POST"])
+def api_pass2(conversation_id):
+    child, error = _json_child()
+    if error:
+        return error
+    outcome = finish_pass2(child, conversation_id)
+    return jsonify(outcome_payload(outcome)), outcome.http_status
+
+
+@kids_ai_bp.route("/api/conversations/<int:conversation_id>/status")
+def api_status(conversation_id):
+    child, error = _json_child()
+    if error:
+        return error
+    outcome = conversation_status(child, conversation_id)
+    return jsonify(outcome_payload(outcome)), outcome.http_status
+
+
+@kids_ai_bp.route("/children/<int:child_id>/conversations")
+@login_required
+def parent_conversations(child_id):
+    denied = _parent_required()
+    if denied:
+        return denied
+    child = _child_for_parent_or_404(child_id)
+    conversations = (
+        KidsAiConversation.query.filter_by(child_id=child.id)
+        .order_by(KidsAiConversation.modified_at.desc())
+        .all()
+    )
+    rows = []
+    for conv in conversations:
+        first = (
+            KidsAiMessage.query.filter_by(
+                conversation_id=conv.id, role=KidsAiMessage.ROLE_CHILD
+            )
+            .order_by(KidsAiMessage.created_at)
+            .first()
+        )
+        opening = first.body if first else ""
+        if len(opening) > 140:
+            opening = opening[:137].rstrip() + "..."
+        summary = conv.running_summary or ""
+        if len(summary) > 180:
+            summary = summary[:177].rstrip() + "..."
+        rows.append(
+            {
+                "conversation": conv,
+                "opening": opening,
+                "summary": summary,
+            }
+        )
+    return render_template(
+        "kids_ai/parent_conversations.html",
+        child=child,
+        rows=rows,
+        age_label=AGE_TIER_LABELS.get(child.age_tier, child.age_tier),
+    )
+
+
+@kids_ai_bp.route("/conversations/<int:conversation_id>")
+@login_required
+def parent_conversation(conversation_id):
+    denied = _parent_required()
+    if denied:
+        return denied
+    conversation = KidsAiConversation.query.get_or_404(conversation_id)
+    if conversation.child.parent_user_id != current_user.id:
+        return redirect(url_for("kids_ai.dashboard"))
+    messages = conversation_messages(conversation)
+    rendered_messages = []
+    for message in messages:
+        rendered_messages.append(
+            {
+                "message": message,
+                "html": (
+                    render_assistant_html(message.body)
+                    if message.role == KidsAiMessage.ROLE_ASSISTANT
+                    else None
+                ),
+            }
+        )
+    return render_template(
+        "kids_ai/parent_conversation.html",
+        child=conversation.child,
+        conversation=conversation,
+        rendered_messages=rendered_messages,
+        age_label=AGE_TIER_LABELS.get(conversation.child.age_tier, conversation.child.age_tier),
+    )
+
+
+@kids_ai_bp.route("/conversations/<int:conversation_id>/delete", methods=["POST"])
+@login_required
+def parent_delete_conversation(conversation_id):
+    denied = _parent_required()
+    if denied:
+        return denied
+    conversation = KidsAiConversation.query.get_or_404(conversation_id)
+    child = conversation.child
+    if child.parent_user_id != current_user.id:
+        return redirect(url_for("kids_ai.dashboard"))
+    delete_conversation(conversation)
+    db.session.add(
+        LogEntry(
+            project="kids_ai",
+            category="Delete Conversation",
+            actor_id=current_user.id,
+            description=(
+                f"{current_user.email} deleted Kids AI conversation {conversation_id} "
+                f"for {child.username}"
+            ),
+        )
+    )
+    db.session.commit()
+    flash("Conversation deleted.", "success")
+    return redirect(url_for("kids_ai.parent_conversations", child_id=child.id))
+
+
+@kids_ai_bp.route("/children/<int:child_id>/conversations/delete-all", methods=["POST"])
+@login_required
+def parent_delete_all_conversations(child_id):
+    denied = _parent_required()
+    if denied:
+        return denied
+    child = _child_for_parent_or_404(child_id)
+    conversations = KidsAiConversation.query.filter_by(child_id=child.id).all()
+    count = len(conversations)
+    for conversation in conversations:
+        delete_conversation(conversation)
+    db.session.add(
+        LogEntry(
+            project="kids_ai",
+            category="Delete Conversation",
+            actor_id=current_user.id,
+            description=(
+                f"{current_user.email} deleted all Kids AI conversations "
+                f"({count}) for {child.username}"
+            ),
+        )
+    )
+    db.session.commit()
+    flash(f"Deleted {count} conversation{'s' if count != 1 else ''}.", "success")
+    return redirect(url_for("kids_ai.parent_conversations", child_id=child.id))

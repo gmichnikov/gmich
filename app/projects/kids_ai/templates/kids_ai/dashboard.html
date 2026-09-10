@@ -35,6 +35,7 @@
                         </div>
                     </div>
                     <div class="kids-ai-row-actions">
+                        <a class="kids-ai-link" href="{{ url_for('kids_ai.parent_conversations', child_id=child.id) }}">Conversations</a>
                         <a class="kids-ai-link" href="{{ url_for('kids_ai.edit_child', child_id=child.id) }}">Edit</a>
                         {% if child.enabled %}
                         <form method="post" action="{{ url_for('kids_ai.disable_child', child_id=child.id) }}">
