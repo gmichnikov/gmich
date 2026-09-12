@@ -606,7 +606,7 @@
   }
 
   function isLineupComplete() {
-    return lineup.rows.length > 0 && computeWarnings().length === 0;
+    return lineup.rows.length > 0 && computeInningWarnings().length === 0;
   }
 
   function canEnterViewMode() {
@@ -1095,7 +1095,7 @@
     return highlights;
   }
 
-  function computeWarnings() {
+  function computeInningWarnings() {
     var warnings = [];
     var presentCount = lineup.rows.length;
 
@@ -1146,6 +1146,11 @@
       }
     }
 
+    return warnings;
+  }
+
+  function computeRepeatWarnings() {
+    var warnings = [];
     lineup.rows.forEach(function (row) {
       var repeats = playerAvoidableRepeats(row);
       Object.keys(repeats).forEach(function (code) {
@@ -1158,8 +1163,11 @@
         });
       });
     });
-
     return warnings;
+  }
+
+  function computeWarnings() {
+    return computeInningWarnings().concat(computeRepeatWarnings());
   }
 
   function isInningWarning(warning) {

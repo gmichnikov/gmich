@@ -235,13 +235,16 @@ def compute_lineup_warnings(game, present_players, cells_by_player):
 
 
 def lineup_is_complete(game, team):
-    """True when every present player is assigned with no lineup warnings."""
+    """True when every present player is assigned and inning counts match.
+
+    Avoidable repeats still warn in the editor; they do not block the diamond.
+    """
     present_players = present_players_for_game(game, team)
     if not present_players:
         return False
     player_ids = [player.id for player in present_players]
     cells_by_player = load_cells_by_player(game, player_ids)
-    return not compute_lineup_warnings(game, present_players, cells_by_player)
+    return not compute_inning_warnings(game, present_players, cells_by_player)
 
 
 def roster_status_for_game(game, team):
