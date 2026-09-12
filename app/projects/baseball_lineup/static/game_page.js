@@ -41,6 +41,7 @@
   var scrollHint = document.querySelector(".blu-lineup-scroll-hint");
   var positionStatus = document.getElementById("blu-position-status");
   var positionStatusRow = document.getElementById("blu-position-status-row");
+  var positionFillStatus = document.getElementById("blu-position-fill-status");
 
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
@@ -238,6 +239,7 @@
             item.extras.join(", ")
         );
       }
+      parts.push("click to randomly fill remaining spots");
     }
     return parts.join(" — ");
   }
@@ -259,11 +261,14 @@
     positionStatusRow.innerHTML = "";
 
     items.forEach(function (item) {
-      var chip = document.createElement("span");
+      var chip = document.createElement("button");
+      chip.type = "button";
       chip.className = "blu-position-chip";
+      chip.dataset.code = item.code;
       chip.setAttribute("role", "listitem");
       if (item.complete) {
         chip.classList.add("blu-position-chip-filled");
+        chip.disabled = true;
       }
       chip.title = positionFillTitle(item);
       chip.setAttribute("aria-label", positionFillTitle(item));
@@ -282,6 +287,137 @@
 
       positionStatusRow.appendChild(chip);
     });
+  }
+
+  function cellValue(row, inning) {
+    return row.cells[String(inning)] || "";
+  }
+
+  function rowHasPosition(row, code) {
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      if (cellValue(row, inning) === code) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function rowHasBattery(row) {
+    return rowHasPosition(row, "P") || rowHasPosition(row, "PH");
+  }
+
+  function totalExpectedForCode(code) {
+    var total = 0;
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      total += expectedCount(code, inning);
+    }
+    return total;
+  }
+
+  function positionAllowsRepeats(code) {
+    return totalExpectedForCode(code) > lineup.rows.length;
+  }
+
+  function isEligibleForPositionFill(row, code, inning) {
+    if (cellValue(row, inning)) {
+      return false;
+    }
+    if ((code === "P" || code === "PH") && rowHasBattery(row)) {
+      return false;
+    }
+    if (!positionAllowsRepeats(code) && rowHasPosition(row, code)) {
+      return false;
+    }
+    return true;
+  }
+
+  function rowCategoryCount(row, category) {
+    var summary = row.summary || summarizeRow(row.cells);
+    row.summary = summary;
+    return summary[category] || 0;
+  }
+
+  function assignPositionCell(row, inning, code) {
+    row.cells[String(inning)] = code;
+    row.summary = summarizeRow(row.cells);
+    row.repeats = repeatedPositions(row.cells);
+  }
+
+  function setPositionFillMessage(text) {
+    if (!positionFillStatus) {
+      return;
+    }
+    positionFillStatus.hidden = !text;
+    positionFillStatus.textContent = text || "";
+  }
+
+  function formatPositionFillResult(code, remaining, placed, failedInnings) {
+    if (remaining === 0) {
+      return code + " is already filled.";
+    }
+    var noun = remaining === 1 ? " spot" : " spots";
+    var message = "Filled " + placed + " of " + remaining + " " + code + noun + ".";
+    if (failedInnings.length) {
+      message +=
+        " Couldn't place inning" +
+        (failedInnings.length === 1 ? " " : "s ") +
+        failedInnings.join(", ") +
+        ".";
+    }
+    return message;
+  }
+
+  function fillPositionRandom(code) {
+    var category = CATEGORY_BY_CODE[code];
+    if (!category || category === "bench" || isViewMode) {
+      return;
+    }
+
+    var remaining = 0;
+    var placed = 0;
+    var failedInnings = [];
+
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      var slots = Math.max(0, expectedCount(code, inning) - actualCount(code, inning));
+      remaining += slots;
+      var missed = 0;
+      for (var n = 0; n < slots; n += 1) {
+        var eligible = lineup.rows.filter(function (row) {
+          return isEligibleForPositionFill(row, code, inning);
+        });
+        var unused = eligible.filter(function (row) {
+          return !rowHasPosition(row, code);
+        });
+        var candidates = unused.length ? unused : eligible;
+        if (!candidates.length) {
+          missed += 1;
+          continue;
+        }
+        var minCount = candidates.reduce(function (min, row) {
+          var value = rowCategoryCount(row, category);
+          return value < min ? value : min;
+        }, Infinity);
+        var pool = candidates.filter(function (row) {
+          return rowCategoryCount(row, category) === minCount;
+        });
+        assignPositionCell(pool[Math.floor(Math.random() * pool.length)], inning, code);
+        placed += 1;
+      }
+      if (missed) {
+        failedInnings.push(inning);
+      }
+    }
+
+    setPositionFillMessage(formatPositionFillResult(code, remaining, placed, failedInnings));
+
+    if (!placed) {
+      return;
+    }
+
+    dirty = true;
+    saveStatus.textContent = "Unsaved changes";
+    updateModeToggle();
+    renderLineupBody();
   }
 
   function summarizeRow(cells) {
@@ -1499,6 +1635,16 @@
       });
     }
   });
+
+  if (positionStatusRow) {
+    positionStatusRow.addEventListener("click", function (event) {
+      var chip = event.target.closest(".blu-position-chip");
+      if (!chip || chip.disabled || isViewMode) {
+        return;
+      }
+      fillPositionRandom(chip.dataset.code);
+    });
+  }
 
   if (fillAllBtn) {
     fillAllBtn.addEventListener("click", function () {

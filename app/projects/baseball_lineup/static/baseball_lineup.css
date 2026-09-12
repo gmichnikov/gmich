@@ -773,13 +773,33 @@
   margin: 0 0 12px;
 }
 
-.blu-position-status-label {
+.blu-position-status-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 6px;
+}
+
+.blu-position-status-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--blu-text-muted);
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.blu-position-status-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blu-text-subtle);
+}
+
+.blu-position-fill-status {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--blu-text-muted);
 }
 
 .blu-position-status-row {
@@ -802,6 +822,19 @@
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.01em;
+  appearance: none;
+  cursor: pointer;
+}
+
+.blu-position-chip:hover:not(:disabled) {
+  border-color: var(--blu-accent);
+  color: var(--blu-accent-hover);
+  background: var(--blu-accent-soft);
+}
+
+.blu-position-chip:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .blu-position-chip-count {
