@@ -768,6 +768,63 @@
   color: #991b1b;
 }
 
+/* Position fill checklist (edit mode) */
+.blu-position-status {
+  margin: 0 0 12px;
+}
+
+.blu-position-status-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blu-text-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.blu-position-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.blu-position-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 2px 10px;
+  border: 1px solid var(--blu-border-strong);
+  border-radius: 999px;
+  background: var(--blu-surface-muted);
+  color: var(--blu-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+}
+
+.blu-position-chip-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blu-text-subtle);
+}
+
+.blu-position-chip-filled {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.blu-position-chip-filled .blu-position-chip-count {
+  color: #166534;
+}
+
+.blu-legend-swatch-filled {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
 /* Lineup grid */
 .blu-lineup-section-header {
   display: flex;

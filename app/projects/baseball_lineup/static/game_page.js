@@ -39,6 +39,8 @@
   var fieldBench = document.getElementById("blu-field-bench");
   var viewDisplayToggle = document.getElementById("blu-view-display-toggle");
   var scrollHint = document.querySelector(".blu-lineup-scroll-hint");
+  var positionStatus = document.getElementById("blu-position-status");
+  var positionStatusRow = document.getElementById("blu-position-status-row");
 
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
@@ -154,6 +156,132 @@
       total += expectedCount(item.code, inning);
     });
     return total;
+  }
+
+  function actualCount(code, inning) {
+    var count = 0;
+    lineup.rows.forEach(function (row) {
+      if ((row.cells[String(inning)] || "") === code) {
+        count += 1;
+      }
+    });
+    return count;
+  }
+
+  function computePositionFillStatus() {
+    return lineup.editor_field_codes
+      .map(function (item) {
+        var inningsFilled = 0;
+        var neededInnings = 0;
+        var neededFilled = 0;
+        var maxExpected = 0;
+        var constantExpected = null;
+        var extras = [];
+
+        for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+          var expected = expectedCount(item.code, inning);
+          var actual = actualCount(item.code, inning);
+          if (expected > maxExpected) {
+            maxExpected = expected;
+          }
+          if (expected > 0) {
+            neededInnings += 1;
+            if (constantExpected === null) {
+              constantExpected = expected;
+            } else if (constantExpected !== expected) {
+              constantExpected = 0;
+            }
+            if (actual === expected) {
+              neededFilled += 1;
+            }
+          } else if (actual > 0) {
+            extras.push(inning);
+          }
+          if (actual === expected) {
+            inningsFilled += 1;
+          }
+        }
+
+        return {
+          code: item.code,
+          label: item.label,
+          visible: maxExpected > 0,
+          complete: inningsFilled === lineup.inning_count,
+          neededInnings: neededInnings,
+          neededFilled: neededFilled,
+          expectedEach: constantExpected || maxExpected,
+          extras: extras,
+        };
+      })
+      .filter(function (item) {
+        return item.visible;
+      });
+  }
+
+  function positionFillTitle(item) {
+    var parts = [item.label];
+    if (item.expectedEach > 1 && item.neededInnings === lineup.inning_count) {
+      parts.push(item.expectedEach + " needed each inning");
+    } else if (item.expectedEach > 1) {
+      parts.push(item.expectedEach + " needed in some innings");
+    }
+    if (item.complete) {
+      parts.push("filled every inning");
+    } else {
+      parts.push(
+        "filled in " + item.neededFilled + " of " + item.neededInnings + " innings"
+      );
+      if (item.extras.length) {
+        parts.push(
+          "extra in inning" +
+            (item.extras.length === 1 ? " " : "s ") +
+            item.extras.join(", ")
+        );
+      }
+    }
+    return parts.join(" — ");
+  }
+
+  function renderPositionStatus() {
+    if (!positionStatus || !positionStatusRow) {
+      return;
+    }
+
+    var hasRows = lineup.rows.length > 0 && !isViewMode;
+    if (!hasRows) {
+      positionStatus.hidden = true;
+      positionStatusRow.innerHTML = "";
+      return;
+    }
+
+    var items = computePositionFillStatus();
+    positionStatus.hidden = items.length === 0;
+    positionStatusRow.innerHTML = "";
+
+    items.forEach(function (item) {
+      var chip = document.createElement("span");
+      chip.className = "blu-position-chip";
+      chip.setAttribute("role", "listitem");
+      if (item.complete) {
+        chip.classList.add("blu-position-chip-filled");
+      }
+      chip.title = positionFillTitle(item);
+      chip.setAttribute("aria-label", positionFillTitle(item));
+
+      var code = document.createElement("span");
+      code.className = "blu-position-chip-code";
+      code.textContent = item.code;
+      chip.appendChild(code);
+
+      if (item.expectedEach > 1) {
+        var count = document.createElement("span");
+        count.className = "blu-position-chip-count";
+        count.textContent = "\u00d7" + item.expectedEach;
+        chip.appendChild(count);
+      }
+
+      positionStatusRow.appendChild(chip);
+    });
   }
 
   function summarizeRow(cells) {
@@ -1153,6 +1281,7 @@
     }
     restoreActiveCell(activeCell);
     renderWarnings();
+    renderPositionStatus();
   }
 
   function renderLineup() {
@@ -1183,6 +1312,7 @@
     if (!hasRows) {
       thead.innerHTML = "";
       tbody.innerHTML = "";
+      renderPositionStatus();
       updateModeToggle();
       return;
     }
@@ -1194,6 +1324,7 @@
         renderLineupViewHeader();
         renderLineupViewBody();
       }
+      renderPositionStatus();
     } else {
       renderLineupHeader();
       renderLineupBody();

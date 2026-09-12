@@ -60,6 +60,10 @@
         </div>
       </div>
       <div class="blu-card-body">
+        <div class="blu-position-status blu-edit-only" id="blu-position-status" hidden>
+          <div class="blu-position-status-label">Positions</div>
+          <div class="blu-position-status-row" id="blu-position-status-row" role="list" aria-label="Position fill status"></div>
+        </div>
         <p class="blu-lineup-scroll-hint blu-edit-only">Swipe sideways to see all innings.</p>
         <div class="blu-lineup-scroll" id="blu-lineup-scroll">
           <table class="blu-lineup-table{% if page_state.lineup_complete and page_state.present_count %} blu-lineup-table-view{% endif %}" id="blu-lineup-table">
@@ -77,6 +81,7 @@
         </div>
 
         <div class="blu-lineup-legend blu-edit-only">
+          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-filled"></span> Position filled every inning</span>
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-overassigned"></span> Too many of a position in one inning</span>
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-skewed"></span> OF/Bench/IF more than 1 inning off another player</span>
         </div>
