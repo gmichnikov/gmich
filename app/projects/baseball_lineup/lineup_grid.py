@@ -14,9 +14,13 @@ from app.projects.baseball_lineup.lineup_config import (
     LABEL_BY_CODE,
     expected_count,
     field_spots_for_inning,
+    format_inning_list,
+    max_needed_assignments,
     normalize_expected_counts,
+    player_avoidable_repeats,
     repeated_positions,
     summarize_row,
+    total_expected_for_code,
 )
 from app.projects.baseball_lineup.models import BluGameRosterEntry, BluLineupCell, BluPlayer
 
@@ -194,14 +198,50 @@ def compute_inning_warnings(game, present_players, cells_by_player):
     return warnings
 
 
+def compute_repeat_warnings(game, present_players, cells_by_player):
+    """Warn when a player repeats a position more often than the roster requires."""
+    warnings = []
+    expected = normalize_expected_counts(game.expected_counts, game.inning_count)
+    present_count = len(present_players)
+    if not present_count:
+        return warnings
+
+    for player in present_players:
+        codes_by_inning = cells_by_player.get(player.id) or {}
+        repeats = player_avoidable_repeats(
+            codes_by_inning, expected, game.inning_count, present_count
+        )
+        for code, innings in repeats.items():
+            allowed = max_needed_assignments(
+                total_expected_for_code(expected, code, game.inning_count),
+                present_count,
+            )
+            when = format_inning_list(innings)
+            if allowed <= 1:
+                reason = "no need for a repeat"
+            else:
+                reason = f"at most {allowed} needed"
+            warnings.append(
+                f"{player.full_name} plays {code} in {when} ({reason})"
+            )
+    return warnings
+
+
+def compute_lineup_warnings(game, present_players, cells_by_player):
+    """Inning-level and avoidable-repeat warning strings."""
+    return compute_inning_warnings(
+        game, present_players, cells_by_player
+    ) + compute_repeat_warnings(game, present_players, cells_by_player)
+
+
 def lineup_is_complete(game, team):
-    """True when every present player is assigned with no inning-level warnings."""
+    """True when every present player is assigned with no lineup warnings."""
     present_players = present_players_for_game(game, team)
     if not present_players:
         return False
     player_ids = [player.id for player in present_players]
     cells_by_player = load_cells_by_player(game, player_ids)
-    return not compute_inning_warnings(game, present_players, cells_by_player)
+    return not compute_lineup_warnings(game, present_players, cells_by_player)
 
 
 def roster_status_for_game(game, team):
@@ -251,7 +291,7 @@ def lineup_state_for_game(game, team):
             }
             for row in rows
         ],
-        "warnings": compute_inning_warnings(game, present_players, cells_by_player),
+        "warnings": compute_lineup_warnings(game, present_players, cells_by_player),
     }
 
 

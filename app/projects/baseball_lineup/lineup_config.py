@@ -8,6 +8,8 @@ each game (copied from team defaults at creation) and every number is editable.
 See docs/DATA_MODEL.md for the stored JSON shape.
 """
 
+import math
+
 INFIELD = "infield"
 OUTFIELD = "outfield"
 BENCH = "bench"
@@ -102,6 +104,59 @@ def resize_expected_counts(expected_counts, inning_count):
             row = row + [row[-1]] * (inning_count - len(row))
         resized[code] = row[:inning_count]
     return resized
+
+
+def total_expected_for_code(expected_counts, code, inning_count):
+    """Total expected slots for ``code`` across innings 1..inning_count."""
+    return sum(
+        expected_count(expected_counts, code, inning)
+        for inning in range(1, inning_count + 1)
+    )
+
+
+def max_needed_assignments(total_need, present_count):
+    """
+    Most times one player must take a position if it is spread as evenly as
+    possible. 0 when the position is not needed. A repeat is avoidable when a
+    player has more than this.
+    """
+    if present_count <= 0 or total_need <= 0:
+        return 0
+    return math.ceil(total_need / present_count)
+
+
+def format_inning_list(innings):
+    """Human list: 'inning 3' / 'innings 1 and 4' / 'innings 1, 3, and 5'."""
+    values = [str(inning) for inning in innings]
+    if not values:
+        return ""
+    if len(values) == 1:
+        return f"inning {values[0]}"
+    if len(values) == 2:
+        return f"innings {values[0]} and {values[1]}"
+    return f"innings {', '.join(values[:-1])}, and {values[-1]}"
+
+
+def player_avoidable_repeats(codes_by_inning, expected_counts, inning_count, present_count):
+    """
+    Positions this player has more often than the even spread requires.
+
+    Returns {code: [innings]} for avoidable repeats. Bench is ignored.
+    """
+    repeats = {}
+    for code in EDITOR_FIELD_CODES:
+        innings = [
+            inning
+            for inning in range(1, inning_count + 1)
+            if (codes_by_inning or {}).get(inning) == code
+        ]
+        allowed = max_needed_assignments(
+            total_expected_for_code(expected_counts, code, inning_count),
+            present_count,
+        )
+        if allowed and len(innings) > allowed:
+            repeats[code] = innings
+    return repeats
 
 
 def expected_count(expected_counts, code, inning):

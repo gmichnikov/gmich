@@ -46,6 +46,8 @@
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
   var dirty = false;
+  var highlightedPosition = null;
+  var previewPosition = null;
   var warningFilterInning = "all";
   var isViewMode = !!(pageState.lineup_complete && lineup.rows.length);
   var viewDisplay = "grid";
@@ -261,11 +263,21 @@
     positionStatusRow.innerHTML = "";
 
     items.forEach(function (item) {
+      var group = document.createElement("div");
+      group.className = "blu-position-chip-group";
+      group.dataset.code = item.code;
+      group.setAttribute("role", "listitem");
+      if (item.complete) {
+        group.classList.add("blu-position-chip-group-filled");
+      }
+      if (highlightedPosition === item.code) {
+        group.classList.add("blu-position-chip-group-active");
+      }
+
       var chip = document.createElement("button");
       chip.type = "button";
       chip.className = "blu-position-chip";
       chip.dataset.code = item.code;
-      chip.setAttribute("role", "listitem");
       if (item.complete) {
         chip.classList.add("blu-position-chip-filled");
         chip.disabled = true;
@@ -285,8 +297,56 @@
         chip.appendChild(count);
       }
 
-      positionStatusRow.appendChild(chip);
+      var highlightBtn = document.createElement("button");
+      highlightBtn.type = "button";
+      highlightBtn.className = "blu-position-highlight";
+      highlightBtn.dataset.code = item.code;
+      highlightBtn.setAttribute("aria-pressed", highlightedPosition === item.code ? "true" : "false");
+      highlightBtn.title = "Highlight " + item.code + " in the grid";
+      highlightBtn.setAttribute("aria-label", "Highlight " + item.label + " in the grid");
+      highlightBtn.textContent = "\u25cf";
+
+      group.appendChild(chip);
+      group.appendChild(highlightBtn);
+      positionStatusRow.appendChild(group);
     });
+  }
+
+  function activeHighlightCode() {
+    return previewPosition || highlightedPosition;
+  }
+
+  function applyPositionHighlights() {
+    var code = activeHighlightCode();
+    if (tbody) {
+      tbody.querySelectorAll(".blu-lineup-select").forEach(function (select) {
+        select.classList.toggle(
+          "blu-cell-position-highlight",
+          !!(code && select.value === code)
+        );
+      });
+      tbody.querySelectorAll(".blu-lineup-view-cell").forEach(function (cell) {
+        var value = cell.dataset.positionCode || "";
+        cell.classList.toggle("blu-cell-position-highlight", !!(code && value === code));
+      });
+    }
+    if (positionStatusRow) {
+      positionStatusRow.querySelectorAll(".blu-position-chip-group").forEach(function (group) {
+        group.classList.toggle(
+          "blu-position-chip-group-active",
+          !!(code && group.dataset.code === code)
+        );
+      });
+      positionStatusRow.querySelectorAll(".blu-position-highlight").forEach(function (btn) {
+        btn.setAttribute("aria-pressed", highlightedPosition === btn.dataset.code ? "true" : "false");
+      });
+    }
+  }
+
+  function togglePositionHighlight(code) {
+    highlightedPosition = highlightedPosition === code ? null : code;
+    previewPosition = null;
+    applyPositionHighlights();
   }
 
   function cellValue(row, inning) {
@@ -314,8 +374,65 @@
     return total;
   }
 
+  function maxNeededAssignments(totalNeed, presentCount) {
+    if (presentCount <= 0 || totalNeed <= 0) {
+      return 0;
+    }
+    return Math.ceil(totalNeed / presentCount);
+  }
+
   function positionAllowsRepeats(code) {
-    return totalExpectedForCode(code) > lineup.rows.length;
+    return maxNeededAssignments(totalExpectedForCode(code), lineup.rows.length) > 1;
+  }
+
+  function formatInningList(innings) {
+    if (innings.length === 1) {
+      return "inning " + innings[0];
+    }
+    if (innings.length === 2) {
+      return "innings " + innings[0] + " and " + innings[1];
+    }
+    return (
+      "innings " +
+      innings.slice(0, -1).join(", ") +
+      ", and " +
+      innings[innings.length - 1]
+    );
+  }
+
+  function playerAvoidableRepeats(row) {
+    var repeats = {};
+    var presentCount = lineup.rows.length;
+    lineup.editor_field_codes.forEach(function (item) {
+      var innings = [];
+      for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+        if (cellValue(row, inning) === item.code) {
+          innings.push(inning);
+        }
+      }
+      var allowed = maxNeededAssignments(totalExpectedForCode(item.code), presentCount);
+      if (allowed && innings.length > allowed) {
+        repeats[item.code] = { innings: innings, allowed: allowed };
+      }
+    });
+    return repeats;
+  }
+
+  function computeAvoidableRepeatCells(rows) {
+    var marked = {};
+    rows.forEach(function (row) {
+      var repeats = playerAvoidableRepeats(row);
+      Object.keys(repeats).forEach(function (code) {
+        repeats[code].innings.forEach(function (inning) {
+          marked[row.player_id + "-" + inning] = {
+            code: code,
+            count: repeats[code].innings.length,
+            allowed: repeats[code].allowed,
+          };
+        });
+      });
+    });
+    return marked;
   }
 
   function isEligibleForPositionFill(row, code, inning) {
@@ -493,7 +610,7 @@
   }
 
   function canEnterViewMode() {
-    return isLineupComplete() && !dirty;
+    return lineup.rows.length > 0;
   }
 
   function setViewMode(view) {
@@ -933,7 +1050,7 @@
       return;
     }
     var hasRows = lineup.rows.length > 0;
-    modeToggle.hidden = !hasRows || (!isViewMode && !canEnterViewMode());
+    modeToggle.hidden = !hasRows;
     if (modeToggle.hidden) {
       return;
     }
@@ -1029,12 +1146,32 @@
       }
     }
 
+    lineup.rows.forEach(function (row) {
+      var repeats = playerAvoidableRepeats(row);
+      Object.keys(repeats).forEach(function (code) {
+        var detail = repeats[code];
+        var reason =
+          detail.allowed <= 1 ? "no need for a repeat" : "at most " + detail.allowed + " needed";
+        warnings.push({
+          group: "repeats",
+          text: row.player_name + " plays " + code + " in " + formatInningList(detail.innings) + " (" + reason + ")",
+        });
+      });
+    });
+
     return warnings;
+  }
+
+  function isInningWarning(warning) {
+    return typeof warning.inning === "number" && warning.inning > 0;
   }
 
   function warningsByInning(warnings) {
     var grouped = {};
     warnings.forEach(function (warning) {
+      if (!isInningWarning(warning)) {
+        return;
+      }
       if (!grouped[warning.inning]) {
         grouped[warning.inning] = [];
       }
@@ -1129,6 +1266,9 @@
     }
 
     var grouped = warningsByInning(warnings);
+    var repeatWarnings = warnings.filter(function (warning) {
+      return warning.group === "repeats";
+    });
     var innings = Object.keys(grouped)
       .map(function (value) {
         return parseInt(value, 10);
@@ -1139,6 +1279,18 @@
 
     var groupsWrap = document.createElement("div");
     groupsWrap.className = "blu-warnings-groups";
+
+    if (repeatWarnings.length) {
+      var repeatDetails = document.createElement("details");
+      repeatDetails.className = "blu-warnings-group";
+      repeatDetails.open = true;
+      var repeatSummary = document.createElement("summary");
+      repeatSummary.className = "blu-warnings-group-summary";
+      repeatSummary.textContent = "Repeats (" + repeatWarnings.length + ")";
+      repeatDetails.appendChild(repeatSummary);
+      repeatDetails.appendChild(renderWarningList(repeatWarnings));
+      groupsWrap.appendChild(repeatDetails);
+    }
 
     innings.forEach(function (inning) {
       var details = document.createElement("details");
@@ -1202,7 +1354,7 @@
       " present)";
   }
 
-  function buildSelect(row, inning, value, overassigned) {
+  function buildSelect(row, inning, value, overassigned, repeatCells) {
     var select = document.createElement("select");
     select.className = "blu-lineup-select";
     select.dataset.playerId = String(row.player_id);
@@ -1237,6 +1389,23 @@
         " (expected " +
         detail.expected +
         ")";
+    }
+    var repeatKey = row.player_id + "-" + inning;
+    if (value && repeatCells[repeatKey]) {
+      var repeat = repeatCells[repeatKey];
+      select.classList.add("blu-cell-repeat-warning");
+      if (!select.title) {
+        select.title =
+          repeat.code +
+          " — " +
+          repeat.count +
+          " innings this game (at most " +
+          repeat.allowed +
+          " needed)";
+      }
+    }
+    if (value && value === activeHighlightCode()) {
+      select.classList.add("blu-cell-position-highlight");
     }
 
     select.addEventListener("change", function () {
@@ -1299,6 +1468,7 @@
 
   function renderLineupViewBody() {
     tbody.innerHTML = "";
+    var repeatCells = computeAvoidableRepeatCells(lineup.rows);
 
     lineup.rows.forEach(function (row) {
       var tr = document.createElement("tr");
@@ -1318,6 +1488,7 @@
         var td = document.createElement("td");
         var value = row.cells[String(inning)] || "";
         td.className = "blu-lineup-view-cell";
+        td.dataset.positionCode = value;
         if (!value) {
           td.classList.add("blu-lineup-view-cell-empty");
           td.textContent = "\u2014";
@@ -1326,6 +1497,12 @@
           td.textContent = "X";
         } else {
           td.textContent = value;
+        }
+        if (value && repeatCells[row.player_id + "-" + inning]) {
+          td.classList.add("blu-cell-repeat-warning");
+        }
+        if (value && value === activeHighlightCode()) {
+          td.classList.add("blu-cell-position-highlight");
         }
         tr.appendChild(td);
       }
@@ -1340,6 +1517,7 @@
     tbody.innerHTML = "";
     var fairnessHighlights = computeFairnessHighlights(lineup.rows);
     var overassignedCells = computeOverassignedCells(lineup.rows);
+    var repeatCells = computeAvoidableRepeatCells(lineup.rows);
 
     lineup.rows.forEach(function (row, index) {
       var tr = document.createElement("tr");
@@ -1390,7 +1568,7 @@
       for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
         var td = document.createElement("td");
         var value = row.cells[String(inning)] || "";
-        td.appendChild(buildSelect(row, inning, value, overassignedCells));
+        td.appendChild(buildSelect(row, inning, value, overassignedCells, repeatCells));
         tr.appendChild(td);
       }
 
@@ -1638,11 +1816,39 @@
 
   if (positionStatusRow) {
     positionStatusRow.addEventListener("click", function (event) {
+      var highlightBtn = event.target.closest(".blu-position-highlight");
+      if (highlightBtn) {
+        togglePositionHighlight(highlightBtn.dataset.code);
+        return;
+      }
       var chip = event.target.closest(".blu-position-chip");
       if (!chip || chip.disabled || isViewMode) {
         return;
       }
       fillPositionRandom(chip.dataset.code);
+    });
+    positionStatusRow.addEventListener("mouseover", function (event) {
+      var group = event.target.closest(".blu-position-chip-group");
+      if (!group || isViewMode) {
+        return;
+      }
+      if (previewPosition === group.dataset.code) {
+        return;
+      }
+      previewPosition = group.dataset.code;
+      applyPositionHighlights();
+    });
+    positionStatusRow.addEventListener("mouseout", function (event) {
+      var group = event.target.closest(".blu-position-chip-group");
+      if (!group) {
+        return;
+      }
+      var next = event.relatedTarget;
+      if (next && group.contains(next)) {
+        return;
+      }
+      previewPosition = null;
+      applyPositionHighlights();
     });
   }
 

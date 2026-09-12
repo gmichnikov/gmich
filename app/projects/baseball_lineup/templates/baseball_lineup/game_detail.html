@@ -25,7 +25,7 @@
         </p>
       </div>
       <div class="blu-page-header-actions">
-        <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-mode-toggle"{% if not page_state.present_count or not page_state.lineup_complete %} hidden{% endif %}>
+        <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-mode-toggle"{% if not page_state.present_count %} hidden{% endif %}>
           {% if page_state.lineup_complete and page_state.present_count %}Edit lineup{% else %}View lineup{% endif %}
         </button>
         <a href="{{ url_for('baseball_lineup.game_edit', team_id=team.id, game_id=game.id) }}" class="blu-btn blu-btn-secondary">Game settings</a>
@@ -63,7 +63,7 @@
         <div class="blu-position-status blu-edit-only" id="blu-position-status" hidden>
           <div class="blu-position-status-heading">
             <div class="blu-position-status-label">Positions</div>
-            <div class="blu-position-status-hint">Click a position to randomly fill leftover innings</div>
+            <div class="blu-position-status-hint">Name fills leftovers. Dot highlights that position in the grid.</div>
           </div>
           <div class="blu-position-status-row" id="blu-position-status-row" role="list" aria-label="Position fill status"></div>
           <p class="blu-position-fill-status" id="blu-position-fill-status" hidden></p>
@@ -86,6 +86,8 @@
 
         <div class="blu-lineup-legend blu-edit-only">
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-filled"></span> Position filled every inning</span>
+          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-highlight"></span> Highlighted position</span>
+          <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-repeat"></span> Avoidable repeat of a position</span>
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-overassigned"></span> Too many of a position in one inning</span>
           <span class="blu-legend-item"><span class="blu-legend-swatch blu-legend-swatch-skewed"></span> OF/Bench/IF more than 1 inning off another player</span>
         </div>
