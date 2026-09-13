@@ -158,6 +158,41 @@ def _participants_for_season(season):
     )
 
 
+def _participant_filter_kwargs():
+    kwargs = {}
+    if request.args.get("unpaid") == "1":
+        kwargs["unpaid"] = 1
+    if request.args.get("needs_pick") == "1":
+        kwargs["needs_pick"] = 1
+    return kwargs
+
+
+def _apply_payment_updates(season, participants):
+    paid_ids = {int(value) for value in request.form.getlist("paid")}
+    changes = []
+    for participant in participants:
+        new_paid = participant.id in paid_ids
+        if participant.has_paid == new_paid:
+            continue
+        participant.has_paid = new_paid
+        changes.append(
+            f'{participant.display_name}: {"paid" if new_paid else "unpaid"}'
+        )
+
+    if changes:
+        log_nfl_survivor(
+            "Payments",
+            (
+                f"{current_user.full_name} updated payment status "
+                f"({season.name}): {', '.join(changes)}"
+            ),
+        )
+        db.session.commit()
+        flash("Payment status updated.")
+    else:
+        flash("No changes to save.")
+
+
 def _spread_favored_class(spread_value):
     if spread_value <= -8:
         return "ns-spread-favored-3"
@@ -993,15 +1028,25 @@ def admin_view_all_picks():
     )
 
 
-@nfl_survivor_bp.route("/admin/participants")
+@nfl_survivor_bp.route("/admin/participants", methods=["GET", "POST"])
 @admin_required
 def admin_view_participants():
     season = _require_season()
     if not season:
         return redirect(url_for("nfl_survivor.index"))
 
-    current_week = get_current_pick_week(season)
     participants = _participants_for_season(season)
+
+    if request.method == "POST":
+        _apply_payment_updates(season, participants)
+        return redirect(
+            url_for(
+                "nfl_survivor.admin_view_participants",
+                **_participant_filter_kwargs(),
+            )
+        )
+
+    current_week = get_current_pick_week(season)
     rows = []
     for participant in participants:
         picks = NflSurvivorPick.query.filter_by(
@@ -1015,17 +1060,30 @@ def admin_view_participants():
                 "id": participant.id,
                 "name": participant.display_name,
                 "owner": participant.user.full_name or participant.user.email,
+                "email": participant.user.email,
                 "picks_count": len(picks),
                 "wrong_picks": wrong_picks,
                 "needs_to_pick": needs_to_pick,
+                "has_paid": participant.has_paid,
             }
         )
+
+    paid_count = sum(1 for row in rows if row["has_paid"])
+    unpaid_count = len(rows) - paid_count
+    needs_pick_count = sum(1 for row in rows if row["needs_to_pick"])
+    filter_kwargs = _participant_filter_kwargs()
 
     ctx = _season_context(season)
     return render_template(
         "nfl_survivor/admin_view_participants.html",
         participants=rows,
         current_week=current_week,
+        paid_count=paid_count,
+        unpaid_count=unpaid_count,
+        needs_pick_count=needs_pick_count,
+        filter_unpaid=filter_kwargs.get("unpaid") == 1,
+        filter_needs_pick=filter_kwargs.get("needs_pick") == 1,
+        filter_kwargs=filter_kwargs,
         **ctx,
     )
 
@@ -1033,56 +1091,9 @@ def admin_view_participants():
 @nfl_survivor_bp.route("/admin/payments", methods=["GET", "POST"])
 @admin_required
 def admin_payments():
-    season = _require_season()
-    if not season:
-        return redirect(url_for("nfl_survivor.index"))
-
-    participants = _participants_for_season(season)
-
     if request.method == "POST":
-        paid_ids = {int(value) for value in request.form.getlist("paid")}
-        changes = []
-        for participant in participants:
-            new_paid = participant.id in paid_ids
-            if participant.has_paid == new_paid:
-                continue
-            participant.has_paid = new_paid
-            changes.append(
-                f'{participant.display_name}: {"paid" if new_paid else "unpaid"}'
-            )
-
-        if changes:
-            log_nfl_survivor(
-                "Payments",
-                (
-                    f"{current_user.full_name} updated payment status "
-                    f"({season.name}): {', '.join(changes)}"
-                ),
-            )
-            db.session.commit()
-            flash("Payment status updated.")
-        else:
-            flash("No changes to save.")
-
-        return redirect(url_for("nfl_survivor.admin_payments"))
-
-    rows = [
-        {
-            "id": participant.id,
-            "name": participant.display_name,
-            "has_paid": participant.has_paid,
-        }
-        for participant in participants
-    ]
-    paid_count = sum(1 for row in rows if row["has_paid"])
-
-    ctx = _season_context(season)
-    return render_template(
-        "nfl_survivor/admin_payments.html",
-        participants=rows,
-        paid_count=paid_count,
-        **ctx,
-    )
+        return admin_view_participants()
+    return redirect(url_for("nfl_survivor.admin_view_participants"))
 
 
 @nfl_survivor_bp.route(

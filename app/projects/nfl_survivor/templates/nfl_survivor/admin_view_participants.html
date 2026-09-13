@@ -4,13 +4,47 @@
 
 {% block ns_content %}
 <h1 class="ns-card-title">Participants</h1>
-<p class="ns-help-text">Week {{ current_week }} — highlighted rows still need a pick.</p>
+<p class="ns-help-text">
+  Week {{ current_week }} —
+  {{ paid_count }} of {{ participants|length }} paid.
+  Highlighted rows have not paid.
+</p>
+
+{% if participants %}
+<form id="ns-payments-form"
+      method="post"
+      action="{{ url_for('nfl_survivor.admin_view_participants', **filter_kwargs) }}"
+      class="ns-payments-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<div class="ns-filter-bar" data-ns-participant-filters>
+  <span class="ns-filter-label">Quick filters</span>
+  <button type="button"
+          class="ns-filter-chip {% if filter_unpaid %}ns-filter-chip-active{% endif %}"
+          data-ns-filter="unpaid"
+          aria-pressed="{{ 'true' if filter_unpaid else 'false' }}">
+    Unpaid
+    <span class="ns-filter-count">{{ unpaid_count }}</span>
+  </button>
+  <button type="button"
+          class="ns-filter-chip {% if filter_needs_pick %}ns-filter-chip-active{% endif %}"
+          data-ns-filter="needs_pick"
+          aria-pressed="{{ 'true' if filter_needs_pick else 'false' }}">
+    Needs pick
+    <span class="ns-filter-count">{{ needs_pick_count }}</span>
+  </button>
+  <span class="ns-filter-showing" data-ns-filter-showing></span>
+</div>
+
 <div class="ns-table-scroll">
-  <table class="ns-admin-table">
+  <table class="ns-admin-table" data-ns-participant-table>
     <thead>
       <tr>
-        <th>Player</th>
-        <th>Owner</th>
+        <th class="ns-paid-cell">Paid</th>
+        <th class="ns-col-text">Player</th>
+        <th class="ns-col-text">Owner</th>
+        <th class="ns-col-text">Email</th>
         <th>Picks</th>
         <th>Losses</th>
         <th>Needs pick</th>
@@ -19,9 +53,24 @@
     </thead>
     <tbody>
       {% for row in participants %}
-      <tr class="{% if row.needs_to_pick %}ns-highlight{% endif %}">
-        <td>{{ row.name }}</td>
-        <td>{{ row.owner }}</td>
+      <tr class="{% if not row.has_paid %}ns-highlight{% endif %}"
+          data-ns-row
+          data-ns-paid="{{ 1 if row.has_paid else 0 }}"
+          data-ns-needs-pick="{{ 1 if row.needs_to_pick else 0 }}">
+        <td class="ns-paid-cell">
+          <input type="checkbox"
+                 name="paid"
+                 value="{{ row.id }}"
+                 id="paid_{{ row.id }}"
+                 form="ns-payments-form"
+                 aria-label="Mark {{ row.name }} paid"
+                 {% if row.has_paid %}checked{% endif %}>
+        </td>
+        <td class="ns-col-text">
+          <label for="paid_{{ row.id }}">{{ row.name }}</label>
+        </td>
+        <td class="ns-col-text">{{ row.owner }}</td>
+        <td class="ns-col-text">{{ row.email }}</td>
         <td>{{ row.picks_count }}</td>
         <td>{{ row.wrong_picks }}</td>
         <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
@@ -41,4 +90,71 @@
     </tbody>
   </table>
 </div>
+<p class="ns-help-text" data-ns-filter-empty hidden>No participants match these filters.</p>
+<button type="submit" form="ns-payments-form" class="ns-btn ns-btn-primary">Save payment status</button>
+{% else %}
+<p class="ns-help-text">No participants yet.</p>
+{% endif %}
+{% endblock %}
+
+{% block ns_scripts %}
+{% if participants %}
+<script>
+(function () {
+  var table = document.querySelector("[data-ns-participant-table]");
+  if (!table) return;
+
+  var rows = table.querySelectorAll("tbody tr[data-ns-row]");
+  var empty = document.querySelector("[data-ns-filter-empty]");
+  var showing = document.querySelector("[data-ns-filter-showing]");
+  var chips = document.querySelectorAll("[data-ns-filter]");
+  var form = document.getElementById("ns-payments-form");
+  var params = new URLSearchParams(window.location.search);
+  var filters = {
+    unpaid: params.get("unpaid") === "1",
+    needs_pick: params.get("needs_pick") === "1"
+  };
+
+  function apply() {
+    var visible = 0;
+    rows.forEach(function (row) {
+      var show = true;
+      if (filters.unpaid && row.getAttribute("data-ns-paid") !== "0") show = false;
+      if (filters.needs_pick && row.getAttribute("data-ns-needs-pick") !== "1") show = false;
+      row.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (empty) empty.hidden = visible > 0;
+    if (showing) {
+      showing.textContent = visible === rows.length
+        ? rows.length + " participants"
+        : "Showing " + visible + " of " + rows.length;
+    }
+    chips.forEach(function (chip) {
+      var key = chip.getAttribute("data-ns-filter");
+      var on = !!filters[key];
+      chip.classList.toggle("ns-filter-chip-active", on);
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    var next = new URLSearchParams();
+    if (filters.unpaid) next.set("unpaid", "1");
+    if (filters.needs_pick) next.set("needs_pick", "1");
+    var qs = next.toString();
+    var url = window.location.pathname + (qs ? "?" + qs : "");
+    window.history.replaceState(null, "", url);
+    if (form) form.setAttribute("action", url);
+  }
+
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var key = chip.getAttribute("data-ns-filter");
+      filters[key] = !filters[key];
+      apply();
+    });
+  });
+
+  apply();
+})();
+</script>
+{% endif %}
 {% endblock %}
