@@ -12,7 +12,7 @@ class NflSurvivorSeason(db.Model):
     year = db.Column(db.Integer, nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
     # Tue boundary (US/Eastern): join closes at the first one; then every 7 days
-    # pick weeks roll, picks lock, spreads assign, and odds fetch windows align.
+    # pick weeks roll, picks lock, and weekly results assign.
     week_2_start = db.Column(db.DateTime(timezone=True), nullable=False)
     espn_season_year = db.Column(db.Integer, nullable=False)
     max_weeks = db.Column(db.Integer, nullable=False, default=18)

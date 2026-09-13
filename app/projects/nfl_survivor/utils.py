@@ -82,21 +82,6 @@ def is_join_open(season):
     return is_week_pickable(season, 1)
 
 
-def get_odds_fetch_window(season, current_week):
-    """
-    Return (window_start, window_end) in US/Eastern for the current pick week.
-    Week 1 spans the 7 days before the first Tuesday; later weeks are Tue–Tue.
-    """
-    anchor = _to_eastern(season.week_2_start)
-    if current_week == 1:
-        window_start = anchor - timedelta(days=7)
-        window_end = anchor
-    else:
-        window_start = anchor + timedelta(days=(current_week - 2) * 7)
-        window_end = window_start + timedelta(days=7)
-    return window_start, window_end
-
-
 def calculate_game_week(season, game_time_utc):
     if game_time_utc.tzinfo is None:
         game_time_utc = UTC.localize(game_time_utc)

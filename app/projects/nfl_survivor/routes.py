@@ -37,7 +37,6 @@ from app.projects.nfl_survivor.utils import (
     entry_log_description,
     get_active_season,
     get_current_pick_week,
-    get_odds_fetch_window,
     get_user_entries,
     is_join_open,
     is_pick_correct,
@@ -1199,9 +1198,6 @@ def _fetch_spreads_data(season, manual=False):
         return {"error": msg}, 500
 
     current_week = get_current_pick_week(season)
-    window_start, window_end = get_odds_fetch_window(season, current_week)
-    commence_from = max(datetime.now(UTC), window_start.astimezone(UTC))
-    commence_to = window_end.astimezone(UTC)
 
     odds_response = requests.get(
         "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds",
@@ -1211,8 +1207,6 @@ def _fetch_spreads_data(season, manual=False):
             "markets": "spreads",
             "oddsFormat": "american",
             "dateFormat": "unix",
-            "commenceTimeFrom": commence_from.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "commenceTimeTo": commence_to.strftime("%Y-%m-%dT%H:%M:%SZ"),
         },
         timeout=30,
     )
@@ -1225,7 +1219,7 @@ def _fetch_spreads_data(season, manual=False):
         if not manual:
             log_nfl_survivor(
                 "Fetch Spreads",
-                f"Cron fetch spreads failed for week {current_week} ({season.name}): {msg}",
+                f"Cron fetch spreads failed ({season.name}): {msg}",
                 actor_id=None,
             )
             db.session.commit()
@@ -1289,7 +1283,7 @@ def _fetch_spreads_data(season, manual=False):
 
     log_nfl_survivor(
         "Fetch Spreads",
-        f"{'Manual' if manual else 'Cron'} fetch spreads for week {current_week} ({season.name})",
+        f"{'Manual' if manual else 'Cron'} fetch spreads ({season.name})",
         actor_id=current_user.id if manual and current_user.is_authenticated else None,
     )
     db.session.commit()
@@ -1334,7 +1328,7 @@ def _fetch_spreads_data(season, manual=False):
         last_updated_time = last_updated.astimezone(EASTERN)
 
     payload = {
-        "message": f"Successfully fetched spreads for week {current_week}",
+        "message": "Successfully fetched available spreads",
         "spreads": spreads,
         "last_updated_time": last_updated_time,
         "current_week": current_week,
