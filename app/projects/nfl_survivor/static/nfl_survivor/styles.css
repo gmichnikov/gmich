@@ -1105,6 +1105,44 @@
   text-align: left;
 }
 
+.ns-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ns-sort-btn:hover,
+.ns-sort-btn:focus-visible {
+  text-decoration: underline;
+}
+
+.ns-sort-btn::after {
+  content: "↕";
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.55;
+}
+
+th[aria-sort="ascending"] .ns-sort-btn::after {
+  content: "↑";
+  opacity: 1;
+}
+
+th[aria-sort="descending"] .ns-sort-btn::after {
+  content: "↓";
+  opacity: 1;
+}
+
 .ns-admin-table .ns-paid-cell {
   width: 3.5rem;
 }
