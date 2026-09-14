@@ -4,6 +4,7 @@ Table: `combined-schedule` in DoltHub.
 """
 from datetime import datetime, timedelta
 
+from app.projects.sports_schedule_admin.core.leagues import WOMEN_LEAGUE_CODES
 from app.projects.sports_schedules.core.constants import (
     DIMENSION_LABELS,
     HIGH_CARDINALITY_FILTERS,
@@ -12,6 +13,30 @@ from app.projects.sports_schedules.core.constants import (
 
 TABLE = "`combined-schedule`"
 VALID_DIMENSIONS = set(DIMENSION_LABELS.keys())
+
+_WOMEN_LEAGUE_SQL = ", ".join(f"'{c}'" for c in sorted(WOMEN_LEAGUE_CODES))
+GENDER_SQL_EXPR = (
+    f"(CASE WHEN `league` IN ({_WOMEN_LEAGUE_SQL}) THEN 'W' ELSE 'M' END)"
+)
+
+
+def _select_expr(col: str) -> str:
+    """SQL expression for a selected dimension (gender is derived from league)."""
+    if col == "gender":
+        return f"{GENDER_SQL_EXPR} AS `gender`"
+    return f"`{col}`"
+
+
+def _group_expr(col: str) -> str:
+    if col == "gender":
+        return GENDER_SQL_EXPR
+    return f"`{col}`"
+
+
+def _order_expr(col: str) -> str:
+    if col == "gender":
+        return GENDER_SQL_EXPR
+    return f"`{col}`"
 
 # Allowlist for low-cardinality: column -> set of valid values
 _LOW_CARD_ALLOWLIST = {
@@ -208,6 +233,15 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
         # When distance filtering is active, also include events with no state (international venues)
         if col == "home_state" and include_international:
             conditions.append(f"(`{col}` IN ({placeholders}) OR `{col}` IS NULL OR `{col}` = '')")
+        elif col == "gender":
+            wants_w = "W" in vals
+            wants_m = "M" in vals
+            if wants_w and wants_m:
+                continue
+            if wants_w:
+                conditions.append(f"`league` IN ({_WOMEN_LEAGUE_SQL})")
+            elif wants_m:
+                conditions.append(f"`league` NOT IN ({_WOMEN_LEAGUE_SQL})")
         else:
             conditions.append(f"`{col}` IN ({placeholders})")
     for col, vals in high_filters.items():
@@ -221,14 +255,15 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
     # --- Build SELECT ---
     if count:
         if valid_dims:
-            sel_cols = [f"`{c}`" for c in valid_dims]
+            sel_cols = [_select_expr(c) for c in valid_dims]
+            group_cols = [_group_expr(c) for c in valid_dims]
             select = ", ".join(sel_cols) + ", COUNT(*) AS `# Games`"
-            group_by = "GROUP BY " + ", ".join(sel_cols)
+            group_by = "GROUP BY " + ", ".join(group_cols)
         else:
             select = "COUNT(*) AS `# Games`"
             group_by = ""
     else:
-        sel_cols = [f"`{c}`" for c in valid_dims]
+        sel_cols = [_select_expr(c) for c in valid_dims]
         select = ", ".join(sel_cols)
         group_by = ""
 
@@ -241,7 +276,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             dir_sql = "DESC" if sort_dir == "desc" else "ASC"
             # Time sort: SQL lexicographic order is wrong (12pm after 1pm). Client-side sort
             # in index.html handles time correctly after fetch.
-            order_by = f"ORDER BY `{sort_column}` {dir_sql}"
+            order_by = f"ORDER BY {_order_expr(sort_column)} {dir_sql}"
         else:
             if count and valid_dims:
                 order_by = "ORDER BY `# Games` DESC"
@@ -249,7 +284,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
                 if "date" in valid_dims:
                     order_by = "ORDER BY `date` ASC"
                 else:
-                    order_by = f"ORDER BY `{valid_dims[0]}` ASC"
+                    order_by = f"ORDER BY {_order_expr(valid_dims[0])} ASC"
             else:
                 order_by = ""
     else:
@@ -259,7 +294,7 @@ def build_sql(params: dict) -> tuple[str | None, str | None]:
             if "date" in valid_dims:
                 order_by = "ORDER BY `date` ASC"
             else:
-                order_by = f"ORDER BY `{valid_dims[0]}` ASC"
+                order_by = f"ORDER BY {_order_expr(valid_dims[0])} ASC"
         else:
             order_by = ""
 

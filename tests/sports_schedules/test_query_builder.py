@@ -194,6 +194,64 @@ class TestBuildSqlFilters(unittest.TestCase):
         self.assertIn("AND", sql)  # both conditions combined with AND
 
 
+class TestBuildSqlGender(unittest.TestCase):
+    """Gender is derived from league in SQL, not a stored column."""
+
+    def test_gender_dimension_uses_case_expression(self):
+        sql, err = build_sql({"dimensions": ["gender", "date"]})
+        self.assertIsNone(err)
+        self.assertIn("CASE WHEN `league` IN", sql)
+        self.assertIn("AS `gender`", sql)
+        self.assertIn("WNBA", sql)
+        self.assertIn("NCAAW", sql)
+        self.assertNotIn("SELECT `gender`", sql)
+
+    def test_filter_women_uses_women_leagues(self):
+        sql, err = build_sql({
+            "dimensions": ["date"],
+            "filters": {"gender": ["W"]},
+        })
+        self.assertIsNone(err)
+        self.assertIn("`league` IN (", sql)
+        self.assertIn("WNBA", sql)
+        self.assertIn("NWSL", sql)
+        self.assertNotIn("NOT IN", sql)
+
+    def test_filter_men_excludes_women_leagues(self):
+        sql, err = build_sql({
+            "dimensions": ["date"],
+            "filters": {"gender": ["M"]},
+        })
+        self.assertIsNone(err)
+        self.assertIn("`league` NOT IN (", sql)
+
+    def test_filter_both_genders_omits_league_condition(self):
+        sql, err = build_sql({
+            "dimensions": ["date"],
+            "filters": {"gender": ["M", "W"]},
+        })
+        self.assertIsNone(err)
+        self.assertNotIn("NOT IN", sql)
+        # No standalone gender/league IN from the gender filter
+        self.assertNotIn("`league` IN (", sql)
+
+    def test_invalid_gender_ignored(self):
+        sql, err = build_sql({
+            "dimensions": ["date"],
+            "filters": {"gender": ["X"]},
+        })
+        self.assertIsNone(err)
+        self.assertNotIn("`league` IN (", sql)
+        self.assertNotIn("`league` NOT IN (", sql)
+
+    def test_count_groups_by_gender_expression(self):
+        sql, err = build_sql({"dimensions": ["gender"], "count": 1})
+        self.assertIsNone(err)
+        self.assertIn("GROUP BY", sql)
+        self.assertIn("CASE WHEN `league` IN", sql)
+        self.assertIn("COUNT(*)", sql)
+
+
 class TestBuildSqlSort(unittest.TestCase):
     """Sort order tests."""
 

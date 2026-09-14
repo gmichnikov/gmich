@@ -46,19 +46,24 @@ def _league_options():
 
 
 # --- LOW_CARDINALITY_OPTIONS: column -> [(value, label), ...] ---
+GENDERS = ["M", "W"]
+
 LOW_CARDINALITY_OPTIONS = {
     "sport": [(v, v.title()) for v in SPORTS],
     "league": _league_options(),
     "level": [(v, v.title()) for v in LEVELS],
+    "gender": [("M", "Men's"), ("W", "Women's")],
     "day": [(v, v) for v in DAYS],
     "home_state": [(code, code) for code in US_STATE_CODES],
 }
+
+LOW_CARDINALITY_FILTER_KEYS = tuple(LOW_CARDINALITY_OPTIONS.keys())
 
 
 # --- Field order for sidebar and filter bar (consistent UI order) ---
 FIELD_ORDER = [
     "day", "date", "time", "road_team", "home_team", "either_team",
-    "home_city", "home_state", "near", "location", "league", "sport", "level",
+    "home_city", "home_state", "near", "location", "league", "sport", "level", "gender",
 ]
 
 # Fields that can only be used as filters (no dimension)
@@ -82,6 +87,7 @@ DIMENSION_LABELS = {
     "either_team": "Either Team",
     "sport": "Sport",
     "level": "Level",
+    "gender": "Gender",
     "league": "League",
     "date": "Date",
     "day": "Day",

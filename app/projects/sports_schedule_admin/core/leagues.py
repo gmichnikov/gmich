@@ -37,6 +37,15 @@ LEAGUE_SEASON_TYPE = {
 }
 
 
+# Women's leagues; every other known league is men's (including WC).
+WOMEN_LEAGUE_CODES = frozenset({"WNBA", "NWSL", "NCAAW", "NCHW", "NCSW"})
+
+
 def is_milb_league(league_code: str) -> bool:
     """Return True if league uses MLB Stats API."""
     return league_code in MILB_LEAGUE_MAP
+
+
+def league_gender(league_code: str) -> str:
+    """Return 'W' or 'M' for a league code. Unknown leagues default to M."""
+    return "W" if league_code in WOMEN_LEAGUE_CODES else "M"

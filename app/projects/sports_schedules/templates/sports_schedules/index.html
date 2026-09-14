@@ -322,6 +322,7 @@
 window.ssDimensionLabels = {{ dimension_labels | tojson }};
 window.ssDefaultDimensions = {{ default_dimensions | tojson }};
 window.ssDefaultFilters = {{ default_filters | tojson }};
+window.ssLowCardinalityFilters = {{ low_cardinality_options.keys() | list | tojson }};
 
 (function() {
   function ssToggleSection(name) {
@@ -554,7 +555,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
   }
 
   function ssUpdateAllFilterSelected() {
-    ['sport', 'league', 'level', 'day', 'home_state'].forEach(ssUpdateFilterSelected);
+    (window.ssLowCardinalityFilters || ['sport', 'league', 'level', 'gender', 'day', 'home_state']).forEach(ssUpdateFilterSelected);
   }
 
   function ssGetAnchorDate() {
@@ -663,7 +664,8 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     }
 
     // Filter fields: check Filter CB for any field that has filter values in URL
-    var filterFields = ['sport', 'league', 'level', 'day', 'home_state', 'home_team', 'road_team', 'location', 'home_city', 'date', 'either_team', 'near'];
+    var lowCard = window.ssLowCardinalityFilters || ['sport', 'league', 'level', 'gender', 'day', 'home_state'];
+    var filterFields = lowCard.concat(['home_team', 'road_team', 'location', 'home_city', 'date', 'either_team', 'near']);
     filterFields.forEach(function(col) {
       var isFilter = false;
       if (col === 'date') {
@@ -701,7 +703,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     if (sortDir && params.get('sort_dir')) sortDir.value = params.get('sort_dir') || 'asc';
 
     // Low-cardinality filters (multiselect in filter bar) — clear when param absent
-    ['sport', 'league', 'level', 'day', 'home_state'].forEach(function(col) {
+    (window.ssLowCardinalityFilters || ['sport', 'league', 'level', 'gender', 'day', 'home_state']).forEach(function(col) {
       var val = params.get(col) || '';
       var sel = document.getElementById('ss-filter-' + col);
       if (sel) {
@@ -1768,7 +1770,7 @@ window.ssDefaultFilters = {{ default_filters | tojson }};
     var et1 = params.get('either_team_1');
     var et2 = params.get('either_team_2');
     if (et1 || et2) config.filters.either_team = [et1, et2].filter(Boolean);
-    ['sport','league','level','day','home_state'].forEach(function(col) {
+    (window.ssLowCardinalityFilters || ['sport','league','level','gender','day','home_state']).forEach(function(col) {
       var v = params.get(col);
       if (v) config.filters[col] = v.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
     });

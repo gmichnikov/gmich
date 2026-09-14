@@ -5,6 +5,7 @@ Builds a single prompt string with instructions, schema, allowed values, and few
 
 from app.projects.sports_schedules.core.constants import (
     DAYS,
+    GENDERS,
     LEAGUE_CODES,
     LEAGUE_DISPLAY_NAMES,
     LEVELS,
@@ -243,6 +244,24 @@ FEW_SHOT_EXAMPLES = [
         },
     ),
     (
+        "Women's hockey in Boston",
+        {
+            "dimensions": "date,time,home_team,road_team",
+            "filters": {"gender": ["W"], "sport": ["hockey"], "home_city": ["Boston"]},
+            "date_mode": "future",
+            "date_n": None,
+            "date_exact": None,
+            "date_start": None,
+            "date_end": None,
+            "date_year": None,
+            "anchor_date": None,
+            "count": False,
+            "limit": 500,
+            "sort_column": "",
+            "sort_dir": "asc",
+        },
+    ),
+    (
         "When do the Red Sox play the Yankees?",
         {
             "dimensions": "date,time,home_team,road_team",
@@ -411,8 +430,8 @@ Rules:
     schema = """
 ## Config Schema
 
-- dimensions: Comma-separated list of column names (exclude either_team—filter-only). Valid: date, time, home_team, road_team, day, league, sport, level, home_city, home_state, location.
-- filters: Object with filter keys. Low-cardinality: sport, league, level, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city — use full names, not abbreviations (OKC→Thunder or Oklahoma City; NYC→New York; KC→Kansas City; DC→Washington). either_team: array of team name substrings (matches home OR road); spell out team names. near: {"zip": "<5-digit US zip>", "radius": "<miles>"} — use when user specifies a zip code or asks for events within a distance; valid radius values are 10, 25, 50, 100, 250 (pick nearest); omit if no zip/distance mentioned.
+- dimensions: Comma-separated list of column names (exclude either_team—filter-only). Valid: date, time, home_team, road_team, day, league, sport, level, gender, home_city, home_state, location.
+- filters: Object with filter keys. Low-cardinality: sport, league, level, gender, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city — use full names, not abbreviations (OKC→Thunder or Oklahoma City; NYC→New York; KC→Kansas City; DC→Washington). either_team: array of team name substrings (matches home OR road); spell out team names. near: {"zip": "<5-digit US zip>", "radius": "<miles>"} — use when user specifies a zip code or asks for events within a distance; valid radius values are 10, 25, 50, 100, 250 (pick nearest); omit if no zip/distance mentioned.
 - date_mode: exact | today | on_or_after | this_weekend | range | future | next_week | last_n | next_n | year
 - date_exact, date_start, date_end: YYYY-MM-DD when required
 - date_n: integer for last_n, next_n
@@ -447,6 +466,7 @@ For exact/on_or_after/range: output concrete YYYY-MM-DD. Use today's date to res
     # --- Allowed values ---
     sport_vals = ", ".join(SPORTS)
     level_vals = ", ".join(LEVELS)
+    gender_vals = ", ".join(GENDERS)
     day_vals = ", ".join(DAYS)
     state_mapping = "; ".join(f"{k}→{v}" for k, v in STATE_NAME_TO_CODE.items())
     league_mapping = ", ".join(
@@ -458,6 +478,7 @@ For exact/on_or_after/range: output concrete YYYY-MM-DD. Use today's date to res
 
 - sport: {sport_vals}
 - level: {level_vals}
+- gender: {gender_vals} (M=men's, W=women's). Use when the user says men's, women's, ladies, etc. Do not set gender just because a league implies it (e.g. WNBA already means W).
 - day: {day_vals}
 - home_state: Use 2-letter codes. When user says state/province name, map to code: {state_mapping}
 - league: Use code not display name. {league_mapping}

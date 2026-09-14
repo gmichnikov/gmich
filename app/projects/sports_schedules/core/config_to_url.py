@@ -4,6 +4,7 @@ Uses config_to_params to resolve relative date modes with the given anchor.
 """
 import urllib.parse
 
+from app.projects.sports_schedules.core.constants import LOW_CARDINALITY_FILTER_KEYS
 from app.projects.sports_schedules.core.sample_queries import config_to_params
 
 
@@ -28,7 +29,7 @@ def config_to_url_params(
         qdict["dimensions"] = params["dimensions"]
 
     filters = params.get("filters") or {}
-    for col in ("sport", "league", "level", "day", "home_state", "home_team", "road_team", "location", "home_city"):
+    for col in (*LOW_CARDINALITY_FILTER_KEYS, "home_team", "road_team", "location", "home_city"):
         vals = filters.get(col)
         if vals and isinstance(vals, list):
             qdict[col] = ",".join(str(v) for v in vals if v)

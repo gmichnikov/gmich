@@ -18,6 +18,7 @@ from app import db
 from app.core.dolthub_client import DoltHubClient
 from app.models import LogEntry
 from app.projects.sports_schedules.core.constants import (
+    LOW_CARDINALITY_FILTER_KEYS,
     SAVED_QUERY_CONFIG_MAX_BYTES,
     SAVED_QUERY_LIMIT,
 )
@@ -58,7 +59,7 @@ def _parse_query_params():
     """Parse request args into build_sql params."""
     args = request.args
     filters = {}
-    for col in ("sport", "league", "level", "day", "home_state"):
+    for col in LOW_CARDINALITY_FILTER_KEYS:
         val = args.get(col)
         if val:
             filters[col] = [v.strip() for v in val.split(",") if v.strip()]

@@ -98,6 +98,18 @@ class TestApiQuerySuccess(unittest.TestCase):
         self.assertIn("basketball", call_args)
 
     @patch("app.projects.sports_schedules.routes.DoltHubClient")
+    def test_gender_filter_passed_to_query(self, mock_dolt_cls):
+        mock_dolt_cls.return_value.execute_sql.return_value = {"rows": []}
+        r = self.client.get(
+            "/sports-schedules/api/query"
+            "?dimensions=date&gender=W&limit=5"
+        )
+        self.assertEqual(r.status_code, 200)
+        call_args = mock_dolt_cls.return_value.execute_sql.call_args[0][0]
+        self.assertIn("WNBA", call_args)
+        self.assertIn("`league` IN (", call_args)
+
+    @patch("app.projects.sports_schedules.routes.DoltHubClient")
     def test_contains_filter_passed_to_query(self, mock_dolt_cls):
         mock_dolt_cls.return_value.execute_sql.return_value = {"rows": []}
         r = self.client.get(
