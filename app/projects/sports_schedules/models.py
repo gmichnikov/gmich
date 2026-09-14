@@ -16,6 +16,13 @@ class SportsScheduleSavedQuery(db.Model):
     config = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    digest_refs = db.relationship(
+        "SportsScheduleScheduledDigestQuery",
+        back_populates="saved_query",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     __table_args__ = (db.Index("ix_sports_schedule_saved_queries_user_id", "user_id"),)
 
 
@@ -61,7 +68,10 @@ class SportsScheduleScheduledDigestQuery(db.Model):
     )
     sort_order = db.Column(db.Integer, default=0, nullable=False)
 
-    saved_query = db.relationship("SportsScheduleSavedQuery", backref="digest_refs")
+    saved_query = db.relationship(
+        "SportsScheduleSavedQuery",
+        back_populates="digest_refs",
+    )
 
     __table_args__ = (
         db.UniqueConstraint("digest_id", "saved_query_id", name="uq_digest_saved_query"),

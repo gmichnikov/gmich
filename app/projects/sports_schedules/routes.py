@@ -407,6 +407,9 @@ def api_saved_queries_delete(query_id):
         return "", 404
     if q.user_id != current_user.id:
         return "", 403
+    # Remove digest membership first. DB ON DELETE CASCADE is not enough:
+    # SQLAlchemy tries to NULL saved_query_id (NOT NULL) and the delete 500s.
+    SportsScheduleScheduledDigestQuery.query.filter_by(saved_query_id=q.id).delete()
     db.session.delete(q)
     db.session.commit()
     return "", 204
