@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from "soccer_minutes/_field.html" import field_pitch %}
+{% from "soccer_minutes/_minutes.html" import minutes_list %}
+
+{% block title %}Period {{ live.current_period }} vs {{ game.opponent_name }}{% endblock %}
+
+{% block body_attrs %} class="scm-live-body"{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page scm-live-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}">{{ game.game_date.strftime('%b %d') }} vs {{ game.opponent_name }}</a>
+    </p>
+
+    <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
+    <p class="scm-field-status" id="scm-field-status" hidden></p>
+
+    <div class="scm-clock-bar" id="scm-clock-bar">
+      <p class="scm-clock-period" id="scm-clock-period">Period {{ live.current_period }} of {{ live.period_count }}</p>
+      <p class="scm-clock-time" id="scm-clock-display">{{ live.clock.displayed }}</p>
+    </div>
+
+    <div class="scm-card" id="scm-pending-field">
+      <div class="scm-card-header">Pending field</div>
+      <div class="scm-card-body">
+        {{ field_pitch(live.pending.bands) }}
+        <div class="scm-bench-block">
+          <div class="scm-bench-header">
+            <h3 class="scm-slot-group-title">Bench</h3>
+            <button type="button" class="scm-btn scm-btn-secondary scm-btn-small" id="scm-send-off" disabled>Off</button>
+          </div>
+          <div class="scm-bench" id="scm-bench">
+            {% for person in live.pending.bench %}
+            <button type="button" class="scm-bench-chip" data-player-id="{{ person.id }}">{{ person.label }}</button>
+            {% else %}
+            <p class="scm-muted scm-bench-empty">No one on the bench.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <ul class="scm-diff" id="scm-diff" {% if not live.diff %}hidden{% endif %}>
+          {% for line in live.diff %}
+          <li>{{ line }}</li>
+          {% endfor %}
+        </ul>
+        <p class="scm-warnings" id="scm-warnings" {% if not live.warnings %}hidden{% endif %}>
+          {{ live.warnings | join(' · ') }}
+        </p>
+
+        <div class="scm-go-actions">
+          <button type="button" class="scm-btn scm-btn-secondary" id="scm-reset" {% if not live.can_go %}disabled{% endif %}>Reset</button>
+          <button type="button" class="scm-btn scm-btn-primary" id="scm-go" {% if not live.can_go %}disabled{% endif %}>Go</button>
+        </div>
+        <div class="scm-go-confirm" id="scm-go-confirm" hidden>
+          <label class="scm-label" for="scm-go-clock">Stamp time</label>
+          <div class="scm-set-clock-row">
+            <input type="text" id="scm-go-clock" class="scm-input" inputmode="numeric" value="{{ live.clock.displayed }}" autocomplete="off">
+            <button type="button" class="scm-btn scm-btn-primary" id="scm-go-confirm-btn">Confirm Go</button>
+          </div>
+          <button type="button" class="scm-btn scm-btn-secondary" id="scm-go-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scm-card">
+      <div class="scm-card-header">Minutes</div>
+      <div class="scm-card-body">
+        {{ minutes_list(live.minutes) }}
+      </div>
+    </div>
+
+    <div class="scm-card" id="scm-clock-controls">
+      <div class="scm-card-header">Clock</div>
+      <div class="scm-card-body">
+        <div class="scm-clock-actions">
+          <button type="button" class="scm-btn scm-btn-primary" id="scm-pause-resume">
+            {{ 'Pause' if live.clock.running else 'Resume' }}
+          </button>
+          <button type="button" class="scm-btn scm-btn-secondary" id="scm-end-period" {% if live.can_go %}disabled{% endif %}>End period</button>
+        </div>
+        <form class="scm-set-clock" id="scm-set-clock-form">
+          <label class="scm-label" for="scm-set-clock">Set clock</label>
+          <div class="scm-set-clock-row">
+            <input
+              type="text"
+              id="scm-set-clock"
+              class="scm-input"
+              inputmode="numeric"
+              placeholder="{{ live.clock.displayed }}"
+              value="{{ live.clock.displayed }}"
+              autocomplete="off"
+            >
+            <button type="submit" class="scm-btn scm-btn-secondary">Set</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if live.undo_label %}
+    <button type="button" class="scm-btn scm-btn-secondary" id="scm-undo">{{ live.undo_label }}</button>
+    {% else %}
+    <button type="button" class="scm-btn scm-btn-secondary" id="scm-undo" hidden>Undo</button>
+    {% endif %}
+
+    <p class="scm-live-settings">
+      <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}">Game settings</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="scm-game-state">{{ live | tojson }}</script>
+<script src="{{ url_for('soccer_minutes.static', filename='live_game.js') }}"></script>
+{% endblock %}

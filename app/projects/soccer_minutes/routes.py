@@ -5,6 +5,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from app import db
+from app.projects.soccer_minutes.clock import displayed_elapsed_ms
 from app.projects.soccer_minutes.field_state import (
     drop_player_from_assignments,
     game_has_kickoff,
@@ -14,6 +15,20 @@ from app.projects.soccer_minutes.field_state import (
     set_player_present,
     setup_state,
     strip_player_from_team_games,
+)
+from app.projects.soccer_minutes.live_state import (
+    commit_go,
+    end_period,
+    game_phase,
+    live_payload,
+    pause_clock,
+    parse_action_clock,
+    reset_pending,
+    resume_clock,
+    save_pending,
+    set_clock,
+    start_period,
+    undo_last,
 )
 from app.projects.soccer_minutes.formation_config import (
     DEFAULT_PERIOD_COUNT,
@@ -69,15 +84,45 @@ def _parse_game_date(raw):
         return None
 
 
-def _setup_payload(team, game):
-    payload = setup_state(team, game)
-    payload["fieldUrl"] = url_for(
-        "soccer_minutes.game_field", team_id=team.id, game_id=game.id
-    )
-    payload["attendanceUrl"] = url_for(
-        "soccer_minutes.game_attendance", team_id=team.id, game_id=game.id
-    )
+def _game_urls(team, game):
+    kw = {"team_id": team.id, "game_id": game.id}
+    return {
+        "fieldUrl": url_for("soccer_minutes.game_field", **kw),
+        "attendanceUrl": url_for("soccer_minutes.game_attendance", **kw),
+        "pendingUrl": url_for("soccer_minutes.game_pending", **kw),
+        "startUrl": url_for("soccer_minutes.game_start", **kw),
+        "pauseUrl": url_for("soccer_minutes.game_pause", **kw),
+        "resumeUrl": url_for("soccer_minutes.game_resume", **kw),
+        "setClockUrl": url_for("soccer_minutes.game_set_clock", **kw),
+        "goUrl": url_for("soccer_minutes.game_go", **kw),
+        "resetUrl": url_for("soccer_minutes.game_reset", **kw),
+        "endUrl": url_for("soccer_minutes.game_end", **kw),
+        "undoUrl": url_for("soccer_minutes.game_undo", **kw),
+    }
+
+
+def _page_payload(team, game):
+    payload = live_payload(team, game, urls=_game_urls(team, game))
+    setup = setup_state(team, game)
+    payload["attendance"] = setup["attendance"]
+    payload["assignments"] = setup["assignments"]
+    payload["bands"] = setup["bands"]
+    payload["bench"] = setup["bench"]
+    payload["filled"] = setup["filled"]
+    payload["field_size"] = setup["field_size"]
+    payload["locked"] = payload["phase"] not in ("setup", "between")
     return payload
+
+
+def _json_ok(team, game, previous_phase):
+    payload = _page_payload(team, game)
+    payload["ok"] = True
+    payload["reload"] = payload["phase"] != previous_phase
+    return jsonify(payload)
+
+
+def _json_error(message, status=400):
+    return jsonify(ok=False, error=message), status
 
 
 def _sanitize_game_maps(team, game):
@@ -429,11 +474,18 @@ def game_create(team_id):
 @login_required
 def game_detail(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
+    payload = _page_payload(team, game)
+    template = (
+        "soccer_minutes/game_live.html"
+        if payload["phase"] == "live"
+        else "soccer_minutes/game_detail.html"
+    )
     return render_template(
-        "soccer_minutes/game_detail.html",
+        template,
         team=team,
         game=game,
-        setup=_setup_payload(team, game),
+        setup=payload,
+        live=payload,
     )
 
 
@@ -539,7 +591,7 @@ def game_attendance(team_id, game_id):
     game.updated_at = datetime.utcnow()
     db.session.commit()
 
-    payload = _setup_payload(team, game)
+    payload = _page_payload(team, game)
     payload["ok"] = True
     return jsonify(payload)
 
@@ -550,8 +602,8 @@ def game_attendance(team_id, game_id):
 @login_required
 def game_field(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
-    if game_has_kickoff(game):
-        return jsonify(ok=False, error="The field is locked after kickoff."), 400
+    if game_phase(game) not in ("setup", "between"):
+        return _json_error("Edit the pending field during a period.")
 
     data = request.get_json(silent=True) or {}
     assignments = data.get("assignments")
@@ -566,6 +618,141 @@ def game_field(team_id, game_id):
     game.updated_at = datetime.utcnow()
     db.session.commit()
 
-    payload = _setup_payload(team, game)
+    payload = _page_payload(team, game)
     payload["ok"] = True
     return jsonify(payload)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/start", methods=["POST"]
+)
+@login_required
+def game_start(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = start_period(team, game)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/pause", methods=["POST"]
+)
+@login_required
+def game_pause(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = pause_clock(game)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/resume", methods=["POST"]
+)
+@login_required
+def game_resume(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = resume_clock(game)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/set-clock", methods=["POST"]
+)
+@login_required
+def game_set_clock(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    data = request.get_json(silent=True) or {}
+    stamp, err = parse_action_clock(data, None)
+    if stamp is None:
+        return _json_error(err or "Enter a time like 5:00.")
+    error = set_clock(game, stamp)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/pending", methods=["POST"]
+)
+@login_required
+def game_pending(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    data = request.get_json(silent=True) or {}
+    error = save_pending(team, game, data.get("assignments"))
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/reset", methods=["POST"]
+)
+@login_required
+def game_reset(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = reset_pending(team, game)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/go", methods=["POST"]
+)
+@login_required
+def game_go(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    data = request.get_json(silent=True) or {}
+    stamp, err = parse_action_clock(data, displayed_elapsed_ms(game))
+    if err:
+        return _json_error(err)
+    error = commit_go(team, game, at_ms=stamp)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/end", methods=["POST"]
+)
+@login_required
+def game_end(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = end_period(game, team)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/undo", methods=["POST"]
+)
+@login_required
+def game_undo(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    previous = game_phase(game)
+    error = undo_last(game)
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return _json_ok(team, game, previous)

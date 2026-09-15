@@ -1,0 +1,13 @@
+{% macro minutes_list(rows) %}
+<ul class="scm-minutes" id="scm-minutes">
+  {% for row in rows %}
+  <li class="scm-minutes-row">
+    <span class="scm-minutes-name">{{ row.label }}</span>
+    <span class="scm-minutes-total">{{ row.total }}</span>
+    <span class="scm-minutes-groups">GK {{ row.groups.gk }} · DEF {{ row.groups.def }} · MID {{ row.groups.mid }} · FWD {{ row.groups.fwd }}</span>
+  </li>
+  {% else %}
+  <li class="scm-muted">Minutes show up after kickoff.</li>
+  {% endfor %}
+</ul>
+{% endmacro %}

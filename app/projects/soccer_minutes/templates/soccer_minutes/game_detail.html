@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "soccer_minutes/_field.html" import field_pitch %}
+{% from "soccer_minutes/_minutes.html" import minutes_list %}
 
 {% block title %}{{ game.game_date.strftime('%b %d') }} vs {{ game.opponent_name }}{% endblock %}
 
@@ -24,12 +25,23 @@
         <p class="scm-page-subtitle">
           <span id="scm-header-filled">{{ setup.filled }}</span> / <span id="scm-header-size">{{ setup.field_size }}</span> on the field
           &middot; {{ game.period_count }} {{ 'period' if game.period_count == 1 else 'periods' }}
+          {% if setup.phase == 'between' %}
+          &middot; Period {{ setup.current_period }} ended at {{ setup.clock.displayed }}
+          {% elif setup.phase == 'done' %}
+          &middot; Final
+          {% endif %}
         </p>
       </div>
       <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Game settings</a>
     </header>
 
     <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
+
+    {% if setup.next_period %}
+    <button type="button" class="scm-btn scm-btn-primary scm-start-period" id="scm-start-period">
+      Start period {{ setup.next_period }}
+    </button>
+    {% endif %}
 
     <div class="scm-card">
       <div class="scm-card-header">Who is here</div>
@@ -58,9 +70,19 @@
     </div>
 
     <div class="scm-card" id="scm-starting-field">
-      <div class="scm-card-header">Starting field</div>
+      <div class="scm-card-header">
+        {% if setup.phase == 'between' %}
+        Field for period {{ setup.next_period }}
+        {% elif setup.phase == 'done' %}
+        Final field
+        {% else %}
+        Starting field
+        {% endif %}
+      </div>
       <div class="scm-card-body">
+        {% if setup.phase != 'done' %}
         <p class="scm-hint">Tap a bench player, then a slot. Tap two slots to swap. Tap a player then Off to clear.</p>
+        {% endif %}
         <p class="scm-field-status" id="scm-field-status" hidden></p>
         {{ field_pitch(setup.bands) }}
         <p class="scm-field-size"><span id="scm-filled-n">{{ setup.filled }}</span> / {{ setup.field_size }} filled</p>
@@ -80,6 +102,19 @@
         </div>
       </div>
     </div>
+
+    {% if setup.phase != 'setup' %}
+    <div class="scm-card">
+      <div class="scm-card-header">Minutes</div>
+      <div class="scm-card-body">
+        {{ minutes_list(setup.minutes) }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if setup.undo_label %}
+    <button type="button" class="scm-btn scm-btn-secondary" id="scm-undo">{{ setup.undo_label }}</button>
+    {% endif %}
 
   </div>
 </div>

@@ -68,12 +68,20 @@
   }
 
   function applyState(next) {
+    if (next.reload || next.phase === "live") {
+      window.location.reload();
+      return;
+    }
     state.assignments = next.assignments;
     state.bands = next.bands;
     state.bench = next.bench;
     state.attendance = next.attendance;
     state.filled = next.filled;
     state.field_size = next.field_size;
+    state.phase = next.phase;
+    state.locked = next.locked;
+    state.undo_label = next.undo_label;
+    state.minutes = next.minutes;
     selected = null;
     render();
   }
@@ -408,6 +416,43 @@
 
   if (offButton) {
     offButton.addEventListener("click", onSendOff);
+  }
+
+  var startButton = document.getElementById("scm-start-period");
+  var undoButton = document.getElementById("scm-undo");
+
+  function runSetupAction(url) {
+    if (saving) {
+      return;
+    }
+    saving = true;
+    showStatus("Saving…");
+    postJson(url, {})
+      .then(function (data) {
+        saving = false;
+        if (!data.ok) {
+          showStatus(data.error || "Could not save. Try again.", true);
+          return;
+        }
+        applyState(data);
+        showStatus("");
+      })
+      .catch(function () {
+        saving = false;
+        showStatus("Could not save. Check your connection.", true);
+      });
+  }
+
+  if (startButton) {
+    startButton.addEventListener("click", function () {
+      runSetupAction(state.startUrl);
+    });
+  }
+
+  if (undoButton) {
+    undoButton.addEventListener("click", function () {
+      runSetupAction(state.undoUrl);
+    });
   }
 
   render();

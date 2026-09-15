@@ -35,8 +35,8 @@ def present_player_ids(players, entries_by_player):
     }
 
 
-def sanitize_assignments(formation, assignments, present_ids):
-    """Keep one present player per valid slot; drop the rest."""
+def coerce_assignment_map(formation, assignments):
+    """Keep one player per valid slot. Does not filter by attendance."""
     valid_keys = {slot["key"] for slot in normalize_formation(formation)["slots"]}
     clean = {}
     used = set()
@@ -50,11 +50,72 @@ def sanitize_assignments(formation, assignments, present_ids):
             player_id = int(raw_id)
         except (TypeError, ValueError):
             continue
-        if player_id not in present_ids or player_id in used:
+        if player_id in used:
             continue
         clean[key] = player_id
         used.add(player_id)
     return clean
+
+
+def sanitize_assignments(formation, assignments, present_ids):
+    """Keep one present player per valid slot; drop the rest."""
+    clean = {}
+    for key, player_id in coerce_assignment_map(formation, assignments).items():
+        if player_id in present_ids:
+            clean[key] = player_id
+    return clean
+
+
+def assignment_view(formation, assignments, players, present_ids, live_assignments=None):
+    """Pitch bands + bench for a field map. Marks slots that differ from live."""
+    formation = normalize_formation(formation)
+    assignments = sanitize_assignments(formation, assignments, present_ids)
+    compare = live_assignments is not None
+    live_map = coerce_assignment_map(formation, live_assignments or {})
+    players_by_id = {player.id: player for player in players}
+    assigned_ids = set(assignments.values())
+    bands = []
+    for band in pitch_bands(formation):
+        slots = []
+        for slot in band["slots"]:
+            player_id = assignments.get(slot["key"])
+            player = players_by_id.get(player_id)
+            live_id = live_map.get(slot["key"])
+            changed = compare and player_id != live_id
+            emptied = compare and bool(live_id) and not player_id
+            slots.append(
+                {
+                    "key": slot["key"],
+                    "name": slot["name"],
+                    "player_id": player_id,
+                    "player_label": player_chip_label(player),
+                    "changed": changed,
+                    "emptied": emptied,
+                }
+            )
+        bands.append(
+            {
+                "group": band["group"],
+                "label": band["label"],
+                "slots": slots,
+            }
+        )
+    bench = [
+        {
+            "id": player.id,
+            "label": player_chip_label(player),
+            "full_name": player.full_name,
+        }
+        for player in players
+        if player.id in present_ids and player.id not in assigned_ids
+    ]
+    return {
+        "assignments": assignments,
+        "bands": bands,
+        "bench": bench,
+        "field_size": len(formation["slots"]),
+        "filled": len(assignments),
+    }
 
 
 def set_player_present(game, player, present):
@@ -150,40 +211,7 @@ def setup_state(team, game):
     entries = roster_entries_by_player(game)
     present_ids = present_player_ids(players, entries)
     formation = normalize_formation(game.formation)
-    assignments = sanitize_assignments(
-        formation, game.draft_assignments, present_ids
-    )
-    assigned_ids = set(assignments.values())
-    bands = []
-    for band in pitch_bands(formation):
-        slots = []
-        for slot in band["slots"]:
-            player_id = assignments.get(slot["key"])
-            player = next((item for item in players if item.id == player_id), None)
-            slots.append(
-                {
-                    "key": slot["key"],
-                    "name": slot["name"],
-                    "player_id": player_id,
-                    "player_label": player_chip_label(player),
-                }
-            )
-        bands.append(
-            {
-                "group": band["group"],
-                "label": band["label"],
-                "slots": slots,
-            }
-        )
-    bench = [
-        {
-            "id": player.id,
-            "label": player_chip_label(player),
-            "full_name": player.full_name,
-        }
-        for player in players
-        if player.id in present_ids and player.id not in assigned_ids
-    ]
+    view = assignment_view(formation, game.draft_assignments, players, present_ids)
     attendance = [
         {
             "id": player.id,
@@ -194,11 +222,11 @@ def setup_state(team, game):
         for player in players
     ]
     return {
-        "assignments": assignments,
-        "bands": bands,
-        "bench": bench,
+        "assignments": view["assignments"],
+        "bands": view["bands"],
+        "bench": view["bench"],
         "attendance": attendance,
-        "field_size": len(formation["slots"]),
-        "filled": len(assignments),
+        "field_size": view["field_size"],
+        "filled": view["filled"],
         "locked": game_has_kickoff(game),
     }

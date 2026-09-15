@@ -554,6 +554,175 @@ button.scm-field-slot {
   margin: 0;
 }
 
+.scm-start-period {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+body.scm-live-body .footer {
+  display: none;
+}
+
+body.scm-live-body .main-content {
+  padding-top: 16px;
+  padding-bottom: 32px;
+}
+
+.scm-live-page .scm-breadcrumb {
+  margin-bottom: 8px;
+}
+
+.scm-clock-bar {
+  background: var(--scm-surface);
+  border: 1px solid var(--scm-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--scm-shadow);
+  position: sticky;
+  top: 8px;
+  z-index: 4;
+}
+
+.scm-clock-period {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--scm-text-muted);
+  font-size: 14px;
+}
+
+.scm-clock-time {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 2.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.scm-clock-actions,
+.scm-go-actions,
+.scm-set-clock-row {
+  display: flex;
+  gap: 8px;
+}
+
+.scm-clock-actions .scm-btn,
+.scm-go-actions .scm-btn,
+.scm-set-clock-row .scm-btn {
+  flex: 1;
+}
+
+.scm-set-clock {
+  margin-top: 12px;
+}
+
+.scm-set-clock .scm-label {
+  margin-bottom: 6px;
+}
+
+.scm-set-clock-row .scm-input {
+  flex: 1;
+}
+
+.scm-go-actions {
+  margin-top: 14px;
+}
+
+.scm-go-confirm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--scm-border);
+}
+
+.scm-go-confirm .scm-btn-secondary {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.scm-diff {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: #fff8e1;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.scm-diff li {
+  margin: 0 0 4px;
+}
+
+.scm-diff li:last-child {
+  margin-bottom: 0;
+}
+
+.scm-warnings {
+  margin: 8px 0 0;
+  color: var(--scm-danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scm-slot-changed {
+  background: #fff3bf;
+}
+
+.scm-slot-emptied {
+  box-shadow: inset 0 0 0 2px var(--scm-danger);
+}
+
+.scm-minutes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scm-minutes-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--scm-border);
+}
+
+.scm-minutes-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scm-minutes-name {
+  font-weight: 700;
+}
+
+.scm-minutes-total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.scm-minutes-groups {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--scm-text-muted);
+}
+
+.scm-live-settings {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+.scm-live-settings a {
+  color: var(--scm-accent);
+  font-weight: 600;
+}
+
+#scm-undo {
+  width: 100%;
+  margin-top: 8px;
+}
+
 @media (min-width: 600px) {
   .scm-page-header-row {
     flex-direction: row;

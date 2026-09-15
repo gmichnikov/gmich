@@ -39,7 +39,7 @@
         {% endif %}
     </head>
 
-    <body>
+    <body{% block body_attrs %}{% endblock %}>
         <nav class="navbar">
             <div class="nav-container">
                 <a href="{{ url_for('main.index') }}" class="nav-logo">gregmichnikov.com</a>
