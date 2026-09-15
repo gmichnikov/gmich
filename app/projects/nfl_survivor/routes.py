@@ -39,6 +39,7 @@ from app.projects.nfl_survivor.utils import (
     get_current_pick_week,
     get_user_entries,
     is_join_open,
+    is_week_picks_revealed,
     is_pick_correct,
     is_scheduled_spreads_day,
     is_team_kickoff_locked,
@@ -599,7 +600,10 @@ def view_picks():
     )
 
     all_picks = {}
-    for week in range(1, current_week):
+    last_possible = min(max(current_week, 1), season.max_weeks)
+    for week in range(1, last_possible + 1):
+        if not is_week_picks_revealed(season, week):
+            continue
         all_picks[week] = {}
         picks_for_week = NflSurvivorPick.query.filter_by(
             season_id=season.id, week=week
@@ -769,7 +773,13 @@ def admin_view_picks():
         team_name = (
             team_lookup.get(pick.team, "Not Picked") if pick else "Not Picked"
         )
-        picks.append((participant.display_name, team_name))
+        picks.append(
+            {
+                "name": participant.display_name,
+                "team_name": team_name,
+                "is_correct": pick.is_correct if pick else None,
+            }
+        )
 
     ctx = _season_context(season)
     return render_template(
@@ -1007,16 +1017,20 @@ def admin_view_all_picks():
     picks = NflSurvivorPick.query.filter_by(season_id=season.id).all()
 
     picks_by_entry = {
-        p.display_name: {week: "" for week in range(1, season.max_weeks + 1)}
+        p.display_name: {
+            week: {"team": "", "is_correct": None}
+            for week in range(1, season.max_weeks + 1)
+        }
         for p in participants
     }
     for pick in picks:
         participant = pick.participant
         if participant.display_name not in picks_by_entry:
             continue
-        picks_by_entry[participant.display_name][pick.week] = team_lookup.get(
-            pick.team, pick.team
-        )
+        picks_by_entry[participant.display_name][pick.week] = {
+            "team": team_lookup.get(pick.team, pick.team),
+            "is_correct": pick.is_correct,
+        }
 
     ctx = _season_context(season)
     return render_template(

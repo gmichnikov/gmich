@@ -8,7 +8,7 @@
   <table class="ns-admin-table">
     <thead>
       <tr>
-        <th>Player</th>
+        <th class="ns-col-text">Player</th>
         {% for week in range(1, max_weeks + 1) %}
         <th>W{{ week }}</th>
         {% endfor %}
@@ -17,9 +17,12 @@
     <tbody>
       {% for username, picks in picks_by_user.items() %}
       <tr>
-        <td>{{ username }}</td>
+        <td class="ns-col-text">{{ username }}</td>
         {% for week in range(1, max_weeks + 1) %}
-        <td>{{ picks[week] }}</td>
+        {% set cell = picks[week] %}
+        <td class="{% if cell.is_correct is true %}ns-correct{% elif cell.is_correct is false %}ns-incorrect{% endif %}">
+          {{ cell.team }}
+        </td>
         {% endfor %}
       </tr>
       {% endfor %}

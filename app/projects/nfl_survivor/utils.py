@@ -1,7 +1,7 @@
 """NFL Survivor helpers: teams, week math, display names."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from pathlib import Path
 
 import pytz
@@ -71,6 +71,24 @@ def get_week_pick_lock_time(season, week):
     if week < 1:
         raise ValueError("week must be >= 1")
     return anchor + timedelta(days=(week - 1) * 7)
+
+
+def get_week_picks_reveal_time(season, week):
+    """Monday 8:30pm ET before the Tuesday that ends this pick week."""
+    tuesday = get_week_pick_lock_time(season, week)
+    eastern_tue = _to_eastern(tuesday)
+    monday_date = eastern_tue.date() - timedelta(days=eastern_tue.weekday())
+    return EASTERN.localize(datetime.combine(monday_date, time(20, 30)))
+
+
+def is_week_picks_revealed(season, week, when=None):
+    if when is None:
+        when = datetime.now(EASTERN)
+    elif when.tzinfo is None:
+        when = EASTERN.localize(when)
+    else:
+        when = when.astimezone(EASTERN)
+    return when >= get_week_picks_reveal_time(season, week)
 
 
 def is_week_pickable(season, week):

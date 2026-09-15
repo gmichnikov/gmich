@@ -18,10 +18,12 @@
       </tr>
     </thead>
     <tbody>
-      {% for name, team_name in picks %}
-      <tr data-ns-player="{{ name }}" data-ns-pick="{{ team_name }}">
-        <td class="ns-col-text">{{ name }}</td>
-        <td class="ns-col-text">{{ team_name }}</td>
+      {% for row in picks %}
+      <tr data-ns-player="{{ row.name }}" data-ns-pick="{{ row.team_name }}">
+        <td class="ns-col-text">{{ row.name }}</td>
+        <td class="ns-col-text{% if row.is_correct is true %} ns-correct{% elif row.is_correct is false %} ns-incorrect{% endif %}">
+          {{ row.team_name }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
