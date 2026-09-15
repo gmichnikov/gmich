@@ -135,6 +135,7 @@ def create_app():
     from app.projects.nfl_survivor import nfl_survivor_bp
     from app.projects.nfl_survivor_setup.routes import nfl_survivor_setup_bp
     from app.projects.baseball_lineup.routes import baseball_lineup_bp
+    from app.projects.soccer_minutes.routes import soccer_minutes_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -204,6 +205,7 @@ def create_app():
     app.register_blueprint(nfl_survivor_bp, url_prefix="/nfl-survivor")
     app.register_blueprint(nfl_survivor_setup_bp, url_prefix="/nfl-survivor-setup")
     app.register_blueprint(baseball_lineup_bp)
+    app.register_blueprint(soccer_minutes_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry

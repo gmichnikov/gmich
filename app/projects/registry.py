@@ -371,6 +371,17 @@ PROJECTS = [
         "order": 32,
     },
     {
+        "id": "soccer_minutes",
+        "name": "Soccer Minutes",
+        "description": "Youth soccer roster, formation, substitutions, and minutes by position",
+        "url": "/soccer-minutes",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "⚽",
+        "order": 33,
+    },
+    {
         "id": "better_signups",
         "name": "Better Signups",
         "description": "Create and manage signup lists for events and items",

@@ -1,0 +1,49 @@
+/* Soccer Minutes — all classes prefixed scm- */
+
+:root {
+  --scm-bg: #eef3ea;
+  --scm-surface: #ffffff;
+  --scm-border: #d5ddd0;
+  --scm-text: #1a2e1a;
+  --scm-text-muted: #4a5c48;
+  --scm-accent: #2d6a4f;
+}
+
+.scm-page {
+  background: var(--scm-bg);
+  color: var(--scm-text);
+  min-height: calc(100vh - 140px);
+  margin: -40px -20px 0 -20px;
+  padding: 32px 20px 48px;
+}
+
+.scm-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.scm-page-header {
+  margin-bottom: 24px;
+}
+
+.scm-page-title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+}
+
+.scm-page-subtitle {
+  margin: 0;
+  color: var(--scm-text-muted);
+}
+
+.scm-empty {
+  background: var(--scm-surface);
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  padding: 24px;
+  color: var(--scm-text-muted);
+}
+
+.scm-empty p {
+  margin: 0;
+}

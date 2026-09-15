@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Soccer Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <header class="scm-page-header">
+      <h1 class="scm-page-title">Soccer Minutes</h1>
+      <p class="scm-page-subtitle">Track who played where and for how long.</p>
+    </header>
+
+    <div class="scm-empty">
+      <p>No teams yet. This project is a skeleton &mdash; roster, formation, and games come next.</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
