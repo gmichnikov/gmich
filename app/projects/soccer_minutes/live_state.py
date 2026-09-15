@@ -190,6 +190,7 @@ def minutes_rows(stints, players, formation, present_ids):
             {
                 "id": player.id,
                 "label": player_chip_label(player),
+                "first_name": player.first_name,
                 "full_name": player.full_name,
                 "total_ms": total,
                 "total": format_ms(total),
@@ -284,6 +285,47 @@ def field_diff(live, pending, formation, players_by_id):
     return lines, warnings
 
 
+def current_spells(events, formation, period, live_assignments, present_ids):
+    """When each present player last entered their current live role this period."""
+    on_field = {}
+    on_bench = {}
+    for event in events:
+        if event.period != period:
+            continue
+        if event.type not in ("period_start", "field_set"):
+            continue
+        field = event_assignments(event, formation)
+        at_ms = int(event.at_ms or 0)
+        now_on = set(field.values())
+        for player_id in list(on_field):
+            if player_id not in now_on:
+                del on_field[player_id]
+                on_bench[player_id] = at_ms
+        for player_id in now_on:
+            if player_id not in on_field:
+                on_field[player_id] = at_ms
+                on_bench.pop(player_id, None)
+        if event.type == "period_start":
+            for player_id in present_ids:
+                if player_id not in on_field:
+                    on_bench.setdefault(player_id, 0)
+
+    live_ids = set(live_assignments.values()) if live_assignments else set()
+    spells = {}
+    for player_id in present_ids:
+        if player_id in live_ids:
+            spells[player_id] = {
+                "on_field": True,
+                "since_ms": int(on_field.get(player_id, 0)),
+            }
+        else:
+            spells[player_id] = {
+                "on_field": False,
+                "since_ms": int(on_bench.get(player_id, 0)),
+            }
+    return spells
+
+
 def pending_map(game, live, formation, present_ids):
     if game.pending_assignments is None:
         return dict(live)
@@ -343,6 +385,11 @@ def live_payload(team, game, now=None, urls=None):
         "warnings": warnings,
         "can_go": can_go,
         "minutes": minutes_rows(stints, players, formation, present_ids),
+        "spells": current_spells(
+            events, formation, period, live, present_ids
+        )
+        if phase == "live"
+        else {},
         "undo_label": UNDO_LABELS.get(last.type) if last else None,
         "locked": phase not in ("setup", "between"),
     }

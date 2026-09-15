@@ -1,4 +1,7 @@
+from types import SimpleNamespace
+
 from app.projects.soccer_minutes.field_state import (
+    assignment_view,
     drop_player_from_assignments,
     sanitize_assignments,
 )
@@ -43,3 +46,26 @@ def test_event_mentions_player():
     assert event_mentions_player(event, 4)
     assert not event_mentions_player(event, 2)
     assert not event_mentions_player(SimpleNamespace(payload={}), 4)
+
+
+def _view_player(pid, first, last="X", jersey=None):
+    return SimpleNamespace(
+        id=pid,
+        first_name=first,
+        last_name=last,
+        jersey_number=jersey,
+        full_name=f"{first} {last}",
+    )
+
+
+def test_bench_sorted_by_first_name():
+    formation = default_formation()
+    players = [
+        _view_player(1, "Zoe"),
+        _view_player(2, "amy"),
+        _view_player(3, "Ben"),
+        _view_player(4, "Amy", "Z"),
+    ]
+    view = assignment_view(formation, {"gk": 3}, players, {1, 2, 3, 4})
+    assert [person["first_name"] for person in view["bench"]] == ["amy", "Amy", "Zoe"]
+    assert [person["id"] for person in view["bench"]] == [2, 4, 1]

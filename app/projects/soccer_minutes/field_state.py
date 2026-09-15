@@ -100,15 +100,23 @@ def assignment_view(formation, assignments, players, present_ids, live_assignmen
                 "slots": slots,
             }
         )
-    bench = [
-        {
-            "id": player.id,
-            "label": player_chip_label(player),
-            "full_name": player.full_name,
-        }
-        for player in players
-        if player.id in present_ids and player.id not in assigned_ids
-    ]
+    bench = sorted(
+        [
+            {
+                "id": player.id,
+                "label": player_chip_label(player),
+                "first_name": player.first_name,
+                "full_name": player.full_name,
+            }
+            for player in players
+            if player.id in present_ids and player.id not in assigned_ids
+        ],
+        key=lambda item: (
+            item["first_name"].lower(),
+            item["full_name"].lower(),
+            item["id"],
+        ),
+    )
     return {
         "assignments": assignments,
         "bands": bands,

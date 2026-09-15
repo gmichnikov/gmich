@@ -110,7 +110,7 @@
     <div class="scm-card">
       <div class="scm-card-header">Minutes</div>
       <div class="scm-card-body">
-        {{ minutes_list(setup.minutes) }}
+        {{ minutes_list(setup.minutes, sortable=True) }}
       </div>
     </div>
     {% endif %}
@@ -126,4 +126,5 @@
 {% block scripts %}
 <script type="application/json" id="scm-game-state">{{ setup | tojson }}</script>
 <script src="{{ url_for('soccer_minutes.static', filename='game_setup.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='minutes_sort.js') }}"></script>
 {% endblock %}

@@ -10,6 +10,7 @@ from app.projects.soccer_minutes.formation_config import default_formation
 from app.projects.soccer_minutes.live_state import (
     assignments_equal,
     compute_stints,
+    current_spells,
     field_diff,
     game_phase,
     max_event_at_ms,
@@ -219,6 +220,31 @@ def test_minutes_rows_omit_absent_and_format():
     assert rows[0]["groups_ms"]["gk"] + rows[0]["groups_ms"]["def"] + rows[0]["groups_ms"]["mid"] + rows[0]["groups_ms"]["fwd"] == rows[0]["total_ms"]
     assert rows[0]["slots"][0]["name"] == "GK"
     assert rows[0]["slots"][0]["time"] == "1:00"
+    assert rows[0]["first_name"] == "Sam"
+
+
+def test_current_spells_start_xi_and_sub():
+    formation = default_formation()
+    start_map = {"gk": 1, "fwd_0": 2}
+    present = {1, 2, 3}
+    start = _event("period_start", 1, 0, start_map, 1)
+    spells = current_spells([start], formation, 1, start_map, present)
+    assert spells[1] == {"on_field": True, "since_ms": 0}
+    assert spells[2] == {"on_field": True, "since_ms": 0}
+    assert spells[3] == {"on_field": False, "since_ms": 0}
+
+    after = {"gk": 1, "fwd_0": 3}
+    go = _event("field_set", 1, 8 * 60 * 1000, after, 2)
+    spells = current_spells([start, go], formation, 1, after, present)
+    assert spells[1] == {"on_field": True, "since_ms": 0}
+    assert spells[2] == {"on_field": False, "since_ms": 8 * 60 * 1000}
+    assert spells[3] == {"on_field": True, "since_ms": 8 * 60 * 1000}
+
+    period2 = _event("period_start", 2, 0, after, 3)
+    spells = current_spells([start, go, period2], formation, 2, after, present)
+    assert spells[1] == {"on_field": True, "since_ms": 0}
+    assert spells[3] == {"on_field": True, "since_ms": 0}
+    assert spells[2] == {"on_field": False, "since_ms": 0}
 
 
 def test_group_and_slot_minutes_sum_to_total():

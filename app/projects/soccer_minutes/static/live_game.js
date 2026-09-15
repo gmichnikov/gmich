@@ -21,6 +21,9 @@
   var warnRoot = document.getElementById("scm-warnings");
   var minutesRoot = document.getElementById("scm-minutes");
   var undoButton = document.getElementById("scm-undo");
+  var fieldTitle = document.getElementById("scm-field-title");
+  var spellsToggle = document.getElementById("scm-toggle-spells");
+  var fieldCard = document.getElementById("scm-pending-field");
   if (!stateNode || !pitchRoot) {
     return;
   }
@@ -30,6 +33,12 @@
   var saving = false;
   var goTimeDirty = false;
   var wakeSentinel = null;
+  var showSpells = false;
+  try {
+    showSpells = localStorage.getItem("scm-show-spells") === "1";
+  } catch (err) {
+    showSpells = false;
+  }
 
   function csrfToken() {
     if (csrfNode && csrfNode.value) {
@@ -100,12 +109,52 @@
     return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
   }
 
+  function spellFor(playerId) {
+    if (!playerId || !showSpells) {
+      return "";
+    }
+    var spells = state.spells || {};
+    var spell = spells[playerId] || spells[String(playerId)];
+    if (!spell) {
+      return "";
+    }
+    var ms = Math.max(0, displayedMs() - (spell.since_ms || 0));
+    return " (" + formatMs(ms) + ")";
+  }
+
+  function syncSpellsToggle() {
+    if (fieldCard) {
+      fieldCard.classList.toggle("scm-show-spells", showSpells);
+    }
+    if (spellsToggle) {
+      spellsToggle.setAttribute("aria-pressed", showSpells ? "true" : "false");
+      spellsToggle.textContent = showSpells ? "Times on" : "Times";
+    }
+  }
+
+  function appendSpell(parent, playerId) {
+    if (!playerId) {
+      return;
+    }
+    var spell = document.createElement("span");
+    spell.className = "scm-spell";
+    spell.setAttribute("data-spell-player", String(playerId));
+    spell.textContent = spellFor(playerId);
+    parent.appendChild(spell);
+  }
+
   function tickClock() {
     if (clockDisplay) {
       clockDisplay.textContent = formatMs(displayedMs());
     }
     if (goClock && goConfirm && !goConfirm.hidden && !goTimeDirty) {
       goClock.value = formatMs(displayedMs());
+    }
+    if (showSpells) {
+      document.querySelectorAll("[data-spell-player]").forEach(function (node) {
+        var playerId = parseInt(node.getAttribute("data-spell-player"), 10);
+        node.textContent = spellFor(playerId);
+      });
     }
   }
 
@@ -250,7 +299,8 @@
         pos.textContent = slot.name;
         var who = document.createElement("span");
         who.className = "scm-slot-who";
-        who.textContent = slot.player_label || "—";
+        who.appendChild(document.createTextNode(slot.player_label || "—"));
+        appendSpell(who, slot.player_id);
         btn.appendChild(pos);
         btn.appendChild(who);
         if (
@@ -272,7 +322,19 @@
     if (!benchRoot) {
       return;
     }
-    var bench = (state.pending && state.pending.bench) || [];
+    var bench = ((state.pending && state.pending.bench) || []).slice().sort(function (a, b) {
+      var byName = (a.first_name || "").localeCompare(b.first_name || "", undefined, {
+        sensitivity: "base",
+      });
+      if (byName) {
+        return byName;
+      }
+      return (a.full_name || a.label || "").localeCompare(
+        b.full_name || b.label || "",
+        undefined,
+        { sensitivity: "base" }
+      );
+    });
     benchRoot.innerHTML = "";
     if (!bench.length) {
       var empty = document.createElement("p");
@@ -286,7 +348,8 @@
       chip.type = "button";
       chip.className = "scm-bench-chip";
       chip.setAttribute("data-player-id", String(person.id));
-      chip.textContent = person.label;
+      chip.appendChild(document.createTextNode(person.label));
+      appendSpell(chip, person.id);
       if (
         selected &&
         selected.kind === "bench" &&
@@ -324,6 +387,8 @@
     (state.minutes || []).forEach(function (row) {
       var li = document.createElement("li");
       li.className = "scm-minutes-row";
+      li.setAttribute("data-name", row.first_name || row.label || "");
+      li.setAttribute("data-ms", String(row.total_ms || 0));
       var name = document.createElement("span");
       name.className = "scm-minutes-name";
       name.textContent = row.label;
@@ -346,6 +411,9 @@
       li.appendChild(groups);
       minutesRoot.appendChild(li);
     });
+    if (typeof window.scmSortMinutes === "function") {
+      window.scmSortMinutes();
+    }
   }
 
   function render() {
@@ -353,6 +421,10 @@
     renderBench();
     renderDiff();
     renderMinutes();
+    if (fieldTitle) {
+      fieldTitle.textContent = state.can_go ? "Pending field" : "Field";
+    }
+    syncSpellsToggle();
     if (clockPeriod) {
       clockPeriod.textContent =
         "Period " + state.current_period + " of " + state.period_count;
@@ -547,6 +619,19 @@
   if (undoButton) {
     undoButton.addEventListener("click", function () {
       runAction(state.undoUrl, {});
+    });
+  }
+
+  if (spellsToggle) {
+    spellsToggle.addEventListener("click", function () {
+      showSpells = !showSpells;
+      try {
+        localStorage.setItem("scm-show-spells", showSpells ? "1" : "0");
+      } catch (err) {
+        /* ignore */
+      }
+      syncSpellsToggle();
+      tickClock();
     });
   }
 

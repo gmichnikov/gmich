@@ -1,7 +1,13 @@
-{% macro minutes_list(rows, show_slots=False) %}
+{% macro minutes_list(rows, show_slots=False, sortable=False) %}
+{% if sortable %}
+<div class="scm-minutes-sort" id="scm-minutes-sort">
+  <button type="button" class="scm-btn scm-btn-secondary scm-btn-small" data-sort="name">Name</button>
+  <button type="button" class="scm-btn scm-btn-secondary scm-btn-small" data-sort="minutes">Minutes</button>
+</div>
+{% endif %}
 <ul class="scm-minutes" id="scm-minutes">
   {% for row in rows %}
-  <li class="scm-minutes-row">
+  <li class="scm-minutes-row" data-name="{{ row.first_name or row.label }}" data-ms="{{ row.total_ms }}">
     <span class="scm-minutes-name">{{ row.label }}</span>
     <span class="scm-minutes-total">{{ row.total }}</span>
     <span class="scm-minutes-groups">GK {{ row.groups.gk }} · DEF {{ row.groups.def }} · MID {{ row.groups.mid }} · FWD {{ row.groups.fwd }}</span>

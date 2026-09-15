@@ -141,21 +141,36 @@
         empty.textContent = "No one on the bench.";
         benchRoot.appendChild(empty);
       } else {
-        state.bench.forEach(function (person) {
-          var chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "scm-bench-chip";
-          chip.setAttribute("data-player-id", String(person.id));
-          chip.textContent = person.label;
-          if (
-            selected &&
-            selected.kind === "bench" &&
-            selected.playerId === person.id
-          ) {
-            chip.classList.add("scm-is-selected");
-          }
-          benchRoot.appendChild(chip);
-        });
+        state.bench
+          .slice()
+          .sort(function (a, b) {
+            var byName = (a.first_name || "").localeCompare(b.first_name || "", undefined, {
+              sensitivity: "base",
+            });
+            if (byName) {
+              return byName;
+            }
+            return (a.full_name || a.label || "").localeCompare(
+              b.full_name || b.label || "",
+              undefined,
+              { sensitivity: "base" }
+            );
+          })
+          .forEach(function (person) {
+            var chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "scm-bench-chip";
+            chip.setAttribute("data-player-id", String(person.id));
+            chip.textContent = person.label;
+            if (
+              selected &&
+              selected.kind === "bench" &&
+              selected.playerId === person.id
+            ) {
+              chip.classList.add("scm-is-selected");
+            }
+            benchRoot.appendChild(chip);
+          });
       }
     }
 

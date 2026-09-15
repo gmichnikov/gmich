@@ -41,7 +41,7 @@
       <div class="scm-card-header">Minutes</div>
       <div class="scm-card-body">
         <p class="scm-hint">Group minutes add up to the on-field total. Slot names are from this game's formation.</p>
-        {{ minutes_list(minutes, show_slots=True) }}
+        {{ minutes_list(minutes, show_slots=True, sortable=True) }}
       </div>
     </div>
 
@@ -94,4 +94,8 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('soccer_minutes.static', filename='minutes_sort.js') }}"></script>
 {% endblock %}

@@ -31,7 +31,10 @@
     </div>
 
     <div class="scm-card" id="scm-pending-field">
-      <div class="scm-card-header">Pending field</div>
+      <div class="scm-card-header scm-card-header-row">
+        <span id="scm-field-title">{% if live.can_go %}Pending field{% else %}Field{% endif %}</span>
+        <button type="button" class="scm-btn scm-btn-secondary scm-btn-small" id="scm-toggle-spells" aria-pressed="false">Times</button>
+      </div>
       <div class="scm-card-body">
         {{ field_pitch(live.pending.bands) }}
         <div class="scm-bench-block">
@@ -75,7 +78,7 @@
     <div class="scm-card">
       <div class="scm-card-header">Minutes</div>
       <div class="scm-card-body">
-        {{ minutes_list(live.minutes) }}
+        {{ minutes_list(live.minutes, sortable=True) }}
       </div>
     </div>
 
@@ -125,4 +128,5 @@
 {% block scripts %}
 <script type="application/json" id="scm-game-state">{{ live | tojson }}</script>
 <script src="{{ url_for('soccer_minutes.static', filename='live_game.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='minutes_sort.js') }}"></script>
 {% endblock %}
