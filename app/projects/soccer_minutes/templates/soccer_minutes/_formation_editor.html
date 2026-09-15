@@ -1,0 +1,71 @@
+{% from "soccer_minutes/_pitch.html" import pitch %}
+
+{% macro formation_editor(period_count, counts, bands, field_size) %}
+<div class="scm-formation" id="scm-formation-editor">
+  <div class="scm-form-group">
+    <label for="scm-period-count" class="scm-label">Periods (halves)</label>
+    <input
+      type="number"
+      id="scm-period-count"
+      name="period_count"
+      class="scm-input"
+      min="1"
+      max="6"
+      value="{{ period_count }}"
+      required
+    >
+  </div>
+
+  <fieldset class="scm-counts">
+    <legend class="scm-label">Outfield shape</legend>
+    <p class="scm-hint">GK is always one. Field size is 1 + these counts.</p>
+    <div class="scm-count-row">
+      <label class="scm-count-field">
+        <span>DEF</span>
+        <input type="number" name="def_count" class="scm-input scm-count-input" min="0" max="8" value="{{ counts.def }}" data-group="def">
+      </label>
+      <label class="scm-count-field">
+        <span>MID</span>
+        <input type="number" name="mid_count" class="scm-input scm-count-input" min="0" max="8" value="{{ counts.mid }}" data-group="mid">
+      </label>
+      <label class="scm-count-field">
+        <span>FWD</span>
+        <input type="number" name="fwd_count" class="scm-input scm-count-input" min="0" max="8" value="{{ counts.fwd }}" data-group="fwd">
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="scm-slot-names" id="scm-slot-names">
+    {% for band in bands %}
+    <div class="scm-slot-group" data-group="{{ band.group }}">
+      <h3 class="scm-slot-group-title">{{ band.label }}</h3>
+      {% if band.slots %}
+        {% for slot in band.slots %}
+        <div class="scm-form-group scm-slot-name-row" data-slot-key="{{ slot.key }}">
+          <label class="scm-label" for="scm-slot-{{ slot.key }}">
+            {% if band.group == 'gk' %}Name{% else %}Left to right {{ loop.index }}{% endif %}
+          </label>
+          <input
+            type="text"
+            id="scm-slot-{{ slot.key }}"
+            name="slot_name_{{ slot.key }}"
+            class="scm-input scm-slot-name-input"
+            maxlength="20"
+            value="{{ slot.name }}"
+            required
+          >
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="scm-muted scm-slot-none">No slots in this line.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="scm-pitch-wrap">
+    <h3 class="scm-slot-group-title">Pitch preview</h3>
+    {{ pitch(bands, field_size) }}
+  </div>
+</div>
+{% endmacro %}

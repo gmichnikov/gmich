@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ player.full_name }} - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; Edit player
+    </p>
+
+    <header class="scm-page-header">
+      <h1 class="scm-page-title">Edit player</h1>
+    </header>
+
+    <form method="post" action="{{ url_for('soccer_minutes.player_update', team_id=team.id, player_id=player.id) }}" class="scm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="scm-form-group">
+        <label for="scm-first-name" class="scm-label">First name</label>
+        <input
+          type="text"
+          id="scm-first-name"
+          name="first_name"
+          class="scm-input"
+          value="{{ player.first_name }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="scm-form-group">
+        <label for="scm-last-name" class="scm-label">Last name</label>
+        <input
+          type="text"
+          id="scm-last-name"
+          name="last_name"
+          class="scm-input"
+          value="{{ player.last_name }}"
+          required
+        >
+      </div>
+
+      <div class="scm-form-group">
+        <label for="scm-jersey" class="scm-label">Jersey number <span class="scm-optional">(optional)</span></label>
+        <input
+          type="text"
+          id="scm-jersey"
+          name="jersey_number"
+          class="scm-input"
+          value="{{ player.jersey_number or '' }}"
+          maxlength="8"
+        >
+      </div>
+
+      <div class="scm-form-actions">
+        <button type="submit" class="scm-btn scm-btn-primary">Save</button>
+        <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}" class="scm-btn scm-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <div class="scm-form-divider"></div>
+
+    <form
+      method="post"
+      action="{{ url_for('soccer_minutes.player_delete', team_id=team.id, player_id=player.id) }}"
+      onsubmit="return confirm('Remove {{ player.full_name }} from the roster?');"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="scm-btn scm-btn-danger">Remove from roster</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

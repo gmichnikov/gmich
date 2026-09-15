@@ -1,0 +1,27 @@
+{% if players %}
+<ul class="scm-roster-list">
+  {% for player in players %}
+  <li class="scm-roster-item">
+    <span class="scm-roster-name">
+      {% if player.jersey_number %}
+      <span class="scm-jersey">{{ player.jersey_number }}</span>
+      {% endif %}
+      {{ player.full_name }}
+    </span>
+    <div class="scm-roster-actions">
+      <form method="post" action="{{ url_for('soccer_minutes.player_move_up', team_id=team.id, player_id=player.id) }}" class="scm-inline-form scm-roster-ajax-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="scm-btn scm-btn-secondary scm-btn-icon" {% if loop.first %}disabled{% endif %} title="Move up">&#x25B2;</button>
+      </form>
+      <form method="post" action="{{ url_for('soccer_minutes.player_move_down', team_id=team.id, player_id=player.id) }}" class="scm-inline-form scm-roster-ajax-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="scm-btn scm-btn-secondary scm-btn-icon" {% if loop.last %}disabled{% endif %} title="Move down">&#x25BC;</button>
+      </form>
+      <a href="{{ url_for('soccer_minutes.player_edit', team_id=team.id, player_id=player.id) }}" class="scm-btn scm-btn-secondary scm-btn-small">Edit</a>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="scm-muted">No players yet. Add your roster above.</p>
+{% endif %}

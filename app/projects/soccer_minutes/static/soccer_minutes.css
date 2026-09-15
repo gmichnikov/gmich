@@ -1,12 +1,20 @@
 /* Soccer Minutes — all classes prefixed scm- */
 
 :root {
-  --scm-bg: #eef3ea;
+  --scm-bg: #e8f0e6;
   --scm-surface: #ffffff;
-  --scm-border: #d5ddd0;
-  --scm-text: #1a2e1a;
+  --scm-surface-muted: #f4f7f3;
+  --scm-border: #cdd9c8;
+  --scm-text: #142414;
   --scm-text-muted: #4a5c48;
-  --scm-accent: #2d6a4f;
+  --scm-accent: #1f6b45;
+  --scm-accent-hover: #155234;
+  --scm-danger: #b91c1c;
+  --scm-danger-hover: #991b1b;
+  --scm-pitch: #2d6a4f;
+  --scm-pitch-line: rgba(255, 255, 255, 0.35);
+  --scm-shadow: 0 1px 3px rgba(20, 36, 20, 0.08);
+  --scm-tap: 44px;
 }
 
 .scm-page {
@@ -14,21 +22,40 @@
   color: var(--scm-text);
   min-height: calc(100vh - 140px);
   margin: -40px -20px 0 -20px;
-  padding: 32px 20px 48px;
+  padding: 24px 16px 48px;
 }
 
 .scm-container {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
 }
 
+.scm-breadcrumb {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--scm-text-muted);
+}
+
+.scm-breadcrumb a {
+  color: var(--scm-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
 .scm-page-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+.scm-page-header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .scm-page-title {
-  margin: 0 0 8px;
-  font-size: 1.75rem;
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  line-height: 1.2;
 }
 
 .scm-page-subtitle {
@@ -36,14 +63,343 @@
   color: var(--scm-text-muted);
 }
 
+.scm-header-actions {
+  margin-bottom: 16px;
+}
+
+.scm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--scm-tap);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.scm-btn-primary {
+  background: var(--scm-accent);
+  color: #fff;
+}
+
+.scm-btn-primary:hover {
+  background: var(--scm-accent-hover);
+}
+
+.scm-btn-secondary {
+  background: var(--scm-surface);
+  color: var(--scm-text);
+  border-color: var(--scm-border);
+}
+
+.scm-btn-danger {
+  background: var(--scm-danger);
+  color: #fff;
+}
+
+.scm-btn-danger:hover {
+  background: var(--scm-danger-hover);
+}
+
+.scm-btn-small,
+.scm-btn-icon {
+  min-height: var(--scm-tap);
+  min-width: var(--scm-tap);
+  padding: 8px 12px;
+}
+
+.scm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scm-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.scm-form-actions .scm-btn {
+  width: 100%;
+}
+
+.scm-form-group {
+  margin-bottom: 14px;
+}
+
+.scm-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.scm-optional {
+  font-weight: 400;
+  color: var(--scm-text-muted);
+}
+
+.scm-input {
+  width: 100%;
+  min-height: var(--scm-tap);
+  padding: 10px 12px;
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: var(--scm-surface);
+  color: var(--scm-text);
+}
+
+.scm-hint,
+.scm-muted,
+.scm-phase-note {
+  color: var(--scm-text-muted);
+  font-size: 14px;
+}
+
 .scm-empty {
   background: var(--scm-surface);
   border: 1px solid var(--scm-border);
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
   color: var(--scm-text-muted);
 }
 
-.scm-empty p {
+.scm-team-list,
+.scm-roster-list {
+  list-style: none;
   margin: 0;
+  padding: 0;
+}
+
+.scm-team-item {
+  margin-bottom: 10px;
+}
+
+.scm-team-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: var(--scm-tap);
+  padding: 12px 14px;
+  background: var(--scm-surface);
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.scm-team-name {
+  font-weight: 700;
+}
+
+.scm-team-meta {
+  color: var(--scm-text-muted);
+  font-size: 14px;
+}
+
+.scm-card {
+  background: var(--scm-surface);
+  border: 1px solid var(--scm-border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--scm-shadow);
+  scroll-margin-top: 12px;
+}
+
+.scm-card-header {
+  padding: 12px 14px;
+  font-weight: 700;
+  background: var(--scm-surface-muted);
+  border-bottom: 1px solid var(--scm-border);
+}
+
+.scm-card-body {
+  padding: 14px;
+}
+
+.scm-roster-status {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--scm-accent);
+}
+
+.scm-roster-status-error {
+  color: var(--scm-danger);
+}
+
+.scm-roster-add {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.scm-roster-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--scm-border);
+}
+
+.scm-roster-name {
+  font-weight: 600;
+  flex: 1 1 140px;
+}
+
+.scm-jersey {
+  display: inline-block;
+  min-width: 1.75rem;
+  margin-right: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--scm-surface-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.scm-roster-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.scm-inline-form {
+  display: inline;
+  margin: 0;
+}
+
+.scm-counts {
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 16px;
+}
+
+.scm-count-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.scm-count-field span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.scm-slot-group {
+  margin-bottom: 16px;
+}
+
+.scm-slot-group-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.scm-form-divider {
+  height: 1px;
+  background: var(--scm-border);
+  margin: 28px 0 16px;
+}
+
+.scm-pitch-wrap {
+  margin-top: 8px;
+}
+
+.scm-pitch {
+  background: var(--scm-pitch);
+  border-radius: 12px;
+  padding: 12px 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scm-pitch-band {
+  border-top: 1px dashed var(--scm-pitch-line);
+  padding-top: 8px;
+}
+
+.scm-pitch-band:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scm-pitch-band-label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.scm-pitch-slots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scm-pitch-slot {
+  min-height: var(--scm-tap);
+  min-width: 64px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--scm-text);
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.scm-pitch-empty {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+}
+
+.scm-field-size {
+  margin: 8px 0 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+@media (min-width: 600px) {
+  .scm-page-header-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .scm-form-actions {
+    flex-direction: row;
+  }
+
+  .scm-form-actions .scm-btn {
+    width: auto;
+  }
+
+  .scm-roster-add {
+    display: grid;
+    grid-template-columns: 1fr 1fr 72px auto;
+    align-items: stretch;
+  }
 }

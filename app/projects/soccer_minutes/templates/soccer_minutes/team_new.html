@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}New team - Soccer Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+    </p>
+
+    <header class="scm-page-header">
+      <h1 class="scm-page-title">New team</h1>
+      <p class="scm-page-subtitle">Starts as 7v7 (2-3-1) with two periods. You can change that next.</p>
+    </header>
+
+    <form method="post" action="{{ url_for('soccer_minutes.team_create') }}" class="scm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="scm-form-group">
+        <label for="scm-team-name" class="scm-label">Team name</label>
+        <input
+          type="text"
+          id="scm-team-name"
+          name="name"
+          class="scm-input"
+          placeholder="e.g. 9U United"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="scm-form-group">
+        <label for="scm-season-label" class="scm-label">Season <span class="scm-optional">(optional)</span></label>
+        <input
+          type="text"
+          id="scm-season-label"
+          name="season_label"
+          class="scm-input"
+          placeholder="e.g. Fall 2026"
+        >
+      </div>
+
+      <div class="scm-form-actions">
+        <button type="submit" class="scm-btn scm-btn-primary">Create team</button>
+        <a href="{{ url_for('soccer_minutes.index') }}" class="scm-btn scm-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

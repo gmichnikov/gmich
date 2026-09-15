@@ -10,6 +10,7 @@ from app import db
 from app.models import LogEntry, User
 from app.projects.ask_many_llms.models import LLMQuestion
 from app.projects.baseball_lineup.models import BluTeam
+from app.projects.soccer_minutes.models import ScmTeam
 from app.projects.basketball_tracker.models import BasketballGame, BasketballTeam
 from app.projects.betfake.models import BetfakeAccount, BetfakeBet, BetfakeTransaction
 from app.projects.better_signups.models import (
@@ -92,6 +93,7 @@ _PROJECT_USER_COLUMNS = (
     ("Basketball team", BasketballTeam.user_id),
     ("Basketball game", BasketballGame.user_id),
     ("Baseball lineup team", BluTeam.user_id),
+    ("Soccer minutes team", ScmTeam.user_id),
     ("Football squares", FootballSquaresGrid.user_id),
     ("NFL Survivor", NflSurvivorParticipant.user_id),
     ("Sports saved query", SportsScheduleSavedQuery.user_id),

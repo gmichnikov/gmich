@@ -1,0 +1,17 @@
+{% macro pitch(bands, field_size) %}
+<div class="scm-pitch" aria-label="Formation preview, {{ field_size }} on the field">
+  {% for band in bands %}
+  <div class="scm-pitch-band scm-pitch-band-{{ band.group }}" data-group="{{ band.group }}">
+    <span class="scm-pitch-band-label">{{ band.label }}</span>
+    <div class="scm-pitch-slots">
+      {% for slot in band.slots %}
+      <span class="scm-pitch-slot" data-slot-key="{{ slot.key }}">{{ slot.name }}</span>
+      {% else %}
+      <span class="scm-pitch-empty">None</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<p class="scm-field-size"><span class="scm-field-size-n">{{ field_size }}</span> on the field</p>
+{% endmacro %}

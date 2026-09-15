@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "soccer_minutes/_pitch.html" import pitch %}
+
+{% block title %}{{ team.display_name }} - Soccer Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo; {{ team.display_name }}
+    </p>
+
+    <header class="scm-page-header scm-page-header-row">
+      <div>
+        <h1 class="scm-page-title">{{ team.display_name }}</h1>
+        <p class="scm-page-subtitle">
+          {{ formation_field_size }} on the field
+          &middot; {{ formation_period_count }} {{ 'period' if formation_period_count == 1 else 'periods' }}
+        </p>
+      </div>
+      <a href="{{ url_for('soccer_minutes.team_edit', team_id=team.id) }}" class="scm-btn scm-btn-secondary">Team settings</a>
+    </header>
+
+    <div class="scm-card">
+      <div class="scm-card-header">Formation</div>
+      <div class="scm-card-body">
+        {{ pitch(formation_bands, formation_field_size) }}
+      </div>
+    </div>
+
+    <div class="scm-card" id="scm-roster">
+      <div class="scm-card-header">Roster</div>
+      <div class="scm-card-body">
+
+        <form method="post" action="{{ url_for('soccer_minutes.player_create', team_id=team.id) }}" class="scm-roster-add scm-roster-ajax-form" id="scm-roster-add">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="first_name" class="scm-input" placeholder="First name" required autocomplete="given-name">
+          <input type="text" name="last_name" class="scm-input" placeholder="Last name" required autocomplete="family-name">
+          <input type="text" name="jersey_number" class="scm-input scm-input-jersey" placeholder="#" maxlength="8" inputmode="text" autocomplete="off">
+          <button type="submit" class="scm-btn scm-btn-primary">Add player</button>
+        </form>
+
+        <p class="scm-roster-status" id="scm-roster-status" hidden></p>
+        <div id="scm-roster-list">
+          {% include "soccer_minutes/_roster_list.html" %}
+        </div>
+
+      </div>
+    </div>
+
+    <p class="scm-muted scm-phase-note">Games come next &mdash; this phase is teams, roster, and formation only.</p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('soccer_minutes.static', filename='soccer_minutes.js') }}"></script>
+{% endblock %}

@@ -8,6 +8,8 @@
 
 **Design principle:** *Record what happened, don't coach for you.* Commercial apps (Pitch Planner, FairSub, SubTime, SubAssist) add auto-rotations, fairness engines, parent reports, and suggested next subs. This app does not. It remembers the field, stamps the time, and shows quiet minute totals.
 
+**Primary device:** A phone in portrait on the sideline. Every screen must be usable there (large tap targets, no hover-only controls). Roster and formation *can* be done on a laptop; they still have to work on a phone. The live game screen is designed for one-handed-ish use at the field, not a spreadsheet.
+
 A **team** means one squad in one season (e.g. “9U United — Fall 2026”). Next season is a new team. Greg has both a **9v9** and a **7v7** team; each team sets its own field size via formation counts.
 
 ### Example (7v7, formation 2-3-1)
@@ -47,7 +49,7 @@ Field slots: GK, LB, RB, LM, CM, RM, ST. Roster of 11. Game is two halves of wha
 | **Save workflow** | Every live action (Start, Pause, Resume, End, Go, **each pending gesture**, Reset, set-clock) saves immediately to the server. Pending is not minutes until Go. If a save fails (no signal, session dead), show a clear error and do not pretend it worked. Undo last **event**. |
 | **Export / display** | Viewable in app only. No print / PDF / CSV in v1. |
 | **Copy last starting XI** | Not v1. |
-| **Device** | **Phone-first** live game screen (large tap targets, portrait). While the page is **visible** and the clock is running, request screen wake-lock so it does not dim in your hand. Wake-lock does nothing in a pocket (screen is already off); that is fine. Roster / formation setup can be a laptop. **No offline mode in v1** — needs a network to save. |
+| **Device** | **Mobile-first, portrait phone.** Live game is the critical screen. Team/roster/formation/recap must work on a phone too; laptop is optional for setup. Large tap targets (min 44px). No hover-only UI. Wake-lock while the live page is visible and the clock is running. **No offline mode in v1.** |
 | **Related tools considered** | Pitch Planner, FairSub, SubTime, SubAssist, and similar. Copied: pauseable clock, pitch + recap, undo. **Not** copied: commit-on-tap or “re-enter the whole XI.” We edit a pending copy, then Go. Skipped: see §8. |
 
 ---
@@ -252,7 +254,19 @@ Season totals: same sums across all games on that team. Slot names can differ ac
 
 ---
 
-## 8. Non-goals (v1)
+## 8. UI / mobile-first
+
+- **All pages** (not only the live game) are laid out for a portrait phone first, then fine on a laptop. Do not design a wide desktop grid and squeeze it.
+- Touch targets at least **44px** tall. Pitch slots and bench names are tappable, not tiny labels.
+- Hub chrome should not steal the live screen; keep it minimal there.
+- Pending vs live must be obvious at a glance (highlight diffs, not a second tiny pitch).
+- No hover-only actions, no drag-and-drop as the only way to move a player (tap-tap is the gesture).
+- CSS classes use the `scm-` prefix.
+- Live actions: vanilla JS, AJAX, no full page reload on Go / pause / pending edits.
+
+---
+
+## 9. Non-goals (v1)
 
 - Auto-rotation / “sub every 8 minutes”
 - Fairness engine, targets (40/50/60%), color bars, suggested next sub
@@ -271,7 +285,7 @@ Season totals: same sums across all games on that team. Slot names can differ ac
 
 ---
 
-## 9. Technical notes
+## 10. Technical notes
 
 - **Stack:** Flask, Postgres, existing hub auth. Vanilla JS on the live screen (no React). AJAX for live actions so the page does not reload on every sub.
 - **Tables:** `scm_*` prefix. **CSS:** `scm-` class prefix. **URL:** `/soccer-minutes`.
@@ -287,7 +301,7 @@ Season totals: same sums across all games on that team. Slot names can differ ac
 
 ---
 
-## 10. Implementation phases
+## 11. Implementation phases
 
 Each phase ends at a manually testable point. **Stop after each phase.**
 
@@ -302,7 +316,7 @@ Each phase ends at a manually testable point. **Stop after each phase.**
 - Team CRUD, including the formation editor (§4.3) and pitch preview.
 - Roster CRUD with jersey numbers, reorder, and delete confirmation.
 
-**Manual test:** Create “9U United / Fall 2026”, change formation to 3 DEF / 3 MID / 2 FWD, name the slots (LB, CB, RB, LM, CM, RM, ST, ST2 or LW/ST/RW), confirm the pitch shows four bands with those names. Create a second team as 7v7 2-3-1. Add players with and without jersey numbers, reorder two, delete one.
+**Manual test:** On a narrow phone-width viewport (and a laptop is fine too): create “9U United / Fall 2026”, change formation to 3 DEF / 3 MID / 2 FWD, name the slots (LB, CB, RB, LM, CM, RM, ST, ST2 or LW/ST/RW), confirm the pitch shows four bands with those names. Create a second team as 7v7 2-3-1. Add players with and without jersey numbers, reorder two, delete one.
 
 ### Phase 2 — Games, attendance, starting field
 

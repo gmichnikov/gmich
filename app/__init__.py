@@ -309,6 +309,13 @@ def create_app():
         BluGameRosterEntry,
         BluLineupCell,
     )
+    from app.projects.soccer_minutes.models import (
+        ScmTeam,
+        ScmPlayer,
+        ScmGame,
+        ScmGameRosterEntry,
+        ScmEvent,
+    )
     from app.projects.kids_ai.models import (
         KidsAiParent,
         KidsAiChild,

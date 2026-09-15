@@ -15,9 +15,29 @@
       <p class="scm-page-subtitle">Track who played where and for how long.</p>
     </header>
 
-    <div class="scm-empty">
-      <p>No teams yet. This project is a skeleton &mdash; roster, formation, and games come next.</p>
+    <div class="scm-header-actions">
+      <a href="{{ url_for('soccer_minutes.team_new') }}" class="scm-btn scm-btn-primary">New team</a>
     </div>
+
+    {% if teams %}
+    <ul class="scm-team-list">
+      {% for team in teams %}
+      <li class="scm-team-item">
+        <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}" class="scm-team-link">
+          <span class="scm-team-name">{{ team.display_name }}</span>
+          <span class="scm-team-meta">
+            {{ team.players.count() }} {{ 'player' if team.players.count() == 1 else 'players' }}
+            &middot; {{ team.period_count }} {{ 'period' if team.period_count == 1 else 'periods' }}
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="scm-empty">
+      <p>No teams yet. Create one to add a roster and set the formation.</p>
+    </div>
+    {% endif %}
 
   </div>
 </div>
