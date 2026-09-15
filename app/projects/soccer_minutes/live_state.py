@@ -164,6 +164,7 @@ def minutes_rows(stints, players, formation, present_ids):
         if player.id not in present_ids:
             continue
         groups = {group: 0 for group in GROUPS}
+        slot_ms = {}
         total = 0
         for stint in by_id.get(player.id, []):
             dur = stint.end_ms - stint.start_ms
@@ -171,6 +172,20 @@ def minutes_rows(stints, players, formation, present_ids):
             group = slot_group.get(stint.slot_key)
             if group in groups:
                 groups[group] += dur
+            slot_ms[stint.slot_key] = slot_ms.get(stint.slot_key, 0) + dur
+        slots = []
+        for slot in formation["slots"]:
+            ms = slot_ms.get(slot["key"], 0)
+            if ms:
+                slots.append(
+                    {
+                        "key": slot["key"],
+                        "name": slot["name"],
+                        "group": slot["group"],
+                        "ms": ms,
+                        "time": format_ms(ms),
+                    }
+                )
         rows.append(
             {
                 "id": player.id,
@@ -178,7 +193,9 @@ def minutes_rows(stints, players, formation, present_ids):
                 "full_name": player.full_name,
                 "total_ms": total,
                 "total": format_ms(total),
+                "groups_ms": groups,
                 "groups": {group: format_ms(ms) for group, ms in groups.items()},
+                "slots": slots,
             }
         )
     return rows

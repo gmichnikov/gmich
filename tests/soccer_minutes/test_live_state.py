@@ -216,3 +216,22 @@ def test_minutes_rows_omit_absent_and_format():
     assert rows[0]["total"] == "1:00"
     assert rows[0]["groups"]["gk"] == "1:00"
     assert rows[0]["groups"]["fwd"] == "0:00"
+    assert rows[0]["groups_ms"]["gk"] + rows[0]["groups_ms"]["def"] + rows[0]["groups_ms"]["mid"] + rows[0]["groups_ms"]["fwd"] == rows[0]["total_ms"]
+    assert rows[0]["slots"][0]["name"] == "GK"
+    assert rows[0]["slots"][0]["time"] == "1:00"
+
+
+def test_group_and_slot_minutes_sum_to_total():
+    formation = default_formation()
+    stints = [
+        type("S", (), {"player_id": 1, "slot_key": "gk", "period": 1, "start_ms": 0, "end_ms": 8 * 60 * 1000})(),
+        type("S", (), {"player_id": 1, "slot_key": "fwd_0", "period": 1, "start_ms": 8 * 60 * 1000, "end_ms": 20 * 60 * 1000})(),
+    ]
+    players = [_player(1, "Sam")]
+    rows = minutes_rows(stints, players, formation, present_ids={1})
+    row = rows[0]
+    assert row["total"] == "20:00"
+    assert sum(row["groups_ms"].values()) == row["total_ms"]
+    assert sum(slot["ms"] for slot in row["slots"]) == row["total_ms"]
+    assert row["groups"]["gk"] == "8:00"
+    assert row["groups"]["fwd"] == "12:00"

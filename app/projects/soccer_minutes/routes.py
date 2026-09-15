@@ -21,6 +21,7 @@ from app.projects.soccer_minutes.live_state import (
     end_period,
     game_phase,
     live_payload,
+    ordered_events,
     pause_clock,
     parse_action_clock,
     reset_pending,
@@ -30,6 +31,7 @@ from app.projects.soccer_minutes.live_state import (
     start_period,
     undo_last,
 )
+from app.projects.soccer_minutes.recap import event_log_rows, update_event_at_ms
 from app.projects.soccer_minutes.formation_config import (
     DEFAULT_PERIOD_COUNT,
     default_formation,
@@ -39,7 +41,7 @@ from app.projects.soccer_minutes.formation_config import (
     parse_period_count,
     pitch_bands,
 )
-from app.projects.soccer_minutes.models import ScmGame, ScmPlayer, ScmTeam
+from app.projects.soccer_minutes.models import ScmEvent, ScmGame, ScmPlayer, ScmTeam
 from app.utils.logging import log_project_visit
 
 soccer_minutes_bp = Blueprint(
@@ -487,6 +489,50 @@ def game_detail(team_id, game_id):
         setup=payload,
         live=payload,
     )
+
+
+@soccer_minutes_bp.route("/teams/<int:team_id>/games/<int:game_id>/recap")
+@login_required
+def game_recap(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    payload = _page_payload(team, game)
+    players = team.players.order_by(ScmPlayer.sort_order, ScmPlayer.id).all()
+    players_by_id = {player.id: player for player in players}
+    events = event_log_rows(ordered_events(game), game.formation, players_by_id)
+    return render_template(
+        "soccer_minutes/game_recap.html",
+        team=team,
+        game=game,
+        minutes=payload["minutes"],
+        events=events,
+        phase=payload["phase"],
+    )
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/events/<int:event_id>/time",
+    methods=["POST"],
+)
+@login_required
+def event_set_time(team_id, game_id, event_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    event = ScmEvent.query.filter_by(id=event_id, game_id=game.id).first()
+    if event is None:
+        abort(404)
+    recap_url = url_for(
+        "soccer_minutes.game_recap", team_id=team.id, game_id=game.id
+    ) + f"#scm-event-{event.id}"
+    stamp, err = parse_action_clock({"clock": request.form.get("clock")}, None)
+    if stamp is None:
+        flash(err or "Enter a time like 8:00.", "error")
+        return redirect(recap_url)
+    error = update_event_at_ms(game, event.id, stamp)
+    if error:
+        flash(error, "error")
+        return redirect(recap_url)
+    db.session.commit()
+    flash("Event time saved.", "success")
+    return redirect(recap_url)
 
 
 @soccer_minutes_bp.route("/teams/<int:team_id>/games/<int:game_id>/edit")

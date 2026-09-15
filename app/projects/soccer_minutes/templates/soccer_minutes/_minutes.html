@@ -1,10 +1,15 @@
-{% macro minutes_list(rows) %}
+{% macro minutes_list(rows, show_slots=False) %}
 <ul class="scm-minutes" id="scm-minutes">
   {% for row in rows %}
   <li class="scm-minutes-row">
     <span class="scm-minutes-name">{{ row.label }}</span>
     <span class="scm-minutes-total">{{ row.total }}</span>
     <span class="scm-minutes-groups">GK {{ row.groups.gk }} · DEF {{ row.groups.def }} · MID {{ row.groups.mid }} · FWD {{ row.groups.fwd }}</span>
+    {% if show_slots and row.slots %}
+    <span class="scm-minutes-slots">
+      {% for slot in row.slots %}{{ slot.name }} {{ slot.time }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </span>
+    {% endif %}
   </li>
   {% else %}
   <li class="scm-muted">Minutes show up after kickoff.</li>

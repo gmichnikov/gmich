@@ -113,6 +113,8 @@
     {% endif %}
 
     <p class="scm-live-settings">
+      <a href="{{ url_for('soccer_minutes.game_recap', team_id=team.id, game_id=game.id) }}">Recap</a>
+      ·
       <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}">Game settings</a>
     </p>
 

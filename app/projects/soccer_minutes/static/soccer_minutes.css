@@ -723,11 +723,70 @@ body.scm-live-body .main-content {
   margin-top: 8px;
 }
 
+.scm-header-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scm-header-actions-row .scm-btn {
+  width: 100%;
+}
+
+.scm-minutes-slots {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.scm-event-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scm-event {
+  padding: 12px 0;
+  border-top: 1px solid var(--scm-border);
+  scroll-margin-top: 12px;
+}
+
+.scm-event:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scm-event-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.scm-event-summary {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  color: var(--scm-text-muted);
+  font-size: 14px;
+}
+
+.scm-event-summary li {
+  margin: 0 0 2px;
+}
+
 @media (min-width: 600px) {
   .scm-page-header-row {
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
+  }
+
+  .scm-header-actions-row {
+    flex-direction: row;
+  }
+
+  .scm-header-actions-row .scm-btn {
+    width: auto;
   }
 
   .scm-form-actions {

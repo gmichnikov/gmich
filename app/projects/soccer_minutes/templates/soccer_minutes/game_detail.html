@@ -32,7 +32,10 @@
           {% endif %}
         </p>
       </div>
-      <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Game settings</a>
+      <div class="scm-header-actions-row">
+        <a href="{{ url_for('soccer_minutes.game_recap', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Recap</a>
+        <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Game settings</a>
+      </div>
     </header>
 
     <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
