@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "soccer_minutes/_field.html" import field_pitch %}
+
+{% block title %}{{ game.game_date.strftime('%b %d') }} vs {{ game.opponent_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; Game
+    </p>
+
+    <header class="scm-page-header scm-page-header-row">
+      <div>
+        <h1 class="scm-page-title">{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}</h1>
+        <p class="scm-page-subtitle">
+          <span id="scm-header-filled">{{ setup.filled }}</span> / <span id="scm-header-size">{{ setup.field_size }}</span> on the field
+          &middot; {{ game.period_count }} {{ 'period' if game.period_count == 1 else 'periods' }}
+        </p>
+      </div>
+      <a href="{{ url_for('soccer_minutes.game_edit', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Game settings</a>
+    </header>
+
+    <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
+
+    <div class="scm-card">
+      <div class="scm-card-header">Who is here</div>
+      <div class="scm-card-body">
+        <p class="scm-hint">Tap a name to mark them absent. Absent kids leave the pitch and bench.</p>
+        <ul class="scm-attendance" id="scm-attendance">
+          {% for person in setup.attendance %}
+          <li>
+            <button
+              type="button"
+              class="scm-attendance-btn{% if not person.is_present %} scm-is-absent{% endif %}"
+              data-player-id="{{ person.id }}"
+              aria-pressed="{{ 'false' if person.is_present else 'true' }}"
+            >
+              {% if person.jersey_number %}<span class="scm-jersey">{{ person.jersey_number }}</span>{% endif %}
+              <span class="scm-attendance-name">{{ person.full_name }}</span>
+              <span class="scm-attendance-flag">{{ 'Out' if not person.is_present else 'Here' }}</span>
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if not setup.attendance %}
+        <p class="scm-muted">Add players on the team roster first.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="scm-card" id="scm-starting-field">
+      <div class="scm-card-header">Starting field</div>
+      <div class="scm-card-body">
+        <p class="scm-hint">Tap a bench player, then a slot. Tap two slots to swap. Tap a player then Off to clear.</p>
+        <p class="scm-field-status" id="scm-field-status" hidden></p>
+        {{ field_pitch(setup.bands) }}
+        <p class="scm-field-size"><span id="scm-filled-n">{{ setup.filled }}</span> / {{ setup.field_size }} filled</p>
+
+        <div class="scm-bench-block">
+          <div class="scm-bench-header">
+            <h3 class="scm-slot-group-title">Bench</h3>
+            <button type="button" class="scm-btn scm-btn-secondary scm-btn-small" id="scm-send-off" disabled>Off</button>
+          </div>
+          <div class="scm-bench" id="scm-bench">
+            {% for person in setup.bench %}
+            <button type="button" class="scm-bench-chip" data-player-id="{{ person.id }}">{{ person.label }}</button>
+            {% else %}
+            <p class="scm-muted scm-bench-empty">No one on the bench.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="scm-game-state">{{ setup | tojson }}</script>
+<script src="{{ url_for('soccer_minutes.static', filename='game_setup.js') }}"></script>
+{% endblock %}

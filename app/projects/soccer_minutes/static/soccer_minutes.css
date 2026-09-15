@@ -382,6 +382,178 @@
   font-weight: 600;
 }
 
+.scm-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scm-game-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scm-game-item {
+  margin-bottom: 8px;
+}
+
+.scm-game-item:last-child {
+  margin-bottom: 0;
+}
+
+.scm-game-link {
+  display: block;
+  min-height: var(--scm-tap);
+  padding: 12px 14px;
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--scm-surface-muted);
+}
+
+.scm-game-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.scm-game-meta {
+  font-size: 13px;
+  color: var(--scm-text-muted);
+}
+
+.scm-hint {
+  margin: 0 0 12px;
+}
+
+.scm-field-status {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--scm-accent);
+}
+
+.scm-attendance {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scm-attendance-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--scm-tap);
+  padding: 8px 12px;
+  border: 1px solid var(--scm-border);
+  border-radius: 8px;
+  background: var(--scm-surface-muted);
+  color: var(--scm-text);
+  font-size: 16px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scm-attendance-name {
+  flex: 1 1 auto;
+}
+
+.scm-attendance-flag {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--scm-accent);
+}
+
+.scm-attendance-btn.scm-is-absent {
+  opacity: 0.7;
+}
+
+.scm-attendance-btn.scm-is-absent .scm-attendance-name {
+  text-decoration: line-through;
+}
+
+.scm-attendance-btn.scm-is-absent .scm-attendance-flag {
+  color: var(--scm-danger);
+}
+
+button.scm-field-slot {
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.15;
+}
+
+.scm-slot-pos {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--scm-text-muted);
+}
+
+.scm-slot-who {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scm-is-selected {
+  box-shadow: 0 0 0 3px #e9c46a;
+  border-color: #e9c46a !important;
+}
+
+.scm-bench-block {
+  margin-top: 16px;
+}
+
+.scm-bench-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.scm-bench-header .scm-slot-group-title {
+  margin: 0;
+}
+
+.scm-bench {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scm-bench-chip {
+  min-height: var(--scm-tap);
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--scm-border);
+  background: var(--scm-surface-muted);
+  color: var(--scm-text);
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.scm-bench-empty {
+  margin: 0;
+}
+
 @media (min-width: 600px) {
   .scm-page-header-row {
     flex-direction: row;

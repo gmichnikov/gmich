@@ -67,7 +67,7 @@
     <form
       method="post"
       action="{{ url_for('soccer_minutes.team_delete', team_id=team.id) }}"
-      onsubmit="return confirm('Delete {{ team.display_name }}? This removes {{ team.players.count() }} players permanently.');"
+      onsubmit="return confirm('Delete {{ team.display_name }}? This removes {{ team.players.count() }} players and {{ team.games.count() }} games permanently.');"
     >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="scm-btn scm-btn-danger">Delete team</button>

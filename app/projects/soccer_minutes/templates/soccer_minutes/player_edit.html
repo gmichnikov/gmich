@@ -72,7 +72,7 @@
     <form
       method="post"
       action="{{ url_for('soccer_minutes.player_delete', team_id=team.id, player_id=player.id) }}"
-      onsubmit="return confirm('Remove {{ player.full_name }} from the roster?');"
+      onsubmit="return confirm('Remove {{ player.full_name }} from the roster?{% if game_count %} This also clears them from {{ game_count }} {{ 'game' if game_count == 1 else 'games' }}.{% endif %}');"
     >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="scm-btn scm-btn-danger">Remove from roster</button>

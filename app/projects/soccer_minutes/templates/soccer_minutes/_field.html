@@ -1,0 +1,24 @@
+{% macro field_pitch(bands) %}
+<div class="scm-pitch scm-pitch-field" id="scm-field-pitch">
+  {% for band in bands %}
+  <div class="scm-pitch-band scm-pitch-band-{{ band.group }}" data-group="{{ band.group }}">
+    <span class="scm-pitch-band-label">{{ band.label }}</span>
+    <div class="scm-pitch-slots">
+      {% for slot in band.slots %}
+      <button
+        type="button"
+        class="scm-pitch-slot scm-field-slot{% if slot.player_id %} scm-slot-filled{% endif %}"
+        data-slot-key="{{ slot.key }}"
+        data-player-id="{{ slot.player_id or '' }}"
+      >
+        <span class="scm-slot-pos">{{ slot.name }}</span>
+        <span class="scm-slot-who">{{ slot.player_label or "—" }}</span>
+      </button>
+      {% else %}
+      <span class="scm-pitch-empty">None</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

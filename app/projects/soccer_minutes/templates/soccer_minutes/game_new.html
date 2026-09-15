@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}New game - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo; New game
+    </p>
+
+    <header class="scm-page-header">
+      <h1 class="scm-page-title">New game</h1>
+      <p class="scm-page-subtitle">
+        Formation is copied from the team ({{ field_size }} on the field,
+        {{ team.period_count }} {{ 'period' if team.period_count == 1 else 'periods' }}).
+      </p>
+    </header>
+
+    <form method="post" action="{{ url_for('soccer_minutes.game_create', team_id=team.id) }}" class="scm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="scm-form-group">
+        <label for="scm-game-date" class="scm-label">Date</label>
+        <input
+          type="date"
+          id="scm-game-date"
+          name="game_date"
+          class="scm-input"
+          value="{{ default_date }}"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="scm-form-group">
+        <label for="scm-opponent-name" class="scm-label">Opponent</label>
+        <input
+          type="text"
+          id="scm-opponent-name"
+          name="opponent_name"
+          class="scm-input"
+          placeholder="e.g. City FC"
+          required
+        >
+      </div>
+
+      <div class="scm-form-actions">
+        <button type="submit" class="scm-btn scm-btn-primary">Create game</button>
+        <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}" class="scm-btn scm-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

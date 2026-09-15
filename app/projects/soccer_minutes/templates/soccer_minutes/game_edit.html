@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "soccer_minutes/_formation_editor.html" import formation_editor %}
+{% from "soccer_minutes/_pitch.html" import pitch %}
+
+{% block title %}Game settings - {{ team.display_name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('soccer_minutes.static', filename='soccer_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="scm-page">
+  <div class="scm-container">
+
+    <p class="scm-breadcrumb">
+      <a href="{{ url_for('soccer_minutes.index') }}">Soccer Minutes</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a>
+      &rsaquo;
+      <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}">{{ game.game_date.strftime('%b %d') }} vs {{ game.opponent_name }}</a>
+      &rsaquo; Settings
+    </p>
+
+    <header class="scm-page-header">
+      <h1 class="scm-page-title">Game settings</h1>
+      {% if locked %}
+      <p class="scm-page-subtitle">Kickoff already happened, so this game's formation is locked.</p>
+      {% endif %}
+    </header>
+
+    <form method="post" action="{{ url_for('soccer_minutes.game_update', team_id=team.id, game_id=game.id) }}" class="scm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="scm-form-group">
+        <label for="scm-game-date" class="scm-label">Date</label>
+        <input
+          type="date"
+          id="scm-game-date"
+          name="game_date"
+          class="scm-input"
+          value="{{ game.game_date.isoformat() }}"
+          required
+        >
+      </div>
+
+      <div class="scm-form-group">
+        <label for="scm-opponent-name" class="scm-label">Opponent</label>
+        <input
+          type="text"
+          id="scm-opponent-name"
+          name="opponent_name"
+          class="scm-input"
+          value="{{ game.opponent_name }}"
+          required
+        >
+      </div>
+
+      {% if locked %}
+      <p class="scm-hint">
+        {{ formation_period_count }} {{ 'period' if formation_period_count == 1 else 'periods' }}
+        &middot; {{ formation_field_size }} on the field. Slot names stay as they were at kickoff.
+      </p>
+      {{ pitch(formation_bands, formation_field_size) }}
+      {% else %}
+      {{ formation_editor(
+        formation_period_count,
+        formation_counts,
+        formation_bands,
+        formation_field_size
+      ) }}
+      {% endif %}
+
+      <div class="scm-form-actions">
+        <button type="submit" class="scm-btn scm-btn-primary">Save settings</button>
+        <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <div class="scm-form-divider"></div>
+
+    <form
+      method="post"
+      action="{{ url_for('soccer_minutes.game_delete', team_id=team.id, game_id=game.id) }}"
+      onsubmit="return confirm('Delete this game vs {{ game.opponent_name }}?');"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="scm-btn scm-btn-danger">Delete game</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not locked %}
+<script src="{{ url_for('soccer_minutes.static', filename='soccer_minutes.js') }}"></script>
+{% endif %}
+{% endblock %}
