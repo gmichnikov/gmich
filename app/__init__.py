@@ -301,6 +301,7 @@ def create_app():
         NflSurvivorWeeklyResult,
         NflSurvivorSpread,
         NflSurvivorGame,
+        NflSurvivorEmailPref,
     )
     from app.projects.baseball_lineup.models import (
         BluTeam,

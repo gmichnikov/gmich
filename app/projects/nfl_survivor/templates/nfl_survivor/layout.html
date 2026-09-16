@@ -65,6 +65,24 @@
       {% if season %}
       <div class="ns-header-meta">
         <span class="ns-season-badge">{{ season.name }}</span>
+        {% if show_email_reminders %}
+        <form method="post"
+              action="{{ url_for('nfl_survivor.email_reminders') }}"
+              class="ns-reminder-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="ns-reminder-form-label" for="ns-email-reminder-day">Reminders</label>
+          <select id="ns-email-reminder-day"
+                  name="reminder_weekday"
+                  onchange="this.form.submit()"
+                  title="Update email that morning, US/Eastern. Set to None to stop.">
+            {% for value, label in email_reminder_choices %}
+            <option value="{{ value }}" {% if value == email_reminder_value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </form>
+        {% endif %}
         {% if show_add_entry %}
         <button type="button"
                 class="ns-pool-settings-btn"

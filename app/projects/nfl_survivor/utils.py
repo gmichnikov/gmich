@@ -22,6 +22,43 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 ACTIVE_ENTRY_SESSION_KEY = "nfl_survivor_active_entry_id"
 MAX_ENTRY_NAME_LENGTH = 100
 
+# Python weekday(): Mon=0 … Sun=6. None (no emails) is NULL, never 0.
+REMINDER_WEEKDAYS = (2, 3, 4, 5, 6)
+REMINDER_WEEKDAY_LABELS = {
+    2: "Wednesday morning",
+    3: "Thursday morning",
+    4: "Friday morning",
+    5: "Saturday morning",
+    6: "Sunday morning",
+}
+REMINDER_WEEKDAY_SHORT_LABELS = {
+    2: "Wed morning",
+    3: "Thu morning",
+    4: "Fri morning",
+    5: "Sat morning",
+    6: "Sun morning",
+}
+
+
+def reminder_weekday_choices():
+    """Select options: empty string = none, then Wed–Sun."""
+    return [("", "None")] + [
+        (str(day), REMINDER_WEEKDAY_SHORT_LABELS[day]) for day in REMINDER_WEEKDAYS
+    ]
+
+
+def parse_reminder_weekday(value):
+    """Return weekday int or None for 'none'. Raise ValueError if invalid."""
+    if value in (None, ""):
+        return None
+    try:
+        day = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("invalid reminder weekday") from exc
+    if day not in REMINDER_WEEKDAYS:
+        raise ValueError("invalid reminder weekday")
+    return day
+
 
 def load_nfl_teams():
     with open(DATA_DIR / "nfl_teams.json", encoding="utf-8") as json_file:

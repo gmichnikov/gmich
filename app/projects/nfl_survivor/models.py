@@ -71,6 +71,8 @@ class NflSurvivorParticipant(db.Model):
     joined_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     has_paid = db.Column(db.Boolean, nullable=False, default=False)
 
+    elimination_email_sent_at = db.Column(db.DateTime, nullable=True)
+
     user = db.relationship("User", backref=db.backref("nfl_survivor_entries", lazy=True))
     picks = db.relationship(
         "NflSurvivorPick",
@@ -171,3 +173,27 @@ class NflSurvivorGame(db.Model):
 
     def __repr__(self):
         return f"<NflSurvivorGame week={self.week} team={self.team_id}>"
+
+
+class NflSurvivorEmailPref(db.Model):
+    """Per-user (not per-entry) reminder email preference."""
+
+    __tablename__ = "nfl_survivor_email_prefs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, unique=True
+    )
+    # Python weekday(): Wed=2 … Sun=6. NULL = no reminder emails.
+    reminder_weekday = db.Column(db.Integer, nullable=True)
+    last_sent_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship(
+        "User", backref=db.backref("nfl_survivor_email_pref", uselist=False)
+    )
+
+    def __repr__(self):
+        return (
+            f"<NflSurvivorEmailPref user_id={self.user_id} "
+            f"weekday={self.reminder_weekday}>"
+        )

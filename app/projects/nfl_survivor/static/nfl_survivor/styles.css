@@ -76,6 +76,40 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.ns-reminder-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.ns-reminder-form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ns-text-muted);
+  white-space: nowrap;
+}
+
+.ns-reminder-form select {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--ns-navy);
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  background: var(--ns-card);
+  box-shadow: var(--ns-shadow);
+  cursor: pointer;
+}
+
+.ns-reminder-form select:hover,
+.ns-reminder-form select:focus-visible {
+  border-color: var(--ns-navy);
+  outline: none;
 }
 
 .ns-pool-settings-btn {
@@ -1211,6 +1245,15 @@ th[aria-sort="ascending"] .ns-sort-btn::after {
 
   .ns-header-meta {
     flex-shrink: 0;
+  }
+
+  .ns-reminder-form {
+    width: 100%;
+  }
+
+  .ns-reminder-form select {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .ns-active-entry-bar {

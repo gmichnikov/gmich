@@ -21,6 +21,7 @@ from app.projects.nfl_survivor.forms import (
 )
 from app.projects.nfl_survivor.log import log_nfl_survivor
 from app.projects.nfl_survivor.models import (
+    NflSurvivorEmailPref,
     NflSurvivorParticipant,
     NflSurvivorPick,
     NflSurvivorSeason,
@@ -30,6 +31,7 @@ from app.projects.nfl_survivor.models import (
 from app.projects.nfl_survivor.utils import (
     UTC,
     ACTIVE_ENTRY_SESSION_KEY,
+    REMINDER_WEEKDAY_LABELS,
     build_entry_pick_history,
     calculate_game_week,
     clear_active_entry,
@@ -50,9 +52,11 @@ from app.projects.nfl_survivor.utils import (
     map_team_names_to_ids,
     normalize_entry_name,
     parse_eastern_datetime,
+    parse_reminder_weekday,
     participant_correct_picks_count,
     participant_is_eliminated,
     participant_wrong_picks_count,
+    reminder_weekday_choices,
     resolve_active_entry,
     set_active_entry,
     teams_available_for_week,
@@ -217,6 +221,9 @@ def nfl_survivor_template_context():
         "show_unpaid_banner": False,
         "show_add_entry": False,
         "add_entry_form": None,
+        "show_email_reminders": False,
+        "email_reminder_value": "",
+        "email_reminder_choices": reminder_weekday_choices(),
     }
     season = get_active_season()
     if season and current_user.is_authenticated:
@@ -226,6 +233,13 @@ def nfl_survivor_template_context():
         ctx["show_unpaid_banner"] = (
             active_entry is not None and not active_entry.has_paid
         )
+        if user_entries:
+            pref = NflSurvivorEmailPref.query.filter_by(
+                user_id=current_user.id
+            ).first()
+            ctx["show_email_reminders"] = True
+            weekday = pref.reminder_weekday if pref else None
+            ctx["email_reminder_value"] = "" if weekday is None else str(weekday)
         if is_join_open(season) and user_entries:
             add_entry_form = AddEntryForm()
             add_entry_form.display_name.data = default_entry_name_for_user(
@@ -299,6 +313,41 @@ def join():
     )
     db.session.commit()
     return redirect(url_for("nfl_survivor.pick"))
+
+
+@nfl_survivor_bp.route("/email-reminders", methods=["POST"])
+@login_required
+def email_reminders():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+    if not get_user_entries(season, current_user.id):
+        return redirect(url_for("nfl_survivor.index"))
+
+    try:
+        weekday = parse_reminder_weekday(request.form.get("reminder_weekday", ""))
+    except ValueError:
+        _set_inline_error("Choose a valid reminder day.")
+        return redirect(request.referrer or url_for("nfl_survivor.pick"))
+
+    pref = NflSurvivorEmailPref.query.filter_by(user_id=current_user.id).first()
+    previous = pref.reminder_weekday if pref else None
+    if pref is None:
+        pref = NflSurvivorEmailPref(user_id=current_user.id)
+        db.session.add(pref)
+    pref.reminder_weekday = weekday
+
+    if previous != weekday:
+        if weekday is None:
+            change = "turned off email reminders"
+        else:
+            change = f"set email reminders to {REMINDER_WEEKDAY_LABELS[weekday]}"
+        log_nfl_survivor(
+            "Email Reminders",
+            f"{current_user.full_name} {change} ({season.name})",
+        )
+    db.session.commit()
+    return redirect(request.referrer or url_for("nfl_survivor.pick"))
 
 
 @nfl_survivor_bp.route("/switch-entry", methods=["POST"])

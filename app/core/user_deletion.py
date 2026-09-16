@@ -42,7 +42,10 @@ from app.projects.helper.models import (
     HelperTask,
 )
 from app.projects.meals.models import MealsEntry, MealsFamilyMember
-from app.projects.nfl_survivor.models import NflSurvivorParticipant
+from app.projects.nfl_survivor.models import (
+    NflSurvivorEmailPref,
+    NflSurvivorParticipant,
+)
 from app.projects.notes.models import Note
 from app.projects.reminders.models import Reminder
 from app.projects.sports_schedules.models import (
@@ -96,6 +99,7 @@ _PROJECT_USER_COLUMNS = (
     ("Soccer minutes team", ScmTeam.user_id),
     ("Football squares", FootballSquaresGrid.user_id),
     ("NFL Survivor", NflSurvivorParticipant.user_id),
+    ("NFL Survivor reminders", NflSurvivorEmailPref.user_id),
     ("Sports saved query", SportsScheduleSavedQuery.user_id),
     ("Sports digest", SportsScheduleScheduledDigest.user_id),
     ("Ask Many LLMs", LLMQuestion.user_id),
