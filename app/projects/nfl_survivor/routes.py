@@ -921,6 +921,63 @@ def auto_update():
     return render_template("nfl_survivor/auto_update.html", **ctx)
 
 
+@nfl_survivor_bp.route("/admin/test-reminder", methods=["GET", "POST"])
+@admin_required
+def admin_test_reminder():
+    season = _require_season()
+    if not season:
+        return redirect(url_for("nfl_survivor.index"))
+
+    if request.method == "POST":
+        from app.projects.nfl_survivor.reminders import (
+            load_reminder_season_data,
+            send_user_reminder,
+        )
+
+        if not current_user.email_verified:
+            flash("Verify your email before sending a test reminder.")
+            return redirect(url_for("nfl_survivor.admin_test_reminder"))
+
+        data = load_reminder_season_data(season)
+        try:
+            status = send_user_reminder(
+                season, current_user, data, update_tracking=False
+            )
+        except Exception as exc:
+            log_nfl_survivor(
+                "Email Reminders",
+                (
+                    f"{current_user.full_name} test reminder failed "
+                    f"({season.name}): {exc}"
+                ),
+            )
+            db.session.commit()
+            flash(f"Failed to send test reminder: {exc}")
+            return redirect(url_for("nfl_survivor.admin_test_reminder"))
+
+        if status == "sent":
+            log_nfl_survivor(
+                "Email Reminders",
+                (
+                    f"{current_user.full_name} sent a test reminder to "
+                    f"{current_user.email} ({season.name})"
+                ),
+            )
+            db.session.commit()
+            flash(f"Test reminder sent to {current_user.email}.")
+        elif status == "skipped_empty":
+            flash(
+                "Nothing to send — no alive entries, and any eliminated entries "
+                "already got their notice."
+            )
+        elif status == "skipped_unverified":
+            flash("Verify your email before sending a test reminder.")
+        return redirect(url_for("nfl_survivor.admin_test_reminder"))
+
+    ctx = _season_context(season)
+    return render_template("nfl_survivor/admin_test_reminder.html", **ctx)
+
+
 @nfl_survivor_bp.route("/admin/fetch-schedule")
 @admin_required
 def fetch_schedule():

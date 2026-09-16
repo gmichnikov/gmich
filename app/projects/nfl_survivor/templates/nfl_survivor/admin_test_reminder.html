@@ -1,0 +1,24 @@
+{% extends "nfl_survivor/layout.html" %}
+
+{% block ns_title %}Test reminder email{% endblock %}
+
+{% block ns_content %}
+<h1 class="ns-card-title">Test reminder email</h1>
+<p class="ns-help-text">
+  Sends the current reminder email to <strong>{{ current_user.email }}</strong>.
+  This does not mark the email as sent, so the daily job can still send on your
+  chosen morning. Your header reminder day can stay set to None.
+</p>
+<p class="ns-help-text">
+  You need a verified email and at least one entry that is still alive, or an
+  entry that has not yet received its two-loss notice.
+</p>
+<p class="ns-help-text">
+  Daily job (add this in Heroku Scheduler at the morning hour you want, US/Eastern):
+  <code>flask nfl-survivor send-reminders</code>
+</p>
+<form method="post" class="ns-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="ns-btn ns-btn-primary">Send test email to me</button>
+</form>
+{% endblock %}

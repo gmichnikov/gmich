@@ -105,5 +105,45 @@ def sync_command():
         click.echo("Spreads skipped (not Tuesday or Thursday, US/Eastern).")
 
 
+@nfl_survivor_cli.command("send-reminders")
+@click.option("--user-id", type=int, default=None, help="Only this user id.")
+@click.option("--email", "user_email", default=None, help="Only this user email.")
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Ignore weekday and last-sent; do not mark as sent. Requires --user-id or --email.",
+)
+@click.option("--dry-run", is_flag=True, help="Print counts without sending.")
+@with_appcontext
+def send_reminders_command(user_id, user_email, force, dry_run):
+    """Send reminder emails to users whose chosen weekday is today (US/Eastern)."""
+    from app.models import User
+    from app.projects.nfl_survivor.reminders import run_reminder_send
+
+    if user_email:
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            raise click.ClickException(f"No user with email {user_email}.")
+        if user_id is not None and user.id != user_id:
+            raise click.ClickException("--user-id and --email do not match.")
+        user_id = user.id
+
+    if force and user_id is None:
+        raise click.ClickException("--force requires --user-id or --email.")
+
+    result = run_reminder_send(
+        user_id=user_id, force=force, dry_run=dry_run
+    )
+    if result.get("error"):
+        raise click.ClickException(result["error"])
+
+    click.echo(
+        "candidates={candidates} sent={sent} failed={failed} "
+        "dry_run={dry_run} skipped_day={skipped_day} "
+        "skipped_already={skipped_already} skipped_empty={skipped_empty} "
+        "skipped_unverified={skipped_unverified}".format(**result)
+    )
+
+
 def init_app(app):
     app.cli.add_command(nfl_survivor_cli)
