@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 from app.projects.nfl_survivor.utils import (
     EASTERN,
+    format_week_choice_label,
+    get_week_date_range,
     get_week_pick_lock_time,
     get_week_picks_reveal_time,
     is_week_picks_revealed,
@@ -46,3 +48,23 @@ class TestWeekPicksReveal(unittest.TestCase):
         self.assertFalse(is_week_picks_revealed(season, 1, when=just_before))
         self.assertTrue(is_week_picks_revealed(season, 1, when=at_reveal))
         self.assertFalse(is_week_picks_revealed(season, 2, when=at_reveal))
+
+
+class TestWeekDateRange(unittest.TestCase):
+    def test_week1_is_tuesday_through_monday_before_week2_start(self):
+        week_2_start = EASTERN.localize(datetime(2026, 9, 15, 0, 0))
+        season = _season(week_2_start)
+        tuesday, monday = get_week_date_range(season, 1)
+        self.assertEqual(tuesday.isoformat(), "2026-09-08")
+        self.assertEqual(monday.isoformat(), "2026-09-14")
+        self.assertEqual(
+            format_week_choice_label(season, 1),
+            "Week 1 · Tue Sep 8 – Mon Sep 14",
+        )
+
+    def test_later_weeks_shift_by_seven_days(self):
+        week_2_start = EASTERN.localize(datetime(2026, 9, 15, 10, 0))
+        season = _season(week_2_start)
+        tuesday, monday = get_week_date_range(season, 2)
+        self.assertEqual(tuesday.isoformat(), "2026-09-15")
+        self.assertEqual(monday.isoformat(), "2026-09-21")

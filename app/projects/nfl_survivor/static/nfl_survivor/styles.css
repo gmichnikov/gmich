@@ -1078,6 +1078,19 @@
   color: #fff;
 }
 
+.ns-styled-table tr.ns-your-entry-row td.ns-first-col,
+.ns-styled-table tr.ns-your-entry-row td.ns-second-col {
+  background: #e8eef8;
+}
+
+.ns-styled-table tr.ns-your-entry-row td.ns-first-col {
+  box-shadow: inset 3px 0 0 var(--ns-navy);
+}
+
+.ns-styled-table tr.ns-your-entry-row td.ns-nopick {
+  background: #f4f7fb;
+}
+
 .ns-correct {
   color: #1b4332;
   font-weight: 600;
@@ -1295,6 +1308,40 @@ th[aria-sort="ascending"] .ns-sort-btn::after {
 .ns-admin-table label {
   cursor: pointer;
   font-weight: 600;
+}
+
+.ns-auto-pick-week-form {
+  margin-bottom: 1.25rem;
+}
+
+.ns-auto-pick-game {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1rem;
+  background: var(--ns-bg);
+  border-radius: var(--ns-radius-sm);
+  border-left: 4px solid var(--ns-navy);
+}
+
+.ns-auto-pick-game-matchup {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--ns-navy);
+  line-height: 1.3;
+}
+
+.ns-auto-pick-game-meta {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--ns-text-muted);
+}
+
+.ns-auto-pick-warning {
+  margin: 0.65rem 0 0;
+}
+
+.ns-auto-pick-confirm-btn {
+  margin-top: 1rem;
 }
 
 /* Help text & admin */

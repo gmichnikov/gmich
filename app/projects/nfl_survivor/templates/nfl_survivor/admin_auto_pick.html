@@ -4,11 +4,140 @@
 
 {% block ns_content %}
 <h1 class="ns-card-title">Auto pick</h1>
-<p class="ns-help-text">Set picks for participants who haven't picked yet, using the best available spread.</p>
-<form method="post" class="ns-form">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <label for="week_number">Week number</label>
-  <input type="number" id="week_number" name="week_number" required>
-  <button type="submit" class="ns-btn ns-btn-primary">Run auto pick</button>
+<p class="ns-help-text">
+  Alive entries with no pick this week get the last game's favorite if they
+  still have that team, otherwise the underdog, otherwise nobody.
+  Confirm the preview before anything is written.
+</p>
+
+<form method="get" class="ns-form ns-auto-pick-week-form">
+  <label for="ns-auto-pick-week">Week</label>
+  <select id="ns-auto-pick-week" name="week" onchange="this.form.submit()">
+    {% for choice in week_choices %}
+    <option value="{{ choice.week }}"
+            {% if choice.week == selected_week %}selected{% endif %}>
+      {{ choice.label }}
+    </option>
+    {% endfor %}
+  </select>
 </form>
+
+{% if last_game.found %}
+<div class="ns-auto-pick-game">
+  <span class="ns-pick-current-label">Last game</span>
+  <strong class="ns-auto-pick-game-matchup">
+    {{ last_game.road_team }} @ {{ last_game.home_team }}
+  </strong>
+  {% if last_game.kickoff_label %}
+  <span class="ns-auto-pick-game-meta">{{ last_game.kickoff_label }}</span>
+  {% endif %}
+  <span class="ns-auto-pick-game-meta">
+    Favorite {{ last_game.favorite }}
+    ({{ last_game.favorite_spread_display }})
+    · Underdog {{ last_game.underdog }}
+    ({{ last_game.underdog_spread_display }})
+  </span>
+</div>
+{% else %}
+<p class="ns-help-text ns-auto-pick-warning">
+  {% if last_game.reason == "no_schedule" %}
+  No last game on the schedule for week {{ selected_week }}. Fetch the
+  schedule first.
+  {% elif last_game.reason == "no_spread" %}
+  Last game is
+  {{ last_game.team_names|join(" vs ") }}{% if last_game.kickoff_label %}
+  ({{ last_game.kickoff_label }}){% endif %}, but there is no spread for it.
+  {% elif last_game.reason == "incomplete_game" %}
+  Last kickoff is on the schedule{% if last_game.kickoff_label %}
+  ({{ last_game.kickoff_label }}){% endif %}, but it does not look like a
+  two-team game.
+  {% else %}
+  Cannot determine the last game for week {{ selected_week }}.
+  {% endif %}
+</p>
+{% endif %}
+
+<p class="ns-help-text">
+  {{ assignment_count }} to assign
+  · {{ already_picked_count }} already picked
+  · {{ eliminated_count }} eliminated
+</p>
+
+{% if preview_rows %}
+<div class="ns-table-scroll">
+  <table class="ns-admin-table">
+    <thead>
+      <tr>
+        <th class="ns-col-text">Player</th>
+        <th class="ns-col-text">Owner</th>
+        <th class="ns-col-text">Would assign</th>
+        <th class="ns-col-text">Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in preview_rows %}
+      <tr class="{% if row.will_assign %}ns-highlight{% endif %}">
+        <td class="ns-col-text">{{ row.name }}</td>
+        <td class="ns-col-text">{{ row.owner }}</td>
+        <td class="ns-col-text">{{ row.team_name or "—" }}</td>
+        <td class="ns-col-text">{{ row.reason_label }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if assignment_count %}
+<button type="button"
+        class="ns-btn ns-btn-primary ns-auto-pick-confirm-btn"
+        data-ns-auto-pick-open>
+  Assign {{ assignment_count }}
+  {{ "pick" if assignment_count == 1 else "picks" }}
+</button>
+
+<dialog class="ns-dialog" id="ns-auto-pick-dialog" aria-labelledby="ns-auto-pick-dialog-title">
+  <form method="post" class="ns-form ns-add-entry-dialog-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="week_number" value="{{ selected_week }}">
+    <input type="hidden" name="confirm" value="ASSIGN">
+    <h2 class="ns-dialog-title" id="ns-auto-pick-dialog-title">Assign these auto picks?</h2>
+    <p class="ns-dialog-text">
+      Week {{ selected_week }}:
+      assign the last-game pick to
+      <strong>{{ assignment_count }}</strong>
+      {{ "entry" if assignment_count == 1 else "entries" }}.
+      This only fills entries that still have no pick.
+    </p>
+    <div class="ns-dialog-actions">
+      <button type="button" class="ns-btn ns-btn-secondary" data-ns-dialog-close>Cancel</button>
+      <button type="submit" class="ns-btn ns-btn-primary">Confirm and assign</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+{% else %}
+<p class="ns-help-text">
+  No alive entries still need a pick for week {{ selected_week }}.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block ns_scripts %}
+{% if assignment_count %}
+<script>
+(function () {
+  var dialog = document.getElementById("ns-auto-pick-dialog");
+  var openBtn = document.querySelector("[data-ns-auto-pick-open]");
+  if (!dialog || !openBtn) return;
+  openBtn.addEventListener("click", function () {
+    dialog.showModal();
+  });
+  dialog.querySelectorAll("[data-ns-dialog-close]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      dialog.close();
+    });
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

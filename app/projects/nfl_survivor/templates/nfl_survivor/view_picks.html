@@ -22,7 +22,8 @@
     </thead>
     <tbody>
       {% for participant in sorted_participants %}
-      <tr data-ns-entry="{{ participant.display_name }}"
+      <tr class="{% if participant.user_id == current_user.id %}ns-your-entry-row{% endif %}"
+          data-ns-entry="{{ participant.display_name }}"
           data-ns-losses="{{ wrong_picks_count.get(participant.id, 0) }}"
           {% for week, week_picks in all_picks.items() %}
           data-ns-week-{{ week }}="{{ week_picks.get(participant.id, {}).get('team', '') }}"

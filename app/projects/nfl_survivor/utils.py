@@ -110,6 +110,23 @@ def get_week_pick_lock_time(season, week):
     return anchor + timedelta(days=(week - 1) * 7)
 
 
+def get_week_date_range(season, week):
+    """Tue–Mon calendar dates (US/Eastern) covered by this pick week."""
+    lock = _to_eastern(get_week_pick_lock_time(season, week))
+    tuesday = (lock - timedelta(days=7)).date()
+    monday = (lock - timedelta(days=1)).date()
+    return tuesday, monday
+
+
+def format_week_choice_label(season, week):
+    """Dropdown label: 'Week 3 · Tue Sep 22 – Mon Sep 28'."""
+    tuesday, monday = get_week_date_range(season, week)
+    return (
+        f"Week {week} · {tuesday.strftime('%a %b %-d')} – "
+        f"{monday.strftime('%a %b %-d')}"
+    )
+
+
 def get_week_picks_reveal_time(season, week):
     """Monday 8:30pm ET before the Tuesday that ends this pick week."""
     tuesday = get_week_pick_lock_time(season, week)
@@ -337,7 +354,165 @@ def format_kickoff_et(season_id, week, team_id):
     kickoff = get_team_kickoff(season_id, week, team_id)
     if not kickoff:
         return ""
-    return kickoff.astimezone(EASTERN).strftime("%a %b %-d, %-I:%M %p ET")
+    return format_kickoff_label(kickoff)
+
+
+def format_kickoff_label(kickoff):
+    """Human-readable kickoff in Eastern, or empty string."""
+    aware = _kickoff_utc(kickoff)
+    if aware is None:
+        return ""
+    return aware.astimezone(EASTERN).strftime("%a %b %-d, %-I:%M %p ET")
+
+
+def _kickoff_utc(kickoff):
+    if kickoff is None:
+        return None
+    if kickoff.tzinfo is None:
+        return UTC.localize(kickoff)
+    return kickoff.astimezone(UTC)
+
+
+def select_last_game_rows(game_rows):
+    """
+    Team rows for the latest kickoff's game.
+
+    If two games share that kickoff, the lower ESPN event id wins. Returns
+    (rows, kickoff) or ([], None).
+    """
+    dated = []
+    for row in game_rows:
+        kickoff = _kickoff_utc(getattr(row, "kickoff", None))
+        if kickoff is None:
+            continue
+        dated.append((kickoff, row))
+    if not dated:
+        return [], None
+
+    last_kickoff = max(kickoff for kickoff, _ in dated)
+    at_last = [row for kickoff, row in dated if kickoff == last_kickoff]
+    groups = {}
+    ungrouped = []
+    for row in at_last:
+        event_id = getattr(row, "espn_event_id", None) or ""
+        if event_id:
+            groups.setdefault(event_id, []).append(row)
+        else:
+            ungrouped.append(row)
+    if groups:
+        event_id = sorted(groups.keys())[0]
+        return groups[event_id], last_kickoff
+    return ungrouped, last_kickoff
+
+
+def resolve_last_game_sides(game_rows, spread_rows, id_to_name):
+    """
+    Favorite and underdog of the week's last game.
+
+    Pick'em (equal spreads) treats the home team as the favorite.
+    """
+    rows, kickoff = select_last_game_rows(game_rows)
+    if not rows or kickoff is None:
+        return {"found": False, "reason": "no_schedule"}
+
+    team_names = []
+    for row in rows:
+        team_id = str(row.team_id)
+        team_names.append(id_to_name.get(team_id, team_id))
+    unique_names = sorted(set(team_names))
+    if len(unique_names) != 2:
+        return {
+            "found": False,
+            "reason": "incomplete_game",
+            "kickoff": kickoff,
+            "kickoff_label": format_kickoff_label(kickoff),
+            "team_names": unique_names,
+        }
+
+    name_set = set(unique_names)
+    matched = None
+    for spread in spread_rows:
+        if {spread.home_team, spread.road_team} == name_set:
+            matched = spread
+            break
+    if matched is None:
+        return {
+            "found": False,
+            "reason": "no_spread",
+            "kickoff": kickoff,
+            "kickoff_label": format_kickoff_label(kickoff),
+            "team_names": unique_names,
+        }
+
+    if matched.home_team_spread <= matched.road_team_spread:
+        favorite = matched.home_team
+        underdog = matched.road_team
+        favorite_spread = matched.home_team_spread
+        underdog_spread = matched.road_team_spread
+    else:
+        favorite = matched.road_team
+        underdog = matched.home_team
+        favorite_spread = matched.road_team_spread
+        underdog_spread = matched.home_team_spread
+
+    return {
+        "found": True,
+        "reason": None,
+        "kickoff": kickoff,
+        "kickoff_label": format_kickoff_label(kickoff),
+        "home_team": matched.home_team,
+        "road_team": matched.road_team,
+        "favorite": favorite,
+        "underdog": underdog,
+        "favorite_spread": favorite_spread,
+        "underdog_spread": underdog_spread,
+        "favorite_spread_display": format_team_spread(favorite_spread),
+        "underdog_spread_display": format_team_spread(underdog_spread),
+    }
+
+
+def last_game_auto_pick_info(season, week):
+    """Load schedule + spreads and resolve the week's last-game auto-pick sides."""
+    games = NflSurvivorGame.query.filter_by(season_id=season.id, week=week).all()
+    spreads = NflSurvivorSpread.query.filter_by(
+        season_id=season.id, week=week
+    ).all()
+    return resolve_last_game_sides(games, spreads, load_nfl_teams_as_dict())
+
+
+def choose_last_game_auto_pick(used_team_names, last_game):
+    """
+    Last-game favorite if unused, else underdog, else nobody.
+
+    Returns (team_name or None, reason). Kickoff having passed does not skip.
+    """
+    if not last_game or not last_game.get("found"):
+        return None, (last_game or {}).get("reason") or "no_last_game"
+    used = set(used_team_names)
+    favorite = last_game["favorite"]
+    underdog = last_game["underdog"]
+    if favorite not in used:
+        return favorite, "favorite"
+    if underdog not in used:
+        return underdog, "underdog"
+    return None, "both_used"
+
+
+AUTO_PICK_REASON_LABELS = {
+    "favorite": "Last-game favorite",
+    "underdog": "Last-game underdog",
+    "already_picked": "Already picked",
+    "eliminated": "Eliminated",
+    "both_used": "Already used both last-game teams",
+    "no_schedule": "No last game on the schedule",
+    "incomplete_game": "Last game is incomplete on the schedule",
+    "no_spread": "No spread for the last game",
+    "no_last_game": "No last game",
+}
+
+
+def auto_pick_reason_label(reason):
+    return AUTO_PICK_REASON_LABELS.get(reason, reason or "")
 
 
 def format_team_spread(spread_value):

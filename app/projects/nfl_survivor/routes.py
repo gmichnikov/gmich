@@ -37,6 +37,9 @@ from app.projects.nfl_survivor.utils import (
     clear_active_entry,
     default_entry_name_for_user,
     entry_log_description,
+    auto_pick_reason_label,
+    choose_last_game_auto_pick,
+    format_week_choice_label,
     get_active_season,
     get_current_pick_week,
     get_user_entries,
@@ -46,6 +49,7 @@ from app.projects.nfl_survivor.utils import (
     is_scheduled_spreads_day,
     is_team_kickoff_locked,
     is_week_pickable,
+    last_game_auto_pick_info,
     load_nfl_teams,
     load_nfl_teams_as_dict,
     load_nfl_teams_as_pairs,
@@ -855,6 +859,65 @@ def admin_view_picks():
     )
 
 
+def _parse_admin_week(season, raw_week):
+    try:
+        week = int(raw_week)
+    except (TypeError, ValueError):
+        return None
+    if week < 1 or week > season.max_weeks:
+        return None
+    return week
+
+
+def _default_admin_week(season):
+    current_week = get_current_pick_week(season)
+    return max(1, min(current_week, season.max_weeks))
+
+
+def _admin_week_choices(season):
+    return [
+        {"week": week, "label": format_week_choice_label(season, week)}
+        for week in range(1, season.max_weeks + 1)
+    ]
+
+
+def _auto_pick_preview(season, week):
+    last_game = last_game_auto_pick_info(season, week)
+    rows = []
+    assignments = []
+    already_picked_count = 0
+    eliminated_count = 0
+    for participant in _participants_for_season(season):
+        if participant_is_eliminated(participant):
+            eliminated_count += 1
+            continue
+        if _participant_made_pick_for_week(participant.id, week):
+            already_picked_count += 1
+            continue
+        used = _get_previously_picked_team_names(participant.id, week)
+        team_name, reason = choose_last_game_auto_pick(used, last_game)
+        will_assign = team_name is not None
+        row = {
+            "participant": participant,
+            "name": participant.display_name,
+            "owner": participant.user.full_name or participant.user.email,
+            "team_name": team_name,
+            "reason": reason,
+            "reason_label": auto_pick_reason_label(reason),
+            "will_assign": will_assign,
+        }
+        rows.append(row)
+        if will_assign:
+            assignments.append(row)
+    return {
+        "last_game": last_game,
+        "rows": rows,
+        "assignments": assignments,
+        "already_picked_count": already_picked_count,
+        "eliminated_count": eliminated_count,
+    }
+
+
 @nfl_survivor_bp.route("/admin/auto-pick", methods=["GET", "POST"])
 @admin_required
 def admin_auto_pick():
@@ -863,24 +926,28 @@ def admin_auto_pick():
         return redirect(url_for("nfl_survivor.index"))
 
     if request.method == "POST":
-        week_number = int(request.form["week_number"])
-        participants = _participants_for_season(season)
-        name_to_id = {team["name"]: team["id"] for team in load_nfl_teams()}
+        week_number = _parse_admin_week(
+            season, request.form.get("week_number")
+        )
+        if week_number is None:
+            flash("Choose a valid week.")
+            return redirect(url_for("nfl_survivor.admin_auto_pick"))
+        if request.form.get("confirm") != "ASSIGN":
+            flash("Confirm auto picks from the preview before assigning.")
+            return redirect(
+                url_for("nfl_survivor.admin_auto_pick", week=week_number)
+            )
 
-        for participant in participants:
-            if participant_is_eliminated(participant):
+        preview = _auto_pick_preview(season, week_number)
+        name_to_id = map_team_names_to_ids()
+        assigned = 0
+        for row in preview["assignments"]:
+            participant = row["participant"]
+            team_id = name_to_id.get(row["team_name"])
+            if not team_id:
                 continue
             if _participant_made_pick_for_week(participant.id, week_number):
                 continue
-            previously_picked = _get_previously_picked_team_names(
-                participant.id, week_number
-            )
-            team_to_pick = _find_team_with_most_negative_spread(
-                season, previously_picked, week_number
-            )
-            if not team_to_pick:
-                continue
-            team_id = name_to_id.get(team_to_pick)
             db.session.add(
                 NflSurvivorPick(
                     season_id=season.id,
@@ -892,17 +959,41 @@ def admin_auto_pick():
             )
             log_nfl_survivor(
                 "Pick",
-                f"Auto-pick: {current_user.full_name} assigned {team_to_pick} to "
-                f"{entry_log_description(participant)} for week {week_number} "
-                f"({season.name})",
+                f"Auto-pick: {current_user.full_name} assigned {row['team_name']} "
+                f"({row['reason']}) to {entry_log_description(participant)} "
+                f"for week {week_number} ({season.name})",
             )
+            assigned += 1
 
         db.session.commit()
-        flash(f"Auto picks set for week {week_number}.")
-        return redirect(url_for("admin.view_logs", project=PROJECT))
+        if assigned:
+            flash(
+                f"Assigned last-game auto picks to {assigned} "
+                f"{'entry' if assigned == 1 else 'entries'} for week {week_number}."
+            )
+        else:
+            flash(f"Nothing to assign for week {week_number}.")
+        return redirect(
+            url_for("nfl_survivor.admin_auto_pick", week=week_number)
+        )
 
+    week_number = _parse_admin_week(season, request.args.get("week"))
+    if week_number is None:
+        week_number = _default_admin_week(season)
+
+    preview = _auto_pick_preview(season, week_number)
     ctx = _season_context(season)
-    return render_template("nfl_survivor/admin_auto_pick.html", **ctx)
+    return render_template(
+        "nfl_survivor/admin_auto_pick.html",
+        selected_week=week_number,
+        week_choices=_admin_week_choices(season),
+        last_game=preview["last_game"],
+        preview_rows=preview["rows"],
+        assignment_count=len(preview["assignments"]),
+        already_picked_count=preview["already_picked_count"],
+        eliminated_count=preview["eliminated_count"],
+        **ctx,
+    )
 
 
 @nfl_survivor_bp.route("/admin/auto-update", methods=["GET", "POST"])
@@ -913,28 +1004,35 @@ def auto_update():
         return redirect(url_for("nfl_survivor.index"))
 
     if request.method == "POST":
-        week_number = request.form.get("week_number")
-        if week_number:
-            try:
-                week_number = int(week_number)
-                results = _fetch_results_for_week(season, week_number)
-                _update_weekly_results(season, week_number, results)
-                flash(f"Weekly results updated for week {week_number}.")
-            except ValueError:
-                flash("Invalid week number.")
-            except Exception as exc:
-                week_label = week_number if week_number else "unknown"
-                log_nfl_survivor(
-                    "Auto Update",
-                    f"{current_user.full_name} auto-update failed for week "
-                    f"{week_label} ({season.name}): {exc}",
-                )
-                db.session.commit()
-                flash(f"Error updating results: {exc}")
-        return redirect(url_for("nfl_survivor.auto_update"))
+        week_number = _parse_admin_week(season, request.form.get("week_number"))
+        if week_number is None:
+            flash("Choose a valid week.")
+            return redirect(url_for("nfl_survivor.auto_update"))
+        try:
+            results = _fetch_results_for_week(season, week_number)
+            _update_weekly_results(season, week_number, results)
+            flash(f"Weekly results updated for week {week_number}.")
+        except Exception as exc:
+            log_nfl_survivor(
+                "Auto Update",
+                f"{current_user.full_name} auto-update failed for week "
+                f"{week_number} ({season.name}): {exc}",
+            )
+            db.session.commit()
+            flash(f"Error updating results: {exc}")
+        return redirect(url_for("nfl_survivor.auto_update", week=week_number))
+
+    week_number = _parse_admin_week(season, request.args.get("week"))
+    if week_number is None:
+        week_number = _default_admin_week(season)
 
     ctx = _season_context(season)
-    return render_template("nfl_survivor/auto_update.html", **ctx)
+    return render_template(
+        "nfl_survivor/auto_update.html",
+        selected_week=week_number,
+        week_choices=_admin_week_choices(season),
+        **ctx,
+    )
 
 
 @nfl_survivor_bp.route("/admin/test-reminder", methods=["GET", "POST"])
@@ -1545,25 +1643,3 @@ def _get_previously_picked_team_names(participant_id, up_to_week):
     ).all()
     team_lookup = load_nfl_teams_as_dict()
     return [team_lookup.get(pick.team, pick.team) for pick in picks]
-
-
-def _find_team_with_most_negative_spread(season, previously_picked_teams, week_number):
-    spreads = NflSurvivorSpread.query.filter_by(
-        season_id=season.id, week=week_number
-    ).all()
-    most_negative_spread = None
-    team_to_pick = None
-    for spread in spreads:
-        if spread.home_team not in previously_picked_teams and (
-            most_negative_spread is None
-            or spread.home_team_spread < most_negative_spread
-        ):
-            most_negative_spread = spread.home_team_spread
-            team_to_pick = spread.home_team
-        if spread.road_team not in previously_picked_teams and (
-            most_negative_spread is None
-            or spread.road_team_spread < most_negative_spread
-        ):
-            most_negative_spread = spread.road_team_spread
-            team_to_pick = spread.road_team
-    return team_to_pick
