@@ -4,12 +4,42 @@
 
 {% block ns_content %}
 <h1 class="ns-card-title">This week's picks</h1>
-<p class="ns-card-subtitle">Week {{ week }} — admin only</p>
+<p class="ns-card-subtitle">
+  Week {{ week }} — {{ needs_pick_count }} of {{ picks|length }} still need a pick.
+</p>
+
+{% if picks %}
+<div class="ns-filter-bar" data-ns-week-pick-filters>
+  <span class="ns-filter-label">Show</span>
+  <button type="button"
+          class="ns-filter-chip ns-filter-chip-active"
+          data-ns-view="all"
+          aria-pressed="true">
+    Everyone
+    <span class="ns-filter-count">{{ picks|length }}</span>
+  </button>
+  <button type="button"
+          class="ns-filter-chip"
+          data-ns-view="needs_pick"
+          aria-pressed="false">
+    Needs pick
+    <span class="ns-filter-count">{{ needs_pick_count }}</span>
+  </button>
+  <button type="button"
+          class="ns-btn ns-btn-secondary ns-btn-small ns-copy-emails-btn"
+          data-ns-copy-emails
+          {% if not needs_pick_emails %}disabled{% endif %}>
+    Copy emails{% if needs_pick_emails %} ({{ needs_pick_emails|length }}){% endif %}
+  </button>
+  <span class="ns-copy-emails-status" data-ns-copy-status aria-live="polite"></span>
+  <span class="ns-filter-showing" data-ns-filter-showing></span>
+</div>
+
 <div class="ns-table-scroll">
-  <table class="ns-admin-table" data-ns-sort-table data-ns-sort-tie="player">
+  <table class="ns-admin-table" data-ns-sort-table data-ns-sort-tie="player" data-ns-week-picks-table>
     <thead>
       <tr>
-        <th class="ns-col-text" data-ns-sort="player" aria-sort="ascending">
+        <th class="ns-col-text" data-ns-sort="player" aria-sort="none">
           <button type="button" class="ns-sort-btn">Player</button>
         </th>
         <th class="ns-col-text" data-ns-sort="pick" data-ns-empty-last data-ns-empty="Not Picked" aria-sort="none">
@@ -19,20 +49,108 @@
     </thead>
     <tbody>
       {% for row in picks %}
-      <tr data-ns-player="{{ row.name }}" data-ns-pick="{{ row.team_name }}">
+      <tr class="{% if row.needs_pick %}ns-needs-pick-row{% elif row.eliminated %}ns-eliminated-row{% endif %}"
+          data-ns-player="{{ row.name }}"
+          data-ns-pick="{{ row.team_name }}"
+          data-ns-needs-pick="{{ 1 if row.needs_pick else 0 }}"
+          data-ns-row>
         <td class="ns-col-text">{{ row.name }}</td>
-        <td class="ns-col-text{% if row.is_correct is true %} ns-correct{% elif row.is_correct is false %} ns-incorrect{% endif %}">
+        <td class="ns-col-text{% if row.needs_pick %} ns-not-picked-cell{% elif row.is_correct is true %} ns-correct{% elif row.is_correct is false %} ns-incorrect{% endif %}">
+          {% if row.needs_pick %}
+          <span class="ns-not-picked-badge">Not picked</span>
+          {% elif row.eliminated and row.team_name == "Not Picked" %}
+          Out
+          {% else %}
           {{ row.team_name }}
+          {% endif %}
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+<p class="ns-help-text" data-ns-filter-empty hidden>Everyone still in the pool has picked.</p>
+{% else %}
+<p class="ns-help-text">No participants yet.</p>
+{% endif %}
 {% endblock %}
 
 {% block ns_scripts %}
 {% if picks %}
 <script src="{{ url_for('nfl_survivor.static', filename='nfl_survivor/table_sort.js') }}"></script>
+<script>
+(function () {
+  var table = document.querySelector("[data-ns-week-picks-table]");
+  if (!table) return;
+
+  var rows = table.querySelectorAll("tbody tr[data-ns-row]");
+  var empty = document.querySelector("[data-ns-filter-empty]");
+  var showing = document.querySelector("[data-ns-filter-showing]");
+  var chips = document.querySelectorAll("[data-ns-view]");
+  var copyBtn = document.querySelector("[data-ns-copy-emails]");
+  var copyStatus = document.querySelector("[data-ns-copy-status]");
+  var emails = {{ needs_pick_emails | tojson }};
+  var params = new URLSearchParams(window.location.search);
+  var view = params.get("needs_pick") === "1" ? "needs_pick" : "all";
+
+  function apply() {
+    var visible = 0;
+    rows.forEach(function (row) {
+      var show = view === "all" || row.getAttribute("data-ns-needs-pick") === "1";
+      row.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (empty) empty.hidden = visible > 0;
+    if (showing) {
+      showing.textContent = view === "all"
+        ? rows.length + " entries"
+        : "Showing " + visible + " of " + rows.length;
+    }
+    chips.forEach(function (chip) {
+      var on = chip.getAttribute("data-ns-view") === view;
+      chip.classList.toggle("ns-filter-chip-active", on);
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    var url = window.location.pathname + (view === "needs_pick" ? "?needs_pick=1" : "");
+    window.history.replaceState(null, "", url);
+  }
+
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      view = chip.getAttribute("data-ns-view");
+      apply();
+    });
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener("click", function () {
+      if (!emails.length) return;
+      var text = emails.join(", ");
+      function done() {
+        if (copyStatus) {
+          copyStatus.textContent = "Copied " + emails.length + " email" + (emails.length === 1 ? "" : "s") + ".";
+        }
+        copyBtn.textContent = "Copied";
+        window.setTimeout(function () {
+          copyBtn.textContent = emails.length
+            ? "Copy emails (" + emails.length + ")"
+            : "Copy emails";
+        }, 2000);
+      }
+      function fail() {
+        if (copyStatus) copyStatus.textContent = "Could not copy — select and copy from the prompt.";
+        window.prompt("Copy these emails:", text);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fail);
+      } else {
+        fail();
+      }
+    });
+  }
+
+  apply();
+})();
+</script>
 {% endif %}
 {% endblock %}

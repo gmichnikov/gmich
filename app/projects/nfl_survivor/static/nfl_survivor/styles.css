@@ -380,6 +380,74 @@
 .ns-actions-cell {
   white-space: nowrap;
   text-align: right;
+  width: 2.75rem;
+}
+
+.ns-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--ns-radius-sm);
+  background: transparent;
+  color: var(--ns-text-muted);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ns-icon-btn:hover,
+.ns-icon-btn:focus-visible {
+  color: var(--ns-navy);
+  background: var(--ns-bg);
+  border-color: var(--ns-border);
+}
+
+.ns-icon-btn-danger:hover,
+.ns-icon-btn-danger:focus-visible {
+  color: var(--ns-red);
+  background: #fdecea;
+  border-color: #f5c2c0;
+}
+
+.ns-player-view {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ns-player-view label {
+  min-width: 0;
+}
+
+.ns-player-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.ns-player-edit[hidden] {
+  display: none !important;
+}
+
+.ns-player-edit input[type="text"] {
+  flex: 1 1 140px;
+  min-width: 0;
+  width: auto;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--ns-border);
+  border-radius: var(--ns-radius-sm);
+}
+
+.ns-player-edit .ns-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .ns-active-entry-bar {
@@ -781,8 +849,8 @@
   margin-top: 1rem;
   padding: 1rem 1.15rem;
   border-radius: var(--ns-radius-sm);
-  background: var(--ns-turf-light);
-  border-left: 4px solid var(--ns-turf);
+  background: var(--ns-bg);
+  border-left: 4px solid var(--ns-navy);
 }
 
 .ns-pick-current-label {
@@ -1066,6 +1134,45 @@
   background: #fffbeb !important;
 }
 
+.ns-needs-pick-row {
+  background: #fff7ed !important;
+}
+
+.ns-needs-pick-row td:first-child {
+  box-shadow: inset 4px 0 0 #ea580c;
+  font-weight: 700;
+}
+
+.ns-not-picked-cell {
+  font-weight: 700;
+}
+
+.ns-not-picked-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #ffedd5;
+  color: #9a3412;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ns-eliminated-row {
+  color: var(--ns-text-muted);
+}
+
+.ns-copy-emails-btn {
+  margin-left: 0.25rem;
+}
+
+.ns-copy-emails-status {
+  font-size: 0.85rem;
+  color: var(--ns-turf);
+  font-weight: 600;
+}
+
 .ns-payments-form {
   display: none;
 }
@@ -1316,6 +1423,14 @@ th[aria-sort="ascending"] .ns-sort-btn::after {
   }
 
   .ns-filter-chip {
+    width: auto;
+  }
+
+  .ns-filter-bar .ns-btn {
+    width: auto;
+  }
+
+  .ns-player-edit .ns-btn {
     width: auto;
   }
 

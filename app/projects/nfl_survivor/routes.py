@@ -813,28 +813,44 @@ def admin_view_picks():
     current_week = get_current_pick_week(season)
     team_lookup = load_nfl_teams_as_dict()
     participants = _participants_for_season(season)
+    picks_this_week = {
+        pick.participant_id: pick
+        for pick in NflSurvivorPick.query.filter_by(
+            season_id=season.id, week=current_week
+        ).all()
+    }
 
     picks = []
     for participant in participants:
-        pick = NflSurvivorPick.query.filter_by(
-            participant_id=participant.id, week=current_week
-        ).first()
+        pick = picks_this_week.get(participant.id)
+        eliminated = participant_is_eliminated(participant)
+        needs_pick = not eliminated and pick is None
         team_name = (
             team_lookup.get(pick.team, "Not Picked") if pick else "Not Picked"
         )
         picks.append(
             {
                 "name": participant.display_name,
+                "email": participant.user.email,
                 "team_name": team_name,
                 "is_correct": pick.is_correct if pick else None,
+                "needs_pick": needs_pick,
+                "eliminated": eliminated,
             }
         )
+
+    picks.sort(key=lambda row: (not row["needs_pick"], row["name"].lower()))
+    needs_pick_emails = sorted(
+        {row["email"] for row in picks if row["needs_pick"] and row["email"]}
+    )
 
     ctx = _season_context(season)
     return render_template(
         "nfl_survivor/admin_view_picks.html",
         picks=picks,
         week=current_week,
+        needs_pick_count=sum(1 for row in picks if row["needs_pick"]),
+        needs_pick_emails=needs_pick_emails,
         **ctx,
     )
 

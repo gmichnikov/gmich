@@ -34,6 +34,12 @@
     Needs pick
     <span class="ns-filter-count">{{ needs_pick_count }}</span>
   </button>
+  <button type="button"
+          class="ns-btn ns-btn-secondary ns-btn-small ns-copy-emails-btn"
+          data-ns-copy-emails>
+    Copy emails
+  </button>
+  <span class="ns-copy-emails-status" data-ns-copy-status aria-live="polite"></span>
   <span class="ns-filter-showing" data-ns-filter-showing></span>
 </div>
 
@@ -48,7 +54,7 @@
         <th>Picks</th>
         <th>Losses</th>
         <th>Needs pick</th>
-        <th></th>
+        <th class="ns-actions-cell"><span class="ns-sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody>
@@ -56,7 +62,8 @@
       <tr class="{% if not row.has_paid %}ns-highlight{% endif %}"
           data-ns-row
           data-ns-paid="{{ 1 if row.has_paid else 0 }}"
-          data-ns-needs-pick="{{ 1 if row.needs_to_pick else 0 }}">
+          data-ns-needs-pick="{{ 1 if row.needs_to_pick else 0 }}"
+          data-ns-email="{{ row.email }}">
         <td class="ns-paid-cell">
           <input type="checkbox"
                  name="paid"
@@ -66,8 +73,44 @@
                  aria-label="Mark {{ row.name }} paid"
                  {% if row.has_paid %}checked{% endif %}>
         </td>
-        <td class="ns-col-text">
-          <label for="paid_{{ row.id }}">{{ row.name }}</label>
+        <td class="ns-col-text ns-player-cell" data-ns-player-cell>
+          <div class="ns-player-view" data-ns-player-view>
+            <label for="paid_{{ row.id }}">{{ row.name }}</label>
+            <button type="button"
+                    class="ns-icon-btn"
+                    data-ns-rename-open
+                    aria-label="Rename {{ row.name }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </svg>
+            </button>
+          </div>
+          <form method="post"
+                action="{{ url_for('nfl_survivor.rename_entry', participant_id=row.id) }}"
+                class="ns-player-edit"
+                data-ns-rename-form
+                hidden>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="ns-sr-only" for="ns-rename-{{ row.id }}">Entry name</label>
+            <input type="text"
+                   id="ns-rename-{{ row.id }}"
+                   name="display_name"
+                   value="{{ row.name }}"
+                   maxlength="100"
+                   required
+                   autocomplete="off"
+                   data-ns-original="{{ row.name }}">
+            <button type="submit"
+                    class="ns-btn ns-btn-primary ns-btn-small"
+                    data-ns-rename-submit
+                    disabled>
+              Update
+            </button>
+            <button type="button" class="ns-btn ns-btn-secondary ns-btn-small" data-ns-rename-cancel>
+              Cancel
+            </button>
+          </form>
         </td>
         <td class="ns-col-text">{{ row.owner }}</td>
         <td class="ns-col-text">{{ row.email }}</td>
@@ -75,15 +118,21 @@
         <td>{{ row.wrong_picks }}</td>
         <td>{% if row.needs_to_pick %}Yes{% endif %}</td>
         <td class="ns-actions-cell">
-          <form method="post"
-                action="{{ url_for('nfl_survivor.rename_entry', participant_id=row.id) }}"
-                class="ns-entry-rename-form ns-entry-rename-inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="text" name="display_name" value="{{ row.name }}" maxlength="100" required>
-            <button type="submit" class="ns-btn ns-btn-secondary ns-btn-small">Rename</button>
-          </form>
-          <a href="{{ url_for('nfl_survivor.admin_remove_participant', participant_id=row.id) }}"
-             class="ns-link-danger">Remove</a>
+          <button type="button"
+                  class="ns-icon-btn ns-icon-btn-danger"
+                  data-ns-remove-open
+                  data-ns-remove-url="{{ url_for('nfl_survivor.admin_remove_participant', participant_id=row.id) }}"
+                  data-ns-remove-name="{{ row.name }}"
+                  data-ns-remove-picks="{{ row.picks_count }}"
+                  aria-label="Remove {{ row.name }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18"></path>
+              <path d="M8 6V4h8v2"></path>
+              <path d="M19 6l-1 14H6L5 6"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
         </td>
       </tr>
       {% endfor %}
@@ -92,6 +141,30 @@
 </div>
 <p class="ns-help-text" data-ns-filter-empty hidden>No participants match these filters.</p>
 <button type="submit" form="ns-payments-form" class="ns-btn ns-btn-primary">Save payment status</button>
+
+<dialog class="ns-dialog" id="ns-remove-dialog" aria-labelledby="ns-remove-dialog-title">
+  <form method="post" class="ns-form ns-add-entry-dialog-form" id="ns-remove-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm" value="REMOVE">
+    <h2 class="ns-dialog-title" id="ns-remove-dialog-title">Remove this entry?</h2>
+    <p class="ns-dialog-text">
+      You are about to remove <strong data-ns-remove-dialog-name></strong> from
+      <strong>{{ season.name }}</strong>. This cannot be undone.
+    </p>
+    <ul class="ns-warning-list">
+      <li>Their user account is <strong>not</strong> deleted.</li>
+      <li>They will no longer appear in the pool or standings.</li>
+      <li>
+        <span data-ns-remove-dialog-picks></span>
+        for this season will be permanently deleted.
+      </li>
+    </ul>
+    <div class="ns-dialog-actions">
+      <button type="button" class="ns-btn ns-btn-secondary" data-ns-dialog-close>Cancel</button>
+      <button type="submit" class="ns-btn ns-btn-danger">Remove from pool</button>
+    </div>
+  </form>
+</dialog>
 {% else %}
 <p class="ns-help-text">No participants yet.</p>
 {% endif %}
@@ -108,27 +181,52 @@
   var empty = document.querySelector("[data-ns-filter-empty]");
   var showing = document.querySelector("[data-ns-filter-showing]");
   var chips = document.querySelectorAll("[data-ns-filter]");
+  var copyBtn = document.querySelector("[data-ns-copy-emails]");
+  var copyStatus = document.querySelector("[data-ns-copy-status]");
   var form = document.getElementById("ns-payments-form");
   var params = new URLSearchParams(window.location.search);
   var filters = {
     unpaid: params.get("unpaid") === "1",
     needs_pick: params.get("needs_pick") === "1"
   };
+  var visibleEmails = [];
+
+  function uniqueEmails(fromRows) {
+    var seen = {};
+    var list = [];
+    fromRows.forEach(function (row) {
+      var email = (row.getAttribute("data-ns-email") || "").trim();
+      if (!email || seen[email]) return;
+      seen[email] = true;
+      list.push(email);
+    });
+    list.sort();
+    return list;
+  }
+
+  function setCopyLabel() {
+    if (!copyBtn) return;
+    copyBtn.disabled = visibleEmails.length === 0;
+    copyBtn.textContent = visibleEmails.length
+      ? "Copy emails (" + visibleEmails.length + ")"
+      : "Copy emails";
+  }
 
   function apply() {
-    var visible = 0;
+    var visibleRows = [];
     rows.forEach(function (row) {
       var show = true;
       if (filters.unpaid && row.getAttribute("data-ns-paid") !== "0") show = false;
       if (filters.needs_pick && row.getAttribute("data-ns-needs-pick") !== "1") show = false;
       row.hidden = !show;
-      if (show) visible += 1;
+      if (show) visibleRows.push(row);
     });
-    if (empty) empty.hidden = visible > 0;
+    visibleEmails = uniqueEmails(visibleRows);
+    if (empty) empty.hidden = visibleRows.length > 0;
     if (showing) {
-      showing.textContent = visible === rows.length
+      showing.textContent = visibleRows.length === rows.length
         ? rows.length + " participants"
-        : "Showing " + visible + " of " + rows.length;
+        : "Showing " + visibleRows.length + " of " + rows.length;
     }
     chips.forEach(function (chip) {
       var key = chip.getAttribute("data-ns-filter");
@@ -136,6 +234,7 @@
       chip.classList.toggle("ns-filter-chip-active", on);
       chip.setAttribute("aria-pressed", on ? "true" : "false");
     });
+    setCopyLabel();
     var next = new URLSearchParams();
     if (filters.unpaid) next.set("unpaid", "1");
     if (filters.needs_pick) next.set("needs_pick", "1");
@@ -152,6 +251,127 @@
       apply();
     });
   });
+
+  if (copyBtn) {
+    copyBtn.addEventListener("click", function () {
+      if (!visibleEmails.length) return;
+      var text = visibleEmails.join(", ");
+      var count = visibleEmails.length;
+      function done() {
+        if (copyStatus) {
+          copyStatus.textContent = "Copied " + count + " email" + (count === 1 ? "" : "s") + ".";
+        }
+        copyBtn.textContent = "Copied";
+        window.setTimeout(setCopyLabel, 2000);
+      }
+      function fail() {
+        if (copyStatus) copyStatus.textContent = "Could not copy — select and copy from the prompt.";
+        window.prompt("Copy these emails:", text);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fail);
+      } else {
+        fail();
+      }
+    });
+  }
+
+  function isRenameDirty(form) {
+    var input = form.querySelector('[name="display_name"]');
+    if (!input) return false;
+    var original = (input.getAttribute("data-ns-original") || "").trim();
+    return input.value.trim() !== "" && input.value.trim() !== original;
+  }
+
+  function syncRenameSubmit(form) {
+    var btn = form.querySelector("[data-ns-rename-submit]");
+    if (btn) btn.disabled = !isRenameDirty(form);
+  }
+
+  function closeRename(cell) {
+    var form = cell.querySelector("[data-ns-rename-form]");
+    var view = cell.querySelector("[data-ns-player-view]");
+    var input = form && form.querySelector('[name="display_name"]');
+    if (input) input.value = input.getAttribute("data-ns-original") || "";
+    if (form) {
+      form.hidden = true;
+      syncRenameSubmit(form);
+    }
+    if (view) view.hidden = false;
+    cell.classList.remove("ns-player-editing");
+  }
+
+  function openRename(cell) {
+    table.querySelectorAll("[data-ns-player-cell].ns-player-editing").forEach(closeRename);
+    var form = cell.querySelector("[data-ns-rename-form]");
+    var view = cell.querySelector("[data-ns-player-view]");
+    var input = form && form.querySelector('[name="display_name"]');
+    if (view) view.hidden = true;
+    if (form) form.hidden = false;
+    cell.classList.add("ns-player-editing");
+    if (input) {
+      input.focus();
+      input.select();
+      syncRenameSubmit(form);
+    }
+  }
+
+  table.querySelectorAll("[data-ns-rename-form]").forEach(function (form) {
+    var input = form.querySelector('[name="display_name"]');
+    if (input) {
+      input.addEventListener("input", function () {
+        syncRenameSubmit(form);
+      });
+    }
+    form.addEventListener("submit", function (e) {
+      if (!isRenameDirty(form)) e.preventDefault();
+    });
+  });
+
+  table.addEventListener("click", function (e) {
+    var pencil = e.target.closest("[data-ns-rename-open]");
+    if (pencil) {
+      openRename(pencil.closest("[data-ns-player-cell]"));
+      return;
+    }
+    var cancel = e.target.closest("[data-ns-rename-cancel]");
+    if (cancel) {
+      closeRename(cancel.closest("[data-ns-player-cell]"));
+    }
+  });
+
+  table.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var cell = e.target.closest("[data-ns-player-cell].ns-player-editing");
+    if (cell) closeRename(cell);
+  });
+
+  var dialog = document.getElementById("ns-remove-dialog");
+  var removeForm = document.getElementById("ns-remove-form");
+  if (dialog) {
+    if (dialog.parentElement !== document.body) {
+      document.body.appendChild(dialog);
+    }
+    dialog.querySelectorAll("[data-ns-dialog-close]").forEach(function (el) {
+      el.addEventListener("click", function () {
+        dialog.close();
+      });
+    });
+    table.addEventListener("click", function (e) {
+      var trash = e.target.closest("[data-ns-remove-open]");
+      if (!trash || !removeForm) return;
+      var name = trash.getAttribute("data-ns-remove-name") || "this entry";
+      var picks = Number(trash.getAttribute("data-ns-remove-picks") || "0");
+      var nameEl = dialog.querySelector("[data-ns-remove-dialog-name]");
+      var picksEl = dialog.querySelector("[data-ns-remove-dialog-picks]");
+      if (nameEl) nameEl.textContent = name;
+      if (picksEl) {
+        picksEl.textContent = picks === 1 ? "1 pick" : picks + " picks";
+      }
+      removeForm.setAttribute("action", trash.getAttribute("data-ns-remove-url") || "");
+      dialog.showModal();
+    });
+  }
 
   apply();
 })();
