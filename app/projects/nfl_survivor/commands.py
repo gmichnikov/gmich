@@ -145,5 +145,24 @@ def send_reminders_command(user_id, user_email, force, dry_run):
     )
 
 
+@nfl_survivor_cli.command("send-sunday-nudge")
+@click.option("--dry-run", is_flag=True, help="Print counts without sending.")
+@with_appcontext
+def send_sunday_nudge_command(dry_run):
+    """Sunday missing-pick nudge (no-op except Sunday, US/Eastern)."""
+    from app.projects.nfl_survivor.sunday_nudge import run_sunday_nudge
+
+    result = run_sunday_nudge(dry_run=dry_run)
+    if result.get("error"):
+        raise click.ClickException(result["error"])
+
+    click.echo(
+        "week={week} recipients={recipients} sent={sent} failed={failed} "
+        "dry_run={dry_run} skipped_day={skipped_day} "
+        "skipped_already={skipped_already} skipped_empty={skipped_empty} "
+        "skipped_unverified={skipped_unverified}".format(**result)
+    )
+
+
 def init_app(app):
     app.cli.add_command(nfl_survivor_cli)

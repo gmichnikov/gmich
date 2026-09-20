@@ -30,7 +30,7 @@ def _get_mailgun_config():
     }
 
 
-def send_email(to_email, subject, text_content, html_content=None, from_name="Greg", from_email=None, reply_to=None, timeout=None):
+def send_email(to_email, subject, text_content, html_content=None, from_name="Greg", from_email=None, reply_to=None, timeout=None, bcc=None):
     """
     Send an email using Mailgun API.
     
@@ -43,8 +43,9 @@ def send_email(to_email, subject, text_content, html_content=None, from_name="Gr
         from_email: Sender address (default: SENDER_EMAIL env var)
         reply_to: Optional Reply-To address; if set, replies go here instead of from_email
         timeout: Optional seconds to wait on Mailgun. Worth setting when the
-            send happens during a web request, where a stalled call would
+            send happens during a web request, where a stalled request would
             otherwise occupy a worker until the Heroku router gives up.
+        bcc: Optional BCC address or iterable of addresses
     
     Returns:
         requests.Response object if successful
@@ -68,6 +69,14 @@ def send_email(to_email, subject, text_content, html_content=None, from_name="Gr
 
     if reply_to:
         data["h:Reply-To"] = reply_to
+
+    if bcc:
+        if isinstance(bcc, (list, tuple, set)):
+            bcc_value = ", ".join(address for address in bcc if address)
+        else:
+            bcc_value = bcc
+        if bcc_value:
+            data["bcc"] = bcc_value
     
     try:
         response = requests.post(

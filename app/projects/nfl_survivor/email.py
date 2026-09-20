@@ -163,3 +163,28 @@ Change your reminder day (or turn emails off) in the NFL Survivor header after y
         from_name="NFL Survivor",
     )
     return True
+
+
+def send_sunday_nudge_email(user, week, *, missing_names, list_entries, bcc=None):
+    """Mandatory Sunday missing-pick email. Raises on Mailgun failure."""
+    from app.projects.nfl_survivor.sunday_nudge import (
+        sunday_nudge_html,
+        sunday_nudge_subject,
+        sunday_nudge_text,
+    )
+
+    base_url = os.getenv("BASE_URL", "https://gregmichnikov.com").rstrip("/")
+    pick_url = f"{base_url}/nfl-survivor/pick"
+    send_email(
+        to_email=user.email,
+        subject=sunday_nudge_subject(week),
+        text_content=sunday_nudge_text(
+            week, pick_url, missing_names, list_entries
+        ),
+        html_content=sunday_nudge_html(
+            week, pick_url, missing_names, list_entries
+        ),
+        from_name="NFL Survivor",
+        bcc=bcc,
+    )
+    return True

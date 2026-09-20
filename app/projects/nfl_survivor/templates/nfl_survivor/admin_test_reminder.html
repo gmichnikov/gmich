@@ -17,6 +17,11 @@
   Daily job (add this in Heroku Scheduler at the morning hour you want, US/Eastern):
   <code>flask nfl-survivor send-reminders</code>
 </p>
+<p class="ns-help-text">
+  Sunday missing-pick nudge (daily Scheduler job; it no-ops except Sunday).
+  12pm ET is 16:00 UTC during EDT, 17:00 UTC during EST:
+  <code>flask nfl-survivor send-sunday-nudge</code>
+</p>
 <form method="post" class="ns-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <button type="submit" class="ns-btn ns-btn-primary">Send test email to me</button>
