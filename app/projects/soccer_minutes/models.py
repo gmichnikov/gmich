@@ -136,6 +136,12 @@ class ScmGame(db.Model):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
+    goals = db.relationship(
+        "ScmGoal",
+        back_populates="game",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (db.Index("ix_scm_game_team_id", "team_id"),)
 
@@ -209,4 +215,41 @@ class ScmEvent(db.Model):
         return (
             f"<ScmEvent game={self.game_id} period={self.period} "
             f"type={self.type} at_ms={self.at_ms}>"
+        )
+
+
+class ScmGoal(db.Model):
+    """One scored goal. Score is counted from these rows, not stored on the game."""
+
+    __tablename__ = "scm_goal"
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(
+        db.Integer, db.ForeignKey("scm_game.id", ondelete="CASCADE"), nullable=False
+    )
+    period = db.Column(db.Integer, nullable=False)
+    at_ms = db.Column(db.Integer, nullable=False)
+    side = db.Column(db.String(8), nullable=False)
+    scorer_id = db.Column(
+        db.Integer,
+        db.ForeignKey("scm_player.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    assist_id = db.Column(
+        db.Integer,
+        db.ForeignKey("scm_player.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    game = db.relationship("ScmGame", back_populates="goals")
+    scorer = db.relationship("ScmPlayer", foreign_keys=[scorer_id])
+    assist = db.relationship("ScmPlayer", foreign_keys=[assist_id])
+
+    __table_args__ = (db.Index("ix_scm_goal_game_id", "game_id"),)
+
+    def __repr__(self):
+        return (
+            f"<ScmGoal game={self.game_id} period={self.period} "
+            f"side={self.side} at_ms={self.at_ms}>"
         )

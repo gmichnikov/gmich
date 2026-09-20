@@ -7,6 +7,18 @@
   var offButton = document.getElementById("scm-send-off");
   var clockDisplay = document.getElementById("scm-clock-display");
   var clockPeriod = document.getElementById("scm-clock-period");
+  var clockScore = document.getElementById("scm-clock-score");
+  var goalUs = document.getElementById("scm-goal-us");
+  var goalThem = document.getElementById("scm-goal-them");
+  var goalConfirm = document.getElementById("scm-goal-confirm");
+  var goalConfirmTitle = document.getElementById("scm-goal-confirm-title");
+  var goalUsFields = document.getElementById("scm-goal-us-fields");
+  var goalScorer = document.getElementById("scm-goal-scorer");
+  var goalAssist = document.getElementById("scm-goal-assist");
+  var goalClock = document.getElementById("scm-goal-clock");
+  var goalConfirmBtn = document.getElementById("scm-goal-confirm-btn");
+  var goalCancel = document.getElementById("scm-goal-cancel");
+  var goalList = document.getElementById("scm-goal-list");
   var pauseResume = document.getElementById("scm-pause-resume");
   var endPeriod = document.getElementById("scm-end-period");
   var setForm = document.getElementById("scm-set-clock-form");
@@ -32,6 +44,8 @@
   var selected = null;
   var saving = false;
   var goTimeDirty = false;
+  var goalTimeDirty = false;
+  var goalSide = "us";
   var wakeSentinel = null;
   var showSpells = false;
   try {
@@ -150,6 +164,9 @@
     if (goClock && goConfirm && !goConfirm.hidden && !goTimeDirty) {
       goClock.value = formatMs(displayedMs());
     }
+    if (goalClock && goalConfirm && !goalConfirm.hidden && !goalTimeDirty) {
+      goalClock.value = formatMs(displayedMs());
+    }
     if (showSpells) {
       document.querySelectorAll("[data-spell-player]").forEach(function (node) {
         var playerId = parseInt(node.getAttribute("data-spell-player"), 10);
@@ -193,6 +210,109 @@
     goTimeDirty = false;
   }
 
+  function hideGoalConfirm() {
+    if (goalConfirm) {
+      goalConfirm.hidden = true;
+    }
+    goalTimeDirty = false;
+  }
+
+  function fillGoalPlayers() {
+    var people = state.goal_players || [];
+    function fill(select, includeBlank, blankLabel) {
+      if (!select) {
+        return;
+      }
+      var current = select.value;
+      select.innerHTML = "";
+      if (includeBlank) {
+        var blank = document.createElement("option");
+        blank.value = "";
+        blank.textContent = blankLabel;
+        select.appendChild(blank);
+      }
+      people.forEach(function (person) {
+        var option = document.createElement("option");
+        option.value = String(person.id);
+        option.textContent = person.on_field
+          ? person.label
+          : person.label + " (bench)";
+        select.appendChild(option);
+      });
+      if (current) {
+        select.value = current;
+      }
+    }
+    fill(goalScorer, true, "Who scored?");
+    fill(goalAssist, true, "No assist");
+  }
+
+  function renderGoals() {
+    if (clockScore) {
+      clockScore.textContent = (state.score && state.score.displayed) || "0–0";
+    }
+    if (!goalList) {
+      return;
+    }
+    goalList.innerHTML = "";
+    (state.goals || []).forEach(function (goal) {
+      var li = document.createElement("li");
+      li.className = "scm-goal-row";
+      var line = document.createElement("span");
+      line.className = "scm-goal-line";
+      line.textContent = "P" + goal.period + " · " + goal.clock + " · " + goal.label;
+      li.appendChild(line);
+      if (goal.warning) {
+        var warn = document.createElement("span");
+        warn.className = "scm-goal-warning";
+        warn.textContent = goal.warning;
+        li.appendChild(warn);
+      }
+      if (goal.deleteUrl) {
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "scm-btn scm-btn-secondary scm-btn-small";
+        remove.textContent = "Remove";
+        remove.addEventListener("click", function () {
+          if (saving) {
+            return;
+          }
+          if (!window.confirm("Remove this goal?")) {
+            return;
+          }
+          runAction(goal.deleteUrl, {});
+        });
+        li.appendChild(remove);
+      }
+      goalList.appendChild(li);
+    });
+  }
+
+  function openGoalConfirm(side) {
+    hideGoConfirm();
+    goalSide = side;
+    goalTimeDirty = false;
+    if (goalConfirmTitle) {
+      goalConfirmTitle.textContent = side === "them" ? "They scored" : "We scored";
+    }
+    if (goalUsFields) {
+      goalUsFields.hidden = side === "them";
+    }
+    fillGoalPlayers();
+    if (goalScorer) {
+      goalScorer.value = "";
+    }
+    if (goalAssist) {
+      goalAssist.value = "";
+    }
+    if (goalClock) {
+      goalClock.value = formatMs(displayedMs());
+    }
+    if (goalConfirm) {
+      goalConfirm.hidden = false;
+    }
+  }
+
   function applyState(next) {
     if (next.reload || (next.phase && next.phase !== "live")) {
       window.location.reload();
@@ -201,6 +321,7 @@
     state = next;
     selected = null;
     hideGoConfirm();
+    hideGoalConfirm();
     render();
     tickClock();
     syncWakeLock();
@@ -421,6 +542,8 @@
     renderBench();
     renderDiff();
     renderMinutes();
+    renderGoals();
+    fillGoalPlayers();
     if (fieldTitle) {
       fieldTitle.textContent = state.can_go ? "Pending field" : "Field";
     }
@@ -620,6 +743,42 @@
     undoButton.addEventListener("click", function () {
       runAction(state.undoUrl, {});
     });
+  }
+
+  if (goalUs) {
+    goalUs.addEventListener("click", function () {
+      openGoalConfirm("us");
+    });
+  }
+
+  if (goalThem) {
+    goalThem.addEventListener("click", function () {
+      openGoalConfirm("them");
+    });
+  }
+
+  if (goalClock) {
+    goalClock.addEventListener("input", function () {
+      goalTimeDirty = true;
+    });
+  }
+
+  if (goalConfirmBtn) {
+    goalConfirmBtn.addEventListener("click", function () {
+      if (!state.goalUrl) {
+        return;
+      }
+      var body = { side: goalSide, clock: goalClock ? goalClock.value : "" };
+      if (goalSide === "us") {
+        body.scorer_id = goalScorer ? goalScorer.value : "";
+        body.assist_id = goalAssist ? goalAssist.value : "";
+      }
+      runAction(state.goalUrl, body);
+    });
+  }
+
+  if (goalCancel) {
+    goalCancel.addEventListener("click", hideGoalConfirm);
   }
 
   if (spellsToggle) {

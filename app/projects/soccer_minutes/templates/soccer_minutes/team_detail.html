@@ -40,6 +40,7 @@
             <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}" class="scm-game-link">
               <span class="scm-game-label">{{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}</span>
               <span class="scm-game-meta">
+                {% if game_scores[game.id].has_goals %}{{ game_scores[game.id].displayed }} &middot; {% endif %}
                 {{ game.period_count }} {{ 'period' if game.period_count == 1 else 'periods' }}
               </span>
             </a>

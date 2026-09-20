@@ -32,6 +32,17 @@ from app.projects.soccer_minutes.live_state import (
     undo_last,
 )
 from app.projects.soccer_minutes.recap import event_log_rows, update_event_at_ms
+from app.projects.soccer_minutes.goals import (
+    apply_goal_attrs,
+    create_goal,
+    goal_player_options,
+    goal_rows,
+    ordered_goals,
+    score_from_goals,
+    scores_by_game_id,
+    started_periods,
+    validate_goal,
+)
 from app.projects.soccer_minutes.formation_config import (
     DEFAULT_PERIOD_COUNT,
     default_formation,
@@ -41,7 +52,13 @@ from app.projects.soccer_minutes.formation_config import (
     parse_period_count,
     pitch_bands,
 )
-from app.projects.soccer_minutes.models import ScmEvent, ScmGame, ScmPlayer, ScmTeam
+from app.projects.soccer_minutes.models import (
+    ScmEvent,
+    ScmGame,
+    ScmGoal,
+    ScmPlayer,
+    ScmTeam,
+)
 from app.utils.logging import log_project_visit
 
 soccer_minutes_bp = Blueprint(
@@ -100,6 +117,7 @@ def _game_urls(team, game):
         "resetUrl": url_for("soccer_minutes.game_reset", **kw),
         "endUrl": url_for("soccer_minutes.game_end", **kw),
         "undoUrl": url_for("soccer_minutes.game_undo", **kw),
+        "goalUrl": url_for("soccer_minutes.game_goal_create", **kw),
     }
 
 
@@ -113,7 +131,29 @@ def _page_payload(team, game):
     payload["filled"] = setup["filled"]
     payload["field_size"] = setup["field_size"]
     payload["locked"] = payload["phase"] not in ("setup", "between")
+    _attach_goals(team, game, payload)
     return payload
+
+
+def _attach_goals(team, game, payload):
+    players = team.players.order_by(ScmPlayer.sort_order, ScmPlayer.id).all()
+    players_by_id = {player.id: player for player in players}
+    present_ids = present_player_ids(players, roster_entries_by_player(game))
+    events = ordered_events(game)
+    goals = ordered_goals(game)
+    live_map = (payload.get("live") or {}).get("assignments") or {}
+    payload["score"] = score_from_goals(goals)
+    payload["goals"] = goal_rows(goals, players_by_id, events, game.formation)
+    payload["goal_players"] = goal_player_options(
+        players, present_ids, live_map
+    )
+    for row in payload["goals"]:
+        row["deleteUrl"] = url_for(
+            "soccer_minutes.game_goal_delete",
+            team_id=team.id,
+            game_id=game.id,
+            goal_id=row["id"],
+        )
 
 
 def _json_ok(team, game, previous_phase):
@@ -125,6 +165,66 @@ def _json_ok(team, game, previous_phase):
 
 def _json_error(message, status=400):
     return jsonify(ok=False, error=message), status
+
+
+def _get_goal_or_404(game, goal_id):
+    goal = ScmGoal.query.filter_by(id=goal_id, game_id=game.id).first()
+    if goal is None:
+        abort(404)
+    return goal
+
+
+def _goal_input():
+    if request.is_json or (
+        request.headers.get("Content-Type") or ""
+    ).startswith("application/json"):
+        return request.get_json(silent=True) or {}, True
+    return request.form, False
+
+
+def _recap_goals_url(team, game, anchor=None):
+    url = url_for("soccer_minutes.game_recap", team_id=team.id, game_id=game.id)
+    if anchor:
+        return url + anchor
+    return url + "#scm-goals"
+
+
+def _validate_goal_from_request(team, game, data, *, live, existing=None):
+    players = team.players.order_by(ScmPlayer.sort_order, ScmPlayer.id).all()
+    present_ids = present_player_ids(players, roster_entries_by_player(game))
+    events = ordered_events(game)
+    phase = game_phase(game, events)
+    displayed = displayed_elapsed_ms(game) if phase == "live" else None
+    if live:
+        if phase != "live":
+            return "Record a goal during a period.", None
+        period = game.current_period
+        stamp, err = parse_action_clock(data, displayed)
+        if err:
+            return err, None
+        if stamp is None:
+            return "Enter a time like 8:00.", None
+    else:
+        period = data.get("period")
+        stamp, err = parse_action_clock(data, None)
+        if stamp is None:
+            return err or "Enter a time like 8:00.", None
+    require_scorer = existing is None or (
+        existing.side == "us" and existing.scorer_id is not None
+    )
+    return validate_goal(
+        side=data.get("side"),
+        period=period,
+        at_ms=stamp,
+        scorer_id=data.get("scorer_id"),
+        assist_id=data.get("assist_id"),
+        events=events,
+        present_ids=present_ids,
+        displayed_ms=displayed,
+        current_period=game.current_period,
+        phase=phase,
+        require_scorer=require_scorer,
+    )
 
 
 def _sanitize_game_maps(team, game):
@@ -254,6 +354,7 @@ def team_detail(team_id):
         team=team,
         players=players,
         games=games,
+        game_scores=scores_by_game_id([game.id for game in games]),
         **ctx,
     )
 
@@ -506,6 +607,14 @@ def game_recap(team_id, game_id):
         minutes=payload["minutes"],
         events=events,
         phase=payload["phase"],
+        score=payload["score"],
+        goals=payload["goals"],
+        goal_players=payload["goal_players"],
+        started_periods=started_periods(ordered_events(game)),
+        default_goal_period=game.current_period,
+        default_goal_clock=payload["clock"]["displayed"]
+        if payload["phase"] == "live"
+        else "",
     )
 
 
@@ -533,6 +642,71 @@ def event_set_time(team_id, game_id, event_id):
     db.session.commit()
     flash("Event time saved.", "success")
     return redirect(recap_url)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/goals", methods=["POST"]
+)
+@login_required
+def game_goal_create(team_id, game_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    data, live = _goal_input()
+    previous = game_phase(game)
+    error, attrs = _validate_goal_from_request(team, game, data, live=live)
+    if error:
+        if live:
+            return _json_error(error)
+        flash(error, "error")
+        return redirect(_recap_goals_url(team, game, "#scm-goal-add"))
+    goal = create_goal(game, attrs)
+    db.session.add(goal)
+    db.session.commit()
+    if live:
+        return _json_ok(team, game, previous)
+    flash("Goal saved.", "success")
+    return redirect(_recap_goals_url(team, game, f"#scm-goal-{goal.id}"))
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/goals/<int:goal_id>/update",
+    methods=["POST"],
+)
+@login_required
+def game_goal_update(team_id, game_id, goal_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    goal = _get_goal_or_404(game, goal_id)
+    recap_url = _recap_goals_url(team, game, f"#scm-goal-{goal.id}")
+    data = request.form
+    error, attrs = _validate_goal_from_request(
+        team, game, data, live=False, existing=goal
+    )
+    if error:
+        flash(error, "error")
+        return redirect(recap_url)
+    apply_goal_attrs(goal, attrs)
+    game.updated_at = datetime.utcnow()
+    db.session.commit()
+    flash("Goal saved.", "success")
+    return redirect(recap_url)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/goals/<int:goal_id>/delete",
+    methods=["POST"],
+)
+@login_required
+def game_goal_delete(team_id, game_id, goal_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    goal = _get_goal_or_404(game, goal_id)
+    _data, live = _goal_input()
+    previous = game_phase(game)
+    db.session.delete(goal)
+    game.updated_at = datetime.utcnow()
+    db.session.commit()
+    if live:
+        return _json_ok(team, game, previous)
+    flash("Goal removed.", "success")
+    return redirect(_recap_goals_url(team, game))
 
 
 @soccer_minutes_bp.route("/teams/<int:team_id>/games/<int:game_id>/edit")

@@ -25,6 +25,9 @@
         <h1 class="scm-page-title">Recap</h1>
         <p class="scm-page-subtitle">
           {{ game.game_date.strftime('%b %d, %Y') }} vs {{ game.opponent_name }}
+          {% if score %}
+          &middot; {{ score.displayed }}
+          {% endif %}
           {% if phase == 'done' %}
           &middot; Final
           {% elif phase == 'live' %}
@@ -36,6 +39,144 @@
       </div>
       <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Back to game</a>
     </header>
+
+    <div class="scm-card" id="scm-goals">
+      <div class="scm-card-header">Goals</div>
+      <div class="scm-card-body">
+        <p class="scm-hint">{{ score.displayed }}{% if phase == 'done' %} final{% endif %}. Time is the game clock in that period.</p>
+        {% if goals %}
+        <ol class="scm-event-log">
+          {% for goal in goals %}
+          <li class="scm-event" id="scm-goal-{{ goal.id }}">
+            <div class="scm-event-head">
+              <span class="scm-event-title">Period {{ goal.period }} · {{ goal.label }}</span>
+            </div>
+            <form
+              method="post"
+              action="{{ url_for('soccer_minutes.game_goal_update', team_id=team.id, game_id=game.id, goal_id=goal.id) }}"
+              class="scm-goal-edit"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="side" value="{{ goal.side }}">
+              <input type="hidden" name="period" value="{{ goal.period }}">
+              <label class="scm-label" for="scm-goal-clock-{{ goal.id }}">Time</label>
+              <div class="scm-set-clock-row">
+                <input
+                  type="text"
+                  id="scm-goal-clock-{{ goal.id }}"
+                  name="clock"
+                  class="scm-input"
+                  value="{{ goal.clock }}"
+                  inputmode="numeric"
+                  required
+                  autocomplete="off"
+                >
+                <button type="submit" class="scm-btn scm-btn-secondary">Save</button>
+              </div>
+              {% if goal.side == 'us' %}
+              <label class="scm-label" for="scm-goal-scorer-{{ goal.id }}">Scorer</label>
+              <select id="scm-goal-scorer-{{ goal.id }}" name="scorer_id" class="scm-input">
+                {% if not goal.scorer_id %}
+                <option value="" selected>Unknown</option>
+                {% endif %}
+                {% for person in goal_players %}
+                <option value="{{ person.id }}" {% if goal.scorer_id == person.id %}selected{% endif %}>{{ person.label }}</option>
+                {% endfor %}
+              </select>
+              <label class="scm-label" for="scm-goal-assist-{{ goal.id }}">Assist <span class="scm-optional">optional</span></label>
+              <select id="scm-goal-assist-{{ goal.id }}" name="assist_id" class="scm-input">
+                <option value="">No assist</option>
+                {% for person in goal_players %}
+                <option value="{{ person.id }}" {% if goal.assist_id == person.id %}selected{% endif %}>{{ person.label }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+            </form>
+            {% if goal.warning %}
+            <p class="scm-goal-warning">{{ goal.warning }}</p>
+            {% endif %}
+            <form
+              method="post"
+              action="{{ url_for('soccer_minutes.game_goal_delete', team_id=team.id, game_id=game.id, goal_id=goal.id) }}"
+              class="scm-goal-delete"
+              onsubmit="return confirm('Remove this goal?');"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="scm-btn scm-btn-danger scm-btn-small">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ol>
+        {% else %}
+        <p class="scm-muted">No goals yet.</p>
+        {% endif %}
+
+        <div class="scm-form-divider" id="scm-goal-add"></div>
+        {% if started_periods %}
+        <form
+          method="post"
+          action="{{ url_for('soccer_minutes.game_goal_create', team_id=team.id, game_id=game.id) }}"
+          class="scm-goal-add"
+          id="scm-goal-add-form"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <p class="scm-event-title">Add a goal</p>
+          <div class="scm-form-group">
+            <label class="scm-label" for="scm-goal-add-side">Who scored</label>
+            <select id="scm-goal-add-side" name="side" class="scm-input">
+              <option value="us">We scored</option>
+              <option value="them">They scored</option>
+            </select>
+          </div>
+          <div class="scm-form-group">
+            <label class="scm-label" for="scm-goal-add-period">Period</label>
+            <select id="scm-goal-add-period" name="period" class="scm-input">
+              {% for period in started_periods %}
+              <option value="{{ period }}" {% if period == default_goal_period %}selected{% endif %}>Period {{ period }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="scm-form-group">
+            <label class="scm-label" for="scm-goal-add-clock">Time</label>
+            <input
+              type="text"
+              id="scm-goal-add-clock"
+              name="clock"
+              class="scm-input"
+              value="{{ default_goal_clock }}"
+              inputmode="numeric"
+              required
+              autocomplete="off"
+              placeholder="8:00"
+            >
+          </div>
+          <div id="scm-goal-add-us-fields">
+            <div class="scm-form-group">
+              <label class="scm-label" for="scm-goal-add-scorer">Scorer</label>
+              <select id="scm-goal-add-scorer" name="scorer_id" class="scm-input">
+                <option value="">Who scored?</option>
+                {% for person in goal_players %}
+                <option value="{{ person.id }}">{{ person.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="scm-form-group">
+              <label class="scm-label" for="scm-goal-add-assist">Assist <span class="scm-optional">optional</span></label>
+              <select id="scm-goal-add-assist" name="assist_id" class="scm-input">
+                <option value="">No assist</option>
+                {% for person in goal_players %}
+                <option value="{{ person.id }}">{{ person.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="scm-btn scm-btn-primary">Add goal</button>
+        </form>
+        {% else %}
+        <p class="scm-muted">Start a period before adding a goal.</p>
+        {% endif %}
+      </div>
+    </div>
 
     <div class="scm-card">
       <div class="scm-card-header">Minutes</div>
@@ -98,4 +239,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('soccer_minutes.static', filename='minutes_sort.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='goals_recap.js') }}"></script>
 {% endblock %}

@@ -592,6 +592,14 @@ body.scm-live-body .main-content {
   font-size: 14px;
 }
 
+.scm-clock-score {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .scm-clock-time {
   margin: 4px 0 0;
   text-align: center;
@@ -600,6 +608,87 @@ body.scm-live-body .main-content {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   line-height: 1;
+}
+
+.scm-score-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.scm-score-actions .scm-btn {
+  flex: 1;
+}
+
+.scm-goal-confirm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--scm-border);
+}
+
+.scm-goal-confirm-title {
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.scm-goal-confirm .scm-label {
+  margin-top: 10px;
+}
+
+.scm-goal-confirm .scm-btn-secondary {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.scm-goal-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0 4px;
+}
+
+.scm-goal-list:empty {
+  display: none;
+  margin: 0;
+}
+
+.scm-goal-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 0;
+}
+
+.scm-goal-line {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.scm-goal-warning {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--scm-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.scm-goal-row .scm-btn {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.scm-goal-edit .scm-label,
+.scm-goal-add .scm-label {
+  margin-top: 10px;
+}
+
+.scm-goal-delete {
+  margin-top: 10px;
+}
+
+.scm-goal-add .scm-btn-primary {
+  width: 100%;
+  margin-top: 8px;
 }
 
 .scm-clock-actions,

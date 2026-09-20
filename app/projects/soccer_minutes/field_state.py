@@ -5,7 +5,11 @@ from app.projects.soccer_minutes.formation_config import (
     normalize_formation,
     pitch_bands,
 )
-from app.projects.soccer_minutes.models import ScmEvent, ScmGameRosterEntry, ScmPlayer
+from app.projects.soccer_minutes.models import (
+    ScmEvent,
+    ScmGameRosterEntry,
+    ScmPlayer,
+)
 
 
 def player_chip_label(player):
@@ -200,6 +204,11 @@ def strip_player_from_team_games(team, player_id):
         for event in list(game.events.all()):
             if event_mentions_player(event, player_id):
                 db.session.delete(event)
+                changed = True
+        from app.projects.soccer_minutes.goals import clear_player_from_goal
+
+        for goal in list(game.goals.all()):
+            if clear_player_from_goal(goal, player_id):
                 changed = True
         if changed:
             affected += 1

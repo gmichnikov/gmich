@@ -25,6 +25,9 @@
         <p class="scm-page-subtitle">
           <span id="scm-header-filled">{{ setup.filled }}</span> / <span id="scm-header-size">{{ setup.field_size }}</span> on the field
           &middot; {{ game.period_count }} {{ 'period' if game.period_count == 1 else 'periods' }}
+          {% if setup.phase != 'setup' %}
+          &middot; <span id="scm-header-score">{{ setup.score.displayed }}</span>
+          {% endif %}
           {% if setup.phase == 'between' %}
           &middot; Period {{ setup.current_period }} ended at {{ setup.clock.displayed }}
           {% elif setup.phase == 'done' %}

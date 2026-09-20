@@ -82,6 +82,7 @@
     state.locked = next.locked;
     state.undo_label = next.undo_label;
     state.minutes = next.minutes;
+    state.score = next.score;
     selected = null;
     render();
   }
@@ -213,6 +214,10 @@
     }
     if (headerSize) {
       headerSize.textContent = String(state.field_size);
+    }
+    var headerScore = document.getElementById("scm-header-score");
+    if (headerScore && state.score) {
+      headerScore.textContent = state.score.displayed;
     }
     if (offButton) {
       offButton.disabled = !(selected && selected.kind === "slot" && selected.slotKey);

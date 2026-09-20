@@ -316,6 +316,7 @@ def create_app():
         ScmGame,
         ScmGameRosterEntry,
         ScmEvent,
+        ScmGoal,
     )
     from app.projects.kids_ai.models import (
         KidsAiParent,
