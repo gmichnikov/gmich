@@ -227,10 +227,53 @@ select.scm-input {
 }
 
 .scm-card-header {
-  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--scm-tap);
+  padding: 8px 8px 8px 14px;
   font-weight: 700;
   background: var(--scm-surface-muted);
   border-bottom: 1px solid var(--scm-border);
+  cursor: pointer;
+}
+
+.scm-card-fold {
+  flex: 0 0 auto;
+  width: var(--scm-tap);
+  height: var(--scm-tap);
+  margin-left: auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--scm-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scm-card-fold:hover,
+.scm-card-fold:focus-visible {
+  background: var(--scm-border);
+  color: var(--scm-text);
+}
+
+.scm-card-chevron {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  transition: transform 0.15s ease;
+}
+
+.scm-card.scm-is-collapsed .scm-card-header {
+  border-bottom: 0;
+}
+
+.scm-card.scm-is-collapsed .scm-card-chevron {
+  transform: rotate(-90deg);
 }
 
 .scm-card-body {
@@ -395,9 +438,9 @@ select.scm-input {
 .scm-card-header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .scm-game-list {
