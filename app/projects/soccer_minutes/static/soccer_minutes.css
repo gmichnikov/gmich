@@ -22,7 +22,8 @@
   color: var(--scm-text);
   min-height: calc(100vh - 140px);
   margin: -40px -20px 0 -20px;
-  padding: 24px 16px 48px;
+  padding: 24px 16px calc(48px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
 }
 
 .scm-container {
@@ -61,6 +62,7 @@
 .scm-page-subtitle {
   margin: 0;
   color: var(--scm-text-muted);
+  overflow-wrap: anywhere;
 }
 
 .scm-header-actions {
@@ -156,6 +158,14 @@
   box-sizing: border-box;
   background: var(--scm-surface);
   color: var(--scm-text);
+}
+
+select.scm-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%234a5c48' d='M1 1l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
 }
 
 .scm-hint,
@@ -580,30 +590,35 @@ body.scm-live-body .main-content {
   margin-bottom: 12px;
   box-shadow: var(--scm-shadow);
   position: sticky;
-  top: 8px;
+  top: 78px;
   z-index: 4;
+}
+
+.scm-clock-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .scm-clock-period {
   margin: 0;
-  text-align: center;
   font-weight: 700;
   color: var(--scm-text-muted);
   font-size: 14px;
 }
 
 .scm-clock-score {
-  margin: 6px 0 0;
-  text-align: center;
-  font-size: 1.4rem;
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 .scm-clock-time {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   text-align: center;
-  font-size: 2.6rem;
+  font-size: 2.4rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -621,9 +636,11 @@ body.scm-live-body .main-content {
 }
 
 .scm-goal-confirm {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--scm-border);
+  margin: -4px 0 12px;
+  padding: 12px;
+  background: var(--scm-surface);
+  border: 1px solid var(--scm-border);
+  border-radius: 10px;
 }
 
 .scm-goal-confirm-title {
@@ -652,16 +669,17 @@ body.scm-live-body .main-content {
 }
 
 .scm-goal-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 8px;
   padding: 8px 0 0;
 }
 
 .scm-goal-line {
-  flex: 1 1 auto;
+  min-width: 0;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .scm-goal-warning {
@@ -684,6 +702,10 @@ body.scm-live-body .main-content {
 
 .scm-goal-delete {
   margin-top: 10px;
+}
+
+.scm-goal-delete .scm-btn {
+  width: 100%;
 }
 
 .scm-goal-add .scm-btn-primary {
@@ -819,6 +841,77 @@ body.scm-live-body .main-content {
   font-weight: 700;
 }
 
+.scm-minutes-name-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--scm-tap);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--scm-accent);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scm-minutes-open {
+  cursor: pointer;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.scm-dialog {
+  box-sizing: border-box;
+  width: min(420px, calc(100vw - 24px));
+  max-width: min(420px, calc(100vw - 24px));
+  max-height: min(90dvh, calc(100vh - 24px));
+  margin: auto;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--scm-border);
+  border-radius: 12px;
+  background: var(--scm-surface);
+  color: var(--scm-text);
+  box-shadow: var(--scm-shadow);
+}
+
+.scm-dialog::backdrop {
+  background: rgba(20, 36, 20, 0.45);
+}
+
+.scm-dialog-title {
+  margin: 0 0 8px;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.scm-stretch-list {
+  list-style: none;
+  margin: 12px 0 16px;
+  padding: 0;
+}
+
+.scm-stretch {
+  padding: 10px 0;
+  border-top: 1px solid var(--scm-border);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.scm-stretch:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scm-dialog .scm-btn {
+  width: 100%;
+}
+
 .scm-minutes-total {
   font-variant-numeric: tabular-nums;
   font-weight: 800;
@@ -882,6 +975,7 @@ body.scm-live-body .main-content {
   display: block;
   font-weight: 700;
   margin-bottom: 8px;
+  overflow-wrap: anywhere;
 }
 
 .scm-event-summary {
@@ -893,7 +987,39 @@ body.scm-live-body .main-content {
 }
 
 .scm-event-summary li {
-  margin: 0 0 2px;
+  margin: 0 0 6px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.scm-stretch-open {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.scm-dialog-field {
+  width: min(480px, calc(100vw - 24px));
+  max-width: min(480px, calc(100vw - 24px));
+}
+
+.scm-dialog-field button.scm-field-slot {
+  min-width: 64px;
+  min-height: 48px;
+}
+
+.scm-dialog-field .scm-pitch {
+  margin: 12px 0;
+}
+
+.scm-dialog-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.scm-dialog-actions .scm-btn {
+  flex: 1;
+  width: auto;
 }
 
 @media (min-width: 600px) {
@@ -923,5 +1049,28 @@ body.scm-live-body .main-content {
     display: grid;
     grid-template-columns: 1fr 1fr 72px auto;
     align-items: stretch;
+  }
+
+  .scm-clock-time {
+    font-size: 2.6rem;
+  }
+}
+
+@media (max-width: 419px) {
+  .scm-set-clock-row {
+    flex-direction: column;
+  }
+
+  .scm-set-clock-row .scm-btn {
+    width: 100%;
+  }
+
+  .scm-clock-time {
+    font-size: 2.1rem;
+  }
+
+  .scm-score-actions .scm-btn {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

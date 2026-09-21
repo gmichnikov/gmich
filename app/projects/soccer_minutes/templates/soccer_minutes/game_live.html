@@ -26,28 +26,30 @@
     <p class="scm-field-status" id="scm-field-status" hidden></p>
 
     <div class="scm-clock-bar" id="scm-clock-bar">
-      <p class="scm-clock-period" id="scm-clock-period">Period {{ live.current_period }} of {{ live.period_count }}</p>
-      <p class="scm-clock-score" id="scm-clock-score">{{ live.score.displayed }}</p>
+      <div class="scm-clock-meta">
+        <p class="scm-clock-period" id="scm-clock-period">Period {{ live.current_period }} of {{ live.period_count }}</p>
+        <p class="scm-clock-score" id="scm-clock-score">{{ live.score.displayed }}</p>
+      </div>
       <p class="scm-clock-time" id="scm-clock-display">{{ live.clock.displayed }}</p>
       <div class="scm-score-actions">
         <button type="button" class="scm-btn scm-btn-primary" id="scm-goal-us">We scored</button>
         <button type="button" class="scm-btn scm-btn-secondary" id="scm-goal-them">They scored</button>
       </div>
-      <div class="scm-goal-confirm" id="scm-goal-confirm" hidden>
-        <p class="scm-goal-confirm-title" id="scm-goal-confirm-title">We scored</p>
-        <div id="scm-goal-us-fields">
-          <label class="scm-label" for="scm-goal-scorer">Scorer</label>
-          <select id="scm-goal-scorer" class="scm-input"></select>
-          <label class="scm-label" for="scm-goal-assist">Assist <span class="scm-optional">optional</span></label>
-          <select id="scm-goal-assist" class="scm-input"></select>
-        </div>
-        <label class="scm-label" for="scm-goal-clock">Time</label>
-        <div class="scm-set-clock-row">
-          <input type="text" id="scm-goal-clock" class="scm-input" inputmode="numeric" value="{{ live.clock.displayed }}" autocomplete="off">
-          <button type="button" class="scm-btn scm-btn-primary" id="scm-goal-confirm-btn">Save goal</button>
-        </div>
-        <button type="button" class="scm-btn scm-btn-secondary" id="scm-goal-cancel">Cancel</button>
+    </div>
+    <div class="scm-goal-confirm" id="scm-goal-confirm" hidden>
+      <p class="scm-goal-confirm-title" id="scm-goal-confirm-title">We scored</p>
+      <div id="scm-goal-us-fields">
+        <label class="scm-label" for="scm-goal-scorer">Scorer</label>
+        <select id="scm-goal-scorer" class="scm-input"></select>
+        <label class="scm-label" for="scm-goal-assist">Assist <span class="scm-optional">optional</span></label>
+        <select id="scm-goal-assist" class="scm-input"></select>
       </div>
+      <label class="scm-label" for="scm-goal-clock">Time</label>
+      <div class="scm-set-clock-row">
+        <input type="text" id="scm-goal-clock" class="scm-input" inputmode="numeric" value="{{ live.clock.displayed }}" autocomplete="off">
+        <button type="button" class="scm-btn scm-btn-primary" id="scm-goal-confirm-btn">Save goal</button>
+      </div>
+      <button type="button" class="scm-btn scm-btn-secondary" id="scm-goal-cancel">Cancel</button>
     </div>
     <ul class="scm-goal-list" id="scm-goal-list">
       {% for goal in live.goals %}

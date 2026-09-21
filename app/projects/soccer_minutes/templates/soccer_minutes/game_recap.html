@@ -181,8 +181,8 @@
     <div class="scm-card">
       <div class="scm-card-header">Minutes</div>
       <div class="scm-card-body">
-        <p class="scm-hint">Group minutes add up to the on-field total. Slot names are from this game's formation.</p>
-        {{ minutes_list(minutes, show_slots=True, sortable=True) }}
+        <p class="scm-hint">Tap a name for bench stretches. Group minutes add up to the on-field total.</p>
+        {{ minutes_list(minutes, show_slots=True, sortable=True, clickable=True) }}
       </div>
     </div>
 
@@ -194,7 +194,7 @@
           {% for event in events %}
           <li class="scm-event" id="scm-event-{{ event.id }}">
             <div class="scm-event-head">
-              <span class="scm-event-title">Period {{ event.period }} · {{ event.title }}</span>
+              <span class="scm-event-title">Period {{ event.period }}{% if event.title %} · {{ event.title }}{% endif %}</span>
             </div>
             <form
               method="post"
@@ -224,6 +224,16 @@
               {% endfor %}
             </ul>
             {% endif %}
+            {% if field_stretches.get(event.id) %}
+            {% set stretch = field_stretches[event.id] %}
+            <button
+              type="button"
+              class="scm-btn scm-btn-secondary scm-btn-small scm-stretch-open"
+              data-stretch-id="{{ event.id }}"
+            >
+              Field {{ stretch.start }}–{{ stretch.end }}
+            </button>
+            {% endif %}
           </li>
           {% endfor %}
         </ol>
@@ -235,9 +245,32 @@
 
   </div>
 </div>
+
+<dialog class="scm-dialog" id="scm-player-dialog" aria-labelledby="scm-player-dialog-title">
+  <h2 class="scm-dialog-title" id="scm-player-dialog-title">Player</h2>
+  <p class="scm-hint" id="scm-player-dialog-totals"></p>
+  <ul class="scm-stretch-list" id="scm-player-dialog-list"></ul>
+  <p class="scm-muted" id="scm-player-dialog-empty" hidden>No bench time this game.</p>
+  <button type="button" class="scm-btn scm-btn-secondary" id="scm-player-dialog-close">Close</button>
+</dialog>
+<script type="application/json" id="scm-bench-details">{{ bench_details | tojson }}</script>
+<dialog class="scm-dialog scm-dialog-field" id="scm-field-dialog" aria-labelledby="scm-field-dialog-title">
+  <h2 class="scm-dialog-title" id="scm-field-dialog-title">Field</h2>
+  <p class="scm-hint" id="scm-field-dialog-hint">Tap two players to swap. This stretch only.</p>
+  <p class="scm-field-status" id="scm-field-dialog-status" hidden></p>
+  <div class="scm-pitch scm-pitch-field" id="scm-field-stretch-pitch"></div>
+  <div class="scm-dialog-actions">
+    <button type="button" class="scm-btn scm-btn-secondary" id="scm-field-dialog-reset" disabled>Reset</button>
+    <button type="button" class="scm-btn scm-btn-primary" id="scm-field-dialog-save" disabled>Save</button>
+  </div>
+  <button type="button" class="scm-btn scm-btn-secondary" id="scm-field-dialog-close">Close</button>
+</dialog>
+<script type="application/json" id="scm-field-stretches">{{ field_stretches | tojson }}</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('soccer_minutes.static', filename='minutes_sort.js') }}"></script>
 <script src="{{ url_for('soccer_minutes.static', filename='goals_recap.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='recap_player.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='recap_field.js') }}"></script>
 {% endblock %}

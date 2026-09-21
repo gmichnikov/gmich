@@ -31,7 +31,6 @@ from app.projects.soccer_minutes.live_state import (
     start_period,
     undo_last,
 )
-from app.projects.soccer_minutes.recap import event_log_rows, update_event_at_ms
 from app.projects.soccer_minutes.goals import (
     apply_goal_attrs,
     create_goal,
@@ -42,6 +41,13 @@ from app.projects.soccer_minutes.goals import (
     scores_by_game_id,
     started_periods,
     validate_goal,
+)
+from app.projects.soccer_minutes.recap import (
+    bench_details_by_player,
+    event_log_rows,
+    field_stretch_map,
+    update_event_assignments,
+    update_event_at_ms,
 )
 from app.projects.soccer_minutes.formation_config import (
     DEFAULT_PERIOD_COUNT,
@@ -599,7 +605,13 @@ def game_recap(team_id, game_id):
     payload = _page_payload(team, game)
     players = team.players.order_by(ScmPlayer.sort_order, ScmPlayer.id).all()
     players_by_id = {player.id: player for player in players}
-    events = event_log_rows(ordered_events(game), game.formation, players_by_id)
+    raw_events = ordered_events(game)
+    events = event_log_rows(raw_events, game.formation, players_by_id)
+    present_ids = present_player_ids(players, roster_entries_by_player(game))
+    open_until = (
+        payload["clock"]["displayed_ms"] if payload["phase"] == "live" else None
+    )
+    open_period = game.current_period if payload["phase"] == "live" else None
     return render_template(
         "soccer_minutes/game_recap.html",
         team=team,
@@ -610,12 +622,50 @@ def game_recap(team_id, game_id):
         score=payload["score"],
         goals=payload["goals"],
         goal_players=payload["goal_players"],
-        started_periods=started_periods(ordered_events(game)),
+        started_periods=started_periods(raw_events),
         default_goal_period=game.current_period,
         default_goal_clock=payload["clock"]["displayed"]
         if payload["phase"] == "live"
         else "",
+        bench_details=bench_details_by_player(
+            raw_events,
+            game.formation,
+            players,
+            present_ids,
+            open_until_ms=open_until,
+            open_period=open_period,
+        ),
+        field_stretches=_field_stretches_payload(
+            team,
+            game,
+            raw_events,
+            players,
+            present_ids,
+            open_until,
+            open_period,
+        ),
     )
+
+
+def _field_stretches_payload(
+    team, game, events, players, present_ids, open_until, open_period
+):
+    stretches = field_stretch_map(
+        events,
+        game.formation,
+        players,
+        present_ids,
+        open_until_ms=open_until,
+        open_period=open_period,
+    )
+    for event_id, row in stretches.items():
+        row["saveUrl"] = url_for(
+            "soccer_minutes.event_set_field",
+            team_id=team.id,
+            game_id=game.id,
+            event_id=event_id,
+        )
+    return stretches
 
 
 @soccer_minutes_bp.route(
@@ -642,6 +692,24 @@ def event_set_time(team_id, game_id, event_id):
     db.session.commit()
     flash("Event time saved.", "success")
     return redirect(recap_url)
+
+
+@soccer_minutes_bp.route(
+    "/teams/<int:team_id>/games/<int:game_id>/events/<int:event_id>/field",
+    methods=["POST"],
+)
+@login_required
+def event_set_field(team_id, game_id, event_id):
+    team, game = _get_game_or_404(team_id, game_id)
+    event = ScmEvent.query.filter_by(id=event_id, game_id=game.id).first()
+    if event is None:
+        abort(404)
+    data = request.get_json(silent=True) or {}
+    error = update_event_assignments(game, event.id, data.get("assignments"))
+    if error:
+        return _json_error(error)
+    db.session.commit()
+    return jsonify(ok=True)
 
 
 @soccer_minutes_bp.route(
