@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from app.projects.soccer_minutes.field_state import (
     assignment_view,
     drop_player_from_assignments,
-    player_chip_short,
+    player_chip_compact,
     sanitize_assignments,
     suggested_draft_assignments,
 )
@@ -73,18 +73,18 @@ def test_bench_sorted_by_first_name():
     assert [person["id"] for person in view["bench"]] == [2, 4, 1]
 
 
-def test_player_chip_short_prefers_jersey():
-    assert player_chip_short(_view_player(1, "Christopher", jersey="10")) == "10"
-    assert player_chip_short(_view_player(2, "Theo")) == "Theo"
-    assert player_chip_short(_view_player(3, "Christopher")) == "Chri"
+def test_player_chip_compact_uses_number_and_three_letters():
+    assert player_chip_compact(_view_player(1, "Christopher", jersey="10")) == "10 Chr…"
+    assert player_chip_compact(_view_player(2, "Theo")) == "The…"
+    assert player_chip_compact(_view_player(3, "Sam")) == "Sam"
     gk = assignment_view(
         default_formation(),
         {"gk": 1},
         [_view_player(1, "Christopher", jersey="10")],
         {1},
     )["bands"][-1]["slots"][0]
-    assert gk["player_label"] == "10"
-    assert gk["player_full_label"] == "Christopher #10"
+    assert gk["player_label"] == "Christopher #10"
+    assert gk["player_compact_label"] == "10 Chr…"
 
 
 def test_suggested_draft_uses_kickoff_not_later_subs():

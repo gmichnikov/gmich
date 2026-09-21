@@ -1,7 +1,15 @@
 {% macro field_pitch(bands) %}
-<div class="scm-pitch scm-pitch-field" id="scm-field-pitch">
+{% set ns = namespace(max_line=1) %}
+{% for band in bands %}
+{% if band.slots|length > ns.max_line %}{% set ns.max_line = band.slots|length %}{% endif %}
+{% endfor %}
+<div
+  class="scm-pitch scm-pitch-field"
+  id="scm-field-pitch"
+  style="--scm-line-n: {{ ns.max_line if ns.max_line > 4 else 4 }}"
+>
   {% for band in bands %}
-  <div class="scm-pitch-band scm-pitch-band-{{ band.group }}" data-group="{{ band.group }}">
+  <div class="scm-pitch-band scm-pitch-band-{{ band.group }}{% if band.slots|length >= 4 %} scm-pitch-band-crowded{% endif %}" data-group="{{ band.group }}">
     <span class="scm-pitch-band-label">{{ band.label }}</span>
     <div class="scm-pitch-slots">
       {% for slot in band.slots %}
@@ -10,10 +18,13 @@
         class="scm-pitch-slot scm-field-slot{% if slot.player_id %} scm-slot-filled{% endif %}{% if slot.changed %} scm-slot-changed{% endif %}{% if slot.emptied %} scm-slot-emptied{% endif %}"
         data-slot-key="{{ slot.key }}"
         data-player-id="{{ slot.player_id or '' }}"
-        {% if slot.player_full_label %}title="{{ slot.player_full_label }}"{% endif %}
+        {% if slot.player_label %}title="{{ slot.player_label }}"{% endif %}
       >
         <span class="scm-slot-pos">{{ slot.name }}</span>
-        <span class="scm-slot-who">{{ slot.player_label or "—" }}</span>
+        <span class="scm-slot-who">
+          <span class="scm-slot-who-full">{{ slot.player_label or "—" }}</span>
+          <span class="scm-slot-who-compact">{{ slot.player_compact_label or slot.player_label or "—" }}</span>
+        </span>
       </button>
       {% else %}
       <span class="scm-pitch-empty">None</span>

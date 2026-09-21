@@ -73,9 +73,14 @@
     if (!working) {
       return;
     }
+    var maxLine = 1;
     (working.bands || []).forEach(function (band) {
+      maxLine = Math.max(maxLine, (band.slots || []).length);
       var bandEl = document.createElement("div");
       bandEl.className = "scm-pitch-band scm-pitch-band-" + band.group;
+      if ((band.slots || []).length >= 4) {
+        bandEl.classList.add("scm-pitch-band-crowded");
+      }
       var label = document.createElement("span");
       label.className = "scm-pitch-band-label";
       label.textContent = band.label;
@@ -92,15 +97,22 @@
           btn.classList.add("scm-is-selected");
         }
         btn.setAttribute("data-slot-key", slot.key);
-        if (slot.player_full_label) {
-          btn.title = slot.player_full_label;
+        if (slot.player_label) {
+          btn.title = slot.player_label;
         }
         var pos = document.createElement("span");
         pos.className = "scm-slot-pos";
         pos.textContent = slot.name;
         var who = document.createElement("span");
         who.className = "scm-slot-who";
-        who.textContent = slot.player_label || "—";
+        var full = document.createElement("span");
+        full.className = "scm-slot-who-full";
+        full.textContent = slot.player_label || "—";
+        var compact = document.createElement("span");
+        compact.className = "scm-slot-who-compact";
+        compact.textContent = slot.player_compact_label || slot.player_label || "—";
+        who.appendChild(full);
+        who.appendChild(compact);
         btn.appendChild(pos);
         btn.appendChild(who);
         slots.appendChild(btn);
@@ -109,6 +121,7 @@
       bandEl.appendChild(slots);
       pitch.appendChild(bandEl);
     });
+    pitch.style.setProperty("--scm-line-n", String(Math.max(4, maxLine)));
     var dirty = isDirty();
     if (resetBtn) {
       resetBtn.disabled = !dirty || saving;
@@ -126,12 +139,15 @@
     }
     var aPlayer = a.player_id;
     var aLabel = a.player_label;
+    var aCompact = a.player_compact_label;
     var aFull = a.player_full_label;
     a.player_id = b.player_id;
     a.player_label = b.player_label;
+    a.player_compact_label = b.player_compact_label;
     a.player_full_label = b.player_full_label;
     b.player_id = aPlayer;
     b.player_label = aLabel;
+    b.player_compact_label = aCompact;
     b.player_full_label = aFull;
     working.assignments[aKey] = a.player_id;
     working.assignments[bKey] = b.player_id;

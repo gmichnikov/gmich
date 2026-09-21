@@ -409,9 +409,15 @@ select.scm-input {
   flex-wrap: wrap;
 }
 
+.scm-pitch-field {
+  --scm-slot-gap: 6px;
+  --scm-slot-w: 96px;
+  --scm-line-n: 4;
+}
+
 .scm-pitch-field .scm-pitch-slots {
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: var(--scm-slot-gap);
 }
 
 .scm-pitch-slot {
@@ -544,7 +550,9 @@ select.scm-input {
 }
 
 button.scm-field-slot {
-  flex: 1 1 0;
+  flex: 0 0 var(--scm-slot-w);
+  width: var(--scm-slot-w);
+  max-width: var(--scm-slot-w);
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -575,6 +583,10 @@ button.scm-field-slot {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.scm-slot-who-compact {
+  display: none;
 }
 
 .scm-is-selected {
@@ -639,16 +651,28 @@ body.scm-live-body .main-content {
   margin-bottom: 8px;
 }
 
+.scm-live-sticky {
+  position: sticky;
+  top: 70px;
+  z-index: 4;
+  background: var(--scm-bg);
+  padding: 8px 0 12px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 .scm-clock-bar {
   background: var(--scm-surface);
   border: 1px solid var(--scm-border);
   border-radius: 10px;
   padding: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   box-shadow: var(--scm-shadow);
-  position: sticky;
-  top: 78px;
-  z-index: 4;
+}
+
+.scm-live-sticky .scm-goal-confirm {
+  margin: 8px 0 0;
 }
 
 .scm-clock-meta {
@@ -1082,7 +1106,6 @@ body.scm-live-body .main-content {
 }
 
 .scm-dialog-field button.scm-field-slot {
-  min-width: 64px;
   min-height: 48px;
 }
 
@@ -1099,6 +1122,23 @@ body.scm-live-body .main-content {
 .scm-dialog-actions .scm-btn {
   flex: 1;
   width: auto;
+}
+
+@media (max-width: 599px) {
+  .scm-pitch-field {
+    --scm-slot-gap: 4px;
+    --scm-slot-w: calc(
+      (100% - (var(--scm-line-n) - 1) * var(--scm-slot-gap)) / var(--scm-line-n)
+    );
+  }
+
+  .scm-pitch-band-crowded .scm-slot-who-full {
+    display: none;
+  }
+
+  .scm-pitch-band-crowded .scm-slot-who-compact {
+    display: inline;
+  }
 }
 
 @media (min-width: 600px) {

@@ -385,10 +385,15 @@
 
   function renderPitch() {
     var bands = (state.pending && state.pending.bands) || [];
+    var maxLine = 1;
     pitchRoot.innerHTML = "";
     bands.forEach(function (band) {
+      maxLine = Math.max(maxLine, (band.slots || []).length);
       var bandEl = document.createElement("div");
       bandEl.className = "scm-pitch-band scm-pitch-band-" + band.group;
+      if ((band.slots || []).length >= 4) {
+        bandEl.classList.add("scm-pitch-band-crowded");
+      }
       var label = document.createElement("span");
       label.className = "scm-pitch-band-label";
       label.textContent = band.label;
@@ -415,15 +420,22 @@
         }
         btn.setAttribute("data-slot-key", slot.key);
         btn.setAttribute("data-player-id", slot.player_id || "");
-        if (slot.player_full_label) {
-          btn.title = slot.player_full_label;
+        if (slot.player_label) {
+          btn.title = slot.player_label;
         }
         var pos = document.createElement("span");
         pos.className = "scm-slot-pos";
         pos.textContent = slot.name;
         var who = document.createElement("span");
         who.className = "scm-slot-who";
-        who.appendChild(document.createTextNode(slot.player_label || "—"));
+        var full = document.createElement("span");
+        full.className = "scm-slot-who-full";
+        full.textContent = slot.player_label || "—";
+        var compact = document.createElement("span");
+        compact.className = "scm-slot-who-compact";
+        compact.textContent = slot.player_compact_label || slot.player_label || "—";
+        who.appendChild(full);
+        who.appendChild(compact);
         appendSpell(who, slot.player_id);
         btn.appendChild(pos);
         btn.appendChild(who);
@@ -440,6 +452,7 @@
       bandEl.appendChild(slots);
       pitchRoot.appendChild(bandEl);
     });
+    pitchRoot.style.setProperty("--scm-line-n", String(Math.max(4, maxLine)));
   }
 
   function renderBench() {

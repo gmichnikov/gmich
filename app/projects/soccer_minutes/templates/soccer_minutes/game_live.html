@@ -25,6 +25,7 @@
     <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
     <p class="scm-field-status" id="scm-field-status" hidden></p>
 
+    <div class="scm-live-sticky">
     <div class="scm-clock-bar" id="scm-clock-bar">
       <div class="scm-clock-meta">
         <p class="scm-clock-period" id="scm-clock-period">Period {{ live.current_period }} of {{ live.period_count }}</p>
@@ -50,6 +51,7 @@
         <button type="button" class="scm-btn scm-btn-primary" id="scm-goal-confirm-btn">Save goal</button>
       </div>
       <button type="button" class="scm-btn scm-btn-secondary" id="scm-goal-cancel">Cancel</button>
+    </div>
     </div>
     <ul class="scm-goal-list" id="scm-goal-list">
       {% for goal in live.goals %}

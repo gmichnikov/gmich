@@ -21,15 +21,18 @@ def player_chip_label(player):
     return player.first_name
 
 
-def player_chip_short(player):
-    """Tight pitch label: jersey digits, else first four letters of the first name."""
+def player_chip_compact(player):
+    """Mobile 4-across label: jersey + first 3 letters, ellipsis if truncated."""
     if player is None:
         return ""
-    jersey = (player.jersey_number or "").strip()
-    if jersey:
-        return jersey
     name = (player.first_name or "").strip()
-    return name[:4]
+    short = name[:3]
+    if len(name) > 3:
+        short += "…"
+    jersey = (player.jersey_number or "").strip()
+    if jersey and short:
+        return f"{jersey} {short}"
+    return jersey or short
 
 
 def roster_entries_by_player(game):
@@ -120,7 +123,8 @@ def assignment_view(formation, assignments, players, present_ids, live_assignmen
                     "key": slot["key"],
                     "name": slot["name"],
                     "player_id": player_id,
-                    "player_label": player_chip_short(player),
+                    "player_label": player_chip_label(player),
+                    "player_compact_label": player_chip_compact(player),
                     "player_full_label": player_chip_label(player),
                     "changed": changed,
                     "emptied": emptied,
