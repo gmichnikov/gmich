@@ -49,32 +49,6 @@
     </button>
     {% endif %}
 
-    <div class="scm-card">
-      <div class="scm-card-header">Who is here</div>
-      <div class="scm-card-body">
-        <p class="scm-hint">Tap a name to mark them absent. Absent kids leave the pitch and bench.</p>
-        <ul class="scm-attendance" id="scm-attendance">
-          {% for person in setup.attendance %}
-          <li>
-            <button
-              type="button"
-              class="scm-attendance-btn{% if not person.is_present %} scm-is-absent{% endif %}"
-              data-player-id="{{ person.id }}"
-              aria-pressed="{{ 'false' if person.is_present else 'true' }}"
-            >
-              {% if person.jersey_number %}<span class="scm-jersey">{{ person.jersey_number }}</span>{% endif %}
-              <span class="scm-attendance-name">{{ person.full_name }}</span>
-              <span class="scm-attendance-flag">{{ 'Out' if not person.is_present else 'Here' }}</span>
-            </button>
-          </li>
-          {% endfor %}
-        </ul>
-        {% if not setup.attendance %}
-        <p class="scm-muted">Add players on the team roster first.</p>
-        {% endif %}
-      </div>
-    </div>
-
     <div class="scm-card" id="scm-starting-field">
       <div class="scm-card-header">
         {% if setup.phase == 'between' %}

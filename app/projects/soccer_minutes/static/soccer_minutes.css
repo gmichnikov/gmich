@@ -409,6 +409,11 @@ select.scm-input {
   flex-wrap: wrap;
 }
 
+.scm-pitch-field .scm-pitch-slots {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
 .scm-pitch-slot {
   min-height: var(--scm-tap);
   min-width: 64px;
@@ -539,11 +544,12 @@ select.scm-input {
 }
 
 button.scm-field-slot {
+  flex: 1 1 0;
   flex-direction: column;
   gap: 2px;
-  min-width: 72px;
+  min-width: 0;
   min-height: 52px;
-  padding: 6px 8px;
+  padding: 6px 4px;
   border: 2px solid transparent;
   cursor: pointer;
   font-family: inherit;
@@ -556,11 +562,19 @@ button.scm-field-slot {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--scm-text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scm-slot-who {
   font-size: 13px;
   font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scm-is-selected {
@@ -1004,8 +1018,8 @@ body.scm-live-body .main-content {
 }
 
 .scm-event {
-  padding: 12px 0;
-  border-top: 1px solid var(--scm-border);
+  padding: 14px 0 16px;
+  border-top: 2px solid var(--scm-border);
   scroll-margin-top: 12px;
 }
 
@@ -1019,6 +1033,28 @@ body.scm-live-body .main-content {
   font-weight: 700;
   margin-bottom: 8px;
   overflow-wrap: anywhere;
+}
+
+.scm-event-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scm-event-time-row .scm-label {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.scm-event-time-row .scm-input {
+  width: auto;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.scm-event-time-row .scm-btn {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .scm-event-summary {

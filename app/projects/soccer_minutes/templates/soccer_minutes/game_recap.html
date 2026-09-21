@@ -40,6 +40,14 @@
       <a href="{{ url_for('soccer_minutes.game_detail', team_id=team.id, game_id=game.id) }}" class="scm-btn scm-btn-secondary">Back to game</a>
     </header>
 
+    <div class="scm-card">
+      <div class="scm-card-header">Minutes</div>
+      <div class="scm-card-body">
+        <p class="scm-hint">Tap a name for bench stretches. Group minutes add up to the on-field total.</p>
+        {{ minutes_list(minutes, show_slots=True, sortable=True, clickable=True) }}
+      </div>
+    </div>
+
     <div class="scm-card" id="scm-goals">
       <div class="scm-card-header">Goals</div>
       <div class="scm-card-body">
@@ -179,14 +187,6 @@
     </div>
 
     <div class="scm-card">
-      <div class="scm-card-header">Minutes</div>
-      <div class="scm-card-body">
-        <p class="scm-hint">Tap a name for bench stretches. Group minutes add up to the on-field total.</p>
-        {{ minutes_list(minutes, show_slots=True, sortable=True, clickable=True) }}
-      </div>
-    </div>
-
-    <div class="scm-card">
       <div class="scm-card-header">Events</div>
       <div class="scm-card-body">
         {% if events %}
@@ -202,8 +202,8 @@
               class="scm-event-time"
             >
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <label class="scm-label" for="scm-event-clock-{{ event.id }}">Time</label>
-              <div class="scm-set-clock-row">
+              <div class="scm-event-time-row">
+                <label class="scm-label" for="scm-event-clock-{{ event.id }}">Time</label>
                 <input
                   type="text"
                   id="scm-event-clock-{{ event.id }}"

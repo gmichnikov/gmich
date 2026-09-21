@@ -415,6 +415,9 @@
         }
         btn.setAttribute("data-slot-key", slot.key);
         btn.setAttribute("data-player-id", slot.player_id || "");
+        if (slot.player_full_label) {
+          btn.title = slot.player_full_label;
+        }
         var pos = document.createElement("span");
         pos.className = "scm-slot-pos";
         pos.textContent = slot.name;
@@ -768,7 +771,10 @@
       if (!state.goalUrl) {
         return;
       }
-      var body = { side: goalSide, clock: goalClock ? goalClock.value : "" };
+      var body = { side: goalSide };
+      if (goalTimeDirty && goalClock && goalClock.value) {
+        body.clock = goalClock.value;
+      }
       if (goalSide === "us") {
         body.scorer_id = goalScorer ? goalScorer.value : "";
         body.assist_id = goalAssist ? goalAssist.value : "";

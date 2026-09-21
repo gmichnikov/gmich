@@ -2,7 +2,6 @@
   var stateNode = document.getElementById("scm-game-state");
   var pitchRoot = document.getElementById("scm-field-pitch");
   var benchRoot = document.getElementById("scm-bench");
-  var attendanceRoot = document.getElementById("scm-attendance");
   var statusNode = document.getElementById("scm-field-status");
   var filledNode = document.getElementById("scm-filled-n");
   var headerFilled = document.getElementById("scm-header-filled");
@@ -75,7 +74,6 @@
     state.assignments = next.assignments;
     state.bands = next.bands;
     state.bench = next.bench;
-    state.attendance = next.attendance;
     state.filled = next.filled;
     state.field_size = next.field_size;
     state.phase = next.phase;
@@ -112,6 +110,9 @@
         }
         btn.setAttribute("data-slot-key", slot.key);
         btn.setAttribute("data-player-id", slot.player_id || "");
+        if (slot.player_full_label) {
+          btn.title = slot.player_full_label;
+        }
         var pos = document.createElement("span");
         pos.className = "scm-slot-pos";
         pos.textContent = slot.name;
@@ -173,37 +174,6 @@
             benchRoot.appendChild(chip);
           });
       }
-    }
-
-    if (attendanceRoot) {
-      attendanceRoot.innerHTML = "";
-      state.attendance.forEach(function (person) {
-        var li = document.createElement("li");
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "scm-attendance-btn";
-        if (!person.is_present) {
-          btn.classList.add("scm-is-absent");
-        }
-        btn.setAttribute("data-player-id", String(person.id));
-        btn.setAttribute("aria-pressed", person.is_present ? "false" : "true");
-        if (person.jersey_number) {
-          var jersey = document.createElement("span");
-          jersey.className = "scm-jersey";
-          jersey.textContent = person.jersey_number;
-          btn.appendChild(jersey);
-        }
-        var name = document.createElement("span");
-        name.className = "scm-attendance-name";
-        name.textContent = person.full_name;
-        btn.appendChild(name);
-        var flagEl = document.createElement("span");
-        flagEl.className = "scm-attendance-flag";
-        flagEl.textContent = person.is_present ? "Here" : "Out";
-        btn.appendChild(flagEl);
-        li.appendChild(btn);
-        attendanceRoot.appendChild(li);
-      });
     }
 
     if (filledNode) {
@@ -372,40 +342,6 @@
     }
   }
 
-  function onAttendanceTap(playerId) {
-    if (saving) {
-      return;
-    }
-    var person = null;
-    state.attendance.forEach(function (item) {
-      if (item.id === playerId) {
-        person = item;
-      }
-    });
-    if (!person) {
-      return;
-    }
-    saving = true;
-    showStatus("Saving…");
-    postJson(state.attendanceUrl, {
-      player_id: playerId,
-      present: !person.is_present,
-    })
-      .then(function (data) {
-        saving = false;
-        if (!data.ok) {
-          showStatus(data.error || "Could not update attendance.", true);
-          return;
-        }
-        applyState(data);
-        showStatus("");
-      })
-      .catch(function () {
-        saving = false;
-        showStatus("Could not update attendance. Check your connection.", true);
-      });
-  }
-
   pitchRoot.addEventListener("click", function (event) {
     var btn = event.target.closest(".scm-field-slot");
     if (!btn || !pitchRoot.contains(btn)) {
@@ -421,16 +357,6 @@
         return;
       }
       onBenchTap(parseInt(btn.getAttribute("data-player-id"), 10));
-    });
-  }
-
-  if (attendanceRoot) {
-    attendanceRoot.addEventListener("click", function (event) {
-      var btn = event.target.closest(".scm-attendance-btn");
-      if (!btn || !attendanceRoot.contains(btn)) {
-        return;
-      }
-      onAttendanceTap(parseInt(btn.getAttribute("data-player-id"), 10));
     });
   }
 

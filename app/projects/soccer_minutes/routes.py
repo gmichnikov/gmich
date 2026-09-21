@@ -10,11 +10,13 @@ from app.projects.soccer_minutes.field_state import (
     drop_player_from_assignments,
     game_has_kickoff,
     present_player_ids,
+    previous_kickoff_game,
     roster_entries_by_player,
     sanitize_assignments,
     set_player_present,
     setup_state,
     strip_player_from_team_games,
+    suggested_draft_assignments,
 )
 from app.projects.soccer_minutes.live_state import (
     commit_go,
@@ -569,6 +571,15 @@ def game_create(team_id):
         return redirect(url_for("soccer_minutes.game_new", team_id=team.id))
 
     game = ScmGame.from_team_defaults(team, game_date, opponent_name)
+    previous = previous_kickoff_game(team)
+    if previous is not None:
+        present_ids = {player.id for player in team.players}
+        game.draft_assignments = suggested_draft_assignments(
+            ordered_events(previous),
+            previous.formation,
+            game.formation,
+            present_ids,
+        )
     db.session.add(game)
     team.updated_at = datetime.utcnow()
     db.session.commit()
@@ -782,11 +793,21 @@ def game_goal_delete(team_id, game_id, goal_id):
 def game_edit(team_id, game_id):
     team, game = _get_game_or_404(team_id, game_id)
     ctx = _formation_editor_context(game.formation, game.period_count)
+    setup = setup_state(team, game)
     return render_template(
         "soccer_minutes/game_edit.html",
         team=team,
         game=game,
         locked=game_has_kickoff(game),
+        attendance=setup["attendance"],
+        attendance_state={
+            "attendance": setup["attendance"],
+            "attendanceUrl": url_for(
+                "soccer_minutes.game_attendance",
+                team_id=team.id,
+                game_id=game.id,
+            ),
+        },
         **ctx,
     )
 

@@ -92,6 +92,9 @@
           btn.classList.add("scm-is-selected");
         }
         btn.setAttribute("data-slot-key", slot.key);
+        if (slot.player_full_label) {
+          btn.title = slot.player_full_label;
+        }
         var pos = document.createElement("span");
         pos.className = "scm-slot-pos";
         pos.textContent = slot.name;
@@ -123,10 +126,13 @@
     }
     var aPlayer = a.player_id;
     var aLabel = a.player_label;
+    var aFull = a.player_full_label;
     a.player_id = b.player_id;
     a.player_label = b.player_label;
+    a.player_full_label = b.player_full_label;
     b.player_id = aPlayer;
     b.player_label = aLabel;
+    b.player_full_label = aFull;
     working.assignments[aKey] = a.player_id;
     working.assignments[bKey] = b.player_id;
   }

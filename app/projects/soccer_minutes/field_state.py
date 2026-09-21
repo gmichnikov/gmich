@@ -7,6 +7,7 @@ from app.projects.soccer_minutes.formation_config import (
 )
 from app.projects.soccer_minutes.models import (
     ScmEvent,
+    ScmGame,
     ScmGameRosterEntry,
     ScmPlayer,
 )
@@ -18,6 +19,17 @@ def player_chip_label(player):
     if player.jersey_number:
         return f"{player.first_name} #{player.jersey_number}"
     return player.first_name
+
+
+def player_chip_short(player):
+    """Tight pitch label: jersey digits, else first four letters of the first name."""
+    if player is None:
+        return ""
+    jersey = (player.jersey_number or "").strip()
+    if jersey:
+        return jersey
+    name = (player.first_name or "").strip()
+    return name[:4]
 
 
 def roster_entries_by_player(game):
@@ -70,6 +82,22 @@ def sanitize_assignments(formation, assignments, present_ids):
     return clean
 
 
+def kickoff_assignments(events, formation):
+    """First period_start field map, or empty if the game never kicked off."""
+    for event in events or []:
+        if getattr(event, "type", None) != "period_start":
+            continue
+        payload = event.payload if isinstance(getattr(event, "payload", None), dict) else {}
+        return coerce_assignment_map(formation, payload.get("assignments") or {})
+    return {}
+
+
+def suggested_draft_assignments(events, previous_formation, new_formation, present_ids):
+    """Copy the previous kickoff XI onto matching slot keys for a new game."""
+    starters = kickoff_assignments(events, previous_formation)
+    return sanitize_assignments(new_formation, starters, present_ids)
+
+
 def assignment_view(formation, assignments, players, present_ids, live_assignments=None):
     """Pitch bands + bench for a field map. Marks slots that differ from live."""
     formation = normalize_formation(formation)
@@ -92,7 +120,8 @@ def assignment_view(formation, assignments, players, present_ids, live_assignmen
                     "key": slot["key"],
                     "name": slot["name"],
                     "player_id": player_id,
-                    "player_label": player_chip_label(player),
+                    "player_label": player_chip_short(player),
+                    "player_full_label": player_chip_label(player),
                     "changed": changed,
                     "emptied": emptied,
                 }
@@ -220,6 +249,17 @@ def game_has_kickoff(game):
         ScmEvent.query.filter_by(game_id=game.id, type="period_start").first()
         is not None
     )
+
+
+def previous_kickoff_game(team, exclude_id=None):
+    """Most recent game for this team that has actually started."""
+    query = team.games.order_by(ScmGame.game_date.desc(), ScmGame.id.desc())
+    for game in query:
+        if exclude_id is not None and game.id == exclude_id:
+            continue
+        if game_has_kickoff(game):
+            return game
+    return None
 
 
 def setup_state(team, game):

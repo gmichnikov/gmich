@@ -28,6 +28,9 @@
       {% endif %}
     </header>
 
+    <input type="hidden" id="scm-csrf" value="{{ csrf_token() }}">
+    {% include "soccer_minutes/_attendance.html" %}
+
     <form method="post" action="{{ url_for('soccer_minutes.game_update', team_id=team.id, game_id=game.id) }}" class="scm-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -92,6 +95,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script type="application/json" id="scm-attendance-state">{{ attendance_state | tojson }}</script>
+<script src="{{ url_for('soccer_minutes.static', filename='attendance.js') }}"></script>
+<script src="{{ url_for('soccer_minutes.static', filename='cards.js') }}"></script>
 {% if not locked %}
 <script src="{{ url_for('soccer_minutes.static', filename='soccer_minutes.js') }}"></script>
 {% endif %}

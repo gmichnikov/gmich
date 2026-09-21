@@ -10,6 +10,7 @@
         class="scm-pitch-slot scm-field-slot{% if slot.player_id %} scm-slot-filled{% endif %}{% if slot.changed %} scm-slot-changed{% endif %}{% if slot.emptied %} scm-slot-emptied{% endif %}"
         data-slot-key="{{ slot.key }}"
         data-player-id="{{ slot.player_id or '' }}"
+        {% if slot.player_full_label %}title="{{ slot.player_full_label }}"{% endif %}
       >
         <span class="scm-slot-pos">{{ slot.name }}</span>
         <span class="scm-slot-who">{{ slot.player_label or "—" }}</span>

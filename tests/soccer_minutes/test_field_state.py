@@ -3,7 +3,9 @@ from types import SimpleNamespace
 from app.projects.soccer_minutes.field_state import (
     assignment_view,
     drop_player_from_assignments,
+    player_chip_short,
     sanitize_assignments,
+    suggested_draft_assignments,
 )
 from app.projects.soccer_minutes.formation_config import default_formation
 
@@ -69,3 +71,56 @@ def test_bench_sorted_by_first_name():
     view = assignment_view(formation, {"gk": 3}, players, {1, 2, 3, 4})
     assert [person["first_name"] for person in view["bench"]] == ["amy", "Amy", "Zoe"]
     assert [person["id"] for person in view["bench"]] == [2, 4, 1]
+
+
+def test_player_chip_short_prefers_jersey():
+    assert player_chip_short(_view_player(1, "Christopher", jersey="10")) == "10"
+    assert player_chip_short(_view_player(2, "Theo")) == "Theo"
+    assert player_chip_short(_view_player(3, "Christopher")) == "Chri"
+    gk = assignment_view(
+        default_formation(),
+        {"gk": 1},
+        [_view_player(1, "Christopher", jersey="10")],
+        {1},
+    )["bands"][-1]["slots"][0]
+    assert gk["player_label"] == "10"
+    assert gk["player_full_label"] == "Christopher #10"
+
+
+def test_suggested_draft_uses_kickoff_not_later_subs():
+    from tests.soccer_minutes.test_live_state import _event
+
+    formation = default_formation()
+    events = [
+        _event("period_start", 1, 0, {"gk": 1, "mid_0": 2, "fwd_0": 3}, 1),
+        _event("field_set", 1, 8000, {"gk": 1, "mid_0": 9, "fwd_0": 3}, 2),
+    ]
+    draft = suggested_draft_assignments(
+        events, formation, formation, {1, 2, 3, 9}
+    )
+    assert draft["gk"] == 1
+    assert draft["mid_0"] == 2
+    assert draft["fwd_0"] == 3
+    assert 9 not in draft.values()
+
+
+def test_suggested_draft_keeps_matching_slots_only():
+    from tests.soccer_minutes.test_live_state import _event
+
+    previous = default_formation()
+    events = [
+        _event("period_start", 1, 0, {"gk": 1, "mid_0": 2, "mid_3": 4}, 1),
+    ]
+    draft = suggested_draft_assignments(
+        events, previous, default_formation(), {1, 2, 4}
+    )
+    assert draft["gk"] == 1
+    assert draft["mid_0"] == 2
+    assert "mid_3" not in draft
+
+
+def test_suggested_draft_empty_without_kickoff():
+    assert (
+        suggested_draft_assignments([], default_formation(), default_formation(), {1})
+        == {}
+    )

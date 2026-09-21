@@ -150,6 +150,44 @@ def test_validate_rejects_time_after_period_end():
     assert "after 20:00" in error
 
 
+def test_validate_clamps_live_clock_one_second_ahead():
+    events = [_event("period_start", 1, 0, {"gk": 1}, 1)]
+    now = parse_clock("8:00")
+    error, attrs = validate_goal(
+        side="them",
+        period=1,
+        at_ms=now + 900,
+        scorer_id=None,
+        assist_id=None,
+        events=events,
+        present_ids={1},
+        displayed_ms=now,
+        current_period=1,
+        phase="live",
+    )
+    assert error is None
+    assert attrs["at_ms"] == now
+
+
+def test_validate_still_rejects_live_clock_well_ahead():
+    events = [_event("period_start", 1, 0, {"gk": 1}, 1)]
+    now = parse_clock("8:00")
+    error, attrs = validate_goal(
+        side="them",
+        period=1,
+        at_ms=now + 3000,
+        scorer_id=None,
+        assist_id=None,
+        events=events,
+        present_ids={1},
+        displayed_ms=now,
+        current_period=1,
+        phase="live",
+    )
+    assert attrs is None
+    assert "after 8:00" in error
+
+
 def test_validate_rejects_unstarted_period():
     error, _attrs = validate_goal(
         side="them",

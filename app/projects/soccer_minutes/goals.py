@@ -10,6 +10,7 @@ from app.projects.soccer_minutes.models import ScmGoal
 SIDE_US = "us"
 SIDE_THEM = "them"
 SIDES = (SIDE_US, SIDE_THEM)
+LIVE_CLOCK_SLACK_MS = 2000
 
 
 def ordered_goals(game, goals=None):
@@ -204,7 +205,14 @@ def validate_goal(
     if at_ms < 0:
         return "Time cannot be negative.", None
     if at_ms > max_ms:
-        return f"Time cannot be after {format_ms(max_ms)}.", None
+        # Live client clocks are often ~1s ahead of the server; clamp that.
+        live_now = (
+            phase == "live" and int(current_period or 0) == int(period)
+        )
+        if live_now and at_ms <= max_ms + LIVE_CLOCK_SLACK_MS:
+            at_ms = max_ms
+        else:
+            return f"Time cannot be after {format_ms(max_ms)}.", None
 
     if side == SIDE_THEM:
         return None, {
