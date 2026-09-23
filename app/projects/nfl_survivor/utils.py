@@ -128,11 +128,11 @@ def format_week_choice_label(season, week):
 
 
 def get_week_picks_reveal_time(season, week):
-    """Monday 8:30pm ET before the Tuesday that ends this pick week."""
+    """Sunday 8:30pm ET before the Tuesday that ends this pick week."""
     tuesday = get_week_pick_lock_time(season, week)
     eastern_tue = _to_eastern(tuesday)
-    monday_date = eastern_tue.date() - timedelta(days=eastern_tue.weekday())
-    return EASTERN.localize(datetime.combine(monday_date, time(20, 30)))
+    sunday_date = eastern_tue.date() - timedelta(days=eastern_tue.weekday() + 1)
+    return EASTERN.localize(datetime.combine(sunday_date, time(20, 30)))
 
 
 def is_week_picks_revealed(season, week, when=None):

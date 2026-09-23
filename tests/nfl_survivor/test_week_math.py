@@ -17,19 +17,19 @@ def _season(week_2_start):
 
 
 class TestWeekPicksReveal(unittest.TestCase):
-    def test_week1_reveals_monday_830_before_tuesday_rollover(self):
+    def test_week1_reveals_sunday_830_before_tuesday_rollover(self):
         week_2_start = EASTERN.localize(datetime(2026, 9, 15, 0, 0))
         season = _season(week_2_start)
         reveal = get_week_picks_reveal_time(season, 1)
-        self.assertEqual(reveal, EASTERN.localize(datetime(2026, 9, 14, 20, 30)))
+        self.assertEqual(reveal, EASTERN.localize(datetime(2026, 9, 13, 20, 30)))
         self.assertLess(reveal, get_week_pick_lock_time(season, 1))
 
-    def test_later_weeks_are_the_following_mondays(self):
+    def test_later_weeks_are_the_following_sundays(self):
         week_2_start = EASTERN.localize(datetime(2026, 9, 15, 0, 0))
         season = _season(week_2_start)
         self.assertEqual(
             get_week_picks_reveal_time(season, 2),
-            EASTERN.localize(datetime(2026, 9, 21, 20, 30)),
+            EASTERN.localize(datetime(2026, 9, 20, 20, 30)),
         )
 
     def test_reveal_does_not_depend_on_exact_tuesday_clock_time(self):
@@ -37,14 +37,14 @@ class TestWeekPicksReveal(unittest.TestCase):
         season = _season(week_2_start)
         self.assertEqual(
             get_week_picks_reveal_time(season, 1),
-            EASTERN.localize(datetime(2026, 9, 14, 20, 30)),
+            EASTERN.localize(datetime(2026, 9, 13, 20, 30)),
         )
 
     def test_is_revealed_at_and_after_830(self):
         week_2_start = EASTERN.localize(datetime(2026, 9, 15, 0, 0))
         season = _season(week_2_start)
-        just_before = EASTERN.localize(datetime(2026, 9, 14, 20, 29))
-        at_reveal = EASTERN.localize(datetime(2026, 9, 14, 20, 30))
+        just_before = EASTERN.localize(datetime(2026, 9, 13, 20, 29))
+        at_reveal = EASTERN.localize(datetime(2026, 9, 13, 20, 30))
         self.assertFalse(is_week_picks_revealed(season, 1, when=just_before))
         self.assertTrue(is_week_picks_revealed(season, 1, when=at_reveal))
         self.assertFalse(is_week_picks_revealed(season, 2, when=at_reveal))
