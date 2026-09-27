@@ -1,0 +1,30 @@
+{% extends "recipes/base.html" %}
+
+{% block title %}Recipes{% endblock %}
+
+{% block body_class %}recipes-body recipes-body--home{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('recipes.static', filename='recipes/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="recipes-home">
+  <header class="recipes-home-header">
+    <h1 class="recipes-home-title">Recipes</h1>
+    <p class="recipes-home-subtitle">Tap a recipe to open the ingredient sheet.</p>
+  </header>
+
+  <nav class="recipes-chips" aria-label="Recipes">
+    {% for recipe in recipes %}
+    <a class="recipes-chip" href="{{ url_for(recipe.endpoint) }}">
+      <span class="recipes-chip-mark" aria-hidden="true">{{ recipe.mark }}</span>
+      <span class="recipes-chip-text">
+        <span class="recipes-chip-name">{{ recipe.name }}</span>
+        <span class="recipes-chip-meta">{{ recipe.blurb }}</span>
+      </span>
+    </a>
+    {% endfor %}
+  </nav>
+</div>
+{% endblock %}

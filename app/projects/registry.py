@@ -640,6 +640,17 @@ PROJECTS = [
         "icon": "🇯🇵",
         "order": 29,
     },
+    {
+        "id": "recipes",
+        "name": "Recipes",
+        "description": "Kitchen ingredient sheets — public, no login",
+        "url": "/recipes",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🧁",
+        "order": 30,
+    },
 ]
 
 

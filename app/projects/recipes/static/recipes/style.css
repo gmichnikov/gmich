@@ -1,0 +1,256 @@
+/* Recipes — chalkboard kitchen. Class names are prefixed so they
+   do not collide with other projects in this app. */
+
+.recipes-html {
+  --recipes-bg: #2B1B12;
+  --recipes-rule: #5A3F2A;
+  --recipes-text: #F3E9DC;
+  --recipes-text-dim: #C9B8A4;
+  --recipes-pumpkin: #E8823A;
+  --recipes-banana: #F0C550;
+  --recipes-sage: #9CB08A;
+  color-scheme: dark;
+  height: 100%;
+}
+
+.recipes-html,
+.recipes-html *,
+.recipes-html *::before,
+.recipes-html *::after {
+  box-sizing: border-box;
+}
+
+.recipes-body {
+  margin: 0;
+  background: var(--recipes-bg);
+  color: var(--recipes-text);
+  font-family: "Karla", -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Homepage */
+
+.recipes-body--home {
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #4a2e1c 0%, transparent 55%),
+    var(--recipes-bg);
+}
+
+.recipes-home {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(32px, 8vh, 80px) clamp(16px, 4vw, 48px);
+}
+
+.recipes-home-header {
+  text-align: center;
+  margin-bottom: clamp(28px, 5vh, 48px);
+}
+
+.recipes-home-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  line-height: 1;
+  margin: 0;
+  color: var(--recipes-banana);
+  letter-spacing: -0.02em;
+}
+
+.recipes-home-subtitle {
+  margin: 12px 0 0;
+  color: var(--recipes-text-dim);
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+}
+
+.recipes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 720px);
+}
+
+.recipes-chip {
+  flex: 1 1 280px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px 14px 14px;
+  border-radius: 999px;
+  background: rgba(232, 130, 58, 0.1);
+  border: 2px solid var(--recipes-pumpkin);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.recipes-chip:hover {
+  background: rgba(232, 130, 58, 0.22);
+  transform: translateY(-2px);
+}
+
+.recipes-chip:focus-visible {
+  background: rgba(232, 130, 58, 0.22);
+  outline: 3px solid var(--recipes-banana);
+  outline-offset: 3px;
+}
+
+.recipes-chip-mark {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--recipes-pumpkin);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.recipes-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recipes-chip-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: var(--recipes-text);
+}
+
+.recipes-chip-meta {
+  font-size: 0.88rem;
+  color: var(--recipes-text-dim);
+}
+
+/* Ingredient sheet — one screen, read at a distance */
+
+.recipes-body--sheet {
+  height: 100%;
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: clamp(12px, 2.5vh, 28px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recipes-sheet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: 900px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.recipes-header {
+  text-align: center;
+  flex-shrink: 0;
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.recipes-back {
+  display: inline-block;
+  margin-bottom: clamp(4px, 0.8vh, 8px);
+  color: var(--recipes-text-dim);
+  text-decoration: none;
+  font-size: clamp(0.75rem, 1.5vh, 0.9rem);
+}
+
+.recipes-back:hover,
+.recipes-back:focus-visible {
+  color: var(--recipes-banana);
+}
+
+.recipes-back:focus-visible {
+  outline: 2px solid var(--recipes-banana);
+  outline-offset: 3px;
+}
+
+.recipes-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 4vh, 2.6rem);
+  line-height: 1.05;
+  margin: 0;
+  color: var(--recipes-banana);
+  text-wrap: balance;
+}
+
+.recipes-subtitle {
+  font-size: clamp(0.9rem, 1.8vh, 1.1rem);
+  color: var(--recipes-text-dim);
+  margin: 6px 0 0;
+}
+
+.recipes-swap {
+  flex-shrink: 0;
+  background: rgba(156, 176, 138, 0.12);
+  border: 2px solid var(--recipes-sage);
+  border-radius: 12px;
+  padding: clamp(8px, 1.4vh, 14px) 18px;
+  margin-bottom: clamp(10px, 2vh, 20px);
+  font-size: clamp(0.85rem, 1.6vh, 1.05rem);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.recipes-swap b {
+  color: var(--recipes-sage);
+}
+
+.recipes-ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  min-height: 0;
+}
+
+.recipes-ingredients li {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(12px, 2.5vw, 24px);
+  border-bottom: 1px solid var(--recipes-rule);
+  padding-block: clamp(2px, 0.6vh, 8px);
+}
+
+.recipes-ingredients li:last-child {
+  border-bottom: none;
+}
+
+.recipes-amount {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--recipes-pumpkin);
+  min-width: 5.5ch;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: clamp(1.05rem, 3vh, 1.7rem);
+  font-weight: 500;
+}
+
+.recipes-item {
+  font-size: clamp(1.05rem, 3vh, 1.7rem);
+  line-height: 1.2;
+}
+
+.recipes-optional-tag {
+  font-size: 0.68em;
+  color: var(--recipes-text-dim);
+  font-style: italic;
+}

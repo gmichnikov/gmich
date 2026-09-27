@@ -132,6 +132,7 @@ def create_app():
     from app.projects.friend_wordle.routes import friend_wordle_bp
     from app.projects.mancala_online.routes import mancala_online_bp
     from app.projects.japan_recs.routes import japan_recs_bp
+    from app.projects.recipes.routes import recipes_bp
     from app.projects.nfl_survivor import nfl_survivor_bp
     from app.projects.nfl_survivor_setup.routes import nfl_survivor_setup_bp
     from app.projects.baseball_lineup.routes import baseball_lineup_bp
@@ -202,6 +203,7 @@ def create_app():
         mancala_online_bp, url_prefix="/mancala-online"
     )
     app.register_blueprint(japan_recs_bp)
+    app.register_blueprint(recipes_bp)
     app.register_blueprint(nfl_survivor_bp, url_prefix="/nfl-survivor")
     app.register_blueprint(nfl_survivor_setup_bp, url_prefix="/nfl-survivor-setup")
     app.register_blueprint(baseball_lineup_bp)

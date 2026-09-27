@@ -1,0 +1,37 @@
+{% extends "recipes/base.html" %}
+
+{% block title %}Pumpkin Banana Muffins{% endblock %}
+
+{% block body_class %}recipes-body recipes-body--sheet{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('recipes.static', filename='recipes/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="recipes-sheet">
+  <header class="recipes-header">
+    <a class="recipes-back" href="{{ url_for('recipes.index') }}">← Recipes</a>
+    <h1 class="recipes-title">Pumpkin Banana Muffins</h1>
+    <p class="recipes-subtitle">Ingredients — makes 12</p>
+  </header>
+
+  <div class="recipes-swap">
+    <b>No baking soda?</b> Use 1 tablespoon (3 tsp) baking powder instead of the 1 tsp baking soda below.
+  </div>
+
+  <ul class="recipes-ingredients">
+    <li><span class="recipes-amount">1½ cup</span><span class="recipes-item">All-purpose flour</span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Baking soda <span class="recipes-optional-tag">(or 1 tbsp baking powder)</span></span></li>
+    <li><span class="recipes-amount">½ tsp</span><span class="recipes-item">Salt</span></li>
+    <li><span class="recipes-amount">1½ tsp</span><span class="recipes-item">Pumpkin pie spice (or cinnamon)</span></li>
+    <li><span class="recipes-amount">2</span><span class="recipes-item">Ripe bananas, mashed</span></li>
+    <li><span class="recipes-amount">1 cup</span><span class="recipes-item">Canned pumpkin puree</span></li>
+    <li><span class="recipes-amount">½ cup</span><span class="recipes-item">Granulated sugar</span></li>
+    <li><span class="recipes-amount">⅓ cup</span><span class="recipes-item">Vegetable oil or melted butter</span></li>
+    <li><span class="recipes-amount">2</span><span class="recipes-item">Large eggs</span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Vanilla extract</span></li>
+    <li><span class="recipes-amount">½ cup</span><span class="recipes-item">Chocolate chips or walnuts <span class="recipes-optional-tag">(optional)</span></span></li>
+  </ul>
+</main>
+{% endblock %}
