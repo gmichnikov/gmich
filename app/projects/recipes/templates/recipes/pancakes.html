@@ -1,0 +1,35 @@
+{% extends "recipes/base.html" %}
+
+{% block title %}Pancakes{% endblock %}
+
+{% block body_class %}recipes-body recipes-body--sheet{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('recipes.static', filename='recipes/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="recipes-sheet">
+  <header class="recipes-header">
+    <a class="recipes-back" href="{{ url_for('recipes.index') }}">← Recipes</a>
+    <h1 class="recipes-title">Pancakes</h1>
+    <p class="recipes-subtitle">Ingredients — makes 8-10</p>
+  </header>
+
+  <div class="recipes-swap">
+    <b>No buttermilk?</b> Add 1 tablespoon lemon juice or vinegar to 1 cup regular milk, stir, and let sit for 5 minutes.
+  </div>
+
+  <ul class="recipes-ingredients">
+    <li><span class="recipes-amount">1½ cup</span><span class="recipes-item">All-purpose flour</span></li>
+    <li><span class="recipes-amount">3½ tsp</span><span class="recipes-item">Baking powder</span></li>
+    <li><span class="recipes-amount">1 tbsp</span><span class="recipes-item">Granulated sugar</span></li>
+    <li><span class="recipes-amount">½ tsp</span><span class="recipes-item">Salt</span></li>
+    <li><span class="recipes-amount">1¼ cup</span><span class="recipes-item">Milk <span class="recipes-optional-tag">(or buttermilk)</span></span></li>
+    <li><span class="recipes-amount">1</span><span class="recipes-item">Large egg</span></li>
+    <li><span class="recipes-amount">3 tbsp</span><span class="recipes-item">Melted butter <span class="recipes-optional-tag">(cooled slightly)</span></span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Vanilla extract</span></li>
+    <li><span class="recipes-amount">½ cup</span><span class="recipes-item">Blueberries or chocolate chips <span class="recipes-optional-tag">(optional)</span></span></li>
+  </ul>
+</main>
+{% endblock %}
