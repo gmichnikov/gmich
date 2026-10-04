@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}LIVE: {{ period_info.label }} vs {{ game.opponent_name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <!-- Top Sticky Header: Period, Points, End Period -->
+    <div class="bkm-live-sticky">
+      <div class="bkm-scoreboard">
+        <div class="bkm-score-block">
+          <span class="bkm-score-label">Points</span>
+          <span class="bkm-score-value" id="bkm-total-pts">{{ total_points }}</span>
+        </div>
+        <div style="text-align: center;">
+          <span class="bkm-period-badge">{{ period_info.label }}</span>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">vs {{ game.opponent_name }}</div>
+        </div>
+        <div>
+          <button type="button" class="bkm-btn bkm-btn-secondary bkm-btn-small" id="bkm-end-period-btn">End {{ period_info.label }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub Confirmation / Pending Banner (Visible when subs staged) -->
+    <div id="bkm-pending-banner" class="bkm-sub-pending-bar" style="display: none;">
+      <div class="bkm-sub-pending-title">Substitutions Staged</div>
+      <ul id="bkm-diff-list" class="bkm-sub-diff-list"></ul>
+      <div class="bkm-sub-actions">
+        <button type="button" id="bkm-confirm-sub-btn" class="bkm-btn bkm-btn-primary" style="flex: 1;">Sub (Go)</button>
+        <button type="button" id="bkm-reset-sub-btn" class="bkm-btn bkm-btn-secondary">Reset</button>
+      </div>
+    </div>
+
+    <!-- Undo Bar (if there's a recent event) -->
+    {% if events %}
+    {% set last_ev = events[-1] %}
+    <div class="bkm-undo-bar" id="bkm-undo-bar">
+      <span>
+        Last: 
+        {% if last_ev.event_type == 'score' %}
+          <strong>{{ last_ev.payload.shot_type|upper }}</strong> (+{{ last_ev.payload.points }} pts)
+        {% elif last_ev.event_type == 'sub' %}
+          <strong>Sub</strong> ({{ last_ev.payload.on|length }} in)
+        {% elif last_ev.event_type == 'period_start' %}
+          <strong>{{ period_info.label }} Started</strong>
+        {% endif %}
+      </span>
+      <button type="button" id="bkm-undo-btn" class="bkm-btn bkm-btn-secondary bkm-btn-small" style="padding: 4px 10px; min-height: 28px;">Undo</button>
+    </div>
+    {% endif %}
+
+    <!-- 5 On Court Players (Half Court Box) -->
+    <div class="bkm-court">
+      <div class="bkm-court-title">On Court (Tap player to score)</div>
+      <div class="bkm-court-slots" id="bkm-court-chips">
+        {% for player in on_court %}
+        <div 
+          class="bkm-player-chip" 
+          data-player-id="{{ player.id }}" 
+          data-player-name="{{ player.full_name }}"
+          data-jersey="{{ player.jersey_number or '' }}"
+        >
+          <span class="bkm-chip-jersey">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}&bull;{% endif %}</span>
+          <span class="bkm-chip-name">{{ player.first_name }} {{ player.last_name[0] }}.</span>
+          <span class="bkm-chip-time">{{ player.duration_str }} &middot; {{ player.stats.points }}p</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Bench Section -->
+    <div class="bkm-bench-section">
+      <div class="bkm-bench-header">
+        <span class="bkm-bench-title" id="bkm-bench-header-title">Bench (Tap to start sub)</span>
+      </div>
+      <div class="bkm-bench-chips" id="bkm-bench-chips">
+        {% for player in bench %}
+        <button 
+          type="button" 
+          class="bkm-bench-chip" 
+          data-player-id="{{ player.id }}"
+          data-player-name="{{ player.full_name }}"
+          data-jersey="{{ player.jersey_number or '' }}"
+        >
+          {% if player.jersey_number %}#{{ player.jersey_number }}{% endif %} {{ player.first_name }} {{ player.last_name[0] }}.
+          <span style="font-size: 11px; color: var(--bkm-text-muted); margin-left: 4px;">({{ player.duration_str }})</span>
+        </button>
+        {% else %}
+        <p style="font-size: 13px; color: var(--bkm-text-muted); margin: 4px 0;">No players on the bench.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Bottom Actions & Links -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+      <a href="{{ url_for('basketball_minutes.game_recap', team_id=team.id, game_id=game.id) }}" class="bkm-btn bkm-btn-secondary bkm-btn-small">View Box Score / Recap</a>
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}" class="bkm-btn bkm-btn-secondary bkm-btn-small">Team Page</a>
+    </div>
+
+    <!-- ========================================================
+         MODAL 1: Quick Scoring Sheet (Tapped on-court player)
+         ======================================================== -->
+    <div id="bkm-score-modal" class="bkm-modal-backdrop" style="display: none;">
+      <div class="bkm-modal-card">
+        <h3 id="bkm-score-modal-player" class="bkm-modal-title">Player Name</h3>
+        <p class="bkm-modal-subtitle">Log points for this player:</p>
+
+        <div class="bkm-scoring-grid">
+          <button type="button" class="bkm-score-btn bkm-score-btn-ft" data-shot="1pt">
+            +1 FT
+            <span>Made Free Throw</span>
+          </button>
+          <button type="button" class="bkm-score-btn bkm-score-btn-miss" data-shot="miss_ft">
+            Miss FT
+            <span>Missed Free Throw</span>
+          </button>
+          <button type="button" class="bkm-score-btn bkm-score-btn-2pt" data-shot="2pt">
+            +2 PTS
+            <span>Field Goal</span>
+          </button>
+          <button type="button" class="bkm-score-btn bkm-score-btn-3pt" data-shot="3pt">
+            +3 PTS
+            <span>3-Pointer</span>
+          </button>
+        </div>
+
+        <button type="button" id="bkm-score-cancel-btn" class="bkm-btn bkm-btn-secondary" style="width: 100%;">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 2: Clock Entry for Sub (Microwave keypad)
+         ======================================================== -->
+    <div id="bkm-clock-modal" class="bkm-modal-backdrop" style="display: none;">
+      <div class="bkm-modal-card">
+        <h3 class="bkm-modal-title">Time Remaining on Clock</h3>
+        <p class="bkm-modal-subtitle">Enter scoreboard minutes & seconds (e.g. 530 for 5:30):</p>
+
+        <div class="bkm-clock-entry">
+          <div id="bkm-clock-display" class="bkm-clock-screen">{{ last_remaining_formatted }}</div>
+          
+          <div class="bkm-keypad">
+            <button type="button" class="bkm-keypad-btn" data-key="1">1</button>
+            <button type="button" class="bkm-keypad-btn" data-key="2">2</button>
+            <button type="button" class="bkm-keypad-btn" data-key="3">3</button>
+            <button type="button" class="bkm-keypad-btn" data-key="4">4</button>
+            <button type="button" class="bkm-keypad-btn" data-key="5">5</button>
+            <button type="button" class="bkm-keypad-btn" data-key="6">6</button>
+            <button type="button" class="bkm-keypad-btn" data-key="7">7</button>
+            <button type="button" class="bkm-keypad-btn" data-key="8">8</button>
+            <button type="button" class="bkm-keypad-btn" data-key="9">9</button>
+            <button type="button" class="bkm-keypad-btn" data-key="C" style="color: var(--bkm-danger);">C</button>
+            <button type="button" class="bkm-keypad-btn" data-key="0">0</button>
+            <button type="button" class="bkm-keypad-btn" data-key="DEL">&larr;</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="button" id="bkm-sub-submit-btn" class="bkm-btn bkm-btn-primary" style="flex: 1;">Save Sub</button>
+          <button type="button" id="bkm-sub-clock-cancel" class="bkm-btn bkm-btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 3: End Period & Overtime Dialog
+         ======================================================== -->
+    <div id="bkm-end-period-modal" class="bkm-modal-backdrop" style="display: none;">
+      <div class="bkm-modal-card">
+        <h3 class="bkm-modal-title">End {{ period_info.label }}</h3>
+        <p class="bkm-modal-subtitle">Confirm period completion:</p>
+
+        {% if period_info.period >= game.period_count %}
+        <div style="background: var(--bkm-surface-muted); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+          <label style="font-weight: 700; font-size: 14px; display: block; margin-bottom: 8px;">Is this Game Over or Overtime?</label>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" id="bkm-action-gameover" class="bkm-btn bkm-btn-primary" style="flex: 1;">Final / Game Over</button>
+            <button type="button" id="bkm-action-overtime" class="bkm-btn bkm-btn-secondary" style="flex: 1;">+ Add Overtime</button>
+          </div>
+        </div>
+        {% else %}
+        <button type="button" id="bkm-action-next-period" class="bkm-btn bkm-btn-primary" style="width: 100%; margin-bottom: 12px;">End {{ period_info.label }} &amp; Next Period</button>
+        {% endif %}
+
+        <button type="button" id="bkm-end-cancel-btn" class="bkm-btn bkm-btn-secondary" style="width: 100%;">Cancel</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const CSRF_TOKEN = "{{ csrf_token() }}";
+  const SUB_URL = "{{ url_for('basketball_minutes.game_sub', team_id=team.id, game_id=game.id) }}";
+  const SCORE_URL = "{{ url_for('basketball_minutes.game_score', team_id=team.id, game_id=game.id) }}";
+  const END_URL = "{{ url_for('basketball_minutes.game_end_period', team_id=team.id, game_id=game.id) }}";
+  const UNDO_URL = "{{ url_for('basketball_minutes.game_undo', team_id=team.id, game_id=game.id) }}";
+
+  // State
+  let liveCourt = {{ on_court|map(attribute='id')|list|tojson }};
+  let stagedCourt = [...liveCourt];
+  let selectedBenchPlayerId = null;
+  let activeScorePlayer = null;
+
+  // Microwave digits buffer
+  let clockDigits = "";
+  const initialTimeStr = "{{ last_remaining_formatted }}";
+
+  // Elements
+  const courtChips = document.querySelectorAll('#bkm-court-chips .bkm-player-chip');
+  const benchChips = document.querySelectorAll('#bkm-bench-chips .bkm-bench-chip');
+  const pendingBanner = document.getElementById('bkm-pending-banner');
+  const diffList = document.getElementById('bkm-diff-list');
+  const confirmSubBtn = document.getElementById('bkm-confirm-sub-btn');
+  const resetSubBtn = document.getElementById('bkm-reset-sub-btn');
+
+  // Modals
+  const scoreModal = document.getElementById('bkm-score-modal');
+  const clockModal = document.getElementById('bkm-clock-modal');
+  const endModal = document.getElementById('bkm-end-period-modal');
+  const clockDisplay = document.getElementById('bkm-clock-display');
+
+  // -------------------------------------------------------------
+  // Court & Bench Interactions
+  // -------------------------------------------------------------
+  function refreshStagedUi() {
+    const hasChanges = JSON.stringify(liveCourt.slice().sort()) !== JSON.stringify(stagedCourt.slice().sort());
+    const onIds = stagedCourt.filter(id => !liveCourt.includes(id));
+    const offIds = liveCourt.filter(id => !stagedCourt.includes(id));
+
+    if (hasChanges) {
+      pendingBanner.style.display = 'block';
+      diffList.innerHTML = '';
+
+      for (let i = 0; i < onIds.length; i++) {
+        const onEl = document.querySelector(`[data-player-id="${onIds[i]}"]`);
+        const offEl = document.querySelector(`[data-player-id="${offIds[i]}"]`);
+        const onName = onEl ? onEl.dataset.playerName : `Player ${onIds[i]}`;
+        const offName = offEl ? offEl.dataset.playerName : `Player ${offIds[i]}`;
+        const li = document.createElement('li');
+        li.textContent = `IN: ${onName} | OUT: ${offName}`;
+        diffList.appendChild(li);
+      }
+    } else {
+      pendingBanner.style.display = 'none';
+    }
+
+    // Highlight court chips
+    courtChips.forEach(chip => {
+      const pid = parseInt(chip.dataset.playerId, 10);
+      const isStagedOff = offIds.includes(pid);
+
+      let subBadge = chip.querySelector('.bkm-badge-sub-status');
+      if (isStagedOff) {
+        chip.classList.add('bkm-staged-off');
+        if (!subBadge) {
+          subBadge = document.createElement('span');
+          subBadge.className = 'bkm-badge-sub-status bkm-badge-sub-out';
+          subBadge.textContent = 'SUB OUT';
+          chip.appendChild(subBadge);
+        }
+      } else {
+        chip.classList.remove('bkm-staged-off');
+        if (subBadge) subBadge.remove();
+      }
+
+      // If we are in Sub Mode (bench player selected), only on-court players who haven't already been subbed out can be targeted
+      if (selectedBenchPlayerId !== null) {
+        if (!isStagedOff) {
+          chip.classList.add('bkm-sub-target');
+          chip.classList.remove('bkm-disabled');
+        } else {
+          chip.classList.remove('bkm-sub-target');
+          chip.classList.add('bkm-disabled');
+        }
+      } else {
+        chip.classList.remove('bkm-sub-target');
+        chip.classList.remove('bkm-disabled');
+      }
+    });
+
+    // Highlight and disable bench chips
+    const benchHeaderTitle = document.getElementById('bkm-bench-header-title');
+    if (selectedBenchPlayerId !== null) {
+      if (benchHeaderTitle) benchHeaderTitle.textContent = 'Sub Mode: Tap player on court to swap (or tap bench again to cancel)';
+    } else {
+      if (benchHeaderTitle) benchHeaderTitle.textContent = 'Bench (Tap to start sub)';
+    }
+
+    benchChips.forEach(chip => {
+      const pid = parseInt(chip.dataset.playerId, 10);
+      const isStagedIn = onIds.includes(pid);
+
+      let subBadge = chip.querySelector('.bkm-badge-sub-status');
+      if (isStagedIn) {
+        chip.classList.add('bkm-staged-in');
+        chip.disabled = true;
+        if (!subBadge) {
+          subBadge = document.createElement('span');
+          subBadge.className = 'bkm-badge-sub-status bkm-badge-sub-in';
+          subBadge.textContent = 'SUB IN';
+          chip.appendChild(subBadge);
+        }
+      } else {
+        chip.classList.remove('bkm-staged-in');
+        chip.disabled = false;
+        if (subBadge) subBadge.remove();
+      }
+
+      if (pid === selectedBenchPlayerId) {
+        chip.classList.add('bkm-selected-sub');
+      } else {
+        chip.classList.remove('bkm-selected-sub');
+      }
+    });
+  }
+
+  // Tap Bench Player -> Enters Sub Mode
+  benchChips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
+      const pid = parseInt(chip.dataset.playerId, 10);
+
+      // Guard: if already staged to come in, cannot select again
+      const onIds = stagedCourt.filter(id => !liveCourt.includes(id));
+      if (onIds.includes(pid)) {
+        return;
+      }
+
+      if (selectedBenchPlayerId === pid) {
+        selectedBenchPlayerId = null; // deselect
+      } else {
+        selectedBenchPlayerId = pid;
+      }
+      refreshStagedUi();
+    });
+  });
+
+  // Tap Court Player
+  courtChips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
+      const pid = parseInt(chip.dataset.playerId, 10);
+
+      if (selectedBenchPlayerId !== null) {
+        // Guard: cannot sub out someone already staged out
+        const offIds = liveCourt.filter(id => !stagedCourt.includes(id));
+        if (offIds.includes(pid)) {
+          return;
+        }
+
+        // We are in SUB MODE: swap selected bench player for this court player!
+        const benchPid = selectedBenchPlayerId;
+        // Swap in stagedCourt
+        stagedCourt = stagedCourt.filter(id => id !== pid);
+        stagedCourt.push(benchPid);
+        selectedBenchPlayerId = null; // finished this swap
+        refreshStagedUi();
+      } else {
+        // We are in SCORING MODE: open scoring popup
+        openScoreModal(pid, chip.dataset.playerName, chip.dataset.jersey);
+      }
+    });
+  });
+
+  resetSubBtn.addEventListener('click', () => {
+    stagedCourt = [...liveCourt];
+    selectedBenchPlayerId = null;
+    refreshStagedUi();
+  });
+
+  // Initialize UI on page load
+  refreshStagedUi();
+
+  // -------------------------------------------------------------
+  // Scoring Flow
+  // -------------------------------------------------------------
+  function openScoreModal(pid, name, jersey) {
+    activeScorePlayer = pid;
+    const label = jersey ? `#${jersey} ${name}` : name;
+    document.getElementById('bkm-score-modal-player').textContent = label;
+    scoreModal.style.display = 'flex';
+  }
+
+  function closeScoreModal() {
+    scoreModal.style.display = 'none';
+    activeScorePlayer = null;
+  }
+
+  document.getElementById('bkm-score-cancel-btn').addEventListener('click', closeScoreModal);
+
+  // Allow Escape key to close open modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (scoreModal.style.display !== 'none') {
+        closeScoreModal();
+      } else if (clockModal.style.display !== 'none') {
+        clockModal.style.display = 'none';
+      } else if (endModal.style.display !== 'none') {
+        endModal.style.display = 'none';
+      } else if (selectedBenchPlayerId !== null) {
+        selectedBenchPlayerId = null;
+        refreshStagedUi();
+      }
+    }
+  });
+
+  document.querySelectorAll('.bkm-score-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!activeScorePlayer) return;
+      const shotType = btn.dataset.shot;
+      scoreModal.style.display = 'none';
+
+      try {
+        const res = await fetch(SCORE_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+          body: JSON.stringify({player_id: activeScorePlayer, shot_type: shotType})
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.error || 'Failed to log score');
+        }
+      } catch (err) {
+        alert('Network error recording score.');
+      }
+    });
+  });
+
+  // -------------------------------------------------------------
+  // Sub Clock / Keypad Entry
+  // -------------------------------------------------------------
+  confirmSubBtn.addEventListener('click', () => {
+    clockDigits = "";
+    updateClockDisplay();
+    clockModal.style.display = 'flex';
+  });
+
+  document.getElementById('bkm-sub-clock-cancel').addEventListener('click', () => {
+    clockModal.style.display = 'none';
+  });
+
+  function updateClockDisplay() {
+    if (!clockDigits) {
+      clockDisplay.textContent = initialTimeStr;
+      return;
+    }
+    // Microwave format: e.g. 530 -> 5:30; 45 -> 0:45; 8 -> 0:08
+    const num = parseInt(clockDigits, 10);
+    if (clockDigits.length <= 2) {
+      clockDisplay.textContent = `0:${clockDigits.padStart(2, '0')}`;
+    } else {
+      const m = clockDigits.slice(0, -2);
+      const s = clockDigits.slice(-2);
+      clockDisplay.textContent = `${m}:${s}`;
+    }
+  }
+
+  document.querySelectorAll('.bkm-keypad-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      if (key === 'C') {
+        clockDigits = "";
+      } else if (key === 'DEL') {
+        clockDigits = clockDigits.slice(0, -1);
+      } else if (clockDigits.length < 4) {
+        clockDigits += key;
+      }
+      updateClockDisplay();
+    });
+  });
+
+  document.getElementById('bkm-sub-submit-btn').addEventListener('click', async () => {
+    const rawTime = clockDigits ? clockDisplay.textContent : initialTimeStr;
+    const submitBtn = document.getElementById('bkm-sub-submit-btn');
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch(SUB_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+        body: JSON.stringify({
+          lineup: stagedCourt,
+          remaining_time: rawTime
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Sub failed');
+        submitBtn.disabled = false;
+      }
+    } catch (err) {
+      alert('Error submitting substitutions');
+      submitBtn.disabled = false;
+    }
+  });
+
+  // -------------------------------------------------------------
+  // Undo & End Period
+  // -------------------------------------------------------------
+  const undoBtn = document.getElementById('bkm-undo-btn');
+  if (undoBtn) {
+    undoBtn.addEventListener('click', async () => {
+      if (!confirm('Undo the last action?')) return;
+      try {
+        const res = await fetch(UNDO_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN}
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.error || 'Could not undo');
+        }
+      } catch (err) {
+        alert('Network error on undo');
+      }
+    });
+  }
+
+  const endPeriodBtn = document.getElementById('bkm-end-period-btn');
+  endPeriodBtn.addEventListener('click', () => {
+    endModal.style.display = 'flex';
+  });
+
+  document.getElementById('bkm-end-cancel-btn').addEventListener('click', () => {
+    endModal.style.display = 'none';
+  });
+
+  const nextPeriodBtn = document.getElementById('bkm-action-next-period');
+  if (nextPeriodBtn) {
+    nextPeriodBtn.addEventListener('click', async () => {
+      endPeriod(false, false);
+    });
+  }
+
+  const gameOverBtn = document.getElementById('bkm-action-gameover');
+  if (gameOverBtn) {
+    gameOverBtn.addEventListener('click', async () => {
+      endPeriod(true, false);
+    });
+  }
+
+  const otBtn = document.getElementById('bkm-action-overtime');
+  if (otBtn) {
+    otBtn.addEventListener('click', async () => {
+      endPeriod(false, true);
+    });
+  }
+
+  async function endPeriod(gameOver, addOvertime) {
+    try {
+      const res = await fetch(END_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+        body: JSON.stringify({
+          remaining_time: '0:00',
+          game_over: gameOver,
+          add_overtime: addOvertime
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.redirect) {
+        window.location.href = data.redirect;
+      }
+    } catch (err) {
+      alert('Error ending period');
+    }
+  }
+</script>
+{% endblock %}

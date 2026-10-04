@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}New Game vs {{ team.display_name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; 
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a> &rsaquo; 
+      New Game
+    </p>
+
+    <header class="bkm-page-header">
+      <h1 class="bkm-page-title">New Game</h1>
+      <p class="bkm-page-subtitle">Configure the opponent and game length for this matchup.</p>
+    </header>
+
+    <div class="bkm-card">
+      <div class="bkm-card-body">
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="opponent_name">Opponent Name</label>
+            <input type="text" id="opponent_name" name="opponent_name" class="bkm-input" placeholder="e.g. Celtics" required autofocus>
+          </div>
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="game_date">Game Date</label>
+            <input type="date" id="game_date" name="game_date" class="bkm-input" value="{{ today_date or '' }}" required>
+          </div>
+
+          <div class="bkm-form-row">
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_count">Format</label>
+              <select id="period_count" name="period_count" class="bkm-select">
+                <option value="4" {% if team.default_period_count == 4 %}selected{% endif %}>4 Quarters</option>
+                <option value="2" {% if team.default_period_count == 2 %}selected{% endif %}>2 Halves</option>
+              </select>
+            </div>
+
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_minutes">Period Length</label>
+              <select id="period_minutes" name="period_minutes" class="bkm-select">
+                {% for m in [5, 6, 7, 8, 10, 12, 14, 16, 18, 20] %}
+                <option value="{{ m }}" {% if team.default_period_minutes == m %}selected{% endif %}>{{ m }} minutes</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; display: flex; gap: 10px;">
+            <button type="submit" class="bkm-btn bkm-btn-primary" style="flex: 1;">Proceed to Lineup</button>
+            <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}" class="bkm-btn bkm-btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Default date to today if empty
+  const dateInput = document.getElementById('game_date');
+  if (dateInput && !dateInput.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+</script>
+{% endblock %}

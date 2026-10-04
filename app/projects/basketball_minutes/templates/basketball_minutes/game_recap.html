@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Recap: vs {{ game.opponent_name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; 
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a> &rsaquo; 
+      Recap vs {{ game.opponent_name }}
+    </p>
+
+    <header class="bkm-page-header">
+      <div class="bkm-page-header-row">
+        <div>
+          <h1 class="bkm-page-title">Game Recap</h1>
+          <p class="bkm-page-subtitle">
+            vs {{ game.opponent_name }} &middot; {{ game.game_date.strftime('%b %d, %Y') }}
+          </p>
+        </div>
+        <div>
+          <a href="{{ url_for('basketball_minutes.game_detail', team_id=team.id, game_id=game.id) }}" class="bkm-btn bkm-btn-secondary bkm-btn-small">Back to Game</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Final Score Entry / Summary Card -->
+    <div class="bkm-card">
+      <div class="bkm-card-header">
+        <span>Final Score</span>
+        <span style="font-size: 13px; font-weight: normal; color: var(--bkm-text-muted);">Tracked: {{ tracked_points }} pts</span>
+      </div>
+      <div class="bkm-card-body">
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="bkm-form-row">
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="final_our_score">Our Score (Final)</label>
+              <input 
+                type="number" 
+                id="final_our_score" 
+                name="final_our_score" 
+                class="bkm-input" 
+                value="{{ game.final_our_score if game.final_our_score is not none else tracked_points }}"
+                placeholder="{{ tracked_points }}"
+              >
+              <p class="bkm-help">Defaults to tracked points ({{ tracked_points }}), but can be adjusted if any baskets were missed.</p>
+            </div>
+
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="final_opponent_score">{{ game.opponent_name }} Score</label>
+              <input 
+                type="number" 
+                id="final_opponent_score" 
+                name="final_opponent_score" 
+                class="bkm-input" 
+                value="{{ game.final_opponent_score if game.final_opponent_score is not none else '' }}"
+                placeholder="Opponent pts"
+              >
+              <p class="bkm-help">Enter opponent final score.</p>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="bkm-btn bkm-btn-primary bkm-btn-small">Save Final Score</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Box Score Table (Minutes & Points) -->
+    <div class="bkm-card">
+      <div class="bkm-card-header">
+        <span>Player Box Score</span>
+      </div>
+      <div class="bkm-card-body" style="padding: 0;">
+        <div class="bkm-table-wrapper">
+          <table class="bkm-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th class="bkm-num">Total Min</th>
+                {% for per in periods_list %}
+                <th class="bkm-num" style="font-size: 11px;">
+                  {% if game.period_count == 4 and per <= 4 %}Q{{ per }}
+                  {% elif game.period_count == 2 and per <= 2 %}H{{ per }}
+                  {% else %}OT{{ per - game.period_count if per > game.period_count else per }}{% endif %}
+                </th>
+                {% endfor %}
+                <th class="bkm-num">PTS</th>
+                <th class="bkm-num">2PT</th>
+                <th class="bkm-num">3PT</th>
+                <th class="bkm-num">FT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in box_score %}
+              <tr>
+                <td>
+                  {% if row.player.jersey_number %}<span class="bkm-jersey-badge">#{{ row.player.jersey_number }}</span>{% endif %}
+                  <strong>{{ row.player.full_name }}</strong>
+                </td>
+                <td class="bkm-num"><strong>{{ row.total_duration }}</strong></td>
+                {% for dur in row.period_durations %}
+                <td class="bkm-num" style="color: var(--bkm-text-muted); font-size: 13px;">{{ dur }}</td>
+                {% endfor %}
+                <td class="bkm-num"><strong style="color: var(--bkm-accent);">{{ row.points }}</strong></td>
+                <td class="bkm-num">{{ row.fg2 }}</td>
+                <td class="bkm-num">{{ row.fg3 }}</td>
+                <td class="bkm-num" style="font-size: 12px; color: var(--bkm-text-muted);">{{ row.ft_str }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="{{ 6 + periods_list|length }}" class="bkm-empty" style="border: none;">No player records available.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Timeline Log -->
+    <div class="bkm-card">
+      <div class="bkm-card-header">
+        <span>Game Event Log ({{ events|length }})</span>
+      </div>
+      <div class="bkm-card-body">
+        {% if events %}
+        <ul class="bkm-event-feed" style="margin: 0; padding: 0; list-style: none;">
+          {% for ev in events %}
+          <li class="bkm-event-item">
+            <div>
+              <span class="bkm-period-badge" style="font-size: 11px; padding: 2px 6px;">
+                {% if game.period_count == 4 and ev.period <= 4 %}Q{{ ev.period }}
+                {% elif game.period_count == 2 and ev.period <= 2 %}H{{ ev.period }}
+                {% else %}P{{ ev.period }}{% endif %}
+              </span>
+              <span style="font-family: monospace; font-size: 12px; margin-left: 6px; color: var(--bkm-text-muted);">
+                {{ (ev.remaining_seconds // 60) }}:{{ '%02d' % (ev.remaining_seconds % 60) }} rem
+              </span>
+              <span style="margin-left: 8px;">
+                {% if ev.event_type == 'period_start' %}
+                  <strong>Period Started</strong> (Lineup: 5 on floor)
+                {% elif ev.event_type == 'sub' %}
+                  <strong>Substitution</strong> ({{ ev.payload.on|length }} in, {{ ev.payload.off|length }} out)
+                {% elif ev.event_type == 'score' %}
+                  {% set p = team.players.filter_by(id=ev.payload.player_id).first() %}
+                  <strong>{{ ev.payload.shot_type|upper }}</strong> 
+                  {% if ev.payload.points > 0 %}(+{{ ev.payload.points }} pts){% else %}(Missed){% endif %}
+                  {% if p %}&middot; {{ p.full_name }}{% endif %}
+                {% elif ev.event_type == 'period_end' %}
+                  <strong>Period Ended</strong>
+                {% endif %}
+              </span>
+            </div>
+            <span style="font-size: 11px; color: var(--bkm-text-muted);">#{{ ev.id }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="bkm-empty" style="border: none; padding: 12px 0;">No events logged yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Delete Game Danger Zone -->
+    <div style="margin-top: 32px; padding: 16px; border: 1px solid #fee2e2; border-radius: 12px; background: #fff5f5;">
+      <h4 style="margin: 0 0 8px; color: var(--bkm-danger);">Delete Game</h4>
+      <p style="font-size: 13px; color: var(--bkm-text-muted); margin: 0 0 12px;">This will remove all events and playing time for this game.</p>
+      <form method="POST" action="{{ url_for('basketball_minutes.game_delete', team_id=team.id, game_id=game.id) }}" onsubmit="return confirm('Delete this game? This cannot be undone.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="bkm-btn bkm-btn-danger bkm-btn-small">Delete Game</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

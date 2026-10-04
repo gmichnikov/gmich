@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ player.full_name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; 
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a> &rsaquo; 
+      Edit Player
+    </p>
+
+    <header class="bkm-page-header">
+      <h1 class="bkm-page-title">Edit Player</h1>
+    </header>
+
+    <div class="bkm-card">
+      <div class="bkm-card-body">
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="bkm-form-row">
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="first_name">First Name</label>
+              <input type="text" id="first_name" name="first_name" class="bkm-input" value="{{ player.first_name }}" required>
+            </div>
+
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="last_name">Last Name</label>
+              <input type="text" id="last_name" name="last_name" class="bkm-input" value="{{ player.last_name }}" required>
+            </div>
+          </div>
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="jersey_number">Jersey Number <span style="font-weight: normal; color: var(--bkm-text-muted);">(optional)</span></label>
+            <input type="text" id="jersey_number" name="jersey_number" class="bkm-input" value="{{ player.jersey_number or '' }}" placeholder="e.g. 23">
+          </div>
+
+          <div style="margin-top: 24px; display: flex; gap: 10px;">
+            <button type="submit" class="bkm-btn bkm-btn-primary" style="flex: 1;">Save Changes</button>
+            <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}" class="bkm-btn bkm-btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="bkm-card" style="border-color: #fee2e2;">
+      <div class="bkm-card-body">
+        <h3 style="margin-top: 0; color: var(--bkm-danger);">Remove Player</h3>
+        <p style="font-size: 14px; color: var(--bkm-text-muted);">Permanently remove this player from the roster.</p>
+        <form method="POST" action="{{ url_for('basketball_minutes.player_delete', team_id=team.id, player_id=player.id) }}" onsubmit="return confirm('Are you sure you want to remove this player?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="bkm-btn bkm-btn-danger">Remove from Roster</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

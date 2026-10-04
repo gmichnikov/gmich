@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}New Team — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; New Team
+    </p>
+
+    <header class="bkm-page-header">
+      <h1 class="bkm-page-title">Create Team</h1>
+      <p class="bkm-page-subtitle">Set your squad name and default period settings.</p>
+    </header>
+
+    <div class="bkm-card">
+      <div class="bkm-card-body">
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="name">Team Name</label>
+            <input type="text" id="name" name="name" class="bkm-input" placeholder="e.g. 10U Warriors" required autofocus>
+          </div>
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="season_label">Season Label <span style="font-weight: normal; color: var(--bkm-text-muted);">(optional)</span></label>
+            <input type="text" id="season_label" name="season_label" class="bkm-input" placeholder="e.g. Winter 2026">
+          </div>
+
+          <div class="bkm-form-row">
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_count">Default Format</label>
+              <select id="period_count" name="period_count" class="bkm-select">
+                <option value="4" selected>4 Quarters</option>
+                <option value="2">2 Halves</option>
+              </select>
+            </div>
+
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_minutes">Default Period Length</label>
+              <select id="period_minutes" name="period_minutes" class="bkm-select">
+                <option value="6">6 minutes</option>
+                <option value="7">7 minutes</option>
+                <option value="8" selected>8 minutes</option>
+                <option value="10">10 minutes</option>
+                <option value="12">12 minutes</option>
+                <option value="16">16 minutes</option>
+                <option value="20">20 minutes</option>
+              </select>
+            </div>
+          </div>
+          <p class="bkm-help">You can change these for individual games whenever needed.</p>
+
+          <div style="margin-top: 24px; display: flex; gap: 10px;">
+            <button type="submit" class="bkm-btn bkm-btn-primary" style="flex: 1;">Create Team</button>
+            <a href="{{ url_for('basketball_minutes.index') }}" class="bkm-btn bkm-btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

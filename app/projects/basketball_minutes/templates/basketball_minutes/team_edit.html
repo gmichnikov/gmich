@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ team.name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; 
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a> &rsaquo; 
+      Edit Team
+    </p>
+
+    <header class="bkm-page-header">
+      <h1 class="bkm-page-title">Edit Team Settings</h1>
+    </header>
+
+    <div class="bkm-card">
+      <div class="bkm-card-body">
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="name">Team Name</label>
+            <input type="text" id="name" name="name" class="bkm-input" value="{{ team.name }}" required>
+          </div>
+
+          <div class="bkm-form-group">
+            <label class="bkm-label" for="season_label">Season Label</label>
+            <input type="text" id="season_label" name="season_label" class="bkm-input" value="{{ team.season_label or '' }}">
+          </div>
+
+          <div class="bkm-form-row">
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_count">Default Format</label>
+              <select id="period_count" name="period_count" class="bkm-select">
+                <option value="4" {% if team.default_period_count == 4 %}selected{% endif %}>4 Quarters</option>
+                <option value="2" {% if team.default_period_count == 2 %}selected{% endif %}>2 Halves</option>
+              </select>
+            </div>
+
+            <div class="bkm-form-group">
+              <label class="bkm-label" for="period_minutes">Default Period Length</label>
+              <select id="period_minutes" name="period_minutes" class="bkm-select">
+                {% for m in [5, 6, 7, 8, 10, 12, 14, 16, 18, 20] %}
+                <option value="{{ m }}" {% if team.default_period_minutes == m %}selected{% endif %}>{{ m }} minutes</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; display: flex; gap: 10px;">
+            <button type="submit" class="bkm-btn bkm-btn-primary" style="flex: 1;">Save Changes</button>
+            <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}" class="bkm-btn bkm-btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="bkm-card" style="border-color: #fee2e2;">
+      <div class="bkm-card-body">
+        <h3 style="margin-top: 0; color: var(--bkm-danger);">Delete Team</h3>
+        <p style="font-size: 14px; color: var(--bkm-text-muted);">This permanently deletes this team, its players, and all associated games.</p>
+        <form method="POST" action="{{ url_for('basketball_minutes.team_delete', team_id=team.id) }}" onsubmit="return confirm('Are you sure you want to delete this team? All game history will be lost.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="bkm-btn bkm-btn-danger">Delete Team</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

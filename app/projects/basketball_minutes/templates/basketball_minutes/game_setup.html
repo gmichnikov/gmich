@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Game Setup vs {{ game.opponent_name }} — Basketball Minutes{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('basketball_minutes.static', filename='basketball_minutes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="bkm-page">
+  <div class="bkm-container">
+
+    <p class="bkm-breadcrumb">
+      <a href="{{ url_for('basketball_minutes.index') }}">Basketball Minutes</a> &rsaquo; 
+      <a href="{{ url_for('basketball_minutes.team_detail', team_id=team.id) }}">{{ team.display_name }}</a> &rsaquo; 
+      Game Setup
+    </p>
+
+    <header class="bkm-page-header">
+      <h1 class="bkm-page-title">vs {{ game.opponent_name }}</h1>
+      <p class="bkm-page-subtitle">
+        {{ game.game_date.strftime('%a, %b %d') }} &middot; 
+        {{ game.period_count }} periods of {{ game.period_minutes }}m &middot;
+        <span style="font-weight: 700; color: var(--bkm-accent);">
+          {% if phase == 'between' %}Next: {{ period_info.label }}{% else %}Starting 5{% endif %}
+        </span>
+      </p>
+    </header>
+
+    <!-- Lineup Picker (Placed on top so it's front-and-center between periods) -->
+    <div class="bkm-card">
+      <div class="bkm-card-header bkm-card-toggle" id="bkm-lineup-toggle" style="cursor: pointer; user-select: none;">
+        <span>
+          <span class="bkm-collapse-icon" id="bkm-lineup-collapse-icon">▼</span>
+          Select 5 for {{ period_info.label }} <span id="bkm-lineup-count">({{ draft_lineup|length }}/5)</span>
+        </span>
+        <button type="button" class="bkm-btn bkm-btn-secondary bkm-btn-small" id="bkm-clear-lineup" onclick="event.stopPropagation();">Clear</button>
+      </div>
+      <div class="bkm-card-body" id="bkm-lineup-body">
+        <p style="font-size: 13px; color: var(--bkm-text-muted); margin-top: 0;">
+          Tap players to choose who is on the court for {{ period_info.label }}. Exactly 5 players required.
+        </p>
+
+        <div class="bkm-bench-chips" id="bkm-picker-chips" style="margin-bottom: 20px;">
+          {% for player, is_present in roster %}
+            {% if is_present %}
+            <button 
+              type="button" 
+              class="bkm-bench-chip {% if player.id in draft_lineup %}bkm-staged-on{% endif %}"
+              data-player-id="{{ player.id }}"
+            >
+              {% if player.jersey_number %}#{{ player.jersey_number }}{% endif %} {{ player.full_name }}
+            </button>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button 
+            type="button" 
+            id="bkm-save-draft-btn" 
+            class="bkm-btn bkm-btn-secondary" 
+            style="flex: 1; min-height: 50px; font-size: 16px;"
+          >
+            Save Lineup
+          </button>
+          <button 
+            type="button" 
+            id="bkm-start-period-btn" 
+            class="bkm-btn bkm-btn-primary" 
+            style="flex: 2; min-height: 50px; font-size: 17px;"
+            {% if draft_lineup|length != 5 %}disabled{% endif %}
+          >
+            Start {{ period_info.label }} (Tip-off)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Checklist (Collapsible) -->
+    <div class="bkm-card">
+      <div class="bkm-card-header bkm-card-toggle" id="bkm-attendance-toggle" style="cursor: pointer; user-select: none;">
+        <span>
+          <span class="bkm-collapse-icon" id="bkm-attendance-collapse-icon">{% if phase == 'between' %}▶{% else %}▼{% endif %}</span>
+          Attendance ({{ present_players|length }}/{{ roster|length }} Present)
+        </span>
+        <span style="font-size: 12px; font-weight: normal; color: var(--bkm-text-muted);">Tap to mark absent</span>
+      </div>
+      <div class="bkm-card-body" id="bkm-attendance-body" style="padding-top: 8px; {% if phase == 'between' %}display: none;{% endif %}">
+        <ul class="bkm-player-list">
+          {% for player, is_present in roster %}
+          <li class="bkm-player-row">
+            <div>
+              {% if player.jersey_number %}<span class="bkm-jersey-badge">#{{ player.jersey_number }}</span>{% endif %}
+              <strong>{{ player.full_name }}</strong>
+            </div>
+            <button 
+              type="button" 
+              class="bkm-btn bkm-btn-small {% if is_present %}bkm-btn-secondary{% else %}bkm-btn-danger{% endif %} bkm-attendance-btn"
+              data-player-id="{{ player.id }}"
+              data-present="{{ 'true' if is_present else 'false' }}"
+            >
+              {{ 'Present' if is_present else 'Absent' }}
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const CSRF_TOKEN = "{{ csrf_token() }}";
+  const ATTENDANCE_URL = "{{ url_for('basketball_minutes.game_attendance', team_id=team.id, game_id=game.id) }}";
+  const DRAFT_URL = "{{ url_for('basketball_minutes.game_save_draft', team_id=team.id, game_id=game.id) }}";
+  const START_URL = "{{ url_for('basketball_minutes.game_start_period', team_id=team.id, game_id=game.id) }}";
+
+  let currentLineup = {{ draft_lineup|tojson }};
+
+  // Attendance toggling
+  document.querySelectorAll('.bkm-attendance-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pid = parseInt(btn.dataset.playerId, 10);
+      const wasPresent = btn.dataset.present === 'true';
+      const willBePresent = !wasPresent;
+
+      try {
+        const res = await fetch(ATTENDANCE_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+          body: JSON.stringify({player_id: pid, is_present: willBePresent})
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+
+  // Lineup selection
+  const chips = document.querySelectorAll('#bkm-picker-chips .bkm-bench-chip');
+  const countDisplay = document.getElementById('bkm-lineup-count');
+  const startBtn = document.getElementById('bkm-start-period-btn');
+  const clearBtn = document.getElementById('bkm-clear-lineup');
+
+  function updateUi() {
+    countDisplay.textContent = `(${currentLineup.length}/5)`;
+    chips.forEach(chip => {
+      const pid = parseInt(chip.dataset.playerId, 10);
+      if (currentLineup.includes(pid)) {
+        chip.classList.add('bkm-staged-on');
+      } else {
+        chip.classList.remove('bkm-staged-on');
+      }
+    });
+    startBtn.disabled = currentLineup.length !== 5;
+  }
+
+  // Initialize UI state on page load
+  updateUi();
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const pid = parseInt(chip.dataset.playerId, 10);
+      if (currentLineup.includes(pid)) {
+        currentLineup = currentLineup.filter(id => id !== pid);
+      } else {
+        if (currentLineup.length >= 5) {
+          alert('Exactly 5 players can be on the floor. Tap a selected player to remove them first.');
+          return;
+        }
+        currentLineup.push(pid);
+      }
+      updateUi();
+      // Auto-save draft
+      fetch(DRAFT_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+        body: JSON.stringify({lineup: currentLineup})
+      });
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    currentLineup = [];
+    updateUi();
+    fetch(DRAFT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+      body: JSON.stringify({lineup: []})
+    });
+  });
+
+  const saveDraftBtn = document.getElementById('bkm-save-draft-btn');
+  if (saveDraftBtn) {
+    saveDraftBtn.addEventListener('click', async () => {
+      saveDraftBtn.disabled = true;
+      saveDraftBtn.textContent = 'Saving...';
+      try {
+        const res = await fetch(DRAFT_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+          body: JSON.stringify({lineup: currentLineup})
+        });
+        const data = await res.json();
+        if (data.success) {
+          saveDraftBtn.textContent = 'Saved!';
+          setTimeout(() => {
+            saveDraftBtn.textContent = 'Save Lineup';
+            saveDraftBtn.disabled = false;
+          }, 1500);
+        } else {
+          alert(data.error || 'Failed to save');
+          saveDraftBtn.textContent = 'Save Lineup';
+          saveDraftBtn.disabled = false;
+        }
+      } catch (err) {
+        alert('Error saving lineup.');
+        saveDraftBtn.textContent = 'Save Lineup';
+        saveDraftBtn.disabled = false;
+      }
+    });
+  }
+
+  // Collapsible cards toggle
+  function setupCollapsible(toggleId, bodyId, iconId) {
+    const toggleEl = document.getElementById(toggleId);
+    const bodyEl = document.getElementById(bodyId);
+    const iconEl = document.getElementById(iconId);
+
+    if (!toggleEl || !bodyEl) return;
+
+    toggleEl.addEventListener('click', (e) => {
+      // Don't toggle if a button inside the header was clicked
+      if (e.target.closest('button')) return;
+
+      const isHidden = bodyEl.style.display === 'none';
+      bodyEl.style.display = isHidden ? 'block' : 'none';
+      if (iconEl) {
+        iconEl.textContent = isHidden ? '▼' : '▶';
+      }
+    });
+  }
+
+  setupCollapsible('bkm-lineup-toggle', 'bkm-lineup-body', 'bkm-lineup-collapse-icon');
+  setupCollapsible('bkm-attendance-toggle', 'bkm-attendance-body', 'bkm-attendance-collapse-icon');
+
+  startBtn.addEventListener('click', async () => {
+    if (currentLineup.length !== 5) return;
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting...';
+
+    try {
+      const res = await fetch(START_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN},
+        body: JSON.stringify({lineup: currentLineup})
+      });
+      const data = await res.json();
+      if (data.success && data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        alert(data.error || 'Failed to start period');
+        startBtn.disabled = false;
+        startBtn.textContent = 'Start Period';
+      }
+    } catch (err) {
+      alert('Error starting period.');
+      startBtn.disabled = false;
+    }
+  });
+</script>
+{% endblock %}

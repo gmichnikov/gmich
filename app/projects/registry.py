@@ -382,6 +382,17 @@ PROJECTS = [
         "order": 33,
     },
     {
+        "id": "basketball_minutes",
+        "name": "Basketball Minutes",
+        "description": "Youth basketball 5x5 playing time, substitutions, and team scoring tracker",
+        "url": "/basketball-minutes",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🏀",
+        "order": 34,
+    },
+    {
         "id": "better_signups",
         "name": "Better Signups",
         "description": "Create and manage signup lists for events and items",
