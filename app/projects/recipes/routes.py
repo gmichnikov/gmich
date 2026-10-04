@@ -18,6 +18,12 @@ RECIPES = [
         "blurb": "Ingredients · makes 12",
         "mark": "🎃",
     },
+    {
+        "name": "Pancakes",
+        "endpoint": "recipes.pancakes",
+        "blurb": "Ingredients · makes 8–10",
+        "mark": "🥞",
+    },
 ]
 
 
@@ -33,3 +39,10 @@ def pumpkin_banana_muffins():
     """Pumpkin banana muffins ingredient sheet."""
     log_project_visit("recipes", "Pumpkin Banana Muffins")
     return render_template("recipes/pumpkin_banana_muffins.html")
+
+
+@recipes_bp.route("/pancakes")
+def pancakes():
+    """Pancakes ingredient sheet."""
+    log_project_visit("recipes", "Pancakes")
+    return render_template("recipes/pancakes.html")
