@@ -5,7 +5,7 @@ import csv
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import click
@@ -356,3 +356,122 @@ def warm_geocache_command():
         click.echo(f"  {'OK' if coords else 'MISS'} {city!r}, {state!r}")
 
     click.echo(f"Done: {geocoded} geocoded, {failed} misses (stored as null coords).")
+
+
+@sports_schedules_cli.command("agent-query")
+@click.option("--zip", "zip_code", default=None, help="Zip code for radius search (e.g. 07928)")
+@click.option("--radius", default=50.0, type=float, help="Radius in miles (default: 50)")
+@click.option("--days", default=7, type=int, help="Number of days forward to search (default: 7)")
+@click.option("--team", multiple=True, help="Optional team filter (can specify multiple)")
+@click.option("--league", multiple=True, help="Optional league filter (can specify multiple)")
+@click.option("--sport", multiple=True, help="Optional sport filter (can specify multiple)")
+@click.option("--limit", default=200, type=int, help="Max results (default: 200)")
+@with_appcontext
+def agent_query_command(zip_code, radius, days, team, league, sport, limit):
+    """
+    Fetch upcoming games in clean JSON format for automated agents.
+    Supports distance/zip filtering, league/sport filtering, and team matching.
+    """
+    from app.core.dolthub_client import DoltHubClient
+    from app.projects.sports_schedules.core.distance_prepare import (
+        apply_post_sql_distance,
+        prepare_distance_filter,
+    )
+    from app.projects.sports_schedules.core.query_builder import build_sql
+
+    now = datetime.utcnow()
+    start_ymd = now.strftime("%Y-%m-%d")
+    end_ymd = (now + timedelta(days=days)).strftime("%Y-%m-%d")
+
+    filters = {}
+    if team:
+        filters["either_team"] = list(team)
+    if league:
+        filters["league"] = list(league)
+    if sport:
+        filters["sport"] = list(sport)
+
+    params = {
+        "dimensions": "date,time,home_team,road_team,location,home_city,home_state,sport,league,level",
+        "filters": filters,
+        "date_mode": "next_n",
+        "date_n": days,
+        "anchor_date": start_ymd,
+        "limit": min(limit * 2, 2000),  # extra buffer for distance filter post-processing
+        "sort_column": "date",
+        "sort_dir": "asc",
+    }
+
+    if zip_code:
+        params["zip_code"] = zip_code
+        params["radius_miles"] = radius
+
+    dpr = prepare_distance_filter(params)
+    if dpr.error:
+        click.echo(json.dumps({"error": dpr.error}))
+        return
+    if dpr.early_empty:
+        click.echo(json.dumps({"rows": [], "count": 0}))
+        return
+
+    if dpr.distance_filter_active and not params.get("count"):
+        params["limit"] = max(limit * 2, 500)
+    else:
+        params["limit"] = limit
+
+    sql, err = build_sql(params)
+    if err:
+        click.echo(json.dumps({"error": err}))
+        return
+
+    dolt = DoltHubClient()
+    result = dolt.execute_sql(sql)
+    if "error" in result:
+        click.echo(json.dumps({"error": result["error"]}))
+        return
+
+    rows = result.get("rows", [])
+    if dpr.distance_filter_active:
+        rows = apply_post_sql_distance(rows, params, dpr)
+
+    rows = rows[:limit]
+    click.echo(json.dumps({"rows": rows, "count": len(rows)}, indent=2))
+
+
+@sports_schedules_cli.command("agent-email")
+@click.option("--to", "to_email", required=True, help="Recipient email address")
+@click.option("--subject", required=True, help="Subject line")
+@click.option("--body", "body_text", default=None, help="Plain text body (optional if passing markdown/html)")
+@click.option("--html", "body_html", default=None, help="HTML body (optional)")
+@with_appcontext
+def agent_email_command(to_email, subject, body_text, body_html):
+    """
+    Send an email via the app's configured Mailgun service.
+    Accepts plain text, HTML, or reads body from stdin if not provided via options.
+    """
+    import sys
+    from app.utils.email_service import send_email
+
+    if not body_text and not body_html:
+        if not sys.stdin.isatty():
+            body_text = sys.stdin.read()
+        else:
+            click.echo("Error: Please provide --body or pipe text via stdin.", err=True)
+            sys.exit(1)
+
+    text_content = body_text or "Please see the HTML version of this message."
+    html_content = body_html
+
+    try:
+        send_email(
+            to_email=to_email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_name="Sports Schedule Curator",
+        )
+        click.echo(f"Successfully sent email to {to_email}")
+    except Exception as e:
+        click.echo(f"Failed to send email: {e}", err=True)
+        sys.exit(1)
+
