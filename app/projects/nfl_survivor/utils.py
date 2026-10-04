@@ -168,8 +168,13 @@ def is_pick_correct(season_id, user_pick, week):
     weekly_result = NflSurvivorWeeklyResult.query.filter_by(
         season_id=season_id, week=week, team=user_pick
     ).first()
-    if weekly_result:
-        return weekly_result.result in ("win", "tie")
+    if not weekly_result:
+        return None
+    if weekly_result.result in ("win", "tie"):
+        return True
+    if weekly_result.result == "lose":
+        return False
+    # If the team was on bye / did not play, or unrecorded
     return False
 
 

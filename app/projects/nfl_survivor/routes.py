@@ -1587,9 +1587,23 @@ def _fetch_results_for_week(season, week):
     game_results = {}
     for event in data.get("events", []):
         for competition in event.get("competitions", []):
-            for competitor in competition.get("competitors", []):
-                team_name = competitor["team"]["displayName"]
-                result = "win" if competitor.get("winner", True) else "lose"
+            status_type = competition.get("status", {}).get("type", {})
+            # Only record results for completed games
+            if not status_type.get("completed", False):
+                continue
+
+            competitors = competition.get("competitors", [])
+            # Check for a tie (neither competitor marked as winner in a completed game)
+            is_tie = not any(c.get("winner") is True for c in competitors)
+
+            for competitor in competitors:
+                team_name = competitor.get("team", {}).get("displayName")
+                if not team_name:
+                    continue
+                if is_tie:
+                    result = "tie"
+                else:
+                    result = "win" if competitor.get("winner") is True else "lose"
                 game_results[team_name] = result
     return {**teams_on_bye, **game_results}
 
