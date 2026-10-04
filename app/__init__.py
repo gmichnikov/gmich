@@ -82,6 +82,7 @@ def create_app():
 
     # Register blueprints
     from app.routes.main import main_bp
+    from app.routes.agent_api import agent_api_bp
     from app.core.auth import auth_bp
     from app.core.admin import admin_bp
     from app.projects.mastermind.routes import mastermind_bp
@@ -140,6 +141,7 @@ def create_app():
     from app.projects.basketball_minutes.routes import basketball_minutes_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(agent_api_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(mastermind_bp, url_prefix="/mastermind")
