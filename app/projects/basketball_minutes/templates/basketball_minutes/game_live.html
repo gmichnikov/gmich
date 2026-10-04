@@ -68,7 +68,9 @@
         >
           <span class="bkm-chip-jersey">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}&bull;{% endif %}</span>
           <span class="bkm-chip-name">{{ player.first_name }} {{ player.last_name[0] }}.</span>
-          <span class="bkm-chip-time">{{ player.duration_str }} &middot; {{ player.stats.points }}p</span>
+          <span class="bkm-chip-time" title="Total game time &middot; Current period time &middot; Points">
+            {{ player.duration_str }}{% if period_info.period > 1 %} ({{ player.period_duration_str }}){% endif %} &middot; {{ player.stats.points }}p
+          </span>
         </div>
         {% endfor %}
       </div>
@@ -145,6 +147,13 @@
         <div class="bkm-clock-entry">
           <div id="bkm-clock-display" class="bkm-clock-screen">{{ last_remaining_formatted }}</div>
           
+          <div class="bkm-clock-presets">
+            <button type="button" class="bkm-preset-btn" data-preset="400">4:00</button>
+            <button type="button" class="bkm-preset-btn" data-preset="200">2:00</button>
+            <button type="button" class="bkm-preset-btn" data-preset="100">1:00</button>
+            <button type="button" class="bkm-preset-btn" data-preset="030">:30</button>
+          </div>
+
           <div class="bkm-keypad">
             <button type="button" class="bkm-keypad-btn" data-key="1">1</button>
             <button type="button" class="bkm-keypad-btn" data-key="2">2</button>
@@ -277,7 +286,7 @@
           chip.classList.remove('bkm-disabled');
         } else {
           chip.classList.remove('bkm-sub-target');
-          chip.classList.add('bkm-disabled');
+          chip.classList.remove('bkm-disabled');
         }
       } else {
         chip.classList.remove('bkm-sub-target');
@@ -347,17 +356,24 @@
     chip.addEventListener('click', (e) => {
       e.preventDefault();
       const pid = parseInt(chip.dataset.playerId, 10);
+      const onIds = stagedCourt.filter(id => !liveCourt.includes(id));
+      const offIds = liveCourt.filter(id => !stagedCourt.includes(id));
+
+      // Improvement #2: If this player is staged to sub out, tapping them cancels that swap!
+      if (offIds.includes(pid)) {
+        // Find which position in offIds they occupy, and remove both them and the paired bench player
+        const offIdx = offIds.indexOf(pid);
+        const pairedBenchPid = onIds[offIdx];
+        stagedCourt = stagedCourt.filter(id => id !== pairedBenchPid);
+        stagedCourt.push(pid);
+        selectedBenchPlayerId = null;
+        refreshStagedUi();
+        return;
+      }
 
       if (selectedBenchPlayerId !== null) {
-        // Guard: cannot sub out someone already staged out
-        const offIds = liveCourt.filter(id => !stagedCourt.includes(id));
-        if (offIds.includes(pid)) {
-          return;
-        }
-
         // We are in SUB MODE: swap selected bench player for this court player!
         const benchPid = selectedBenchPlayerId;
-        // Swap in stagedCourt
         stagedCourt = stagedCourt.filter(id => id !== pid);
         stagedCourt.push(benchPid);
         selectedBenchPlayerId = null; // finished this swap
@@ -463,6 +479,13 @@
       clockDisplay.textContent = `${m}:${s}`;
     }
   }
+
+  document.querySelectorAll('.bkm-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      clockDigits = btn.dataset.preset;
+      updateClockDisplay();
+    });
+  });
 
   document.querySelectorAll('.bkm-keypad-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -578,5 +601,23 @@
       alert('Error ending period');
     }
   }
+
+  // Screen Wake Lock (prevents phone screen from dimming/sleeping on sideline)
+  let wakeLock = null;
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+      } catch (err) {
+        // Wake lock can fail if low battery or tab in background
+      }
+    }
+  }
+  requestWakeLock();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+    }
+  });
 </script>
 {% endblock %}

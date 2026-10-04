@@ -671,6 +671,33 @@
   text-align: center;
 }
 
+.bkm-clock-presets {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 12px;
+}
+
+.bkm-preset-btn {
+  flex: 1;
+  height: 38px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--bkm-border);
+  background: var(--bkm-accent-light);
+  color: var(--bkm-accent-hover);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s;
+}
+
+.bkm-preset-btn:active {
+  background: #fed7aa;
+  transform: scale(0.96);
+}
+
 .bkm-keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

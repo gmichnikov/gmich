@@ -487,13 +487,15 @@ def game_live(team_id, game_id):
     ]
 
     total_pts, player_stats = compute_scoring(game, events)
-    stints, player_seconds, _ = compute_stints_and_minutes(game, events)
+    stints, player_seconds, period_player_seconds = compute_stints_and_minutes(game, events)
 
     # Attach stats to player objects for rendering
     for p in team.players.all():
         p.stats = player_stats[p.id]
         p.total_seconds = player_seconds[p.id]
         p.duration_str = format_duration(player_seconds[p.id])
+        p.period_seconds = period_player_seconds.get((p.id, p_info["period"]), 0)
+        p.period_duration_str = format_duration(p.period_seconds)
 
     last_sec = last_event_time(game, events)
 
