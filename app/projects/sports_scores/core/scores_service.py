@@ -103,8 +103,8 @@ def _upsert_games(games):
 def fetch_and_store(sport_key, anchor_date=None):
     """
     Fetch the ESPN scoreboard for sport_key covering the full display window
-    (anchor_date - 2 days through anchor_date) in a single API call using a
-    date range (dates=YYYYMMDD-YYYYMMDD), then upsert all games into the DB.
+    (anchor_date - 2 days through anchor_date) by requesting each day individually
+    (ESPN scoreboard endpoint requires single dates=YYYYMMDD), then upsert all games into the DB.
 
     anchor_date defaults to today in ET.
     Updates the fetch log on success.
@@ -113,30 +113,33 @@ def fetch_and_store(sport_key, anchor_date=None):
     if anchor_date is None:
         anchor_date = _today_et()
 
-    start_date = anchor_date - timedelta(days=2)
-    dates_param = f"{start_date.strftime('%Y%m%d')}-{anchor_date.strftime('%Y%m%d')}"
-
     try:
         url = _scoreboard_url(sport_key)
     except ValueError as exc:
         logger.error("sports_scores fetch_and_store: %s", exc)
         return False
 
-    try:
-        response = requests.get(url, params={"dates": dates_param}, timeout=20)
-        response.raise_for_status()
-        data = response.json()
-    except requests.exceptions.RequestException as exc:
-        logger.error(
-            "sports_scores: ESPN fetch failed for %s (dates=%s): %s",
-            sport_key,
-            dates_param,
-            exc,
-        )
-        return False
+    dates = [anchor_date - timedelta(days=2), anchor_date - timedelta(days=1), anchor_date]
+    all_games = []
 
-    games = parse_scoreboard(sport_key, data)
-    _upsert_games(games)
+    for d in dates:
+        dates_param = d.strftime("%Y%m%d")
+        try:
+            response = requests.get(url, params={"dates": dates_param}, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as exc:
+            logger.error(
+                "sports_scores: ESPN fetch failed for %s (dates=%s): %s",
+                sport_key,
+                dates_param,
+                exc,
+            )
+            return False
+
+        all_games.extend(parse_scoreboard(sport_key, data))
+
+    _upsert_games(all_games)
 
     log = get_fetch_log(sport_key)
     if log:
@@ -146,10 +149,10 @@ def fetch_and_store(sport_key, anchor_date=None):
 
     db.session.commit()
     logger.info(
-        "sports_scores: stored %d games for %s (dates=%s)",
-        len(games),
+        "sports_scores: stored %d games for %s across %d dates",
+        len(all_games),
         sport_key,
-        dates_param,
+        len(dates),
     )
     return True
 
