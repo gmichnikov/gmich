@@ -164,5 +164,23 @@ def send_sunday_nudge_command(dry_run):
     )
 
 
+@nfl_survivor_cli.command("update-results")
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Run even if today is not Tuesday (US/Eastern).",
+)
+@with_appcontext
+def update_results_command(force):
+    """Update game results and mark picks for the week that just finished."""
+    from app.projects.nfl_survivor.results import run_auto_update_results
+
+    result = run_auto_update_results(force=force)
+    if result.get("error"):
+        raise click.ClickException(result["error"])
+
+    click.echo(result["message"])
+
+
 def init_app(app):
     app.cli.add_command(nfl_survivor_cli)

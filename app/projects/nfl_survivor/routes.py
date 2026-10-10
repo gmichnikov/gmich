@@ -28,6 +28,10 @@ from app.projects.nfl_survivor.models import (
     NflSurvivorSpread,
     NflSurvivorWeeklyResult,
 )
+from app.projects.nfl_survivor.results import (
+    fetch_results_for_week as _fetch_results_for_week,
+    update_weekly_results,
+)
 from app.projects.nfl_survivor.utils import (
     UTC,
     ACTIVE_ENTRY_SESSION_KEY,
@@ -1572,73 +1576,17 @@ def _fetch_spreads_data(season, manual=False):
     return payload
 
 
-def _fetch_results_for_week(season, week):
-    url = (
-        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
-        f"?dates={season.espn_season_year}&seasontype=2&week={week}"
-    )
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    data = response.json()
-    teams_on_bye = {
-        team["displayName"]: "did not play"
-        for team in data.get("week", {}).get("teamsOnBye", [])
-    }
-    game_results = {}
-    for event in data.get("events", []):
-        for competition in event.get("competitions", []):
-            status_type = competition.get("status", {}).get("type", {})
-            # Only record results for completed games
-            if not status_type.get("completed", False):
-                continue
-
-            competitors = competition.get("competitors", [])
-            # Check for a tie (neither competitor marked as winner in a completed game)
-            is_tie = not any(c.get("winner") is True for c in competitors)
-
-            for competitor in competitors:
-                team_name = competitor.get("team", {}).get("displayName")
-                if not team_name:
-                    continue
-                if is_tie:
-                    result = "tie"
-                else:
-                    result = "win" if competitor.get("winner") is True else "lose"
-                game_results[team_name] = result
-    return {**teams_on_bye, **game_results}
-
-
 def _update_weekly_results(season, week, results):
-    team_name_to_id = map_team_names_to_ids()
-    for team_name, result in results.items():
-        team_id = team_name_to_id.get(team_name)
-        if not team_id:
-            continue
-        weekly_result = NflSurvivorWeeklyResult.query.filter_by(
-            season_id=season.id, week=week, team=team_id
-        ).first()
-        if weekly_result:
-            weekly_result.result = result
-        else:
-            db.session.add(
-                NflSurvivorWeeklyResult(
-                    season_id=season.id,
-                    week=week,
-                    team=team_id,
-                    result=result,
-                )
-            )
-
-    log_nfl_survivor(
-        "Auto Update",
-        f"{current_user.full_name} auto-updated results for week {week} ({season.name})",
+    actor_name = current_user.full_name if current_user.is_authenticated else None
+    actor_id = current_user.id if current_user.is_authenticated else None
+    return update_weekly_results(
+        season,
+        week,
+        results,
+        actor_name=actor_name,
+        actor_id=actor_id,
+        source="admin",
     )
-    db.session.commit()
-
-    all_picks = NflSurvivorPick.query.filter_by(season_id=season.id, week=week).all()
-    for pick in all_picks:
-        pick.is_correct = is_pick_correct(season.id, pick.team, week)
-    db.session.commit()
 
 
 def _participant_made_pick_for_week(participant_id, week):

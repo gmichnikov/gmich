@@ -5,6 +5,10 @@
 {% block ns_content %}
 <h1 class="ns-card-title">Auto update results</h1>
 <p class="ns-help-text">Pull scores from ESPN for a completed week.</p>
+<p class="ns-help-text">
+  Automated job (runs every Tuesday at 5:00 AM ET via Heroku Scheduler; no-ops on other days):
+  <code>flask nfl-survivor update-results</code>
+</p>
 <form method="post" class="ns-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label for="week_number">Week</label>
