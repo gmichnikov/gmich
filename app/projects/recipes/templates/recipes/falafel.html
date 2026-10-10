@@ -1,0 +1,39 @@
+{% extends "recipes/base.html" %}
+
+{% block title %}Falafel{% endblock %}
+
+{% block body_class %}recipes-body recipes-body--sheet{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('recipes.static', filename='recipes/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="recipes-sheet">
+  <header class="recipes-header">
+    <a class="recipes-back" href="{{ url_for('recipes.index') }}">← Recipes</a>
+    <h1 class="recipes-title">Falafel</h1>
+    <p class="recipes-subtitle">Ingredients — makes 12–15</p>
+  </header>
+
+  <div class="recipes-swap">
+    <b>Using canned chickpeas?</b> Drain and pat dry thoroughly. Add an extra tablespoon of flour to help bind.
+  </div>
+
+  <ul class="recipes-ingredients">
+    <li><span class="recipes-amount">1 cup</span><span class="recipes-item">Dried chickpeas, soaked overnight <span class="recipes-optional-tag">(or 1 can, drained)</span></span></li>
+    <li><span class="recipes-amount">½ cup</span><span class="recipes-item">Fresh parsley, packed</span></li>
+    <li><span class="recipes-amount">½ cup</span><span class="recipes-item">Fresh cilantro, packed</span></li>
+    <li><span class="recipes-amount">¼ cup</span><span class="recipes-item">Onion, roughly chopped</span></li>
+    <li><span class="recipes-amount">4</span><span class="recipes-item">Garlic cloves</span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Ground cumin</span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Ground coriander</span></li>
+    <li><span class="recipes-amount">¼ tsp</span><span class="recipes-item">Cayenne pepper <span class="recipes-optional-tag">(optional)</span></span></li>
+    <li><span class="recipes-amount">1 tsp</span><span class="recipes-item">Salt</span></li>
+    <li><span class="recipes-amount">¼ tsp</span><span class="recipes-item">Black pepper</span></li>
+    <li><span class="recipes-amount">2 tbsp</span><span class="recipes-item">Chickpea flour <span class="recipes-optional-tag">(or all-purpose)</span></span></li>
+    <li><span class="recipes-amount">½ tsp</span><span class="recipes-item">Baking powder</span></li>
+    <li><span class="recipes-amount">—</span><span class="recipes-item">Oil for frying</span></li>
+  </ul>
+</main>
+{% endblock %}
