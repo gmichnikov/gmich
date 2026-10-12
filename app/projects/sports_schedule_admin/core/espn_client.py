@@ -269,9 +269,14 @@ class ESPNClient:
 
         sport, league, level = self.LEAGUE_MAP[league_code]
         url = f"{self.BASE_URL}/{sport}/{league}/teams/{team_id}/schedule"
+        # Men's college basketball: the bare schedule URL is the preseason
+        # slice, which is empty in the fall. The November–March slate is
+        # seasontype 2 (regular season). Other leagues already return the
+        # current season from the bare URL.
+        params = {"seasontype": 2} if league_code == "NCAAM" else None
 
         try:
-            response = requests.get(url, timeout=20)
+            response = requests.get(url, params=params, timeout=20)
             response.raise_for_status()
             data = response.json()
             return self._parse_events(data, league_code, level, sport)
