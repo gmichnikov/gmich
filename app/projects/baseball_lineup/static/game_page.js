@@ -45,7 +45,18 @@
 
   var gameId = pageRoot.dataset.gameId;
   var collapseKey = "blu-game-" + gameId + "-attendance-open";
+  var draftKey = "blu-lineup-draft-" + gameId;
   var dirty = false;
+  var editVersion = 0;
+  var saveInFlight = false;
+  var saveQueued = false;
+  var saveQueuedView = false;
+  var autosaveTimer = null;
+  var autosaveDelay = 1200;
+  var exportStatusTimer = null;
+  var downloadCsvBtn = document.getElementById("blu-download-csv");
+  var copyCsvBtn = document.getElementById("blu-copy-csv");
+  var exportStatus = document.getElementById("blu-export-status");
   var highlightedPosition = null;
   var previewPosition = null;
   var warningFilterInning = "all";
@@ -108,9 +119,27 @@
       options.body = JSON.stringify(body);
     }
     return fetch(url, options).then(function (response) {
-      return response.json().then(function (data) {
-        if (!response.ok || !data.ok) {
-          throw new Error((data && data.error) || "Request failed.");
+      var redirectedToLogin =
+        response.redirected && response.url.indexOf("/login") !== -1;
+      return response.text().then(function (text) {
+        if (redirectedToLogin) {
+          throw new Error(
+            "Your session expired. This lineup is saved in this browser. Sign in again and reopen the game."
+          );
+        }
+        var data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseError) {
+          throw new Error(
+            "The server sent an unexpected response. Your lineup is still on this page."
+          );
+        }
+        if (!response.ok || !data || !data.ok) {
+          throw new Error(
+            (data && data.error) ||
+              "Save failed. Your lineup is still on this page."
+          );
         }
         return data;
       });
@@ -531,8 +560,7 @@
       return;
     }
 
-    dirty = true;
-    saveStatus.textContent = "Unsaved changes";
+    markDirty();
     updateModeToggle();
     renderLineupBody();
   }
@@ -1420,8 +1448,7 @@
       row.cells[String(inning)] = select.value;
       row.summary = summarizeRow(row.cells);
       row.repeats = repeatedPositions(row.cells);
-      dirty = true;
-      saveStatus.textContent = "Unsaved changes";
+      markDirty();
       if (isViewMode) {
         setViewMode(false);
       } else {
@@ -1691,8 +1718,10 @@
         }
       });
       pageState.lineup = lineup;
+      persistDraft();
     } else {
       dirty = false;
+      clearDraft();
     }
 
     pageState.lineup_complete = nextState.lineup_complete;
@@ -1734,8 +1763,7 @@
         }
       }
     });
-    dirty = true;
-    saveStatus.textContent = "Unsaved changes";
+    markDirty();
     isViewMode = false;
     pageRoot.classList.remove("blu-game-page--view");
     pageRoot.classList.add("blu-game-page--edit");
@@ -1767,19 +1795,297 @@
     return cells;
   }
 
-  function saveLineup() {
-    saveBtn.disabled = true;
+  function snapshotCells() {
+    var cells = {};
+    lineup.rows.forEach(function (row) {
+      cells[String(row.player_id)] = Object.assign({}, row.cells);
+    });
+    return cells;
+  }
+
+  function cellsDiffer(left, right) {
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      var key = String(inning);
+      if ((left[key] || "") !== (right[key] || "")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function persistDraft() {
+    try {
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({ cells: snapshotCells(), savedAt: Date.now() })
+      );
+    } catch (err) {
+      // Private browsing can refuse storage. The on-page grid is still there.
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch (err) {
+      // Ignore storage failures.
+    }
+  }
+
+  function markDirty() {
+    dirty = true;
+    editVersion += 1;
+    autosaveDelay = 1200;
+    saveStatus.textContent = "Unsaved changes";
+    persistDraft();
+    scheduleAutosave();
+  }
+
+  function scheduleAutosave() {
+    if (autosaveTimer) {
+      clearTimeout(autosaveTimer);
+    }
+    autosaveTimer = setTimeout(function () {
+      autosaveTimer = null;
+      if (dirty) {
+        saveLineup({ source: "auto" });
+      }
+    }, autosaveDelay);
+  }
+
+  function restoreDraft() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(draftKey);
+    } catch (err) {
+      return;
+    }
+    if (!raw) {
+      return;
+    }
+    var draft = null;
+    try {
+      draft = JSON.parse(raw);
+    } catch (err) {
+      clearDraft();
+      return;
+    }
+    if (!draft || !draft.cells) {
+      clearDraft();
+      return;
+    }
+
+    var changed = false;
+    lineup.rows.forEach(function (row) {
+      var saved = draft.cells[String(row.player_id)];
+      if (!saved) {
+        return;
+      }
+      if (!cellsDiffer(row.cells, saved)) {
+        return;
+      }
+      row.cells = saved;
+      row.summary = summarizeRow(row.cells);
+      row.repeats = repeatedPositions(row.cells);
+      changed = true;
+    });
+
+    if (!changed) {
+      clearDraft();
+      return;
+    }
+
+    dirty = true;
+    editVersion += 1;
+    isViewMode = false;
+    pageRoot.classList.remove("blu-game-page--view");
+    pageRoot.classList.add("blu-game-page--edit");
+    if (lineupCard) {
+      lineupCard.classList.remove("blu-lineup-card-compact");
+    }
+    saveStatus.textContent = "Restored a lineup that hadn't finished saving.";
+    scheduleAutosave();
+  }
+
+  function csvEscape(value, delimiter) {
+    var text = value == null ? "" : String(value);
+    if (
+      text.indexOf('"') !== -1 ||
+      text.indexOf("\n") !== -1 ||
+      text.indexOf("\r") !== -1 ||
+      text.indexOf(delimiter) !== -1
+    ) {
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+    return text;
+  }
+
+  function lineupTable(delimiter) {
+    var headers = ["Player name"];
+    for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+      headers.push(String(inning));
+    }
+    var lines = [
+      headers
+        .map(function (value) {
+          return csvEscape(value, delimiter);
+        })
+        .join(delimiter),
+    ];
+    lineup.rows.forEach(function (row) {
+      var cols = [row.player_name];
+      for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
+        cols.push(row.cells[String(inning)] || "");
+      }
+      lines.push(
+        cols
+          .map(function (value) {
+            return csvEscape(value, delimiter);
+          })
+          .join(delimiter)
+      );
+    });
+    return lines.join("\r\n");
+  }
+
+  function exportFileName() {
+    var raw = pageRoot.dataset.exportName || "lineup";
+    var cleaned = raw
+      .replace(/[\\/:*?"<>|]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return (cleaned || "lineup") + ".csv";
+  }
+
+  function setExportStatus(text) {
+    if (!exportStatus) {
+      return;
+    }
+    exportStatus.textContent = text;
+    if (exportStatusTimer) {
+      clearTimeout(exportStatusTimer);
+    }
+    exportStatusTimer = setTimeout(function () {
+      exportStatus.textContent = "";
+    }, 2500);
+  }
+
+  function downloadCsv() {
+    var csv = "\uFEFF" + lineupTable(",");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = exportFileName();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setExportStatus("Downloaded.");
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      try {
+        var ok = document.execCommand("copy");
+        area.remove();
+        if (ok) {
+          resolve();
+        } else {
+          reject(new Error("Copy failed."));
+        }
+      } catch (err) {
+        area.remove();
+        reject(err);
+      }
+    });
+  }
+
+  function copyCsv() {
+    copyText(lineupTable("\t"))
+      .then(function () {
+        setExportStatus("Copied. Paste it into a spreadsheet.");
+      })
+      .catch(function () {
+        setExportStatus("Couldn't copy. Use Download CSV instead.");
+      });
+  }
+
+  function saveLineup(options) {
+    options = options || {};
+    var switchToView = !!options.switchToViewIfComplete;
+    if (saveInFlight) {
+      saveQueued = true;
+      if (switchToView) {
+        saveQueuedView = true;
+      }
+      return;
+    }
+    if (!dirty) {
+      if (switchToView && pageState.lineup_complete && lineup.rows.length) {
+        setViewMode(true);
+      }
+      saveStatus.textContent = "Saved.";
+      return;
+    }
+
+    var versionAtSend = editVersion;
+    saveInFlight = true;
+    if (saveBtn && options.source !== "auto") {
+      saveBtn.disabled = true;
+    }
     saveStatus.textContent = "Saving\u2026";
     return apiPost(urls.lineup_save, { cells: collectCellsPayload() })
       .then(function (data) {
-        applyServerState(data.state, { switchToViewIfComplete: true });
-        saveStatus.textContent = "Saved.";
+        var newer = editVersion !== versionAtSend;
+        var showView = !newer && (switchToView || saveQueuedView);
+        if (data.state) {
+          applyServerState(data.state, {
+            preserveCells: newer,
+            switchToViewIfComplete: showView,
+          });
+        } else if (!newer) {
+          dirty = false;
+          clearDraft();
+        }
+        if (newer) {
+          persistDraft();
+          scheduleAutosave();
+        } else {
+          autosaveDelay = 1200;
+          saveStatus.textContent = "Saved.";
+        }
       })
       .catch(function (err) {
-        saveStatus.textContent = err.message || "Save failed.";
+        saveStatus.textContent =
+          err.message || "Save failed. Your lineup is still on this page.";
+        persistDraft();
+        if (options.source === "auto") {
+          autosaveDelay = Math.min(Math.max(autosaveDelay * 2, 5000), 60000);
+          scheduleAutosave();
+        }
       })
       .finally(function () {
-        saveBtn.disabled = false;
+        saveInFlight = false;
+        if (saveBtn) {
+          saveBtn.disabled = false;
+        }
+        if (saveQueued) {
+          var queuedView = saveQueuedView;
+          saveQueued = false;
+          saveQueuedView = false;
+          saveLineup({ switchToViewIfComplete: queuedView });
+        }
       });
   }
 
@@ -1921,7 +2227,17 @@
   }
 
   if (saveBtn) {
-    saveBtn.addEventListener("click", saveLineup);
+    saveBtn.addEventListener("click", function () {
+      saveLineup({ switchToViewIfComplete: true });
+    });
+  }
+
+  if (downloadCsvBtn) {
+    downloadCsvBtn.addEventListener("click", downloadCsv);
+  }
+
+  if (copyCsvBtn) {
+    copyCsvBtn.addEventListener("click", copyCsv);
   }
 
   if (warningsPanel) {
@@ -1952,6 +2268,7 @@
     }
   });
 
+  restoreDraft();
   pageRoot.classList.toggle("blu-game-page--view", isViewMode);
   pageRoot.classList.toggle("blu-game-page--edit", !isViewMode);
   if (lineupCard) {

@@ -303,6 +303,41 @@ def lineup_editor_payload(game, team):
     return lineup_state_for_game(game, team)
 
 
+def normalize_cells_payload(cells_payload, present_player_ids, inning_count):
+    """Keep one valid position per present player and inning.
+
+    Blank codes are omitted (stored as no row). A repeated player/inning keeps
+    the last value so a duplicate cannot fail the save.
+    """
+    present_ids = set(present_player_ids)
+    chosen = {}
+    if not isinstance(cells_payload, list):
+        return []
+
+    for item in cells_payload:
+        if not isinstance(item, dict):
+            continue
+        try:
+            player_id = int(item["player_id"])
+            inning = int(item["inning"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if player_id not in present_ids:
+            continue
+        if not (1 <= inning <= inning_count):
+            continue
+
+        code = (item.get("position_code") or "").strip()
+        if not code or code not in ALL_CODES:
+            continue
+        chosen[(player_id, inning)] = code
+
+    return [
+        {"player_id": player_id, "inning": inning, "position_code": code}
+        for (player_id, inning), code in chosen.items()
+    ]
+
+
 def save_lineup_cells(game, present_player_ids, cells_payload):
     """
     Replace lineup cells for present players only.
@@ -323,26 +358,14 @@ def save_lineup_cells(game, present_player_ids, cells_payload):
         BluLineupCell.player_id.in_(present_ids),
     ).delete(synchronize_session=False)
 
-    for item in cells_payload:
-        try:
-            player_id = int(item["player_id"])
-            inning = int(item["inning"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if player_id not in present_ids:
-            continue
-        if not (1 <= inning <= game.inning_count):
-            continue
-
-        code = (item.get("position_code") or "").strip()
-        if not code or code not in ALL_CODES:
-            continue
-
+    for item in normalize_cells_payload(
+        cells_payload, present_player_ids, game.inning_count
+    ):
         db.session.add(
             BluLineupCell(
                 game_id=game.id,
-                player_id=player_id,
-                inning=inning,
-                position_code=code,
+                player_id=item["player_id"],
+                inning=item["inning"],
+                position_code=item["position_code"],
             )
         )

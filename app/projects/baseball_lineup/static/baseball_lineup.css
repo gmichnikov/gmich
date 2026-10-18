@@ -916,7 +916,8 @@
   margin: 0;
 }
 
-.blu-lineup-toolbar {
+.blu-lineup-toolbar,
+.blu-lineup-export {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -1392,7 +1393,8 @@
     min-width: 0;
   }
 
-  .blu-lineup-toolbar .blu-save-status {
+  .blu-lineup-toolbar .blu-save-status,
+  .blu-lineup-export .blu-save-status {
     flex: 1 1 100%;
     text-align: center;
   }

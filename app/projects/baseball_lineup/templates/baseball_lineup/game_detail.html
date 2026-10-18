@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="blu-page">
-  <div class="blu-container blu-container-wide{% if page_state.lineup_complete and page_state.present_count %} blu-game-page--view{% else %} blu-game-page--edit{% endif %}" id="blu-game-page" data-game-id="{{ game.id }}">
+  <div class="blu-container blu-container-wide{% if page_state.lineup_complete and page_state.present_count %} blu-game-page--view{% else %} blu-game-page--edit{% endif %}" id="blu-game-page" data-game-id="{{ game.id }}" data-export-name="{{ (game.game_date.isoformat() ~ ' vs ' ~ game.opponent_name) | e }}">
 
     <p class="blu-breadcrumb">
       <a href="{{ url_for('baseball_lineup.index') }}">Baseball Lineup</a>
@@ -42,6 +42,11 @@
     <div class="blu-card{% if page_state.lineup_complete and page_state.present_count %} blu-lineup-card-compact{% endif %}" id="blu-lineup-card">
       <div class="blu-card-header blu-card-header-row">
         <span id="blu-lineup-card-title">{% if page_state.lineup_complete and page_state.present_count %}Lineup{% else %}Edit lineup{% endif %}</span>
+        <div class="blu-lineup-export" id="blu-lineup-export">
+          <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-download-csv">Download CSV</button>
+          <button type="button" class="blu-btn blu-btn-secondary blu-btn-small" id="blu-copy-csv">Copy</button>
+          <span class="blu-save-status" id="blu-export-status"></span>
+        </div>
         <div class="blu-view-display-toggle blu-view-only" id="blu-view-display-toggle" hidden>
           <button type="button" class="blu-view-display-btn blu-view-display-btn-active" data-display="grid">Grid</button>
           <button type="button" class="blu-view-display-btn" data-display="field">Diamond</button>

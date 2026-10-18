@@ -1,7 +1,18 @@
 from datetime import date, datetime
 
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
+from flask_wtf.csrf import CSRFError
 from sqlalchemy import func
 
 from app import db
@@ -136,6 +147,29 @@ def _game_page_json(team, game):
 
 def _json_game_response(team, game):
     return jsonify({"ok": True, "state": _game_page_json(team, game)})
+
+
+@baseball_lineup_bp.errorhandler(CSRFError)
+def handle_csrf_error(error):
+    """JSON endpoints must not answer with an HTML error page."""
+    wants_json = (
+        request.is_json
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    )
+    if wants_json:
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": (
+                        "Your session expired. This lineup is saved in this browser. "
+                        "Sign in again and reopen the game."
+                    ),
+                }
+            ),
+            400,
+        )
+    return (error.description or "CSRF validation failed"), 400
 
 
 def _set_player_present(game, player, present):
@@ -627,17 +661,45 @@ def game_lineup_save(team_id, game_id):
     data = request.get_json(silent=True) or {}
     cells = data.get("cells")
     if not isinstance(cells, list):
-        return jsonify({"ok": False, "error": "Invalid lineup data."}), 400
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": "Invalid lineup data. Your lineup is still on this page.",
+                }
+            ),
+            400,
+        )
 
-    present_players = present_players_for_game(game, team)
-    present_ids = [player.id for player in present_players]
+    try:
+        present_players = present_players_for_game(game, team)
+        present_ids = [player.id for player in present_players]
+        save_lineup_cells(game, present_ids, cells)
+        game.updated_at = datetime.utcnow()
+        team.updated_at = datetime.utcnow()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Baseball lineup save failed for game %s", game_id
+        )
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": "Couldn't save the lineup. It is still on this page.",
+                }
+            ),
+            500,
+        )
 
-    save_lineup_cells(game, present_ids, cells)
-    game.updated_at = datetime.utcnow()
-    team.updated_at = datetime.utcnow()
-    db.session.commit()
-
-    return _json_game_response(team, game)
+    try:
+        return _json_game_response(team, game)
+    except Exception:
+        current_app.logger.exception(
+            "Baseball lineup save response failed for game %s", game_id
+        )
+        return jsonify({"ok": True, "state": None})
 
 
 @baseball_lineup_bp.route(
