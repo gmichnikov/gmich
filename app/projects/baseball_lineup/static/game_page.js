@@ -1920,7 +1920,7 @@
     return text;
   }
 
-  function lineupTable(delimiter) {
+  function lineupExportText(delimiter) {
     var headers = ["Player name"];
     for (var inning = 1; inning <= lineup.inning_count; inning += 1) {
       headers.push(String(inning));
@@ -1971,7 +1971,7 @@
   }
 
   function downloadCsv() {
-    var csv = "\uFEFF" + lineupTable(",");
+    var csv = "\uFEFF" + lineupExportText(",");
     var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     var url = URL.createObjectURL(blob);
     var link = document.createElement("a");
@@ -2012,7 +2012,7 @@
   }
 
   function copyCsv() {
-    copyText(lineupTable("\t"))
+    copyText(lineupExportText("\t"))
       .then(function () {
         setExportStatus("Copied. Paste it into a spreadsheet.");
       })
