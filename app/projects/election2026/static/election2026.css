@@ -601,12 +601,16 @@ details[open] > .election2026-filters-summary {
     }
 
     .election2026-summary {
-        grid-template-columns: 1fr 1fr 1fr;
+        display: block;
+        column-count: 3;
+        column-gap: 0.35rem;
     }
 
     .election2026-sum {
         grid-template-columns: 4.2rem minmax(0, 1fr) minmax(0, 1fr);
         grid-template-areas: "race left right";
+        break-inside: avoid;
+        margin-bottom: 0.35rem;
     }
 
     .election2026-grid {

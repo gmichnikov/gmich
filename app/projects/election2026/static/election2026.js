@@ -5,9 +5,9 @@
     var selected = null;
     var windowKey = "all";
     var officeKey = "all";
-    var sortKey = "state";
+    var sortKey = "closest";
     var calledKey = "all";
-    var viewKey = "lines";
+    var viewKey = "summary";
     var mapSvgText = null;
     var mapHover = null;
     var query = "";
