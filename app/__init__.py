@@ -408,6 +408,7 @@ def create_app():
     from app.projects.daily_email.commands import init_app as init_daily_email_commands
     from app.projects.nfl_survivor.commands import init_app as init_nfl_survivor_commands
     from app.projects.kids_ai.commands import init_app as init_kids_ai_commands
+    from app.projects.election2026.commands import init_app as init_election2026_commands
     from app.core.commands import init_app as init_credit_commands
 
     init_credit_commands(app)
@@ -420,6 +421,7 @@ def create_app():
     init_daily_email_commands(app)
     init_nfl_survivor_commands(app)
     init_kids_ai_commands(app)
+    init_election2026_commands(app)
 
     # App-level 404 handler — catches 404s from any blueprint (travel_log, notes, etc.)
     @app.errorhandler(404)
