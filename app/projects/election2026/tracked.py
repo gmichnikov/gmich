@@ -3,7 +3,10 @@
 This is not a live filter. A race that later moves to 95/5 stays on the board.
 Florida governor and the Florida Senate special were outside 90/10 and were
 added anyway, along with Florida's 4th, Florida's 13th, and New Jersey's 7th
-House districts. The event ticker is pinned because several series also contain a
+House districts. Alabama Governor, Oklahoma Governor, Montana Senate, and
+Nebraska Governor moved inside 90/10 on election night and were added then.
+Nebraska Senate was already inside that range and was added with them. The
+event ticker is pinned because several series also contain a
 later cycle or a party-only contract.
 
 Maine is SENATEME-26 only. KXMESENATEPERSON-26 is the same race.
@@ -184,6 +187,41 @@ TRACKED_RACES = [
         "office": "house",
         "state": "NJ",
         "label": "New Jersey 7th",
+    },
+    {
+        "event_ticker": "GOVPARTYNE-26",
+        "series_ticker": "GOVPARTYNE",
+        "office": "governor",
+        "state": "NE",
+        "label": "Nebraska Governor",
+    },
+    {
+        "event_ticker": "SENATEMT-26",
+        "series_ticker": "SENATEMT",
+        "office": "senate",
+        "state": "MT",
+        "label": "Montana Senate",
+    },
+    {
+        "event_ticker": "GOVPARTYOK-26",
+        "series_ticker": "GOVPARTYOK",
+        "office": "governor",
+        "state": "OK",
+        "label": "Oklahoma Governor",
+    },
+    {
+        "event_ticker": "GOVPARTYAL-26",
+        "series_ticker": "GOVPARTYAL",
+        "office": "governor",
+        "state": "AL",
+        "label": "Alabama Governor",
+    },
+    {
+        "event_ticker": "SENATENE-26",
+        "series_ticker": "SENATENE",
+        "office": "senate",
+        "state": "NE",
+        "label": "Nebraska Senate",
     },
 ]
 

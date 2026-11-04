@@ -528,9 +528,58 @@
         else mapHover = null;
     }
 
+    function shortRace(race) {
+        var state = race.state || "";
+        if (race.office === "house") return state + "-" + districtNumber(race);
+        if (race.office === "senate") return state + " Sen";
+        if (race.office === "governor") return state + " Gov";
+        return race.label || state;
+    }
+
+    function lastName(name) {
+        var parts = String(name || "").trim().split(/\s+/);
+        return parts[parts.length - 1] || "";
+    }
+
+    function renderSummary() {
+        hoverState = null;
+        var races = visibleRaces();
+        if (!races.length) {
+            gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + emptyBoardMessage() + "</p>";
+            return;
+        }
+        gridEl.innerHTML = '<div class="election2026-summary">' + races.map(function (race) {
+            var sides = barSides(race);
+            var left = sides && sides.left;
+            var right = sides && sides.right;
+            var leftLeads = left && (!right || left.price >= right.price);
+            var rightLeads = right && (!left || right.price > left.price);
+            function personHtml(side, leads) {
+                if (!side) return '<span class="election2026-sum-person"></span>';
+                return (
+                    '<span class="election2026-sum-person' + (side === right ? " election2026-sum-person-right" : "") + '" style="color:' + partyColor(side.candidate.party, side.index) + '">' +
+                    '<span class="election2026-sum-name">' + escapeHtml(lastName(side.candidate.name)) + "</span>" +
+                    '<span class="election2026-sum-pct' + (leads ? " election2026-sum-pct-lead" : "") + '">' + formatPercent(side.price) + "</span>" +
+                    "</span>"
+                );
+            }
+            var detail = [race.label].concat([left, right].filter(Boolean).map(function (side) {
+                return side.candidate.name + " " + formatPercent(side.price);
+            })).join(", ");
+            return (
+                '<div class="election2026-sum" title="' + escapeAttr(detail) + '">' +
+                '<span class="election2026-sum-race">' + escapeHtml(shortRace(race)) + "</span>" +
+                personHtml(left, leftLeads) +
+                personHtml(right, rightLeads) +
+                "</div>"
+            );
+        }).join("") + "</div>";
+    }
+
     function renderBoard() {
         if (viewKey === "bars") renderBars();
         else if (viewKey === "map") renderMap();
+        else if (viewKey === "summary") renderSummary();
         else renderGrid();
     }
 

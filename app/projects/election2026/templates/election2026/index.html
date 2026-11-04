@@ -30,11 +30,6 @@
             <button type="button" class="election2026-button" data-office="starred" aria-pressed="false">Starred</button>
             <button type="button" class="election2026-button" data-office="none" aria-pressed="false">None</button>
         </div>
-        <div class="election2026-button-row" role="group" aria-label="Sort">
-            <button type="button" class="election2026-button" data-sort="state" aria-pressed="true">By state</button>
-            <button type="button" class="election2026-button" data-sort="leader" aria-pressed="false">By leader</button>
-            <button type="button" class="election2026-button" data-sort="closest" aria-pressed="false">Closest</button>
-        </div>
         <label class="election2026-search">
             <span class="election2026-search-label">Search</span>
             <input type="search" id="election2026-search" placeholder="State or candidate" autocomplete="off" enterkeyhint="search">
@@ -45,10 +40,18 @@
         </details>
     </details>
 
-    <div class="election2026-button-row election2026-views" role="tablist" aria-label="Chart">
-        <button type="button" class="election2026-button" data-view="lines" aria-pressed="true">Over time</button>
-        <button type="button" class="election2026-button" data-view="bars" aria-pressed="false">Latest</button>
-        <button type="button" class="election2026-button" data-view="map" aria-pressed="false">Map</button>
+    <div class="election2026-board-bar">
+        <div class="election2026-button-row election2026-views" role="tablist" aria-label="Chart">
+            <button type="button" class="election2026-button" data-view="lines" aria-pressed="true">Over time</button>
+            <button type="button" class="election2026-button" data-view="bars" aria-pressed="false">Latest</button>
+            <button type="button" class="election2026-button" data-view="map" aria-pressed="false">Map</button>
+            <button type="button" class="election2026-button" data-view="summary" aria-pressed="false">Summary</button>
+        </div>
+        <div class="election2026-button-row election2026-sorts" role="group" aria-label="Sort">
+            <button type="button" class="election2026-button" data-sort="state" aria-pressed="true">By state</button>
+            <button type="button" class="election2026-button" data-sort="leader" aria-pressed="false">By leader</button>
+            <button type="button" class="election2026-button" data-sort="closest" aria-pressed="false">Closest</button>
+        </div>
     </div>
 
     <div class="election2026-grid" id="election2026-grid" data-map-url="{{ url_for('election2026.static', filename='us.svg') }}"></div>

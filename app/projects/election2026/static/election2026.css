@@ -205,8 +205,16 @@ details[open] > .election2026-filters-summary {
     outline-offset: 2px;
 }
 
-.election2026-views {
+.election2026-board-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
     margin-bottom: 0.75rem;
+}
+
+.election2026-board-bar .election2026-button-row {
+    margin-top: 0;
 }
 
 .election2026-bars {
@@ -214,6 +222,67 @@ details[open] > .election2026-filters-summary {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+}
+
+.election2026-summary {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+}
+
+.election2026-sum {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+        "race race"
+        "left right";
+    column-gap: 0.35rem;
+    align-items: baseline;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    padding: 0.28rem 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.3;
+    min-width: 0;
+}
+
+.election2026-sum-race {
+    grid-area: race;
+    color: #627d98;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.election2026-sum-person {
+    display: flex;
+    gap: 0.3rem;
+    min-width: 0;
+    grid-area: left;
+}
+
+.election2026-sum-person-right {
+    grid-area: right;
+    justify-content: flex-end;
+}
+
+.election2026-sum-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.election2026-sum-pct {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.election2026-sum-pct-lead {
+    font-weight: 700;
 }
 
 .election2026-split {
@@ -523,6 +592,21 @@ details[open] > .election2026-filters-summary {
 @media (min-width: 800px) {
     .election2026-title {
         font-size: 1.85rem;
+    }
+
+    .election2026-board-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .election2026-summary {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .election2026-sum {
+        grid-template-columns: 4.2rem minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas: "race left right";
     }
 
     .election2026-grid {
