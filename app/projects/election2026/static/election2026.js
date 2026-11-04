@@ -5,8 +5,11 @@
     var selected = null;
     var windowKey = "all";
     var officeKey = "all";
+    var sortKey = "state";
     var query = "";
     var hoverState = null;
+    var starred = loadStarred();
+    var starStorageKey = "election2026-starred";
 
     var CHART = {
         width: 640,
@@ -24,6 +27,35 @@
     var chipsEl = document.getElementById("election2026-chips");
     var gridEl = document.getElementById("election2026-grid");
     var searchEl = document.getElementById("election2026-search");
+
+    function loadStarred() {
+        try {
+            var parsed = JSON.parse(localStorage.getItem("election2026-starred") || "[]");
+            if (!Array.isArray(parsed)) return new Set();
+            return new Set(parsed.filter(function (ticker) { return typeof ticker === "string"; }));
+        } catch (error) {
+            return new Set();
+        }
+    }
+
+    function saveStarred() {
+        try {
+            localStorage.setItem(starStorageKey, JSON.stringify(Array.from(starred)));
+        } catch (error) {
+            return;
+        }
+    }
+
+    function starButton(race) {
+        var on = starred.has(race.event_ticker);
+        return (
+            '<button type="button" class="election2026-star" data-star="' + escapeAttr(race.event_ticker) +
+            '" aria-pressed="' + (on ? "true" : "false") +
+            '" aria-label="' + escapeAttr((on ? "Unstar " : "Star ") + race.label) + '">' +
+            (on ? "★" : "☆") +
+            "</button>"
+        );
+    }
 
     function partyColor(party, index) {
         if (party === "Democrat") return "#2b6cb0";
@@ -57,12 +89,19 @@
     }
 
     function stateName(race) {
-        var officeWord = race.office === "governor" ? "Governor" : "Senate";
         var label = race.label || "";
-        if (label.toLowerCase().slice(-officeWord.length) === officeWord.toLowerCase()) {
+        var officeWord = race.office === "governor" ? "Governor" : race.office === "senate" ? "Senate" : "";
+        if (officeWord && label.toLowerCase().slice(-officeWord.length) === officeWord.toLowerCase()) {
             return label.slice(0, -officeWord.length).trim();
         }
+        var district = label.search(/\s+\d/);
+        if (race.office === "house" && district > 0) return label.slice(0, district).trim();
         return label;
+    }
+
+    function districtNumber(race) {
+        var match = /(\d+)/.exec(race.label || "");
+        return match ? parseInt(match[1], 10) : 0;
     }
 
     function raceMatchesQuery(race) {
@@ -93,11 +132,39 @@
         return kept;
     }
 
+    function leaderPrice(race) {
+        var best = null;
+        (race.candidates || []).forEach(function (candidate) {
+            var points = candidate.points || [];
+            if (!points.length) return;
+            var price = points[points.length - 1].p;
+            if (best === null || price > best) best = price;
+        });
+        return best === null ? -1 : best;
+    }
+
+    function compareRaces(a, b) {
+        if (sortKey === "leader") {
+            var byPrice = leaderPrice(b) - leaderPrice(a);
+            if (byPrice !== 0) return byPrice;
+        }
+        var byState = stateName(a).localeCompare(stateName(b));
+        if (byState !== 0) return byState;
+        var byOffice = (a.office || "").localeCompare(b.office || "");
+        if (byOffice !== 0) return byOffice;
+        if (a.office === "house" && b.office === "house") return districtNumber(a) - districtNumber(b);
+        return (a.label || "").localeCompare(b.label || "");
+    }
+
+    function orderedRaces(races) {
+        return races.slice().sort(compareRaces);
+    }
+
     function visibleRaces() {
         if (!data) return [];
-        return data.races.filter(function (race) {
+        return orderedRaces(data.races.filter(function (race) {
             return selected.has(race.event_ticker) && raceMatchesQuery(race);
-        });
+        }));
     }
 
     function sharedDomain(races) {
@@ -216,7 +283,7 @@
     }
 
     function renderChips() {
-        var races = data.races.filter(raceMatchesQuery);
+        var races = orderedRaces(data.races.filter(raceMatchesQuery));
         if (!races.length) {
             chipsEl.innerHTML = '<p class="election2026-empty">No races match.</p>';
             return;
@@ -224,10 +291,13 @@
         chipsEl.innerHTML = races.map(function (race) {
             var checked = selected.has(race.event_ticker) ? " checked" : "";
             return (
+                '<span class="election2026-chip-row">' +
+                starButton(race) +
                 '<label class="election2026-chip">' +
                 '<input type="checkbox" data-race="' + escapeAttr(race.event_ticker) + '"' + checked + ">" +
                 "<span>" + escapeHtml(race.label) + "</span>" +
-                "</label>"
+                "</label>" +
+                "</span>"
             );
         }).join("");
     }
@@ -237,7 +307,14 @@
         if (!races.length) {
             hoverState = null;
             var anyMatch = data.races.some(raceMatchesQuery);
-            var message = normalize(query) && !anyMatch ? "No races match." : "No races selected.";
+            var starredMatch = data.races.some(function (race) {
+                return starred.has(race.event_ticker) && raceMatchesQuery(race);
+            });
+            var message = normalize(query) && !anyMatch
+                ? "No races match."
+                : officeKey === "starred" && !starredMatch
+                    ? "No starred races."
+                    : "No races selected.";
             gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + message + "</p>";
             return;
         }
@@ -260,8 +337,13 @@
             }).join("");
             return (
                 '<article class="election2026-card">' +
+                '<div class="election2026-card-top">' +
+                "<div>" +
                 "<h2 class=\"election2026-card-title\">" + escapeHtml(race.label) + "</h2>" +
                 '<p class="election2026-office">' + escapeHtml(race.office) + "</p>" +
+                "</div>" +
+                starButton(race) +
+                "</div>" +
                 '<div class="election2026-candidates">' + candidates + "</div>" +
                 chartBlock(race, domain) +
                 "</article>"
@@ -426,7 +508,7 @@
         officeKey = office;
         selected = new Set();
         data.races.forEach(function (race) {
-            if (office === "all" || race.office === office) {
+            if (office === "all" || race.office === office || (office === "starred" && starred.has(race.event_ticker))) {
                 selected.add(race.event_ticker);
             }
         });
@@ -438,6 +520,15 @@
         button.addEventListener("click", function () {
             windowKey = button.getAttribute("data-window");
             setPressed("[data-window]", "data-window", windowKey);
+            renderGrid();
+        });
+    });
+
+    document.querySelectorAll("[data-sort]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            sortKey = button.getAttribute("data-sort");
+            setPressed("[data-sort]", "data-sort", sortKey);
+            renderChips();
             renderGrid();
         });
     });
@@ -465,6 +556,26 @@
         renderChips();
         renderGrid();
     });
+
+    function toggleStar(event) {
+        var button = event.target.closest ? event.target.closest("[data-star]") : null;
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        var ticker = button.getAttribute("data-star");
+        if (starred.has(ticker)) starred.delete(ticker);
+        else starred.add(ticker);
+        saveStarred();
+        if (officeKey === "starred") {
+            if (starred.has(ticker)) selected.add(ticker);
+            else selected.delete(ticker);
+        }
+        renderChips();
+        renderGrid();
+    }
+
+    chipsEl.addEventListener("click", toggleStar);
+    gridEl.addEventListener("click", toggleStar);
 
     searchEl.addEventListener("input", function () {
         query = searchEl.value;

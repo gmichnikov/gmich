@@ -1,7 +1,9 @@
-"""Races inside 90/10 at the time this list was written.
+"""Fixed race list. Most were inside 90/10 when the list was written.
 
-This is a fixed list, not a live filter. A race that later moves to 95/5 stays
-on the board. The event ticker is pinned because several series also contain a
+This is not a live filter. A race that later moves to 95/5 stays on the board.
+Florida governor and the Florida Senate special were outside 90/10 and were
+added anyway, along with Florida's 4th, Florida's 13th, and New Jersey's 7th
+House districts. The event ticker is pinned because several series also contain a
 later cycle or a party-only contract.
 
 Maine is SENATEME-26 only. KXMESENATEPERSON-26 is the same race.
@@ -147,6 +149,41 @@ TRACKED_RACES = [
         "office": "senate",
         "state": "OH",
         "label": "Ohio Senate",
+    },
+    {
+        "event_ticker": "GOVPARTYFL-26",
+        "series_ticker": "GOVPARTYFL",
+        "office": "governor",
+        "state": "FL",
+        "label": "Florida Governor",
+    },
+    {
+        "event_ticker": "SENATEFLS-26",
+        "series_ticker": "SENATEFLS",
+        "office": "senate",
+        "state": "FL",
+        "label": "Florida Senate",
+    },
+    {
+        "event_ticker": "KXHOUSERACE-FL04-26",
+        "series_ticker": "KXHOUSERACE",
+        "office": "house",
+        "state": "FL",
+        "label": "Florida 4th",
+    },
+    {
+        "event_ticker": "HOUSEFL13-26",
+        "series_ticker": "HOUSEFL13",
+        "office": "house",
+        "state": "FL",
+        "label": "Florida 13th",
+    },
+    {
+        "event_ticker": "HOUSENJ7-26",
+        "series_ticker": "HOUSENJ7",
+        "office": "house",
+        "state": "NJ",
+        "label": "New Jersey 7th",
     },
 ]
 

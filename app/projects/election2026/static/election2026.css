@@ -117,10 +117,49 @@
     color: #fff;
 }
 
+.election2026-chip-row {
+    display: inline-flex;
+    align-items: center;
+}
+
 .election2026-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+}
+
+.election2026-star {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #9fb3c8;
+    font-size: 1.45rem;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.election2026-star[aria-pressed="true"] {
+    color: #d69e2e;
+}
+
+.election2026-star:focus-visible {
+    outline: 2px solid #243b53;
+    outline-offset: 2px;
+}
+
+.election2026-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.35rem;
+}
+
+.election2026-card-top .election2026-star {
+    margin: -0.35rem -0.35rem 0 0;
 }
 
 .election2026-chip input {
