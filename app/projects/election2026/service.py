@@ -15,7 +15,7 @@ from app.projects.election2026.models import (
     Election2026Price,
     Election2026Race,
 )
-from app.projects.election2026.selection import display_price, parse_party, select_markets
+from app.projects.election2026.selection import display_price, market_is_called, parse_party, select_markets
 from app.projects.election2026.tracked import TRACKED_BY_EVENT, TRACKED_RACES
 
 logger = logging.getLogger(__name__)
@@ -267,6 +267,9 @@ def board_payload():
                 "label": spec["label"],
                 "office": race.office or spec["office"],
                 "state": race.state or spec["state"],
+                "called": any(
+                    market_is_called(market.status, market.result) for market in candidates
+                ),
                 "candidates": [
                     {
                         "name": market.candidate_name or market.ticker,

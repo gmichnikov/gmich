@@ -13,19 +13,29 @@ PARTY_ONLY_NAMES = {
 }
 
 LIVE_STATUSES = {"active", "open"}
+CALLED_STATUSES = {"determined", "finalized"}
 
 
 def display_price(bid, ask, last):
-    """Midpoint of the Yes book. Last trade only when one side is missing.
+    """Midpoint of the Yes book. Last trade when a side is missing or the book is empty.
 
-    A bid of 0 is a real quote. None means that side was absent.
+    A bid of 0 is a real quote. None means that side was absent. A settled
+    contract comes back as a bid of 0 and an ask of 1, so the midpoint is 50
+    even after the race is called. That empty book uses the last trade.
     """
-    if bid is not None and ask is not None:
+    if bid is not None and ask is not None and not (bid == 0 and ask == 1):
         return (bid + ask) / 2
     for value in (last, bid, ask):
         if value is not None:
             return value
     return None
+
+
+def market_is_called(status, result):
+    """True once Kalshi has a result, or the contract is determined or finalized."""
+    if (result or "").strip():
+        return True
+    return (status or "").lower() in CALLED_STATUSES
 
 
 def parse_party(subtitle):

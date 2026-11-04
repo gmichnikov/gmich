@@ -1,6 +1,6 @@
 import unittest
 
-from app.projects.election2026.selection import display_price, parse_party, select_markets
+from app.projects.election2026.selection import display_price, market_is_called, parse_party, select_markets
 
 
 def market(name, last, status="active", subtitle=None):
@@ -21,6 +21,10 @@ class SelectionTest(unittest.TestCase):
     def test_zero_bid_is_a_real_quote(self):
         self.assertEqual(display_price(0.0, 0.02, 0.01), 0.01)
 
+    def test_empty_book_uses_the_last_trade(self):
+        self.assertEqual(display_price(0.0, 1.0, 0.999), 0.999)
+        self.assertEqual(display_price(0.0, 1.0, 0.001), 0.001)
+
     def test_last_trade_when_a_side_is_missing(self):
         self.assertEqual(display_price(None, 0.20, 0.15), 0.15)
 
@@ -28,6 +32,13 @@ class SelectionTest(unittest.TestCase):
         self.assertEqual(parse_party("Abdul El-Sayed:: Democrat"), "Democrat")
         self.assertEqual(parse_party("Republican party:: Republican party"), "Republican")
         self.assertIsNone(parse_party(None))
+
+    def test_called_when_kalshi_has_a_result_or_settled_status(self):
+        self.assertTrue(market_is_called("determined", "yes"))
+        self.assertTrue(market_is_called("determined", "no"))
+        self.assertTrue(market_is_called("finalized", ""))
+        self.assertFalse(market_is_called("active", None))
+        self.assertFalse(market_is_called("active", ""))
 
     def test_keeps_top_two_and_drops_longshots_and_party_lines(self):
         chosen = select_markets([

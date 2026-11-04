@@ -6,6 +6,7 @@
     var windowKey = "all";
     var officeKey = "all";
     var sortKey = "state";
+    var calledKey = "all";
     var viewKey = "lines";
     var mapSvgText = null;
     var mapHover = null;
@@ -166,10 +167,16 @@
         return races.slice().sort(compareRaces);
     }
 
+    function matchesCalled(race) {
+        if (calledKey === "called") return !!race.called;
+        if (calledKey === "open") return !race.called;
+        return true;
+    }
+
     function visibleRaces() {
         if (!data) return [];
         return orderedRaces(data.races.filter(function (race) {
-            return selected.has(race.event_ticker) && raceMatchesQuery(race);
+            return selected.has(race.event_ticker) && raceMatchesQuery(race) && matchesCalled(race);
         }));
     }
 
@@ -289,7 +296,9 @@
     }
 
     function renderChips() {
-        var races = orderedRaces(data.races.filter(raceMatchesQuery));
+        var races = orderedRaces(data.races.filter(function (race) {
+            return raceMatchesQuery(race) && matchesCalled(race);
+        }));
         if (!races.length) {
             chipsEl.innerHTML = '<p class="election2026-empty">No races match.</p>';
             return;
@@ -314,6 +323,11 @@
             return starred.has(race.event_ticker) && raceMatchesQuery(race);
         });
         if (normalize(query) && !anyMatch) return "No races match.";
+        var selectedMatch = data.races.some(function (race) {
+            return selected.has(race.event_ticker) && raceMatchesQuery(race);
+        });
+        if (calledKey === "called" && selectedMatch) return "No called races.";
+        if (calledKey === "open" && selectedMatch) return "No uncalled races.";
         if (officeKey === "starred" && !starredMatch) return "No starred races.";
         return "No races selected.";
     }
@@ -787,6 +801,15 @@
         setPressed("[data-office]", "data-office", office);
         render();
     }
+
+    document.querySelectorAll("[data-called]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            calledKey = button.getAttribute("data-called");
+            setPressed("[data-called]", "data-called", calledKey);
+            renderChips();
+            renderBoard();
+        });
+    });
 
     document.querySelectorAll("[data-window]").forEach(function (button) {
         button.addEventListener("click", function () {
