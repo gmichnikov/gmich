@@ -10,7 +10,35 @@
 <div class="election2026-page">
     <header class="election2026-header">
         <h1 class="election2026-title">Election 2026</h1>
-        <p class="election2026-intro">Senate and governor prices from Kalshi, saved over the night. Nothing is being collected yet.</p>
+        <p class="election2026-intro">Each chart is one race, with both leading candidates. The line is the Kalshi Yes price. This page saves a new price about once a minute while it is open.</p>
+        <p class="election2026-updated" id="election2026-updated">Loading prices…</p>
+        <p class="election2026-error" id="election2026-error" hidden></p>
     </header>
+
+    <details class="election2026-toolbar" open>
+        <summary class="election2026-filters-summary">Filters</summary>
+        <div class="election2026-button-row" role="group" aria-label="Time window">
+            <button type="button" class="election2026-button" data-window="all" aria-pressed="true">Tonight</button>
+            <button type="button" class="election2026-button" data-window="2h" aria-pressed="false">2 hours</button>
+            <button type="button" class="election2026-button" data-window="30m" aria-pressed="false">30 min</button>
+        </div>
+        <div class="election2026-button-row" role="group" aria-label="Which races">
+            <button type="button" class="election2026-button" data-office="all" aria-pressed="true">All</button>
+            <button type="button" class="election2026-button" data-office="senate" aria-pressed="false">Senate</button>
+            <button type="button" class="election2026-button" data-office="governor" aria-pressed="false">Governor</button>
+            <button type="button" class="election2026-button" data-office="none" aria-pressed="false">None</button>
+        </div>
+        <label class="election2026-search">
+            <span class="election2026-search-label">Search</span>
+            <input type="search" id="election2026-search" placeholder="State or candidate" autocomplete="off" enterkeyhint="search">
+        </label>
+        <div class="election2026-chips" id="election2026-chips" aria-label="Races"></div>
+    </details>
+
+    <div class="election2026-grid" id="election2026-grid"></div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('election2026.static', filename='election2026.js') }}" defer></script>
 {% endblock %}

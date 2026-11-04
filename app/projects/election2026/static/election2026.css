@@ -1,17 +1,325 @@
 /* Election 2026. Class names are prefixed so they do not collide with other projects. */
 
 .election2026-page {
-    max-width: 40rem;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 1.5rem 1rem 3rem;
+    color: #1f2933;
+}
+
+.election2026-header,
+.election2026-toolbar,
+.election2026-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.election2026-header {
+    padding: 1rem 1rem 0.9rem;
+    margin-bottom: 0.75rem;
 }
 
 .election2026-title {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
+    margin: 0 0 0.35rem;
+    font-size: 1.6rem;
+    line-height: 1.2;
+}
+
+.election2026-intro,
+.election2026-updated,
+.election2026-error {
+    margin: 0;
+    line-height: 1.45;
 }
 
 .election2026-intro {
+    color: #3e4c59;
+    font-size: 0.95rem;
+}
+
+.election2026-updated {
+    margin-top: 0.55rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.election2026-error {
+    margin-top: 0.4rem;
+    color: #9b2c2c;
+    font-size: 0.9rem;
+}
+
+.election2026-toolbar {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.election2026-filters-summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+    font-weight: 650;
+    list-style: none;
+}
+
+.election2026-filters-summary::-webkit-details-marker {
+    display: none;
+}
+
+.election2026-filters-summary::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.55rem;
+    border-right: 2px solid #243b53;
+    border-bottom: 2px solid #243b53;
+    transform: rotate(-45deg);
+}
+
+.election2026-toolbar[open] > .election2026-filters-summary::before {
+    transform: rotate(45deg);
+}
+
+.election2026-toolbar[open] > .election2026-filters-summary {
+    margin-bottom: 0.55rem;
+}
+
+.election2026-button-row,
+.election2026-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.election2026-button-row + .election2026-button-row,
+.election2026-chips {
+    margin-top: 0.45rem;
+}
+
+.election2026-button,
+.election2026-chip {
+    min-height: 44px;
+    border: 1px solid #d9e2ec;
+    border-radius: 999px;
+    background: #f5f7fa;
+    color: #1f2933;
+    font: inherit;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+}
+
+.election2026-button[aria-pressed="true"] {
+    background: #243b53;
+    border-color: #243b53;
+    color: #fff;
+}
+
+.election2026-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.election2026-chip input {
+    width: 1rem;
+    height: 1rem;
     margin: 0;
-    line-height: 1.5;
+}
+
+.election2026-search {
+    display: block;
+    margin-top: 0.55rem;
+}
+
+.election2026-search-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #627d98;
+    font-size: 0.8rem;
+    font-weight: 650;
+}
+
+.election2026-search input {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2933;
+    font: inherit;
+    font-size: 1rem;
+    padding: 0.4rem 0.7rem;
+}
+
+.election2026-search input:focus,
+.election2026-filters-summary:focus-visible,
+.election2026-button:focus-visible {
+    outline: 2px solid #243b53;
+    outline-offset: 2px;
+}
+
+.election2026-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.election2026-card {
+    padding: 0.85rem 0.85rem 0.65rem;
+    min-width: 0;
+}
+
+.election2026-card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+}
+
+.election2026-office {
+    display: inline-block;
+    margin-top: 0.15rem;
+    color: #627d98;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.election2026-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.55rem 0 0.35rem;
+}
+
+.election2026-candidate {
+    display: grid;
+    grid-template-columns: 0.7rem minmax(0, 1fr) auto;
+    gap: 0.4rem;
+    align-items: center;
+    font-size: 0.92rem;
+}
+
+.election2026-who {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.4rem;
+    align-items: baseline;
+}
+
+.election2026-swatch {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 2px;
+    align-self: center;
+}
+
+.election2026-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.election2026-party {
+    color: #627d98;
+    font-size: 0.8rem;
+}
+
+.election2026-quote {
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.election2026-delta {
+    color: #627d98;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.election2026-chart-wrap {
+    position: relative;
+    touch-action: pan-y;
+}
+
+.election2026-chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+}
+
+.election2026-guide {
+    position: absolute;
+    width: 1px;
+    background: #243b53;
+    pointer-events: none;
+}
+
+.election2026-tip {
+    position: absolute;
+    z-index: 2;
+    max-width: 78%;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    pointer-events: none;
+}
+
+.election2026-tip-time {
+    margin-bottom: 0.2rem;
+    color: #627d98;
+}
+
+.election2026-tip-row {
+    display: grid;
+    grid-template-columns: 0.7rem minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.election2026-tip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.election2026-tip-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+}
+
+.election2026-empty {
+    margin: 0.4rem 0 0.2rem;
+    color: #627d98;
+    font-size: 0.9rem;
+}
+
+.election2026-grid > .election2026-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+@media (min-width: 800px) {
+    .election2026-title {
+        font-size: 1.85rem;
+    }
+
+    .election2026-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .election2026-candidate {
+        font-size: 0.95rem;
+    }
 }
