@@ -31,6 +31,11 @@
     var chipsEl = document.getElementById("election2026-chips");
     var gridEl = document.getElementById("election2026-grid");
     var searchEl = document.getElementById("election2026-search");
+    var filtersEl = document.querySelector(".election2026-toolbar");
+    var racesEl = document.querySelector(".election2026-races");
+    var savedSelected = null;
+    var restoringView = false;
+    var viewStorageKey = "election2026-view";
 
     function loadStarred() {
         try {
@@ -48,6 +53,84 @@
         } catch (error) {
             return;
         }
+    }
+
+    function oneOf(value, allowed, fallback) {
+        return allowed.indexOf(value) === -1 ? fallback : value;
+    }
+
+    function loadViewState() {
+        try {
+            var parsed = JSON.parse(localStorage.getItem(viewStorageKey) || "null");
+            if (!parsed || typeof parsed !== "object") return null;
+            return parsed;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function saveViewState() {
+        if (restoringView) return;
+        var custom = officeKey === "custom" || officeKey === "none";
+        var state = {
+            windowKey: windowKey,
+            officeKey: officeKey,
+            sortKey: sortKey,
+            calledKey: calledKey,
+            viewKey: viewKey,
+            query: query,
+            filtersOpen: filtersEl.open,
+            racesOpen: racesEl.open,
+            selected: custom && selected ? Array.from(selected) : null
+        };
+        try {
+            localStorage.setItem(viewStorageKey, JSON.stringify(state));
+        } catch (error) {
+            return;
+        }
+    }
+
+    function selectionForOffice(office, customTickers) {
+        var next = new Set();
+        if (!data) return next;
+        if (office === "none") return next;
+        if (office === "custom") {
+            var keep = new Set(customTickers || []);
+            data.races.forEach(function (race) {
+                if (keep.has(race.event_ticker)) next.add(race.event_ticker);
+            });
+            return next;
+        }
+        data.races.forEach(function (race) {
+            if (office === "all" || race.office === office || (office === "starred" && starred.has(race.event_ticker))) {
+                next.add(race.event_ticker);
+            }
+        });
+        return next;
+    }
+
+    function applySavedView() {
+        var saved = loadViewState();
+        if (!saved) return null;
+        restoringView = true;
+        windowKey = oneOf(saved.windowKey, ["all", "2h", "30m"], windowKey);
+        officeKey = oneOf(saved.officeKey, ["all", "senate", "governor", "house", "starred", "none", "custom"], officeKey);
+        sortKey = oneOf(saved.sortKey, ["state", "leader", "closest"], sortKey);
+        calledKey = oneOf(saved.calledKey, ["all", "called", "open"], calledKey);
+        viewKey = oneOf(saved.viewKey, ["lines", "bars", "map", "summary"], viewKey);
+        query = typeof saved.query === "string" ? saved.query : "";
+        searchEl.value = query;
+        if (typeof saved.filtersOpen === "boolean") filtersEl.open = saved.filtersOpen;
+        if (typeof saved.racesOpen === "boolean") racesEl.open = saved.racesOpen;
+        setPressed("[data-window]", "data-window", windowKey);
+        setPressed("[data-office]", "data-office", officeKey);
+        setPressed("[data-sort]", "data-sort", sortKey);
+        setPressed("[data-called]", "data-called", calledKey);
+        setPressed("[data-view]", "data-view", viewKey);
+        restoringView = false;
+        return Array.isArray(saved.selected)
+            ? saved.selected.filter(function (ticker) { return typeof ticker === "string"; })
+            : null;
     }
 
     function starButton(race) {
@@ -595,6 +678,7 @@
         else if (viewKey === "map") renderMap();
         else if (viewKey === "summary") renderSummary();
         else renderGrid();
+        saveViewState();
     }
 
     function renderGrid() {
@@ -792,14 +876,32 @@
 
     function selectOffice(office) {
         officeKey = office;
-        selected = new Set();
-        data.races.forEach(function (race) {
-            if (office === "all" || race.office === office || (office === "starred" && starred.has(race.event_ticker))) {
-                selected.add(race.event_ticker);
-            }
-        });
+        selected = selectionForOffice(office);
         setPressed("[data-office]", "data-office", office);
         render();
+    }
+
+    function resetView() {
+        windowKey = "all";
+        officeKey = "all";
+        sortKey = "closest";
+        calledKey = "all";
+        viewKey = "summary";
+        query = "";
+        searchEl.value = "";
+        filtersEl.open = true;
+        racesEl.open = false;
+        setPressed("[data-window]", "data-window", windowKey);
+        setPressed("[data-office]", "data-office", officeKey);
+        setPressed("[data-sort]", "data-sort", sortKey);
+        setPressed("[data-called]", "data-called", calledKey);
+        setPressed("[data-view]", "data-view", viewKey);
+        if (data) {
+            selected = selectionForOffice("all");
+            render();
+        } else {
+            saveViewState();
+        }
     }
 
     document.querySelectorAll("[data-called]").forEach(function (button) {
@@ -827,6 +929,10 @@
             renderBoard();
         });
     });
+
+    document.getElementById("election2026-reset").addEventListener("click", resetView);
+    filtersEl.addEventListener("toggle", saveViewState);
+    racesEl.addEventListener("toggle", saveViewState);
 
     document.querySelectorAll("[data-office]").forEach(function (button) {
         button.addEventListener("click", function () {
@@ -951,7 +1057,7 @@
         var first = selected === null;
         data = payload;
         if (first) {
-            selected = new Set(payload.races.map(function (race) { return race.event_ticker; }));
+            selected = selectionForOffice(officeKey, savedSelected);
         } else {
             var known = new Set(payload.races.map(function (race) { return race.event_ticker; }));
             payload.races.forEach(function (race) {
@@ -978,6 +1084,7 @@
             });
     }
 
+    savedSelected = applySavedView();
     load();
     setInterval(load, pollMs);
 })();
