@@ -652,6 +652,17 @@ PROJECTS = [
         "order": 29,
     },
     {
+        "id": "election2026",
+        "name": "Election 2026",
+        "description": "Senate and governor prices from Kalshi, saved over time",
+        "url": "/election-2026",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "icon": "🗳️",
+        "order": 35,
+    },
+    {
         "id": "recipes",
         "name": "Recipes",
         "description": "Kitchen ingredient sheets — public, no login",

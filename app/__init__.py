@@ -139,6 +139,7 @@ def create_app():
     from app.projects.baseball_lineup.routes import baseball_lineup_bp
     from app.projects.soccer_minutes.routes import soccer_minutes_bp
     from app.projects.basketball_minutes.routes import basketball_minutes_bp
+    from app.projects.election2026.routes import election2026_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(agent_api_bp)
@@ -212,6 +213,7 @@ def create_app():
     app.register_blueprint(baseball_lineup_bp)
     app.register_blueprint(soccer_minutes_bp)
     app.register_blueprint(basketball_minutes_bp)
+    app.register_blueprint(election2026_bp)
 
     # Import models to ensure they're known to Flask-SQLAlchemy
     from app.models import User, LogEntry
@@ -330,6 +332,11 @@ def create_app():
         BkmGame,
         BkmGameRosterEntry,
         BkmEvent,
+    )
+    from app.projects.election2026.models import (
+        Election2026Race,
+        Election2026Market,
+        Election2026Price,
     )
     from app.projects.kids_ai.models import (
         KidsAiParent,

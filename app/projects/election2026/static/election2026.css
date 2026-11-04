@@ -1,0 +1,17 @@
+/* Election 2026. Class names are prefixed so they do not collide with other projects. */
+
+.election2026-page {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+.election2026-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+}
+
+.election2026-intro {
+    margin: 0;
+    line-height: 1.5;
+}

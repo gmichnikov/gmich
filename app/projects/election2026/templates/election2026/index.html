@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Election 2026{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('election2026.static', filename='election2026.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="election2026-page">
+    <header class="election2026-header">
+        <h1 class="election2026-title">Election 2026</h1>
+        <p class="election2026-intro">Senate and governor prices from Kalshi, saved over the night. Nothing is being collected yet.</p>
+    </header>
+</div>
+{% endblock %}
