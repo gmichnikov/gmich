@@ -48,9 +48,10 @@
     <div class="election2026-button-row election2026-views" role="tablist" aria-label="Chart">
         <button type="button" class="election2026-button" data-view="lines" aria-pressed="true">Over time</button>
         <button type="button" class="election2026-button" data-view="bars" aria-pressed="false">Latest</button>
+        <button type="button" class="election2026-button" data-view="map" aria-pressed="false">Map</button>
     </div>
 
-    <div class="election2026-grid" id="election2026-grid"></div>
+    <div class="election2026-grid" id="election2026-grid" data-map-url="{{ url_for('election2026.static', filename='us.svg') }}"></div>
 </div>
 {% endblock %}
 

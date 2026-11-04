@@ -7,6 +7,8 @@
     var officeKey = "all";
     var sortKey = "state";
     var viewKey = "lines";
+    var mapSvgText = null;
+    var mapHover = null;
     var query = "";
     var hoverState = null;
     var starred = loadStarred();
@@ -316,46 +318,219 @@
         return "No races selected.";
     }
 
+    function latestPoint(candidate) {
+        var points = candidate.points || [];
+        if (!points.length) return null;
+        return points[points.length - 1].p;
+    }
+
+    function barSides(race) {
+        var priced = [];
+        race.candidates.forEach(function (candidate, index) {
+            var price = latestPoint(candidate);
+            if (price === null) return;
+            priced.push({ candidate: candidate, index: index, price: price });
+        });
+        if (!priced.length) return null;
+        priced.sort(function (a, b) { return b.price - a.price; });
+        var left = null;
+        var right = null;
+        priced.forEach(function (row) {
+            if (!left && row.candidate.party === "Democrat") left = row;
+            else if (!right && row.candidate.party === "Republican") right = row;
+        });
+        priced.forEach(function (row) {
+            if (row === left || row === right) return;
+            if (!right) right = row;
+            else if (!left) left = row;
+        });
+        return { left: left, right: right };
+    }
+
     function renderBars() {
         hoverState = null;
-        var rows = [];
-        visibleRaces().forEach(function (race) {
-            race.candidates.forEach(function (candidate, index) {
-                var points = candidate.points || [];
-                if (!points.length) return;
-                rows.push({
-                    race: race,
-                    candidate: candidate,
-                    index: index,
-                    price: points[points.length - 1].p
-                });
-            });
-        });
-        if (!rows.length) {
+        var races = visibleRaces().filter(function (race) { return barSides(race); });
+        if (!races.length) {
             gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + emptyBoardMessage() + "</p>";
             return;
         }
-        rows.sort(function (a, b) {
-            if (b.price !== a.price) return b.price - a.price;
-            return (a.candidate.name || "").localeCompare(b.candidate.name || "");
-        });
-        gridEl.innerHTML = '<div class="election2026-bars">' + rows.map(function (row) {
-            var width = Math.max(0, Math.min(100, row.price * 100));
+        gridEl.innerHTML = '<div class="election2026-bars">' + races.map(function (race) {
+            var sides = barSides(race);
+            var leftPrice = sides.left ? sides.left.price : 0;
+            var rightPrice = sides.right ? sides.right.price : 0;
+            var total = leftPrice + rightPrice;
+            var leftPct = total ? (leftPrice / total) * 100 : 0;
+            var rightPct = total ? 100 - leftPct : 0;
+            function sideHtml(side, alignRight) {
+                if (!side) return '<span class="election2026-split-side"></span>';
+                var name = '<span class="election2026-name">' + escapeHtml(side.candidate.name) + "</span>";
+                var quote = '<span class="election2026-quote">' + formatPercent(side.price) + "</span>";
+                return (
+                    '<span class="election2026-split-side' + (alignRight ? " election2026-split-side-right" : "") + '">' +
+                    (alignRight ? quote + name : name + quote) +
+                    "</span>"
+                );
+            }
+            function fillHtml(side, pct) {
+                if (!side || pct <= 0) return "";
+                return '<div class="election2026-split-fill" style="width:' + pct.toFixed(1) + "%;background:" + partyColor(side.candidate.party, side.index) + '"></div>';
+            }
             return (
-                '<div class="election2026-bar-row">' +
-                '<div class="election2026-bar-fill" style="width:' + width.toFixed(1) + "%;background:" + partyColor(row.candidate.party, row.index) + '"></div>' +
-                '<div class="election2026-bar-label">' +
-                '<span class="election2026-swatch" style="background:' + partyColor(row.candidate.party, row.index) + '"></span>' +
-                '<span class="election2026-bar-who"><span class="election2026-name">' + escapeHtml(row.candidate.name) + "</span>" +
-                '<span class="election2026-bar-race">' + escapeHtml(row.race.label) + "</span></span>" +
-                '<span class="election2026-quote">' + formatPercent(row.price) + "</span>" +
+                '<div class="election2026-split">' +
+                '<div class="election2026-split-title">' + escapeHtml(race.label) + "</div>" +
+                '<div class="election2026-split-bar">' +
+                '<div class="election2026-split-track">' + fillHtml(sides.left, leftPct) + fillHtml(sides.right, rightPct) + "</div>" +
+                '<div class="election2026-split-names">' + sideHtml(sides.left, false) + sideHtml(sides.right, true) + "</div>" +
                 "</div></div>"
             );
         }).join("") + "</div>";
     }
 
+    function racesByState() {
+        var groups = {};
+        visibleRaces().forEach(function (race) {
+            var code = (race.state || "").toUpperCase();
+            if (!code) return;
+            if (!groups[code]) groups[code] = [];
+            groups[code].push(race);
+        });
+        Object.keys(groups).forEach(function (code) {
+            groups[code].sort(function (a, b) {
+                var byOffice = (a.office || "").localeCompare(b.office || "");
+                if (byOffice !== 0) return byOffice;
+                if (a.office === "house" && b.office === "house") return districtNumber(a) - districtNumber(b);
+                return (a.label || "").localeCompare(b.label || "");
+            });
+        });
+        return groups;
+    }
+
+    function mapPopupHtml(code) {
+        var races = racesByState()[code] || [];
+        if (!races.length) return "";
+        var rows = races.map(function (race) {
+            var candidates = race.candidates.map(function (candidate, index) {
+                var points = candidate.points || [];
+                var quote = points.length ? formatPercent(points[points.length - 1].p) : "—";
+                return (
+                    '<div class="election2026-map-cand">' +
+                    '<span class="election2026-swatch" style="background:' + partyColor(candidate.party, index) + '"></span>' +
+                    '<span class="election2026-name">' + escapeHtml(candidate.name) + "</span>" +
+                    '<span class="election2026-quote">' + quote + "</span>" +
+                    "</div>"
+                );
+            }).join("");
+            return (
+                '<div class="election2026-map-race">' +
+                '<div class="election2026-map-race-title">' + escapeHtml(race.label) + "</div>" +
+                candidates +
+                "</div>"
+            );
+        }).join("");
+        return '<div class="election2026-map-pop-title">' + escapeHtml(stateName(races[0])) + "</div>" + rows;
+    }
+
+    function hideMapPop() {
+        var pop = gridEl.querySelector(".election2026-map-pop");
+        if (!pop) return;
+        pop.hidden = true;
+        pop.innerHTML = "";
+    }
+
+    function placeMapCounts() {
+        var card = gridEl.querySelector(".election2026-map-card");
+        var svg = gridEl.querySelector(".election2026-map");
+        if (!card || !svg) return;
+        card.querySelectorAll(".election2026-map-badge").forEach(function (badge) {
+            badge.remove();
+        });
+        var groups = racesByState();
+        var cardBox = card.getBoundingClientRect();
+        svg.querySelectorAll("[data-state]").forEach(function (shape) {
+            var races = groups[shape.getAttribute("data-state")];
+            if (!races || !races.length) return;
+            var box = shape.getBoundingClientRect();
+            if (box.width < 28 || box.height < 22) return;
+            var badge = document.createElement("span");
+            badge.className = "election2026-map-badge";
+            badge.textContent = String(races.length);
+            badge.style.left = (box.left - cardBox.left + box.width / 2) + "px";
+            badge.style.top = (box.top - cardBox.top + box.height / 2) + "px";
+            card.appendChild(badge);
+        });
+    }
+
+    function showMapPop(code, clientX, clientY, pointerType) {
+        var pop = gridEl.querySelector(".election2026-map-pop");
+        var html = mapPopupHtml(code);
+        if (!pop || !html) return;
+        pop.hidden = false;
+        if (!mapHover || mapHover.code !== code) pop.innerHTML = html;
+        var docked = pointerType === "touch";
+        pop.classList.toggle("election2026-map-pop-docked", docked);
+        mapHover = { code: code, x: clientX, y: clientY, pointerType: pointerType };
+        if (docked) {
+            pop.style.left = "";
+            pop.style.top = "";
+            return;
+        }
+        var card = pop.parentElement;
+        var rect = card.getBoundingClientRect();
+        pop.style.left = (clientX - rect.left + 14) + "px";
+        pop.style.top = (clientY - rect.top + 14) + "px";
+        var popRect = pop.getBoundingClientRect();
+        if (popRect.right > window.innerWidth - 8) {
+            pop.style.left = (clientX - rect.left - popRect.width - 14) + "px";
+        }
+        if (popRect.bottom > window.innerHeight - 8) {
+            pop.style.top = (clientY - rect.top - popRect.height - 14) + "px";
+        }
+    }
+
+    function renderMap() {
+        hoverState = null;
+        if (!visibleRaces().length) {
+            mapHover = null;
+            gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + emptyBoardMessage() + "</p>";
+            return;
+        }
+        if (!mapSvgText) {
+            gridEl.innerHTML = '<p class="election2026-card election2026-empty">Loading map…</p>';
+            fetch(gridEl.getAttribute("data-map-url"))
+                .then(function (response) {
+                    if (!response.ok) throw new Error("Map request failed");
+                    return response.text();
+                })
+                .then(function (text) {
+                    mapSvgText = text;
+                    if (viewKey === "map") renderMap();
+                })
+                .catch(function () {
+                    if (viewKey === "map") {
+                        gridEl.innerHTML = '<p class="election2026-card election2026-empty">The map could not be loaded.</p>';
+                    }
+                });
+            return;
+        }
+        var groups = racesByState();
+        gridEl.innerHTML = (
+            '<div class="election2026-map-card">' +
+            mapSvgText +
+            '<div class="election2026-map-pop" hidden></div>' +
+            "</div>"
+        );
+        gridEl.querySelectorAll("[data-state]").forEach(function (shape) {
+            var races = groups[shape.getAttribute("data-state")];
+            if (races && races.length) shape.setAttribute("data-active", "true");
+        });
+        placeMapCounts();
+        if (mapHover && groups[mapHover.code]) showMapPop(mapHover.code, mapHover.x, mapHover.y, mapHover.pointerType);
+        else mapHover = null;
+    }
+
     function renderBoard() {
         if (viewKey === "bars") renderBars();
+        else if (viewKey === "map") renderMap();
         else renderGrid();
     }
 
@@ -639,13 +814,45 @@
         });
     });
 
+    function activeMapState(event) {
+        if (event.target.closest && event.target.closest(".election2026-map-pop")) return null;
+        var shape = event.target.closest ? event.target.closest("[data-active='true']") : null;
+        return shape;
+    }
+
     gridEl.addEventListener("pointermove", function (event) {
         if (event.pointerType === "touch") return;
+        if (viewKey === "map") {
+            var shape = activeMapState(event);
+            if (!shape) {
+                hideMapPop();
+                mapHover = null;
+                return;
+            }
+            showMapPop(shape.getAttribute("data-state"), event.clientX, event.clientY, "mouse");
+            return;
+        }
         trackHover(event);
     });
 
     gridEl.addEventListener("pointerdown", function (event) {
         if (event.pointerType !== "touch") return;
+        if (viewKey === "map") {
+            var shape = activeMapState(event);
+            if (!shape) {
+                hideMapPop();
+                mapHover = null;
+                return;
+            }
+            var code = shape.getAttribute("data-state");
+            if (mapHover && mapHover.code === code && mapHover.pointerType === "touch") {
+                hideMapPop();
+                mapHover = null;
+                return;
+            }
+            showMapPop(code, event.clientX, event.clientY, "touch");
+            return;
+        }
         trackHover(event);
     });
 
@@ -653,6 +860,14 @@
         if (event.pointerType === "touch") return;
         hideHover();
         hoverState = null;
+        if (viewKey === "map" && (!mapHover || mapHover.pointerType !== "touch")) {
+            hideMapPop();
+            mapHover = null;
+        }
+    });
+
+    window.addEventListener("resize", function () {
+        if (viewKey === "map") placeMapCounts();
     });
 
     gridEl.addEventListener("pointercancel", function () {
