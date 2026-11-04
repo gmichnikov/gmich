@@ -77,12 +77,16 @@
     transform: rotate(-45deg);
 }
 
-.election2026-toolbar[open] > .election2026-filters-summary::before {
+details[open] > .election2026-filters-summary::before {
     transform: rotate(45deg);
 }
 
-.election2026-toolbar[open] > .election2026-filters-summary {
+details[open] > .election2026-filters-summary {
     margin-bottom: 0.55rem;
+}
+
+.election2026-races {
+    margin-top: 0.35rem;
 }
 
 .election2026-button-row,
@@ -199,6 +203,57 @@
 .election2026-button:focus-visible {
     outline: 2px solid #243b53;
     outline-offset: 2px;
+}
+
+.election2026-views {
+    margin-bottom: 0.75rem;
+}
+
+.election2026-bars {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.election2026-bar-row {
+    position: relative;
+    min-height: 44px;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.election2026-bar-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0.28;
+}
+
+.election2026-bar-label {
+    position: relative;
+    display: grid;
+    grid-template-columns: 0.7rem minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.3rem 0.7rem;
+}
+
+.election2026-bar-who {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.45rem;
+    align-items: baseline;
+}
+
+.election2026-bar-race {
+    color: #627d98;
+    font-size: 0.8rem;
 }
 
 .election2026-grid {

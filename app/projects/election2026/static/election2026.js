@@ -6,6 +6,7 @@
     var windowKey = "all";
     var officeKey = "all";
     var sortKey = "state";
+    var viewKey = "lines";
     var query = "";
     var hoverState = null;
     var starred = loadStarred();
@@ -144,8 +145,11 @@
     }
 
     function compareRaces(a, b) {
-        if (sortKey === "leader") {
-            var byPrice = leaderPrice(b) - leaderPrice(a);
+        if (sortKey === "leader" || sortKey === "closest") {
+            var priceA = leaderPrice(a);
+            var priceB = leaderPrice(b);
+            if ((priceA < 0) !== (priceB < 0)) return priceA < 0 ? 1 : -1;
+            var byPrice = sortKey === "closest" ? priceA - priceB : priceB - priceA;
             if (byPrice !== 0) return byPrice;
         }
         var byState = stateName(a).localeCompare(stateName(b));
@@ -302,20 +306,64 @@
         }).join("");
     }
 
+    function emptyBoardMessage() {
+        var anyMatch = data.races.some(raceMatchesQuery);
+        var starredMatch = data.races.some(function (race) {
+            return starred.has(race.event_ticker) && raceMatchesQuery(race);
+        });
+        if (normalize(query) && !anyMatch) return "No races match.";
+        if (officeKey === "starred" && !starredMatch) return "No starred races.";
+        return "No races selected.";
+    }
+
+    function renderBars() {
+        hoverState = null;
+        var rows = [];
+        visibleRaces().forEach(function (race) {
+            race.candidates.forEach(function (candidate, index) {
+                var points = candidate.points || [];
+                if (!points.length) return;
+                rows.push({
+                    race: race,
+                    candidate: candidate,
+                    index: index,
+                    price: points[points.length - 1].p
+                });
+            });
+        });
+        if (!rows.length) {
+            gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + emptyBoardMessage() + "</p>";
+            return;
+        }
+        rows.sort(function (a, b) {
+            if (b.price !== a.price) return b.price - a.price;
+            return (a.candidate.name || "").localeCompare(b.candidate.name || "");
+        });
+        gridEl.innerHTML = '<div class="election2026-bars">' + rows.map(function (row) {
+            var width = Math.max(0, Math.min(100, row.price * 100));
+            return (
+                '<div class="election2026-bar-row">' +
+                '<div class="election2026-bar-fill" style="width:' + width.toFixed(1) + "%;background:" + partyColor(row.candidate.party, row.index) + '"></div>' +
+                '<div class="election2026-bar-label">' +
+                '<span class="election2026-swatch" style="background:' + partyColor(row.candidate.party, row.index) + '"></span>' +
+                '<span class="election2026-bar-who"><span class="election2026-name">' + escapeHtml(row.candidate.name) + "</span>" +
+                '<span class="election2026-bar-race">' + escapeHtml(row.race.label) + "</span></span>" +
+                '<span class="election2026-quote">' + formatPercent(row.price) + "</span>" +
+                "</div></div>"
+            );
+        }).join("") + "</div>";
+    }
+
+    function renderBoard() {
+        if (viewKey === "bars") renderBars();
+        else renderGrid();
+    }
+
     function renderGrid() {
         var races = visibleRaces();
         if (!races.length) {
             hoverState = null;
-            var anyMatch = data.races.some(raceMatchesQuery);
-            var starredMatch = data.races.some(function (race) {
-                return starred.has(race.event_ticker) && raceMatchesQuery(race);
-            });
-            var message = normalize(query) && !anyMatch
-                ? "No races match."
-                : officeKey === "starred" && !starredMatch
-                    ? "No starred races."
-                    : "No races selected.";
-            gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + message + "</p>";
+            gridEl.innerHTML = '<p class="election2026-card election2026-empty">' + emptyBoardMessage() + "</p>";
             return;
         }
         var domain = sharedDomain(races);
@@ -495,7 +543,7 @@
         renderUpdated();
         renderErrors();
         renderChips();
-        renderGrid();
+        renderBoard();
     }
 
     function setPressed(selector, attr, value) {
@@ -520,7 +568,7 @@
         button.addEventListener("click", function () {
             windowKey = button.getAttribute("data-window");
             setPressed("[data-window]", "data-window", windowKey);
-            renderGrid();
+            renderBoard();
         });
     });
 
@@ -529,7 +577,7 @@
             sortKey = button.getAttribute("data-sort");
             setPressed("[data-sort]", "data-sort", sortKey);
             renderChips();
-            renderGrid();
+            renderBoard();
         });
     });
 
@@ -554,7 +602,7 @@
             setPressed("[data-office]", "data-office", "");
         }
         renderChips();
-        renderGrid();
+        renderBoard();
     });
 
     function toggleStar(event) {
@@ -571,7 +619,7 @@
             else selected.delete(ticker);
         }
         renderChips();
-        renderGrid();
+        renderBoard();
     }
 
     chipsEl.addEventListener("click", toggleStar);
@@ -580,7 +628,15 @@
     searchEl.addEventListener("input", function () {
         query = searchEl.value;
         renderChips();
-        renderGrid();
+        renderBoard();
+    });
+
+    document.querySelectorAll("[data-view]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            viewKey = button.getAttribute("data-view");
+            setPressed("[data-view]", "data-view", viewKey);
+            renderBoard();
+        });
     });
 
     gridEl.addEventListener("pointermove", function (event) {
