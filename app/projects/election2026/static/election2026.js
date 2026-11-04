@@ -367,7 +367,7 @@
                 var quote = '<span class="election2026-quote">' + formatPercent(side.price) + "</span>";
                 return (
                     '<span class="election2026-split-side' + (alignRight ? " election2026-split-side-right" : "") + '">' +
-                    (alignRight ? quote + name : name + quote) +
+                    name + quote +
                     "</span>"
                 );
             }

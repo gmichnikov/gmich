@@ -255,26 +255,28 @@ details[open] > .election2026-filters-summary {
 
 .election2026-split-names {
     position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.5rem;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     min-height: 44px;
 }
 
 .election2026-split-side {
-    min-width: 0;
     display: flex;
     gap: 0.35rem;
     align-items: baseline;
+    min-width: 0;
+    max-width: 46%;
 }
 
 .election2026-split-side-right {
-    justify-content: flex-end;
+    margin-left: auto;
+    text-align: right;
 }
 
 .election2026-split-side .election2026-name {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
 }
 
 .election2026-split-side .election2026-quote {
