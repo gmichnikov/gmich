@@ -4,7 +4,7 @@
     var PLAYER_KEY = "c4o_player_id";
     var createBtn = document.getElementById("c4oCreateBtn");
     var vsCpuBtn = document.getElementById("c4oVsCpuBtn");
-    var difficulty = "hard";
+    var difficulty = "medium";
     var firstMove = "you";
     var joinForm = document.getElementById("c4oJoinForm");
     var joinInput = document.getElementById("c4oJoinCode");

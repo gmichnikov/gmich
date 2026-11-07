@@ -9,8 +9,9 @@ ROWS = 6
 COLS = 7
 WIN_SCORE = 1_000_000
 COLUMN_ORDER = (3, 2, 4, 1, 5, 0, 6)
-MEDIUM_DEPTH = 4
-HARD_DEPTH = 7
+MEDIUM_DEPTH = 2
+HARD_DEPTH = 4
+VERY_HARD_DEPTH = 7
 
 
 def other_seat(seat):
@@ -199,5 +200,10 @@ def _choose_search(board, player, depth):
 def choose_column(board, player, difficulty):
     if difficulty == "easy":
         return _choose_easy(board, player)
-    depth = MEDIUM_DEPTH if difficulty == "medium" else HARD_DEPTH
+    if difficulty == "very-hard":
+        depth = VERY_HARD_DEPTH
+    elif difficulty == "hard":
+        depth = HARD_DEPTH
+    else:
+        depth = MEDIUM_DEPTH
     return _choose_search(board, player, depth)

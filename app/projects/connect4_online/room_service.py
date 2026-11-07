@@ -18,7 +18,7 @@ CLEANUP_DAYS = 14
 MAX_NAME_LENGTH = 30
 ROWS = 6
 COLS = 7
-DIFFICULTIES = ("easy", "medium", "hard")
+DIFFICULTIES = ("easy", "medium", "hard", "very-hard")
 
 
 class RoomError(Exception):
@@ -103,7 +103,7 @@ def _is_board_full(board):
 def _clean_difficulty(value):
     cleaned = (value or "hard").strip().lower()
     if cleaned not in DIFFICULTIES:
-        raise RoomError("Pick easy, medium, or hard.", 400)
+        raise RoomError("Pick easy, medium, hard, or very hard.", 400)
     return cleaned
 
 
