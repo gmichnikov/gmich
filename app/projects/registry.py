@@ -102,7 +102,7 @@ PROJECTS = [
     {
         "id": "connect4_online",
         "name": "Connect 4 Online",
-        "description": "Drop four in a row with a friend via a shareable link",
+        "description": "Play a friend with a link, or play the computer",
         "url": "/connect4-online",
         "auth_required": False,
         "status": "active",

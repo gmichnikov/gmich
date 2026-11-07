@@ -5,13 +5,16 @@ from flask import Blueprint, jsonify, render_template, request, session
 
 from app.projects.connect4_online.room_service import (
     RoomError,
+    cpu_first_from_payload,
     cleanup_stale_rooms,
+    create_cpu_room,
     create_room,
     get_state,
     join_room,
     make_move,
     rematch,
     set_color,
+    set_cpu_settings,
     set_name,
 )
 from app.projects.connect4_online.serialize import room_to_dict
@@ -64,7 +67,15 @@ def index():
 @connect4_online_bp.route("/rooms", methods=["POST"])
 @_handle_room_errors
 def api_create_room():
-    room = create_room(_player_id())
+    data = request.get_json(silent=True) or {}
+    if data.get("vs_cpu"):
+        room = create_cpu_room(
+            _player_id(),
+            difficulty=data.get("difficulty", "hard"),
+            cpu_first=cpu_first_from_payload(data),
+        )
+    else:
+        room = create_room(_player_id())
     return jsonify({"code": room.code}), 201
 
 
@@ -123,4 +134,17 @@ def api_room_move(code):
 @_handle_room_errors
 def api_room_rematch(code):
     room, seat = rematch(code, _player_id())
+    return jsonify(room_to_dict(room, seat))
+
+
+@connect4_online_bp.route("/room/<code>/cpu-settings", methods=["POST"])
+@_handle_room_errors
+def api_room_cpu_settings(code):
+    data = request.get_json(silent=True) or {}
+    room, seat = set_cpu_settings(
+        code,
+        _player_id(),
+        data.get("difficulty", "hard"),
+        cpu_first_from_payload(data),
+    )
     return jsonify(room_to_dict(room, seat))

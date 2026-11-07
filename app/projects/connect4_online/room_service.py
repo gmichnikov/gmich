@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 
 from app import db
 from app.projects.connect4_online.colors import default_color_for_seat
+from app.projects.connect4_online.cpu import (
+    CPU_DISPLAY_NAME,
+    CPU_PLAYER_ID,
+    choose_column,
+)
 from app.projects.connect4_online.models import Connect4OnlineRoom
 
 ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -13,6 +18,7 @@ CLEANUP_DAYS = 14
 MAX_NAME_LENGTH = 30
 ROWS = 6
 COLS = 7
+DIFFICULTIES = ("easy", "medium", "hard")
 
 
 class RoomError(Exception):
@@ -94,6 +100,50 @@ def _is_board_full(board):
     return all(cell is not None for cell in board[0])
 
 
+def _clean_difficulty(value):
+    cleaned = (value or "hard").strip().lower()
+    if cleaned not in DIFFICULTIES:
+        raise RoomError("Pick easy, medium, or hard.", 400)
+    return cleaned
+
+
+def cpu_first_from_payload(data):
+    if "cpu_first" in data:
+        return bool(data.get("cpu_first"))
+    first = (data.get("first") or "you").strip().lower()
+    if first not in ("you", "computer"):
+        raise RoomError("Pick who moves first.", 400)
+    return first == "computer"
+
+
+def _apply_seat_move(room, board, seat, col):
+    row = _lowest_empty_row(board, col)
+    if row is None:
+        raise RoomError("That column is full.", 400)
+    board[row][col] = seat
+    winner, winning_cells = _check_winner(board, row, col)
+    if winner is not None:
+        room.status = Connect4OnlineRoom.STATUS_WON
+        room.winner = winner
+        room.winning_cells = winning_cells
+    elif _is_board_full(board):
+        room.status = Connect4OnlineRoom.STATUS_DRAW
+    else:
+        room.turn = "O" if seat == "X" else "X"
+
+
+def _maybe_cpu_move(room, board):
+    if not room.vs_cpu or room.status != Connect4OnlineRoom.STATUS_ACTIVE:
+        return
+    cpu_seat = room.cpu_seat()
+    if room.turn != cpu_seat:
+        return
+    col = choose_column(board, cpu_seat, room.difficulty or "hard")
+    if col is None:
+        return
+    _apply_seat_move(room, board, cpu_seat, col)
+
+
 def cleanup_stale_rooms():
     cutoff = datetime.utcnow() - timedelta(days=CLEANUP_DAYS)
     Connect4OnlineRoom.query.filter(Connect4OnlineRoom.updated_at < cutoff).delete()
@@ -126,6 +176,43 @@ def create_room(creator_player_id=None):
             created_at=now,
             updated_at=now,
         )
+        db.session.add(room)
+        db.session.commit()
+        return room
+    raise RoomError("Could not create a room right now. Please try again.", 500)
+
+
+def create_cpu_room(creator_player_id, difficulty="hard", cpu_first=False):
+    cleanup_stale_rooms()
+    difficulty = _clean_difficulty(difficulty)
+    starter = "O" if cpu_first else "X"
+    for _ in range(20):
+        code = _generate_code()
+        if Connect4OnlineRoom.query.filter_by(code=code).first():
+            continue
+        now = datetime.utcnow()
+        board = _empty_board()
+        room = Connect4OnlineRoom(
+            code=code,
+            board=board,
+            turn=starter,
+            last_starter=starter,
+            status=Connect4OnlineRoom.STATUS_ACTIVE,
+            seat_x=creator_player_id,
+            seat_o=CPU_PLAYER_ID,
+            name_o=CPU_DISPLAY_NAME,
+            color_x="red",
+            color_o="yellow",
+            vs_cpu=True,
+            difficulty=difficulty,
+            cpu_first=cpu_first,
+            version=1,
+            created_at=now,
+            updated_at=now,
+        )
+        if cpu_first:
+            _maybe_cpu_move(room, board)
+            room.board = [list(row) for row in board]
         db.session.add(room)
         db.session.commit()
         return room
@@ -241,21 +328,9 @@ def make_move(code, player_id, col):
         raise RoomError("Invalid column.", 400)
 
     board = [list(row) for row in room.board]
-    row = _lowest_empty_row(board, col)
-    if row is None:
-        raise RoomError("That column is full.", 400)
-
-    board[row][col] = seat
+    _apply_seat_move(room, board, seat, col)
+    _maybe_cpu_move(room, board)
     room.board = board
-    winner, winning_cells = _check_winner(board, row, col)
-    if winner is not None:
-        room.status = Connect4OnlineRoom.STATUS_WON
-        room.winner = winner
-        room.winning_cells = winning_cells
-    elif _is_board_full(board):
-        room.status = Connect4OnlineRoom.STATUS_DRAW
-    else:
-        room.turn = "O" if seat == "X" else "X"
 
     room.version += 1
     _touch(room)
@@ -275,14 +350,38 @@ def rematch(code, player_id):
     ):
         raise RoomError("The current game isn't finished yet.", 400)
 
-    new_starter = "O" if room.last_starter == "X" else "X"
-    room.board = _empty_board()
+    if room.vs_cpu:
+        new_starter = "O" if room.cpu_first else "X"
+    else:
+        new_starter = "O" if room.last_starter == "X" else "X"
+    board = _empty_board()
+    room.board = board
     room.winner = None
     room.winning_cells = None
     room.status = Connect4OnlineRoom.STATUS_ACTIVE
     room.turn = new_starter
     room.last_starter = new_starter
+    if room.vs_cpu and room.cpu_first:
+        _maybe_cpu_move(room, board)
+        room.board = [list(row) for row in board]
     room.version += 1
+    _touch(room)
+    db.session.commit()
+    return room, seat
+
+
+def set_cpu_settings(code, player_id, difficulty, cpu_first):
+    room = _get_room_row(code)
+    if not room.vs_cpu:
+        raise RoomError("This room isn't a computer game.", 400)
+    seat = room.seat_for_player(player_id)
+    if seat is None:
+        raise RoomError("Only players in this room can change these settings.", 403)
+    if room.status == Connect4OnlineRoom.STATUS_ACTIVE:
+        raise RoomError("You can change these after the game ends.", 400)
+
+    room.difficulty = _clean_difficulty(difficulty)
+    room.cpu_first = bool(cpu_first)
     _touch(room)
     db.session.commit()
     return room, seat

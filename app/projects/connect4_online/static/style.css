@@ -417,6 +417,63 @@
     }
 }
 
+.c4o-cpu-options {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.c4o-setting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.c4o-setting-label {
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #5c7388;
+}
+
+.c4o-segment {
+    display: flex;
+    border: 2px solid #0066cc;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.c4o-segment-btn {
+    padding: 8px 14px;
+    font-size: 0.95em;
+    font-weight: 600;
+    background: white;
+    color: #0066cc;
+    border: none;
+    cursor: pointer;
+}
+
+.c4o-segment-btn + .c4o-segment-btn {
+    border-left: 2px solid #0066cc;
+}
+
+.c4o-segment-btn.c4o-segment-active {
+    background: #0066cc;
+    color: white;
+}
+
+.c4o-cpu-options.c4o-cpu-locked {
+    opacity: 0.55;
+}
+
+.c4o-segment-btn:disabled {
+    cursor: default;
+}
+
 .c4o-actions {
     margin-top: 20px;
     display: flex;

@@ -45,4 +45,7 @@ def room_to_dict(room, viewer_seat):
         "rows": ROWS,
         "cols": COLS,
         "version": room.version,
+        "vs_cpu": bool(room.vs_cpu),
+        "difficulty": room.difficulty or "hard",
+        "cpu_first": bool(room.cpu_first),
     }

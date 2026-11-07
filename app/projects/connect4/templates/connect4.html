@@ -168,93 +168,29 @@
     .c4-controls {
         margin-top: 30px;
         display: flex;
-        flex-direction: column;
-        align-items: center;
         gap: 15px;
     }
 
-    .c4-mode {
-        display: flex;
-        border: 2px solid white;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .c4-mode-btn {
-        padding: 10px 18px;
-        font-size: 1em;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        color: white;
-    }
-
-    .c4-mode-btn + .c4-mode-btn {
-        border-left: 2px solid white;
-    }
-
-    .c4-mode-btn.c4-mode-active {
+    .c4-btn {
+        padding: 15px 40px;
+        font-size: 1.2em;
         background: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
+        font-weight: bold;
         color: #667eea;
     }
 
-    .c4-mode-btn:not(.c4-mode-active):hover {
-        background: rgba(255, 255, 255, 0.16);
+    .c4-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     }
 
-    .c4-setting {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .c4-setting[hidden] {
-        display: none;
-    }
-
-    .c4-setting-locked {
-        opacity: 0.55;
-    }
-
-    .c4-mode-btn:disabled {
-        cursor: default;
-    }
-
-    .c4-mode-btn:disabled:hover {
-        background: transparent;
-    }
-
-    .c4-mode-btn.c4-mode-active:disabled:hover {
-        background: white;
-    }
-
-    .c4-setting-label {
-        color: white;
-        font-size: 0.8em;
-        font-weight: bold;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-
-    .c4-board.c4-locked .c4-cell {
-        cursor: default;
-    }
-
-    .c4-new-game {
-        padding: 10px 22px;
-        font-size: 1em;
-        background: transparent;
-        border: 2px solid white;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: bold;
-        color: white;
-    }
-
-    .c4-new-game:hover {
-        background: rgba(255, 255, 255, 0.16);
+    .c4-btn:active {
+        transform: translateY(-1px);
     }
 
     .c4-doom-message {
@@ -322,11 +258,6 @@
         .c4-game-info {
             font-size: 1.2em;
         }
-
-        .c4-mode-btn {
-            padding: 8px 12px;
-            font-size: 0.95em;
-        }
     }
 </style>
 
@@ -340,26 +271,7 @@
         <div class="c4-board" id="board"></div>
     </div>
     <div class="c4-controls">
-        <div class="c4-mode" id="c4Mode" role="group" aria-label="Game mode">
-            <button type="button" class="c4-mode-btn c4-mode-active" data-mode="two-player" aria-pressed="true">Two players</button>
-            <button type="button" class="c4-mode-btn" data-mode="vs-computer" aria-pressed="false">Vs computer</button>
-        </div>
-        <div class="c4-setting" id="c4Difficulty" hidden>
-            <div class="c4-setting-label">Difficulty</div>
-            <div class="c4-mode" role="group" aria-label="Difficulty">
-                <button type="button" class="c4-mode-btn" data-difficulty="easy" aria-pressed="false">Easy</button>
-                <button type="button" class="c4-mode-btn" data-difficulty="medium" aria-pressed="false">Medium</button>
-                <button type="button" class="c4-mode-btn c4-mode-active" data-difficulty="hard" aria-pressed="true">Hard</button>
-            </div>
-        </div>
-        <div class="c4-setting" id="c4First" hidden>
-            <div class="c4-setting-label">First move</div>
-            <div class="c4-mode" role="group" aria-label="Who goes first">
-                <button type="button" class="c4-mode-btn c4-mode-active" data-first="you" aria-pressed="true">You first</button>
-                <button type="button" class="c4-mode-btn" data-first="computer" aria-pressed="false">Computer first</button>
-            </div>
-        </div>
-        <button class="c4-new-game" type="button" id="c4NewGame" hidden>Start over</button>
+        <button class="c4-btn" onclick="resetGame()">Start Over</button>
     </div>
 </div>
 
@@ -368,55 +280,15 @@
     const COLS = 7;
     const YELLOW = "c4-yellow";
     const RED = "c4-red";
-    const MODE_TWO_PLAYER = "two-player";
-    const MODE_VS_COMPUTER = "vs-computer";
-    const DIFFICULTY_EASY = "easy";
-    const DIFFICULTY_MEDIUM = "medium";
-    const DIFFICULTY_HARD = "hard";
-    const FIRST_YOU = "you";
-    const FIRST_COMPUTER = "computer";
-    const MEDIUM_SEARCH_DEPTH = 4;
-    const COMPUTER_SEARCH_DEPTH = 7;
-    const WIN_SCORE = 1000000;
-    const COLUMN_ORDER = [3, 2, 4, 1, 5, 0, 6];
 
     let board = [];
     let currentPlayer = YELLOW;
     let gameOver = false;
     let isDoomState = false;
     let doomMessageShown = false;
-    let gameMode = MODE_TWO_PLAYER;
-    let difficulty = DIFFICULTY_HARD;
-    let firstPlayer = FIRST_YOU;
-    let turnToken = 0;
-
-    function isVsComputer() {
-        return gameMode === MODE_VS_COMPUTER;
-    }
-
-    function otherColor(color) {
-        return color === YELLOW ? RED : YELLOW;
-    }
-
-    function computerColor() {
-        return firstPlayer === FIRST_COMPUTER ? YELLOW : RED;
-    }
-
-    function humanColor() {
-        return otherColor(computerColor());
-    }
-
-    function isComputerTurn() {
-        return isVsComputer() && currentPlayer === computerColor();
-    }
-
-    function humanCanPlay() {
-        return !gameOver && !isComputerTurn();
-    }
 
     // Initialize the game
     function initGame() {
-        turnToken += 1;
         board = Array(ROWS)
             .fill(null)
             .map(() => Array(COLS).fill(null));
@@ -443,20 +315,11 @@
             }
         }
 
-        updateBoardLock();
         updateStatus();
-        updateCpuSettings();
-        if (isComputerTurn()) scheduleComputerMove();
-    }
-
-    function updateCpuSettings() {
-        const show = isVsComputer();
-        document.getElementById("c4Difficulty").hidden = !show;
-        document.getElementById("c4First").hidden = !show;
     }
 
     function handleCellClick(col) {
-        if (!humanCanPlay()) return;
+        if (gameOver) return;
 
         const row = getLowestEmptyRow(col);
         if (row === -1) return; // Column is full
@@ -481,248 +344,19 @@
         if (isBoardFull()) {
             gameOver = true;
             document.getElementById("statusText").textContent = "It's a Draw!";
-            updateNewGameButton();
             return;
         }
 
         // Switch player
         currentPlayer = currentPlayer === YELLOW ? RED : YELLOW;
         updateStatus();
-        updateBoardLock();
-
-        if (isComputerTurn()) {
-            scheduleComputerMove();
-            return;
-        }
 
         // Check if next player is doomed
         checkDoomState();
     }
 
-    function scheduleComputerMove() {
-        const token = turnToken;
-        window.setTimeout(() => {
-            if (token !== turnToken || gameOver || !isComputerTurn()) return;
-            playComputerMove();
-        }, 450);
-    }
-
-    function scoreWindow(cells, player) {
-        const opponentColor = otherColor(player);
-        let mine = 0;
-        let opponent = 0;
-        cells.forEach((cell) => {
-            if (cell === player) mine += 1;
-            else if (cell === opponentColor) opponent += 1;
-        });
-        if (mine && opponent) return 0;
-        if (mine === 4) return 100;
-        if (opponent === 4) return -100;
-        if (mine === 3) return 12;
-        if (opponent === 3) return -16;
-        if (mine === 2) return 3;
-        if (opponent === 2) return -4;
-        if (mine === 1) return 1;
-        if (opponent === 1) return -1;
-        return 0;
-    }
-
-    function evaluateBoard(player) {
-        const opponentColor = otherColor(player);
-        let score = 0;
-        for (let row = 0; row < ROWS; row++) {
-            if (board[row][3] === player) score += 3;
-            else if (board[row][3] === opponentColor) score -= 3;
-        }
-
-        for (let row = 0; row < ROWS; row++) {
-            for (let col = 0; col < COLS - 3; col++) {
-                score += scoreWindow(
-                    [
-                        board[row][col],
-                        board[row][col + 1],
-                        board[row][col + 2],
-                        board[row][col + 3],
-                    ],
-                    player
-                );
-            }
-        }
-
-        for (let col = 0; col < COLS; col++) {
-            for (let row = 0; row < ROWS - 3; row++) {
-                score += scoreWindow(
-                    [
-                        board[row][col],
-                        board[row + 1][col],
-                        board[row + 2][col],
-                        board[row + 3][col],
-                    ],
-                    player
-                );
-            }
-        }
-
-        for (let row = 0; row < ROWS - 3; row++) {
-            for (let col = 0; col < COLS - 3; col++) {
-                score += scoreWindow(
-                    [
-                        board[row][col],
-                        board[row + 1][col + 1],
-                        board[row + 2][col + 2],
-                        board[row + 3][col + 3],
-                    ],
-                    player
-                );
-            }
-        }
-
-        for (let row = 3; row < ROWS; row++) {
-            for (let col = 0; col < COLS - 3; col++) {
-                score += scoreWindow(
-                    [
-                        board[row][col],
-                        board[row - 1][col + 1],
-                        board[row - 2][col + 2],
-                        board[row - 3][col + 3],
-                    ],
-                    player
-                );
-            }
-        }
-
-        return score;
-    }
-
-    function minimax(depth, alpha, beta, maximizing, player) {
-        if (depth === 0) return evaluateBoard(player);
-
-        const mover = maximizing ? player : otherColor(player);
-        let value = maximizing ? -Infinity : Infinity;
-
-        for (const col of COLUMN_ORDER) {
-            const row = getLowestEmptyRow(col);
-            if (row === -1) continue;
-
-            board[row][col] = mover;
-            let score;
-            if (checkWinSimulation(row, col, mover)) {
-                score = (maximizing ? 1 : -1) * (WIN_SCORE + depth);
-            } else if (isBoardFull()) {
-                score = 0;
-            } else {
-                score = minimax(depth - 1, alpha, beta, !maximizing, player);
-            }
-            board[row][col] = null;
-
-            if (maximizing) {
-                value = Math.max(value, score);
-                alpha = Math.max(alpha, value);
-            } else {
-                value = Math.min(value, score);
-                beta = Math.min(beta, value);
-            }
-            if (alpha >= beta) break;
-        }
-
-        return value;
-    }
-
-    function immediateWinColumn(player) {
-        for (const col of COLUMN_ORDER) {
-            const row = getLowestEmptyRow(col);
-            if (row === -1) continue;
-            board[row][col] = player;
-            const wins = checkWinSimulation(row, col, player);
-            board[row][col] = null;
-            if (wins) return col;
-        }
-        return -1;
-    }
-
-    function chooseEasyColumn() {
-        const player = computerColor();
-        const winningMove = immediateWinColumn(player);
-        if (winningMove !== -1) return winningMove;
-
-        const blockingMove = immediateWinColumn(otherColor(player));
-        if (blockingMove !== -1) return blockingMove;
-
-        const legal = COLUMN_ORDER.filter((col) => getLowestEmptyRow(col) !== -1);
-        if (legal.length === 0) return -1;
-        if (Math.random() < 0.5) return legal[Math.floor(Math.random() * legal.length)];
-        return legal[0];
-    }
-
-    function chooseSearchColumn(depth) {
-        const player = computerColor();
-        let bestScore = -Infinity;
-        let bestCol = -1;
-
-        for (const col of COLUMN_ORDER) {
-            const row = getLowestEmptyRow(col);
-            if (row === -1) continue;
-
-            board[row][col] = player;
-            let score;
-            if (checkWinSimulation(row, col, player)) {
-                score = WIN_SCORE + depth;
-            } else if (isBoardFull()) {
-                score = 0;
-            } else {
-                score = minimax(depth - 1, -Infinity, Infinity, false, player);
-            }
-            board[row][col] = null;
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestCol = col;
-            }
-        }
-
-        return bestCol;
-    }
-
-    function chooseComputerColumn() {
-        if (difficulty === DIFFICULTY_EASY) return chooseEasyColumn();
-        const depth = difficulty === DIFFICULTY_MEDIUM ? MEDIUM_SEARCH_DEPTH : COMPUTER_SEARCH_DEPTH;
-        return chooseSearchColumn(depth);
-    }
-
-    function playComputerMove() {
-        const col = chooseComputerColumn();
-        if (col === -1) return;
-
-        clearPreview();
-        const row = getLowestEmptyRow(col);
-        const color = computerColor();
-        board[row][col] = color;
-        getCell(row, col).classList.add(color);
-
-        if (checkWin(row, col)) {
-            gameOver = true;
-            showWinner();
-            createConfetti();
-            updateBoardLock();
-            return;
-        }
-
-        if (isBoardFull()) {
-            gameOver = true;
-            document.getElementById("statusText").textContent = "It's a Draw!";
-            updateBoardLock();
-            updateNewGameButton();
-            return;
-        }
-
-        currentPlayer = otherColor(color);
-        updateStatus();
-        updateBoardLock();
-        checkDoomState();
-    }
-
     function handleCellHover(col, isEntering) {
-        if (!humanCanPlay()) return;
+        if (gameOver) return;
 
         clearPreview();
 
@@ -862,61 +496,23 @@
         return board[0].every((cell) => cell !== null);
     }
 
-    function updateBoardLock() {
-        document.getElementById("board").classList.toggle("c4-locked", isComputerTurn());
-    }
-
     function updateStatus() {
         const statusText = document.getElementById("statusText");
         const indicator = document.getElementById("playerIndicator");
 
-        if (isVsComputer()) {
-            statusText.textContent = isComputerTurn() ? "Computer's turn" : "Your turn";
-        } else {
-            statusText.textContent = `${currentPlayer === YELLOW ? "Yellow" : "Red"}'s Turn`;
-        }
+        statusText.textContent = `${currentPlayer === YELLOW ? "Yellow" : "Red"}'s Turn`;
         indicator.style.background =
             currentPlayer === YELLOW
                 ? "radial-gradient(circle at 30% 30%, #ffd700, #ffb700)"
                 : "radial-gradient(circle at 30% 30%, #dc143c, #a00020)";
-        updateNewGameButton();
-    }
-
-    function gameInProgress() {
-        return !gameOver && board.some((row) => row.some((cell) => cell !== null));
-    }
-
-    function updateNewGameButton() {
-        const button = document.getElementById("c4NewGame");
-        const inProgress = gameInProgress();
-        if (!inProgress && !gameOver) {
-            button.hidden = true;
-        } else {
-            button.hidden = false;
-            button.textContent = gameOver ? "Play again" : "Start over";
-        }
-
-        const difficultyGroup = document.getElementById("c4Difficulty");
-        difficultyGroup.classList.toggle("c4-setting-locked", inProgress);
-        difficultyGroup.querySelectorAll(".c4-mode-btn").forEach((btn) => {
-            btn.disabled = inProgress;
-        });
     }
 
     function showWinner() {
         const statusText = document.getElementById("statusText");
-        if (isVsComputer()) {
-            statusText.textContent = currentPlayer === humanColor() ? "You win!" : "Computer wins!";
-        } else {
-            statusText.textContent = `${currentPlayer === YELLOW ? "🟡 Yellow" : "🔴 Red"} Wins!`;
-        }
-        updateNewGameButton();
+        statusText.textContent = `${currentPlayer === YELLOW ? "🟡 Yellow" : "🔴 Red"} Wins!`;
     }
 
     function checkDoomState() {
-        // In a computer game the banner is for the human, whose turn it is.
-        if (isVsComputer() && isComputerTurn()) return;
-
         // Check if current player is in a "doomed" state where opponent has multiple winning threats
         const opponent = currentPlayer === YELLOW ? RED : YELLOW;
         const winningThreats = countWinningThreats(opponent);
@@ -1021,49 +617,6 @@
         document.querySelectorAll(".c4-doom-message").forEach((el) => el.remove());
         initGame();
     }
-
-    function markSelected(group, attribute, value) {
-        group.querySelectorAll(".c4-mode-btn").forEach((btn) => {
-            const selected = btn.dataset[attribute] === value;
-            btn.classList.toggle("c4-mode-active", selected);
-            btn.setAttribute("aria-pressed", selected ? "true" : "false");
-        });
-    }
-
-    function setGameMode(mode) {
-        if (mode !== MODE_TWO_PLAYER && mode !== MODE_VS_COMPUTER) return;
-        if (mode === gameMode) return;
-        gameMode = mode;
-        markSelected(document.getElementById("c4Mode"), "mode", gameMode);
-        resetGame();
-    }
-
-    function setDifficulty(next) {
-        if (gameInProgress()) return;
-        if (next !== DIFFICULTY_EASY && next !== DIFFICULTY_MEDIUM && next !== DIFFICULTY_HARD) return;
-        if (next === difficulty) return;
-        difficulty = next;
-        markSelected(document.getElementById("c4Difficulty"), "difficulty", difficulty);
-    }
-
-    function setFirstPlayer(next) {
-        if (next !== FIRST_YOU && next !== FIRST_COMPUTER) return;
-        if (next === firstPlayer) return;
-        firstPlayer = next;
-        markSelected(document.getElementById("c4First"), "first", firstPlayer);
-        resetGame();
-    }
-
-    document.getElementById("c4Mode").querySelectorAll(".c4-mode-btn").forEach((btn) => {
-        btn.addEventListener("click", () => setGameMode(btn.dataset.mode));
-    });
-    document.getElementById("c4Difficulty").querySelectorAll(".c4-mode-btn").forEach((btn) => {
-        btn.addEventListener("click", () => setDifficulty(btn.dataset.difficulty));
-    });
-    document.getElementById("c4First").querySelectorAll(".c4-mode-btn").forEach((btn) => {
-        btn.addEventListener("click", () => setFirstPlayer(btn.dataset.first));
-    });
-    document.getElementById("c4NewGame").addEventListener("click", resetGame);
 
     // Start the game
     initGame();

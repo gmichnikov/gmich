@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from app import db
+from app.projects.connect4_online.cpu import CPU_DISPLAY_NAME, CPU_PLAYER_ID
 
 
 class Connect4OnlineRoom(db.Model):
@@ -25,6 +26,9 @@ class Connect4OnlineRoom(db.Model):
     status = db.Column(db.String(10), nullable=False, default=STATUS_WAITING)
     winner = db.Column(db.String(1), nullable=True)
     winning_cells = db.Column(db.JSON, nullable=True)
+    vs_cpu = db.Column(db.Boolean, nullable=False, default=False)
+    difficulty = db.Column(db.String(10), nullable=False, default="hard")
+    cpu_first = db.Column(db.Boolean, nullable=False, default=False)
     version = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -36,7 +40,15 @@ class Connect4OnlineRoom(db.Model):
             return "O"
         return None
 
+    def cpu_seat(self):
+        if not self.vs_cpu:
+            return None
+        return "O"
+
     def display_name(self, seat):
+        seat_id = self.seat_x if seat == "X" else self.seat_o
+        if seat_id == CPU_PLAYER_ID:
+            return CPU_DISPLAY_NAME
         raw = self.name_x if seat == "X" else self.name_o
         if raw:
             return raw

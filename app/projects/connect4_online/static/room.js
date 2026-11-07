@@ -35,6 +35,10 @@
     var colorRow = document.getElementById("c4oColorRow");
     var colorPicker = document.getElementById("c4oColorPicker");
     var opponentLabel = document.getElementById("c4oOpponentLabel");
+    var cpuSettings = document.getElementById("c4oCpuSettings");
+    var roomDifficulty = document.getElementById("c4oRoomDifficulty");
+    var roomFirst = document.getElementById("c4oRoomFirst");
+    var infoHint = document.querySelector(".c4o-room-info-hint");
     var joinPanel = document.getElementById("c4oJoinPanel");
     var joinBtn = document.getElementById("c4oJoinBtn");
     var boardFrame = document.getElementById("c4oBoardFrame");
@@ -209,6 +213,14 @@
             }
             return "Both seats are full.";
         }
+        if (state.vs_cpu && state.your_seat) {
+            if (state.status === "won") {
+                return state.winner === state.your_seat ? "You win!" : "Computer wins!";
+            }
+            if (state.status === "active") {
+                return state.turn === state.your_seat ? "Your turn" : "Computer's turn";
+            }
+        }
         if (state.status === "won") {
             var winnerName = seatName(state, state.winner);
             var winnerColor = colorLabel(state, seatColor(state, state.winner));
@@ -362,8 +374,9 @@
         joinPanel.hidden = !canTakeSeat(state);
         joinBtn.disabled = isJoining;
         spectatorBadge.hidden = isPlayer || !bothSeatsFull(state);
-        shareRow.hidden = !isPlayer;
+        shareRow.hidden = !isPlayer || !!state.vs_cpu;
         nameRow.hidden = !isPlayer;
+        updateCpuSettings(state, isPlayer, isFinished);
         boardFrame.hidden = !showGameBoard(state);
 
         if (isPlayer) {
@@ -390,6 +403,60 @@
         }
     }
 
+    function markSegment(group, attribute, value) {
+        group.querySelectorAll(".c4o-segment-btn").forEach(function (btn) {
+            var selected = btn.dataset[attribute] === value;
+            btn.classList.toggle("c4o-segment-active", selected);
+            btn.setAttribute("aria-pressed", selected ? "true" : "false");
+        });
+    }
+
+    function updateCpuSettings(state, isPlayer, isFinished) {
+        var show = !!(state.vs_cpu && isPlayer);
+        cpuSettings.hidden = !show;
+        if (infoHint) {
+            infoHint.textContent = state.vs_cpu ? "Settings" : "Share & settings";
+        }
+        if (!show) {
+            return;
+        }
+        var locked = state.status === "active";
+        cpuSettings.classList.toggle("c4o-cpu-locked", locked);
+        markSegment(roomDifficulty, "difficulty", state.difficulty || "hard");
+        markSegment(roomFirst, "first", state.cpu_first ? "computer" : "you");
+        cpuSettings.querySelectorAll(".c4o-segment-btn").forEach(function (btn) {
+            btn.disabled = locked;
+        });
+    }
+
+    function saveCpuSettings(nextDifficulty, nextFirst) {
+        if (!lastState || !lastState.vs_cpu || lastState.status === "active") {
+            return;
+        }
+        apiRequest("POST", "/cpu-settings", {
+            difficulty: nextDifficulty,
+            first: nextFirst,
+        }).then(render).catch(function (err) {
+            statusEl.textContent = err.message;
+        });
+    }
+
+    roomDifficulty.addEventListener("click", function (event) {
+        var choice = event.target.dataset.difficulty;
+        if (!choice || !lastState || lastState.status === "active") {
+            return;
+        }
+        saveCpuSettings(choice, lastState.cpu_first ? "computer" : "you");
+    });
+
+    roomFirst.addEventListener("click", function (event) {
+        var choice = event.target.dataset.first;
+        if (!choice || !lastState || lastState.status === "active") {
+            return;
+        }
+        saveCpuSettings(lastState.difficulty || "hard", choice);
+    });
+
     function canMoveNow(state) {
         state = state || lastState;
         return (
@@ -400,6 +467,9 @@
     }
 
     function poll() {
+        if (isMoving) {
+            return;
+        }
         apiRequest("GET", "/state").then(render).catch(function () {
             statusEl.textContent = "Connection issue \u2014 retrying\u2026";
         });
@@ -474,18 +544,74 @@
             return;
         }
         isMoving = true;
-        lastMoveCol = col;
         hoverCol = null;
         clearPreview();
+        var snapshot = JSON.parse(JSON.stringify(lastState));
+        var humanRow = lowestEmptyRow(snapshot.board, col);
+        showYourMove(snapshot, humanRow, col);
         apiRequest("POST", "/move", { col: col })
-            .then(render)
-            .catch(function (err) {
-                statusEl.textContent = err.message;
-                lastMoveCol = null;
+            .then(function (state) {
+                if (state.vs_cpu) {
+                    revealCpuMove(snapshot.board, state, humanRow, col);
+                } else {
+                    render(state);
+                    isMoving = false;
+                }
             })
-            .then(function () {
+            .catch(function (err) {
+                lastVersion = snapshot.version;
+                render(snapshot);
+                statusEl.textContent = err.message;
                 isMoving = false;
             });
+    }
+
+    function showYourMove(snapshot, row, col) {
+        var pending = JSON.parse(JSON.stringify(snapshot));
+        pending.board[row][col] = snapshot.your_seat;
+        pending.turn = snapshot.your_seat === "X" ? "O" : "X";
+        pending.version = snapshot.version + 1;
+        lastMoveCol = col;
+        render(pending);
+    }
+
+    function findCpuDisc(beforeBoard, afterBoard, humanRow, humanCol) {
+        for (var row = 0; row < ROWS; row++) {
+            for (var col = 0; col < COLS; col++) {
+                if (row === humanRow && col === humanCol) {
+                    continue;
+                }
+                if (!beforeBoard[row][col] && afterBoard[row][col]) {
+                    return { row: row, col: col };
+                }
+            }
+        }
+        return null;
+    }
+
+    function animateDisc(row, col) {
+        var cell = getCell(row, col);
+        if (!cell) {
+            return;
+        }
+        cell.classList.remove("c4o-dropped");
+        void cell.offsetWidth;
+        cell.classList.add("c4o-dropped");
+    }
+
+    function revealCpuMove(beforeBoard, state, humanRow, humanCol) {
+        var cpuDisc = findCpuDisc(beforeBoard, state.board, humanRow, humanCol);
+        if (!cpuDisc) {
+            render(state);
+            isMoving = false;
+            return;
+        }
+        setTimeout(function () {
+            lastVersion = state.version;
+            render(state);
+            animateDisc(cpuDisc.row, cpuDisc.col);
+            isMoving = false;
+        }, 450);
     }
 
     function handleColumnHover(col, isEntering) {

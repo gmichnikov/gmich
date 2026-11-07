@@ -8,10 +8,29 @@
 <div class="c4o-wrapper">
     <div class="c4o-container">
         <h1>Connect 4 Online</h1>
-        <p class="c4o-subtitle">Drop discs with a friend anywhere on the web &mdash; no login required.</p>
+        <p class="c4o-subtitle">Play a friend with a link, or play the computer. No login required.</p>
 
         <div class="c4o-landing-panel">
             <button id="c4oCreateBtn" class="c4o-primary-btn" type="button">Create New Game</button>
+
+            <div class="c4o-cpu-options" id="c4oCpuOptions">
+                <div class="c4o-setting">
+                    <div class="c4o-setting-label">Difficulty</div>
+                    <div class="c4o-segment" id="c4oDifficulty" role="group" aria-label="Difficulty">
+                        <button type="button" class="c4o-segment-btn" data-difficulty="easy" aria-pressed="false">Easy</button>
+                        <button type="button" class="c4o-segment-btn" data-difficulty="medium" aria-pressed="false">Medium</button>
+                        <button type="button" class="c4o-segment-btn c4o-segment-active" data-difficulty="hard" aria-pressed="true">Hard</button>
+                    </div>
+                </div>
+                <div class="c4o-setting">
+                    <div class="c4o-setting-label">First move</div>
+                    <div class="c4o-segment" id="c4oFirst" role="group" aria-label="Who goes first">
+                        <button type="button" class="c4o-segment-btn c4o-segment-active" data-first="you" aria-pressed="true">You first</button>
+                        <button type="button" class="c4o-segment-btn" data-first="computer" aria-pressed="false">Computer first</button>
+                    </div>
+                </div>
+            </div>
+            <button id="c4oVsCpuBtn" class="c4o-secondary-btn c4o-link-btn" type="button">Play vs Computer</button>
 
             <div class="c4o-divider">or</div>
 
