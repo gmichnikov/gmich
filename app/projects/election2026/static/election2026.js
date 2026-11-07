@@ -171,6 +171,22 @@
         return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     }
 
+    function spansDays(domain) {
+        if (!domain || domain.min === null || domain.max === null) return false;
+        var start = new Date(domain.min);
+        var end = new Date(domain.max);
+        return start.getFullYear() !== end.getFullYear() ||
+            start.getMonth() !== end.getMonth() ||
+            start.getDate() !== end.getDate();
+    }
+
+    function formatChartTime(ms, domain) {
+        var clock = formatClock(new Date(ms).toISOString());
+        if (!spansDays(domain)) return clock;
+        var day = new Date(ms).toLocaleDateString([], { month: "short", day: "numeric" });
+        return day + ", " + clock;
+    }
+
     function normalize(value) {
         return String(value || "").toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
     }
@@ -328,9 +344,9 @@
         });
 
         if (domain.min !== null) {
-            parts.push('<text x="' + padLeft + '" y="' + (height - 4) + '" fill="#7b8794" font-size="12">' + formatClock(new Date(domain.min).toISOString()) + "</text>");
+            parts.push('<text x="' + padLeft + '" y="' + (height - 4) + '" fill="#7b8794" font-size="12">' + formatChartTime(domain.min, domain) + "</text>");
             if (domain.max !== domain.min) {
-                parts.push('<text x="' + (width - padRight) + '" y="' + (height - 4) + '" fill="#7b8794" font-size="12" text-anchor="end">' + formatClock(new Date(domain.max).toISOString()) + "</text>");
+                parts.push('<text x="' + (width - padRight) + '" y="' + (height - 4) + '" fill="#7b8794" font-size="12" text-anchor="end">' + formatChartTime(domain.max, domain) + "</text>");
             }
         }
 
@@ -822,7 +838,7 @@
         guide.style.top = (CHART.padTop / CHART.height * 100) + "%";
         guide.style.height = (CHART.plotHeight / CHART.height * 100) + "%";
         tip.hidden = false;
-        tip.innerHTML = '<div class="election2026-tip-time">' + formatClock(new Date(time).toISOString()) + "</div>" + rows;
+        tip.innerHTML = '<div class="election2026-tip-time">' + formatChartTime(time, domain) + "</div>" + rows;
         tip.style.top = "2px";
         tip.style.left = leftPct + "%";
         tip.style.transform = leftPct > 58 ? "translateX(calc(-100% - 8px))" : "translateX(8px)";
