@@ -342,6 +342,7 @@ def create_cpu_room(creator_player_id=None):
             created_at=now,
             updated_at=now,
         )
+        _start_placement(room)
         db.session.add(room)
         db.session.commit()
         return room
@@ -390,6 +391,16 @@ def join_room(code, player_id, name=None):
 
 def get_state(code, player_id):
     room = _get_room_row(code)
+    if (
+        room.vs_cpu
+        and room.status == BattleshipOnlineRoom.STATUS_WAITING
+        and room.seat_x
+        and room.seat_o
+    ):
+        _start_placement(room)
+        room.version += 1
+        _touch(room)
+        db.session.commit()
     return room, room.seat_for_player(player_id)
 
 
