@@ -205,6 +205,8 @@ def set_secret(code, player_id, word):
     cleaned = (word or "").strip()
     if not _SECRET_RE.fullmatch(cleaned):
         raise RoomError("Secret word must be exactly 5 letters (A–Z).", 400)
+    if not is_valid_guess(cleaned):
+        raise RoomError("Not in word list.", 400)
 
     room.secret = cleaned.lower()
     _touch(room)
@@ -223,6 +225,8 @@ def confirm_secret(code, player_id):
         raise RoomError("Only the setter can confirm the secret word.", 403)
     if not room.secret or not _SECRET_RE.fullmatch(room.secret):
         raise RoomError("Enter a 5-letter secret word first.", 400)
+    if not is_valid_guess(room.secret):
+        raise RoomError("Not in word list.", 400)
 
     room.status = FriendWordleRoom.STATUS_GUESSING
     room.version += 1

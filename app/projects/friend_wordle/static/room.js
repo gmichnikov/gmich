@@ -729,9 +729,13 @@
         if (isConfirming) {
             return;
         }
-        var word = secretInput.value.trim();
+        var word = secretInput.value.trim().toLowerCase();
         if (word.length !== 5) {
             showToast("Enter exactly 5 letters.");
+            return;
+        }
+        if (validGuesses && !validGuesses.has(word)) {
+            showToast("Not in word list");
             return;
         }
         isConfirming = true;
@@ -745,7 +749,11 @@
                 render(state);
             })
             .catch(function (err) {
-                showToast(err.message);
+                if (err.message === "Not in word list.") {
+                    showToast("Not in word list");
+                } else {
+                    showToast(err.message);
+                }
             })
             .then(function () {
                 isConfirming = false;
