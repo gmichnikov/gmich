@@ -10,7 +10,7 @@ from app.utils.wordle.evaluate import evaluate_guess
 from app.utils.wordle.word_lists import is_valid_guess
 
 ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-ROOM_CODE_LENGTH = 6
+ROOM_CODE_LENGTH = 4
 CLEANUP_DAYS = 14
 MAX_NAME_LENGTH = 30
 MAX_GUESSES = 6

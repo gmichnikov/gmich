@@ -2,7 +2,7 @@
     "use strict";
 
     var PLAYER_KEY = "cno_player_id";
-    var CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
+    var CODE_RE = /^[A-HJ-NP-Z2-9]{4,6}$/;
     var createBtn = document.getElementById("cnoCreateBtn");
     var joinForm = document.getElementById("cnoJoinForm");
     var joinInput = document.getElementById("cnoJoinCode");
@@ -91,7 +91,7 @@
             return;
         }
         if (!CODE_RE.test(code)) {
-            showError("Enter a valid 6-character room code.");
+            showError("Enter a valid room code.");
             return;
         }
         goToRoom(code);

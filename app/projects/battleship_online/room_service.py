@@ -13,7 +13,7 @@ from app.projects.battleship_online.cpu import (
 from app.projects.battleship_online.models import BattleshipOnlineRoom
 
 ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-ROOM_CODE_LENGTH = 6
+ROOM_CODE_LENGTH = 4
 CLEANUP_DAYS = 14
 MAX_NAME_LENGTH = 30
 GRID_SIZE = 10

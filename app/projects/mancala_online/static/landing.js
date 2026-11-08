@@ -69,7 +69,7 @@
         e.preventDefault();
         var code = (joinInput.value || "").trim().toUpperCase();
         if (!code) {
-            showError("Please enter a 6-character room code.");
+            showError("Enter a room code first.");
             return;
         }
         goToRoom(code);
