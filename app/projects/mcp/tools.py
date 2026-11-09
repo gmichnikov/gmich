@@ -1,7 +1,7 @@
 """
 MCP tool implementations for the personal bio server.
 
-Tools: get_personal, get_work
+Tools: get_personal, get_work. Schedule tools register themselves from sports_tools.
 """
 
 import json
@@ -27,6 +27,10 @@ def get_work() -> dict:
     """Return work background: skills, projects, experience."""
     data = _load_data()
     return data.get("work", {})
+
+
+class McpToolError(Exception):
+    """Tool failure whose message is safe to return to the model."""
 
 
 # Tool definitions for MCP protocol (name -> handler)

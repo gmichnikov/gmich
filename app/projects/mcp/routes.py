@@ -1,14 +1,15 @@
 """
 MCP (Model Context Protocol) server routes.
 
-Exposes a personal bio/résumé as queryable tools for AI assistants.
-Endpoint: POST /mcp (JSON-RPC), GET /mcp (landing page or 405 for MCP clients).
+Exposes bio tools and read-only sports schedule tools.
+Endpoint: POST /mcp (JSON-RPC). GET /mcp/ renders the landing page for browsers.
 """
 
 import json
-from flask import Blueprint, request, jsonify, render_template, Response
+from flask import Blueprint, request, jsonify, render_template
 from app import csrf
-from app.projects.mcp.tools import TOOL_HANDLERS
+from app.projects.mcp.sports_tools import schedule_mcp_tools
+from app.projects.mcp.tools import McpToolError, TOOL_HANDLERS
 
 mcp_bp = Blueprint(
     "mcp",
@@ -28,7 +29,7 @@ MCP_TOOLS = [
         "description": "Work background: skills, projects, experience",
         "inputSchema": {"type": "object", "properties": {}},
     },
-]
+] + schedule_mcp_tools()
 
 
 def _handle_json_rpc(body: dict) -> dict | None:
@@ -44,7 +45,7 @@ def _handle_json_rpc(body: dict) -> dict | None:
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "mcp-bio", "version": "0.1.0"},
+                "serverInfo": {"name": "gmich", "version": "0.1.0"},
             },
         }
 
@@ -76,6 +77,15 @@ def _handle_json_rpc(body: dict) -> dict | None:
                 "result": {
                     "content": [{"type": "text", "text": json.dumps(result)}],
                     "isError": False,
+                },
+            }
+        except McpToolError as exc:
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [{"type": "text", "text": str(exc)}],
+                    "isError": True,
                 },
             }
         except Exception as e:

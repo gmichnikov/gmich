@@ -4,7 +4,7 @@ Let a person ask "What games are in NJ this weekend?" or "MLB games within 50 mi
 
 The host model is the natural-language layer. This app exposes two read-only tools on the MCP server that is already deployed at `POST /mcp`. No new service, no new database, no Gemini call, and no credit charge.
 
-**Status:** Phase 1 done. Phase 2 not started.
+**Status:** Phase 1 and Phase 2 done. Phase 3 is the live-client check after deploy.
 
 ---
 
@@ -372,12 +372,12 @@ Nothing user-facing changes in this phase. The check is the test run: the Sunday
 
 ### Phase 2 — MCP tools
 
-- [ ] Add `McpToolError` and catch it in `routes.py` without putting other exception text on that path.
-- [ ] Add `sports_tools.py`, register both handlers, and append `schedule_mcp_tools()` to `MCP_TOOLS`.
-- [ ] Set `serverInfo.name` to `gmich`. Fix the module docstring so GET is described as the landing page.
-- [ ] Add the per-IP limit using the last `X-Forwarded-For` entry, prune expired keys, and write the `LogEntry` and the PostHog capture.
-- [ ] Update the landing page tool list and add example questions.
-- [ ] Add `tests/mcp/test_sports_tools.py` and run it, plus the Phase 1 tests.
+- [x] Add `McpToolError` and catch it in `routes.py` without putting other exception text on that path.
+- [x] Add `sports_tools.py`, register both handlers, and append `schedule_mcp_tools()` to `MCP_TOOLS`.
+- [x] Set `serverInfo.name` to `gmich`. Fix the module docstring so GET is described as the landing page.
+- [x] Add the per-IP limit using the last `X-Forwarded-For` entry, prune expired keys, and write the `LogEntry` and the PostHog capture.
+- [x] Update the landing page tool list and add example questions.
+- [x] Add `tests/mcp/test_sports_tools.py` and run it, plus the Phase 1 tests.
 
 Local protocol check, with the Flask app running. This is separate from the Phase 3 client gate. `POST /mcp` with `initialize`, then `notifications/initialized`, then `tools/list`, then `tools/call` for `get_schedule_options`, a New Jersey `this_weekend` query, and a bad league. The bad league is `isError: true`. The landing page lists the four tools. Bio `get_personal` still returns data. `curl` is enough. MCP Inspector is fine too.
 
@@ -407,17 +407,17 @@ Run one of those from a second client, Cursor or ChatGPT. Compare one radius res
 
 ## Acceptance checklist
 
-- [ ] `tools/list` shows `get_personal`, `get_work`, `get_schedule_options`, and `query_schedules`
+- [x] `tools/list` shows `get_personal`, `get_work`, `get_schedule_options`, and `query_schedules`
 - [ ] "NJ this weekend" uses the current Eastern Friday–Sunday range, including on a Sunday evening
 - [ ] A radius query over-fetches, then matches the web UI for the same zip and radius within the returned page
-- [ ] Invalid league, state, or a missing date mode is a tool error and does not hit DoltHub
-- [ ] The tool payload uses `columns` and array `rows`, includes `truncated`, `date_range_used`, and `applied`, and omits SQL
+- [x] Invalid league, state, or a missing date mode is a tool error and does not hit DoltHub
+- [x] The tool payload uses `columns` and array `rows`, includes `truncated`, `date_range_used`, and `applied`, and omits SQL
 - [ ] A non-radius result sets `truncated` only when more than `limit` rows existed
-- [ ] `get_schedule_options` returns leagues, states, and today's Eastern date without calling DoltHub
+- [x] `get_schedule_options` returns leagues, states, and today's Eastern date without calling DoltHub
 - [ ] A DoltHub failure returns a generic message with no token or URL
 - [ ] A radius query that hits the geocode cap returns an error and no rows, and cities looked up before the cap stay cached
-- [ ] The rate limit keys off the last `X-Forwarded-For` entry and drops expired IP entries
+- [x] The rate limit keys off the last `X-Forwarded-For` entry and drops expired IP entries
 - [ ] Phase 1 and Phase 2 tests pass, and `tests/sports_schedules/test_routes.py` still passes
 - [ ] A local `initialize`, `tools/list`, and `tools/call` round trip succeeds before deploy
-- [ ] The landing page lists the new tools
+- [x] The landing page lists the new tools
 - [ ] claude.ai and one other client can ask a question and get rows
