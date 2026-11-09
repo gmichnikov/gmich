@@ -234,6 +234,21 @@ def nearby_states(lat: float, lon: float, radius_miles: float) -> list[str]:
     return [r.state_id for r in rows]
 
 
+class GeocodeBudgetExceeded(Exception):
+    """Uncached Nominatim work exceeded the caller's time budget."""
+
+
+def _nominatim_would_run(city: str, state: str) -> bool:
+    """True when this city/state would call Nominatim instead of the cache or a hardcoded point."""
+    normalized = normalize_state(state)
+    if normalized is None:
+        return False
+    return (
+        SportsScheduleGeocodeCache.query.filter_by(city=city, state=normalized).first()
+        is None
+    )
+
+
 def filter_rows_by_distance(
     rows: list[dict],
     user_lat: float,
@@ -241,14 +256,19 @@ def filter_rows_by_distance(
     radius_miles: float,
     city_key: str = "home_city",
     state_key: str = "home_state",
+    max_seconds: float | None = None,
 ) -> list[dict]:
     """
     Filters a list of event dicts to only those within radius_miles of (user_lat, user_lon).
     Geocodes each unique city/state via the cache as needed.
+
+    max_seconds limits time spent in uncached Nominatim lookups. Cache hits, including a
+    stored miss, do not count. The default None leaves callers uncapped.
     """
     user_coords = (user_lat, user_lon)
     coord_cache: dict[tuple[str, str], tuple[float, float] | None] = {}
     filtered = []
+    spent = 0.0
 
     for row in rows:
         city = (row.get(city_key) or "").strip()
@@ -258,7 +278,13 @@ def filter_rows_by_distance(
 
         key = (city, state)
         if key not in coord_cache:
+            uncached = max_seconds is not None and _nominatim_would_run(city, state)
+            if uncached and spent >= max_seconds:
+                raise GeocodeBudgetExceeded()
+            started = time.perf_counter()
             coord_cache[key] = citystate_to_coords(city, state)
+            if uncached:
+                spent += time.perf_counter() - started
 
         coords = coord_cache[key]
         if coords is None:

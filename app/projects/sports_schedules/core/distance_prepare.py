@@ -105,8 +105,12 @@ def apply_post_sql_distance(
     rows: list,
     params: dict,
     dpr: DistancePrepareResult,
+    max_seconds: float | None = None,
 ) -> list:
-    """Python-side distance filter and strip helper dimensions (matches /api/query)."""
+    """Python-side distance filter and strip helper dimensions (matches /api/query).
+
+    max_seconds is forwarded to the geocoder. None leaves the lookup uncapped.
+    """
     if dpr.early_empty or dpr.error or not dpr.distance_filter_active:
         return rows
     if (
@@ -119,6 +123,7 @@ def apply_post_sql_distance(
             dpr.user_coords[0],
             dpr.user_coords[1],
             dpr.radius_miles,
+            max_seconds=max_seconds,
         )
     if dpr.extra_dims:
         rows = [

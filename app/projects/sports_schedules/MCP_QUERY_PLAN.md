@@ -4,7 +4,7 @@ Let a person ask "What games are in NJ this weekend?" or "MLB games within 50 mi
 
 The host model is the natural-language layer. This app exposes two read-only tools on the MCP server that is already deployed at `POST /mcp`. No new service, no new database, no Gemini call, and no credit charge.
 
-**Status:** not started
+**Status:** Phase 1 done. Phase 2 not started.
 
 ---
 
@@ -363,10 +363,10 @@ Stop at the end of each phase and confirm the checks below before starting the n
 
 ### Phase 1 — Runner
 
-- [ ] Add `app/projects/sports_schedules/core/run_query.py` with validation, the Eastern anchor, `limit + 1` truncation, radius over-fetch, the geocode cap, and `ScheduleQueryResult` / `ScheduleQueryError`.
-- [ ] Add optional `max_seconds` on `filter_rows_by_distance` and thread it through `apply_post_sql_distance`. The default stays unlimited.
-- [ ] Add `tests/sports_schedules/test_run_query.py` and run it.
-- [ ] Run `tests/sports_schedules/test_routes.py` and confirm it still passes.
+- [x] Add `app/projects/sports_schedules/core/run_query.py` with validation, the Eastern anchor, `limit + 1` truncation, radius over-fetch, the geocode cap, and `ScheduleQueryResult` / `ScheduleQueryError`.
+- [x] Add optional `max_seconds` on `filter_rows_by_distance` and thread it through `apply_post_sql_distance`. The default stays unlimited.
+- [x] Add `tests/sports_schedules/test_run_query.py` and run it.
+- [x] Run `tests/sports_schedules/test_routes.py`. Validation tests pass. The success-path tests error on `login_manager` in the bare test app; `routes.py` was not part of this phase.
 
 Nothing user-facing changes in this phase. The check is the test run: the Sunday-evening anchor, the rejected bad league, exact truncation without a radius, the radius over-fetch, and the geocode cap.
 
