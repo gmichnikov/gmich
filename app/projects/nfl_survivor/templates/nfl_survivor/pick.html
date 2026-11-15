@@ -98,16 +98,15 @@
 {% endif %}
 
 <details class="ns-pick-details" open>
-  <summary>Lines &amp; kickoffs</summary>
+  <summary>Week {{ selected_week }} lines &amp; kickoffs</summary>
   {% if last_updated_time %}
   <p class="ns-help-text">Spreads last updated {{ last_updated_time.strftime("%b %-d, %-I:%M %p %Z") }}.</p>
   {% endif %}
-  {% for week, spreads in spreads_by_week.items() %}
-  <h3 class="ns-pick-spreads-week">Week {{ week }}</h3>
+  {% if spreads %}
   {{ ns_spreads_list(spreads) }}
   {% else %}
-  <p class="ns-help-text">No spreads loaded yet — check back after the next fetch.</p>
-  {% endfor %}
+  <p class="ns-help-text">No spreads loaded yet for this week — check back after the next fetch.</p>
+  {% endif %}
 </details>
 </div>
 {% endblock %}

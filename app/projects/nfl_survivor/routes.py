@@ -550,39 +550,22 @@ def pick():
         form.submit.label.text = "Update pick"
         form.team_choice.label.text = "Change to"
 
-    current_time_utc = datetime.now(UTC)
-    time_24_hours_ago = current_time_utc - timedelta(hours=24)
     spreads = (
-        NflSurvivorSpread.query.filter_by(season_id=season.id)
-        .filter(NflSurvivorSpread.game_time > time_24_hours_ago.replace(tzinfo=None))
+        NflSurvivorSpread.query.filter_by(season_id=season.id, week=selected_week)
         .order_by(NflSurvivorSpread.game_time)
         .all()
     )
-    spreads_by_week = {}
     for spread in spreads:
         game_time = spread.game_time
         if game_time.tzinfo is None:
             game_time = UTC.localize(game_time)
         spread.game_time = game_time.astimezone(EASTERN)
-        spreads_by_week.setdefault(spread.week, []).append(spread)
 
     last_updated = (
         db.session.query(db.func.max(NflSurvivorSpread.update_time))
-        .filter_by(season_id=season.id, week=current_week)
+        .filter_by(season_id=season.id, week=selected_week)
         .scalar()
     )
-    if last_updated is None:
-        max_week = (
-            db.session.query(db.func.max(NflSurvivorSpread.week))
-            .filter_by(season_id=season.id)
-            .scalar()
-        )
-        if max_week:
-            last_updated = (
-                db.session.query(db.func.max(NflSurvivorSpread.update_time))
-                .filter_by(season_id=season.id, week=max_week)
-                .scalar()
-            )
     last_updated_time = None
     if last_updated:
         if last_updated.tzinfo is None:
@@ -593,7 +576,7 @@ def pick():
     return render_template(
         "nfl_survivor/pick.html",
         form=form,
-        spreads_by_week=spreads_by_week,
+        spreads=spreads,
         last_updated_time=last_updated_time,
         current_week=current_week,
         selected_week=selected_week,
@@ -851,12 +834,14 @@ def admin_view_picks():
     needs_pick_emails = sorted(
         {row["email"] for row in picks if row["needs_pick"] and row["email"]}
     )
+    alive_count = sum(1 for row in picks if not row["eliminated"])
 
     ctx = _season_context(season)
     return render_template(
         "nfl_survivor/admin_view_picks.html",
         picks=picks,
         week=current_week,
+        alive_count=alive_count,
         needs_pick_count=sum(1 for row in picks if row["needs_pick"]),
         needs_pick_emails=needs_pick_emails,
         **ctx,

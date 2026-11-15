@@ -5,7 +5,7 @@
 {% block ns_content %}
 <h1 class="ns-card-title">This week's picks</h1>
 <p class="ns-card-subtitle">
-  Week {{ week }} — {{ needs_pick_count }} of {{ picks|length }} still need a pick.
+  Week {{ week }} — {{ needs_pick_count }} of {{ alive_count }} still need a pick.
 </p>
 
 {% if picks %}
@@ -13,8 +13,15 @@
   <span class="ns-filter-label">Show</span>
   <button type="button"
           class="ns-filter-chip ns-filter-chip-active"
-          data-ns-view="all"
+          data-ns-view="alive"
           aria-pressed="true">
+    Still alive
+    <span class="ns-filter-count">{{ alive_count }}</span>
+  </button>
+  <button type="button"
+          class="ns-filter-chip"
+          data-ns-view="all"
+          aria-pressed="false">
     Everyone
     <span class="ns-filter-count">{{ picks|length }}</span>
   </button>
@@ -53,7 +60,9 @@
           data-ns-player="{{ row.name }}"
           data-ns-pick="{{ row.team_name }}"
           data-ns-needs-pick="{{ 1 if row.needs_pick else 0 }}"
-          data-ns-row>
+          data-ns-eliminated="{{ 1 if row.eliminated else 0 }}"
+          data-ns-row
+          {% if row.eliminated %}hidden{% endif %}>
         <td class="ns-col-text">{{ row.name }}</td>
         <td class="ns-col-text{% if row.needs_pick %} ns-not-picked-cell{% elif row.is_correct is true %} ns-correct{% elif row.is_correct is false %} ns-incorrect{% endif %}">
           {% if row.needs_pick %}
@@ -69,7 +78,7 @@
     </tbody>
   </table>
 </div>
-<p class="ns-help-text" data-ns-filter-empty hidden>Everyone still in the pool has picked.</p>
+<p class="ns-help-text" data-ns-filter-empty hidden></p>
 {% else %}
 <p class="ns-help-text">No participants yet.</p>
 {% endif %}
@@ -91,18 +100,31 @@
   var copyStatus = document.querySelector("[data-ns-copy-status]");
   var emails = {{ needs_pick_emails | tojson }};
   var params = new URLSearchParams(window.location.search);
-  var view = params.get("needs_pick") === "1" ? "needs_pick" : "all";
+  var view = "alive";
+  if (params.get("needs_pick") === "1") view = "needs_pick";
+  else if (params.get("alive") === "0") view = "all";
+
+  function rowVisible(row) {
+    if (view === "all") return true;
+    if (view === "needs_pick") return row.getAttribute("data-ns-needs-pick") === "1";
+    return row.getAttribute("data-ns-eliminated") !== "1";
+  }
 
   function apply() {
     var visible = 0;
     rows.forEach(function (row) {
-      var show = view === "all" || row.getAttribute("data-ns-needs-pick") === "1";
+      var show = rowVisible(row);
       row.hidden = !show;
       if (show) visible += 1;
     });
-    if (empty) empty.hidden = visible > 0;
+    if (empty) {
+      empty.hidden = visible > 0;
+      empty.textContent = view === "needs_pick"
+        ? "Everyone still in the pool has picked."
+        : "No one is still alive.";
+    }
     if (showing) {
-      showing.textContent = view === "all"
+      showing.textContent = visible === rows.length
         ? rows.length + " entries"
         : "Showing " + visible + " of " + rows.length;
     }
@@ -111,13 +133,16 @@
       chip.classList.toggle("ns-filter-chip-active", on);
       chip.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    var url = window.location.pathname + (view === "needs_pick" ? "?needs_pick=1" : "");
+    var url = window.location.pathname;
+    if (view === "needs_pick") url += "?needs_pick=1";
+    else if (view === "all") url += "?alive=0";
     window.history.replaceState(null, "", url);
   }
 
   chips.forEach(function (chip) {
     chip.addEventListener("click", function () {
-      view = chip.getAttribute("data-ns-view");
+      var next = chip.getAttribute("data-ns-view");
+      view = next === "alive" && view === "alive" ? "all" : next;
       apply();
     });
   });

@@ -340,13 +340,56 @@ def is_team_kickoff_locked(season, week, team_id):
     return datetime.now(UTC) >= kickoff
 
 
+def teams_with_games(season, week):
+    """
+    Team ids that have a game in `week`.
+
+    None when the schedule has not been loaded, so future weeks can still
+    list every unused team.
+    """
+    rows = NflSurvivorGame.query.filter_by(season_id=season.id, week=week).all()
+    if not rows:
+        return None
+    return {row.team_id for row in rows}
+
+
+def teams_with_opponents(season, week):
+    """
+    Team names that have an opponent on the week's spreads.
+
+    None when no spreads are stored for the week.
+    """
+    spreads = NflSurvivorSpread.query.filter_by(
+        season_id=season.id, week=week
+    ).all()
+    if not spreads:
+        return None
+    names = set()
+    for spread in spreads:
+        names.add(spread.home_team)
+        names.add(spread.road_team)
+    return names
+
+
 def teams_available_for_week(season, week, picked_team_ids):
     """
-    Team (id, name) pairs pickable for `week`: not already used and kickoff not passed.
+    Team (id, name) pairs pickable for `week`.
+
+    Skips teams already used, teams whose kickoff has passed, and teams on a
+    bye. A bye is a team with no game once the schedule is loaded, or no
+    opponent once spreads are loaded and the schedule is not.
     """
+    playing_ids = teams_with_games(season, week)
+    opponent_names = (
+        None if playing_ids is not None else teams_with_opponents(season, week)
+    )
     pairs = []
     for team_id, team_name in load_nfl_teams_as_pairs():
         if team_id in picked_team_ids:
+            continue
+        if playing_ids is not None and team_id not in playing_ids:
+            continue
+        if opponent_names is not None and team_name not in opponent_names:
             continue
         if is_team_kickoff_locked(season, week, team_id):
             continue
