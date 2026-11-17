@@ -144,6 +144,17 @@ PROJECTS = [
         "order": 506,
     },
     {
+        "id": "checkers_online",
+        "name": "Checkers",
+        "description": "Play a friend with a link, or play the computer",
+        "url": "/checkers-online",
+        "auth_required": False,
+        "status": "active",
+        "type": "project",
+        "parent": "live_multiplayer_games",
+        "order": 507,
+    },
+    {
         "id": "algebra_snake",
         "name": "Algebra Snake",
         "description": "Eat the correct answers",

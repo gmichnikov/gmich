@@ -132,6 +132,7 @@ def create_app():
     from app.projects.connect4_online.routes import connect4_online_bp
     from app.projects.friend_wordle.routes import friend_wordle_bp
     from app.projects.mancala_online.routes import mancala_online_bp
+    from app.projects.checkers_online.routes import checkers_online_bp
     from app.projects.japan_recs.routes import japan_recs_bp
     from app.projects.recipes.routes import recipes_bp
     from app.projects.nfl_survivor import nfl_survivor_bp
@@ -205,6 +206,9 @@ def create_app():
     )
     app.register_blueprint(
         mancala_online_bp, url_prefix="/mancala-online"
+    )
+    app.register_blueprint(
+        checkers_online_bp, url_prefix="/checkers-online"
     )
     app.register_blueprint(japan_recs_bp)
     app.register_blueprint(recipes_bp)
@@ -302,6 +306,7 @@ def create_app():
     from app.projects.connect4_online.models import Connect4OnlineRoom
     from app.projects.friend_wordle.models import FriendWordleRoom
     from app.projects.mancala_online.models import MancalaOnlineRoom
+    from app.projects.checkers_online.models import CheckersOnlineRoom
     from app.projects.nfl_survivor.models import (
         NflSurvivorSeason,
         NflSurvivorParticipant,

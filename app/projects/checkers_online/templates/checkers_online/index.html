@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkers Online{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('checkers_online.static', filename='style.css') }}">
+
+<div class="chk-wrapper">
+    <div class="chk-container">
+        <h1>Checkers</h1>
+        <p class="chk-subtitle">Play a friend with a link, or play the computer. No login required.</p>
+
+        <div class="chk-landing-panel">
+            <button id="chkCreateBtn" class="chk-primary-btn" type="button">Create New Game</button>
+
+            <div class="chk-cpu-options" id="chkCpuOptions">
+                <div class="chk-setting">
+                    <div class="chk-setting-label">Difficulty</div>
+                    <div class="chk-segment" id="chkDifficulty" role="group" aria-label="Difficulty">
+                        <button type="button" class="chk-segment-btn" data-difficulty="easy" aria-pressed="false">Easy</button>
+                        <button type="button" class="chk-segment-btn chk-segment-active" data-difficulty="medium" aria-pressed="true">Medium</button>
+                        <button type="button" class="chk-segment-btn" data-difficulty="hard" aria-pressed="false">Hard</button>
+                    </div>
+                </div>
+                <div class="chk-setting">
+                    <div class="chk-setting-label">Your pieces</div>
+                    <div class="chk-segment" id="chkColor" role="group" aria-label="Your pieces">
+                        <button type="button" class="chk-segment-btn chk-segment-active" data-color="black" aria-pressed="true">Black</button>
+                        <button type="button" class="chk-segment-btn" data-color="red" aria-pressed="false">Red</button>
+                    </div>
+                </div>
+                <div class="chk-setting">
+                    <div class="chk-setting-label">First move</div>
+                    <div class="chk-segment" id="chkFirst" role="group" aria-label="Who goes first">
+                        <button type="button" class="chk-segment-btn chk-segment-active" data-first="you" aria-pressed="true">You first</button>
+                        <button type="button" class="chk-segment-btn" data-first="computer" aria-pressed="false">Computer first</button>
+                    </div>
+                </div>
+            </div>
+            <button id="chkVsCpuBtn" class="chk-secondary-btn chk-link-btn" type="button">Play vs Computer</button>
+
+            <div class="chk-divider">or</div>
+
+            <form id="chkJoinForm" class="chk-join-form">
+                <label for="chkJoinCode">Join with a room code</label>
+                <input type="text" id="chkJoinCode" maxlength="6" placeholder="e.g. K7M2" autocomplete="off">
+                <button type="submit" class="chk-secondary-btn">Join</button>
+            </form>
+        </div>
+
+        <p id="chkLandingError" class="chk-error" hidden></p>
+    </div>
+</div>
+
+<script>
+    var CHK_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('checkers_online.static', filename='landing.js') }}"></script>
+{% endblock %}

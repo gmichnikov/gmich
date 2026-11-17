@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Not Found - Checkers{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('checkers_online.static', filename='style.css') }}">
+
+<div class="chk-wrapper">
+    <div class="chk-container">
+        <h1>Room Not Found</h1>
+        <p class="chk-subtitle">{{ message }}</p>
+        <a class="chk-primary-btn chk-link-btn" href="{{ url_for('checkers_online.index') }}">Start a New Game</a>
+    </div>
+</div>
+{% endblock %}

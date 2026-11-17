@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ code }} - Checkers{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('checkers_online.static', filename='style.css') }}">
+
+<div class="chk-wrapper">
+    <div class="chk-container chk-room-container">
+        <h1>Checkers</h1>
+
+        <details class="chk-room-info" open>
+            <summary class="chk-room-info-summary">
+                <span>Room code: <strong id="chkRoomCode">{{ code }}</strong></span>
+                <span class="chk-room-info-hint" id="chkInfoHint">Share &amp; settings</span>
+            </summary>
+            <div class="chk-room-info-body">
+                <div class="chk-share-row" id="chkShareRow">
+                    <label for="chkShareLink">Share this link with your opponent:</label>
+                    <div class="chk-share-input-row">
+                        <input type="text" id="chkShareLink" readonly>
+                        <button id="chkCopyBtn" class="chk-secondary-btn chk-copy-btn" type="button">Copy</button>
+                    </div>
+                </div>
+                <div class="chk-spectator-badge" id="chkSpectatorBadge" hidden>You're spectating this room</div>
+                <div class="chk-name-row" id="chkNameRow" hidden>
+                    <label for="chkNameInput">Your name:</label>
+                    <div class="chk-share-input-row">
+                        <input type="text" id="chkNameInput" maxlength="30" autocomplete="nickname">
+                        <button id="chkNameSaveBtn" class="chk-secondary-btn chk-copy-btn" type="button">Save</button>
+                    </div>
+                </div>
+                <div class="chk-color-row" id="chkColorRow" hidden>
+                    <label>Your pieces:</label>
+                    <div class="chk-color-picker">
+                        <button type="button" id="chkColorBlack" class="chk-color-btn" data-color="black">Black</button>
+                        <button type="button" id="chkColorRed" class="chk-color-btn" data-color="red">Red</button>
+                    </div>
+                </div>
+                <div class="chk-opponent-label" id="chkOpponentLabel" hidden></div>
+                <div class="chk-cpu-options" id="chkCpuSettings" hidden>
+                    <div class="chk-setting">
+                        <div class="chk-setting-label">Difficulty</div>
+                        <div class="chk-segment" id="chkRoomDifficulty" role="group" aria-label="Difficulty">
+                            <button type="button" class="chk-segment-btn" data-difficulty="easy">Easy</button>
+                            <button type="button" class="chk-segment-btn" data-difficulty="medium">Medium</button>
+                            <button type="button" class="chk-segment-btn" data-difficulty="hard">Hard</button>
+                        </div>
+                    </div>
+                    <div class="chk-setting">
+                        <div class="chk-setting-label">First move</div>
+                        <div class="chk-segment" id="chkRoomFirst" role="group" aria-label="Who goes first">
+                            <button type="button" class="chk-segment-btn" data-first="you">You first</button>
+                            <button type="button" class="chk-segment-btn" data-first="computer">Computer first</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <div class="chk-status-message" id="chkStatusMessage">Loading&hellip;</div>
+
+        <div class="chk-join-panel" id="chkJoinPanel" hidden>
+            <button id="chkJoinBtn" class="chk-primary-btn" type="button">Join game</button>
+        </div>
+
+        <div class="chk-board" id="chkBoard" hidden></div>
+
+        <div class="chk-actions">
+            <button id="chkRematchBtn" class="chk-primary-btn" type="button" hidden>Rematch</button>
+            <a href="{{ url_for('checkers_online.index') }}" class="chk-secondary-btn chk-home-btn">Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var CHK_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var CHK_ROOM_CODE = {{ code | tojson }};
+</script>
+<script src="{{ url_for('checkers_online.static', filename='room.js') }}"></script>
+{% endblock %}
