@@ -82,6 +82,10 @@ DEFAULT_FILTERS = {"date": "next_week"}
 SAVED_QUERY_LIMIT = 20
 SAVED_QUERY_CONFIG_MAX_BYTES = 2048
 
+# Whole miles for a zip-code radius. The old dropdown steps were a UI convenience.
+RADIUS_MILES_MIN = 1
+RADIUS_MILES_MAX = 250
+
 # --- DIMENSION_LABELS: column -> display label (from PRD) ---
 DIMENSION_LABELS = {
     "either_team": "Either Team",

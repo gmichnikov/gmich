@@ -73,6 +73,20 @@ class TestSportsMcpTools(unittest.TestCase):
         self.assertIn("NJ", payload["states"])
         self.assertEqual(len(payload["today"]), 10)
         self.assertNotIn("coverage", payload)
+        self.assertEqual(payload["radius_miles"], {"min": 1, "max": 250})
+        self.assertNotIn("radius_options", payload)
+
+    def test_near_radius_accepts_any_whole_mile_in_range(self):
+        tools = self._rpc("tools/list").get_json()["result"]["tools"]
+        query = next(tool for tool in tools if tool["name"] == "query_schedules")
+        radius = (
+            query["inputSchema"]["properties"]["filters"]["properties"]["near"]["properties"]["radius"]
+        )
+        self.assertEqual(radius["type"], "integer")
+        self.assertEqual(radius["minimum"], 1)
+        self.assertEqual(radius["maximum"], 250)
+        self.assertNotIn("enum", radius)
+        self.assertIn("1 to 250", query["description"])
 
     def test_bad_league_is_a_tool_error(self):
         from unittest.mock import patch

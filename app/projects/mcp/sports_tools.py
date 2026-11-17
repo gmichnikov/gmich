@@ -18,6 +18,8 @@ from app.projects.sports_schedules.core.constants import (
     HIGH_CARDINALITY_FILTERS,
     LEAGUE_CODES,
     LEVELS,
+    RADIUS_MILES_MAX,
+    RADIUS_MILES_MIN,
     SPORTS,
     US_STATE_CODES,
 )
@@ -59,7 +61,11 @@ _NOTES = [
     "Team, city, and location filters are case-insensitive contains matches and need full names. OKC fails; use Oklahoma City or Thunder. NYC means New York. KC means Kansas City. DC means Washington. LA means Los Angeles. SF means San Francisco. PHX means Phoenix.",
     "One either_team value means that team is home or away. Two values mean they play each other. There is no Celtics-or-Knicks filter; that is two queries.",
     "In New Jersey means home_state NJ, the home team's state. It does not include New Jersey teams playing away.",
-    "near needs a 5-digit US zip and a radius of 10, 25, 50, 100, or 250. A city plus a mileage is a home_city contains match, or a request back to the user for a zip. Do not invent a zip.",
+    (
+        "near needs a 5-digit US zip and a whole-mile radius from "
+        f"{RADIUS_MILES_MIN} to {RADIUS_MILES_MAX}. A city plus a mileage is a home_city "
+        "contains match, or a request back to the user for a zip. Do not invent a zip."
+    ),
     "gender is M or W and is derived from the league. Set it when the user says men's or women's. Do not set it only because the league is already single-gender, such as WNBA. Women's college basketball is gender W, sport basketball, level college.",
     "Times in the rows are Eastern.",
     "An empty rows array means this database had no match. Some smaller college conferences are missing entirely. Do not tell the user that no such game exists.",
@@ -152,7 +158,7 @@ def get_schedule_options(**_ignored) -> dict:
         "dimensions": list(_SELECTABLE),
         "filter_only": list(FILTER_ONLY_FIELDS),
         "date_modes": list(_DATE_MODES),
-        "radius_options": [10, 25, 50, 100, 250],
+        "radius_miles": {"min": RADIUS_MILES_MIN, "max": RADIUS_MILES_MAX},
         "notes": list(_NOTES),
     }
 
@@ -199,9 +205,17 @@ def schedule_mcp_tools() -> list[dict]:
     }
     filter_properties["near"] = {
         "type": "object",
+        "description": (
+            "Games within a whole-mile radius of a 5-digit US zip. "
+            f"radius is an integer from {RADIUS_MILES_MIN} to {RADIUS_MILES_MAX}."
+        ),
         "properties": {
             "zip": {"type": "string"},
-            "radius": {"type": "number", "enum": [10, 25, 50, 100, 250]},
+            "radius": {
+                "type": "integer",
+                "minimum": RADIUS_MILES_MIN,
+                "maximum": RADIUS_MILES_MAX,
+            },
         },
     }
     description = (

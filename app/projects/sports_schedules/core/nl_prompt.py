@@ -431,7 +431,7 @@ Rules:
 ## Config Schema
 
 - dimensions: Comma-separated list of column names (exclude either_team—filter-only). Valid: date, time, home_team, road_team, day, league, sport, level, gender, home_city, home_state, location.
-- filters: Object with filter keys. Low-cardinality: sport, league, level, gender, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city — use full names, not abbreviations (OKC→Thunder or Oklahoma City; NYC→New York; KC→Kansas City; DC→Washington). either_team: array of team name substrings (matches home OR road); spell out team names. near: {"zip": "<5-digit US zip>", "radius": "<miles>"} — use when user specifies a zip code or asks for events within a distance; valid radius values are 10, 25, 50, 100, 250 (pick nearest); omit if no zip/distance mentioned.
+- filters: Object with filter keys. Low-cardinality: sport, league, level, gender, day, home_state (use allowed values). High-cardinality (free-form strings): home_team, road_team, location, home_city — use full names, not abbreviations (OKC→Thunder or Oklahoma City; NYC→New York; KC→Kansas City; DC→Washington). either_team: array of team name substrings (matches home OR road); spell out team names. near: {"zip": "<5-digit US zip>", "radius": <whole miles>} — use when user specifies a zip code or asks for events within a distance; radius is an integer from 1 to 250; omit if no zip/distance mentioned.
 - date_mode: exact | today | on_or_after | this_weekend | range | future | next_week | last_n | next_n | year
 - date_exact, date_start, date_end: YYYY-MM-DD when required
 - date_n: integer for last_n, next_n

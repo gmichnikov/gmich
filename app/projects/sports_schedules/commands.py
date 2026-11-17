@@ -360,7 +360,7 @@ def warm_geocache_command():
 
 @sports_schedules_cli.command("agent-query")
 @click.option("--zip", "zip_code", default=None, help="Zip code for radius search (e.g. 07928)")
-@click.option("--radius", default=50.0, type=float, help="Radius in miles (default: 50)")
+@click.option("--radius", default=50, type=int, help="Whole miles from 1 to 250 (default: 50)")
 @click.option("--days", default=7, type=int, help="Number of days forward to search (default: 7)")
 @click.option("--team", multiple=True, help="Optional team filter (can specify multiple)")
 @click.option("--league", multiple=True, help="Optional league filter (can specify multiple)")

@@ -29,7 +29,9 @@ from app.projects.sports_schedules.core.constants import (
     US_STATE_CODES,
 )
 from app.projects.sports_schedules.core.distance_prepare import (
+    RADIUS_MILES_ERROR,
     apply_post_sql_distance,
+    parse_radius_miles,
     prepare_distance_filter,
 )
 from app.projects.sports_schedules.core.geocode import GeocodeBudgetExceeded
@@ -53,7 +55,6 @@ _DATE_MODES = (
     "range",
 )
 _DEFAULT_DIMENSIONS = ["date", "time", "league", "home_team", "road_team"]
-_RADII = (10, 25, 50, 100, 250)
 _GEOCODE_MAX_SECONDS = 15
 _LOAD_ERROR = "Unable to load schedules. Try again."
 _GEOCODE_ERROR = (
@@ -383,13 +384,12 @@ def _near(raw) -> tuple[dict, int]:
     if not re.fullmatch(r"\d{5}", zip_code):
         raise ScheduleQueryError("near.zip must be a 5-digit US zip code.")
     try:
-        miles = float(raw.get("radius"))
-    except (TypeError, ValueError):
-        raise ScheduleQueryError("near.radius must be a number of miles.")
-    if miles <= 0:
-        raise ScheduleQueryError("near.radius must be greater than 0.")
-    snapped = min(_RADII, key=lambda option: (abs(option - miles), -option))
-    return {"zip": zip_code, "radius": snapped}, snapped
+        miles = parse_radius_miles(raw.get("radius"))
+    except ValueError as exc:
+        raise ScheduleQueryError(str(exc)) from None
+    if miles is None:
+        raise ScheduleQueryError(RADIUS_MILES_ERROR)
+    return {"zip": zip_code, "radius": miles}, miles
 
 
 def _date_bounds(params: dict) -> dict:

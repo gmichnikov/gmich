@@ -9,7 +9,11 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from app.projects.sports_schedules.core.distance_prepare import DistancePrepareResult
+from app.projects.sports_schedules.core.distance_prepare import (
+    DistancePrepareResult,
+    parse_radius_miles,
+    prepare_distance_filter,
+)
 from app.projects.sports_schedules.core.geocode import (
     GeocodeBudgetExceeded,
     filter_rows_by_distance,
@@ -202,7 +206,17 @@ class TestRunScheduleQuery(unittest.TestCase):
         self.assertIn("`home_state` IN ('NJ', 'NY')", dolt.sql)
         self.assertEqual(result.row_count, 10)
         self.assertTrue(result.truncated)
-        self.assertEqual(result.applied["radius_used"], 25)
+        self.assertEqual(result.applied["radius_used"], 30)
+
+    def test_near_radius_rejects_values_outside_whole_miles(self):
+        for radius in (0, 22.5, 251, "nope", True, None):
+            with self.assertRaises(ScheduleQueryError) as caught:
+                run_schedule_query({
+                    "date_mode": "today",
+                    "dimensions": ["date"],
+                    "filters": {"near": {"zip": "07928", "radius": radius}},
+                })
+            self.assertIn("whole number from 1 to 250", str(caught.exception))
 
     def test_unknown_zip_is_returned_verbatim(self):
         dolt = _Dolt()
@@ -301,6 +315,49 @@ class TestGeocodeBudget(unittest.TestCase):
                             rows, 40.7, -74.0, 50, max_seconds=15
                         )
         self.assertEqual(looked_up, ["Newark"])
+
+
+class TestRadiusMiles(unittest.TestCase):
+    def test_parse_accepts_any_whole_mile_in_range(self):
+        self.assertEqual(parse_radius_miles(22), 22)
+        self.assertEqual(parse_radius_miles("22"), 22)
+        self.assertEqual(parse_radius_miles(50.0), 50)
+        self.assertEqual(parse_radius_miles(1), 1)
+        self.assertEqual(parse_radius_miles(250), 250)
+        self.assertIsNone(parse_radius_miles(None))
+        self.assertIsNone(parse_radius_miles("  "))
+
+    def test_prepare_uses_the_requested_miles(self):
+        with patch(
+            "app.projects.sports_schedules.core.distance_prepare.zip_to_coords",
+            return_value=(40.7, -74.4),
+        ):
+            with patch(
+                "app.projects.sports_schedules.core.distance_prepare.nearby_states",
+                return_value=["NJ"],
+            ):
+                result = prepare_distance_filter({
+                    "filters": {},
+                    "zip_code": "07928",
+                    "radius_miles": 22,
+                    "dimensions": "date",
+                })
+        self.assertIsNone(result.error)
+        self.assertEqual(result.radius_miles, 22)
+        self.assertTrue(result.distance_filter_active)
+
+    def test_prepare_rejects_out_of_range_before_geocoding(self):
+        with patch(
+            "app.projects.sports_schedules.core.distance_prepare.zip_to_coords"
+        ) as coords:
+            result = prepare_distance_filter({
+                "filters": {},
+                "zip_code": "07928",
+                "radius_miles": 999,
+                "dimensions": "date",
+            })
+        coords.assert_not_called()
+        self.assertIn("whole number from 1 to 250", result.error)
 
 
 class TestFrozenAnchor(unittest.TestCase):

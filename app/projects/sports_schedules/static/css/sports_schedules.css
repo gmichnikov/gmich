@@ -1171,6 +1171,11 @@
   flex-wrap: wrap;
 }
 
+.ss-filter-near-inner .ss-filter-near-radius {
+  width: 5.5rem;
+  flex: 0 0 auto;
+}
+
 .ss-near-attribution {
   font-size: 0.72rem;
   color: #adb5bd;

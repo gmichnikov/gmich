@@ -101,6 +101,8 @@ def index():
         FILTER_ONLY_FIELDS,
         HIGH_CARDINALITY_FILTERS,
         LOW_CARDINALITY_OPTIONS,
+        RADIUS_MILES_MAX,
+        RADIUS_MILES_MIN,
     )
     return render_template(
         "sports_schedules/index.html",
@@ -111,6 +113,8 @@ def index():
         filter_only_fields=FILTER_ONLY_FIELDS,
         high_cardinality_filters=HIGH_CARDINALITY_FILTERS,
         low_cardinality_options=LOW_CARDINALITY_OPTIONS,
+        radius_miles_min=RADIUS_MILES_MIN,
+        radius_miles_max=RADIUS_MILES_MAX,
         is_authenticated=current_user.is_authenticated,
         login_url=url_for("auth.login"),
         credits=current_user.credits if current_user.is_authenticated else 0,

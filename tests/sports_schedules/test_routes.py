@@ -37,6 +37,13 @@ class TestApiQueryValidation(unittest.TestCase):
         r = self.client.get("/sports-schedules/api/query?limit=10")
         self.assertEqual(r.status_code, 400)
 
+    def test_radius_outside_bounds_returns_400(self):
+        r = self.client.get(
+            "/sports-schedules/api/query?dimensions=date&zip_code=07928&radius_miles=999"
+        )
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("whole number from 1 to 250", r.get_json()["error"])
+
     def test_invalid_limit_returns_400(self):
         r = self.client.get("/sports-schedules/api/query?dimensions=league&limit=10000")
         self.assertEqual(r.status_code, 400)

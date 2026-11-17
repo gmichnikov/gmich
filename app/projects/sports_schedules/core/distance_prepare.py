@@ -3,20 +3,53 @@ Shared distance filter setup for /api/query and weekly digest execution.
 
 Distance uses zip + radius from request params or from saved config ``filters.near``.
 """
+import math
 from dataclasses import dataclass
 
+from app.projects.sports_schedules.core.constants import RADIUS_MILES_MAX, RADIUS_MILES_MIN
 from app.projects.sports_schedules.core.geocode import (
     filter_rows_by_distance,
     nearby_states,
     zip_to_coords,
 )
 
+RADIUS_MILES_ERROR = (
+    f"Miles must be a whole number from {RADIUS_MILES_MIN} to {RADIUS_MILES_MAX}."
+)
+
+
+def parse_radius_miles(raw) -> int | None:
+    """Whole miles in range, or None when the value is missing.
+
+    Raises ValueError when a value is present but not a whole number of miles
+    from RADIUS_MILES_MIN to RADIUS_MILES_MAX.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        raise ValueError(RADIUS_MILES_ERROR)
+    if isinstance(raw, str):
+        text = raw.strip()
+        if not text:
+            return None
+        raw = text
+    try:
+        number = float(raw)
+    except (TypeError, ValueError):
+        raise ValueError(RADIUS_MILES_ERROR) from None
+    if not math.isfinite(number) or not number.is_integer():
+        raise ValueError(RADIUS_MILES_ERROR)
+    miles = int(number)
+    if miles < RADIUS_MILES_MIN or miles > RADIUS_MILES_MAX:
+        raise ValueError(RADIUS_MILES_ERROR)
+    return miles
+
 
 @dataclass(frozen=True)
 class DistancePrepareResult:
     distance_filter_active: bool
     user_coords: tuple[float, float] | None
-    radius_miles: float | None
+    radius_miles: int | None
     extra_dims: list[str]
     error: str | None
     """Set when zip is missing from DB; caller should surface as query error."""
@@ -46,15 +79,11 @@ def prepare_distance_filter(params: dict) -> DistancePrepareResult:
             del filters["near"]
 
     try:
-        radius_miles = (
-            float(radius_raw)
-            if radius_raw is not None and str(radius_raw).strip() != ""
-            else None
-        )
-    except (TypeError, ValueError):
-        radius_miles = None
+        radius_miles = parse_radius_miles(radius_raw)
+    except ValueError as exc:
+        return DistancePrepareResult(False, None, None, [], str(exc), False)
 
-    if not zip_code or radius_miles is None or radius_miles <= 0:
+    if not zip_code or radius_miles is None:
         return DistancePrepareResult(
             False, None, None, [], None, False
         )
