@@ -39,27 +39,37 @@ class TestSportsMcpTools(unittest.TestCase):
     def tearDown(self):
         reset_rate_buckets()
 
-    def _rpc(self, method, params=None, headers=None):
+    def _rpc(self, method, params=None, headers=None, path="/mcp/sports"):
         return self.client.post(
-            "/mcp/",
+            path,
             json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params or {}},
             headers=headers,
         )
 
-    def test_initialize_names_the_server_gmich(self):
-        body = self._rpc("initialize").get_json()
-        self.assertEqual(body["result"]["serverInfo"]["name"], "gmich")
+    def test_initialize_names_each_connector(self):
+        personal = self._rpc("initialize", path="/mcp/").get_json()
+        sports = self._rpc("initialize").get_json()
+        self.assertEqual(personal["result"]["serverInfo"]["name"], "gmich")
+        self.assertEqual(sports["result"]["serverInfo"]["name"], "gmich-sports")
 
-    def test_tools_list_includes_schedule_tools(self):
-        tools = self._rpc("tools/list").get_json()["result"]["tools"]
-        names = [tool["name"] for tool in tools]
-        self.assertEqual(
-            names,
-            ["get_personal", "get_work", "get_schedule_options", "query_schedules"],
-        )
-        for tool in tools:
-            if tool["name"] in ("get_schedule_options", "query_schedules"):
-                self.assertEqual(tool["inputSchema"]["type"], "object")
+    def test_tools_list_is_split_by_connector(self):
+        personal = [tool["name"] for tool in self._rpc("tools/list", path="/mcp/").get_json()["result"]["tools"]]
+        sports_tools = self._rpc("tools/list").get_json()["result"]["tools"]
+        sports = [tool["name"] for tool in sports_tools]
+        self.assertEqual(personal, ["get_personal", "get_work"])
+        self.assertEqual(sports, ["get_schedule_options", "query_schedules"])
+        for tool in sports_tools:
+            self.assertEqual(tool["inputSchema"]["type"], "object")
+
+    def test_a_connector_rejects_the_other_connectors_tools(self):
+        personal = self._rpc("tools/call", {"name": "query_schedules", "arguments": {}}, path="/mcp/")
+        sports = self._rpc("tools/call", {"name": "get_personal", "arguments": {}})
+        self.assertIn("query_schedules", personal.get_json()["error"]["message"])
+        self.assertIn("get_personal", sports.get_json()["error"]["message"])
+
+    def test_sports_post_accepts_a_trailing_slash(self):
+        body = self._rpc("initialize", path="/mcp/sports/").get_json()
+        self.assertEqual(body["result"]["serverInfo"]["name"], "gmich-sports")
 
     def test_get_schedule_options_skips_dolthub(self):
         from unittest.mock import patch
@@ -146,15 +156,18 @@ class TestSportsMcpTools(unittest.TestCase):
         self.assertNotIn("sql", payload)
 
     def test_personal_tool_still_returns_data(self):
-        response = self._rpc("tools/call", {"name": "get_personal", "arguments": {}})
+        response = self._rpc("tools/call", {"name": "get_personal", "arguments": {}}, path="/mcp/")
         result = response.get_json()["result"]
         self.assertFalse(result["isError"])
         self.assertIn("bio", result["content"][0]["text"])
 
-    def test_landing_page_lists_schedule_tools(self):
-        html = self.client.get("/mcp/").get_data(as_text=True)
-        self.assertIn("query_schedules", html)
-        self.assertIn("get_schedule_options", html)
+    def test_landing_page_lists_both_connectors(self):
+        for path in ("/mcp/", "/mcp/sports"):
+            html = self.client.get(path).get_data(as_text=True)
+            self.assertIn("/mcp/sports", html)
+            self.assertIn("query_schedules", html)
+            self.assertIn("get_personal", html)
+            self.assertIn("get_work", html)
 
     def test_client_ip_uses_the_last_forwarded_hop(self):
         with self.app.test_request_context(headers={"X-Forwarded-For": "9.9.9.9, 8.8.8.8"}):

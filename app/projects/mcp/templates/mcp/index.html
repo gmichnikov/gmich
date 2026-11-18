@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal MCP Server - gregmichnikov.com</title>
+  <title>MCP connectors - gregmichnikov.com</title>
   <style>
     .mcp-page { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
     .mcp-page h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .mcp-page h2 { font-size: 1.1rem; margin: 1.75rem 0 0.4rem; }
     .mcp-page p { color: #444; line-height: 1.6; }
     .mcp-page .mcp-url-box { background: #f5f5f5; padding: 1rem; border-radius: 6px; font-family: monospace; word-break: break-all; margin: 1rem 0; }
     .mcp-page .mcp-url-box code { font-size: 0.9rem; }
@@ -16,14 +17,25 @@
   </style>
 </head>
 <body class="mcp-page">
-  <h1>MCP Server</h1>
-  <p>Bio, résumé, and sports schedules for AI assistants. Add this server as a connector in Cursor, Claude, ChatGPT, or Claude Code.</p>
+  <h1>MCP connectors</h1>
+  <p>Two separate connectors. Add the one you want in Cursor, Claude, ChatGPT, or Claude Code. A client only sees the tools for the URL you paste.</p>
 
-  <p><strong>Connector URL:</strong></p>
+  <h2>Sports schedules</h2>
+  <p>Pro, college, and some minor-league games. Times are Eastern. A distance search needs a US zip and a whole number of miles from 1 to 250.</p>
   <div class="mcp-url-box">
-    <code id="mcp-url">{{ url_for('mcp.mcp_endpoint', _external=True) }}</code>
+    <code id="mcp-sports-url">{{ url_for('mcp.sports_endpoint', _external=True) }}</code>
   </div>
-  <button class="mcp-copy-btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('mcp-url').textContent); this.textContent='Copied!'">Copy URL</button>
+  <button class="mcp-copy-btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('mcp-sports-url').textContent); this.textContent='Copied!'">Copy sports URL</button>
+  <p><strong>Tools:</strong> get_schedule_options, query_schedules</p>
+  <p><strong>Questions you can ask:</strong> “What games are in NJ this weekend?” “MLB games within 22 miles of 07928 in the next 30 days.” “When do the Celtics play the Knicks?”</p>
+
+  <h2>Personal</h2>
+  <p>Bio, family, and work background.</p>
+  <div class="mcp-url-box">
+    <code id="mcp-personal-url">{{ url_for('mcp.mcp_endpoint', _external=True) }}</code>
+  </div>
+  <button class="mcp-copy-btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('mcp-personal-url').textContent); this.textContent='Copied!'">Copy personal URL</button>
+  <p><strong>Tools:</strong> get_personal, get_work</p>
 
   <p><strong>Supported clients:</strong></p>
   <ul>
@@ -33,8 +45,5 @@
     <li><strong>ChatGPT</strong> — Developer Mode → add URL (Plus/Pro/Team)</li>
     <li><strong>Claude Code</strong> — <code>claude mcp add --transport http &lt;url&gt;</code></li>
   </ul>
-
-  <p><strong>Tools:</strong> get_personal, get_work, get_schedule_options, query_schedules</p>
-  <p><strong>Schedule questions you can ask:</strong> “What games are in NJ this weekend?” “MLB games within 50 miles of 07928 in the next 30 days.” “When do the Celtics play the Knicks?”</p>
 </body>
 </html>

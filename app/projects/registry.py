@@ -555,7 +555,7 @@ PROJECTS = [
     {
         "id": "mcp",
         "name": "Personal MCP Server",
-        "description": "Queryable bio/résumé for AI assistants — add as a connector in Cursor, Claude, etc.",
+        "description": "Two AI connectors: a personal bio, and sports schedule search.",
         "url": "/mcp",
         "auth_required": False,
         "status": "active",

@@ -1,8 +1,8 @@
 """
 MCP (Model Context Protocol) server routes.
 
-Exposes bio tools and read-only sports schedule tools.
-Endpoint: POST /mcp (JSON-RPC). GET /mcp/ renders the landing page for browsers.
+Two connectors on one app. POST /mcp is the personal bio. POST /mcp/sports is
+read-only schedule search. GET on either URL renders the landing page.
 """
 
 import json
@@ -17,8 +17,7 @@ mcp_bp = Blueprint(
     template_folder="templates",
 )
 
-# MCP tool definitions for protocol
-MCP_TOOLS = [
+PERSONAL_TOOLS = [
     {
         "name": "get_personal",
         "description": "Personal and family life: bio, contact, interests, family",
@@ -29,14 +28,16 @@ MCP_TOOLS = [
         "description": "Work background: skills, projects, experience",
         "inputSchema": {"type": "object", "properties": {}},
     },
-] + schedule_mcp_tools()
+]
+SPORTS_TOOLS = schedule_mcp_tools()
 
 
-def _handle_json_rpc(body: dict) -> dict | None:
+def _handle_json_rpc(body: dict, tools: list[dict], server_name: str) -> dict | None:
     """Process JSON-RPC request and return response."""
     method = body.get("method")
     params = body.get("params") or {}
     req_id = body.get("id")
+    allowed = {tool["name"] for tool in tools}
 
     if method == "initialize":
         return {
@@ -45,7 +46,7 @@ def _handle_json_rpc(body: dict) -> dict | None:
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "gmich", "version": "0.1.0"},
+                "serverInfo": {"name": server_name, "version": "0.1.0"},
             },
         }
 
@@ -56,13 +57,13 @@ def _handle_json_rpc(body: dict) -> dict | None:
         return {
             "jsonrpc": "2.0",
             "id": req_id,
-            "result": {"tools": MCP_TOOLS},
+            "result": {"tools": tools},
         }
 
     if method == "tools/call":
         name = params.get("name")
         args = params.get("arguments") or {}
-        if name not in TOOL_HANDLERS:
+        if name not in allowed or name not in TOOL_HANDLERS:
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,
@@ -105,28 +106,46 @@ def _handle_json_rpc(body: dict) -> dict | None:
     }
 
 
-@mcp_bp.route("/", methods=["GET"])
-def index():
-    """Landing page: how to add this MCP server as a connector."""
+def _landing_page():
     return render_template("mcp/index.html")
 
 
-@mcp_bp.route("/", methods=["POST"])
-@csrf.exempt
-def mcp_endpoint():
-    """
-    MCP JSON-RPC endpoint.
-    Handles Initialize, tools/list, tools/call.
-    """
+def _json_rpc_response(tools: list[dict], server_name: str):
     try:
         body = request.get_json()
         if not body:
             return jsonify({"error": "Invalid JSON"}), 400
 
-        response = _handle_json_rpc(body)
+        response = _handle_json_rpc(body, tools, server_name)
         if response is None:
             return "", 202  # Notification — no response body
 
         return jsonify(response)
     except Exception as e:
         return jsonify({"jsonrpc": "2.0", "error": {"code": -32603, "message": str(e)}}), 500
+
+
+@mcp_bp.route("/", methods=["GET"])
+def index():
+    """Landing page: how to add either connector."""
+    return _landing_page()
+
+
+@mcp_bp.route("/", methods=["POST"])
+@csrf.exempt
+def mcp_endpoint():
+    """Personal bio connector. Handles initialize, tools/list, and tools/call."""
+    return _json_rpc_response(PERSONAL_TOOLS, "gmich")
+
+
+@mcp_bp.route("/sports", methods=["GET"], strict_slashes=False)
+def sports_index():
+    """Same landing page. Browsers that open the sports URL still see both connectors."""
+    return _landing_page()
+
+
+@mcp_bp.route("/sports", methods=["POST"], strict_slashes=False)
+@csrf.exempt
+def sports_endpoint():
+    """Sports schedule connector. Handles initialize, tools/list, and tools/call."""
+    return _json_rpc_response(SPORTS_TOOLS, "gmich-sports")
