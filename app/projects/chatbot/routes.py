@@ -7,10 +7,21 @@ from app.projects.chatbot.greg import GREG_CONTEXT
 from app.utils.logging import log_project_visit
 from uuid import uuid4
 import os
-from posthog import Posthog
-from posthog.ai.openai import OpenAI
 
-_posthog = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", sync_mode=True)
+_posthog = None
+
+
+def _get_posthog():
+    global _posthog
+    if _posthog is None:
+        from posthog import Posthog
+
+        _posthog = Posthog(
+            os.environ.get("POSTHOG_API_KEY", ""),
+            host="https://us.i.posthog.com",
+            sync_mode=True,
+        )
+    return _posthog
 
 chatbot_bp = Blueprint('chatbot', __name__,
                        template_folder='templates',
@@ -237,7 +248,9 @@ Keep responses concise. Never use markdown formatting.
         # Add the current user message
         formatted_messages.append({"role": "user", "content": user_message})
 
-        client = OpenAI(api_key=API_KEY, posthog_client=_posthog)
+        from posthog.ai.openai import OpenAI
+
+        client = OpenAI(api_key=API_KEY, posthog_client=_get_posthog())
 
         model = "gpt-5-mini"
         completion = client.chat.completions.create(

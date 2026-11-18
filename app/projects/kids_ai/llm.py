@@ -4,11 +4,6 @@ import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from anthropic import Anthropic
-from google import genai
-from google.genai import types
-from openai import OpenAI
-
 from app.projects.kids_ai.pricing import (
     MODEL_MODERATION_A,
     MODEL_MODERATION_B,
@@ -51,6 +46,8 @@ def _anthropic_output_text(response):
 
 
 def _anthropic_text(system, messages, model, max_tokens, timeout=PRIMARY_TIMEOUT_SECONDS):
+    from anthropic import Anthropic
+
     client = Anthropic(
         api_key=os.getenv("ANTHROPIC_API_KEY"),
         timeout=timeout,
@@ -84,6 +81,8 @@ def _anthropic_text(system, messages, model, max_tokens, timeout=PRIMARY_TIMEOUT
 
 
 def _openai_text(system, user_prompt, model, max_tokens, timeout=MODERATION_TIMEOUT_SECONDS):
+    from openai import OpenAI
+
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
         timeout=timeout,
@@ -134,6 +133,9 @@ def _gemini_output_text(response):
 
 
 def _gemini_text(prompt, model, max_tokens, json_mode=False, timeout=MODERATION_TIMEOUT_SECONDS):
+    from google import genai
+    from google.genai import types
+
     client = genai.Client(
         api_key=os.getenv("GOOGLE_API_KEY"),
         http_options=types.HttpOptions(timeout=int(timeout * 1000)),

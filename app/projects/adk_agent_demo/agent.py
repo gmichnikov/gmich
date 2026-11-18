@@ -4,10 +4,6 @@ import datetime
 import requests
 from zoneinfo import ZoneInfo
 
-from google.adk.agents import Agent
-from google.adk.tools import google_search
-from google.adk.tools.agent_tool import AgentTool
-
 
 def get_current_time(city: str) -> dict:
     """Returns the current time in a specified city.
@@ -138,62 +134,73 @@ def convert_c_to_f(celsius: float) -> dict:
     }
 
 
-# Create the specialized agents
-time_agent = Agent(
-    name="time_specialist",
-    model="gemini-2.5-flash",
-    description="A specialist that can tell the current time in various cities.",
-    instruction="""You are a time specialist. Your job is to:
+_adk_agent = None
+
+
+def get_adk_agent():
+    """Build the ADK manager the first time a request needs it."""
+    global _adk_agent
+    if _adk_agent is not None:
+        return _adk_agent
+
+    from google.adk.agents import Agent
+    from google.adk.tools import google_search
+    from google.adk.tools.agent_tool import AgentTool
+
+    time_agent = Agent(
+        name="time_specialist",
+        model="gemini-2.5-flash",
+        description="A specialist that can tell the current time in various cities.",
+        instruction="""You are a time specialist. Your job is to:
 1. Immediately use the get_current_time tool for the city requested by the manager.
 2. Once you have the result, state it clearly.
 3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
-    tools=[get_current_time],
-)
+        tools=[get_current_time],
+    )
 
-weather_agent = Agent(
-    name="weather_specialist",
-    model="gemini-2.5-flash",
-    description="A specialist that can check the weather and convert temperatures.",
-    instruction="""You are a weather specialist. Your job is to:
+    weather_agent = Agent(
+        name="weather_specialist",
+        model="gemini-2.5-flash",
+        description="A specialist that can check the weather and convert temperatures.",
+        instruction="""You are a weather specialist. Your job is to:
 1. Provide weather data using the get_weather tool (and convert_c_to_f if requested).
 2. Once you have the results, state them clearly.
 3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
-    tools=[get_weather, convert_c_to_f],
-)
+        tools=[get_weather, convert_c_to_f],
+    )
 
-math_agent = Agent(
-    name="math_specialist",
-    model="gemini-2.5-flash",
-    description="A specialist that can perform mathematical calculations.",
-    instruction="""You are a math specialist. Your job is to:
+    math_agent = Agent(
+        name="math_specialist",
+        model="gemini-2.5-flash",
+        description="A specialist that can perform mathematical calculations.",
+        instruction="""You are a math specialist. Your job is to:
 1. Use the add_numbers tool to calculate the result based on information in the chat history.
 2. Once you have the result, state it clearly.
 3. Then, use the escalate tool to return control to the adk_agent_demo_manager.
 Do not attempt to perform any other tasks or talk to other specialists.""",
-    tools=[add_numbers],
-)
+        tools=[add_numbers],
+    )
 
-search_agent = Agent(
-    name="search_specialist",
-    model="gemini-2.5-flash",
-    description="A specialist that can search the web for real-time information.",
-    instruction="""You are a search specialist. Your job is to:
+    search_agent = Agent(
+        name="search_specialist",
+        model="gemini-2.5-flash",
+        description="A specialist that can search the web for real-time information.",
+        instruction="""You are a search specialist. Your job is to:
 1. Use the google_search tool to find the information requested.
 2. State your findings clearly.
 3. Your results will automatically be returned to the manager.""",
-    tools=[google_search],
-)
+        tools=[google_search],
+    )
 
-search_tool = AgentTool(agent=search_agent)
+    search_tool = AgentTool(agent=search_agent)
 
-# Create the root agent
-adk_agent = Agent(
-    name="adk_agent_demo_manager",
-    model="gemini-2.5-flash",
-    description="A manager that delegates tasks to specialized agents for time, weather, math, and web search.",
-    instruction="""You are the ADK Agent Demo Manager. You are the sole orchestrator.
+    _adk_agent = Agent(
+        name="adk_agent_demo_manager",
+        model="gemini-2.5-flash",
+        description="A manager that delegates tasks to specialized agents for time, weather, math, and web search.",
+        instruction="""You are the ADK Agent Demo Manager. You are the sole orchestrator.
 Your job is to manage the workflow:
 1. Analyze the user's request.
 2. If you need specific data, transfer control to the appropriate specialist one at a time.
@@ -202,6 +209,7 @@ Your job is to manage the workflow:
 5. Once all information is gathered, synthesize everything into a final friendly answer for the user.
 
 Crucially: You are the only one who decides the sequence of events. Do not provide a final answer until all steps are complete.""",
-    sub_agents=[time_agent, weather_agent, math_agent],
-    tools=[search_tool],
-)
+        sub_agents=[time_agent, weather_agent, math_agent],
+        tools=[search_tool],
+    )
+    return _adk_agent

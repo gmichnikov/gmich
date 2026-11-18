@@ -2,12 +2,10 @@
 
 import logging
 
-import boto3
-from botocore.exceptions import ClientError
-
 
 def get_r2_client():
     """S3-compatible client for Cloudflare R2."""
+    import boto3
     from flask import current_app
 
     account_id = current_app.config.get("R2_ACCOUNT_ID")
@@ -50,6 +48,8 @@ def generate_presigned_download_url(key, expires_in=3600):
 
 def object_exists(key):
     """Return True if the object exists in the configured R2 bucket."""
+    from botocore.exceptions import ClientError
+
     try:
         client = get_r2_client()
         bucket = get_r2_bucket_name()

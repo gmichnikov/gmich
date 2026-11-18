@@ -2,8 +2,18 @@
 
 import re
 from zoneinfo import ZoneInfo
-import timezonefinder
 from datetime import datetime
+
+_timezone_finder = None
+
+
+def _get_timezone_finder():
+    global _timezone_finder
+    if _timezone_finder is None:
+        import timezonefinder
+
+        _timezone_finder = timezonefinder.TimezoneFinder()
+    return _timezone_finder
 
 
 # Tag format: lowercase, hyphens, numbers only. No spaces.
@@ -219,8 +229,7 @@ def get_visited_date_default(lat, lng):
     Used for defaulting visited_date when creating entries with lat/lng.
     """
     try:
-        tf = timezonefinder.TimezoneFinder()
-        tz_name = tf.timezone_at(lat=float(lat), lng=float(lng))
+        tz_name = _get_timezone_finder().timezone_at(lat=float(lat), lng=float(lng))
         if tz_name:
             return datetime.now(ZoneInfo(tz_name)).date()
     except Exception:

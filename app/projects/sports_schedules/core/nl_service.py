@@ -7,10 +7,20 @@ import os
 import signal
 from contextlib import contextmanager
 
-from posthog import Posthog
-from posthog.ai.gemini import Client as PostHogGeminiClient
+_posthog = None
 
-_posthog = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", sync_mode=True)
+
+def _get_posthog():
+    global _posthog
+    if _posthog is None:
+        from posthog import Posthog
+
+        _posthog = Posthog(
+            os.environ.get("POSTHOG_API_KEY", ""),
+            host="https://us.i.posthog.com",
+            sync_mode=True,
+        )
+    return _posthog
 
 MODEL = "gemini-3-flash-preview"
 MAX_OUTPUT_TOKENS = 2048
@@ -47,7 +57,9 @@ def call_nl_llm(prompt: str, distinct_id: str = "anonymous") -> tuple[str, dict]
     if not api_key:
         raise ValueError("GOOGLE_API_KEY environment variable is not set")
 
-    client = PostHogGeminiClient(api_key=api_key, posthog_client=_posthog)
+    from posthog.ai.gemini import Client as PostHogGeminiClient
+
+    client = PostHogGeminiClient(api_key=api_key, posthog_client=_get_posthog())
 
     with _timeout_context(TIMEOUT_SECONDS):
         response = client.models.generate_content(

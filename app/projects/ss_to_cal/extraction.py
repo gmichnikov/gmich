@@ -10,14 +10,23 @@ import time
 from contextlib import contextmanager
 from datetime import date
 
-from google.genai import types
-from posthog import Posthog
-from posthog.ai.anthropic import Anthropic as PostHogAnthropicClient
-from posthog.ai.gemini import Client as PostHogGeminiClient
-
 logger = logging.getLogger(__name__)
 
-_posthog = Posthog(os.environ.get("POSTHOG_API_KEY", ""), host="https://us.i.posthog.com", sync_mode=True)
+_posthog = None
+
+
+def _get_posthog():
+    global _posthog
+    if _posthog is None:
+        from posthog import Posthog
+
+        _posthog = Posthog(
+            os.environ.get("POSTHOG_API_KEY", ""),
+            host="https://us.i.posthog.com",
+            sync_mode=True,
+        )
+    return _posthog
+
 
 DEFAULT_MODEL = os.getenv("SSTC_EXTRACTION_MODEL", "claude-sonnet-4-6")
 MAX_OUTPUT_TOKENS = 1024
@@ -117,7 +126,9 @@ def _extract_with_claude(jpeg_bytes: bytes, *, distinct_id: str, model: str) -> 
     if not api_key:
         raise ExtractionApiError("ANTHROPIC_API_KEY environment variable is not set")
 
-    client = PostHogAnthropicClient(api_key=api_key, posthog_client=_posthog)
+    from posthog.ai.anthropic import Anthropic as PostHogAnthropicClient
+
+    client = PostHogAnthropicClient(api_key=api_key, posthog_client=_get_posthog())
     api_started = time.monotonic()
     image_b64 = base64.standard_b64encode(jpeg_bytes).decode("ascii")
 
@@ -166,7 +177,10 @@ def _extract_with_gemini(jpeg_bytes: bytes, *, distinct_id: str, model: str) -> 
     if not api_key:
         raise ExtractionApiError("GOOGLE_API_KEY environment variable is not set")
 
-    client = PostHogGeminiClient(api_key=api_key, posthog_client=_posthog)
+    from google.genai import types
+    from posthog.ai.gemini import Client as PostHogGeminiClient
+
+    client = PostHogGeminiClient(api_key=api_key, posthog_client=_get_posthog())
     api_started = time.monotonic()
 
     with _timeout_context(TIMEOUT_SECONDS):

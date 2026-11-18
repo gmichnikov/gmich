@@ -8,8 +8,6 @@ import logging
 import os
 import re
 
-from google import genai
-
 MODEL = "gemini-3-flash-preview"
 MAX_OUTPUT_TOKENS = 4096
 
@@ -17,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 def _get_client():
+    from google import genai
+
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("GOOGLE_API_KEY environment variable is not set")

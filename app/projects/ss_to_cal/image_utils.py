@@ -2,8 +2,6 @@
 
 import io
 
-from PIL import Image
-
 MAX_EDGE_PX = 1600
 JPEG_QUALITY = 85
 
@@ -16,6 +14,8 @@ def prepare_image_for_api(file_storage) -> tuple[bytes, int, int]:
     """
     Decode upload, resize longest edge to MAX_EDGE_PX, return JPEG bytes + dimensions.
     """
+    from PIL import Image
+
     raw = file_storage.read()
     if not raw:
         raise ImageProcessingError("The shared image was empty.")

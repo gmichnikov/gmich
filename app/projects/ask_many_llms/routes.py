@@ -20,7 +20,6 @@ bp = Blueprint('ask_many_llms', __name__,
 def index():
     """Redirect to ask question page"""
     return redirect(url_for('ask_many_llms.ask_question'))
-llm_service = LLMService()
 
 @bp.route('/api/create-question', methods=['POST'])
 @login_required

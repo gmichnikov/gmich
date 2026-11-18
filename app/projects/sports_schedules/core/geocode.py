@@ -8,9 +8,6 @@ Geocoding helpers for distance-based filtering.
 import logging
 import time
 
-from geopy.distance import geodesic
-from geopy.geocoders import Nominatim
-
 from app import db
 from app.projects.sports_schedules.models import (
     SportsScheduleGeocodeCache,
@@ -19,7 +16,16 @@ from app.projects.sports_schedules.models import (
 
 logger = logging.getLogger(__name__)
 
-_geolocator = Nominatim(user_agent="gmich-sports-schedules")
+_geolocator = None
+
+
+def _get_geolocator():
+    global _geolocator
+    if _geolocator is None:
+        from geopy.geocoders import Nominatim
+
+        _geolocator = Nominatim(user_agent="gmich-sports-schedules")
+    return _geolocator
 
 # Normalize full US state names to 2-letter codes. Also handles DC and common variants.
 _STATE_NAME_TO_CODE = {
@@ -196,7 +202,7 @@ def _nominatim_lookup(city: str, state: str) -> tuple[float, float] | None:
     query = f"{city}, {state}, USA"
     try:
         time.sleep(1.1)  # Nominatim rate limit: 1 request/second
-        location = _geolocator.geocode(query, timeout=10)
+        location = _get_geolocator().geocode(query, timeout=10)
         if location:
             return (location.latitude, location.longitude)
     except Exception as e:
@@ -265,6 +271,8 @@ def filter_rows_by_distance(
     max_seconds limits time spent in uncached Nominatim lookups. Cache hits, including a
     stored miss, do not count. The default None leaves callers uncapped.
     """
+    from geopy.distance import geodesic
+
     user_coords = (user_lat, user_lon)
     coord_cache: dict[tuple[str, str], tuple[float, float] | None] = {}
     filtered = []

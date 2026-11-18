@@ -5,9 +5,6 @@ Handles communication with OpenAI, Anthropic, and Google Gemini APIs
 import os
 import logging
 from typing import List, Dict
-import openai
-from anthropic import Anthropic
-from google import genai
 import time
 import signal
 from contextlib import contextmanager
@@ -98,14 +95,33 @@ MODEL_MAPPINGS = {
 
 class LLMService:
     def __init__(self):
-        # Initialize OpenAI
-        self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        # Initialize Anthropic
-        self.anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        
-        # Initialize Google Gemini
-        self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
+        self._openai_client = None
+        self._anthropic = None
+        self._gemini_client = None
+
+    @property
+    def openai_client(self):
+        if self._openai_client is None:
+            import openai
+
+            self._openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        return self._openai_client
+
+    @property
+    def anthropic(self):
+        if self._anthropic is None:
+            from anthropic import Anthropic
+
+            self._anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+        return self._anthropic
+
+    @property
+    def gemini_client(self):
+        if self._gemini_client is None:
+            from google import genai
+
+            self._gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
+        return self._gemini_client
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
         """Calculate the cost of a response based on token usage."""

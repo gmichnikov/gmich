@@ -14,8 +14,6 @@ import os
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
-from anthropic import Anthropic
-
 logger = logging.getLogger(__name__)
 
 CLAUDE_MODEL = "claude-haiku-4-5"
@@ -93,6 +91,8 @@ def _call_claude(prompt: str, max_tokens: int = 512) -> str:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY is not set")
+    from anthropic import Anthropic
+
     client = Anthropic(api_key=api_key)
     response = client.messages.create(
         model=CLAUDE_MODEL,

@@ -1,13 +1,11 @@
 import asyncio
 import json
+import threading
 
 from flask import Blueprint, render_template, request, jsonify, current_app, Response, stream_with_context
 from flask_login import login_required, current_user
-from google.adk.runners import InMemoryRunner
-from google.genai import types as genai_types
 
 from app.utils.logging import log_project_visit
-from app.projects.adk_agent_demo.agent import adk_agent
 
 adk_agent_demo_bp = Blueprint('adk_agent_demo', __name__,
                                url_prefix='/adk-agent-demo',
@@ -15,8 +13,24 @@ adk_agent_demo_bp = Blueprint('adk_agent_demo', __name__,
                                static_folder='static',
                                static_url_path='/adk-agent-demo/static')
 
-# Create a runner for the agent
-runner = InMemoryRunner(agent=adk_agent, app_name=adk_agent.name)
+_runner = None
+_runner_lock = threading.Lock()
+
+
+def _get_runner():
+    """Import ADK and build the runner on the first /ask, then reuse it."""
+    global _runner
+    if _runner is not None:
+        return _runner
+    with _runner_lock:
+        if _runner is None:
+            from google.adk.runners import InMemoryRunner
+
+            from app.projects.adk_agent_demo.agent import get_adk_agent
+
+            agent = get_adk_agent()
+            _runner = InMemoryRunner(agent=agent, app_name=agent.name)
+    return _runner
 
 
 @adk_agent_demo_bp.route('/')
@@ -41,8 +55,8 @@ def ask_agent():
 
     user_id = str(current_user.id)
     session_id = f"session_{current_user.id}"
-    app_name = adk_agent.name
-    
+    runner = _get_runner()
+
     # 1. Deduct credit upfront in the main request context
     if current_user.credits < 1:
         return jsonify({'error': 'Insufficient credits'}), 400
@@ -95,6 +109,8 @@ def ask_agent():
                                 user_id=user_id,
                                 session_id=session_id
                             )
+
+                        from google.genai import types as genai_types
 
                         user_message = genai_types.Content(
                             role="user",
