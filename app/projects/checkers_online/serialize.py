@@ -1,11 +1,22 @@
 from app.projects.checkers_online.models import CheckersOnlineRoom
 from app.projects.checkers_online.room_service import _colors_locked
-from app.projects.checkers_online.rules import legal_moves
+from app.projects.checkers_online.rules import board_from_key, describe_last_move, legal_moves
 
 _DRAW_TEXT = {
     "quiet": "Draw — 40 moves with no capture or king.",
     "repeat": "Draw — the same position happened three times.",
 }
+
+
+def _last_move(room):
+    history = room.position_history or []
+    if len(history) < 2:
+        return None
+    try:
+        previous = board_from_key(history[-2])
+    except (ValueError, IndexError):
+        return None
+    return describe_last_move(previous, room.board)
 
 
 def room_to_dict(room, viewer_seat):
@@ -47,6 +58,7 @@ def room_to_dict(room, viewer_seat):
         "your_color": your_color,
         "can_pick_color": bool(viewer_seat) and not _colors_locked(room),
         "legal_moves": moves,
+        "last_move": _last_move(room),
         "version": room.version,
         "vs_cpu": bool(room.vs_cpu),
         "difficulty": room.difficulty or "medium",

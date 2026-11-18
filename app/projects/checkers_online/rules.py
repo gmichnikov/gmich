@@ -66,6 +66,44 @@ def position_key(board, turn):
     return turn + ":" + "/".join(rows)
 
 
+def board_from_key(key):
+    _turn, body = key.split(":", 1)
+    board = []
+    for row in body.split("/"):
+        board.append([None if cell == "." else cell for cell in row])
+    return board
+
+
+def describe_last_move(previous, current):
+    """Where the last piece came from, where it landed, and what it jumped."""
+    dest = None
+    arrived = None
+    emptied = []
+    for row in range(SIZE):
+        for col in range(SIZE):
+            before = previous[row][col]
+            after = current[row][col]
+            if before == after:
+                continue
+            if after is not None and (before is None or piece_color(before) != piece_color(after)):
+                dest = [row, col]
+                arrived = piece_color(after)
+            elif before is not None and after is None:
+                emptied.append((row, col, before))
+    if dest is None or arrived is None:
+        return None
+    origin = None
+    captures = []
+    for row, col, before in emptied:
+        if piece_color(before) == arrived:
+            origin = [row, col]
+        else:
+            captures.append([row, col])
+    if origin is None:
+        return None
+    return {"from": origin, "to": dest, "captures": captures}
+
+
 def _move(start, path, captures, promote):
     return {
         "from": [start[0], start[1]],

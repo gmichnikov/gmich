@@ -237,6 +237,16 @@
                 if (selected && selected.row === row && selected.col === col) {
                     cell.classList.add("chk-selected");
                 }
+                var lastMove = state.last_move;
+                if (lastMove && lastMove.from[0] === row && lastMove.from[1] === col) {
+                    cell.classList.add("chk-last-from");
+                }
+                if (lastMove && lastMove.to[0] === row && lastMove.to[1] === col) {
+                    cell.classList.add("chk-last-to");
+                }
+                if (lastMove && squareListed(lastMove.captures, row, col)) {
+                    cell.classList.add("chk-last-capture");
+                }
                 var landing = landingMove(selectedMoves, row, col);
                 if (landing) {
                     cell.classList.add(landing.captures.length ? "chk-landing-jump" : "chk-landing");
@@ -306,6 +316,18 @@
             });
     }
 
+    function squareListed(squares, row, col) {
+        if (!squares) {
+            return false;
+        }
+        for (var i = 0; i < squares.length; i += 1) {
+            if (squares[i][0] === row && squares[i][1] === col) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function boardsDiffer(left, right) {
         for (var row = 0; row < 8; row += 1) {
             for (var col = 0; col < 8; col += 1) {
@@ -334,6 +356,11 @@
         next.board = board;
         next.turn = state.turn === "black" ? "red" : "black";
         next.legal_moves = [];
+        next.last_move = {
+            from: move.from,
+            to: move.to,
+            captures: move.captures,
+        };
         return next;
     }
 

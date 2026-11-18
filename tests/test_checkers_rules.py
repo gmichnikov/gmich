@@ -8,9 +8,12 @@ from rules import (
     QUIET_DRAW_PLIES,
     apply_action,
     apply_move,
+    board_from_key,
+    describe_last_move,
     initial_board,
     legal_moves,
     new_game_state,
+    position_key,
 )
 
 
@@ -118,3 +121,17 @@ class TestCheckersRules(unittest.TestCase):
         result = apply_action(board, "black", 0, history, move)
         self.assertEqual(result["status"], "draw")
         self.assertEqual(result["result_reason"], "repeat")
+
+    def test_last_move_marks_a_jump(self):
+        board = _empty()
+        board[2][1] = "b"
+        board[3][2] = "r"
+        board[5][4] = "r"
+        move = next(m for m in legal_moves(board, "black") if m["to"] == [6, 5])
+        after = apply_move(board, move)
+        described = describe_last_move(board, after)
+        self.assertEqual(described["from"], [2, 1])
+        self.assertEqual(described["to"], [6, 5])
+        self.assertEqual(described["captures"], [[3, 2], [5, 4]])
+        restored = board_from_key(position_key(board, "black"))
+        self.assertEqual(describe_last_move(restored, after)["to"], [6, 5])
