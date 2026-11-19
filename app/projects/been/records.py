@@ -6,7 +6,7 @@ from app import db
 from app.projects.been.models import BeenPlace, BeenVisit
 from app.projects.been.parsing import VisitInputError, parse_when
 from app.projects.been.places import clean_place
-from app.projects.been.water import clean_activity, clean_water_slug
+from app.projects.been.activities import clean_activity
 
 
 def _clean_notes(raw):
@@ -58,22 +58,16 @@ def find_or_create_place(user_id, place):
     return row
 
 
-def add_visit(user_id, *, place, water_slug, activity, when, notes):
+def add_visit(user_id, *, place, activity, when, notes):
     visited_on, precision = parse_when(when)
-    water_slug = clean_water_slug(water_slug)
     activity = clean_activity(activity)
     notes = _clean_notes(notes)
-    if place is None and not water_slug:
-        raise VisitInputError("Add a place or a body of water.")
-    if activity and not water_slug:
-        raise VisitInputError("Pick a body of water for that activity.")
-    place_row = None
-    if place is not None:
-        place_row = find_or_create_place(user_id, clean_place(place))
+    if place is None:
+        raise VisitInputError("Choose a place from the search results.")
+    place_row = find_or_create_place(user_id, clean_place(place))
     visit = BeenVisit(
         user_id=user_id,
         place=place_row,
-        water_slug=water_slug,
         activity=activity,
         visited_on=visited_on,
         date_precision=precision,
@@ -84,16 +78,10 @@ def add_visit(user_id, *, place, water_slug, activity, when, notes):
     return visit
 
 
-def update_visit(visit, *, water_slug, activity, when, notes):
+def update_visit(visit, *, activity, when, notes):
     visited_on, precision = parse_when(when)
-    water_slug = clean_water_slug(water_slug)
     activity = clean_activity(activity)
     notes = _clean_notes(notes)
-    if visit.place_id is None and not water_slug:
-        raise VisitInputError("This visit needs a body of water.")
-    if activity and not water_slug:
-        raise VisitInputError("Pick a body of water for that activity.")
-    visit.water_slug = water_slug
     visit.activity = activity
     visit.visited_on = visited_on
     visit.date_precision = precision

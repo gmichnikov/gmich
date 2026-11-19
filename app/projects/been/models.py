@@ -53,14 +53,13 @@ class BeenPlace(db.Model):
 
 
 class BeenVisit(db.Model):
-    """One stay or water activity. A visit may have a place, a water body, or both."""
+    """One stay at a place. activity marks a water spot (swam, boated, and so on)."""
 
     __tablename__ = "been_visit"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    place_id = db.Column(db.Integer, db.ForeignKey("been_place.id", ondelete="CASCADE"), nullable=True)
-    water_slug = db.Column(db.String(64), nullable=True)
+    place_id = db.Column(db.Integer, db.ForeignKey("been_place.id", ondelete="CASCADE"), nullable=False)
     activity = db.Column(db.String(16), nullable=True)
     visited_on = db.Column(db.Date, nullable=True)
     # year, month, or day. Null when visited_on is null.
@@ -74,10 +73,6 @@ class BeenVisit(db.Model):
     __table_args__ = (
         db.Index("ix_been_visit_user_id", "user_id"),
         db.Index("ix_been_visit_place_id", "place_id"),
-        db.CheckConstraint(
-            "place_id IS NOT NULL OR water_slug IS NOT NULL",
-            name="ck_been_visit_place_or_water",
-        ),
         db.CheckConstraint(
             "(visited_on IS NULL AND date_precision IS NULL) OR "
             "(visited_on IS NOT NULL AND date_precision IN ('year', 'month', 'day'))",

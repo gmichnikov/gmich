@@ -544,7 +544,7 @@ PROJECTS = [
     {
         "id": "been",
         "name": "Where I've Been",
-        "description": "A private list of places and water from your whole life",
+        "description": "A private list of places, including swims and crossings",
         "url": "/been",
         "auth_required": True,
         "status": "active",

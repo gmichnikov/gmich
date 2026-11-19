@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "been/_fields.html" import water_select, activity_select, when_field, notes_field %}
+{% from "been/_fields.html" import activity_select, when_field, notes_field %}
 
 {% block title %}Edit {{ title }}{% endblock %}
 
@@ -21,12 +21,9 @@
 
     <form method="post" class="been-card been-wait">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <p class="been-hint">The place stays as saved. You can change the date, water, and notes.</p>
+        <p class="been-hint">The place stays as saved. You can change the date, the water mark, and the notes.</p>
         {{ when_field(when_value) }}
-        <div class="been-split">
-            {{ water_select(water_groups, visit.water_slug or '', not visit.place) }}
-            {{ activity_select(activities, visit.activity or '') }}
-        </div>
+        {{ activity_select(activities, visit.activity or '') }}
         {{ notes_field(visit.notes or '') }}
         <div class="been-actions">
             <button type="submit" class="been-button" data-loading="Saving…">Save changes</button>

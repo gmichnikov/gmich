@@ -1,10 +1,15 @@
 import unittest
 from datetime import date
 
-from app.projects.been.parsing import format_when, parse_paste_line, parse_when, when_input_value
+from app.projects.been.activities import clean_activity
+from app.projects.been.parsing import (
+    VisitInputError,
+    format_when,
+    parse_paste_line,
+    parse_when,
+    when_input_value,
+)
 from app.projects.been.places import build_paste_preview, clean_place, normalize_feature
-from app.projects.been.water import WATER_BODIES, WATER_BY_SLUG, clean_activity, clean_water_slug
-from app.projects.been.parsing import VisitInputError
 
 
 LISBON = {
@@ -131,17 +136,9 @@ class PastePreviewTests(unittest.TestCase):
         self.assertIsNone(preview["rows"][0]["place"])
 
 
-class WaterTests(unittest.TestCase):
-    def test_slugs_are_unique(self):
-        slugs = [body["slug"] for body in WATER_BODIES]
-        self.assertEqual(len(slugs), len(set(slugs)))
-        self.assertIn("atlantic-ocean", WATER_BY_SLUG)
-        self.assertIn("tyrrhenian-sea", WATER_BY_SLUG)
-
-    def test_clean_water_and_activity(self):
-        self.assertIsNone(clean_water_slug("  "))
+class ActivityTests(unittest.TestCase):
+    def test_clean_activity(self):
+        self.assertIsNone(clean_activity("  "))
         self.assertEqual(clean_activity("Swam"), "swam")
-        with self.assertRaises(VisitInputError):
-            clean_water_slug("the-puddle")
         with self.assertRaises(VisitInputError):
             clean_activity("skied")

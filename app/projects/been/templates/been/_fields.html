@@ -1,27 +1,13 @@
-{% macro water_select(groups, selected='', required=false) %}
-<label class="been-label">Water
-    <select name="water_slug" class="been-input" {% if required %}required{% endif %}>
-        <option value="" {% if not selected %}selected{% endif %} {% if required %}disabled{% endif %}>{{ "Choose one" if required else "None" }}</option>
-        {% for group in groups %}
-        <optgroup label="{{ group.label }}">
-            {% for body in group.bodies %}
-            <option value="{{ body.slug }}" {% if body.slug == selected %}selected{% endif %}>{{ body.name }}</option>
-            {% endfor %}
-        </optgroup>
-        {% endfor %}
-    </select>
-</label>
-{% endmacro %}
-
 {% macro activity_select(activities, selected='') %}
-<label class="been-label">Activity
+<label class="been-label">Water
     <select name="activity" class="been-input">
-        <option value="">None</option>
+        <option value="">Not water</option>
         {% for code, label in activities %}
         <option value="{{ code }}" {% if code == selected %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
 </label>
+<p class="been-hint">Cities and regions stay on Not water. A swim, boat, ferry, dive, or sail marks the pin as water.</p>
 {% endmacro %}
 
 {% macro when_field(value='') %}

@@ -1,13 +1,13 @@
 """Text shown for a visit in the list."""
 
+from app.projects.been.activities import activity_label
 from app.projects.been.parsing import format_when
-from app.projects.been.water import activity_label, water_name
 
 
 def visit_title(visit):
     if visit.place is not None:
         return visit.place.name
-    return water_name(visit.water_slug)
+    return "Untitled place"
 
 
 def visit_meta(visit):
@@ -21,10 +21,7 @@ def visit_meta(visit):
     when = format_when(visit.visited_on, visit.date_precision)
     if when:
         parts.append(when)
-    if visit.water_slug and visit.place is not None:
-        water = water_name(visit.water_slug)
-        activity = activity_label(visit.activity)
-        parts.append(f"{activity} · {water}" if activity else water)
-    elif visit.activity:
-        parts.append(activity_label(visit.activity))
+    activity = activity_label(visit.activity)
+    if activity:
+        parts.append(activity)
     return " · ".join(parts)

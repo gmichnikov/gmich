@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "been/_fields.html" import water_select, activity_select, when_field, notes_field %}
+{% from "been/_fields.html" import activity_select, when_field, notes_field %}
 
 {% block title %}Where I've Been{% endblock %}
 
@@ -12,7 +12,7 @@
     <header class="been-header">
         <div>
             <h1 class="been-title">Where I've Been</h1>
-            <p class="been-lead">A private list of places and water. Only you can see this.</p>
+            <p class="been-lead">A private list of places. Only you can see this.</p>
         </div>
         {% if place_count or region_count or country_count or water_count %}
         <ul class="been-stats">
@@ -26,7 +26,7 @@
             <li><strong>{{ country_count }}</strong> {{ 'country' if country_count == 1 else 'countries' }}</li>
             {% endif %}
             {% if water_count %}
-            <li><strong>{{ water_count }}</strong> {{ 'body of water' if water_count == 1 else 'bodies of water' }}</li>
+            <li><strong>{{ water_count }}</strong> {{ 'water spot' if water_count == 1 else 'water spots' }}</li>
             {% endif %}
         </ul>
         {% endif %}
@@ -60,10 +60,7 @@
                 <button type="button" id="been-pick-clear" class="been-text-button">Clear</button>
             </div>
             {{ when_field() }}
-            <div class="been-split">
-                {{ water_select(water_groups) }}
-                {{ activity_select(activities) }}
-            </div>
+            {{ activity_select(activities) }}
             {{ notes_field() }}
             <button type="submit" class="been-button" data-loading="Saving…">Save place</button>
         </form>
@@ -77,21 +74,6 @@
             <textarea id="been-paste" class="been-input been-paste" name="paste" rows="6" placeholder="Lisbon, 2019-05&#10;Rome, 2019-06&#10;Texas"></textarea>
             <p class="been-hint">Add a date after a comma when you know it: 2019, 2019-05, or 2019-05-02. You'll review matches before anything is saved.</p>
             <button type="submit" class="been-button" data-loading="Checking places…">Review matches</button>
-        </form>
-    </details>
-
-    <details class="been-card been-details">
-        <summary>Add water</summary>
-        <form method="post" action="{{ url_for('been.create_water') }}" class="been-wait">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <p class="been-hint">A sea, lake, or river, with or without a city. The list is the major ones.</p>
-            <div class="been-split">
-                {{ water_select(water_groups, '', true) }}
-                {{ activity_select(activities) }}
-            </div>
-            {{ when_field() }}
-            {{ notes_field() }}
-            <button type="submit" class="been-button" data-loading="Saving…">Save water</button>
         </form>
     </details>
 
@@ -121,7 +103,7 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="been-empty">Nothing here yet. Search for a city, paste a list, or add a body of water.</p>
+        <p class="been-empty">Nothing here yet. Search for a city or paste a list.</p>
         {% endif %}
     </section>
 </div>

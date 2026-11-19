@@ -13,8 +13,8 @@ from app.projects.been.models import BeenPlace, BeenVisit
 from app.projects.been.parsing import VisitInputError, when_input_value
 from app.projects.been.places import build_paste_preview, search_places
 from app.projects.been.present import visit_meta, visit_title
+from app.projects.been.activities import ACTIVITIES
 from app.projects.been.records import add_visit, delete_visit, update_visit
-from app.projects.been.water import ACTIVITIES, water_groups
 from app.utils.logging import log_project_visit
 
 been_bp = Blueprint(
@@ -44,10 +44,7 @@ _PASTE_LIMIT = 30
 
 
 def _form_context(**extra):
-    context = {
-        "water_groups": water_groups(),
-        "activities": ACTIVITIES,
-    }
+    context = {"activities": ACTIVITIES}
     context.update(extra)
     return context
 
@@ -102,7 +99,7 @@ def index():
             place_count=sum(1 for place in places if place.kind == "spot"),
             region_count=sum(1 for place in places if place.kind == "region"),
             country_count=len({place.country_code for place in places if place.country_code}),
-            water_count=len({visit.water_slug for visit in visits if visit.water_slug}),
+            water_count=len({visit.place_id for visit in visits if visit.activity and visit.place_id}),
         ),
     )
 
@@ -124,28 +121,6 @@ def create_visit():
         visit = add_visit(
             current_user.id,
             place=_place_from_form(request.form),
-            water_slug=request.form.get("water_slug"),
-            activity=request.form.get("activity"),
-            when=request.form.get("when"),
-            notes=request.form.get("notes"),
-        )
-        db.session.commit()
-    except VisitInputError as exc:
-        db.session.rollback()
-        flash(str(exc))
-        return redirect(url_for("been.index"))
-    flash(_save_message(visit))
-    return redirect(url_for("been.index"))
-
-
-@been_bp.route("/water", methods=["POST"])
-@login_required
-def create_water():
-    try:
-        visit = add_visit(
-            current_user.id,
-            place=None,
-            water_slug=request.form.get("water_slug"),
             activity=request.form.get("activity"),
             when=request.form.get("when"),
             notes=request.form.get("notes"),
@@ -199,7 +174,6 @@ def paste_save():
                 add_visit(
                     current_user.id,
                     place=place,
-                    water_slug=None,
                     activity=None,
                     when=row.get("when"),
                     notes=None,
@@ -227,7 +201,6 @@ def edit_visit(visit_id):
         try:
             update_visit(
                 visit,
-                water_slug=request.form.get("water_slug"),
                 activity=request.form.get("activity"),
                 when=request.form.get("when"),
                 notes=request.form.get("notes"),

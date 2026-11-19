@@ -43,7 +43,6 @@ class RecordTests(unittest.TestCase):
         first = add_visit(
             self.user_id,
             place=place,
-            water_slug="atlantic-ocean",
             activity="swam",
             when="2019-05",
             notes="first",
@@ -51,7 +50,6 @@ class RecordTests(unittest.TestCase):
         second = add_visit(
             self.user_id,
             place=place,
-            water_slug=None,
             activity=None,
             when="2022",
             notes=None,
@@ -71,19 +69,18 @@ class RecordTests(unittest.TestCase):
         self.assertEqual(BeenPlace.query.count(), 0)
         self.assertEqual(BeenVisit.query.count(), 0)
 
-    def test_water_only_and_rejected_activity(self):
+    def test_activity_can_change_and_a_visit_needs_a_place(self):
         visit = add_visit(
             self.user_id,
-            place=None,
-            water_slug="tyrrhenian-sea",
+            place=normalize_feature(LISBON),
             activity="sailed",
             when="",
             notes=None,
         )
         db.session.commit()
-        self.assertIsNone(visit.place_id)
+        self.assertEqual(visit.activity, "sailed")
         self.assertIsNone(visit.visited_on)
-        update_visit(visit, water_slug="tyrrhenian-sea", activity="ferry", when="2018-06-02", notes="overnight")
+        update_visit(visit, activity="ferry", when="2018-06-02", notes="overnight")
         db.session.commit()
         self.assertEqual(visit.activity, "ferry")
         self.assertEqual(visit.date_precision, "day")
@@ -91,7 +88,6 @@ class RecordTests(unittest.TestCase):
             add_visit(
                 self.user_id,
                 place=None,
-                water_slug=None,
                 activity="swam",
                 when="2019",
                 notes=None,
