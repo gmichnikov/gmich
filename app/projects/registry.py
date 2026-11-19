@@ -542,6 +542,17 @@ PROJECTS = [
         "order": 18,
     },
     {
+        "id": "been",
+        "name": "Where I've Been",
+        "description": "A private list of places and water from your whole life",
+        "url": "/been",
+        "auth_required": True,
+        "status": "active",
+        "type": "project",
+        "icon": "🗺️",
+        "order": 36,
+    },
+    {
         "id": "docs_demo",
         "name": "Docs Demo",
         "description": "A simple demo project — no login, no database",

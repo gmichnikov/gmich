@@ -118,6 +118,7 @@ def create_app():
     from app.projects.kids_ai.routes import kids_ai_bp
     from app.projects.daily_email.routes import daily_email_bp
     from app.projects.travel_log.routes import travel_log_bp
+    from app.projects.been.routes import been_bp
     from app.projects.docs_demo.routes import docs_demo_bp
     from app.projects.mcp.routes import mcp_bp
     from app.projects.sports_scores.routes import sports_scores_bp
@@ -181,6 +182,7 @@ def create_app():
     app.register_blueprint(kids_ai_bp)
     app.register_blueprint(daily_email_bp)
     app.register_blueprint(travel_log_bp)
+    app.register_blueprint(been_bp)
     app.register_blueprint(docs_demo_bp, url_prefix="/docs-demo")
     app.register_blueprint(mcp_bp, url_prefix="/mcp")
     app.register_blueprint(sports_scores_bp)
@@ -277,6 +279,7 @@ def create_app():
         TlogEntry,
         TlogEntryPhoto,
     )
+    from app.projects.been.models import BeenPlace, BeenVisit
     from app.projects.sports_scores.models import ScoresFetchLog, ScoresGame
     from app.projects.daily_email.models import (
         DailyEmailProfile,

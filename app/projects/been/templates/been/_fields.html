@@ -1,0 +1,38 @@
+{% macro water_select(groups, selected='', required=false) %}
+<label class="been-label">Water
+    <select name="water_slug" class="been-input" {% if required %}required{% endif %}>
+        <option value="" {% if not selected %}selected{% endif %} {% if required %}disabled{% endif %}>{{ "Choose one" if required else "None" }}</option>
+        {% for group in groups %}
+        <optgroup label="{{ group.label }}">
+            {% for body in group.bodies %}
+            <option value="{{ body.slug }}" {% if body.slug == selected %}selected{% endif %}>{{ body.name }}</option>
+            {% endfor %}
+        </optgroup>
+        {% endfor %}
+    </select>
+</label>
+{% endmacro %}
+
+{% macro activity_select(activities, selected='') %}
+<label class="been-label">Activity
+    <select name="activity" class="been-input">
+        <option value="">None</option>
+        {% for code, label in activities %}
+        <option value="{{ code }}" {% if code == selected %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+</label>
+{% endmacro %}
+
+{% macro when_field(value='') %}
+<label class="been-label">When
+    <input class="been-input" type="text" name="when" value="{{ value }}" placeholder="2019-05" autocomplete="off" inputmode="numeric">
+</label>
+<p class="been-hint">Year, year-month, or full date. Blank is fine.</p>
+{% endmacro %}
+
+{% macro notes_field(value='') %}
+<label class="been-label">Notes
+    <textarea class="been-input been-notes" name="notes" rows="2">{{ value }}</textarea>
+</label>
+{% endmacro %}

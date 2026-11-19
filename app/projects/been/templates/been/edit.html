@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "been/_fields.html" import water_select, activity_select, when_field, notes_field %}
+
+{% block title %}Edit {{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('been.static', filename='been.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="been-page">
+    <header class="been-header">
+        <div>
+            <p class="been-kicker"><a class="been-text-button" href="{{ url_for('been.index') }}">Where I've Been</a></p>
+            <h1 class="been-title">{{ title }}</h1>
+            {% if meta %}
+            <p class="been-lead">{{ meta }}</p>
+            {% endif %}
+        </div>
+    </header>
+
+    <form method="post" class="been-card been-wait">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p class="been-hint">The place stays as saved. You can change the date, water, and notes.</p>
+        {{ when_field(when_value) }}
+        <div class="been-split">
+            {{ water_select(water_groups, visit.water_slug or '', not visit.place) }}
+            {{ activity_select(activities, visit.activity or '') }}
+        </div>
+        {{ notes_field(visit.notes or '') }}
+        <div class="been-actions">
+            <button type="submit" class="been-button" data-loading="Saving…">Save changes</button>
+            <a class="been-text-button" href="{{ url_for('been.index') }}">Cancel</a>
+        </div>
+    </form>
+
+    <form method="post" action="{{ url_for('been.remove_visit', visit_id=visit.id) }}" class="been-delete" onsubmit="return confirm('Delete this visit?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="been-text-button been-danger">Delete this visit</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Review places{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('been.static', filename='been.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="been-page">
+    <header class="been-header">
+        <div>
+            <h1 class="been-title">Review matches</h1>
+            <p class="been-lead">Uncheck anything that landed in the wrong place. Nothing is saved until you confirm.</p>
+        </div>
+    </header>
+
+    {% if truncated %}
+    <p class="been-banner">Only the first {{ limit }} places were checked. Paste the rest after you save these.</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('been.paste_save') }}" class="been-card been-wait">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="payload" hidden>{{ payload }}</textarea>
+        <ul class="been-review">
+            {% for row in rows %}
+            <li class="been-review-row {% if not row.place %}been-review-miss{% endif %}">
+                <label class="been-review-check">
+                    <input type="checkbox" name="include" value="{{ loop.index0 }}" {% if row.place %}checked{% else %}disabled{% endif %}>
+                    <span>{{ row.query }}</span>
+                </label>
+                <span class="been-review-match">
+                    {% if row.place %}
+                    {{ row.place.name }}{% if row.place.subtitle %} · {{ row.place.subtitle }}{% endif %}
+                    {% else %}
+                    {{ row.error }}
+                    {% endif %}
+                </span>
+                <span class="been-review-when">{{ row.when or "No date" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="been-actions">
+            <button type="submit" class="been-button" data-loading="Saving…">Save selected</button>
+            <a class="been-text-button" href="{{ url_for('been.index') }}">Cancel</a>
+        </div>
+    </form>
+</div>
+<script src="{{ url_for('been.static', filename='been.js') }}"></script>
+{% endblock %}

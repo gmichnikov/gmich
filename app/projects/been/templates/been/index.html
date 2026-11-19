@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% from "been/_fields.html" import water_select, activity_select, when_field, notes_field %}
+
+{% block title %}Where I've Been{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('been.static', filename='been.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="been-page">
+    <header class="been-header">
+        <div>
+            <h1 class="been-title">Where I've Been</h1>
+            <p class="been-lead">A private list of places and water. Only you can see this.</p>
+        </div>
+        {% if place_count or region_count or country_count or water_count %}
+        <ul class="been-stats">
+            {% if place_count %}
+            <li><strong>{{ place_count }}</strong> {{ 'place' if place_count == 1 else 'places' }}</li>
+            {% endif %}
+            {% if region_count %}
+            <li><strong>{{ region_count }}</strong> {{ 'region' if region_count == 1 else 'regions' }}</li>
+            {% endif %}
+            {% if country_count %}
+            <li><strong>{{ country_count }}</strong> {{ 'country' if country_count == 1 else 'countries' }}</li>
+            {% endif %}
+            {% if water_count %}
+            <li><strong>{{ water_count }}</strong> {{ 'body of water' if water_count == 1 else 'bodies of water' }}</li>
+            {% endif %}
+        </ul>
+        {% endif %}
+    </header>
+
+    <section class="been-card" aria-labelledby="been-add-heading">
+        <h2 id="been-add-heading" class="been-card-title">Add a place</h2>
+        <label class="been-label" for="been-search">Search</label>
+        <input id="been-search" class="been-input" type="search" placeholder="Lisbon, Texas, Positano" autocomplete="off" data-search-url="{{ url_for('been.search') }}">
+        <div id="been-results" class="been-results" hidden></div>
+
+        <form id="been-pick-form" class="been-pick been-wait" method="post" action="{{ url_for('been.create_visit') }}" hidden>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="name">
+            <input type="hidden" name="kind">
+            <input type="hidden" name="lat">
+            <input type="hidden" name="lng">
+            <input type="hidden" name="country_code">
+            <input type="hidden" name="country_name">
+            <input type="hidden" name="region_name">
+            <input type="hidden" name="city">
+            <input type="hidden" name="osm_type">
+            <input type="hidden" name="osm_id">
+            <input type="hidden" name="osm_key">
+            <input type="hidden" name="osm_value">
+            <div class="been-pick-head">
+                <div>
+                    <h3 id="been-pick-title" class="been-pick-title"></h3>
+                    <p id="been-pick-meta" class="been-pick-meta"></p>
+                </div>
+                <button type="button" id="been-pick-clear" class="been-text-button">Clear</button>
+            </div>
+            {{ when_field() }}
+            <div class="been-split">
+                {{ water_select(water_groups) }}
+                {{ activity_select(activities) }}
+            </div>
+            {{ notes_field() }}
+            <button type="submit" class="been-button" data-loading="Saving…">Save place</button>
+        </form>
+    </section>
+
+    <details class="been-card been-details">
+        <summary>Paste a list</summary>
+        <form method="post" action="{{ url_for('been.paste_preview') }}" class="been-wait">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="been-label" for="been-paste">One place per line</label>
+            <textarea id="been-paste" class="been-input been-paste" name="paste" rows="6" placeholder="Lisbon, 2019-05&#10;Rome, 2019-06&#10;Texas"></textarea>
+            <p class="been-hint">Add a date after a comma when you know it: 2019, 2019-05, or 2019-05-02. You'll review matches before anything is saved.</p>
+            <button type="submit" class="been-button" data-loading="Checking places…">Review matches</button>
+        </form>
+    </details>
+
+    <details class="been-card been-details">
+        <summary>Add water</summary>
+        <form method="post" action="{{ url_for('been.create_water') }}" class="been-wait">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <p class="been-hint">A sea, lake, or river, with or without a city. The list is the major ones.</p>
+            <div class="been-split">
+                {{ water_select(water_groups, '', true) }}
+                {{ activity_select(activities) }}
+            </div>
+            {{ when_field() }}
+            {{ notes_field() }}
+            <button type="submit" class="been-button" data-loading="Saving…">Save water</button>
+        </form>
+    </details>
+
+    <section class="been-list" aria-labelledby="been-list-heading">
+        <h2 id="been-list-heading" class="been-card-title">Your list</h2>
+        {% if cards %}
+        <ul class="been-visits">
+            {% for card in cards %}
+            <li class="been-visit">
+                <div class="been-visit-body">
+                    <h3 class="been-visit-title">{{ card.title }}</h3>
+                    {% if card.meta %}
+                    <p class="been-visit-meta">{{ card.meta }}</p>
+                    {% endif %}
+                    {% if card.visit.notes %}
+                    <p class="been-visit-notes">{{ card.visit.notes }}</p>
+                    {% endif %}
+                </div>
+                <div class="been-visit-actions">
+                    <a class="been-text-button" href="{{ url_for('been.edit_visit', visit_id=card.visit.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('been.remove_visit', visit_id=card.visit.id) }}" onsubmit="return confirm('Delete this visit?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="been-text-button been-danger">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="been-empty">Nothing here yet. Search for a city, paste a list, or add a body of water.</p>
+        {% endif %}
+    </section>
+</div>
+<script src="{{ url_for('been.static', filename='been.js') }}"></script>
+{% endblock %}
